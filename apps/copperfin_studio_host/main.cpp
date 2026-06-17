@@ -344,9 +344,14 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         }));
     std::vector<std::size_t> root_record_indexes;
     root_record_indexes.reserve(root_object_count);
+    std::vector<std::size_t> leaf_record_indexes;
+    leaf_record_indexes.reserve(objects.size());
     for (const auto& object : objects) {
         if (object.parent_record_index == copperfin::studio::StudioObjectMissingRecordIndex) {
             root_record_indexes.push_back(object.record_index);
+        }
+        if (object.child_record_indexes.empty()) {
+            leaf_record_indexes.push_back(object.record_index);
         }
     }
     const auto report_layout = copperfin::studio::build_report_layout(document);
@@ -413,6 +418,10 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "    \"rootObjectCount\": " << root_object_count << ",\n";
     std::cout << "    \"rootRecordIndexes\": ";
     print_json_record_index_array(root_record_indexes);
+    std::cout << ",\n";
+    std::cout << "    \"leafObjectCount\": " << leaf_record_indexes.size() << ",\n";
+    std::cout << "    \"leafRecordIndexes\": ";
+    print_json_record_index_array(leaf_record_indexes);
     std::cout << ",\n";
     std::cout << "    \"commandUndoAvailable\": " << (command_undo_status.available ? "true" : "false") << ",\n";
     std::cout << "    \"commandUndoLabel\": ";
