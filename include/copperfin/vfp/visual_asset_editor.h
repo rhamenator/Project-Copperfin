@@ -736,6 +736,12 @@ struct VisualObjectDesktopRequest {
     bool desktop = false;
 };
 
+struct VisualObjectKeyPreviewRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool key_preview = false;
+};
+
 struct VisualObjectMaxButtonRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1437,6 +1443,7 @@ VisualAssetEditResult set_visual_object_closable(const VisualObjectClosableReque
 VisualAssetEditResult set_visual_object_control_box(const VisualObjectControlBoxRequest& request);
 VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenterRequest& request);
 VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest& request);
+VisualAssetEditResult set_visual_object_key_preview(const VisualObjectKeyPreviewRequest& request);
 VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRequest& request);
 VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request);
 VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request);

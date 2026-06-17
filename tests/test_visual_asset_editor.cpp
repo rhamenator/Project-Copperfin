@@ -11015,6 +11015,24 @@ void test_set_visual_object_desktop_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_key_preview_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#902",
+        "key_preview",
+        "KeyPreview",
+        "KEYPREVIEW",
+        "key-preview",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_key_preview({
+                .path = path,
+                .objects = objects,
+                .key_preview = value
+            });
+        });
+}
+
 void test_set_visual_object_max_button_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#889",
@@ -22975,6 +22993,7 @@ int main() {
     test_set_visual_object_control_box_assigns_logical_state();
     test_set_visual_object_auto_center_assigns_logical_state();
     test_set_visual_object_desktop_assigns_logical_state();
+    test_set_visual_object_key_preview_assigns_logical_state();
     test_set_visual_object_max_button_assigns_logical_state();
     test_set_visual_object_min_button_assigns_logical_state();
     test_set_visual_object_movable_assigns_logical_state();
