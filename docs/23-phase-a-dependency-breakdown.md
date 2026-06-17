@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest shipped E2 slice: `#1072`, which exposes host current-control-object commands by stable target selectors.
+- Latest shipped E2 slice: `#1073`, which exposes host closable-object commands by stable target selectors.
 - Current continuation shape: expose already-implemented rollback-safe visual-object editor APIs through `copperfin_studio_host` one property command at a time, with stable selectors, no-mutation failure coverage, docs, validation, commit, push, and issue closure per slice.
 - Next work: create or pick the next prompt-sized `#23` child for the next implemented visual-object editor API that still lacks a host wrapper, unless the live issue tracker already contains a more specific open child.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
@@ -357,7 +357,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1072`; do not divert back to the closed Phase A safety gate, `#92`-`#101`, `#22`, or `#154`-`#203` without reopened regression evidence |
+| `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1073`; do not divert back to the closed Phase A safety gate, `#92`-`#101`, `#22`, or `#154`-`#203` without reopened regression evidence |
 
 Decision rule for agents:
 
@@ -381,11 +381,11 @@ Historical-closed prompt-sized native slice queues:
 Adjacent prompt-sized native slice queues:
 
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
-- `#23`: `#1072` is shipped; continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
+- `#23`: `#1073` is shipped; continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
 - broader repo execution leaves remain pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document currently points to the live E2/#23 continuation lane, not those adjacent historical/planning leaves
 
 <details>
-<summary>Historical post-D1/E1/E2 closed issue sweep through #1072</summary>
+<summary>Historical post-D1/E1/E2 closed issue sweep through #1073</summary>
 
 Historical post-D1 execution order through the current E2 queue:
 
@@ -807,6 +807,7 @@ The numbered list below is retained as closure evidence for the completed D1/E1 
 414. `#1070`
 415. `#1071`
 416. `#1072`
+417. `#1073`
 
 </details>
 

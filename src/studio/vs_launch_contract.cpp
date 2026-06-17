@@ -368,6 +368,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--closable-object") {
+            result.request.closable_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -892,6 +897,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.dynamic_fore_color = args[++index];
             result.request.dynamic_fore_color_available = true;
+            continue;
+        }
+
+        if (argument == "--closable") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --closable."};
+            }
+            const auto closable = parse_bool_value(args[++index]);
+            if (!closable.has_value()) {
+                return {.ok = false, .error = "The --closable value must be true or false."};
+            }
+            result.request.closable = *closable;
+            result.request.closable_available = true;
             continue;
         }
 
@@ -2101,6 +2119,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--closable-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --closable-target-object-name."};
+            }
+            result.request.closable_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--closable-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --closable-target-unique-id."};
+            }
+            result.request.closable_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -2756,6 +2798,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.dynamic_fore_color_objects.empty())) {
         return {.ok = false, .error = "Dynamic-fore-color arguments can only be used with --dynamic-fore-color-object."};
     }
+    if (result.request.closable_object && !result.request.closable_available) {
+        return {.ok = false, .error = "An object closable assignment requires --closable."};
+    }
+    if (result.request.closable_object && result.request.closable_objects.empty()) {
+        return {.ok = false, .error = "An object closable assignment requires at least one target selector."};
+    }
+    if (!result.request.closable_object &&
+        (result.request.closable_available ||
+         !result.request.closable_objects.empty())) {
+        return {.ok = false, .error = "Closable arguments can only be used with --closable-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -2814,6 +2867,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.disabled_fore_color_object ? 1 : 0) +
         (result.request.dynamic_back_color_object ? 1 : 0) +
         (result.request.dynamic_fore_color_object ? 1 : 0) +
+        (result.request.closable_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

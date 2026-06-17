@@ -2582,6 +2582,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.closable_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> closable_objects;
+        closable_objects.reserve(parse_result.request.closable_objects.size());
+        for (const auto& closable_object : parse_result.request.closable_objects) {
+            closable_objects.push_back({
+                .record_index = closable_object.record_index,
+                .object_name = closable_object.object_name,
+                .unique_id = closable_object.unique_id
+            });
+        }
+
+        const auto closable_result = copperfin::vfp::set_visual_object_closable({
+            .path = parse_result.request.path,
+            .objects = closable_objects,
+            .closable = parse_result.request.closable
+        });
+
+        if (!closable_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << closable_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.ungroup_object) {
         const auto ungroup_result = copperfin::vfp::ungroup_visual_object({
             .path = parse_result.request.path,

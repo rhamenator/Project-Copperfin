@@ -215,6 +215,10 @@ void test_parse_launch_arguments() {
         "#1071: launch contract should keep dynamic-fore-color-object off by default");
     expect(!result.request.dynamic_fore_color_available,
         "#1071: launch contract should keep dynamic fore color unavailable by default");
+    expect(!result.request.closable_object,
+        "#1073: launch contract should keep closable-object off by default");
+    expect(!result.request.closable_available,
+        "#1073: launch contract should keep closable unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -4456,6 +4460,92 @@ void test_parse_launch_arguments_rejects_dynamic_fore_color_object_ambiguity() {
         "#1071: launch contract should reject stray dynamic-fore-color arguments");
 }
 
+void test_parse_launch_arguments_for_closable_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--closable-object",
+        "--closable", "false",
+        "--closable-target-object-name", "frmCustomer",
+        "--closable-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1073: launch contract should parse closable-object requests");
+    expect(result.request.closable_object,
+        "#1073: launch contract should detect --closable-object");
+    expect(result.request.closable_available && !result.request.closable,
+        "#1073: closable-object requests should carry closable state");
+    expect(result.request.closable_objects.size() == 2U,
+        "#1073: closable-object requests should collect closable target selectors");
+    if (result.request.closable_objects.size() == 2U) {
+        expect(result.request.closable_objects[0].object_name == "frmCustomer" &&
+                result.request.closable_objects[0].unique_id.empty(),
+            "#1073: closable-object requests should parse target object-name selectors");
+        expect(result.request.closable_objects[1].object_name.empty() &&
+                result.request.closable_objects[1].unique_id == "two-guid",
+            "#1073: closable-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_closable_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--closable-object",
+        "--closable-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1073: launch contract should reject closable-object requests without closable state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--closable-object",
+        "--closable", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1073: launch contract should reject closable-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--closable-object",
+        "--closable", "sometimes",
+        "--closable-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1073: launch contract should reject invalid closable boolean values");
+}
+
+void test_parse_launch_arguments_rejects_closable_object_ambiguity() {
+    const auto closable_dynamic_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--closable-object",
+        "--dynamic-fore-color-object",
+        "--closable", "false",
+        "--closable-target-unique-id", "one-guid",
+        "--dynamic-fore-color", "RGB(7,8,9)",
+        "--dynamic-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!closable_dynamic_result.ok,
+        "#1073: launch contract should reject simultaneous closable-object and dynamic-fore-color-object requests");
+
+    const auto closable_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--closable-object",
+        "--clear-property",
+        "--property-name", "Closable",
+        "--closable", "false",
+        "--closable-target-unique-id", "one-guid"
+    });
+    expect(!closable_property_result.ok,
+        "#1073: launch contract should reject closable-object combined with property commands");
+
+    const auto stray_closable_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--closable", "false"
+    });
+    expect(!stray_closable_result.ok,
+        "#1073: launch contract should reject stray closable arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -5823,6 +5913,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_fore_color_object();
     test_parse_launch_arguments_rejects_dynamic_fore_color_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_fore_color_object_ambiguity();
+    test_parse_launch_arguments_for_closable_object();
+    test_parse_launch_arguments_rejects_closable_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_closable_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
