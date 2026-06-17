@@ -11323,6 +11323,29 @@ void test_set_visual_object_min_button_assigns_logical_state() {
         });
 }
 
+void test_set_visual_object_min_height_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#954",
+        "min_height",
+        "MinHeight",
+        "MINHEIGHT",
+        "min-height",
+        0,
+        1,
+        42,
+        7,
+        99,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_min_height({
+                .path = path,
+                .objects = objects,
+                .min_height = value
+            });
+        });
+}
+
 void test_set_visual_object_movable_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#891",
@@ -24092,6 +24115,7 @@ int main() {
     test_set_visual_object_max_left_assigns_numeric_value();
     test_set_visual_object_max_top_assigns_numeric_value();
     test_set_visual_object_min_button_assigns_logical_state();
+    test_set_visual_object_min_height_assigns_numeric_value();
     test_set_visual_object_movable_assigns_logical_state();
     test_set_visual_object_half_height_caption_assigns_logical_state();
     test_set_visual_object_mdi_form_assigns_logical_state();

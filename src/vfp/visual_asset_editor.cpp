@@ -5497,6 +5497,19 @@ VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRe
         request.min_button ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRequest& request) {
+    if (request.min_height < 0) {
+        return {.ok = false, .error = "MinHeight must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "MinHeight",
+        "min-height",
+        std::to_string(request.min_height));
+}
+
 VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

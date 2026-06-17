@@ -832,6 +832,12 @@ struct VisualObjectMinButtonRequest {
     bool min_button = false;
 };
 
+struct VisualObjectMinHeightRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int min_height = 0;
+};
+
 struct VisualObjectMovableRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1765,6 +1771,7 @@ VisualAssetEditResult set_visual_object_max_width(const VisualObjectMaxWidthRequ
 VisualAssetEditResult set_visual_object_max_left(const VisualObjectMaxLeftRequest& request);
 VisualAssetEditResult set_visual_object_max_top(const VisualObjectMaxTopRequest& request);
 VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRequest& request);
+VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRequest& request);
 VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest& request);
 VisualAssetEditResult set_visual_object_half_height_caption(const VisualObjectHalfHeightCaptionRequest& request);
 VisualAssetEditResult set_visual_object_mdi_form(const VisualObjectMdiFormRequest& request);

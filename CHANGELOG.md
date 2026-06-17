@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#954 selected visual object min-height assignment shipped: designer commands can assign caller-provided non-negative numeric `MinHeight` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#953 selected visual object max-top assignment shipped: designer commands can assign caller-provided non-negative numeric `MaxTop` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#952 selected visual object max-left assignment shipped: designer commands can assign caller-provided non-negative numeric `MaxLeft` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#951 selected visual object max-width assignment shipped: designer commands can assign caller-provided non-negative numeric `MaxWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
