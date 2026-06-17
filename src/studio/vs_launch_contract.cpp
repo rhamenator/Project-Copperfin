@@ -298,6 +298,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--selected-item-fore-color-object") {
+            result.request.selected_item_fore_color_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -834,6 +839,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.selected_item_back_color = selected_item_back_color;
             result.request.selected_item_back_color_available = true;
+            continue;
+        }
+
+        if (argument == "--selected-item-fore-color") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --selected-item-fore-color."};
+            }
+            int selected_item_fore_color = 0;
+            if (!parse_int_value(args[++index], selected_item_fore_color)) {
+                return {.ok = false, .error = "The --selected-item-fore-color value must be an integer."};
+            }
+            result.request.selected_item_fore_color = selected_item_fore_color;
+            result.request.selected_item_fore_color_available = true;
             continue;
         }
 
@@ -1525,6 +1543,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--selected-item-fore-color-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --selected-item-fore-color-target-object-name."};
+            }
+            result.request.selected_item_fore_color_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--selected-item-fore-color-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --selected-item-fore-color-target-unique-id."};
+            }
+            result.request.selected_item_fore_color_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -1993,6 +2035,20 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.selected_item_back_color_objects.empty())) {
         return {.ok = false, .error = "Selected-item-back-color arguments can only be used with --selected-item-back-color-object."};
     }
+    if (result.request.selected_item_fore_color_object && !result.request.selected_item_fore_color_available) {
+        return {.ok = false, .error = "An object selected-item-fore-color assignment requires --selected-item-fore-color."};
+    }
+    if (result.request.selected_item_fore_color_object && result.request.selected_item_fore_color < 0) {
+        return {.ok = false, .error = "An object selected-item-fore-color assignment requires a non-negative value."};
+    }
+    if (result.request.selected_item_fore_color_object && result.request.selected_item_fore_color_objects.empty()) {
+        return {.ok = false, .error = "An object selected-item-fore-color assignment requires at least one target selector."};
+    }
+    if (!result.request.selected_item_fore_color_object &&
+        (result.request.selected_item_fore_color_available ||
+         !result.request.selected_item_fore_color_objects.empty())) {
+        return {.ok = false, .error = "Selected-item-fore-color arguments can only be used with --selected-item-fore-color-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -2037,6 +2093,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.selected_back_color_object ? 1 : 0) +
         (result.request.selected_fore_color_object ? 1 : 0) +
         (result.request.selected_item_back_color_object ? 1 : 0) +
+        (result.request.selected_item_fore_color_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
