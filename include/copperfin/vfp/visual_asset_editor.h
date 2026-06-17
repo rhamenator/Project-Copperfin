@@ -1042,6 +1042,12 @@ struct VisualObjectLockColumnsLeftRequest {
     int lock_columns_left = 0;
 };
 
+struct VisualObjectRecordSourceTypeRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int record_source_type = 0;
+};
+
 struct VisualObjectSpecialEffectRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1652,6 +1658,7 @@ VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHe
 VisualAssetEditResult set_visual_object_row_height(const VisualObjectRowHeightRequest& request);
 VisualAssetEditResult set_visual_object_lock_columns(const VisualObjectLockColumnsRequest& request);
 VisualAssetEditResult set_visual_object_lock_columns_left(const VisualObjectLockColumnsLeftRequest& request);
+VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request);
 VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureRequest& request);
 VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequest& request);

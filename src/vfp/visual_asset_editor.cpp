@@ -5871,6 +5871,19 @@ VisualAssetEditResult set_visual_object_lock_columns_left(const VisualObjectLock
         std::to_string(request.lock_columns_left));
 }
 
+VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request) {
+    if (request.record_source_type < 0) {
+        return {.ok = false, .error = "RecordSourceType must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "RecordSourceType",
+        "record-source-type",
+        std::to_string(request.record_source_type));
+}
+
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
         return {.ok = false, .error = "SpecialEffect must not be negative."};
