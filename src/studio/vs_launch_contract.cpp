@@ -16,6 +16,13 @@ bool parse_size_value(const std::string& text, std::size_t& value) {
     return result.ec == std::errc{} && result.ptr == end;
 }
 
+bool parse_double_value(const std::string& text, double& value) {
+    const char* begin = text.data();
+    const char* end = text.data() + text.size();
+    const auto result = std::from_chars(begin, end, value);
+    return result.ec == std::errc{} && result.ptr == end;
+}
+
 std::string lowercase_copy(std::string text) {
     std::transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
         return static_cast<char>(std::tolower(ch));
@@ -145,6 +152,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
 
         if (argument == "--distribute-object") {
             result.request.distribute_object = true;
+            continue;
+        }
+
+        if (argument == "--snap-object") {
+            result.request.snap_object = true;
             continue;
         }
 
@@ -356,6 +368,38 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--snap-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --snap-mode."};
+            }
+            result.request.snap_mode = args[++index];
+            continue;
+        }
+
+        if (argument == "--grid-width") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-width."};
+            }
+            double grid_width = 0.0;
+            if (!parse_double_value(args[++index], grid_width)) {
+                return {.ok = false, .error = "The --grid-width value must be numeric."};
+            }
+            result.request.grid_width = grid_width;
+            continue;
+        }
+
+        if (argument == "--grid-height") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-height."};
+            }
+            double grid_height = 0.0;
+            if (!parse_double_value(args[++index], grid_height)) {
+                return {.ok = false, .error = "The --grid-height value must be numeric."};
+            }
+            result.request.grid_height = grid_height;
+            continue;
+        }
+
         if (argument == "--anchor-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --anchor-object-name."};
@@ -437,6 +481,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --distribute-target-unique-id."};
             }
             result.request.distribute_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--snap-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --snap-target-object-name."};
+            }
+            result.request.snap_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--snap-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --snap-target-unique-id."};
+            }
+            result.request.snap_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -606,6 +674,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.distribute_objects.empty())) {
         return {.ok = false, .error = "Distribution arguments can only be used with --distribute-object."};
     }
+    if (result.request.snap_object && result.request.snap_mode.empty()) {
+        return {.ok = false, .error = "An object snap requires --snap-mode."};
+    }
+    if (result.request.snap_object && result.request.snap_objects.empty()) {
+        return {.ok = false, .error = "An object snap requires at least one target selector."};
+    }
+    if (!result.request.snap_object &&
+        (!result.request.snap_mode.empty() ||
+         result.request.grid_width != 0.0 ||
+         result.request.grid_height != 0.0 ||
+         !result.request.snap_objects.empty())) {
+        return {.ok = false, .error = "Snap arguments can only be used with --snap-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -625,6 +706,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.align_object ? 1 : 0) +
         (result.request.resize_object ? 1 : 0) +
         (result.request.distribute_object ? 1 : 0) +
+        (result.request.snap_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

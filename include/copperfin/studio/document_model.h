@@ -66,8 +66,11 @@ struct StudioOpenRequest {
     std::string alignment_mode{};
     std::string resize_mode{};
     std::string distribution_mode{};
+    std::string snap_mode{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
+    double grid_width = 0.0;
+    double grid_height = 0.0;
     std::size_t line = 0;
     std::size_t column = 0;
     std::size_t record_index = 0;
@@ -87,6 +90,7 @@ struct StudioOpenRequest {
     bool align_object = false;
     bool resize_object = false;
     bool distribute_object = false;
+    bool snap_object = false;
     bool ungroup_object = false;
     bool clear_parent = false;
     bool selection_record_available = false;
@@ -97,6 +101,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> align_objects{};
     std::vector<StudioObjectSelector> resize_objects{};
     std::vector<StudioObjectSelector> distribute_objects{};
+    std::vector<StudioObjectSelector> snap_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

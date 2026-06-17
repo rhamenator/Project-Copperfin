@@ -106,6 +106,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.align_object, "#1031: launch contract should keep align-object off by default");
     expect(!result.request.resize_object, "#1032: launch contract should keep resize-object off by default");
     expect(!result.request.distribute_object, "#1033: launch contract should keep distribute-object off by default");
+    expect(!result.request.snap_object, "#1034: launch contract should keep snap-object off by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -908,6 +909,102 @@ void test_parse_launch_arguments_rejects_distribute_object_ambiguity() {
     });
     expect(!stray_distribution_result.ok,
         "#1033: launch contract should reject stray distribution arguments");
+}
+
+void test_parse_launch_arguments_for_snap_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--snap-object",
+        "--snap-mode", "both",
+        "--grid-width", "10.5",
+        "--grid-height", "25",
+        "--snap-target-object-name", "cmdOne",
+        "--snap-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1034: launch contract should parse snap-object requests");
+    expect(result.request.snap_object, "#1034: launch contract should detect --snap-object");
+    expect(result.request.snap_mode == "both",
+        "#1034: snap-object requests should carry snap mode");
+    expect(result.request.grid_width == 10.5 && result.request.grid_height == 25.0,
+        "#1034: snap-object requests should carry numeric grid dimensions");
+    expect(result.request.snap_objects.size() == 2U,
+        "#1034: snap-object requests should collect snap target selectors");
+    if (result.request.snap_objects.size() == 2U) {
+        expect(result.request.snap_objects[0].object_name == "cmdOne" &&
+                result.request.snap_objects[0].unique_id.empty(),
+            "#1034: snap-object requests should parse target object-name selectors");
+        expect(result.request.snap_objects[1].object_name.empty() &&
+                result.request.snap_objects[1].unique_id == "two-guid",
+            "#1034: snap-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_snap_object_invalid_inputs() {
+    const auto missing_mode_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--snap-object",
+        "--grid-width", "10",
+        "--snap-target-unique-id", "one-guid"
+    });
+    expect(!missing_mode_result.ok,
+        "#1034: launch contract should reject snap-object requests without snap mode");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--snap-object",
+        "--snap-mode", "horizontal",
+        "--grid-width", "10"
+    });
+    expect(!missing_targets_result.ok,
+        "#1034: launch contract should reject snap-object requests without target selectors");
+
+    const auto invalid_grid_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--snap-object",
+        "--snap-mode", "horizontal",
+        "--grid-width", "wide",
+        "--snap-target-unique-id", "one-guid"
+    });
+    expect(!invalid_grid_result.ok,
+        "#1034: launch contract should reject non-numeric grid widths");
+}
+
+void test_parse_launch_arguments_rejects_snap_object_ambiguity() {
+    const auto snap_distribute_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--snap-object",
+        "--distribute-object",
+        "--snap-mode", "horizontal",
+        "--grid-width", "10",
+        "--distribution-mode", "horizontal",
+        "--snap-target-unique-id", "one-guid",
+        "--distribute-target-unique-id", "one-guid",
+        "--distribute-target-unique-id", "two-guid",
+        "--distribute-target-unique-id", "three-guid"
+    });
+    expect(!snap_distribute_result.ok,
+        "#1034: launch contract should reject simultaneous snap-object and distribute-object requests");
+
+    const auto snap_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--snap-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--snap-mode", "horizontal",
+        "--grid-width", "10",
+        "--snap-target-unique-id", "one-guid"
+    });
+    expect(!snap_property_result.ok,
+        "#1034: launch contract should reject snap-object combined with property commands");
+
+    const auto stray_snap_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--snap-mode", "horizontal"
+    });
+    expect(!stray_snap_result.ok,
+        "#1034: launch contract should reject stray snap arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -2160,6 +2257,9 @@ int main() {
     test_parse_launch_arguments_for_distribute_object();
     test_parse_launch_arguments_rejects_distribute_object_invalid_inputs();
     test_parse_launch_arguments_rejects_distribute_object_ambiguity();
+    test_parse_launch_arguments_for_snap_object();
+    test_parse_launch_arguments_rejects_snap_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_snap_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
