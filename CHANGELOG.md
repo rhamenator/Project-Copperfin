@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#958 context-aware editor action registry shipped: Studio now exposes stable selection-context action descriptors and filtering for property grids, method editors, expression editors, builders, toolbox panes, data-environment editors, and project navigation.
 - E2/#957 designer toolbox palette registry shipped: Studio now exposes stable VFP-compatible toolbox descriptors and context filtering for form, class, container, and report designer control-creation palettes.
 - E2/#956 context-aware builder and wizard registry shipped: Studio now exposes stable VFP-compatible builder/wizard descriptors and context filtering for forms, classes, controls, reports, labels, projects, and data-environment workflows.
 - E2/#955 selected visual object min-width assignment shipped: designer commands can assign caller-provided non-negative numeric `MinWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.

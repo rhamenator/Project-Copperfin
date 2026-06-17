@@ -91,6 +91,10 @@ copperfin_add_test(test_toolbox_palette cf_design_model
     test_toolbox_palette.cpp
 )
 
+copperfin_add_test(test_context_editor_actions cf_design_model
+    test_context_editor_actions.cpp
+)
+
 copperfin_add_test(test_report_layout cf_design_model
     test_report_layout.cpp
 )
