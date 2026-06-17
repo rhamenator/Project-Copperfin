@@ -1006,6 +1006,24 @@ void write_synthetic_form_table_for_object_fore_color(const std::filesystem::pat
     expect(create_result.ok, "#1067: synthetic SCX table for object fore color should be created");
 }
 
+void write_synthetic_form_table_for_object_disabled_back_color(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "DISABLEDBACKCOLOR", .type = 'C', .length = 16U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"lstCustomers", "lstCustomers", "one-guid", "16777215"},
+        {"lstOrders", "lstOrders", "two-guid", "12632256"},
+        {"lblStatus", "lblStatus", "three-guid", "255"},
+        {"lstOther", "lstOther", "other-guid", "65280"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1068: synthetic SCX table for object disabled back color should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -7802,6 +7820,147 @@ void test_studio_host_json_assigns_fore_color_by_stable_selectors(const std::str
     }
 }
 
+void test_studio_host_json_assigns_disabled_back_color_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_disabled_back_color_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path disabled_back_color_path = temp_root / "disabled_back_color.scx";
+    write_synthetic_form_table_for_object_disabled_back_color(disabled_back_color_path);
+    const auto disabled_back_color_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", disabled_back_color_path.string(),
+            "--disabled-back-color-object",
+            "--disabled-back-color", "8421504",
+            "--disabled-back-color-target-object-name", "lstCustomers",
+            "--disabled-back-color-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(disabled_back_color_process.exit_code == 0,
+        "#1068: host object disabled-back-color assignment should exit successfully");
+    expect(visual_object_property(disabled_back_color_path, "one-guid", "DISABLEDBACKCOLOR") == "8421504" &&
+            visual_object_property(disabled_back_color_path, "two-guid", "DISABLEDBACKCOLOR") == "8421504" &&
+            visual_object_property(disabled_back_color_path, "three-guid", "DISABLEDBACKCOLOR") == "255" &&
+            visual_object_property(disabled_back_color_path, "other-guid", "DISABLEDBACKCOLOR") == "65280",
+        "#1068: host object disabled-back-color assignment should assign selected numeric values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_disabled_back_color(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--disabled-back-color-object",
+            "--disabled-back-color", "8421504",
+            "--disabled-back-color-target-unique-id", "one-guid",
+            "--disabled-back-color-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1068: missing-target host object disabled-back-color assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "DISABLEDBACKCOLOR") == "16777215" &&
+            visual_object_property(missing_target_path, "two-guid", "DISABLEDBACKCOLOR") == "12632256",
+        "#1068: missing-target host object disabled-back-color assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_disabled_back_color(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--disabled-back-color-object",
+            "--disabled-back-color", "8421504",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1068: disabled-back-color-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "DISABLEDBACKCOLOR") == "16777215",
+        "#1068: disabled-back-color-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_disabled_back_color(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--disabled-back-color-object",
+            "--disabled-back-color-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1068: disabled-back-color-object without disabled-back-color should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "DISABLEDBACKCOLOR") == "16777215",
+        "#1068: disabled-back-color-object without disabled-back-color should not mutate the asset");
+
+    const fs::path negative_path = temp_root / "negative.scx";
+    write_synthetic_form_table_for_object_disabled_back_color(negative_path);
+    const auto negative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_path.string(),
+            "--disabled-back-color-object",
+            "--disabled-back-color", "-1",
+            "--disabled-back-color-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_process.exit_code == 2,
+        "#1068: negative disabled-back-color values should fail during launch parsing");
+    expect(visual_object_property(negative_path, "one-guid", "DISABLEDBACKCOLOR") == "16777215",
+        "#1068: negative disabled-back-color values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_disabled_back_color(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--disabled-back-color-object",
+            "--disabled-back-color", "8421504",
+            "--disabled-back-color-target-unique-id", "one-guid",
+            "--disabled-back-color-target-object-name", "lstCustomers",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1068: duplicate-target host object disabled-back-color assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "DISABLEDBACKCOLOR") == "16777215",
+        "#1068: duplicate-target host object disabled-back-color assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_disabled_back_color(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--disabled-back-color-object",
+            "--fore-color-object",
+            "--disabled-back-color", "8421504",
+            "--disabled-back-color-target-unique-id", "one-guid",
+            "--fore-color", "65280",
+            "--fore-color-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1068: disabled-back-color-object plus fore-color-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "DISABLEDBACKCOLOR") == "16777215",
+        "#1068: disabled-back-color-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -7978,6 +8137,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_highlight_fore_color_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_back_color_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_fore_color_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_disabled_back_color_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
