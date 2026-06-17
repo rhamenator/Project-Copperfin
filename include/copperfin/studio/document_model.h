@@ -72,6 +72,7 @@ struct StudioOpenRequest {
     std::string tooltip_text{};
     std::string status_bar_text{};
     std::string control_source{};
+    std::string input_mask{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     double grid_width = 0.0;
@@ -110,6 +111,7 @@ struct StudioOpenRequest {
     bool tooltip_text_object = false;
     bool status_bar_text_object = false;
     bool control_source_object = false;
+    bool input_mask_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -128,6 +130,7 @@ struct StudioOpenRequest {
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
+    bool input_mask_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -147,6 +150,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> tooltip_text_objects{};
     std::vector<StudioObjectSelector> status_bar_text_objects{};
     std::vector<StudioObjectSelector> control_source_objects{};
+    std::vector<StudioObjectSelector> input_mask_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

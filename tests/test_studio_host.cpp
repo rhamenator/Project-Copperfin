@@ -127,6 +127,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.status_bar_text_available, "#1044: launch contract should keep status-bar text unavailable by default");
     expect(!result.request.control_source_object, "#1045: launch contract should keep control-source-object off by default");
     expect(!result.request.control_source_available, "#1045: launch contract should keep control source unavailable by default");
+    expect(!result.request.input_mask_object, "#1046: launch contract should keep input-mask-object off by default");
+    expect(!result.request.input_mask_available, "#1046: launch contract should keep input mask unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1937,6 +1939,82 @@ void test_parse_launch_arguments_rejects_control_source_object_ambiguity() {
         "#1045: launch contract should reject stray control-source arguments");
 }
 
+void test_parse_launch_arguments_for_input_mask_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--input-mask-object",
+        "--input-mask", "999-99-9999",
+        "--input-mask-target-object-name", "txtPhone",
+        "--input-mask-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1046: launch contract should parse input-mask-object requests");
+    expect(result.request.input_mask_object, "#1046: launch contract should detect --input-mask-object");
+    expect(result.request.input_mask_available && result.request.input_mask == "999-99-9999",
+        "#1046: input-mask-object requests should carry input mask text");
+    expect(result.request.input_mask_objects.size() == 2U,
+        "#1046: input-mask-object requests should collect input mask target selectors");
+    if (result.request.input_mask_objects.size() == 2U) {
+        expect(result.request.input_mask_objects[0].object_name == "txtPhone" &&
+                result.request.input_mask_objects[0].unique_id.empty(),
+            "#1046: input-mask-object requests should parse target object-name selectors");
+        expect(result.request.input_mask_objects[1].object_name.empty() &&
+                result.request.input_mask_objects[1].unique_id == "two-guid",
+            "#1046: input-mask-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_input_mask_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--input-mask-object",
+        "--input-mask-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1046: launch contract should reject input-mask-object requests without input mask text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--input-mask-object",
+        "--input-mask", "99999"
+    });
+    expect(!missing_targets_result.ok,
+        "#1046: launch contract should reject input-mask-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_input_mask_object_ambiguity() {
+    const auto input_control_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--input-mask-object",
+        "--control-source-object",
+        "--input-mask", "99999",
+        "--input-mask-target-unique-id", "one-guid",
+        "--control-source", "customers.name",
+        "--control-source-target-unique-id", "one-guid"
+    });
+    expect(!input_control_result.ok,
+        "#1046: launch contract should reject simultaneous input-mask-object and control-source-object requests");
+
+    const auto input_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--input-mask-object",
+        "--clear-property",
+        "--property-name", "InputMask",
+        "--input-mask", "99999",
+        "--input-mask-target-unique-id", "one-guid"
+    });
+    expect(!input_property_result.ok,
+        "#1046: launch contract should reject input-mask-object combined with property commands");
+
+    const auto stray_input_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--input-mask", "99999"
+    });
+    expect(!stray_input_result.ok,
+        "#1046: launch contract should reject stray input-mask arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3223,6 +3301,9 @@ int main() {
     test_parse_launch_arguments_for_control_source_object();
     test_parse_launch_arguments_rejects_control_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_control_source_object_ambiguity();
+    test_parse_launch_arguments_for_input_mask_object();
+    test_parse_launch_arguments_rejects_input_mask_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_input_mask_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
