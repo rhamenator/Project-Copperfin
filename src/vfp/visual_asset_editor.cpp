@@ -5812,6 +5812,20 @@ VisualAssetEditResult set_visual_object_buffer_mode(const VisualObjectBufferMode
         std::to_string(request.buffer_mode));
 }
 
+VisualAssetEditResult set_visual_object_buffer_mode_override(
+    const VisualObjectBufferModeOverrideRequest& request) {
+    if (request.buffer_mode_override < 0) {
+        return {.ok = false, .error = "BufferModeOverride must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "BufferModeOverride",
+        "buffer-mode-override",
+        std::to_string(request.buffer_mode_override));
+}
+
 VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRequest& request) {
     if (request.scale_mode < 0) {
         return {.ok = false, .error = "ScaleMode must not be negative."};

@@ -11922,6 +11922,29 @@ void test_set_visual_object_buffer_mode_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_buffer_mode_override_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#914",
+        "buffer_mode_override",
+        "BufferModeOverride",
+        "BUFFERMODEOVERRIDE",
+        "buffer-mode-override",
+        0,
+        1,
+        2,
+        3,
+        4,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_buffer_mode_override({
+                .path = path,
+                .objects = objects,
+                .buffer_mode_override = value
+            });
+        });
+}
+
 void test_set_visual_object_scale_mode_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#892",
@@ -23251,6 +23274,7 @@ int main() {
     test_set_visual_object_draw_width_assigns_numeric_value();
     test_set_visual_object_fill_style_assigns_numeric_value();
     test_set_visual_object_buffer_mode_assigns_numeric_value();
+    test_set_visual_object_buffer_mode_override_assigns_numeric_value();
     test_set_visual_object_scale_mode_assigns_numeric_value();
     test_set_visual_object_scroll_bars_assigns_numeric_value();
     test_set_visual_object_window_state_assigns_numeric_value();

@@ -1006,6 +1006,12 @@ struct VisualObjectBufferModeRequest {
     int buffer_mode = 0;
 };
 
+struct VisualObjectBufferModeOverrideRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int buffer_mode_override = 0;
+};
+
 struct VisualObjectScaleModeRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1555,6 +1561,8 @@ VisualAssetEditResult set_visual_object_draw_style(const VisualObjectDrawStyleRe
 VisualAssetEditResult set_visual_object_draw_width(const VisualObjectDrawWidthRequest& request);
 VisualAssetEditResult set_visual_object_fill_style(const VisualObjectFillStyleRequest& request);
 VisualAssetEditResult set_visual_object_buffer_mode(const VisualObjectBufferModeRequest& request);
+VisualAssetEditResult set_visual_object_buffer_mode_override(
+    const VisualObjectBufferModeOverrideRequest& request);
 VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRequest& request);
 VisualAssetEditResult set_visual_object_scroll_bars(const VisualObjectScrollBarsRequest& request);
 VisualAssetEditResult set_visual_object_window_state(const VisualObjectWindowStateRequest& request);
