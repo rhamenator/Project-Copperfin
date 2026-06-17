@@ -443,6 +443,8 @@ void test_update_visual_object_property_rewrites_properties_memo() {
 
     const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
     expect(undo_result.ok, "undo_visual_object_property should revert memo-backed asset edits");
+    expect(undo_result.affected_object_count == 1U,
+        "#1008: successful visual property undo should report one affected object");
 
     const auto reverted_parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
     expect(reverted_parse_result.ok, "reverted synthetic SCX/SCT should remain readable");
@@ -457,6 +459,10 @@ void test_update_visual_object_property_rewrites_properties_memo() {
 
     const auto empty_undo_status = copperfin::vfp::query_visual_object_undo(table_path.string());
     expect(!empty_undo_status.available, "undo journal should be empty after undoing the only memo-backed edit");
+    const auto missing_undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
+    expect(!missing_undo_result.ok, "#1008: undo should fail when no visual asset undo history is available");
+    expect(missing_undo_result.affected_object_count == 0U,
+        "#1008: failed visual property undo should report zero affected objects");
 
     fs::remove_all(temp_dir, ignored);
 }

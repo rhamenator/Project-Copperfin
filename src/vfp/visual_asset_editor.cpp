@@ -8077,7 +8077,7 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
         std::filesystem::remove(visual_asset_undo_root_directory(path), error);
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
 }
 
 }  // namespace copperfin::vfp
