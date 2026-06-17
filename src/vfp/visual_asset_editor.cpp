@@ -5346,6 +5346,15 @@ VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipCont
         request.clip_controls ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_dockable(const VisualObjectDockableRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "Dockable",
+        "dockable",
+        request.dockable ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
