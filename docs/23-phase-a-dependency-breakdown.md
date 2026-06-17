@@ -8,12 +8,23 @@ It is intentionally narrower than the top-level roadmap:
 - granularity: command/function groups and runtime engine seams
 - purpose: preserve the historical dependency reasoning and identify the current prompt-sized continuation lane
 
+## Current Agent Directive
+
+This is the only actionable queue in this file as of 2026-06-17.
+
+- Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), or shared design-model lane (`#22`) unless fresh issue evidence shows a regression.
+- The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
+- Latest shipped E2 slice: `#1016`, which added report/label DataEnvironment context inference.
+- Next work: pick an open prompt-sized child under `#23`, or create one before coding if no suitable child exists.
+- Current preferred next child: toolbox-descriptor-driven visual object creation, so designer hosts can turn a selected toolbox item into a rollback-safe VFP visual-object create request.
+- Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
+
 ## Reading Notes
 
 - The Phase A percentages and dependency rows below are historical planning estimates. Do not use them as current completion metrics.
 - The dependency edges are pragmatic engineering dependencies, not strict architectural laws. They explain why the Phase A runtime/storage order was chosen.
 - The CPM section is historical closure evidence. It is not the current execution gate.
-- Current execution guidance lives in the "Current Active Queue" table under "Issue Hierarchy"; create or pick a prompt-sized child there before writing code.
+- Current execution guidance is summarized in "Current Agent Directive" and mirrored in the "Current Active Queue" table under "Issue Hierarchy"; create or pick a prompt-sized child there before writing code.
 
 ## Historical Phase A Areas
 
@@ -49,9 +60,9 @@ Phase A is closed. The rows below are retained only to explain the old dependenc
 | G17 | Automation object activation parity | `#10`, `#11` | 68% | `CREATEOBJECT()`, `GETOBJECT()`, `NEWOBJECT()` activation targeting and reuse | G5, G9, G15 | G18, later interop/runtime parity | The front door is materially deeper now; the remaining work is mostly containment and fault behavior. |
 | G18 | Automation property/method behavior and containment | `#10`, `#12` | 100% | OLE/COM property access, method invocation, automation-failure isolation | G17 | Phase A closure, later host safety work | Phase A closure criteria are met; remaining host-safety depth belongs to Phase B runtime-fault work. |
 
-## Dependency Table By Recommended Work Package
+## Historical Dependency Table By Recommended Work Package
 
-This is the actionable version of the graph. It groups the above command/function clusters into deliverable slices.
+This was the actionable version of the old Phase A graph. It is retained only as closure evidence and must not redirect agents away from the current E2/#23 queue.
 
 | WP | Work Package | Linked Issues | Duration (Weeks) | Primary Groups | Prerequisites | Expected Output |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -203,9 +214,9 @@ That sequence is slightly different from the raw dependency graph because it pri
 - highest fan-out prerequisites before local polish
 - near-complete lanes that can be closed cheaply once their upstream seams are stable
 
-## Gantt Chart
+## Historical Gantt Chart
 
-This is a planning schedule, not a delivery promise. It assumes focused sequential attention on the critical path with parallel work only where dependencies are already clean.
+This is a historical planning schedule, not a delivery promise or current queue. It is retained only to explain the old Phase A ordering.
 
 ```mermaid
 gantt
