@@ -21,6 +21,12 @@ This folder captures the current plan for a new platform that can:
 - add modern security, packaging, deployment, and observability
 - avoid direct reuse of FoxPro/VFP branding
 
+Interop maturity:
+
+- Version 1 is anchored on Visual FoxPro 9 compatibility. VFP 6, VFP 7, and VFP 8 assets may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate targets.
+- Current .NET support is an early modernization path, not a general managed-runtime surface: the build host can publish a generated C# launcher/stub that the native runtime pipeline starts as a child process, while generated C# transpilation output is only an emitted artifact today.
+- Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook. These capabilities should stay behind a user-selected modernization target until they are implemented and tested end-to-end.
+
 Why "Copperfin"?
 
 - `Copper` signals durable infrastructure, wiring, and business systems.

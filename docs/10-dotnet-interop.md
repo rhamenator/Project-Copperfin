@@ -9,6 +9,12 @@ Copperfin must fit into the .NET ecosystem well enough that teams can:
 - package Copperfin functionality as .NET-consumable outputs
 - modernize legacy systems without throwing away .NET investments
 
+Current maturity:
+
+- The implemented path is not yet a general managed-runtime execution surface. The build pipeline can generate a C# launcher/stub that is invoked as a child process by the native runtime pipeline in `src/runtime/runtime_pipeline.cpp`.
+- Generated C# transpilation output is currently an emitted artifact, not code executed by the runtime host.
+- Copperfin should expose .NET behavior only when a user explicitly chooses a modernization target that needs it, until CLR hosting, managed wrappers, and runtime invocation are implemented and tested as first-class surfaces.
+
 ## Why This Matters
 
 A plausible reason VFP became harder for Microsoft to justify was that it did not align cleanly with the company's 64-bit and .NET-centered strategic direction.

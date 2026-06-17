@@ -17,6 +17,12 @@ The trusted runtime, file engine, build pipeline, and security boundary stay nat
 
 Everything else must integrate through explicit, auditable boundaries.
 
+Current maturity:
+
+- .NET integration currently exists as an early generated-launcher path: the native runtime pipeline can spawn a generated C# stub as a child process, but generated C# transpilation output is not executed by the runtime host.
+- Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook today.
+- .NET, Python, R, and other polyglot features should require a user-selected modernization target before they are exposed as product capabilities.
+
 ## .NET Story
 
 This is the primary secondary ecosystem.

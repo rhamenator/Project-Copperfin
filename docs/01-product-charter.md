@@ -25,6 +25,10 @@ Implementation stance:
 - .NET compatibility is a product requirement, not an optional add-on
 - Rust is acceptable for selected subsystems where memory safety and performance both matter
 
+Version target:
+
+- Version 1 is tested as a Visual FoxPro 9-compatible target. VFP 6, VFP 7, and VFP 8 files may work through shared DBF/FPT/CDX/DBC readers, but they are best-effort and untested rather than separate compile-time targets. Copperfin should not expose a version-selection dial until the project intentionally funds and tests differentiated behavior.
+
 ## Problem
 
 Legacy FoxPro systems still run critical line-of-business workflows, but teams are boxed in by:
@@ -80,6 +84,7 @@ Language and framework choices should be judged against these, not the other way
 - pixel-perfect recreation of the original IDE shell
 - support for every third-party ActiveX control on day one
 - full cloud-native rewrite of every legacy app automatically
+- FoxBASE, FoxPro 1.x, and FoxPro 2.x binary-format support
 
 ## Success Criteria
 
@@ -92,6 +97,10 @@ Language and framework choices should be judged against these, not the other way
 - import or map common forms/reports/projects into a modern workspace
 - package apps without brittle shared-machine setup
 - enforce modern authn, authz, audit, secrets, and policy controls
+
+Interop maturity note:
+
+- Current .NET and polyglot capabilities are not blanket execution guarantees. The current .NET path can publish a generated C# launcher/stub that is invoked as a child process by the native runtime pipeline; generated C# transpilation output is an emitted artifact rather than code executed by the runtime host; Python support has no runtime hook today. Exposing .NET or polyglot behavior to users should require an explicit modernization target selection until those paths are implemented and tested as first-class runtime surfaces.
 
 ## Product Principles
 
