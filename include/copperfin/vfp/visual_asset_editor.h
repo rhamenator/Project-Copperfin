@@ -976,6 +976,12 @@ struct VisualObjectGridLineColorRequest {
     int grid_line_color = 0;
 };
 
+struct VisualObjectHeaderHeightRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    int header_height = 0;
+};
+
 struct VisualObjectSpecialEffectRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1574,6 +1580,7 @@ VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderSty
 VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWidthRequest& request);
 VisualAssetEditResult set_visual_object_border_color(const VisualObjectBorderColorRequest& request);
 VisualAssetEditResult set_visual_object_grid_line_color(const VisualObjectGridLineColorRequest& request);
+VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHeightRequest& request);
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request);
 VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureRequest& request);
 VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequest& request);

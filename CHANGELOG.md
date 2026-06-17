@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#918 selected visual object header-height assignment shipped: designer commands can assign caller-provided non-negative numeric `HeaderHeight` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#917 selected visual object grid-line-color assignment shipped: designer commands can assign caller-provided non-negative numeric `GridLineColor` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#916 selected visual object data-session assignment shipped: designer commands can assign caller-provided non-negative numeric `DataSession` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#915 selected visual object allow-output assignment shipped: designer commands can assign caller-provided logical `AllowOutput` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.

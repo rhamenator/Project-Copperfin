@@ -5743,6 +5743,19 @@ VisualAssetEditResult set_visual_object_grid_line_color(const VisualObjectGridLi
         std::to_string(request.grid_line_color));
 }
 
+VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHeightRequest& request) {
+    if (request.header_height < 0) {
+        return {.ok = false, .error = "HeaderHeight must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "HeaderHeight",
+        "header-height",
+        std::to_string(request.header_height));
+}
+
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
         return {.ok = false, .error = "SpecialEffect must not be negative."};
