@@ -105,6 +105,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.group_object, "#1030: launch contract should keep group-object off by default");
     expect(!result.request.align_object, "#1031: launch contract should keep align-object off by default");
     expect(!result.request.resize_object, "#1032: launch contract should keep resize-object off by default");
+    expect(!result.request.distribute_object, "#1033: launch contract should keep distribute-object off by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -823,6 +824,90 @@ void test_parse_launch_arguments_rejects_resize_object_ambiguity() {
     });
     expect(!stray_resize_result.ok,
         "#1032: launch contract should reject stray resize arguments");
+}
+
+void test_parse_launch_arguments_for_distribute_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--distribute-object",
+        "--distribution-mode", "horizontal",
+        "--distribute-target-object-name", "cmdLeft",
+        "--distribute-target-unique-id", "middle-guid",
+        "--distribute-target-object-name", "cmdRight"
+    });
+
+    expect(result.ok, "#1033: launch contract should parse distribute-object requests");
+    expect(result.request.distribute_object, "#1033: launch contract should detect --distribute-object");
+    expect(result.request.distribution_mode == "horizontal",
+        "#1033: distribute-object requests should carry distribution mode");
+    expect(result.request.distribute_objects.size() == 3U,
+        "#1033: distribute-object requests should collect distribution target selectors");
+    if (result.request.distribute_objects.size() == 3U) {
+        expect(result.request.distribute_objects[0].object_name == "cmdLeft" &&
+                result.request.distribute_objects[0].unique_id.empty(),
+            "#1033: distribute-object requests should parse target object-name selectors");
+        expect(result.request.distribute_objects[1].object_name.empty() &&
+                result.request.distribute_objects[1].unique_id == "middle-guid",
+            "#1033: distribute-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_distribute_object_invalid_inputs() {
+    const auto missing_mode_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--distribute-object",
+        "--distribute-target-unique-id", "left-guid",
+        "--distribute-target-unique-id", "middle-guid",
+        "--distribute-target-unique-id", "right-guid"
+    });
+    expect(!missing_mode_result.ok,
+        "#1033: launch contract should reject distribute-object requests without distribution mode");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--distribute-object",
+        "--distribution-mode", "horizontal"
+    });
+    expect(!missing_targets_result.ok,
+        "#1033: launch contract should reject distribute-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_distribute_object_ambiguity() {
+    const auto distribute_resize_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--distribute-object",
+        "--resize-object",
+        "--distribution-mode", "horizontal",
+        "--resize-mode", "width",
+        "--anchor-unique-id", "anchor-guid",
+        "--distribute-target-unique-id", "left-guid",
+        "--distribute-target-unique-id", "middle-guid",
+        "--distribute-target-unique-id", "right-guid",
+        "--resize-target-unique-id", "middle-guid"
+    });
+    expect(!distribute_resize_result.ok,
+        "#1033: launch contract should reject simultaneous distribute-object and resize-object requests");
+
+    const auto distribute_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--distribute-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--distribution-mode", "horizontal",
+        "--distribute-target-unique-id", "left-guid",
+        "--distribute-target-unique-id", "middle-guid",
+        "--distribute-target-unique-id", "right-guid"
+    });
+    expect(!distribute_property_result.ok,
+        "#1033: launch contract should reject distribute-object combined with property commands");
+
+    const auto stray_distribution_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--distribution-mode", "horizontal"
+    });
+    expect(!stray_distribution_result.ok,
+        "#1033: launch contract should reject stray distribution arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -2072,6 +2157,9 @@ int main() {
     test_parse_launch_arguments_for_resize_object();
     test_parse_launch_arguments_rejects_resize_object_invalid_inputs();
     test_parse_launch_arguments_rejects_resize_object_ambiguity();
+    test_parse_launch_arguments_for_distribute_object();
+    test_parse_launch_arguments_rejects_distribute_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_distribute_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

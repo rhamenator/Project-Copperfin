@@ -374,6 +374,26 @@ void write_synthetic_form_table_for_object_align(const std::filesystem::path& fo
     expect(create_result.ok, "#1031: synthetic SCX table for object alignment should be created");
 }
 
+void write_synthetic_form_table_for_object_distribute(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "WIDTH", .type = 'C', .length = 10U},
+        {.name = "HEIGHT", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdLeft", "cmdLeft", "left-guid", "10", "10", "20", "10"},
+        {"cmdMiddle", "cmdMiddle", "middle-guid", "90", "50", "20", "10"},
+        {"cmdRight", "cmdRight", "right-guid", "110", "90", "20", "10"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1033: synthetic SCX table for object distribution should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -2517,6 +2537,137 @@ void test_studio_host_json_resizes_objects_by_stable_selectors(const std::string
     }
 }
 
+void test_studio_host_json_distributes_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_distribute_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path distribute_path = temp_root / "distribute.scx";
+    write_synthetic_form_table_for_object_distribute(distribute_path);
+    const auto distribute_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", distribute_path.string(),
+            "--distribute-object",
+            "--distribution-mode", "horizontal",
+            "--distribute-target-object-name", "cmdLeft",
+            "--distribute-target-unique-id", "middle-guid",
+            "--distribute-target-object-name", "cmdRight",
+            "--json"
+        },
+        temp_root);
+    expect(distribute_process.exit_code == 0,
+        "#1033: host object distribution should exit successfully");
+    expect(visual_object_property(distribute_path, "left-guid", "HPOS") == "10" &&
+            visual_object_property(distribute_path, "middle-guid", "HPOS") == "60" &&
+            visual_object_property(distribute_path, "right-guid", "HPOS") == "110",
+        "#1033: host object distribution should evenly position the middle object");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_distribute(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--distribute-object",
+            "--distribution-mode", "horizontal",
+            "--distribute-target-unique-id", "left-guid",
+            "--distribute-target-unique-id", "missing-guid",
+            "--distribute-target-unique-id", "right-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1033: missing-target host object distribution should return command failure");
+    expect(visual_object_property(missing_target_path, "middle-guid", "HPOS") == "90",
+        "#1033: missing-target host object distribution should not mutate the asset");
+
+    const fs::path too_few_path = temp_root / "too_few.scx";
+    write_synthetic_form_table_for_object_distribute(too_few_path);
+    const auto too_few_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", too_few_path.string(),
+            "--distribute-object",
+            "--distribution-mode", "horizontal",
+            "--distribute-target-unique-id", "left-guid",
+            "--distribute-target-unique-id", "right-guid",
+            "--json"
+        },
+        temp_root);
+    expect(too_few_process.exit_code == 4,
+        "#1033: too-few-target host object distribution should return command failure");
+    expect(visual_object_property(too_few_path, "middle-guid", "HPOS") == "90",
+        "#1033: too-few-target host object distribution should not mutate the asset");
+
+    const fs::path missing_mode_path = temp_root / "missing_mode.scx";
+    write_synthetic_form_table_for_object_distribute(missing_mode_path);
+    const auto missing_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_mode_path.string(),
+            "--distribute-object",
+            "--distribute-target-unique-id", "left-guid",
+            "--distribute-target-unique-id", "middle-guid",
+            "--distribute-target-unique-id", "right-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_mode_process.exit_code == 2,
+        "#1033: distribute-object without distribution mode should fail during launch parsing");
+    expect(visual_object_property(missing_mode_path, "middle-guid", "HPOS") == "90",
+        "#1033: distribute-object without distribution mode should not mutate the asset");
+
+    const fs::path unsupported_mode_path = temp_root / "unsupported_mode.scx";
+    write_synthetic_form_table_for_object_distribute(unsupported_mode_path);
+    const auto unsupported_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unsupported_mode_path.string(),
+            "--distribute-object",
+            "--distribution-mode", "diagonal",
+            "--distribute-target-unique-id", "left-guid",
+            "--distribute-target-unique-id", "middle-guid",
+            "--distribute-target-unique-id", "right-guid",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_mode_process.exit_code == 4,
+        "#1033: unsupported-mode host object distribution should return command failure");
+    expect(visual_object_property(unsupported_mode_path, "middle-guid", "HPOS") == "90",
+        "#1033: unsupported-mode host object distribution should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_distribute(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--distribute-object",
+            "--resize-object",
+            "--distribution-mode", "horizontal",
+            "--resize-mode", "width",
+            "--anchor-unique-id", "left-guid",
+            "--distribute-target-unique-id", "left-guid",
+            "--distribute-target-unique-id", "middle-guid",
+            "--distribute-target-unique-id", "right-guid",
+            "--resize-target-unique-id", "middle-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1033: distribute-object plus resize-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "middle-guid", "HPOS") == "90",
+        "#1033: distribute-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -2658,6 +2809,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
     test_studio_host_json_aligns_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_resizes_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_distributes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
