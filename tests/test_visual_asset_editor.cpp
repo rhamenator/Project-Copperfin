@@ -3146,6 +3146,8 @@ void test_set_visual_object_deleted_state_targets_selected_object() {
         .deleted = true
     });
     expect(delete_result.ok, "#741: visual object deleted-state edits should support UNIQUEID selection");
+    expect(delete_result.affected_object_count == 1U,
+        "#1006: successful deleted-state edit should report one affected object");
 
     auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
     expect(parse_result.ok, "#741: deleted-state fixture should remain readable after delete");
@@ -3181,6 +3183,8 @@ void test_set_visual_object_deleted_state_targets_selected_object() {
         .deleted = false
     });
     expect(restore_result.ok, "#741: visual object deleted-state edits should support object-name restore");
+    expect(restore_result.affected_object_count == 1U,
+        "#1006: successful deleted-state restore should report one affected object");
 
     parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
     expect(parse_result.ok, "#741: deleted-state fixture should remain readable after restore");
@@ -3216,6 +3220,8 @@ void test_set_visual_object_deleted_state_targets_selected_object() {
         .deleted = true
     });
     expect(!delete_result.ok, "#741: missing selected objects should not mutate deleted state");
+    expect(delete_result.affected_object_count == 0U,
+        "#1006: failed deleted-state edit should report zero affected objects");
 
     parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
     expect(parse_result.ok, "#741: deleted-state fixture should remain readable after failed selection");
@@ -7390,6 +7396,8 @@ void test_reparent_visual_object_updates_container_parent() {
         .clear_parent = false
     });
     expect(reparent_result.ok, "#751: reparent should support UNIQUEID source and object-name parent selection");
+    expect(reparent_result.affected_object_count == 1U,
+        "#1006: successful reparent should report one affected object");
 
     auto parent_result = copperfin::vfp::query_visual_object_property({
         .path = table_path.string(),
@@ -7484,6 +7492,8 @@ void test_reparent_visual_object_updates_container_parent() {
         .clear_parent = false
     });
     expect(!reparent_result.ok, "#751: reparent should reject self-parenting");
+    expect(reparent_result.affected_object_count == 0U,
+        "#1006: failed reparent should report zero affected objects");
 
     reparent_result = copperfin::vfp::reparent_visual_object({
         .path = table_path.string(),
@@ -7578,6 +7588,8 @@ void test_reparent_visual_objects_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#781: batch reparent should support mixed selectors, parent names, parent UNIQUEIDs, and clear-parent operations");
+    expect(batch_result.affected_object_count == 3U,
+        "#1006: successful batch reparent should report affected item count");
 
     auto save_parent = parent_state("save-guid");
     auto name_parent = parent_state("name-guid");
@@ -7615,6 +7627,8 @@ void test_reparent_visual_objects_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#781: batch reparent should reject missing parent selectors");
+    expect(batch_result.affected_object_count == 0U,
+        "#1006: failed batch reparent should report zero affected objects");
     save_parent = parent_state("save-guid");
     name_parent = parent_state("name-guid");
     expect(save_parent.ok && save_parent.value == "cntMain" &&
@@ -7685,6 +7699,8 @@ void test_reparent_visual_objects_rolls_back_failed_batches() {
         .objects = {}
     });
     expect(!batch_result.ok, "#781: empty batch reparent requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1006: empty batch reparent should report zero affected objects");
 
     for (int index = 0; index < 3; ++index) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
@@ -22247,6 +22263,8 @@ void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
         }
     });
     expect(batch_result.ok, "#753: batch deleted-state changes should support mixed selector modes");
+    expect(batch_result.affected_object_count == 2U,
+        "#1006: successful batch deleted-state change should report changed item count");
     expect(is_deleted("save-guid") && is_deleted("name-guid"),
         "#753: batch deleted-state changes should mark multiple selected objects deleted");
     expect(!is_deleted("status-guid"),
@@ -22292,6 +22310,8 @@ void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
     });
     expect(!batch_result.ok,
         "#753: batch deleted-state changes should reject ambiguous later selections");
+    expect(batch_result.affected_object_count == 0U,
+        "#1006: failed batch deleted-state change should report zero affected objects");
     expect(!is_deleted("status-guid") && !is_deleted("dup-one-guid") && !is_deleted("dup-two-guid"),
         "#753: failed batch deleted-state changes should roll back earlier flag mutations");
 
@@ -22300,6 +22320,8 @@ void test_set_visual_object_deleted_states_rolls_back_batch_failures() {
         .objects = {}
     });
     expect(!batch_result.ok, "#753: empty batch deleted-state requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1006: empty batch deleted-state change should report zero affected objects");
     expect(!is_deleted("save-guid") && !is_deleted("name-guid") && !is_deleted("status-guid"),
         "#753: empty batch deleted-state requests should not mutate existing flags");
 
@@ -22351,6 +22373,8 @@ void test_rename_visual_object_updates_identity_safely() {
         .new_unique_id = "commit-guid"
     });
     expect(rename_result.ok, "#754: rename should update selected object identity fields together");
+    expect(rename_result.affected_object_count == 1U,
+        "#1006: successful object rename should report one affected object");
 
     auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok && list_result.objects.size() == 3U,
@@ -22390,6 +22414,8 @@ void test_rename_visual_object_updates_identity_safely() {
     });
     expect(!rename_result.ok,
         "#754: rename should reject identity collisions with deleted rows");
+    expect(rename_result.affected_object_count == 0U,
+        "#1006: failed object rename should report zero affected objects");
 
     rename_result = copperfin::vfp::rename_visual_object({
         .path = table_path.string(),
@@ -22515,6 +22541,8 @@ void test_rename_visual_objects_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#782: batch rename should support mixed selectors and OBJNAME/NAME/UNIQUEID updates");
+    expect(batch_result.affected_object_count == 3U,
+        "#1006: successful batch object rename should report affected item count");
     expect(property_value("commit-guid", "OBJNAME") == "cmdCommit" &&
             property_value("commit-guid", "NAME") == "commitButton" &&
             property_value("name-entry-guid", "NAME") == "nameEntry" &&
@@ -22631,6 +22659,8 @@ void test_rename_visual_objects_rolls_back_failed_batches() {
         .objects = {}
     });
     expect(!batch_result.ok, "#782: empty batch rename requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1006: empty batch object rename should report zero affected objects");
 
     for (int index = 0; index < 6; ++index) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
@@ -22705,6 +22735,8 @@ void test_reorder_visual_object_updates_z_order() {
         .target_unique_id = {}
     });
     expect(reorder_result.ok, "#755: reorder should support front placement by UNIQUEID");
+    expect(reorder_result.affected_object_count == 1U,
+        "#1006: successful object reorder should report one affected object");
     expect(order_string() == "c-guid*,a-guid,b-guid,d-guid",
         "#755: front placement should move the selected record to the front and preserve deleted flags");
 
@@ -22767,6 +22799,8 @@ void test_reorder_visual_object_updates_z_order() {
         .target_unique_id = "b-guid"
     });
     expect(!reorder_result.ok, "#755: reorder should reject self-targeted relative moves");
+    expect(reorder_result.affected_object_count == 0U,
+        "#1006: failed object reorder should report zero affected objects");
 
     reorder_result = copperfin::vfp::reorder_visual_object({
         .path = table_path.string(),
@@ -22850,6 +22884,8 @@ void test_reorder_visual_objects_rolls_back_failed_batches() {
         .objects = {}
     });
     expect(!batch_result.ok, "#783: batch reorder should reject empty operation sets");
+    expect(batch_result.affected_object_count == 0U,
+        "#1006: empty batch object reorder should report zero affected objects");
     expect(order_string() == original_order, "#783: empty batch failures should not mutate record order");
 
     batch_result = copperfin::vfp::reorder_visual_objects({
@@ -22891,6 +22927,8 @@ void test_reorder_visual_objects_rolls_back_failed_batches() {
     });
     expect(batch_result.ok,
         "#783: batch reorder should support mixed source selectors and front/back/before/after placements");
+    expect(batch_result.affected_object_count == 4U,
+        "#1006: successful batch object reorder should report affected item count");
     expect(order_string() == "d-guid,e-guid,c-guid*,a-guid,b-guid",
         "#783: batch reorder should apply operations against the evolving row order and preserve deleted flags");
 
@@ -22927,6 +22965,8 @@ void test_reorder_visual_objects_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#783: batch reorder should reject missing target selectors");
+    expect(batch_result.affected_object_count == 0U,
+        "#1006: failed batch object reorder should report zero affected objects");
     expect(order_string() == committed_order,
         "#783: missing-target failures should roll back earlier batch order changes");
 
@@ -23271,6 +23311,8 @@ void test_set_visual_object_subtree_deleted_state_updates_descendants() {
         .deleted = true
     });
     expect(subtree_result.ok, "#758: subtree deleted-state changes should support UNIQUEID source selection");
+    expect(subtree_result.affected_object_count == 3U,
+        "#1006: subtree delete should report root plus changed descendant count");
     expect(is_deleted("container-guid") &&
             is_deleted("save-guid") &&
             is_deleted("name-guid") &&
@@ -23287,6 +23329,8 @@ void test_set_visual_object_subtree_deleted_state_updates_descendants() {
         .deleted = false
     });
     expect(subtree_result.ok, "#758: subtree deleted-state changes should support object-name source selection");
+    expect(subtree_result.affected_object_count == 4U,
+        "#1006: subtree restore should report root plus descendant count");
     expect(!is_deleted("container-guid") &&
             !is_deleted("save-guid") &&
             !is_deleted("name-guid") &&
@@ -23301,6 +23345,8 @@ void test_set_visual_object_subtree_deleted_state_updates_descendants() {
         .deleted = true
     });
     expect(!subtree_result.ok, "#758: subtree delete should fail explicitly for missing source selections");
+    expect(subtree_result.affected_object_count == 0U,
+        "#1006: failed subtree delete should report zero affected objects");
 
     subtree_result = copperfin::vfp::set_visual_object_subtree_deleted_state({
         .path = table_path.string(),

@@ -7420,7 +7420,7 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
         }
     }
 
-    return update_visual_object_property({
+    auto reparent_result = update_visual_object_property({
         .path = request.path,
         .record_index = source_record_index,
         .object_name = {},
@@ -7428,6 +7428,10 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
         .property_name = "PARENT",
         .property_value = parent_name
     });
+    if (reparent_result.ok) {
+        reparent_result.affected_object_count = 1U;
+    }
+    return reparent_result;
 }
 
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request) {
@@ -7471,7 +7475,7 @@ VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchReq
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};
 }
 
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request) {
@@ -7554,13 +7558,17 @@ VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& requ
         changes.push_back({.property_name = "UNIQUEID", .property_value = request.new_unique_id});
     }
 
-    return update_visual_object_properties({
+    auto rename_result = update_visual_object_properties({
         .path = request.path,
         .record_index = record_index,
         .object_name = {},
         .unique_id = {},
         .properties = changes
     });
+    if (rename_result.ok) {
+        rename_result.affected_object_count = 1U;
+    }
+    return rename_result;
 }
 
 VisualAssetEditResult rename_visual_objects(const VisualObjectRenameBatchRequest& request) {
@@ -7607,7 +7615,7 @@ VisualAssetEditResult rename_visual_objects(const VisualObjectRenameBatchRequest
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};
 }
 
 VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& request) {
@@ -7727,7 +7735,7 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
 }
 
 VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchRequest& request) {
@@ -7782,7 +7790,7 @@ VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchReque
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.objects.size()};
 }
 
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {
@@ -7808,7 +7816,7 @@ VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedS
         return {.ok = false, .error = result.error};
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
 }
 
 VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeletedStateBatchRequest& request) {
@@ -7890,7 +7898,7 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
         applied.push_back({.record_index = record_index, .prior_deleted = prior_deleted});
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = applied.size()};
 }
 
 VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObjectSubtreeDeletedStateRequest& request) {
