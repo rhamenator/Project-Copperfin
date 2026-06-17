@@ -5846,6 +5846,19 @@ VisualAssetEditResult set_visual_object_highlight_row_line_width(
         std::to_string(request.highlight_row_line_width));
 }
 
+VisualAssetEditResult set_visual_object_highlight_style(const VisualObjectHighlightStyleRequest& request) {
+    if (request.highlight_style < 0) {
+        return {.ok = false, .error = "HighlightStyle must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "HighlightStyle",
+        "highlight-style",
+        std::to_string(request.highlight_style));
+}
+
 VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHeightRequest& request) {
     if (request.header_height < 0) {
         return {.ok = false, .error = "HeaderHeight must not be negative."};

@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#937 selected visual object highlight-style assignment shipped: designer commands can assign caller-provided non-negative numeric `HighlightStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#936 selected visual object column-order assignment shipped: designer commands can assign caller-provided non-negative numeric `ColumnOrder` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#935 selected visual object allow-row-sizing assignment shipped: designer commands can assign caller-provided FoxPro logical `AllowRowSizing` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#934 selected visual object allow-header-sizing assignment shipped: designer commands can assign caller-provided FoxPro logical `AllowHeaderSizing` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
