@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#928 selected visual object highlight-row-line-width assignment shipped: designer commands can assign caller-provided non-negative numeric `HighlightRowLineWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#927 selected visual object highlight-row assignment shipped: designer commands can assign caller-provided FoxPro logical `HighlightRow` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#926 selected visual object split-bar assignment shipped: designer commands can assign caller-provided FoxPro logical `SplitBar` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#925 selected visual object record-mark assignment shipped: designer commands can assign caller-provided FoxPro logical `RecordMark` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
