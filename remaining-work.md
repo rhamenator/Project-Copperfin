@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-17: E2/#1017 toolbox descriptor visual creation is now shipped. Studio now exposes `create_visual_object_from_toolbox_item`, which resolves toolbox palette item metadata into rollback-safe `create_visual_object` requests with generated default names that avoid existing OBJNAME/NAME collisions, descriptor class/baseclass fields, optional unique id/parent metadata, caller-provided extra fields, and clean unknown-toolbox failures without mutating the asset.
 - 2026-06-17: E2/#1016 report/label DataEnvironment context inference is now shipped. DataEnvironment symbols and selected DataEnvironment records now infer `data_environment` for FRX/LBX assets as well as forms/classes, while report/label expression defaults and explicit override precedence remain intact.
 - 2026-06-17: E2/#1015 selected visual container context inference is now shipped. Form/class launches that select container-like records such as PageFrame or Grid now infer `container_object` when no explicit context override is present, while DataEnvironment and explicit override precedence remain intact.
 - 2026-06-17: E2/#1014 explicit container designer selection context is now shipped. Explicit Studio launches can request `container_object`, which exposes property-grid, method-editor, control/grid builders, and container-safe toolbox metadata without inheriting form/class/report/menu/project/data-environment builders.

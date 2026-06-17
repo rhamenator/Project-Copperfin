@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1017 toolbox descriptor visual creation shipped: Studio now exposes `create_visual_object_from_toolbox_item`, resolving toolbox palette metadata into rollback-safe VFP visual-object create requests with default name generation, descriptor class/baseclass mapping, parent/identity propagation, extra field values, and clean unknown-toolbox failures without mutation.
 - Dependency guidance refresh shipped: `docs/23-phase-a-dependency-breakdown.md` now puts the live E2/#23 agent directive ahead of historical Phase A planning content and explicitly marks the old Phase A work-package and Gantt sections as non-actionable closure evidence.
 - E2/#1016 report/label DataEnvironment context inference shipped: DataEnvironment symbols and selected DataEnvironment records now infer `data_environment` for FRX/LBX assets as well as forms/classes, while report/label expression defaults and explicit override precedence remain intact.
 - E2/#1015 selected visual container context inference shipped: form/class launches that select container-like records such as PageFrame or Grid now infer `container_object` when no explicit context override is present, with DataEnvironment and explicit override precedence preserved.

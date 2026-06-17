@@ -14,9 +14,8 @@ This is the only actionable queue in this file as of 2026-06-17.
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), or shared design-model lane (`#22`) unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest shipped E2 slice: `#1016`, which added report/label DataEnvironment context inference.
+- Latest shipped E2 slice: `#1017`, which added toolbox-descriptor-driven visual object creation.
 - Next work: pick an open prompt-sized child under `#23`, or create one before coding if no suitable child exists.
-- Current preferred next child: toolbox-descriptor-driven visual object creation, so designer hosts can turn a selected toolbox item into a rollback-safe VFP visual-object create request.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
 
 ## Reading Notes
@@ -355,7 +354,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#23` | open next child | continue designer interaction, builder, and context-aware editor fidelity after `#1016` |
+| `#23` | open next child | continue designer interaction, builder, and context-aware editor fidelity after `#1017` |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -372,7 +371,7 @@ Historical-closed prompt-sized native slice queues:
 Adjacent prompt-sized native slice queues:
 
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
-- `#23`: `#1016` is shipped; continue by opening the next prompt-sized designer interaction/builder/context-aware editor child if no open child remains
+- `#23`: `#1017` is shipped; continue by opening the next prompt-sized designer interaction/builder/context-aware editor child if no open child remains
 - broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
 Historical post-D1 execution order through the current E2 queue:
@@ -739,6 +738,7 @@ The numbered list below is retained as closure evidence for the completed D1/E1 
 358. `#1014`
 359. `#1015`
 360. `#1016`
+361. `#1017`
 
 Execution guardrails:
 
