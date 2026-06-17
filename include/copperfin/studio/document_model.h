@@ -173,6 +173,7 @@ struct StudioOpenRequest {
     bool continuous_scroll_object = false;
     bool dockable_object = false;
     bool clip_controls_object = false;
+    bool sparse_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -227,6 +228,7 @@ struct StudioOpenRequest {
     bool continuous_scroll_available = false;
     bool dockable_available = false;
     bool clip_controls_available = false;
+    bool sparse_available = false;
     bool closable = false;
     bool control_box = false;
     bool allow_output = false;
@@ -236,6 +238,7 @@ struct StudioOpenRequest {
     bool continuous_scroll = false;
     bool dockable = false;
     bool clip_controls = false;
+    bool sparse = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -291,6 +294,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> continuous_scroll_objects{};
     std::vector<StudioObjectSelector> dockable_objects{};
     std::vector<StudioObjectSelector> clip_controls_objects{};
+    std::vector<StudioObjectSelector> sparse_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
