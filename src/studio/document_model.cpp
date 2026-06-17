@@ -195,10 +195,15 @@ std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(Stud
                 })
             };
         case StudioAssetKind::report:
-        case StudioAssetKind::label:
             return {
                 studio_designer_context_for_selection({
                     .selection_context = StudioEditorSelectionContext::report_expression
+                })
+            };
+        case StudioAssetKind::label:
+            return {
+                studio_designer_context_for_selection({
+                    .selection_context = StudioEditorSelectionContext::label_expression
                 })
             };
         case StudioAssetKind::project:

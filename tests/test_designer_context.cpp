@@ -74,6 +74,24 @@ int main() {
                report_context.toolbox_item_count == report_context.toolbox_items.size(),
            "#1009: report context should report counts from filtered descriptor vectors");
 
+    const auto label_context = copperfin::studio::studio_designer_context_for_selection({
+        .selection_context = StudioEditorSelectionContext::label_expression
+    });
+    expect(label_context.selection_context == StudioEditorSelectionContext::label_expression,
+           "#1011: label context result should preserve the requested selection context");
+    expect(has_id(label_context.editor_actions, "edit-report-expression"),
+           "#1011: label context should include shared expression editor action");
+    expect(has_id(label_context.builders, "label-wizard"),
+           "#1011: label context should include label wizard");
+    expect(!has_id(label_context.builders, "report-builder"),
+           "#1011: label context should not reuse report builder metadata");
+    expect(has_id(label_context.toolbox_items, "label"),
+           "#1011: label context should include report-safe Label toolbox item");
+    expect(label_context.builder_count == 1U &&
+               label_context.editor_action_count == label_context.editor_actions.size() &&
+               label_context.toolbox_item_count == label_context.toolbox_items.size(),
+           "#1011: label context should report filtered descriptor counts");
+
     const auto visual_method_context = copperfin::studio::studio_designer_context_for_selection({
         .selection_context = StudioEditorSelectionContext::visual_method
     });

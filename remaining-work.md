@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-17: E2/#1011 explicit label designer selection context is now shipped. LBX/LBT documents default to `label_expression`, explicit launch parsing accepts the token, and label contexts expose shared expression editing, report-safe toolbox items, and `label-wizard` metadata without reusing report-builder metadata.
 - 2026-06-17: E2/#1010 form-builder visual context exposure is now shipped. Visual-object designer contexts now include the VFP-compatible `form-builder` before existing control/grid builders, while visual-method contexts retain the narrower control-builder list.
 - 2026-06-17: E2/#1009 designer context count metadata is now shipped. Designer-context results and Studio host JSON expose editor-action, builder, and toolbox-item counts derived from the same filtered descriptor vectors used for context menus and panes.
 - 2026-06-17: E2/#1008 visual property undo affected-count reporting is now shipped. Successful `undo_visual_object_property` calls report one affected object/property operation, while missing-history failures report zero and retain existing undo journal behavior.

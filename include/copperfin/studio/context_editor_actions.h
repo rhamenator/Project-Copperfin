@@ -9,6 +9,7 @@ enum class StudioEditorSelectionContext {
     visual_object,
     visual_method,
     report_expression,
+    label_expression,
     project_item,
     data_environment
 };

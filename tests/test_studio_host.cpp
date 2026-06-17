@@ -77,6 +77,7 @@ void test_parse_launch_arguments() {
         "--symbol", "cmdSave.Click",
         "--selection-context", "visual_method",
         "--selection-context", "report_expression",
+        "--selection-context", "label_expression",
         "--undo-mode", "command",
         "--undo-label", "Bulk Undo"
     });
@@ -94,13 +95,15 @@ void test_parse_launch_arguments() {
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");
-    expect(result.request.designer_selection_contexts.size() == 2U,
+    expect(result.request.designer_selection_contexts.size() == 3U,
            "#962: launch contract should collect explicit selection-context tokens");
-    if (result.request.designer_selection_contexts.size() == 2U) {
+    if (result.request.designer_selection_contexts.size() == 3U) {
         expect(result.request.designer_selection_contexts[0] == copperfin::studio::StudioEditorSelectionContext::visual_method,
                "#962: launch contract should parse visual_method selection-context tokens");
         expect(result.request.designer_selection_contexts[1] == copperfin::studio::StudioEditorSelectionContext::report_expression,
                "#962: launch contract should parse report_expression selection-context tokens");
+        expect(result.request.designer_selection_contexts[2] == copperfin::studio::StudioEditorSelectionContext::label_expression,
+               "#1011: launch contract should parse label_expression selection-context tokens");
     }
     expect(result.request.undo_mode == copperfin::studio::StudioUndoMode::command, "launch contract should parse the undo mode");
     expect(result.request.undo_label == "Bulk Undo", "launch contract should parse the undo label");
@@ -400,6 +403,26 @@ void test_open_document_attaches_default_designer_contexts() {
                "#960: report designer context should include report-safe toolbox items");
         expect(!has_descriptor_id(context.toolbox_items, "textbox"),
                "#960: report designer context should exclude form-only toolbox items");
+    }
+
+    const auto label_result = copperfin::studio::open_document({
+        .path = write_synthetic_asset("mailing.lbx").string()
+    });
+    expect(label_result.ok, "#1011: synthetic label should open for designer-context checks");
+    expect(label_result.document.designer_contexts.size() == 1U,
+           "#1011: label documents should expose one default designer context");
+    if (!label_result.document.designer_contexts.empty()) {
+        const auto& context = label_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::label_expression,
+               "#1011: label documents should expose the label-expression designer context");
+        expect(has_descriptor_id(context.editor_actions, "edit-report-expression"),
+               "#1011: label designer context should include expression editor actions");
+        expect(has_descriptor_id(context.builders, "label-wizard"),
+               "#1011: label designer context should include label wizard builders");
+        expect(!has_descriptor_id(context.builders, "report-builder"),
+               "#1011: label designer context should not reuse report builders");
+        expect(has_descriptor_id(context.toolbox_items, "label"),
+               "#1011: label designer context should include report-safe toolbox items");
     }
 
     const auto project_result = copperfin::studio::open_document({

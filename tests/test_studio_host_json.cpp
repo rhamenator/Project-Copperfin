@@ -214,6 +214,51 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(override_process.stdout_text, "\"selectionContext\": \"visual_object\"",
                         "#962: explicit selection contexts should override the form default selection context");
 
+    const auto label_override_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--selection-context", "label_expression", "--json"},
+        temp_root);
+
+    if (label_override_process.exit_code != 0) {
+        std::cerr << "studio host label override stdout:\n" << label_override_process.stdout_text << "\n";
+        std::cerr << "studio host label override stderr:\n" << label_override_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(label_override_process.exit_code == 0,
+           "#1011: Studio host explicit label context JSON smoke should exit successfully");
+    expect_contains(label_override_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+                    "#1011: explicit label_expression selection contexts should serialize through host JSON");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"label-wizard\"",
+                    "#1011: explicit label_expression contexts should expose label wizard builders");
+    expect_not_contains(label_override_process.stdout_text, "\"id\": \"report-builder\"",
+                        "#1011: explicit label_expression contexts should not reuse report builders");
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_form_asset(label_path);
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--json"},
+        temp_root);
+
+    if (label_process.exit_code != 0) {
+        std::cerr << "studio host label stdout:\n" << label_process.stdout_text << "\n";
+        std::cerr << "studio host label stderr:\n" << label_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(label_process.exit_code == 0, "#1011: Studio host label JSON smoke should exit successfully");
+    expect_contains(label_process.stdout_text, "\"kind\": \"label\"",
+                    "#1011: label JSON should preserve label document kind");
+    expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+                    "#1011: label documents should default to label-expression JSON contexts");
+    expect_contains(label_process.stdout_text, "\"builderCount\": 1",
+                    "#1011: label JSON should expose label builder count");
+    expect_contains(label_process.stdout_text, "\"id\": \"label-wizard\"",
+                    "#1011: label JSON should expose label wizard builder ids");
+    expect_not_contains(label_process.stdout_text, "\"id\": \"report-builder\"",
+                        "#1011: label JSON should not expose report builder ids");
+
     const auto symbol_process = run_process_capture(
         studio_host_path,
         {

@@ -20,6 +20,8 @@ const char* studio_editor_selection_context_name(StudioEditorSelectionContext co
             return "visual_method";
         case StudioEditorSelectionContext::report_expression:
             return "report_expression";
+        case StudioEditorSelectionContext::label_expression:
+            return "label_expression";
         case StudioEditorSelectionContext::project_item:
             return "project_item";
         case StudioEditorSelectionContext::data_environment:
@@ -55,7 +57,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .id = "show-property-grid",
             .label = "Properties",
             .kind = Kind::property_grid,
-            .contexts = {Context::visual_object, Context::report_expression, Context::project_item},
+            .contexts = {Context::visual_object, Context::report_expression, Context::label_expression, Context::project_item},
             .command_token = "studio.property_grid.show",
             .target_surface = "property-grid",
             .description = "Show the selected object's direct and memo-backed VFP properties."
@@ -73,7 +75,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .id = "edit-report-expression",
             .label = "Edit Expression",
             .kind = Kind::expression_editor,
-            .contexts = {Context::report_expression},
+            .contexts = {Context::report_expression, Context::label_expression},
             .command_token = "studio.expression_editor.open",
             .target_surface = "expression-editor",
             .description = "Open FRX/LBX expression text with report/label source provenance."
@@ -85,6 +87,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .contexts = {
                 Context::visual_object,
                 Context::report_expression,
+                Context::label_expression,
                 Context::project_item,
                 Context::data_environment
             },
@@ -96,7 +99,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .id = "show-toolbox",
             .label = "Toolbox",
             .kind = Kind::toolbox,
-            .contexts = {Context::visual_object, Context::report_expression},
+            .contexts = {Context::visual_object, Context::report_expression, Context::label_expression},
             .command_token = "studio.toolbox.show_for_context",
             .target_surface = "toolbox-palette",
             .description = "Show toolbox items relevant to the active visual designer context."
@@ -105,7 +108,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .id = "edit-data-environment",
             .label = "Data Environment",
             .kind = Kind::builder,
-            .contexts = {Context::visual_object, Context::report_expression, Context::data_environment},
+            .contexts = {Context::visual_object, Context::report_expression, Context::label_expression, Context::data_environment},
             .command_token = "studio.data_environment.open",
             .target_surface = "data-environment",
             .description = "Open data-environment bindings for forms, reports, and selected data-context entries."

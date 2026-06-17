@@ -40,6 +40,9 @@ int main() {
     expect(std::string(copperfin::studio::studio_editor_selection_context_name(
                StudioEditorSelectionContext::report_expression)) == "report_expression",
            "#958: report-expression context token should be stable");
+    expect(std::string(copperfin::studio::studio_editor_selection_context_name(
+               StudioEditorSelectionContext::label_expression)) == "label_expression",
+           "#1011: label-expression context token should be stable");
     expect(std::string(copperfin::studio::studio_editor_action_kind_name(
                StudioEditorActionKind::expression_editor)) == "expression_editor",
            "#958: expression-editor action token should be stable");
@@ -100,6 +103,15 @@ int main() {
     expect(has_action(report_actions, "open-builder"), "#958: report-expression context should expose builders");
     expect(!has_action(report_actions, "edit-visual-method"),
            "#958: report-expression context should exclude method editor");
+
+    const auto label_actions = copperfin::studio::studio_editor_actions_for_context(
+        StudioEditorSelectionContext::label_expression);
+    expect(has_action(label_actions, "edit-report-expression"),
+           "#1011: label-expression context should expose expression editor");
+    expect(has_action(label_actions, "open-builder"), "#1011: label-expression context should expose builders");
+    expect(has_action(label_actions, "show-toolbox"), "#1011: label-expression context should expose report-safe toolbox");
+    expect(!has_action(label_actions, "edit-visual-method"),
+           "#1011: label-expression context should exclude method editor");
 
     const auto project_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::project_item);
