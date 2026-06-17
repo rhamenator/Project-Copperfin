@@ -868,6 +868,12 @@ struct VisualObjectListItemIdRequest {
     int list_item_id = 0;
 };
 
+struct VisualObjectLockScreenRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool lock_screen = false;
+};
+
 struct VisualObjectHideSelectionRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1741,6 +1747,7 @@ VisualAssetEditResult set_visual_object_help_context_id(const VisualObjectHelpCo
 VisualAssetEditResult set_visual_object_display_orientation(const VisualObjectDisplayOrientationRequest& request);
 VisualAssetEditResult set_visual_object_tab_orientation(const VisualObjectTabOrientationRequest& request);
 VisualAssetEditResult set_visual_object_list_item_id(const VisualObjectListItemIdRequest& request);
+VisualAssetEditResult set_visual_object_lock_screen(const VisualObjectLockScreenRequest& request);
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request);
 VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectAllowCellSelectionRequest& request);
 VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMarkRequest& request);

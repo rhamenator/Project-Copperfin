@@ -11436,6 +11436,24 @@ void test_set_visual_object_list_item_id_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_lock_screen_assigns_logical_state() {
+    test_visual_object_logical_property_assigns_state(
+        "#949",
+        "lock_screen",
+        "LockScreen",
+        "LOCKSCREEN",
+        "lock-screen",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            bool value) {
+            return copperfin::vfp::set_visual_object_lock_screen({
+                .path = path,
+                .objects = objects,
+                .lock_screen = value
+            });
+        });
+}
+
 void test_set_visual_object_hide_selection_assigns_logical_state() {
     test_visual_object_logical_property_assigns_state(
         "#877",
@@ -23988,6 +24006,7 @@ int main() {
     test_set_visual_object_display_orientation_assigns_numeric_value();
     test_set_visual_object_tab_orientation_assigns_numeric_value();
     test_set_visual_object_list_item_id_assigns_numeric_value();
+    test_set_visual_object_lock_screen_assigns_logical_state();
     test_set_visual_object_hide_selection_assigns_logical_state();
     test_set_visual_object_allow_cell_selection_assigns_logical_state();
     test_set_visual_object_delete_mark_assigns_logical_state();

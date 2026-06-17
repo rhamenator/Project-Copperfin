@@ -5556,6 +5556,15 @@ VisualAssetEditResult set_visual_object_list_item_id(const VisualObjectListItemI
         std::to_string(request.list_item_id));
 }
 
+VisualAssetEditResult set_visual_object_lock_screen(const VisualObjectLockScreenRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "LockScreen",
+        "lock-screen",
+        request.lock_screen ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSelectionRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

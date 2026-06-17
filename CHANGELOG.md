@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#949 selected visual object lock-screen assignment shipped: designer commands can assign caller-provided FoxPro logical `LockScreen` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving `.T.`/`.F.` serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#948 selected visual object left-column assignment shipped: designer commands can assign caller-provided non-negative numeric `LeftColumn` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#947 selected visual object list-item-id assignment shipped: designer commands can assign caller-provided non-negative numeric `ListItemID` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#946 selected visual object form-set-class assignment shipped: designer commands can assign caller-provided text `FormSetClass` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.
