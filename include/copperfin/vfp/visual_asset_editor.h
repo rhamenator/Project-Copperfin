@@ -748,6 +748,12 @@ struct VisualObjectAutoVerbMenuRequest {
     bool auto_verb_menu = false;
 };
 
+struct VisualObjectBindControlsRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool bind_controls = false;
+};
+
 struct VisualObjectClipControlsRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1499,6 +1505,7 @@ VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenter
 VisualAssetEditResult set_visual_object_auto_size(const VisualObjectAutoSizeRequest& request);
 VisualAssetEditResult set_visual_object_auto_release(const VisualObjectAutoReleaseRequest& request);
 VisualAssetEditResult set_visual_object_auto_verb_menu(const VisualObjectAutoVerbMenuRequest& request);
+VisualAssetEditResult set_visual_object_bind_controls(const VisualObjectBindControlsRequest& request);
 VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipControlsRequest& request);
 VisualAssetEditResult set_visual_object_dockable(const VisualObjectDockableRequest& request);
 VisualAssetEditResult set_visual_object_continuous_scroll(const VisualObjectContinuousScrollRequest& request);

@@ -5355,6 +5355,15 @@ VisualAssetEditResult set_visual_object_auto_verb_menu(const VisualObjectAutoVer
         request.auto_verb_menu ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_bind_controls(const VisualObjectBindControlsRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "BindControls",
+        "bind-controls",
+        request.bind_controls ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipControlsRequest& request) {
     return set_visual_object_scalar_property(
         request.path,

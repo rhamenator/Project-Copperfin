@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#912 selected visual object bind-controls assignment shipped: designer commands can assign caller-provided logical `BindControls` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#911 selected visual object auto-verb-menu assignment shipped: designer commands can assign caller-provided logical `AutoVerbMenu` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#910 selected visual object auto-release assignment shipped: designer commands can assign caller-provided logical `AutoRelease` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#909 selected visual object continuous-scroll assignment shipped: designer commands can assign caller-provided logical `ContinuousScroll` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
