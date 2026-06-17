@@ -102,6 +102,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.rename_object, "#1026: launch contract should keep rename-object off by default");
     expect(!result.request.reparent_object, "#1027: launch contract should keep reparent-object off by default");
     expect(!result.request.reorder_object, "#1028: launch contract should keep reorder-object off by default");
+    expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
     expect(result.request.object_name == "cmdSave", "#1020: launch contract should parse object-name selectors");
@@ -504,6 +505,44 @@ void test_parse_launch_arguments_rejects_reorder_object_ambiguity_and_missing_pl
     });
     expect(!reorder_property_result.ok,
         "#1028: launch contract should reject reorder-object combined with property commands");
+}
+
+void test_parse_launch_arguments_for_ungroup_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--ungroup-object",
+        "--object-name", "cntGroup",
+        "--unique-id", "group-guid"
+    });
+
+    expect(result.ok, "#1029: launch contract should parse ungroup-object requests");
+    expect(result.request.ungroup_object, "#1029: launch contract should detect --ungroup-object");
+    expect(result.request.object_name == "cntGroup",
+        "#1029: ungroup-object requests should carry source object-name selectors");
+    expect(result.request.unique_id == "group-guid",
+        "#1029: ungroup-object requests should carry source unique-id selectors");
+}
+
+void test_parse_launch_arguments_rejects_ungroup_object_ambiguity() {
+    const auto ungroup_reorder_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ungroup-object",
+        "--reorder-object",
+        "--unique-id", "group-guid",
+        "--placement", "front"
+    });
+    expect(!ungroup_reorder_result.ok,
+        "#1029: launch contract should reject simultaneous ungroup-object and reorder-object requests");
+
+    const auto ungroup_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ungroup-object",
+        "--clear-property",
+        "--property-name", "Caption"
+    });
+    expect(!ungroup_property_result.ok,
+        "#1029: launch contract should reject ungroup-object combined with property commands");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1742,6 +1781,8 @@ int main() {
     test_parse_launch_arguments_rejects_reparent_object_ambiguity_and_missing_parent();
     test_parse_launch_arguments_for_reorder_object();
     test_parse_launch_arguments_rejects_reorder_object_ambiguity_and_missing_placement();
+    test_parse_launch_arguments_for_ungroup_object();
+    test_parse_launch_arguments_rejects_ungroup_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

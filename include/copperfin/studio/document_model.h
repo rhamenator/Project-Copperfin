@@ -67,6 +67,7 @@ struct StudioOpenRequest {
     bool rename_object = false;
     bool reparent_object = false;
     bool reorder_object = false;
+    bool ungroup_object = false;
     bool clear_parent = false;
     bool selection_record_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;

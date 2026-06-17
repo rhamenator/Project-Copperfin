@@ -128,6 +128,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--ungroup-object") {
+            result.request.ungroup_object = true;
+            continue;
+        }
+
         if (argument == "--clear-parent") {
             result.request.clear_parent = true;
             continue;
@@ -384,7 +389,8 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.duplicate_object ? 1 : 0) +
         (result.request.rename_object ? 1 : 0) +
         (result.request.reparent_object ? 1 : 0) +
-        (result.request.reorder_object ? 1 : 0);
+        (result.request.reorder_object ? 1 : 0) +
+        (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
     }
