@@ -225,6 +225,23 @@ std::string visual_object_parent(const std::filesystem::path& form_path, const s
     return {};
 }
 
+std::string visual_object_property(
+    const std::filesystem::path& form_path,
+    const std::string& unique_id,
+    const std::string& property_name) {
+    const auto result = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = unique_id,
+        .property_name = property_name
+    });
+    if (!result.ok || !result.exists) {
+        return {};
+    }
+    return result.value;
+}
+
 std::string visual_object_order(const std::filesystem::path& form_path) {
     const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
     if (!list_result.ok) {
@@ -335,6 +352,26 @@ void write_synthetic_form_table_for_object_group(const std::filesystem::path& fo
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
     expect(create_result.ok, "#1030: synthetic SCX table for object group should be created");
+}
+
+void write_synthetic_form_table_for_object_align(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U},
+        {.name = "WIDTH", .type = 'C', .length = 10U},
+        {.name = "HEIGHT", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdAnchor", "cmdAnchor", "anchor-guid", "10", "20", "100", "50"},
+        {"txtName", "txtName", "name-guid", "1", "2", "30", "10"},
+        {"lblStatus", "lblStatus", "status-guid", "5", "6", "20", "25"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1031: synthetic SCX table for object alignment should be created");
 }
 
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
@@ -2226,6 +2263,133 @@ void test_studio_host_json_groups_objects_by_stable_child_selectors(const std::s
     }
 }
 
+void test_studio_host_json_aligns_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_align_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path align_path = temp_root / "align.scx";
+    write_synthetic_form_table_for_object_align(align_path);
+    const auto align_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", align_path.string(),
+            "--align-object",
+            "--alignment-mode", "left",
+            "--anchor-unique-id", "anchor-guid",
+            "--align-target-object-name", "txtName",
+            "--align-target-unique-id", "status-guid",
+            "--json"
+        },
+        temp_root);
+    expect(align_process.exit_code == 0,
+        "#1031: host object alignment should exit successfully");
+    expect(visual_object_property(align_path, "name-guid", "HPOS") == "10" &&
+            visual_object_property(align_path, "status-guid", "HPOS") == "10" &&
+            visual_object_property(align_path, "name-guid", "VPOS") == "2",
+        "#1031: host object alignment should align selected objects and preserve unrelated geometry");
+
+    const fs::path missing_anchor_path = temp_root / "missing_anchor.scx";
+    write_synthetic_form_table_for_object_align(missing_anchor_path);
+    const auto missing_anchor_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_anchor_path.string(),
+            "--align-object",
+            "--alignment-mode", "left",
+            "--anchor-unique-id", "missing-anchor",
+            "--align-target-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_anchor_process.exit_code == 4,
+        "#1031: missing-anchor host object alignment should return command failure");
+    expect(visual_object_property(missing_anchor_path, "name-guid", "HPOS") == "1" &&
+            visual_object_property(missing_anchor_path, "name-guid", "VPOS") == "2",
+        "#1031: missing-anchor host object alignment should not mutate the asset");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_align(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--align-object",
+            "--alignment-mode", "left",
+            "--anchor-unique-id", "anchor-guid",
+            "--align-target-unique-id", "missing-target",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1031: missing-target host object alignment should return command failure");
+    expect(visual_object_property(missing_target_path, "name-guid", "HPOS") == "1" &&
+            visual_object_property(missing_target_path, "status-guid", "HPOS") == "5",
+        "#1031: missing-target host object alignment should not mutate the asset");
+
+    const fs::path missing_mode_path = temp_root / "missing_mode.scx";
+    write_synthetic_form_table_for_object_align(missing_mode_path);
+    const auto missing_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_mode_path.string(),
+            "--align-object",
+            "--anchor-unique-id", "anchor-guid",
+            "--align-target-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_mode_process.exit_code == 2,
+        "#1031: align-object without alignment mode should fail during launch parsing");
+    expect(visual_object_property(missing_mode_path, "name-guid", "HPOS") == "1",
+        "#1031: align-object without alignment mode should not mutate the asset");
+
+    const fs::path missing_targets_path = temp_root / "missing_targets.scx";
+    write_synthetic_form_table_for_object_align(missing_targets_path);
+    const auto missing_targets_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_targets_path.string(),
+            "--align-object",
+            "--alignment-mode", "left",
+            "--anchor-object-name", "cmdAnchor",
+            "--json"
+        },
+        temp_root);
+    expect(missing_targets_process.exit_code == 2,
+        "#1031: align-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_targets_path, "name-guid", "HPOS") == "1",
+        "#1031: align-object without target selectors should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_align(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--align-object",
+            "--group-object",
+            "--alignment-mode", "left",
+            "--anchor-unique-id", "anchor-guid",
+            "--align-target-unique-id", "name-guid",
+            "--field-value", "OBJNAME=cntGroup",
+            "--group-child-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1031: align-object plus group-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "name-guid", "HPOS") == "1",
+        "#1031: align-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -2365,6 +2529,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
+    test_studio_host_json_aligns_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

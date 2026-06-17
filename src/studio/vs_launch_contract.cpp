@@ -133,6 +133,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--align-object") {
+            result.request.align_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -317,6 +322,54 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--alignment-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --alignment-mode."};
+            }
+            result.request.alignment_mode = args[++index];
+            continue;
+        }
+
+        if (argument == "--anchor-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --anchor-object-name."};
+            }
+            result.request.anchor_object_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--anchor-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --anchor-unique-id."};
+            }
+            result.request.anchor_unique_id = args[++index];
+            continue;
+        }
+
+        if (argument == "--align-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --align-target-object-name."};
+            }
+            result.request.align_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--align-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --align-target-unique-id."};
+            }
+            result.request.align_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -436,6 +489,24 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
     if (!result.request.group_object && !result.request.group_objects.empty()) {
         return {.ok = false, .error = "Grouped child selectors can only be used with --group-object."};
     }
+    if (result.request.align_object && result.request.alignment_mode.empty()) {
+        return {.ok = false, .error = "An object alignment requires --alignment-mode."};
+    }
+    if (result.request.align_object &&
+        result.request.anchor_object_name.empty() &&
+        result.request.anchor_unique_id.empty()) {
+        return {.ok = false, .error = "An object alignment requires --anchor-object-name or --anchor-unique-id."};
+    }
+    if (result.request.align_object && result.request.align_objects.empty()) {
+        return {.ok = false, .error = "An object alignment requires at least one target selector."};
+    }
+    if (!result.request.align_object &&
+        (!result.request.alignment_mode.empty() ||
+         !result.request.anchor_object_name.empty() ||
+         !result.request.anchor_unique_id.empty() ||
+         !result.request.align_objects.empty())) {
+        return {.ok = false, .error = "Alignment arguments can only be used with --align-object."};
+    }
     const int property_command_count =
         (result.request.apply_property_update ? 1 : 0) +
         (result.request.clear_property ? 1 : 0) +
@@ -448,6 +519,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.reparent_object ? 1 : 0) +
         (result.request.reorder_object ? 1 : 0) +
         (result.request.group_object ? 1 : 0) +
+        (result.request.align_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

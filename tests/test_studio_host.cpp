@@ -103,6 +103,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.reparent_object, "#1027: launch contract should keep reparent-object off by default");
     expect(!result.request.reorder_object, "#1028: launch contract should keep reorder-object off by default");
     expect(!result.request.group_object, "#1030: launch contract should keep group-object off by default");
+    expect(!result.request.align_object, "#1031: launch contract should keep align-object off by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -637,6 +638,98 @@ void test_parse_launch_arguments_rejects_group_object_ambiguity() {
     });
     expect(!stray_field_value_result.ok,
         "#1030: launch contract should reject stray group field values");
+}
+
+void test_parse_launch_arguments_for_align_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--align-object",
+        "--alignment-mode", "left",
+        "--anchor-unique-id", "anchor-guid",
+        "--align-target-object-name", "txtName",
+        "--align-target-unique-id", "status-guid"
+    });
+
+    expect(result.ok, "#1031: launch contract should parse align-object requests");
+    expect(result.request.align_object, "#1031: launch contract should detect --align-object");
+    expect(result.request.alignment_mode == "left",
+        "#1031: align-object requests should carry alignment mode");
+    expect(result.request.anchor_unique_id == "anchor-guid",
+        "#1031: align-object requests should carry anchor unique-id selectors");
+    expect(result.request.align_objects.size() == 2U,
+        "#1031: align-object requests should collect alignment target selectors");
+    if (result.request.align_objects.size() == 2U) {
+        expect(result.request.align_objects[0].object_name == "txtName" &&
+                result.request.align_objects[0].unique_id.empty(),
+            "#1031: align-object requests should parse target object-name selectors");
+        expect(result.request.align_objects[1].object_name.empty() &&
+                result.request.align_objects[1].unique_id == "status-guid",
+            "#1031: align-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_align_object_invalid_inputs() {
+    const auto missing_mode_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--align-object",
+        "--anchor-unique-id", "anchor-guid",
+        "--align-target-unique-id", "name-guid"
+    });
+    expect(!missing_mode_result.ok,
+        "#1031: launch contract should reject align-object requests without alignment mode");
+
+    const auto missing_anchor_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--align-object",
+        "--alignment-mode", "left",
+        "--align-target-unique-id", "name-guid"
+    });
+    expect(!missing_anchor_result.ok,
+        "#1031: launch contract should reject align-object requests without anchor selectors");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--align-object",
+        "--alignment-mode", "left",
+        "--anchor-object-name", "cmdAnchor"
+    });
+    expect(!missing_targets_result.ok,
+        "#1031: launch contract should reject align-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_align_object_ambiguity() {
+    const auto align_group_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--align-object",
+        "--group-object",
+        "--alignment-mode", "left",
+        "--anchor-unique-id", "anchor-guid",
+        "--align-target-unique-id", "name-guid",
+        "--field-value", "OBJNAME=cntGroup",
+        "--group-child-unique-id", "name-guid"
+    });
+    expect(!align_group_result.ok,
+        "#1031: launch contract should reject simultaneous align-object and group-object requests");
+
+    const auto align_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--align-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--alignment-mode", "left",
+        "--anchor-unique-id", "anchor-guid",
+        "--align-target-unique-id", "name-guid"
+    });
+    expect(!align_property_result.ok,
+        "#1031: launch contract should reject align-object combined with property commands");
+
+    const auto stray_alignment_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--alignment-mode", "left"
+    });
+    expect(!stray_alignment_result.ok,
+        "#1031: launch contract should reject stray alignment arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1880,6 +1973,9 @@ int main() {
     test_parse_launch_arguments_for_group_object();
     test_parse_launch_arguments_rejects_group_object_invalid_inputs();
     test_parse_launch_arguments_rejects_group_object_ambiguity();
+    test_parse_launch_arguments_for_align_object();
+    test_parse_launch_arguments_rejects_align_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_align_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
