@@ -47,6 +47,10 @@ int main() {
     expect(has_id(visual_context.builders, "grid-builder"), "#959: visual context should include grid builder");
     expect(visual_context.builder_count == visual_context.builders.size(),
            "#1009: visual context should report builder count metadata");
+    expect(visual_context.builder_count == 3U,
+           "#1010: visual context should expose form plus control builders");
+    expect(has_id(visual_context.builders, "form-builder"),
+           "#1010: visual context should include form builder");
     expect(has_id(visual_context.toolbox_items, "textbox"), "#959: visual context should include TextBox toolbox item");
     expect(has_id(visual_context.toolbox_items, "pageframe"),
            "#959: visual context should include PageFrame toolbox item");
@@ -69,6 +73,14 @@ int main() {
                report_context.builder_count == report_context.builders.size() &&
                report_context.toolbox_item_count == report_context.toolbox_items.size(),
            "#1009: report context should report counts from filtered descriptor vectors");
+
+    const auto visual_method_context = copperfin::studio::studio_designer_context_for_selection({
+        .selection_context = StudioEditorSelectionContext::visual_method
+    });
+    expect(has_id(visual_method_context.builders, "control-builder"),
+           "#1010: visual-method context should preserve control builder availability");
+    expect(!has_id(visual_method_context.builders, "form-builder"),
+           "#1010: visual-method context should not inherit form builder availability");
 
     const auto project_context = copperfin::studio::studio_designer_context_for_selection({
         .selection_context = StudioEditorSelectionContext::project_item

@@ -176,7 +176,7 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#961: form JSON should expose the visual-object context token");
     expect_contains(process.stdout_text, "\"editorActionCount\": 5",
                     "#1009: form JSON should expose designer context editor-action count");
-    expect_contains(process.stdout_text, "\"builderCount\": 2",
+    expect_contains(process.stdout_text, "\"builderCount\": 3",
                     "#1009: form JSON should expose designer context builder count");
     expect_contains(process.stdout_text, "\"toolboxItemCount\": ",
                     "#1009: form JSON should expose designer context toolbox-item count");
@@ -186,6 +186,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#961: designer context JSON should expose property-grid action ids");
     expect_contains(process.stdout_text, "\"builders\": [",
                     "#961: designer context JSON should expose builders");
+    expect_contains(process.stdout_text, "\"id\": \"form-builder\"",
+                    "#1010: designer context JSON should expose form builder ids");
     expect_contains(process.stdout_text, "\"id\": \"control-builder\"",
                     "#961: designer context JSON should expose control builder ids");
     expect_contains(process.stdout_text, "\"toolboxItems\": [",

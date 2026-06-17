@@ -254,10 +254,14 @@ void test_open_document_attaches_default_designer_contexts() {
                "#1009: form designer context should report editor-action count metadata");
         expect(context.builder_count == context.builders.size(),
                "#1009: form designer context should report builder count metadata");
+        expect(context.builder_count == 3U,
+               "#1010: form designer context should expose form plus control builders");
         expect(context.toolbox_item_count == context.toolbox_items.size(),
                "#1009: form designer context should report toolbox-item count metadata");
         expect(has_descriptor_id(context.editor_actions, "show-property-grid"),
                "#960: form designer context should include property-grid actions");
+        expect(has_descriptor_id(context.builders, "form-builder"),
+               "#1010: form designer context should include form builder");
         expect(has_descriptor_id(context.builders, "control-builder"),
                "#960: form designer context should include control builders");
         expect(has_descriptor_id(context.toolbox_items, "textbox"),

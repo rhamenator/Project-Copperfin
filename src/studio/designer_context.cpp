@@ -9,6 +9,12 @@ namespace {
 std::vector<StudioBuilderDescriptor> builders_for_selection_context(StudioEditorSelectionContext context) {
     switch (context) {
         case StudioEditorSelectionContext::visual_object:
+        {
+            auto builders = studio_builders_for_context(StudioBuilderContext::form);
+            auto control_builders = studio_builders_for_context(StudioBuilderContext::control);
+            builders.insert(builders.end(), control_builders.begin(), control_builders.end());
+            return builders;
+        }
         case StudioEditorSelectionContext::visual_method:
             return studio_builders_for_context(StudioBuilderContext::control);
         case StudioEditorSelectionContext::report_expression:
