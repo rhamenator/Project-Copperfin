@@ -6,23 +6,25 @@ It is intentionally narrower than the top-level roadmap:
 
 - scope: historical Phase A dependency evidence plus current post-D1/E1 continuation pointers
 - granularity: command/function groups and runtime engine seams
-- purpose: decide what to finish first, what can run in parallel, and what is actually on the critical path
+- purpose: preserve the historical dependency reasoning and identify the current prompt-sized continuation lane
 
 ## Reading Notes
 
-- Top-level percentages for Phase A areas come directly from [remaining-work.md](/home/rich/dev/Project-Copperfin/remaining-work.md:291).
-- Group-level percentages below are inferred planning estimates based on the current backlog text, recent progress notes, and shipped test coverage. They are not yet first-class roadmap metrics.
-- The dependency edges are pragmatic engineering dependencies, not strict architectural laws. They answer "what should be finished first if the goal is fastest safe progress toward VFP parity?"
-- The CPM section uses longest-path logic over a directed acyclic prerequisite graph. Dijkstra's algorithm is not needed here because this is a precedence-scheduling problem rather than a shortest-path routing problem.
+- The Phase A percentages and dependency rows below are historical planning estimates. Do not use them as current completion metrics.
+- The dependency edges are pragmatic engineering dependencies, not strict architectural laws. They explain why the Phase A runtime/storage order was chosen.
+- The CPM section is historical closure evidence. It is not the current execution gate.
+- Current execution guidance lives in the "Current Active Queue" table under "Issue Hierarchy"; create or pick a prompt-sized child there before writing code.
 
-## Phase A Areas
+## Historical Phase A Areas
 
-| Phase A Area | Top-Level Progress | Main Risk Still Open |
+Phase A is closed. The rows below are retained only to explain the old dependency model that led to closure.
+
+| Phase A Area | Historical Top-Level Progress | Closure Note |
 | --- | --- | --- |
-| A1. File and index fidelity | 92-95% | repair breadth, edge-case metadata, and runtime consumption gaps |
-| A2. Work areas, sessions, and cursor semantics | 90-96% | richer order/collation/search behavior and remote/result-cursor parity |
-| A3. Command and expression surface | 82% | remaining issue `#7` / `#8` command-surface and macro/eval fidelity |
-| A4. Automation and interop semantics | 100% | OLE/COM parity depth and host-failure containment under `#10`, `#11`, and `#12` |
+| A1. File and index fidelity | 92-95% | Historical storage/search risk model; do not treat as an active queue without fresh issue evidence. |
+| A2. Work areas, sessions, and cursor semantics | 90-96% | Historical cursor/runtime risk model; old Phase A lane issues are closed. |
+| A3. Command and expression surface | 82% | Historical `#7` / `#8` command-surface model; the old Phase A issue tree is closed. |
+| A4. Automation and interop semantics | 100% | Historical OLE/COM closure model; broader host-safety depth moved to later runtime/debugger work. |
 
 ## Command/Function Group Dependency Table
 
@@ -167,16 +169,18 @@ flowchart LR
     class A1,A2,A3,A4 lane;
 ```
 
-## Recommended Order
+## Historical Phase A Recommended Order
 
-The recommended order is not simply "lowest percentage first." It is:
+This order is retained as closure evidence only. It must not redirect agents away from the current active queue.
+
+The historical recommended order was not simply "lowest percentage first." It was:
 
 1. finish the storage and search seams that everything else inherits
 2. close the remaining macro/eval/runtime-state seams before polishing more commands
 3. finish command groups that sit on those two foundations
 4. treat automation/OLE rows as historical-complete in Phase A closure ordering
 
-That produced this Phase A practical order:
+That produced this historical Phase A practical order:
 
 1. `#150`, `#151`, `#152`, `#153` runtime-safety/diagnostics slices (closed safety gate)
 2. `WP0` corpus and regression harness expansion
@@ -291,11 +295,11 @@ flowchart LR
     class S150,S151,S152,S153,WP0,WP1,WP2,WP5,WP9,WP12 critical;
 ```
 
-## First Things To Address
+## Historical First Things Addressed
 
-If the goal is "what should be handled first, concretely?", the answer is:
+This table records the old Phase A priority rationale. It is not the current work queue.
 
-| Priority | First Slice | Why First |
+| Priority | Historical Slice | Why It Was First |
 | --- | --- | --- |
 | 1 | corpus and fixture expansion around issue `#7` / `#8` leftovers | It lowers the cost of every later parity slice and reduces regression risk. |
 | 2 | DBF/FPT validation and repair gaps | Storage correctness is still the deepest common dependency in Phase A. |
@@ -333,6 +337,8 @@ Historical-closed lane structure under `#8`:
 | `#8` | `#99` Finish memory-variable, `PUBLIC`/`PRIVATE`/`RELEASE`, and assignment semantics | G15 / WP8 |
 | `#8` | `#100` Finish field-transfer and macro-target data movement parity | G12 / WP9 |
 | `#8` | `#101` Finish headless interaction macro/eval fidelity | G14 / WP12 |
+
+## Current Active Queue
 
 Current active-open prompt-sized slice queue after Phase A/D1/E1 closure:
 
@@ -743,6 +749,6 @@ Use this document together with:
 
 Operationally:
 
-- pick work from the current critical path unless there is a very cheap near-complete lane to close
+- pick or create one prompt-sized child from the Current Active Queue unless the live issue tracker shows a higher-weight blocker
 - do not treat the closed Phase A/A3/A4 notes as active runtime queues without fresh issue evidence
 - treat G16 corpus expansion as a repeated enabling activity, not a one-time task
