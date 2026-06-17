@@ -131,6 +131,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.input_mask_available, "#1046: launch contract should keep input mask unavailable by default");
     expect(!result.request.format_object, "#1047: launch contract should keep format-object off by default");
     expect(!result.request.format_available, "#1047: launch contract should keep format unavailable by default");
+    expect(!result.request.row_source_object, "#1048: launch contract should keep row-source-object off by default");
+    expect(!result.request.row_source_available, "#1048: launch contract should keep row source unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2093,6 +2095,82 @@ void test_parse_launch_arguments_rejects_format_object_ambiguity() {
         "#1047: launch contract should reject stray format arguments");
 }
 
+void test_parse_launch_arguments_for_row_source_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--row-source-object",
+        "--row-source", "customers.name,customer_id",
+        "--row-source-target-object-name", "cboCustomer",
+        "--row-source-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1048: launch contract should parse row-source-object requests");
+    expect(result.request.row_source_object, "#1048: launch contract should detect --row-source-object");
+    expect(result.request.row_source_available && result.request.row_source == "customers.name,customer_id",
+        "#1048: row-source-object requests should carry row source text");
+    expect(result.request.row_source_objects.size() == 2U,
+        "#1048: row-source-object requests should collect row source target selectors");
+    if (result.request.row_source_objects.size() == 2U) {
+        expect(result.request.row_source_objects[0].object_name == "cboCustomer" &&
+                result.request.row_source_objects[0].unique_id.empty(),
+            "#1048: row-source-object requests should parse target object-name selectors");
+        expect(result.request.row_source_objects[1].object_name.empty() &&
+                result.request.row_source_objects[1].unique_id == "two-guid",
+            "#1048: row-source-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_row_source_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-source-object",
+        "--row-source-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1048: launch contract should reject row-source-object requests without row source text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-source-object",
+        "--row-source", "customers.name"
+    });
+    expect(!missing_targets_result.ok,
+        "#1048: launch contract should reject row-source-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_row_source_object_ambiguity() {
+    const auto row_format_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-source-object",
+        "--format-object",
+        "--row-source", "customers.name",
+        "--row-source-target-unique-id", "one-guid",
+        "--format", "!",
+        "--format-target-unique-id", "one-guid"
+    });
+    expect(!row_format_result.ok,
+        "#1048: launch contract should reject simultaneous row-source-object and format-object requests");
+
+    const auto row_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-source-object",
+        "--clear-property",
+        "--property-name", "RowSource",
+        "--row-source", "customers.name",
+        "--row-source-target-unique-id", "one-guid"
+    });
+    expect(!row_property_result.ok,
+        "#1048: launch contract should reject row-source-object combined with property commands");
+
+    const auto stray_row_source_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-source", "customers.name"
+    });
+    expect(!stray_row_source_result.ok,
+        "#1048: launch contract should reject stray row-source arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3385,6 +3463,9 @@ int main() {
     test_parse_launch_arguments_for_format_object();
     test_parse_launch_arguments_rejects_format_object_invalid_inputs();
     test_parse_launch_arguments_rejects_format_object_ambiguity();
+    test_parse_launch_arguments_for_row_source_object();
+    test_parse_launch_arguments_rejects_row_source_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_row_source_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
