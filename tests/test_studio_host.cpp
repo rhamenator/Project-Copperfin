@@ -100,6 +100,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.restore_object, "#1024: launch contract should keep restore-object off by default");
     expect(!result.request.duplicate_object, "#1025: launch contract should keep duplicate-object off by default");
     expect(!result.request.rename_object, "#1026: launch contract should keep rename-object off by default");
+    expect(!result.request.reparent_object, "#1027: launch contract should keep reparent-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
     expect(result.request.object_name == "cmdSave", "#1020: launch contract should parse object-name selectors");
@@ -382,6 +383,69 @@ void test_parse_launch_arguments_rejects_rename_object_ambiguity_and_empty_ident
     });
     expect(!rename_property_result.ok,
         "#1026: launch contract should reject rename-object combined with property commands");
+}
+
+void test_parse_launch_arguments_for_reparent_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--reparent-object",
+        "--object-name", "txtName",
+        "--unique-id", "textbox-guid",
+        "--parent-name", "cntPanel",
+        "--parent-unique-id", "panel-guid"
+    });
+
+    expect(result.ok, "#1027: launch contract should parse reparent-object requests");
+    expect(result.request.reparent_object, "#1027: launch contract should detect --reparent-object");
+    expect(result.request.object_name == "txtName",
+        "#1027: reparent-object requests should carry source object-name selectors");
+    expect(result.request.unique_id == "textbox-guid",
+        "#1027: reparent-object requests should carry source unique-id selectors");
+    expect(result.request.parent_name == "cntPanel",
+        "#1027: reparent-object requests should carry parent object-name selectors");
+    expect(result.request.parent_unique_id == "panel-guid",
+        "#1027: reparent-object requests should carry parent unique-id selectors");
+}
+
+void test_parse_launch_arguments_rejects_reparent_object_ambiguity_and_missing_parent() {
+    const auto missing_parent_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--reparent-object",
+        "--unique-id", "textbox-guid"
+    });
+    expect(!missing_parent_result.ok,
+        "#1027: launch contract should reject reparent-object requests without parent selectors or clear-parent");
+
+    const auto clear_parent_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--reparent-object",
+        "--unique-id", "textbox-guid",
+        "--clear-parent"
+    });
+    expect(clear_parent_result.ok && clear_parent_result.request.clear_parent,
+        "#1027: launch contract should parse clear-parent reparent requests");
+
+    const auto reparent_rename_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--reparent-object",
+        "--rename-object",
+        "--unique-id", "textbox-guid",
+        "--parent-name", "cntPanel",
+        "--new-object-name", "txtCustomer"
+    });
+    expect(!reparent_rename_result.ok,
+        "#1027: launch contract should reject simultaneous reparent-object and rename-object requests");
+
+    const auto reparent_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--reparent-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--parent-name", "cntPanel"
+    });
+    expect(!reparent_property_result.ok,
+        "#1027: launch contract should reject reparent-object combined with property commands");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1616,6 +1680,8 @@ int main() {
     test_parse_launch_arguments_rejects_duplicate_object_ambiguity();
     test_parse_launch_arguments_for_rename_object();
     test_parse_launch_arguments_rejects_rename_object_ambiguity_and_empty_identity();
+    test_parse_launch_arguments_for_reparent_object();
+    test_parse_launch_arguments_rejects_reparent_object_ambiguity_and_missing_parent();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

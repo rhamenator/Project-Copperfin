@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1027 host reparent-object command shipped: `copperfin_studio_host --reparent-object` now reparents visual objects by record index, object name, or unique id, accepts parent object-name/unique-id selectors or `--clear-parent`, rejects ambiguous reparent-object/delete/restore/duplicate/rename-object/property command combinations, and preserves no-mutation behavior for missing source or parent targets.
 - E2/#1026 host rename-object command shipped: `copperfin_studio_host --rename-object` now renames visual object identity fields by record index, object name, or unique id, accepts replacement object/name/unique-id values, rejects ambiguous rename-object/delete/restore/duplicate/property command combinations, and preserves no-mutation behavior for missing targets.
 - E2/#1025 host duplicate-object command shipped: `copperfin_studio_host --duplicate-object` now duplicates visual objects by record index, object name, or unique id, accepts replacement object/name/unique-id values, rejects ambiguous duplicate/delete/restore/property command combinations, and preserves no-mutation behavior for missing targets.
 - E2/#1024 host restore-object command shipped: `copperfin_studio_host --restore-object` now clears visual-object deletion state by record index, object name, or unique id, rejects ambiguous delete/restore/property command combinations, and preserves no-mutation behavior for missing targets.

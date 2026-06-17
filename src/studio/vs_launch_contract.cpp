@@ -118,6 +118,16 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--reparent-object") {
+            result.request.reparent_object = true;
+            continue;
+        }
+
+        if (argument == "--clear-parent") {
+            result.request.clear_parent = true;
+            continue;
+        }
+
         if (argument == "--json") {
             result.output_json = true;
             continue;
@@ -209,6 +219,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --new-unique-id."};
             }
             result.request.new_unique_id = args[++index];
+            continue;
+        }
+
+        if (argument == "--parent-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --parent-name."};
+            }
+            result.request.parent_name = args[++index];
+            continue;
+        }
+
+        if (argument == "--parent-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --parent-unique-id."};
+            }
+            result.request.parent_unique_id = args[++index];
             continue;
         }
 
@@ -310,6 +336,12 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         result.request.new_unique_id.empty()) {
         return {.ok = false, .error = "An object rename requires --new-object-name, --new-name, or --new-unique-id."};
     }
+    if (result.request.reparent_object &&
+        !result.request.clear_parent &&
+        result.request.parent_name.empty() &&
+        result.request.parent_unique_id.empty()) {
+        return {.ok = false, .error = "An object reparent requires --parent-name, --parent-unique-id, or --clear-parent."};
+    }
     const int property_command_count =
         (result.request.apply_property_update ? 1 : 0) +
         (result.request.clear_property ? 1 : 0) +
@@ -318,7 +350,8 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.delete_object ? 1 : 0) +
         (result.request.restore_object ? 1 : 0) +
         (result.request.duplicate_object ? 1 : 0) +
-        (result.request.rename_object ? 1 : 0);
+        (result.request.rename_object ? 1 : 0) +
+        (result.request.reparent_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
     }

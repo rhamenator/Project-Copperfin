@@ -199,6 +199,19 @@ bool visual_object_exists(const std::filesystem::path& form_path, const std::str
     return false;
 }
 
+std::string visual_object_parent(const std::filesystem::path& form_path, const std::string& unique_id) {
+    const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
+    if (!list_result.ok) {
+        return {};
+    }
+    for (const auto& object : list_result.objects) {
+        if (object.unique_id == unique_id) {
+            return object.parent_name;
+        }
+    }
+    return {};
+}
+
 void delete_existing_textbox(const std::filesystem::path& form_path, const std::string& evidence) {
     const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
         .path = form_path.string(),
@@ -232,6 +245,26 @@ std::filesystem::path write_synthetic_form_table_for_property_rename(
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
     expect(create_result.ok, "#1022: synthetic SCX table for property rename should be created");
     return form_path;
+}
+
+void write_synthetic_form_table_for_object_reparent(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "form-guid", "", "Form", "Form", ""},
+        {"cntPanel", "cntPanel", "panel-guid", "frmCustomer", "Container", "Container", ""},
+        {"txt1", "txt1", "existing-textbox-guid", "frmCustomer", "TextBox", "TextBox", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1027: synthetic SCX table for object reparent should be created");
 }
 
 void write_synthetic_form_table_with_container_object(const std::filesystem::path& form_path) {
@@ -1743,6 +1776,123 @@ void test_studio_host_json_renames_objects_by_stable_selectors(const std::string
     }
 }
 
+void test_studio_host_json_reparents_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_reparent_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path object_name_path = temp_root / "object_name.scx";
+    write_synthetic_form_table_for_object_reparent(object_name_path);
+    const auto object_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", object_name_path.string(),
+            "--reparent-object",
+            "--object-name", "txt1",
+            "--parent-name", "cntPanel",
+            "--json"
+        },
+        temp_root);
+    expect(object_name_process.exit_code == 0,
+        "#1027: object-name host object reparent should exit successfully");
+    expect(visual_object_parent(object_name_path, "existing-textbox-guid") == "cntPanel",
+        "#1027: object-name host object reparent should update the target parent");
+
+    const fs::path unique_id_path = temp_root / "unique_id.scx";
+    write_synthetic_form_table_for_object_reparent(unique_id_path);
+    const auto unique_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unique_id_path.string(),
+            "--reparent-object",
+            "--unique-id", "existing-textbox-guid",
+            "--parent-unique-id", "panel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(unique_id_process.exit_code == 0,
+        "#1027: unique-id host object reparent should exit successfully");
+    expect(visual_object_parent(unique_id_path, "existing-textbox-guid") == "cntPanel",
+        "#1027: unique-id host object reparent should update the target parent");
+
+    const fs::path clear_parent_path = temp_root / "clear_parent.scx";
+    write_synthetic_form_table_for_object_reparent(clear_parent_path);
+    const auto clear_parent_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", clear_parent_path.string(),
+            "--reparent-object",
+            "--unique-id", "existing-textbox-guid",
+            "--clear-parent",
+            "--json"
+        },
+        temp_root);
+    expect(clear_parent_process.exit_code == 0,
+        "#1027: clear-parent host object reparent should exit successfully");
+    expect(visual_object_parent(clear_parent_path, "existing-textbox-guid").empty(),
+        "#1027: clear-parent host object reparent should clear the target parent");
+
+    const fs::path missing_source_path = temp_root / "missing_source.scx";
+    write_synthetic_form_table_for_object_reparent(missing_source_path);
+    const auto missing_source_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_source_path.string(),
+            "--reparent-object",
+            "--object-name", "missingObject",
+            "--parent-name", "cntPanel",
+            "--json"
+        },
+        temp_root);
+    expect(missing_source_process.exit_code == 4,
+        "#1027: missing source host object reparent should return command failure");
+    expect(visual_object_parent(missing_source_path, "existing-textbox-guid") == "frmCustomer",
+        "#1027: missing source host object reparent should not mutate the asset");
+
+    const fs::path missing_parent_path = temp_root / "missing_parent.scx";
+    write_synthetic_form_table_for_object_reparent(missing_parent_path);
+    const auto missing_parent_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_parent_path.string(),
+            "--reparent-object",
+            "--unique-id", "existing-textbox-guid",
+            "--parent-name", "missingParent",
+            "--json"
+        },
+        temp_root);
+    expect(missing_parent_process.exit_code == 4,
+        "#1027: missing parent host object reparent should return command failure");
+    expect(visual_object_parent(missing_parent_path, "existing-textbox-guid") == "frmCustomer",
+        "#1027: missing parent host object reparent should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_reparent(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--reparent-object",
+            "--rename-object",
+            "--unique-id", "existing-textbox-guid",
+            "--parent-name", "cntPanel",
+            "--new-object-name", "txtCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1027: reparent-object plus rename-object requests should fail during launch parsing");
+    expect(visual_object_parent(ambiguous_path, "existing-textbox-guid") == "frmCustomer",
+        "#1027: reparent-object/rename-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1760,5 +1910,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
