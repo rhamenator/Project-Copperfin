@@ -117,6 +117,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.enabled_available, "#1039: launch contract should keep enabled unavailable by default");
     expect(!result.request.read_only_object, "#1040: launch contract should keep read-only-object off by default");
     expect(!result.request.object_read_only_available, "#1040: launch contract should keep object read-only unavailable by default");
+    expect(!result.request.locked_object, "#1041: launch contract should keep locked-object off by default");
+    expect(!result.request.locked_available, "#1041: launch contract should keep locked unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1538,6 +1540,91 @@ void test_parse_launch_arguments_rejects_read_only_object_ambiguity() {
         "#1040: launch contract should reject stray object read-only arguments");
 }
 
+void test_parse_launch_arguments_for_locked_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--locked-object",
+        "--locked", "true",
+        "--locked-target-object-name", "txtOne",
+        "--locked-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1041: launch contract should parse locked-object requests");
+    expect(result.request.locked_object, "#1041: launch contract should detect --locked-object");
+    expect(result.request.locked_available && result.request.locked,
+        "#1041: locked-object requests should carry true locked state");
+    expect(result.request.locked_objects.size() == 2U,
+        "#1041: locked-object requests should collect locked target selectors");
+    if (result.request.locked_objects.size() == 2U) {
+        expect(result.request.locked_objects[0].object_name == "txtOne" &&
+                result.request.locked_objects[0].unique_id.empty(),
+            "#1041: locked-object requests should parse target object-name selectors");
+        expect(result.request.locked_objects[1].object_name.empty() &&
+                result.request.locked_objects[1].unique_id == "two-guid",
+            "#1041: locked-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_locked_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--locked-object",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1041: launch contract should reject locked-object requests without locked state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--locked-object",
+        "--locked", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1041: launch contract should reject locked-object requests without target selectors");
+
+    const auto invalid_bool_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--locked-object",
+        "--locked", "maybe",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!invalid_bool_result.ok,
+        "#1041: launch contract should reject unsupported locked values");
+}
+
+void test_parse_launch_arguments_rejects_locked_object_ambiguity() {
+    const auto locked_read_only_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--locked-object",
+        "--read-only-object",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid",
+        "--object-read-only", "true",
+        "--read-only-target-unique-id", "one-guid"
+    });
+    expect(!locked_read_only_result.ok,
+        "#1041: launch contract should reject simultaneous locked-object and read-only-object requests");
+
+    const auto locked_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--locked-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!locked_property_result.ok,
+        "#1041: launch contract should reject locked-object combined with property commands");
+
+    const auto stray_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--locked", "true"
+    });
+    expect(!stray_locked_result.ok,
+        "#1041: launch contract should reject stray locked arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -2809,6 +2896,9 @@ int main() {
     test_parse_launch_arguments_for_read_only_object();
     test_parse_launch_arguments_rejects_read_only_object_invalid_inputs();
     test_parse_launch_arguments_rejects_read_only_object_ambiguity();
+    test_parse_launch_arguments_for_locked_object();
+    test_parse_launch_arguments_rejects_locked_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_locked_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
