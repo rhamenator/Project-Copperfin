@@ -11871,6 +11871,29 @@ void test_set_visual_object_lock_columns_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_lock_columns_left_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#921",
+        "lock_columns_left",
+        "LockColumnsLeft",
+        "LOCKCOLUMNSLEFT",
+        "lock-columns-left",
+        0,
+        1,
+        2,
+        3,
+        4,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_lock_columns_left({
+                .path = path,
+                .objects = objects,
+                .lock_columns_left = value
+            });
+        });
+}
+
 void test_set_visual_object_special_effect_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#864",
@@ -23405,6 +23428,7 @@ int main() {
     test_set_visual_object_header_height_assigns_numeric_value();
     test_set_visual_object_row_height_assigns_numeric_value();
     test_set_visual_object_lock_columns_assigns_numeric_value();
+    test_set_visual_object_lock_columns_left_assigns_numeric_value();
     test_set_visual_object_special_effect_assigns_numeric_value();
     test_set_visual_object_curvature_assigns_numeric_value();
     test_set_visual_object_draw_mode_assigns_numeric_value();
