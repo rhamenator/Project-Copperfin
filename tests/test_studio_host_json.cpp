@@ -319,6 +319,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#982: Studio host JSON should expose document-level leaf object counts");
     expect_contains(selected_object_process.stdout_text, "\"leafRecordIndexes\": [0, 2]",
                     "#982: Studio host JSON should expose document-level leaf record links");
+    expect_contains(selected_object_process.stdout_text, "\"maxObjectDepth\": 1",
+                    "#983: Studio host JSON should expose document-level maximum object tree depth");
     expect_contains(selected_object_process.stdout_text, "\"selectedObjectAvailable\": true",
                     "#979: matched explicit selected records should report selected object availability");
     expect_contains(selected_object_process.stdout_text, "\"selectedObject\": {",
@@ -389,6 +391,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#971: root selected object summaries should expose null parent record links");
         expect_contains(selected_object_json, "\"objectPath\": \"frmCustomer\"",
                         "#972: root selected object summaries should expose direct object paths");
+        expect_contains(selected_object_json, "\"objectDepth\": 0",
+                        "#983: root selected object summaries should expose zero object tree depth");
         expect_contains(selected_object_json, "\"objectTypeCode\": 1",
                         "#973: selected object summaries should expose raw object type codes");
         expect_contains(selected_object_json, "\"objectCode\": 0",
@@ -435,6 +439,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#980: leaf child object entries should expose empty child record links");
             expect_contains(child_object_json, "\"objectPath\": \"frmCustomer.cmdSave\"",
                             "#972: child object entries should expose parent-prefixed object paths");
+            expect_contains(child_object_json, "\"objectDepth\": 1",
+                            "#983: child object entries should expose nested object tree depth");
             expect_contains(child_object_json, "\"objectTypeCode\": 4",
                             "#973: child object entries should expose raw object type codes");
             expect_contains(child_object_json, "\"objectCode\": 2",

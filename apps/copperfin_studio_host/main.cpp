@@ -293,6 +293,7 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     std::cout << indent << "  \"objectPath\": ";
     print_json_string(object.object_path);
     std::cout << ",\n";
+    std::cout << indent << "  \"objectDepth\": " << object.object_depth << ",\n";
     std::cout << indent << "  \"uniqueId\": ";
     print_json_string(object.unique_id);
     std::cout << ",\n";
@@ -354,6 +355,16 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
             leaf_record_indexes.push_back(object.record_index);
         }
     }
+    const auto max_object_depth = objects.empty()
+        ? 0U
+        : std::max_element(
+              objects.begin(),
+              objects.end(),
+              [](const copperfin::studio::StudioObjectSnapshot& left,
+                 const copperfin::studio::StudioObjectSnapshot& right) {
+                  return left.object_depth < right.object_depth;
+              })
+              ->object_depth;
     const auto report_layout = copperfin::studio::build_report_layout(document);
     const auto project_workspace = copperfin::studio::build_project_workspace(document);
     const auto security_profile = copperfin::security::default_native_security_profile();
@@ -423,6 +434,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "    \"leafRecordIndexes\": ";
     print_json_record_index_array(leaf_record_indexes);
     std::cout << ",\n";
+    std::cout << "    \"maxObjectDepth\": " << max_object_depth << ",\n";
     std::cout << "    \"commandUndoAvailable\": " << (command_undo_status.available ? "true" : "false") << ",\n";
     std::cout << "    \"commandUndoLabel\": ";
     print_json_string(command_undo_status.label);
@@ -943,6 +955,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "        \"objectPath\": ";
         print_json_string(object.object_path);
         std::cout << ",\n";
+        std::cout << "        \"objectDepth\": " << object.object_depth << ",\n";
         std::cout << "        \"uniqueId\": ";
         print_json_string(object.unique_id);
         std::cout << ",\n";

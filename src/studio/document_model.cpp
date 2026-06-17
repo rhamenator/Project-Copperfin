@@ -348,6 +348,22 @@ std::string build_object_path(
     return path;
 }
 
+std::size_t build_object_depth(
+    const StudioObjectSnapshot& object,
+    const std::vector<StudioObjectSnapshot>& objects) {
+    std::size_t depth = 0U;
+    std::size_t parent_record_index = object.parent_record_index;
+    while (parent_record_index != StudioObjectMissingRecordIndex && depth < objects.size()) {
+        const auto* parent = find_object_by_record_index(objects, parent_record_index);
+        if (parent == nullptr) {
+            break;
+        }
+        ++depth;
+        parent_record_index = parent->parent_record_index;
+    }
+    return depth;
+}
+
 }  // namespace
 
 StudioAssetKind studio_asset_kind_from_vfp_family(vfp::AssetFamily family) {
@@ -612,6 +628,7 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
     }
 
     for (auto& object : objects) {
+        object.object_depth = build_object_depth(object, objects);
         object.object_path = build_object_path(object, objects);
         object.child_record_indexes.clear();
         for (const auto& candidate : objects) {
