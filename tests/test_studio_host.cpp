@@ -175,6 +175,10 @@ void test_parse_launch_arguments() {
         "#1062: launch contract should keep item-back-color-object off by default");
     expect(!result.request.item_back_color_available,
         "#1062: launch contract should keep item back color unavailable by default");
+    expect(!result.request.item_fore_color_object,
+        "#1063: launch contract should keep item-fore-color-object off by default");
+    expect(!result.request.item_fore_color_available,
+        "#1063: launch contract should keep item fore color unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -3518,6 +3522,101 @@ void test_parse_launch_arguments_rejects_item_back_color_object_ambiguity() {
         "#1062: launch contract should reject stray item-back-color arguments");
 }
 
+void test_parse_launch_arguments_for_item_fore_color_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--item-fore-color-object",
+        "--item-fore-color", "65280",
+        "--item-fore-color-target-object-name", "lstOrders",
+        "--item-fore-color-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1063: launch contract should parse item-fore-color-object requests");
+    expect(result.request.item_fore_color_object,
+        "#1063: launch contract should detect --item-fore-color-object");
+    expect(result.request.item_fore_color_available && result.request.item_fore_color == 65280,
+        "#1063: item-fore-color-object requests should carry item fore color values");
+    expect(result.request.item_fore_color_objects.size() == 2U,
+        "#1063: item-fore-color-object requests should collect item-fore-color target selectors");
+    if (result.request.item_fore_color_objects.size() == 2U) {
+        expect(result.request.item_fore_color_objects[0].object_name == "lstOrders" &&
+                result.request.item_fore_color_objects[0].unique_id.empty(),
+            "#1063: item-fore-color-object requests should parse target object-name selectors");
+        expect(result.request.item_fore_color_objects[1].object_name.empty() &&
+                result.request.item_fore_color_objects[1].unique_id == "two-guid",
+            "#1063: item-fore-color-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_item_fore_color_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--item-fore-color-object",
+        "--item-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1063: launch contract should reject item-fore-color-object requests without item fore color");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--item-fore-color-object",
+        "--item-fore-color", "65280"
+    });
+    expect(!missing_targets_result.ok,
+        "#1063: launch contract should reject item-fore-color-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--item-fore-color-object",
+        "--item-fore-color", "green",
+        "--item-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1063: launch contract should reject non-integer item-fore-color values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--item-fore-color-object",
+        "--item-fore-color", "-1",
+        "--item-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1063: launch contract should reject negative item-fore-color values before mutation");
+}
+
+void test_parse_launch_arguments_rejects_item_fore_color_object_ambiguity() {
+    const auto item_fore_back_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--item-fore-color-object",
+        "--item-back-color-object",
+        "--item-fore-color", "65280",
+        "--item-fore-color-target-unique-id", "one-guid",
+        "--item-back-color", "65280",
+        "--item-back-color-target-unique-id", "one-guid"
+    });
+    expect(!item_fore_back_result.ok,
+        "#1063: launch contract should reject simultaneous item-fore-color-object and item-back-color-object requests");
+
+    const auto item_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--item-fore-color-object",
+        "--clear-property",
+        "--property-name", "ItemForeColor",
+        "--item-fore-color", "65280",
+        "--item-fore-color-target-unique-id", "one-guid"
+    });
+    expect(!item_property_result.ok,
+        "#1063: launch contract should reject item-fore-color-object combined with property commands");
+
+    const auto stray_item_fore_color_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--item-fore-color", "65280"
+    });
+    expect(!stray_item_fore_color_result.ok,
+        "#1063: launch contract should reject stray item-fore-color arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -4855,6 +4954,9 @@ int main() {
     test_parse_launch_arguments_for_item_back_color_object();
     test_parse_launch_arguments_rejects_item_back_color_object_invalid_inputs();
     test_parse_launch_arguments_rejects_item_back_color_object_ambiguity();
+    test_parse_launch_arguments_for_item_fore_color_object();
+    test_parse_launch_arguments_rejects_item_fore_color_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_item_fore_color_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
