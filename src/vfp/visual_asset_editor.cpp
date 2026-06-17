@@ -2054,7 +2054,11 @@ bool is_property_blob_asset_path(const std::string& path) {
 }
 
 VisualAssetEditResult update_visual_object_property(const VisualObjectEditRequest& request) {
-    return apply_visual_object_property_change(request, true, false);
+    auto update_result = apply_visual_object_property_change(request, true, false);
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
 }
 
 VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request) {
@@ -7981,7 +7985,7 @@ VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEdi
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
 }
 
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request) {

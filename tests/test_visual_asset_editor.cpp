@@ -420,6 +420,8 @@ void test_update_visual_object_property_rewrites_properties_memo() {
     });
 
     expect(update_result.ok, "update_visual_object_property should succeed for a synthetic SCX/SCT pair");
+    expect(update_result.affected_object_count == 1U,
+        "#1007: successful single property edit should report one affected object");
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
     expect(parse_result.ok, "updated synthetic SCX/SCT should remain readable");
@@ -482,6 +484,8 @@ void test_update_visual_object_properties_updates_selected_geometry_fields() {
         }
     });
     expect(update_result.ok, "#735: multi-property edits should update selected geometry fields");
+    expect(update_result.affected_object_count == 1U,
+        "#1007: successful multi-property edit should report one affected object");
 
     auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
     expect(parse_result.ok, "#735: multi-property geometry fixture should remain readable");
@@ -523,6 +527,8 @@ void test_update_visual_object_properties_updates_selected_geometry_fields() {
         .properties = {}
     });
     expect(!empty_result.ok, "#735: empty multi-property edit requests should fail explicitly");
+    expect(empty_result.affected_object_count == 0U,
+        "#1007: empty multi-property edit should report zero affected objects");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -550,6 +556,8 @@ void test_update_visual_object_properties_rolls_back_failed_batches() {
         }
     });
     expect(!update_result.ok, "#740: failing multi-property edits should report the failed property change");
+    expect(update_result.affected_object_count == 0U,
+        "#1007: failed multi-property edit should report zero affected objects");
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 2U);
     expect(parse_result.ok, "#740: rollback geometry fixture should remain readable");
