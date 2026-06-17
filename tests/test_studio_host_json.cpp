@@ -2390,6 +2390,133 @@ void test_studio_host_json_aligns_objects_by_stable_selectors(const std::string&
     }
 }
 
+void test_studio_host_json_resizes_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_resize_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path resize_path = temp_root / "resize.scx";
+    write_synthetic_form_table_for_object_align(resize_path);
+    const auto resize_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", resize_path.string(),
+            "--resize-object",
+            "--resize-mode", "width",
+            "--anchor-unique-id", "anchor-guid",
+            "--resize-target-object-name", "txtName",
+            "--resize-target-unique-id", "status-guid",
+            "--json"
+        },
+        temp_root);
+    expect(resize_process.exit_code == 0,
+        "#1032: host object resize should exit successfully");
+    expect(visual_object_property(resize_path, "name-guid", "WIDTH") == "100" &&
+            visual_object_property(resize_path, "status-guid", "WIDTH") == "100" &&
+            visual_object_property(resize_path, "name-guid", "HEIGHT") == "10",
+        "#1032: host object resize should resize selected objects and preserve unrelated geometry");
+
+    const fs::path missing_anchor_path = temp_root / "missing_anchor.scx";
+    write_synthetic_form_table_for_object_align(missing_anchor_path);
+    const auto missing_anchor_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_anchor_path.string(),
+            "--resize-object",
+            "--resize-mode", "width",
+            "--anchor-unique-id", "missing-anchor",
+            "--resize-target-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_anchor_process.exit_code == 4,
+        "#1032: missing-anchor host object resize should return command failure");
+    expect(visual_object_property(missing_anchor_path, "name-guid", "WIDTH") == "30" &&
+            visual_object_property(missing_anchor_path, "name-guid", "HEIGHT") == "10",
+        "#1032: missing-anchor host object resize should not mutate the asset");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_align(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--resize-object",
+            "--resize-mode", "width",
+            "--anchor-unique-id", "anchor-guid",
+            "--resize-target-unique-id", "missing-target",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1032: missing-target host object resize should return command failure");
+    expect(visual_object_property(missing_target_path, "name-guid", "WIDTH") == "30" &&
+            visual_object_property(missing_target_path, "status-guid", "WIDTH") == "20",
+        "#1032: missing-target host object resize should not mutate the asset");
+
+    const fs::path missing_mode_path = temp_root / "missing_mode.scx";
+    write_synthetic_form_table_for_object_align(missing_mode_path);
+    const auto missing_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_mode_path.string(),
+            "--resize-object",
+            "--anchor-unique-id", "anchor-guid",
+            "--resize-target-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_mode_process.exit_code == 2,
+        "#1032: resize-object without resize mode should fail during launch parsing");
+    expect(visual_object_property(missing_mode_path, "name-guid", "WIDTH") == "30",
+        "#1032: resize-object without resize mode should not mutate the asset");
+
+    const fs::path missing_targets_path = temp_root / "missing_targets.scx";
+    write_synthetic_form_table_for_object_align(missing_targets_path);
+    const auto missing_targets_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_targets_path.string(),
+            "--resize-object",
+            "--resize-mode", "width",
+            "--anchor-object-name", "cmdAnchor",
+            "--json"
+        },
+        temp_root);
+    expect(missing_targets_process.exit_code == 2,
+        "#1032: resize-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_targets_path, "name-guid", "WIDTH") == "30",
+        "#1032: resize-object without target selectors should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_align(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--resize-object",
+            "--align-object",
+            "--resize-mode", "width",
+            "--alignment-mode", "left",
+            "--anchor-unique-id", "anchor-guid",
+            "--resize-target-unique-id", "name-guid",
+            "--align-target-unique-id", "name-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1032: resize-object plus align-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "name-guid", "WIDTH") == "30",
+        "#1032: resize-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -2530,6 +2657,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
     test_studio_host_json_aligns_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_resizes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

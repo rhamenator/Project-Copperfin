@@ -64,6 +64,7 @@ struct StudioOpenRequest {
     std::string target_object_name{};
     std::string target_unique_id{};
     std::string alignment_mode{};
+    std::string resize_mode{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     std::size_t line = 0;
@@ -83,6 +84,7 @@ struct StudioOpenRequest {
     bool reorder_object = false;
     bool group_object = false;
     bool align_object = false;
+    bool resize_object = false;
     bool ungroup_object = false;
     bool clear_parent = false;
     bool selection_record_available = false;
@@ -91,6 +93,7 @@ struct StudioOpenRequest {
     std::vector<StudioFieldValueAssignment> field_values{};
     std::vector<StudioObjectSelector> group_objects{};
     std::vector<StudioObjectSelector> align_objects{};
+    std::vector<StudioObjectSelector> resize_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

@@ -22,7 +22,7 @@
 namespace {
 
 void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--align-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--alignment-mode <mode>] [--anchor-object-name <name>] [--anchor-unique-id <id>] [--align-target-object-name <name>] [--align-target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--align-object|--resize-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--alignment-mode <mode>] [--resize-mode <width|height|size>] [--anchor-object-name <name>] [--anchor-unique-id <id>] [--align-target-object-name <name>] [--align-target-unique-id <id>] [--resize-target-object-name <name>] [--resize-target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -1570,6 +1570,33 @@ int main(int argc, char** argv) {
         if (!align_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << align_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.resize_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> resize_objects;
+        resize_objects.reserve(parse_result.request.resize_objects.size());
+        for (const auto& resize_object : parse_result.request.resize_objects) {
+            resize_objects.push_back({
+                .record_index = resize_object.record_index,
+                .object_name = resize_object.object_name,
+                .unique_id = resize_object.unique_id
+            });
+        }
+
+        const auto resize_result = copperfin::vfp::resize_visual_objects({
+            .path = parse_result.request.path,
+            .anchor_record_index = 0U,
+            .anchor_object_name = parse_result.request.anchor_object_name,
+            .anchor_unique_id = parse_result.request.anchor_unique_id,
+            .objects = resize_objects,
+            .mode = parse_result.request.resize_mode
+        });
+
+        if (!resize_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << resize_result.error << "\n";
             return 4;
         }
     }
