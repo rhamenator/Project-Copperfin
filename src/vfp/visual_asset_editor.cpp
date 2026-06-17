@@ -5775,6 +5775,19 @@ VisualAssetEditResult set_visual_object_window_state(const VisualObjectWindowSta
         std::to_string(request.window_state));
 }
 
+VisualAssetEditResult set_visual_object_show_window(const VisualObjectShowWindowRequest& request) {
+    if (request.show_window < 0) {
+        return {.ok = false, .error = "ShowWindow must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "ShowWindow",
+        "show-window",
+        std::to_string(request.show_window));
+}
+
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
         return {.ok = false, .error = "MousePointer must not be negative."};

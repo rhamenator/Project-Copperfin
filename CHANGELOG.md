@@ -2,6 +2,7 @@
 
 ## 2026-06-16
 
+- E2/#904 selected visual object show-window assignment shipped: designer commands can assign caller-provided non-negative numeric `ShowWindow` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#903 selected visual object Mac desktop assignment shipped: designer commands can assign caller-provided logical `MacDesktop` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#902 selected visual object key-preview assignment shipped: designer commands can assign caller-provided logical `KeyPreview` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#901 selected visual object desktop assignment shipped: designer commands can assign caller-provided logical `Desktop` state through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving FoxPro logical serialization, duplicate selection rejection, and rollback-safe batch writes.
