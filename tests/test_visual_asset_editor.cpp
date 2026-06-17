@@ -12291,6 +12291,29 @@ void test_set_visual_object_default_file_path_assigns_text() {
         });
 }
 
+void test_set_visual_object_form_set_class_assigns_text() {
+    test_visual_object_text_property_assigns_text(
+        "#946",
+        "form_set_class",
+        "FormSetClass",
+        "FORMSETCLASS",
+        "form-set class",
+        "BaseFormSet",
+        "CustomerFormSet",
+        "OrderFormSet",
+        "forms.customer_set",
+        "archive.form_set",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& value) {
+            return copperfin::vfp::set_visual_object_form_set_class({
+                .path = path,
+                .objects = objects,
+                .form_set_class = value
+            });
+        });
+}
+
 void test_set_visual_object_record_source_type_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#929",
@@ -23960,6 +23983,7 @@ int main() {
     test_set_visual_object_link_master_assigns_text();
     test_set_visual_object_initial_selected_alias_assigns_text();
     test_set_visual_object_default_file_path_assigns_text();
+    test_set_visual_object_form_set_class_assigns_text();
     test_set_visual_object_record_source_type_assigns_numeric_value();
     test_set_visual_object_partition_assigns_numeric_value();
     test_set_visual_object_column_order_assigns_numeric_value();

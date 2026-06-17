@@ -5995,6 +5995,15 @@ VisualAssetEditResult set_visual_object_default_file_path(const VisualObjectDefa
         request.default_file_path);
 }
 
+VisualAssetEditResult set_visual_object_form_set_class(const VisualObjectFormSetClassRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "FormSetClass",
+        "form-set class",
+        request.form_set_class);
+}
+
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request) {
     if (request.record_source_type < 0) {
         return {.ok = false, .error = "RecordSourceType must not be negative."};
