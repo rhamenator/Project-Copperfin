@@ -176,9 +176,9 @@ The recommended order is not simply "lowest percentage first." It is:
 3. finish command groups that sit on those two foundations
 4. treat automation/OLE rows as historical-complete in Phase A closure ordering
 
-That produces this practical order:
+That produced this Phase A practical order:
 
-1. `#150`, `#151`, `#152`, `#153` runtime-safety/diagnostics slices (current active-open safety gate)
+1. `#150`, `#151`, `#152`, `#153` runtime-safety/diagnostics slices (closed safety gate)
 2. `WP0` corpus and regression harness expansion
 3. `WP1` DBF/FPT validation and repair completion
 4. `WP2` index fidelity completion
@@ -237,14 +237,14 @@ gantt
 
 The critical path below is the longest prerequisite chain for Phase A completion under the above work-package model.
 
-Critical path for remaining Phase A work:
+Historical critical path for Phase A work:
 
 - `#150 -> #151 -> #152 -> #153 -> WP0 -> WP1 -> WP2 -> WP5 -> WP9 -> WP12`
 - issue path: `(#13/#14 safety gate) -> (#7/#8 support) -> (#92) -> (#100) -> (#101)`
 
-Total remaining critical-path duration:
+Historical critical-path duration estimate:
 
-- `9 weeks` for WP0-WP12 plus current runtime-safety slice execution (`#150`-`#153`)
+- `9 weeks` for WP0-WP12 plus runtime-safety slice execution (`#150`-`#153`); this path is closed in the current issue tracker.
 
 ```mermaid
 flowchart LR
@@ -667,15 +667,15 @@ Execution guardrails:
 - treat "coverage advanced" notes as progress evidence, not issue-closure evidence
 - keep work tied to an open prompt-sized child; create the next child under the active umbrella before coding when none exists
 
-Current dependency links:
+Historical dependency links:
 
-- `#93` is blocked by `#92`
-- `#100` is blocked by `#97`
+- `#93` was blocked by `#92`; both are now closed
+- `#100` was blocked by `#97`; both are now closed
 - historical note: `#10` and `#11` previously depended on `#99` and are now closed
-- 2026-05-12 execution note: `#150` implementation slice advanced in code/test (fault data-session + cursor snapshot restoration across `RETRY`/`RESUME`/ON ERROR unwind); continue strict gate order with `#151` next.
-- 2026-05-12 execution note: `#151` implementation slice advanced in focused tests (non-default data-session repeated-`CONTINUE` stability); continue strict gate order with `#152` next.
-- 2026-05-12 execution note: `#152` implementation slice advanced in focused tests (repeated nested-fault caller-frame metadata refresh); continue strict gate order with `#153` next.
-- 2026-05-12 execution note: `#153` implementation slice advanced in focused tests (repeated-fault diagnostic normalization refresh); continue strict gate order with `#92` next.
+- 2026-05-12 historical execution note: `#150` implementation slice advanced in code/test (fault data-session + cursor snapshot restoration across `RETRY`/`RESUME`/ON ERROR unwind); the gate then proceeded to `#151`, and both are now closed.
+- 2026-05-12 historical execution note: `#151` implementation slice advanced in focused tests (non-default data-session repeated-`CONTINUE` stability); the gate then proceeded to `#152`, and both are now closed.
+- 2026-05-12 historical execution note: `#152` implementation slice advanced in focused tests (repeated nested-fault caller-frame metadata refresh); the gate then proceeded to `#153`, and both are now closed.
+- 2026-05-12 historical execution note: `#153` implementation slice advanced in focused tests (repeated-fault diagnostic normalization refresh); the gate then proceeded to `#92`, and both are now closed.
 - 2026-05-12 execution note: `#98` implementation slice advanced in focused tests (`SET()` option readback/isolation for `FDOW`/`FWEEK`/`POINT`/`SEPARATOR`/`CURRENCY`); continue strict gate order with `#99` next.
 - 2026-05-12 execution note: `#99` implementation slice advanced in focused tests (`RELEASE ALL` with `PRIVATE` shadow restoration semantics); continue strict gate order with `#100` next.
 - 2026-05-12 execution note: `#101` implementation slice advanced in focused tests (`INPUT`/`ACCEPT` `TO LOCAL` target-scope fidelity in headless mode); continue strict gate order with `#93` next.

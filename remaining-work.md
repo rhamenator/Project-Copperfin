@@ -768,8 +768,8 @@ If direct commits continue, close a child issue only when:
 - A3 historical-closed prompt-sized slice issues in the current H3 batch: #257-#268, #391-#393
 - A3 historical native slice ranges in this lane: `#115`-`#130` plus `#146`-`#149` under `#95`
 - A4 automation and host containment: completed in #10, #11, #12
-- Runtime safety and diagnostics: #14
-- Runtime safety closed lane issues: #13 (2026-06-14)
+- Runtime safety and diagnostics: #13 and #14 closed (2026-06-14)
+- Runtime safety closed lane issues: #13 (2026-06-14), #14 (2026-06-14)
 - Runtime safety active-open prompt-sized slice issues: none
 - Runtime safety historical-closed prompt-sized slice issues: #142, #143, #144, #145, #150, #151, #152, #153, #269, #270, #272, #273
 
@@ -788,7 +788,7 @@ Canonical Phase A critical-path order (all closed as of 2026-06-13):
 11. #93 (closed 2026-06-13)
 12. #94 (closed 2026-06-13)
 
-Phase A critical path is complete. Runtime-parity branches (#15-#18) are now closed; adjacent work continues on B1/B2 blocking slices.
+Phase A critical path is complete. Runtime safety/diagnostics branches (#13/#14) and runtime-parity branches (#15-#18) are now closed; adjacent work continues on post-D1/E1 designer, IDE, and higher-level execution slices.
 
 ### Runtime Parity Surfaces
 
