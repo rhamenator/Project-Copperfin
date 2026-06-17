@@ -41,6 +41,7 @@ struct StudioOpenRequest {
     std::string symbol{};
     std::string property_name{};
     std::string property_value{};
+    std::string new_property_name{};
     std::string object_name{};
     std::string unique_id{};
     std::size_t line = 0;
@@ -51,6 +52,7 @@ struct StudioOpenRequest {
     bool load_full_table = false;
     bool apply_property_update = false;
     bool clear_property = false;
+    bool rename_property = false;
     bool selection_record_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};

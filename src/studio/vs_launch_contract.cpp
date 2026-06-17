@@ -93,6 +93,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--rename-property") {
+            result.request.rename_property = true;
+            continue;
+        }
+
         if (argument == "--json") {
             result.output_json = true;
             continue;
@@ -152,6 +157,14 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --property-value."};
             }
             result.request.property_value = args[++index];
+            continue;
+        }
+
+        if (argument == "--new-property-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --new-property-name."};
+            }
+            result.request.new_property_name = args[++index];
             continue;
         }
 
@@ -241,8 +254,18 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
     if (result.request.clear_property && result.request.property_name.empty()) {
         return {.ok = false, .error = "A property clear requires --property-name."};
     }
-    if (result.request.apply_property_update && result.request.clear_property) {
-        return {.ok = false, .error = "--set-property and --clear-property cannot be used together."};
+    if (result.request.rename_property && result.request.property_name.empty()) {
+        return {.ok = false, .error = "A property rename requires --property-name."};
+    }
+    if (result.request.rename_property && result.request.new_property_name.empty()) {
+        return {.ok = false, .error = "A property rename requires --new-property-name."};
+    }
+    const int property_command_count =
+        (result.request.apply_property_update ? 1 : 0) +
+        (result.request.clear_property ? 1 : 0) +
+        (result.request.rename_property ? 1 : 0);
+    if (property_command_count > 1) {
+        return {.ok = false, .error = "Only one property command can be used at a time."};
     }
 
     result.ok = true;
