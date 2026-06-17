@@ -57,6 +57,32 @@ int main() {
     expect(visual_context.toolbox_item_count == visual_context.toolbox_items.size(),
            "#1009: visual context should report toolbox-item count metadata");
 
+    const auto container_context = copperfin::studio::studio_designer_context_for_selection({
+        .selection_context = StudioEditorSelectionContext::container_object
+    });
+    expect(container_context.selection_context == StudioEditorSelectionContext::container_object,
+           "#1014: container context result should preserve the requested selection context");
+    expect(has_id(container_context.editor_actions, "show-property-grid"),
+           "#1014: container context should include property-grid action");
+    expect(has_id(container_context.editor_actions, "edit-visual-method"),
+           "#1014: container context should include method-editor action");
+    expect(has_id(container_context.builders, "control-builder"),
+           "#1014: container context should include control builder");
+    expect(has_id(container_context.builders, "grid-builder"),
+           "#1014: container context should include grid builder");
+    expect(!has_id(container_context.builders, "form-builder"),
+           "#1014: container context should not inherit form builder availability");
+    expect(!has_id(container_context.builders, "class-builder"),
+           "#1014: container context should not inherit class builder availability");
+    expect(has_id(container_context.toolbox_items, "checkbox"),
+           "#1014: container context should include container-safe CheckBox toolbox item");
+    expect(has_id(container_context.toolbox_items, "grid"),
+           "#1014: container context should include container-safe Grid toolbox item");
+    expect(container_context.builder_count == 2U &&
+               container_context.editor_action_count == container_context.editor_actions.size() &&
+               container_context.toolbox_item_count == container_context.toolbox_items.size(),
+           "#1014: container context should report filtered descriptor counts");
+
     const auto class_context = copperfin::studio::studio_designer_context_for_selection({
         .selection_context = StudioEditorSelectionContext::class_designer
     });

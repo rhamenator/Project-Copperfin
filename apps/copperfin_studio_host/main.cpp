@@ -23,7 +23,7 @@ void print_usage() {
     std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--set-property --record <n> --property-name <name> --property-value <value>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
-    std::cout << "Selection context tokens: visual_object, visual_method, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
+    std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
 }
 
 std::string json_escape(const std::string& value) {

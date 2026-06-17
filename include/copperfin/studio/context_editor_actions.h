@@ -8,6 +8,7 @@ namespace copperfin::studio {
 enum class StudioEditorSelectionContext {
     visual_object,
     visual_method,
+    container_object,
     class_designer,
     report_expression,
     label_expression,

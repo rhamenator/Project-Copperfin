@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-17: E2/#1014 explicit container designer selection context is now shipped. Explicit Studio launches can request `container_object`, which exposes property-grid, method-editor, control/grid builders, and container-safe toolbox metadata without inheriting form/class/report/menu/project/data-environment builders.
 - 2026-06-17: E2/#1013 explicit menu designer selection context is now shipped. MNX/MNT documents default to `menu_item`, explicit launch parsing accepts the token, and menu contexts expose property-grid plus `menu-designer` builder metadata with zero toolbox items and no form/report builder leakage.
 - 2026-06-17: E2/#1012 explicit class designer selection context is now shipped. VCX/VCT documents default to `class_designer`, explicit launch parsing accepts the token, and class contexts expose property-grid, method-editor, class-safe toolbox, and `class-builder` metadata without inheriting form/control builders.
 - 2026-06-17: E2/#1011 explicit label designer selection context is now shipped. LBX/LBT documents default to `label_expression`, explicit launch parsing accepts the token, and label contexts expose shared expression editing, report-safe toolbox items, and `label-wizard` metadata without reusing report-builder metadata.

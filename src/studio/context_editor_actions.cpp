@@ -18,6 +18,8 @@ const char* studio_editor_selection_context_name(StudioEditorSelectionContext co
             return "visual_object";
         case StudioEditorSelectionContext::visual_method:
             return "visual_method";
+        case StudioEditorSelectionContext::container_object:
+            return "container_object";
         case StudioEditorSelectionContext::class_designer:
             return "class_designer";
         case StudioEditorSelectionContext::report_expression:
@@ -63,6 +65,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .kind = Kind::property_grid,
             .contexts = {
                 Context::visual_object,
+                Context::container_object,
                 Context::class_designer,
                 Context::report_expression,
                 Context::label_expression,
@@ -77,7 +80,12 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .id = "edit-visual-method",
             .label = "Edit Method",
             .kind = Kind::source_editor,
-            .contexts = {Context::visual_object, Context::visual_method, Context::class_designer},
+            .contexts = {
+                Context::visual_object,
+                Context::visual_method,
+                Context::container_object,
+                Context::class_designer
+            },
             .command_token = "studio.method_editor.open",
             .target_surface = "method-editor",
             .description = "Open the selected visual object's PROCEDURE/FUNCTION source in a method editor."
@@ -97,6 +105,7 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .kind = Kind::builder,
             .contexts = {
                 Context::visual_object,
+                Context::container_object,
                 Context::class_designer,
                 Context::report_expression,
                 Context::label_expression,
@@ -112,7 +121,13 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .id = "show-toolbox",
             .label = "Toolbox",
             .kind = Kind::toolbox,
-            .contexts = {Context::visual_object, Context::class_designer, Context::report_expression, Context::label_expression},
+            .contexts = {
+                Context::visual_object,
+                Context::container_object,
+                Context::class_designer,
+                Context::report_expression,
+                Context::label_expression
+            },
             .command_token = "studio.toolbox.show_for_context",
             .target_surface = "toolbox-palette",
             .description = "Show toolbox items relevant to the active visual designer context."

@@ -76,6 +76,7 @@ void test_parse_launch_arguments() {
         "--column", "7",
         "--symbol", "cmdSave.Click",
         "--selection-context", "visual_method",
+        "--selection-context", "container_object",
         "--selection-context", "report_expression",
         "--selection-context", "label_expression",
         "--selection-context", "class_designer",
@@ -97,18 +98,20 @@ void test_parse_launch_arguments() {
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");
-    expect(result.request.designer_selection_contexts.size() == 5U,
+    expect(result.request.designer_selection_contexts.size() == 6U,
            "#962: launch contract should collect explicit selection-context tokens");
-    if (result.request.designer_selection_contexts.size() == 5U) {
+    if (result.request.designer_selection_contexts.size() == 6U) {
         expect(result.request.designer_selection_contexts[0] == copperfin::studio::StudioEditorSelectionContext::visual_method,
                "#962: launch contract should parse visual_method selection-context tokens");
-        expect(result.request.designer_selection_contexts[1] == copperfin::studio::StudioEditorSelectionContext::report_expression,
+        expect(result.request.designer_selection_contexts[1] == copperfin::studio::StudioEditorSelectionContext::container_object,
+               "#1014: launch contract should parse container_object selection-context tokens");
+        expect(result.request.designer_selection_contexts[2] == copperfin::studio::StudioEditorSelectionContext::report_expression,
                "#962: launch contract should parse report_expression selection-context tokens");
-        expect(result.request.designer_selection_contexts[2] == copperfin::studio::StudioEditorSelectionContext::label_expression,
+        expect(result.request.designer_selection_contexts[3] == copperfin::studio::StudioEditorSelectionContext::label_expression,
                "#1011: launch contract should parse label_expression selection-context tokens");
-        expect(result.request.designer_selection_contexts[3] == copperfin::studio::StudioEditorSelectionContext::class_designer,
+        expect(result.request.designer_selection_contexts[4] == copperfin::studio::StudioEditorSelectionContext::class_designer,
                "#1012: launch contract should parse class_designer selection-context tokens");
-        expect(result.request.designer_selection_contexts[4] == copperfin::studio::StudioEditorSelectionContext::menu_item,
+        expect(result.request.designer_selection_contexts[5] == copperfin::studio::StudioEditorSelectionContext::menu_item,
                "#1013: launch contract should parse menu_item selection-context tokens");
     }
     expect(result.request.undo_mode == copperfin::studio::StudioUndoMode::command, "launch contract should parse the undo mode");
@@ -275,6 +278,29 @@ void test_open_document_attaches_default_designer_contexts() {
                "#960: form designer context should include control builders");
         expect(has_descriptor_id(context.toolbox_items, "textbox"),
                "#960: form designer context should include form toolbox items");
+    }
+
+    const auto container_override_result = copperfin::studio::open_document({
+        .path = (temp_dir / "customer.scx").string(),
+        .designer_selection_contexts = {
+            copperfin::studio::StudioEditorSelectionContext::container_object
+        }
+    });
+    expect(container_override_result.ok, "#1014: synthetic form should open for explicit container context checks");
+    expect(container_override_result.document.designer_contexts.size() == 1U,
+           "#1014: explicit container contexts should override the form default context list");
+    if (!container_override_result.document.designer_contexts.empty()) {
+        const auto& context = container_override_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::container_object,
+               "#1014: explicit container contexts should be preserved");
+        expect(has_descriptor_id(context.editor_actions, "edit-visual-method"),
+               "#1014: explicit container contexts should include method-editor actions");
+        expect(has_descriptor_id(context.builders, "control-builder"),
+               "#1014: explicit container contexts should include control builders");
+        expect(!has_descriptor_id(context.builders, "form-builder"),
+               "#1014: explicit container contexts should not expose form builders");
+        expect(has_descriptor_id(context.toolbox_items, "checkbox"),
+               "#1014: explicit container contexts should include container-safe toolbox items");
     }
 
     const auto class_result = copperfin::studio::open_document({

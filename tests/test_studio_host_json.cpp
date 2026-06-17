@@ -214,6 +214,32 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(override_process.stdout_text, "\"selectionContext\": \"visual_object\"",
                         "#962: explicit selection contexts should override the form default selection context");
 
+    const auto container_override_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--selection-context", "container_object", "--json"},
+        temp_root);
+
+    if (container_override_process.exit_code != 0) {
+        std::cerr << "studio host container override stdout:\n" << container_override_process.stdout_text << "\n";
+        std::cerr << "studio host container override stderr:\n" << container_override_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(container_override_process.exit_code == 0,
+           "#1014: Studio host explicit container context JSON smoke should exit successfully");
+    expect_contains(container_override_process.stdout_text, "\"selectionContext\": \"container_object\"",
+                    "#1014: explicit container_object selection contexts should serialize through host JSON");
+    expect_contains(container_override_process.stdout_text, "\"id\": \"control-builder\"",
+                    "#1014: explicit container_object contexts should expose control builder metadata");
+    expect_contains(container_override_process.stdout_text, "\"id\": \"grid-builder\"",
+                    "#1014: explicit container_object contexts should expose grid builder metadata");
+    expect_contains(container_override_process.stdout_text, "\"id\": \"checkbox\"",
+                    "#1014: explicit container_object contexts should expose container-safe toolbox metadata");
+    expect_not_contains(container_override_process.stdout_text, "\"id\": \"form-builder\"",
+                        "#1014: explicit container_object contexts should not expose form builders");
+    expect_not_contains(container_override_process.stdout_text, "\"id\": \"class-builder\"",
+                        "#1014: explicit container_object contexts should not expose class builders");
+
     const auto label_override_process = run_process_capture(
         studio_host_path,
         {"--path", form_path.string(), "--selection-context", "label_expression", "--json"},

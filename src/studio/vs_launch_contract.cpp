@@ -31,6 +31,9 @@ std::optional<StudioEditorSelectionContext> parse_selection_context_token(std::s
     if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::visual_method)) {
         return StudioEditorSelectionContext::visual_method;
     }
+    if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::container_object)) {
+        return StudioEditorSelectionContext::container_object;
+    }
     if (token == studio_editor_selection_context_name(StudioEditorSelectionContext::class_designer)) {
         return StudioEditorSelectionContext::class_designer;
     }
@@ -53,7 +56,7 @@ std::optional<StudioEditorSelectionContext> parse_selection_context_token(std::s
 }
 
 std::string selection_context_error() {
-    return "The --selection-context value must be visual_object, visual_method, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.";
+    return "The --selection-context value must be visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.";
 }
 
 }  // namespace
