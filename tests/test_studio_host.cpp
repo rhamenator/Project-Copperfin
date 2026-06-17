@@ -121,6 +121,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.locked_available, "#1041: launch contract should keep locked unavailable by default");
     expect(!result.request.caption_object, "#1042: launch contract should keep caption-object off by default");
     expect(!result.request.caption_available, "#1042: launch contract should keep caption unavailable by default");
+    expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
+    expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1703,6 +1705,82 @@ void test_parse_launch_arguments_rejects_caption_object_ambiguity() {
         "#1042: launch contract should reject stray caption arguments");
 }
 
+void test_parse_launch_arguments_for_tooltip_text_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--tooltip-text-object",
+        "--tooltip-text", "Save this customer",
+        "--tooltip-text-target-object-name", "cmdSave",
+        "--tooltip-text-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1043: launch contract should parse tooltip-text-object requests");
+    expect(result.request.tooltip_text_object, "#1043: launch contract should detect --tooltip-text-object");
+    expect(result.request.tooltip_text_available && result.request.tooltip_text == "Save this customer",
+        "#1043: tooltip-text-object requests should carry tooltip text");
+    expect(result.request.tooltip_text_objects.size() == 2U,
+        "#1043: tooltip-text-object requests should collect tooltip text target selectors");
+    if (result.request.tooltip_text_objects.size() == 2U) {
+        expect(result.request.tooltip_text_objects[0].object_name == "cmdSave" &&
+                result.request.tooltip_text_objects[0].unique_id.empty(),
+            "#1043: tooltip-text-object requests should parse target object-name selectors");
+        expect(result.request.tooltip_text_objects[1].object_name.empty() &&
+                result.request.tooltip_text_objects[1].unique_id == "two-guid",
+            "#1043: tooltip-text-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tooltip-text-object",
+        "--tooltip-text-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1043: launch contract should reject tooltip-text-object requests without tooltip text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tooltip-text-object",
+        "--tooltip-text", "Save"
+    });
+    expect(!missing_targets_result.ok,
+        "#1043: launch contract should reject tooltip-text-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity() {
+    const auto tooltip_caption_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tooltip-text-object",
+        "--caption-object",
+        "--tooltip-text", "Save",
+        "--tooltip-text-target-unique-id", "one-guid",
+        "--caption", "Save",
+        "--caption-target-unique-id", "one-guid"
+    });
+    expect(!tooltip_caption_result.ok,
+        "#1043: launch contract should reject simultaneous tooltip-text-object and caption-object requests");
+
+    const auto tooltip_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tooltip-text-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--tooltip-text", "Save",
+        "--tooltip-text-target-unique-id", "one-guid"
+    });
+    expect(!tooltip_property_result.ok,
+        "#1043: launch contract should reject tooltip-text-object combined with property commands");
+
+    const auto stray_tooltip_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tooltip-text", "Save"
+    });
+    expect(!stray_tooltip_result.ok,
+        "#1043: launch contract should reject stray tooltip text arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -2980,6 +3058,9 @@ int main() {
     test_parse_launch_arguments_for_caption_object();
     test_parse_launch_arguments_rejects_caption_object_invalid_inputs();
     test_parse_launch_arguments_rejects_caption_object_ambiguity();
+    test_parse_launch_arguments_for_tooltip_text_object();
+    test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
