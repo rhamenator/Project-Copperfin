@@ -115,6 +115,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.visible_available, "#1038: launch contract should keep visible unavailable by default");
     expect(!result.request.enabled_object, "#1039: launch contract should keep enabled-object off by default");
     expect(!result.request.enabled_available, "#1039: launch contract should keep enabled unavailable by default");
+    expect(!result.request.read_only_object, "#1040: launch contract should keep read-only-object off by default");
+    expect(!result.request.object_read_only_available, "#1040: launch contract should keep object read-only unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1451,6 +1453,91 @@ void test_parse_launch_arguments_rejects_enabled_object_ambiguity() {
         "#1039: launch contract should reject stray enabled arguments");
 }
 
+void test_parse_launch_arguments_for_read_only_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--read-only-object",
+        "--object-read-only", "true",
+        "--read-only-target-object-name", "txtOne",
+        "--read-only-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1040: launch contract should parse read-only-object requests");
+    expect(result.request.read_only_object, "#1040: launch contract should detect --read-only-object");
+    expect(result.request.object_read_only_available && result.request.object_read_only,
+        "#1040: read-only-object requests should carry true read-only state");
+    expect(result.request.read_only_objects.size() == 2U,
+        "#1040: read-only-object requests should collect read-only target selectors");
+    if (result.request.read_only_objects.size() == 2U) {
+        expect(result.request.read_only_objects[0].object_name == "txtOne" &&
+                result.request.read_only_objects[0].unique_id.empty(),
+            "#1040: read-only-object requests should parse target object-name selectors");
+        expect(result.request.read_only_objects[1].object_name.empty() &&
+                result.request.read_only_objects[1].unique_id == "two-guid",
+            "#1040: read-only-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_read_only_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--read-only-object",
+        "--read-only-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1040: launch contract should reject read-only-object requests without object read-only state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--read-only-object",
+        "--object-read-only", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1040: launch contract should reject read-only-object requests without target selectors");
+
+    const auto invalid_bool_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--read-only-object",
+        "--object-read-only", "maybe",
+        "--read-only-target-unique-id", "one-guid"
+    });
+    expect(!invalid_bool_result.ok,
+        "#1040: launch contract should reject unsupported object read-only values");
+}
+
+void test_parse_launch_arguments_rejects_read_only_object_ambiguity() {
+    const auto read_only_enabled_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--read-only-object",
+        "--enabled-object",
+        "--object-read-only", "true",
+        "--read-only-target-unique-id", "one-guid",
+        "--enabled", "true",
+        "--enabled-target-unique-id", "one-guid"
+    });
+    expect(!read_only_enabled_result.ok,
+        "#1040: launch contract should reject simultaneous read-only-object and enabled-object requests");
+
+    const auto read_only_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--read-only-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--object-read-only", "true",
+        "--read-only-target-unique-id", "one-guid"
+    });
+    expect(!read_only_property_result.ok,
+        "#1040: launch contract should reject read-only-object combined with property commands");
+
+    const auto stray_read_only_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--object-read-only", "true"
+    });
+    expect(!stray_read_only_result.ok,
+        "#1040: launch contract should reject stray object read-only arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -2719,6 +2806,9 @@ int main() {
     test_parse_launch_arguments_for_enabled_object();
     test_parse_launch_arguments_rejects_enabled_object_invalid_inputs();
     test_parse_launch_arguments_rejects_enabled_object_ambiguity();
+    test_parse_launch_arguments_for_read_only_object();
+    test_parse_launch_arguments_rejects_read_only_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_read_only_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

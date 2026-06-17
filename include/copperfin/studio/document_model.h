@@ -100,16 +100,19 @@ struct StudioOpenRequest {
     bool tab_stop_object = false;
     bool visibility_object = false;
     bool enabled_object = false;
+    bool read_only_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
     bool enabled = false;
+    bool object_read_only = false;
     bool clear_parent = false;
     bool selection_record_available = false;
     bool starting_tab_index_available = false;
     bool tab_stop_available = false;
     bool visible_available = false;
     bool enabled_available = false;
+    bool object_read_only_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -123,6 +126,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> tab_stop_objects{};
     std::vector<StudioObjectSelector> visibility_objects{};
     std::vector<StudioObjectSelector> enabled_objects{};
+    std::vector<StudioObjectSelector> read_only_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
