@@ -5799,6 +5799,19 @@ VisualAssetEditResult set_visual_object_fill_style(const VisualObjectFillStyleRe
         std::to_string(request.fill_style));
 }
 
+VisualAssetEditResult set_visual_object_buffer_mode(const VisualObjectBufferModeRequest& request) {
+    if (request.buffer_mode < 0) {
+        return {.ok = false, .error = "BufferMode must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "BufferMode",
+        "buffer-mode",
+        std::to_string(request.buffer_mode));
+}
+
 VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRequest& request) {
     if (request.scale_mode < 0) {
         return {.ok = false, .error = "ScaleMode must not be negative."};
