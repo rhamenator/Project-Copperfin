@@ -567,6 +567,9 @@ struct VisualObjectSubtreeDuplicateResult {
     std::string error;
     std::size_t root_record_index = 0;
     std::size_t copied_count = 0;
+    std::string root_object_name;
+    std::string root_unique_id;
+    std::string root_parent_name;
 };
 
 struct VisualObjectCreateRequest {

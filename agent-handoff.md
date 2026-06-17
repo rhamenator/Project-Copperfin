@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#994`, adding batch-duplicated object identity metadata to `VisualObjectDuplicateBatchResult`, while preserving single-duplicate, batch-create, and single-create identity reporting, ungroup target-parent reporting, grouping child-count reporting, visual outline hierarchy/path/sibling/count metadata, host JSON hierarchy metadata, selected-object availability/metadata/properties, property provenance, code metadata, parent links, child record links/counts, deletion state, and unmatched-selection `null` output.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#995`, adding copied-root identity metadata to `VisualObjectSubtreeDuplicateResult`, while preserving batch-duplicate, single-duplicate, batch-create, and single-create identity reporting, ungroup target-parent reporting, grouping child-count reporting, visual outline hierarchy/path/sibling/count metadata, host JSON hierarchy metadata, selected-object availability/metadata/properties, property provenance, code metadata, parent links, child record links/counts, deletion state, and unmatched-selection `null` output.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 

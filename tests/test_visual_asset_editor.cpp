@@ -23301,6 +23301,10 @@ void test_duplicate_visual_object_subtree_rewrites_copied_parents() {
             duplicate_result.root_record_index == 6U &&
             duplicate_result.copied_count == 4U,
         "#760: subtree duplicate should append root and descendants in pre-order");
+    expect(duplicate_result.root_object_name == "cntCopy" &&
+            duplicate_result.root_unique_id == "container-copy-guid" &&
+            duplicate_result.root_parent_name == "frmMain",
+        "#995: subtree duplicate should report copied root identity metadata");
 
     auto objects_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(objects_result.ok && objects_result.objects.size() == 10U,
@@ -23363,6 +23367,10 @@ void test_duplicate_visual_object_subtree_rewrites_copied_parents() {
     });
     expect(!duplicate_result.ok,
         "#760: subtree duplicate should reject replacement identities colliding with existing rows");
+    expect(duplicate_result.root_object_name.empty() &&
+            duplicate_result.root_unique_id.empty() &&
+            duplicate_result.root_parent_name.empty(),
+        "#995: failed subtree duplicate should not report stale copied root identity metadata after collisions");
 
     duplicate_result = copperfin::vfp::duplicate_visual_object_subtree({
         .path = table_path.string(),
