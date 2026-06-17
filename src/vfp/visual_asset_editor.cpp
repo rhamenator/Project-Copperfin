@@ -5977,6 +5977,15 @@ VisualAssetEditResult set_visual_object_link_master(const VisualObjectLinkMaster
         request.link_master);
 }
 
+VisualAssetEditResult set_visual_object_initial_selected_alias(const VisualObjectInitialSelectedAliasRequest& request) {
+    return set_visual_object_text_property(
+        request.path,
+        request.objects,
+        "InitialSelectedAlias",
+        "initial-selected alias",
+        request.initial_selected_alias);
+}
+
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request) {
     if (request.record_source_type < 0) {
         return {.ok = false, .error = "RecordSourceType must not be negative."};

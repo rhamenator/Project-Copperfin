@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#944 selected visual object initial-selected-alias assignment shipped: designer commands can assign caller-provided text `InitialSelectedAlias` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving quoted text serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#943 selected visual object tab-orientation assignment shipped: designer commands can assign caller-provided non-negative numeric `TabOrientation` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#942 selected visual object display-orientation assignment shipped: designer commands can assign caller-provided non-negative numeric `DisplayOrientation` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#941 selected visual object help-context-id assignment shipped: designer commands can assign caller-provided non-negative numeric `HelpContextID` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.

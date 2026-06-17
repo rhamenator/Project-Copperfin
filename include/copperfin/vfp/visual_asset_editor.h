@@ -1102,6 +1102,12 @@ struct VisualObjectLinkMasterRequest {
     std::string link_master;
 };
 
+struct VisualObjectInitialSelectedAliasRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    std::string initial_selected_alias;
+};
+
 struct VisualObjectRecordSourceTypeRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1752,6 +1758,7 @@ VisualAssetEditResult set_visual_object_lock_columns(const VisualObjectLockColum
 VisualAssetEditResult set_visual_object_lock_columns_left(const VisualObjectLockColumnsLeftRequest& request);
 VisualAssetEditResult set_visual_object_record_source(const VisualObjectRecordSourceRequest& request);
 VisualAssetEditResult set_visual_object_link_master(const VisualObjectLinkMasterRequest& request);
+VisualAssetEditResult set_visual_object_initial_selected_alias(const VisualObjectInitialSelectedAliasRequest& request);
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request);
 VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionRequest& request);
 VisualAssetEditResult set_visual_object_column_order(const VisualObjectColumnOrderRequest& request);

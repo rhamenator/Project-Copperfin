@@ -12245,6 +12245,29 @@ void test_set_visual_object_link_master_assigns_text() {
         });
 }
 
+void test_set_visual_object_initial_selected_alias_assigns_text() {
+    test_visual_object_text_property_assigns_text(
+        "#944",
+        "initial_selected_alias",
+        "InitialSelectedAlias",
+        "INITIALSELECTEDALIAS",
+        "initial-selected alias",
+        "customers",
+        "orders",
+        "states",
+        "customers.active",
+        "archive.records",
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            const std::string& value) {
+            return copperfin::vfp::set_visual_object_initial_selected_alias({
+                .path = path,
+                .objects = objects,
+                .initial_selected_alias = value
+            });
+        });
+}
+
 void test_set_visual_object_record_source_type_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#929",
@@ -23912,6 +23935,7 @@ int main() {
     test_set_visual_object_lock_columns_left_assigns_numeric_value();
     test_set_visual_object_record_source_assigns_text();
     test_set_visual_object_link_master_assigns_text();
+    test_set_visual_object_initial_selected_alias_assigns_text();
     test_set_visual_object_record_source_type_assigns_numeric_value();
     test_set_visual_object_partition_assigns_numeric_value();
     test_set_visual_object_column_order_assigns_numeric_value();
