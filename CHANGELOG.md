@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#922 selected visual object grid-line-width assignment shipped: designer commands can assign caller-provided non-negative numeric `GridLineWidth` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#921 selected visual object lock-columns-left assignment shipped: designer commands can assign caller-provided non-negative numeric `LockColumnsLeft` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#920 selected visual object lock-columns assignment shipped: designer commands can assign caller-provided non-negative numeric `LockColumns` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#919 selected visual object row-height assignment shipped: designer commands can assign caller-provided non-negative numeric `RowHeight` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
