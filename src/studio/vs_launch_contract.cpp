@@ -160,6 +160,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--nudge-object") {
+            result.request.nudge_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -376,6 +381,14 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--nudge-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --nudge-mode."};
+            }
+            result.request.nudge_mode = args[++index];
+            continue;
+        }
+
         if (argument == "--grid-width") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --grid-width."};
@@ -397,6 +410,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "The --grid-height value must be numeric."};
             }
             result.request.grid_height = grid_height;
+            continue;
+        }
+
+        if (argument == "--delta-hpos") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --delta-hpos."};
+            }
+            double delta_hpos = 0.0;
+            if (!parse_double_value(args[++index], delta_hpos)) {
+                return {.ok = false, .error = "The --delta-hpos value must be numeric."};
+            }
+            result.request.delta_hpos = delta_hpos;
+            continue;
+        }
+
+        if (argument == "--delta-vpos") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --delta-vpos."};
+            }
+            double delta_vpos = 0.0;
+            if (!parse_double_value(args[++index], delta_vpos)) {
+                return {.ok = false, .error = "The --delta-vpos value must be numeric."};
+            }
+            result.request.delta_vpos = delta_vpos;
             continue;
         }
 
@@ -505,6 +542,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --snap-target-unique-id."};
             }
             result.request.snap_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--nudge-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --nudge-target-object-name."};
+            }
+            result.request.nudge_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--nudge-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --nudge-target-unique-id."};
+            }
+            result.request.nudge_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -687,6 +748,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.snap_objects.empty())) {
         return {.ok = false, .error = "Snap arguments can only be used with --snap-object."};
     }
+    if (result.request.nudge_object && result.request.nudge_mode.empty()) {
+        return {.ok = false, .error = "An object nudge requires --nudge-mode."};
+    }
+    if (result.request.nudge_object && result.request.nudge_objects.empty()) {
+        return {.ok = false, .error = "An object nudge requires at least one target selector."};
+    }
+    if (!result.request.nudge_object &&
+        (!result.request.nudge_mode.empty() ||
+         result.request.delta_hpos != 0.0 ||
+         result.request.delta_vpos != 0.0 ||
+         !result.request.nudge_objects.empty())) {
+        return {.ok = false, .error = "Nudge arguments can only be used with --nudge-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -707,6 +781,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.resize_object ? 1 : 0) +
         (result.request.distribute_object ? 1 : 0) +
         (result.request.snap_object ? 1 : 0) +
+        (result.request.nudge_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

@@ -107,6 +107,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.resize_object, "#1032: launch contract should keep resize-object off by default");
     expect(!result.request.distribute_object, "#1033: launch contract should keep distribute-object off by default");
     expect(!result.request.snap_object, "#1034: launch contract should keep snap-object off by default");
+    expect(!result.request.nudge_object, "#1035: launch contract should keep nudge-object off by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1005,6 +1006,101 @@ void test_parse_launch_arguments_rejects_snap_object_ambiguity() {
     });
     expect(!stray_snap_result.ok,
         "#1034: launch contract should reject stray snap arguments");
+}
+
+void test_parse_launch_arguments_for_nudge_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--nudge-object",
+        "--nudge-mode", "both",
+        "--delta-hpos", "5.5",
+        "--delta-vpos", "-2",
+        "--nudge-target-object-name", "cmdOne",
+        "--nudge-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1035: launch contract should parse nudge-object requests");
+    expect(result.request.nudge_object, "#1035: launch contract should detect --nudge-object");
+    expect(result.request.nudge_mode == "both",
+        "#1035: nudge-object requests should carry nudge mode");
+    expect(result.request.delta_hpos == 5.5 && result.request.delta_vpos == -2.0,
+        "#1035: nudge-object requests should carry numeric deltas");
+    expect(result.request.nudge_objects.size() == 2U,
+        "#1035: nudge-object requests should collect nudge target selectors");
+    if (result.request.nudge_objects.size() == 2U) {
+        expect(result.request.nudge_objects[0].object_name == "cmdOne" &&
+                result.request.nudge_objects[0].unique_id.empty(),
+            "#1035: nudge-object requests should parse target object-name selectors");
+        expect(result.request.nudge_objects[1].object_name.empty() &&
+                result.request.nudge_objects[1].unique_id == "two-guid",
+            "#1035: nudge-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_nudge_object_invalid_inputs() {
+    const auto missing_mode_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--nudge-object",
+        "--delta-hpos", "1",
+        "--nudge-target-unique-id", "one-guid"
+    });
+    expect(!missing_mode_result.ok,
+        "#1035: launch contract should reject nudge-object requests without nudge mode");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--nudge-object",
+        "--nudge-mode", "horizontal",
+        "--delta-hpos", "1"
+    });
+    expect(!missing_targets_result.ok,
+        "#1035: launch contract should reject nudge-object requests without target selectors");
+
+    const auto invalid_delta_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--nudge-object",
+        "--nudge-mode", "horizontal",
+        "--delta-hpos", "right",
+        "--nudge-target-unique-id", "one-guid"
+    });
+    expect(!invalid_delta_result.ok,
+        "#1035: launch contract should reject non-numeric horizontal deltas");
+}
+
+void test_parse_launch_arguments_rejects_nudge_object_ambiguity() {
+    const auto nudge_snap_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--nudge-object",
+        "--snap-object",
+        "--nudge-mode", "horizontal",
+        "--delta-hpos", "1",
+        "--snap-mode", "horizontal",
+        "--grid-width", "10",
+        "--nudge-target-unique-id", "one-guid",
+        "--snap-target-unique-id", "one-guid"
+    });
+    expect(!nudge_snap_result.ok,
+        "#1035: launch contract should reject simultaneous nudge-object and snap-object requests");
+
+    const auto nudge_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--nudge-object",
+        "--clear-property",
+        "--property-name", "Caption",
+        "--nudge-mode", "horizontal",
+        "--delta-hpos", "1",
+        "--nudge-target-unique-id", "one-guid"
+    });
+    expect(!nudge_property_result.ok,
+        "#1035: launch contract should reject nudge-object combined with property commands");
+
+    const auto stray_nudge_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--nudge-mode", "horizontal"
+    });
+    expect(!stray_nudge_result.ok,
+        "#1035: launch contract should reject stray nudge arguments");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -2260,6 +2356,9 @@ int main() {
     test_parse_launch_arguments_for_snap_object();
     test_parse_launch_arguments_rejects_snap_object_invalid_inputs();
     test_parse_launch_arguments_rejects_snap_object_ambiguity();
+    test_parse_launch_arguments_for_nudge_object();
+    test_parse_launch_arguments_rejects_nudge_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_nudge_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

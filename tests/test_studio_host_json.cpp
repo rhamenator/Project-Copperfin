@@ -412,6 +412,24 @@ void write_synthetic_form_table_for_object_snap(const std::filesystem::path& for
     expect(create_result.ok, "#1034: synthetic SCX table for object snap should be created");
 }
 
+void write_synthetic_form_table_for_object_nudge(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "HPOS", .type = 'C', .length = 10U},
+        {.name = "VPOS", .type = 'C', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdOne", "cmdOne", "one-guid", "10", "20"},
+        {"cmdTwo", "cmdTwo", "two-guid", "33.5", "44.5"},
+        {"cmdOther", "cmdOther", "other-guid", "77", "88"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1035: synthetic SCX table for object nudge should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -2820,6 +2838,139 @@ void test_studio_host_json_snaps_objects_by_stable_selectors(const std::string& 
     }
 }
 
+void test_studio_host_json_nudges_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_nudge_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path nudge_path = temp_root / "nudge.scx";
+    write_synthetic_form_table_for_object_nudge(nudge_path);
+    const auto nudge_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", nudge_path.string(),
+            "--nudge-object",
+            "--nudge-mode", "both",
+            "--delta-hpos", "5",
+            "--delta-vpos", "-2.5",
+            "--nudge-target-object-name", "cmdOne",
+            "--nudge-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(nudge_process.exit_code == 0,
+        "#1035: host object nudge should exit successfully");
+    expect(visual_object_property(nudge_path, "one-guid", "HPOS") == "15" &&
+            visual_object_property(nudge_path, "one-guid", "VPOS") == "17.5" &&
+            visual_object_property(nudge_path, "two-guid", "HPOS") == "38.5" &&
+            visual_object_property(nudge_path, "two-guid", "VPOS") == "42" &&
+            visual_object_property(nudge_path, "other-guid", "HPOS") == "77",
+        "#1035: host object nudge should move selected coordinates and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_nudge(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--nudge-object",
+            "--nudge-mode", "horizontal",
+            "--delta-hpos", "1",
+            "--nudge-target-unique-id", "one-guid",
+            "--nudge-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1035: missing-target host object nudge should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "HPOS") == "10" &&
+            visual_object_property(missing_target_path, "two-guid", "HPOS") == "33.5",
+        "#1035: missing-target host object nudge should not mutate the asset");
+
+    const fs::path missing_mode_path = temp_root / "missing_mode.scx";
+    write_synthetic_form_table_for_object_nudge(missing_mode_path);
+    const auto missing_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_mode_path.string(),
+            "--nudge-object",
+            "--delta-hpos", "1",
+            "--nudge-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_mode_process.exit_code == 2,
+        "#1035: nudge-object without nudge mode should fail during launch parsing");
+    expect(visual_object_property(missing_mode_path, "one-guid", "HPOS") == "10",
+        "#1035: nudge-object without nudge mode should not mutate the asset");
+
+    const fs::path zero_delta_path = temp_root / "zero_delta.scx";
+    write_synthetic_form_table_for_object_nudge(zero_delta_path);
+    const auto zero_delta_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", zero_delta_path.string(),
+            "--nudge-object",
+            "--nudge-mode", "horizontal",
+            "--delta-hpos", "0",
+            "--nudge-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(zero_delta_process.exit_code == 4,
+        "#1035: zero-delta host object nudge should return command failure");
+    expect(visual_object_property(zero_delta_path, "one-guid", "HPOS") == "10",
+        "#1035: zero-delta host object nudge should not mutate the asset");
+
+    const fs::path unsupported_mode_path = temp_root / "unsupported_mode.scx";
+    write_synthetic_form_table_for_object_nudge(unsupported_mode_path);
+    const auto unsupported_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unsupported_mode_path.string(),
+            "--nudge-object",
+            "--nudge-mode", "diagonal",
+            "--delta-hpos", "1",
+            "--delta-vpos", "1",
+            "--nudge-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_mode_process.exit_code == 4,
+        "#1035: unsupported-mode host object nudge should return command failure");
+    expect(visual_object_property(unsupported_mode_path, "one-guid", "HPOS") == "10",
+        "#1035: unsupported-mode host object nudge should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_nudge(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--nudge-object",
+            "--snap-object",
+            "--nudge-mode", "horizontal",
+            "--delta-hpos", "1",
+            "--snap-mode", "horizontal",
+            "--grid-width", "10",
+            "--nudge-target-unique-id", "one-guid",
+            "--snap-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1035: nudge-object plus snap-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "HPOS") == "10",
+        "#1035: nudge-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -2963,6 +3114,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_resizes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_snaps_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_nudges_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }
