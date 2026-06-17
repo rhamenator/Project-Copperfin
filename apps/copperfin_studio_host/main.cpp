@@ -219,6 +219,27 @@ void print_json_designer_contexts(const std::vector<copperfin::studio::StudioDes
     std::cout << "    ]";
 }
 
+void print_json_object_properties(
+    const std::vector<copperfin::studio::StudioPropertySnapshot>& properties,
+    const std::string& indent) {
+    std::cout << "[\n";
+    for (std::size_t property_index = 0; property_index < properties.size(); ++property_index) {
+        const auto& property = properties[property_index];
+        std::cout << indent << "  {\"name\": ";
+        print_json_string(property.name);
+        std::cout << ", \"type\": ";
+        print_json_string(std::string(1U, property.type));
+        std::cout << ", \"isNull\": " << (property.is_null ? "true" : "false") << ", \"value\": ";
+        print_json_string(property.value);
+        std::cout << "}";
+        if ((property_index + 1U) != properties.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << indent << "]";
+}
+
 void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& object, const std::string& indent) {
     std::cout << "{\n";
     std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
@@ -242,6 +263,9 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     std::cout << ",\n";
     std::cout << indent << "  \"baseclassName\": ";
     print_json_string(object.baseclass_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"properties\": ";
+    print_json_object_properties(object.properties, indent + "  ");
     std::cout << "\n";
     std::cout << indent << "}";
 }
@@ -824,22 +848,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "        \"subtitle\": ";
         print_json_string(object.subtitle);
         std::cout << ",\n";
-        std::cout << "        \"properties\": [\n";
-        for (std::size_t property_index = 0; property_index < object.properties.size(); ++property_index) {
-            const auto& property = object.properties[property_index];
-            std::cout << "          {\"name\": ";
-            print_json_string(property.name);
-            std::cout << ", \"type\": ";
-            print_json_string(std::string(1U, property.type));
-            std::cout << ", \"isNull\": " << (property.is_null ? "true" : "false") << ", \"value\": ";
-            print_json_string(property.value);
-            std::cout << "}";
-            if ((property_index + 1U) != object.properties.size()) {
-                std::cout << ",";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "        ]\n";
+        std::cout << "        \"properties\": ";
+        print_json_object_properties(object.properties, "        ");
+        std::cout << "\n";
         std::cout << "      }";
         if ((index + 1U) != objects.size()) {
             std::cout << ",";

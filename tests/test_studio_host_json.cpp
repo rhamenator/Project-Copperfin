@@ -313,6 +313,35 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#967: selected object summaries should expose class names");
     expect_contains(selected_object_process.stdout_text, "\"baseclassName\": \"form\"",
                     "#967: selected object summaries should expose baseclass names");
+    const auto selected_object_begin = selected_object_process.stdout_text.find("\"selectedObject\": {");
+    const auto selected_object_end =
+        selected_object_begin == std::string::npos
+            ? std::string::npos
+            : selected_object_process.stdout_text.find("\"hasSidecar\"", selected_object_begin);
+    expect(selected_object_begin != std::string::npos &&
+               selected_object_end != std::string::npos &&
+               selected_object_end > selected_object_begin,
+           "#968: Studio host JSON should delimit a selected-object section before document metadata resumes");
+    if (selected_object_begin != std::string::npos &&
+        selected_object_end != std::string::npos &&
+        selected_object_end > selected_object_begin) {
+        const auto selected_object_json =
+            selected_object_process.stdout_text.substr(selected_object_begin, selected_object_end - selected_object_begin);
+        expect_contains(selected_object_json, "\"properties\": [",
+                        "#968: selected object summaries should expose direct property snapshots");
+        expect_contains(selected_object_json, "\"name\": \"OBJNAME\"",
+                        "#968: selected object properties should include DBF field names");
+        expect_contains(selected_object_json, "\"type\": \"C\"",
+                        "#968: selected object properties should preserve DBF field types");
+        expect_contains(selected_object_json, "\"isNull\": false",
+                        "#968: selected object properties should preserve DBF null flags");
+        expect_contains(selected_object_json, "\"value\": \"frmCustomer\"",
+                        "#968: selected object properties should include selected object values");
+        expect_contains(selected_object_json, "\"name\": \"BASECLASS\"",
+                        "#968: selected object properties should include later direct DBF fields");
+        expect_contains(selected_object_json, "\"value\": \"form\"",
+                        "#968: selected object properties should include selected baseclass values");
+    }
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

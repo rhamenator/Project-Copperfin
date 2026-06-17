@@ -17,7 +17,7 @@ Important:
   - `docs/safety/test-coverage-gap-analysis.md` (edge case gap analysis; consult when adding tests)
   - the runtime/data files directly relevant to the slice you choose
 - Stay implementation-first. Do not stop at analysis.
-- Prioritize Phase A runtime/data-engine compatibility over UI, IDE, or designer work.
+- Prioritize the current active queue in `docs/23-phase-a-dependency-breakdown.md`; the Phase A runtime/data-engine gate is closed.
 - Keep changes minimal and focused.
 - Fix mistakes you encounter in your changed area.
 - Treat the issue tracker at slice granularity: before coding, choose one open prompt-sized slice issue or create one under the active lane issue if none fits.
@@ -30,7 +30,7 @@ Current priority order:
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#967`, exposing `selectedObject` in `copperfin_studio_host --json` for explicit record selections that match parsed designer objects, while unmatched or unavailable selections report `null`.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest slice: `#968`, embedding selected-object property snapshots in `copperfin_studio_host --json` for explicit record selections that match parsed designer objects, while preserving compact selected-object identity metadata and unmatched-selection `null` output.
 
 Next: continue `#23` by opening the next prompt-sized designer interaction, builder, or context-aware editor child before coding. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
@@ -609,7 +609,7 @@ Current shipped highlights worth remembering:
 Workflow:
 
 1. Inspect the current repo state in the relevant files only.
-2. Identify the single best critical-path runtime/data-engine slice.
+2. Identify the single best prompt-sized slice from the current active queue.
 3. Implement it.
 4. Add or update focused regression tests.
 5. Run narrow validation relevant to the slice.
@@ -623,12 +623,10 @@ Workflow:
 
 Default direction if no stronger signal appears from the current files:
 
-- Prefer the next unfinished critical-path slice from `docs/23-phase-a-dependency-breakdown.md`.
-- Immediate target family:
-  - `#150`, then `#151` under `#13`
-  - then `#152`, then `#153` under `#14`
-- Do not reopen the recently deepened `WAIT` / `KEYBOARD` / `DISPLAY` / `LIST` lane or the now-closed `#95` / `#96` / `#10` / `#11` / `#12` / spent `#13`-`#14` child slices unless a concrete remaining parity bug is visible.
-- Avoid broad roadmap work and avoid jumping to shell/UI/designer tasks unless Phase A is blocked.
+- Prefer the current active queue from `docs/23-phase-a-dependency-breakdown.md`.
+- Current target family: E2/#23 designer interaction, builder, and context-aware editor fidelity.
+- Do not reopen the closed Phase A runtime/data-engine, D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless concrete regression evidence appears.
+- Avoid broad roadmap work; create one prompt-sized child issue under the active lane before coding.
 
 Future-enhancement tracking:
 
