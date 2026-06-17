@@ -257,6 +257,8 @@ struct VisualObjectSnapshot {
     std::size_t sibling_index = 0;
     std::size_t sibling_count = 0;
     std::size_t child_count = 0;
+    std::size_t property_count = 0;
+    std::size_t method_count = 0;
     std::string class_name;
     std::string baseclass_name;
     std::string caption;

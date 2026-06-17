@@ -931,6 +931,7 @@ VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
     const auto* class_name = find_record_value(record, "CLASS");
     const auto* baseclass_name = find_record_value(record, "BASECLASS");
     const auto* properties = find_record_value(record, "PROPERTIES");
+    const auto* methods = find_record_value(record, "METHODS");
 
     std::string caption;
     if (properties != nullptr) {
@@ -942,6 +943,13 @@ VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
             caption = caption_it->value;
         }
     }
+
+    const std::size_t parsed_property_count = properties == nullptr
+        ? 0U
+        : parse_visual_property_blob(properties->display_value).size();
+    const std::size_t parsed_method_count = methods == nullptr
+        ? 0U
+        : parse_visual_methods_blob(methods->display_value, methods->memo_block_number).size();
 
     return {
         .record_index = record.record_index,
@@ -957,6 +965,8 @@ VisualObjectSnapshot build_visual_object_snapshot(const DbfRecord& record) {
         .sibling_index = 0U,
         .sibling_count = 0U,
         .child_count = 0U,
+        .property_count = record.values.size() + parsed_property_count,
+        .method_count = parsed_method_count,
         .class_name = class_name == nullptr ? std::string{} : trim_both(class_name->display_value),
         .baseclass_name = baseclass_name == nullptr ? std::string{} : trim_both(baseclass_name->display_value),
         .caption = caption

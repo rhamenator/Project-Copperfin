@@ -3253,12 +3253,32 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
         {.name = "UNIQUEID", .type = 'C', .length = 16U},
         {.name = "PARENT", .type = 'C', .length = 16U},
         {.name = "CLASS", .type = 'C', .length = 16U},
-        {.name = "BASECLASS", .type = 'C', .length = 16U}
+        {.name = "BASECLASS", .type = 'C', .length = 16U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"Page1", "pageOne", "page-guid", "", "pageframe", "Page"},
-        {"cmdSave", "saveButton", "save-guid", "Page1", "cmdButton", "CommandButton"},
-        {"txtName", "nameBox", "name-guid", "page1", "textBox", "TextBox"}
+        {
+            "Page1",
+            "pageOne",
+            "page-guid",
+            "",
+            "pageframe",
+            "Page",
+            "Caption = \"Page\"\r\nWidth = 200\r\n",
+            "PROCEDURE Activate\r\nRETURN\r\n"
+        },
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "Page1",
+            "cmdButton",
+            "CommandButton",
+            "Caption = \"Save\"\r\n",
+            "PROCEDURE Click\r\nRETURN\r\nFUNCTION CanSave\r\nRETURN .T.\r\n"
+        },
+        {"txtName", "nameBox", "name-guid", "page1", "textBox", "TextBox", "", ""}
     };
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
     expect(create_result.ok, "#744: object outline metadata fixture should be writable");
@@ -3277,6 +3297,8 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 list_result.objects[0].sibling_index == 0U &&
                 list_result.objects[0].sibling_count == 1U,
             "#987: root visual object outlines should expose path, depth, ancestor, and sibling metadata");
+        expect(list_result.objects[0].property_count == 10U && list_result.objects[0].method_count == 1U,
+            "#988: root visual object outlines should expose direct plus memo property counts and method counts");
         expect(list_result.objects[1].parent_name == "Page1",
             "#744: visual object outlines should expose parent/container names");
         expect(list_result.objects[1].parent_record_available &&
@@ -3290,6 +3312,8 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 list_result.objects[1].sibling_index == 0U &&
                 list_result.objects[1].sibling_count == 2U,
             "#987: first child visual object outlines should expose path, depth, ancestors, and sibling order");
+        expect(list_result.objects[1].property_count == 9U && list_result.objects[1].method_count == 2U,
+            "#988: child visual object outlines should expose parsed property and method counts");
         expect(list_result.objects[1].class_name == "cmdButton",
             "#744: visual object outlines should expose class names");
         expect(list_result.objects[1].baseclass_name == "CommandButton",
@@ -3305,6 +3329,8 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 list_result.objects[2].sibling_index == 1U &&
                 list_result.objects[2].sibling_count == 2U,
             "#987: second child visual object outlines should expose case-insensitive sibling order");
+        expect(list_result.objects[2].property_count == 8U && list_result.objects[2].method_count == 0U,
+            "#988: objects with empty property/method memos should still expose direct field counts");
         expect(list_result.objects[2].caption.empty(),
             "#745: visual object outlines should keep captions empty when no Caption property exists");
     }
@@ -3322,8 +3348,10 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 children_result.children[0].parent_record_index == 0U &&
                 children_result.children[0].child_count == 0U &&
                 children_result.children[0].object_path == "Page1.cmdSave" &&
-                children_result.children[0].sibling_count == 2U,
-            "#987: embedded child-list snapshots should expose resolved hierarchy and sibling metadata");
+                children_result.children[0].sibling_count == 2U &&
+                children_result.children[0].property_count == 9U &&
+                children_result.children[0].method_count == 2U,
+            "#988: embedded child-list snapshots should expose resolved hierarchy and count metadata");
     }
 
     const auto descendants_result = copperfin::vfp::list_visual_object_descendants({
@@ -3339,8 +3367,10 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
                 descendants_result.descendants[1].object.parent_record_index == 0U &&
                 descendants_result.descendants[1].object.child_count == 0U &&
                 descendants_result.descendants[1].object.object_path == "Page1.txtName" &&
-                descendants_result.descendants[1].object.sibling_index == 1U,
-            "#987: embedded descendant snapshots should expose resolved hierarchy and sibling metadata");
+                descendants_result.descendants[1].object.sibling_index == 1U &&
+                descendants_result.descendants[1].object.property_count == 8U &&
+                descendants_result.descendants[1].object.method_count == 0U,
+            "#988: embedded descendant snapshots should expose resolved hierarchy and count metadata");
     }
 
     const auto ancestors_result = copperfin::vfp::list_visual_object_ancestors({
@@ -3355,8 +3385,10 @@ void test_list_visual_objects_reads_hierarchy_metadata() {
         expect(!ancestors_result.ancestors[0].object.parent_record_available &&
                 ancestors_result.ancestors[0].object.child_count == 2U &&
                 ancestors_result.ancestors[0].object.object_path == "Page1" &&
-                ancestors_result.ancestors[0].object.sibling_count == 1U,
-            "#987: embedded ancestor snapshots should expose their own hierarchy and sibling metadata");
+                ancestors_result.ancestors[0].object.sibling_count == 1U &&
+                ancestors_result.ancestors[0].object.property_count == 10U &&
+                ancestors_result.ancestors[0].object.method_count == 1U,
+            "#988: embedded ancestor snapshots should expose their own hierarchy and count metadata");
     }
 
     fs::remove_all(temp_dir, ignored);
