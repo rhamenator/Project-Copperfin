@@ -147,6 +147,10 @@ void test_parse_launch_arguments() {
     expect(!result.request.left_column_available, "#1054: launch contract should keep left column unavailable by default");
     expect(!result.request.display_value_object, "#1055: launch contract should keep display-value-object off by default");
     expect(!result.request.display_value_available, "#1055: launch contract should keep display value unavailable by default");
+    expect(!result.request.selected_back_color_object,
+        "#1056: launch contract should keep selected-back-color-object off by default");
+    expect(!result.request.selected_back_color_available,
+        "#1056: launch contract should keep selected back color unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -2825,6 +2829,101 @@ void test_parse_launch_arguments_rejects_display_value_object_ambiguity() {
         "#1055: launch contract should reject stray display-value arguments");
 }
 
+void test_parse_launch_arguments_for_selected_back_color_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--selected-back-color-object",
+        "--selected-back-color", "16777215",
+        "--selected-back-color-target-object-name", "lstOrders",
+        "--selected-back-color-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1056: launch contract should parse selected-back-color-object requests");
+    expect(result.request.selected_back_color_object,
+        "#1056: launch contract should detect --selected-back-color-object");
+    expect(result.request.selected_back_color_available && result.request.selected_back_color == 16777215,
+        "#1056: selected-back-color-object requests should carry selected back color values");
+    expect(result.request.selected_back_color_objects.size() == 2U,
+        "#1056: selected-back-color-object requests should collect selected-back-color target selectors");
+    if (result.request.selected_back_color_objects.size() == 2U) {
+        expect(result.request.selected_back_color_objects[0].object_name == "lstOrders" &&
+                result.request.selected_back_color_objects[0].unique_id.empty(),
+            "#1056: selected-back-color-object requests should parse target object-name selectors");
+        expect(result.request.selected_back_color_objects[1].object_name.empty() &&
+                result.request.selected_back_color_objects[1].unique_id == "two-guid",
+            "#1056: selected-back-color-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_selected_back_color_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selected-back-color-object",
+        "--selected-back-color-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1056: launch contract should reject selected-back-color-object requests without selected back color");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selected-back-color-object",
+        "--selected-back-color", "16777215"
+    });
+    expect(!missing_targets_result.ok,
+        "#1056: launch contract should reject selected-back-color-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selected-back-color-object",
+        "--selected-back-color", "white",
+        "--selected-back-color-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1056: launch contract should reject non-integer selected-back-color values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selected-back-color-object",
+        "--selected-back-color", "-1",
+        "--selected-back-color-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1056: launch contract should reject negative selected-back-color values before mutation");
+}
+
+void test_parse_launch_arguments_rejects_selected_back_color_object_ambiguity() {
+    const auto selected_back_display_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selected-back-color-object",
+        "--display-value-object",
+        "--selected-back-color", "16777215",
+        "--selected-back-color-target-unique-id", "one-guid",
+        "--display-value", "Bob",
+        "--display-value-target-unique-id", "one-guid"
+    });
+    expect(!selected_back_display_value_result.ok,
+        "#1056: launch contract should reject simultaneous selected-back-color-object and display-value-object requests");
+
+    const auto selected_back_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selected-back-color-object",
+        "--clear-property",
+        "--property-name", "SelectedBackColor",
+        "--selected-back-color", "16777215",
+        "--selected-back-color-target-unique-id", "one-guid"
+    });
+    expect(!selected_back_property_result.ok,
+        "#1056: launch contract should reject selected-back-color-object combined with property commands");
+
+    const auto stray_selected_back_color_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--selected-back-color", "16777215"
+    });
+    expect(!stray_selected_back_color_result.ok,
+        "#1056: launch contract should reject stray selected-back-color arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -4141,6 +4240,9 @@ int main() {
     test_parse_launch_arguments_for_display_value_object();
     test_parse_launch_arguments_rejects_display_value_object_invalid_inputs();
     test_parse_launch_arguments_rejects_display_value_object_ambiguity();
+    test_parse_launch_arguments_for_selected_back_color_object();
+    test_parse_launch_arguments_rejects_selected_back_color_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_selected_back_color_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
