@@ -618,6 +618,7 @@ struct VisualObjectGroupResult {
     bool ok = false;
     std::string error;
     std::size_t container_record_index = 0;
+    std::size_t child_count = 0;
 };
 
 struct VisualObjectUngroupRequest {

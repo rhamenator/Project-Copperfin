@@ -21694,8 +21694,8 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
             {.record_index = 0U, .object_name = {}, .unique_id = "name-guid"}
         }
     });
-    expect(group_result.ok && group_result.container_record_index == 4U,
-        "#788: grouping should append a container and return its record index");
+    expect(group_result.ok && group_result.container_record_index == 4U && group_result.child_count == 2U,
+        "#989: grouping should append a container and report the grouped child count");
     expect(object_count() == 5U,
         "#788: grouping should append exactly one group container");
 
@@ -21738,7 +21738,8 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
             {.record_index = 0U, .object_name = {}, .unique_id = "missing-guid"}
         }
     });
-    expect(!group_result.ok, "#788: grouping should reject missing selected objects");
+    expect(!group_result.ok && group_result.child_count == 0U,
+        "#989: grouping should reject missing selected objects with zero grouped child count");
     expect(object_count() == committed_count &&
             parent_value("save-guid") == "frmMain" &&
             parent_value("name-guid") == "frmMain",
@@ -21754,7 +21755,8 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
             {.record_index = 0U, .object_name = {}, .unique_id = "save-guid"}
         }
     });
-    expect(!group_result.ok, "#788: grouping should reject invalid container identities");
+    expect(!group_result.ok && group_result.child_count == 0U,
+        "#989: grouping should reject invalid container identities with zero grouped child count");
     expect(object_count() == committed_count,
         "#788: invalid-container failures should not append rows");
 
@@ -21768,7 +21770,8 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
             {.record_index = 0U, .object_name = {}, .unique_id = "save-guid"}
         }
     });
-    expect(!group_result.ok, "#788: grouping should reject containers without OBJNAME or fallback NAME");
+    expect(!group_result.ok && group_result.child_count == 0U,
+        "#989: grouping should reject containers without OBJNAME or fallback NAME with zero grouped child count");
     expect(object_count() == committed_count,
         "#788: nameless-container failures should remove the created row");
 
@@ -21779,7 +21782,8 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
             {.record_index = 0U, .object_name = {}, .unique_id = "save-guid"}
         }
     });
-    expect(!group_result.ok, "#788: grouping should reject empty container field values");
+    expect(!group_result.ok && group_result.child_count == 0U,
+        "#989: grouping should reject empty container field values with zero grouped child count");
     expect(object_count() == committed_count,
         "#788: empty-container-field failures should not append rows");
 
@@ -21791,7 +21795,8 @@ void test_group_visual_objects_creates_container_and_rolls_back_failures() {
         },
         .objects = {}
     });
-    expect(!group_result.ok, "#788: grouping should reject empty selections");
+    expect(!group_result.ok && group_result.child_count == 0U,
+        "#989: grouping should reject empty selections with zero grouped child count");
     expect(object_count() == committed_count,
         "#788: empty-selection failures should not append rows");
 
