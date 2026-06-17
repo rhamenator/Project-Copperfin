@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#939 selected visual object fill-color assignment shipped: designer commands can assign caller-provided non-negative numeric `FillColor` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#938 selected visual object child-order assignment shipped: designer commands can assign caller-provided non-negative numeric `ChildOrder` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#937 selected visual object highlight-style assignment shipped: designer commands can assign caller-provided non-negative numeric `HighlightStyle` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.
 - E2/#936 selected visual object column-order assignment shipped: designer commands can assign caller-provided non-negative numeric `ColumnOrder` values through direct fields, existing serialized properties, and writable absent memo-backed properties while preserving unquoted numeric serialization, duplicate selection rejection, and rollback-safe batch writes.

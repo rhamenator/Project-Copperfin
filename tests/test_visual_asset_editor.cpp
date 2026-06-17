@@ -12365,6 +12365,29 @@ void test_set_visual_object_draw_width_assigns_numeric_value() {
         });
 }
 
+void test_set_visual_object_fill_color_assigns_numeric_value() {
+    test_visual_object_non_negative_numeric_property_assigns_value(
+        "#939",
+        "fill_color",
+        "FillColor",
+        "FILLCOLOR",
+        "fill-color",
+        0,
+        255,
+        65280,
+        16711680,
+        16777215,
+        [](const std::string& path,
+            const std::vector<copperfin::vfp::VisualObjectAlignmentTarget>& objects,
+            int value) {
+            return copperfin::vfp::set_visual_object_fill_color({
+                .path = path,
+                .objects = objects,
+                .fill_color = value
+            });
+        });
+}
+
 void test_set_visual_object_fill_style_assigns_numeric_value() {
     test_visual_object_non_negative_numeric_property_assigns_value(
         "#888",
@@ -23807,6 +23830,7 @@ int main() {
     test_set_visual_object_draw_mode_assigns_numeric_value();
     test_set_visual_object_draw_style_assigns_numeric_value();
     test_set_visual_object_draw_width_assigns_numeric_value();
+    test_set_visual_object_fill_color_assigns_numeric_value();
     test_set_visual_object_fill_style_assigns_numeric_value();
     test_set_visual_object_buffer_mode_assigns_numeric_value();
     test_set_visual_object_buffer_mode_override_assigns_numeric_value();
