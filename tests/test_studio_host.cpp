@@ -123,6 +123,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.caption_available, "#1042: launch contract should keep caption unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
+    expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
+    expect(!result.request.status_bar_text_available, "#1044: launch contract should keep status-bar text unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -1781,6 +1783,82 @@ void test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity() {
         "#1043: launch contract should reject stray tooltip text arguments");
 }
 
+void test_parse_launch_arguments_for_status_bar_text_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--status-bar-text-object",
+        "--status-bar-text", "Ready to save",
+        "--status-bar-text-target-object-name", "cmdSave",
+        "--status-bar-text-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1044: launch contract should parse status-bar-text-object requests");
+    expect(result.request.status_bar_text_object, "#1044: launch contract should detect --status-bar-text-object");
+    expect(result.request.status_bar_text_available && result.request.status_bar_text == "Ready to save",
+        "#1044: status-bar-text-object requests should carry status-bar text");
+    expect(result.request.status_bar_text_objects.size() == 2U,
+        "#1044: status-bar-text-object requests should collect status-bar text target selectors");
+    if (result.request.status_bar_text_objects.size() == 2U) {
+        expect(result.request.status_bar_text_objects[0].object_name == "cmdSave" &&
+                result.request.status_bar_text_objects[0].unique_id.empty(),
+            "#1044: status-bar-text-object requests should parse target object-name selectors");
+        expect(result.request.status_bar_text_objects[1].object_name.empty() &&
+                result.request.status_bar_text_objects[1].unique_id == "two-guid",
+            "#1044: status-bar-text-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_status_bar_text_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--status-bar-text-object",
+        "--status-bar-text-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1044: launch contract should reject status-bar-text-object requests without status-bar text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--status-bar-text-object",
+        "--status-bar-text", "Ready"
+    });
+    expect(!missing_targets_result.ok,
+        "#1044: launch contract should reject status-bar-text-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_status_bar_text_object_ambiguity() {
+    const auto status_tooltip_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--status-bar-text-object",
+        "--tooltip-text-object",
+        "--status-bar-text", "Ready",
+        "--status-bar-text-target-unique-id", "one-guid",
+        "--tooltip-text", "Save",
+        "--tooltip-text-target-unique-id", "one-guid"
+    });
+    expect(!status_tooltip_result.ok,
+        "#1044: launch contract should reject simultaneous status-bar-text-object and tooltip-text-object requests");
+
+    const auto status_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--status-bar-text-object",
+        "--clear-property",
+        "--property-name", "StatusBarText",
+        "--status-bar-text", "Ready",
+        "--status-bar-text-target-unique-id", "one-guid"
+    });
+    expect(!status_property_result.ok,
+        "#1044: launch contract should reject status-bar-text-object combined with property commands");
+
+    const auto stray_status_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--status-bar-text", "Ready"
+    });
+    expect(!stray_status_result.ok,
+        "#1044: launch contract should reject stray status-bar text arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -3061,6 +3139,9 @@ int main() {
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
+    test_parse_launch_arguments_for_status_bar_text_object();
+    test_parse_launch_arguments_rejects_status_bar_text_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_status_bar_text_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
