@@ -398,6 +398,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--continuous-scroll-object") {
+            result.request.continuous_scroll_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1000,6 +1005,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.auto_release = *auto_release;
             result.request.auto_release_available = true;
+            continue;
+        }
+
+        if (argument == "--continuous-scroll") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --continuous-scroll."};
+            }
+            const auto continuous_scroll = parse_bool_value(args[++index]);
+            if (!continuous_scroll.has_value()) {
+                return {.ok = false, .error = "The --continuous-scroll value must be true or false."};
+            }
+            result.request.continuous_scroll = *continuous_scroll;
+            result.request.continuous_scroll_available = true;
             continue;
         }
 
@@ -2353,6 +2371,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--continuous-scroll-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --continuous-scroll-target-object-name."};
+            }
+            result.request.continuous_scroll_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--continuous-scroll-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --continuous-scroll-target-unique-id."};
+            }
+            result.request.continuous_scroll_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3074,6 +3116,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.auto_release_objects.empty())) {
         return {.ok = false, .error = "Auto-release arguments can only be used with --auto-release-object."};
     }
+    if (result.request.continuous_scroll_object && !result.request.continuous_scroll_available) {
+        return {.ok = false, .error = "An object continuous-scroll assignment requires --continuous-scroll."};
+    }
+    if (result.request.continuous_scroll_object && result.request.continuous_scroll_objects.empty()) {
+        return {.ok = false, .error = "An object continuous-scroll assignment requires at least one target selector."};
+    }
+    if (!result.request.continuous_scroll_object &&
+        (result.request.continuous_scroll_available ||
+         !result.request.continuous_scroll_objects.empty())) {
+        return {.ok = false, .error = "Continuous-scroll arguments can only be used with --continuous-scroll-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3138,6 +3191,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +
+        (result.request.continuous_scroll_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

@@ -239,6 +239,10 @@ void test_parse_launch_arguments() {
         "#1080: launch contract should keep auto-release-object off by default");
     expect(!result.request.auto_release_available,
         "#1080: launch contract should keep auto release unavailable by default");
+    expect(!result.request.continuous_scroll_object,
+        "#1081: launch contract should keep continuous-scroll-object off by default");
+    expect(!result.request.continuous_scroll_available,
+        "#1081: launch contract should keep continuous scroll unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -4996,6 +5000,92 @@ void test_parse_launch_arguments_rejects_auto_release_object_ambiguity() {
         "#1080: launch contract should reject stray auto-release arguments");
 }
 
+void test_parse_launch_arguments_for_continuous_scroll_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--continuous-scroll-object",
+        "--continuous-scroll", "false",
+        "--continuous-scroll-target-object-name", "frmCustomer",
+        "--continuous-scroll-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1081: launch contract should parse continuous-scroll-object requests");
+    expect(result.request.continuous_scroll_object,
+        "#1081: launch contract should detect --continuous-scroll-object");
+    expect(result.request.continuous_scroll_available && !result.request.continuous_scroll,
+        "#1081: continuous-scroll-object requests should carry continuous scroll state");
+    expect(result.request.continuous_scroll_objects.size() == 2U,
+        "#1081: continuous-scroll-object requests should collect continuous-scroll target selectors");
+    if (result.request.continuous_scroll_objects.size() == 2U) {
+        expect(result.request.continuous_scroll_objects[0].object_name == "frmCustomer" &&
+                result.request.continuous_scroll_objects[0].unique_id.empty(),
+            "#1081: continuous-scroll-object requests should parse target object-name selectors");
+        expect(result.request.continuous_scroll_objects[1].object_name.empty() &&
+                result.request.continuous_scroll_objects[1].unique_id == "two-guid",
+            "#1081: continuous-scroll-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_continuous_scroll_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--continuous-scroll-object",
+        "--continuous-scroll-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1081: launch contract should reject continuous-scroll-object requests without continuous scroll state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--continuous-scroll-object",
+        "--continuous-scroll", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1081: launch contract should reject continuous-scroll-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--continuous-scroll-object",
+        "--continuous-scroll", "sometimes",
+        "--continuous-scroll-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1081: launch contract should reject invalid continuous-scroll boolean values");
+}
+
+void test_parse_launch_arguments_rejects_continuous_scroll_object_ambiguity() {
+    const auto continuous_scroll_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--continuous-scroll-object",
+        "--auto-size-object",
+        "--continuous-scroll", "false",
+        "--continuous-scroll-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!continuous_scroll_auto_size_result.ok,
+        "#1081: launch contract should reject simultaneous continuous-scroll-object and auto-size-object requests");
+
+    const auto continuous_scroll_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--continuous-scroll-object",
+        "--clear-property",
+        "--property-name", "ContinuousScroll",
+        "--continuous-scroll", "false",
+        "--continuous-scroll-target-unique-id", "one-guid"
+    });
+    expect(!continuous_scroll_property_result.ok,
+        "#1081: launch contract should reject continuous-scroll-object combined with property commands");
+
+    const auto stray_continuous_scroll_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--continuous-scroll", "false"
+    });
+    expect(!stray_continuous_scroll_result.ok,
+        "#1081: launch contract should reject stray continuous-scroll arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6381,6 +6471,9 @@ int main() {
     test_parse_launch_arguments_for_auto_release_object();
     test_parse_launch_arguments_rejects_auto_release_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_release_object_ambiguity();
+    test_parse_launch_arguments_for_continuous_scroll_object();
+    test_parse_launch_arguments_rejects_continuous_scroll_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_continuous_scroll_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
