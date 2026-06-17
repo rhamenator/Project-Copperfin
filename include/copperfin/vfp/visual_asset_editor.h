@@ -528,6 +528,9 @@ struct VisualObjectDuplicateResult {
     bool ok = false;
     std::string error;
     std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_name;
 };
 
 struct VisualObjectDuplicateBatchResult {

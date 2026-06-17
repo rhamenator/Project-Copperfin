@@ -6541,6 +6541,10 @@ void test_duplicate_visual_object_appends_identity_safe_copy() {
     });
     expect(duplicate_result.ok && duplicate_result.record_index == 2U,
         "#749: selected-object duplication should append a live copy at the next record index");
+    expect(duplicate_result.object_name == "cmdSaveCopy" &&
+            duplicate_result.unique_id == "save-copy-guid" &&
+            duplicate_result.parent_name == "frmMain",
+        "#993: selected-object duplication should report duplicated object identity metadata");
 
     auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok && list_result.objects.size() == 3U,
@@ -6598,6 +6602,10 @@ void test_duplicate_visual_object_appends_identity_safe_copy() {
     });
     expect(!duplicate_result.ok,
         "#749: duplicate identity checks should reject collisions with deleted records");
+    expect(duplicate_result.object_name.empty() &&
+            duplicate_result.unique_id.empty() &&
+            duplicate_result.parent_name.empty(),
+        "#993: failed duplicate requests should not report stale identity metadata after collisions");
 
     list_result = copperfin::vfp::list_visual_objects(table_path.string());
     expect(list_result.ok && list_result.objects.size() == 3U && list_result.objects[1].deleted,
