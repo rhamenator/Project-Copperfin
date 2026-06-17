@@ -423,6 +423,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--allow-cell-selection-object") {
+            result.request.allow_cell_selection_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1090,6 +1095,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.lock_screen = *lock_screen;
             result.request.lock_screen_available = true;
+            continue;
+        }
+
+        if (argument == "--allow-cell-selection") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --allow-cell-selection."};
+            }
+            const auto allow_cell_selection = parse_bool_value(args[++index]);
+            if (!allow_cell_selection.has_value()) {
+                return {.ok = false, .error = "The --allow-cell-selection value must be true or false."};
+            }
+            result.request.allow_cell_selection = *allow_cell_selection;
+            result.request.allow_cell_selection_available = true;
             continue;
         }
 
@@ -2563,6 +2581,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--allow-cell-selection-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --allow-cell-selection-target-object-name."};
+            }
+            result.request.allow_cell_selection_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--allow-cell-selection-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --allow-cell-selection-target-unique-id."};
+            }
+            result.request.allow_cell_selection_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3339,6 +3381,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.lock_screen_objects.empty())) {
         return {.ok = false, .error = "Lock-screen arguments can only be used with --lock-screen-object."};
     }
+    if (result.request.allow_cell_selection_object && !result.request.allow_cell_selection_available) {
+        return {.ok = false, .error = "An object allow-cell-selection assignment requires --allow-cell-selection."};
+    }
+    if (result.request.allow_cell_selection_object && result.request.allow_cell_selection_objects.empty()) {
+        return {.ok = false, .error = "An object allow-cell-selection assignment requires at least one target selector."};
+    }
+    if (!result.request.allow_cell_selection_object &&
+        (result.request.allow_cell_selection_available ||
+         !result.request.allow_cell_selection_objects.empty())) {
+        return {.ok = false, .error = "Allow-cell-selection arguments can only be used with --allow-cell-selection-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3408,6 +3461,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.clip_controls_object ? 1 : 0) +
         (result.request.sparse_object ? 1 : 0) +
         (result.request.lock_screen_object ? 1 : 0) +
+        (result.request.allow_cell_selection_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

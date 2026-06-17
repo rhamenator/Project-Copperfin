@@ -259,6 +259,10 @@ void test_parse_launch_arguments() {
         "#1085: launch contract should keep lock-screen-object off by default");
     expect(!result.request.lock_screen_available,
         "#1085: launch contract should keep lock screen unavailable by default");
+    expect(!result.request.allow_cell_selection_object,
+        "#1086: launch contract should keep allow-cell-selection-object off by default");
+    expect(!result.request.allow_cell_selection_available,
+        "#1086: launch contract should keep allow cell selection unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5446,6 +5450,92 @@ void test_parse_launch_arguments_rejects_lock_screen_object_ambiguity() {
         "#1085: launch contract should reject stray lock-screen arguments");
 }
 
+void test_parse_launch_arguments_for_allow_cell_selection_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--allow-cell-selection-object",
+        "--allow-cell-selection", "false",
+        "--allow-cell-selection-target-object-name", "frmCustomer",
+        "--allow-cell-selection-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1086: launch contract should parse allow-cell-selection-object requests");
+    expect(result.request.allow_cell_selection_object,
+        "#1086: launch contract should detect --allow-cell-selection-object");
+    expect(result.request.allow_cell_selection_available && !result.request.allow_cell_selection,
+        "#1086: allow-cell-selection-object requests should carry allow cell selection state");
+    expect(result.request.allow_cell_selection_objects.size() == 2U,
+        "#1086: allow-cell-selection-object requests should collect allow_cell_selection target selectors");
+    if (result.request.allow_cell_selection_objects.size() == 2U) {
+        expect(result.request.allow_cell_selection_objects[0].object_name == "frmCustomer" &&
+                result.request.allow_cell_selection_objects[0].unique_id.empty(),
+            "#1086: allow-cell-selection-object requests should parse target object-name selectors");
+        expect(result.request.allow_cell_selection_objects[1].object_name.empty() &&
+                result.request.allow_cell_selection_objects[1].unique_id == "two-guid",
+            "#1086: allow-cell-selection-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_allow_cell_selection_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-cell-selection-object",
+        "--allow-cell-selection-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1086: launch contract should reject allow-cell-selection-object requests without allow cell selection state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-cell-selection-object",
+        "--allow-cell-selection", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1086: launch contract should reject allow-cell-selection-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-cell-selection-object",
+        "--allow-cell-selection", "sometimes",
+        "--allow-cell-selection-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1086: launch contract should reject invalid allow-cell-selection boolean values");
+}
+
+void test_parse_launch_arguments_rejects_allow_cell_selection_object_ambiguity() {
+    const auto allow_cell_selection_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-cell-selection-object",
+        "--auto-size-object",
+        "--allow-cell-selection", "false",
+        "--allow-cell-selection-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!allow_cell_selection_auto_size_result.ok,
+        "#1086: launch contract should reject simultaneous allow-cell-selection-object and auto-size-object requests");
+
+    const auto allow_cell_selection_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-cell-selection-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--allow-cell-selection", "false",
+        "--allow-cell-selection-target-unique-id", "one-guid"
+    });
+    expect(!allow_cell_selection_property_result.ok,
+        "#1086: launch contract should reject allow-cell-selection-object combined with property commands");
+
+    const auto stray_allow_cell_selection_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-cell-selection", "false"
+    });
+    expect(!stray_allow_cell_selection_result.ok,
+        "#1086: launch contract should reject stray allow-cell-selection arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6846,6 +6936,9 @@ int main() {
     test_parse_launch_arguments_for_lock_screen_object();
     test_parse_launch_arguments_rejects_lock_screen_object_invalid_inputs();
     test_parse_launch_arguments_rejects_lock_screen_object_ambiguity();
+    test_parse_launch_arguments_for_allow_cell_selection_object();
+    test_parse_launch_arguments_rejects_allow_cell_selection_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_allow_cell_selection_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
