@@ -892,6 +892,12 @@ struct VisualObjectAllowHeaderSizingRequest {
     bool allow_header_sizing = false;
 };
 
+struct VisualObjectAllowRowSizingRequest {
+    std::string path;
+    std::vector<VisualObjectAlignmentTarget> objects;
+    bool allow_row_sizing = false;
+};
+
 struct VisualObjectSparseRequest {
     std::string path;
     std::vector<VisualObjectAlignmentTarget> objects;
@@ -1661,6 +1667,7 @@ VisualAssetEditResult set_visual_object_split_bar(const VisualObjectSplitBarRequ
 VisualAssetEditResult set_visual_object_highlight_row(const VisualObjectHighlightRowRequest& request);
 VisualAssetEditResult set_visual_object_panel_link(const VisualObjectPanelLinkRequest& request);
 VisualAssetEditResult set_visual_object_allow_header_sizing(const VisualObjectAllowHeaderSizingRequest& request);
+VisualAssetEditResult set_visual_object_allow_row_sizing(const VisualObjectAllowRowSizingRequest& request);
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request);
 VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLineFeedsRequest& request);
 VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOnTopRequest& request);
