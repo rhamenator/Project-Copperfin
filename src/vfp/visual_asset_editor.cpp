@@ -5756,6 +5756,19 @@ VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHe
         std::to_string(request.header_height));
 }
 
+VisualAssetEditResult set_visual_object_row_height(const VisualObjectRowHeightRequest& request) {
+    if (request.row_height < 0) {
+        return {.ok = false, .error = "RowHeight must not be negative."};
+    }
+
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "RowHeight",
+        "row-height",
+        std::to_string(request.row_height));
+}
+
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
         return {.ok = false, .error = "SpecialEffect must not be negative."};
