@@ -102,6 +102,8 @@ struct StudioObjectSnapshot {
     std::uint32_t object_name_memo_block_number = 0;
     std::string object_path{};
     std::size_t object_depth = 0;
+    std::size_t sibling_index = 0;
+    std::size_t sibling_count = 0;
     std::string unique_id{};
     std::size_t unique_id_field_index = StudioObjectMissingFieldIndex;
     std::uint32_t unique_id_memo_block_number = 0;

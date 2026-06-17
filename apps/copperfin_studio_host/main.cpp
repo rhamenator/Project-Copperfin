@@ -294,6 +294,8 @@ void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& ob
     print_json_string(object.object_path);
     std::cout << ",\n";
     std::cout << indent << "  \"objectDepth\": " << object.object_depth << ",\n";
+    std::cout << indent << "  \"siblingIndex\": " << object.sibling_index << ",\n";
+    std::cout << indent << "  \"siblingCount\": " << object.sibling_count << ",\n";
     std::cout << indent << "  \"uniqueId\": ";
     print_json_string(object.unique_id);
     std::cout << ",\n";
@@ -956,6 +958,8 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         print_json_string(object.object_path);
         std::cout << ",\n";
         std::cout << "        \"objectDepth\": " << object.object_depth << ",\n";
+        std::cout << "        \"siblingIndex\": " << object.sibling_index << ",\n";
+        std::cout << "        \"siblingCount\": " << object.sibling_count << ",\n";
         std::cout << "        \"uniqueId\": ";
         print_json_string(object.unique_id);
         std::cout << ",\n";

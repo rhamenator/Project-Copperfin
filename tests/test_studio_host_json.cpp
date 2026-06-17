@@ -139,7 +139,8 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
     const std::vector<std::vector<std::string>> records{
         {"2", "0", "WINDOWS", "Dataenvironment", "de-1", "", "", "dataenvironment"},
         {"1", "0", "WINDOWS", "frmCustomer", "form-1", "", "customerform", "form"},
-        {"4", "2", "WINDOWS", "cmdSave", "button-1", "frmCustomer", "commandbutton", "commandbutton"}
+        {"4", "2", "WINDOWS", "cmdSave", "button-1", "frmCustomer", "commandbutton", "commandbutton"},
+        {"4", "1", "WINDOWS", "txtName", "textbox-1", "frmCustomer", "textbox", "textbox"}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
@@ -307,7 +308,7 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
 
     expect(selected_object_process.exit_code == 0,
            "#967: Studio host selected-object JSON smoke should exit successfully");
-    expect_contains(selected_object_process.stdout_text, "\"objectCount\": 3",
+    expect_contains(selected_object_process.stdout_text, "\"objectCount\": 4",
                     "#977: Studio host JSON should expose document-level object counts");
     expect_contains(selected_object_process.stdout_text, "\"deletedObjectCount\": 0",
                     "#977: Studio host JSON should expose document-level deleted object counts");
@@ -315,9 +316,9 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#978: Studio host JSON should expose document-level root object counts");
     expect_contains(selected_object_process.stdout_text, "\"rootRecordIndexes\": [0, 1]",
                     "#981: Studio host JSON should expose document-level root record links");
-    expect_contains(selected_object_process.stdout_text, "\"leafObjectCount\": 2",
+    expect_contains(selected_object_process.stdout_text, "\"leafObjectCount\": 3",
                     "#982: Studio host JSON should expose document-level leaf object counts");
-    expect_contains(selected_object_process.stdout_text, "\"leafRecordIndexes\": [0, 2]",
+    expect_contains(selected_object_process.stdout_text, "\"leafRecordIndexes\": [0, 2, 3]",
                     "#982: Studio host JSON should expose document-level leaf record links");
     expect_contains(selected_object_process.stdout_text, "\"maxObjectDepth\": 1",
                     "#983: Studio host JSON should expose document-level maximum object tree depth");
@@ -383,9 +384,9 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#968: selected object properties should include later direct DBF fields");
         expect_contains(selected_object_json, "\"value\": \"form\"",
                         "#968: selected object properties should include selected baseclass values");
-        expect_contains(selected_object_json, "\"childCount\": 1",
+        expect_contains(selected_object_json, "\"childCount\": 2",
                         "#970: selected parent object summaries should expose direct child counts");
-        expect_contains(selected_object_json, "\"childRecordIndexes\": [2]",
+        expect_contains(selected_object_json, "\"childRecordIndexes\": [2, 3]",
                         "#980: selected parent object summaries should expose direct child record links");
         expect_contains(selected_object_json, "\"parentRecordIndex\": null",
                         "#971: root selected object summaries should expose null parent record links");
@@ -393,6 +394,10 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                         "#972: root selected object summaries should expose direct object paths");
         expect_contains(selected_object_json, "\"objectDepth\": 0",
                         "#983: root selected object summaries should expose zero object tree depth");
+        expect_contains(selected_object_json, "\"siblingIndex\": 1",
+                        "#984: selected root object summaries should expose document-root sibling order");
+        expect_contains(selected_object_json, "\"siblingCount\": 2",
+                        "#984: selected root object summaries should expose document-root sibling count");
         expect_contains(selected_object_json, "\"objectTypeCode\": 1",
                         "#973: selected object summaries should expose raw object type codes");
         expect_contains(selected_object_json, "\"objectCode\": 0",
@@ -441,6 +446,10 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#972: child object entries should expose parent-prefixed object paths");
             expect_contains(child_object_json, "\"objectDepth\": 1",
                             "#983: child object entries should expose nested object tree depth");
+            expect_contains(child_object_json, "\"siblingIndex\": 0",
+                            "#984: first child object entries should expose sibling order");
+            expect_contains(child_object_json, "\"siblingCount\": 2",
+                            "#984: child object entries should expose sibling count");
             expect_contains(child_object_json, "\"objectTypeCode\": 4",
                             "#973: child object entries should expose raw object type codes");
             expect_contains(child_object_json, "\"objectCode\": 2",
@@ -449,6 +458,27 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#973: child object entries should expose parsed platform metadata");
             expect_contains(child_object_json, "\"propertyCount\": 8",
                             "#976: child object entries should expose direct property counts");
+        }
+        const auto sibling_object_begin = objects_json.find("\"objectName\": \"txtName\"");
+        expect(sibling_object_begin != std::string::npos,
+               "#984: synthetic SCX object array should include the second sibling control object");
+        if (sibling_object_begin != std::string::npos) {
+            const auto sibling_entry_begin = objects_json.rfind("{", sibling_object_begin);
+            const auto sibling_properties_begin = objects_json.find("\"properties\": [", sibling_object_begin);
+            const auto sibling_object_json =
+                sibling_entry_begin == std::string::npos
+                    ? objects_json.substr(sibling_object_begin)
+                    : sibling_properties_begin == std::string::npos
+                        ? objects_json.substr(sibling_entry_begin)
+                        : objects_json.substr(sibling_entry_begin, sibling_properties_begin - sibling_entry_begin);
+            expect_contains(sibling_object_json, "\"parentRecordIndex\": 1",
+                            "#984: second child object entries should preserve resolved parent links");
+            expect_contains(sibling_object_json, "\"objectDepth\": 1",
+                            "#984: second child object entries should expose nested object tree depth");
+            expect_contains(sibling_object_json, "\"siblingIndex\": 1",
+                            "#984: second child object entries should expose sibling order");
+            expect_contains(sibling_object_json, "\"siblingCount\": 2",
+                            "#984: second child object entries should expose sibling count");
         }
     }
 

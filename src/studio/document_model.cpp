@@ -364,6 +364,22 @@ std::size_t build_object_depth(
     return depth;
 }
 
+void assign_sibling_order(
+    StudioObjectSnapshot& object,
+    const std::vector<StudioObjectSnapshot>& objects) {
+    object.sibling_index = 0U;
+    object.sibling_count = 0U;
+    for (const auto& candidate : objects) {
+        if (candidate.parent_record_index != object.parent_record_index) {
+            continue;
+        }
+        if (candidate.record_index == object.record_index) {
+            object.sibling_index = object.sibling_count;
+        }
+        ++object.sibling_count;
+    }
+}
+
 }  // namespace
 
 StudioAssetKind studio_asset_kind_from_vfp_family(vfp::AssetFamily family) {
@@ -630,6 +646,7 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
     for (auto& object : objects) {
         object.object_depth = build_object_depth(object, objects);
         object.object_path = build_object_path(object, objects);
+        assign_sibling_order(object, objects);
         object.child_record_indexes.clear();
         for (const auto& candidate : objects) {
             if (candidate.parent_record_index == object.record_index) {
