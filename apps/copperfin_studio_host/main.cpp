@@ -251,6 +251,7 @@ void print_json_record_index_or_null(std::size_t record_index) {
 void print_json_object_summary(const copperfin::studio::StudioObjectSnapshot& object, const std::string& indent) {
     std::cout << "{\n";
     std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
+    std::cout << indent << "  \"deleted\": " << (object.deleted ? "true" : "false") << ",\n";
     std::cout << indent << "  \"title\": ";
     print_json_string(object.title);
     std::cout << ",\n";

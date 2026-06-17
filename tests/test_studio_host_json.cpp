@@ -331,6 +331,8 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
         selected_object_end > selected_object_begin) {
         const auto selected_object_json =
             selected_object_process.stdout_text.substr(selected_object_begin, selected_object_end - selected_object_begin);
+        expect_contains(selected_object_json, "\"deleted\": false",
+                        "#974: selected object summaries should expose parsed deletion state");
         expect_contains(selected_object_json, "\"properties\": [",
                         "#968: selected object summaries should expose direct property snapshots");
         expect_contains(selected_object_json, "\"name\": \"OBJNAME\"",
