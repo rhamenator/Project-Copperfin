@@ -168,6 +168,7 @@ struct StudioOpenRequest {
     bool control_box_object = false;
     bool allow_output_object = false;
     bool auto_center_object = false;
+    bool auto_size_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -217,10 +218,12 @@ struct StudioOpenRequest {
     bool control_box_available = false;
     bool allow_output_available = false;
     bool auto_center_available = false;
+    bool auto_size_available = false;
     bool closable = false;
     bool control_box = false;
     bool allow_output = false;
     bool auto_center = false;
+    bool auto_size = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -271,6 +274,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> control_box_objects{};
     std::vector<StudioObjectSelector> allow_output_objects{};
     std::vector<StudioObjectSelector> auto_center_objects{};
+    std::vector<StudioObjectSelector> auto_size_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

@@ -388,6 +388,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--auto-size-object") {
+            result.request.auto_size_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -964,6 +969,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.auto_center = *auto_center;
             result.request.auto_center_available = true;
+            continue;
+        }
+
+        if (argument == "--auto-size") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-size."};
+            }
+            const auto auto_size = parse_bool_value(args[++index]);
+            if (!auto_size.has_value()) {
+                return {.ok = false, .error = "The --auto-size value must be true or false."};
+            }
+            result.request.auto_size = *auto_size;
+            result.request.auto_size_available = true;
             continue;
         }
 
@@ -2269,6 +2287,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--auto-size-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
+            }
+            result.request.auto_size_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--auto-size-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-size-target-unique-id."};
+            }
+            result.request.auto_size_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -2968,6 +3010,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.auto_center_objects.empty())) {
         return {.ok = false, .error = "Auto-center arguments can only be used with --auto-center-object."};
     }
+    if (result.request.auto_size_object && !result.request.auto_size_available) {
+        return {.ok = false, .error = "An object auto-size assignment requires --auto-size."};
+    }
+    if (result.request.auto_size_object && result.request.auto_size_objects.empty()) {
+        return {.ok = false, .error = "An object auto-size assignment requires at least one target selector."};
+    }
+    if (!result.request.auto_size_object &&
+        (result.request.auto_size_available ||
+         !result.request.auto_size_objects.empty())) {
+        return {.ok = false, .error = "Auto-size arguments can only be used with --auto-size-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3030,6 +3083,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.control_box_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
+        (result.request.auto_size_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
