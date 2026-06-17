@@ -5522,6 +5522,15 @@ VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectA
         request.allow_cell_selection ? ".T." : ".F.");
 }
 
+VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMarkRequest& request) {
+    return set_visual_object_scalar_property(
+        request.path,
+        request.objects,
+        "DeleteMark",
+        "delete-mark",
+        request.delete_mark ? ".T." : ".F.");
+}
+
 VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& request) {
     return set_visual_object_scalar_property(
         request.path,
