@@ -188,10 +188,15 @@ bool selected_record_is_data_environment(const StudioDocumentModel& document, st
 std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
     switch (kind) {
         case StudioAssetKind::form:
-        case StudioAssetKind::class_library:
             return {
                 studio_designer_context_for_selection({
                     .selection_context = StudioEditorSelectionContext::visual_object
+                })
+            };
+        case StudioAssetKind::class_library:
+            return {
+                studio_designer_context_for_selection({
+                    .selection_context = StudioEditorSelectionContext::class_designer
                 })
             };
         case StudioAssetKind::report:

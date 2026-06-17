@@ -78,6 +78,7 @@ void test_parse_launch_arguments() {
         "--selection-context", "visual_method",
         "--selection-context", "report_expression",
         "--selection-context", "label_expression",
+        "--selection-context", "class_designer",
         "--undo-mode", "command",
         "--undo-label", "Bulk Undo"
     });
@@ -95,15 +96,17 @@ void test_parse_launch_arguments() {
     expect(result.request.line == 25U, "launch contract should parse the line value");
     expect(result.request.column == 7U, "launch contract should parse the column value");
     expect(result.request.symbol == "cmdSave.Click", "launch contract should parse the symbol");
-    expect(result.request.designer_selection_contexts.size() == 3U,
+    expect(result.request.designer_selection_contexts.size() == 4U,
            "#962: launch contract should collect explicit selection-context tokens");
-    if (result.request.designer_selection_contexts.size() == 3U) {
+    if (result.request.designer_selection_contexts.size() == 4U) {
         expect(result.request.designer_selection_contexts[0] == copperfin::studio::StudioEditorSelectionContext::visual_method,
                "#962: launch contract should parse visual_method selection-context tokens");
         expect(result.request.designer_selection_contexts[1] == copperfin::studio::StudioEditorSelectionContext::report_expression,
                "#962: launch contract should parse report_expression selection-context tokens");
         expect(result.request.designer_selection_contexts[2] == copperfin::studio::StudioEditorSelectionContext::label_expression,
                "#1011: launch contract should parse label_expression selection-context tokens");
+        expect(result.request.designer_selection_contexts[3] == copperfin::studio::StudioEditorSelectionContext::class_designer,
+               "#1012: launch contract should parse class_designer selection-context tokens");
     }
     expect(result.request.undo_mode == copperfin::studio::StudioUndoMode::command, "launch contract should parse the undo mode");
     expect(result.request.undo_label == "Bulk Undo", "launch contract should parse the undo label");
@@ -269,6 +272,30 @@ void test_open_document_attaches_default_designer_contexts() {
                "#960: form designer context should include control builders");
         expect(has_descriptor_id(context.toolbox_items, "textbox"),
                "#960: form designer context should include form toolbox items");
+    }
+
+    const auto class_result = copperfin::studio::open_document({
+        .path = write_synthetic_asset("customer.vcx").string()
+    });
+    expect(class_result.ok, "#1012: synthetic class library should open for designer-context checks");
+    expect(class_result.document.designer_contexts.size() == 1U,
+           "#1012: class-library documents should expose one default designer context");
+    if (!class_result.document.designer_contexts.empty()) {
+        const auto& context = class_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::class_designer,
+               "#1012: class-library documents should expose the class-designer context");
+        expect(has_descriptor_id(context.editor_actions, "show-property-grid"),
+               "#1012: class designer context should include property-grid actions");
+        expect(has_descriptor_id(context.editor_actions, "edit-visual-method"),
+               "#1012: class designer context should include method-editor actions");
+        expect(has_descriptor_id(context.builders, "class-builder"),
+               "#1012: class designer context should include class builders");
+        expect(!has_descriptor_id(context.builders, "form-builder"),
+               "#1012: class designer context should not expose form builders");
+        expect(!has_descriptor_id(context.builders, "control-builder"),
+               "#1012: class designer context should not expose control builders");
+        expect(has_descriptor_id(context.toolbox_items, "textbox"),
+               "#1012: class designer context should include class-safe toolbox items");
     }
 
     const auto method_symbol_result = copperfin::studio::open_document({

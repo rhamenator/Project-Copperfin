@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#1012 class designer selection context shipped: VCX/VCT documents now default to `class_designer`, explicit Studio launches accept the token, and class contexts expose property-grid, method-editor, class-safe toolbox, and `class-builder` metadata without inheriting form/control builders.
 - E2/#1011 label designer selection context shipped: LBX/LBT documents now default to `label_expression`, explicit Studio launches accept the token, and label contexts expose shared expression editing plus `label-wizard` metadata without inheriting report-builder actions.
 - E2/#967 selected Studio object JSON shipped: `copperfin_studio_host --json` now emits a `selectedObject` summary when explicit record selection matches a parsed designer object.
 - E2/#966 selected-record DataEnvironment inference shipped: form/class launches targeting a parsed DataEnvironment record now infer `data_environment` designer context when no explicit override or symbol inference applies.

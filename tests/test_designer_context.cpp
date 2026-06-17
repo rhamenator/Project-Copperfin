@@ -57,6 +57,28 @@ int main() {
     expect(visual_context.toolbox_item_count == visual_context.toolbox_items.size(),
            "#1009: visual context should report toolbox-item count metadata");
 
+    const auto class_context = copperfin::studio::studio_designer_context_for_selection({
+        .selection_context = StudioEditorSelectionContext::class_designer
+    });
+    expect(class_context.selection_context == StudioEditorSelectionContext::class_designer,
+           "#1012: class context result should preserve the requested selection context");
+    expect(has_id(class_context.editor_actions, "show-property-grid"),
+           "#1012: class context should include property-grid action");
+    expect(has_id(class_context.editor_actions, "edit-visual-method"),
+           "#1012: class context should include method-editor action");
+    expect(has_id(class_context.builders, "class-builder"),
+           "#1012: class context should include class builder");
+    expect(!has_id(class_context.builders, "form-builder"),
+           "#1012: class context should not inherit form builder availability");
+    expect(!has_id(class_context.builders, "control-builder"),
+           "#1012: class context should not inherit control builder availability");
+    expect(has_id(class_context.toolbox_items, "textbox"),
+           "#1012: class context should include class-safe TextBox toolbox item");
+    expect(class_context.builder_count == 1U &&
+               class_context.editor_action_count == class_context.editor_actions.size() &&
+               class_context.toolbox_item_count == class_context.toolbox_items.size(),
+           "#1012: class context should report filtered descriptor counts");
+
     const auto report_context = copperfin::studio::studio_designer_context_for_selection({
         .selection_context = StudioEditorSelectionContext::report_expression
     });

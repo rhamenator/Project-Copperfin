@@ -38,6 +38,9 @@ int main() {
                StudioEditorSelectionContext::visual_object)) == "visual_object",
            "#958: visual-object context token should be stable");
     expect(std::string(copperfin::studio::studio_editor_selection_context_name(
+               StudioEditorSelectionContext::class_designer)) == "class_designer",
+           "#1012: class-designer context token should be stable");
+    expect(std::string(copperfin::studio::studio_editor_selection_context_name(
                StudioEditorSelectionContext::report_expression)) == "report_expression",
            "#958: report-expression context token should be stable");
     expect(std::string(copperfin::studio::studio_editor_selection_context_name(
@@ -95,6 +98,19 @@ int main() {
     expect(has_action(visual_actions, "show-toolbox"), "#958: visual-object context should expose toolbox");
     expect(!has_action(visual_actions, "edit-report-expression"),
            "#958: visual-object context should exclude report expression editor");
+
+    const auto class_actions = copperfin::studio::studio_editor_actions_for_context(
+        StudioEditorSelectionContext::class_designer);
+    expect(has_action(class_actions, "show-property-grid"),
+           "#1012: class-designer context should expose property grid");
+    expect(has_action(class_actions, "edit-visual-method"),
+           "#1012: class-designer context should expose method editor");
+    expect(has_action(class_actions, "open-builder"),
+           "#1012: class-designer context should expose builders");
+    expect(has_action(class_actions, "show-toolbox"),
+           "#1012: class-designer context should expose toolbox");
+    expect(!has_action(class_actions, "edit-report-expression"),
+           "#1012: class-designer context should exclude report expression editor");
 
     const auto report_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::report_expression);

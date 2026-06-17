@@ -234,6 +234,28 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(label_override_process.stdout_text, "\"id\": \"report-builder\"",
                         "#1011: explicit label_expression contexts should not reuse report builders");
 
+    const auto class_override_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--selection-context", "class_designer", "--json"},
+        temp_root);
+
+    if (class_override_process.exit_code != 0) {
+        std::cerr << "studio host class override stdout:\n" << class_override_process.stdout_text << "\n";
+        std::cerr << "studio host class override stderr:\n" << class_override_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(class_override_process.exit_code == 0,
+           "#1012: Studio host explicit class context JSON smoke should exit successfully");
+    expect_contains(class_override_process.stdout_text, "\"selectionContext\": \"class_designer\"",
+                    "#1012: explicit class_designer selection contexts should serialize through host JSON");
+    expect_contains(class_override_process.stdout_text, "\"id\": \"class-builder\"",
+                    "#1012: explicit class_designer contexts should expose class builder metadata");
+    expect_not_contains(class_override_process.stdout_text, "\"id\": \"form-builder\"",
+                        "#1012: explicit class_designer contexts should not expose form builders");
+    expect_not_contains(class_override_process.stdout_text, "\"id\": \"control-builder\"",
+                        "#1012: explicit class_designer contexts should not expose control builders");
+
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_form_asset(label_path);
     const auto label_process = run_process_capture(
@@ -258,6 +280,33 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#1011: label JSON should expose label wizard builder ids");
     expect_not_contains(label_process.stdout_text, "\"id\": \"report-builder\"",
                         "#1011: label JSON should not expose report builder ids");
+
+    const fs::path class_path = temp_root / "customer.vcx";
+    write_synthetic_form_asset(class_path);
+    const auto class_process = run_process_capture(
+        studio_host_path,
+        {"--path", class_path.string(), "--json"},
+        temp_root);
+
+    if (class_process.exit_code != 0) {
+        std::cerr << "studio host class stdout:\n" << class_process.stdout_text << "\n";
+        std::cerr << "studio host class stderr:\n" << class_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(class_process.exit_code == 0, "#1012: Studio host class-library JSON smoke should exit successfully");
+    expect_contains(class_process.stdout_text, "\"kind\": \"class_library\"",
+                    "#1012: class-library JSON should preserve class-library document kind");
+    expect_contains(class_process.stdout_text, "\"selectionContext\": \"class_designer\"",
+                    "#1012: class-library documents should default to class-designer JSON contexts");
+    expect_contains(class_process.stdout_text, "\"builderCount\": 1",
+                    "#1012: class-library JSON should expose class builder count");
+    expect_contains(class_process.stdout_text, "\"id\": \"class-builder\"",
+                    "#1012: class-library JSON should expose class builder ids");
+    expect_not_contains(class_process.stdout_text, "\"id\": \"form-builder\"",
+                        "#1012: class-library JSON should not expose form builder ids");
+    expect_not_contains(class_process.stdout_text, "\"id\": \"control-builder\"",
+                        "#1012: class-library JSON should not expose control builder ids");
 
     const auto symbol_process = run_process_capture(
         studio_host_path,
