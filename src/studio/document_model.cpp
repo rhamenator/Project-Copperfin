@@ -490,11 +490,15 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     StudioDocumentModel document;
     document.path = request.path;
     document.display_name = filename_of(request.path);
+    document.selection_symbol = request.symbol;
     document.kind = studio_asset_kind_from_vfp_family(inspection.family);
     document.sidecar_path = infer_sidecar_path(request.path, document.kind);
     document.has_sidecar = !document.sidecar_path.empty() && std::filesystem::exists(document.sidecar_path);
     document.read_only = request.read_only;
     document.launched_from_visual_studio = request.launched_from_visual_studio;
+    document.selection_line = request.line;
+    document.selection_column = request.column;
+    document.selection_record_index = request.record_index;
     document.inspection = inspection;
     document.designer_contexts = request.designer_selection_contexts.empty()
         ? default_designer_contexts_for_request(document.kind, request.symbol)

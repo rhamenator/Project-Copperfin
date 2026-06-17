@@ -153,6 +153,11 @@ void test_open_document_infers_form_sidecar() {
     expect(result.document.has_sidecar, "open_document should detect the SCT sidecar");
     expect(result.document.sidecar_path == sidecar_path.string(), "open_document should infer the SCT sidecar path");
     expect(result.document.launched_from_visual_studio, "launch metadata should flow into the Studio document");
+    expect(result.document.selection_symbol == "form1", "#964: launch selection symbol should flow into the Studio document");
+    expect(result.document.selection_line == 10U, "#964: launch selection line should flow into the Studio document");
+    expect(result.document.selection_column == 2U, "#964: launch selection column should flow into the Studio document");
+    expect(result.document.selection_record_index == 0U,
+           "#964: launch selection record index should keep the default when none is supplied");
     expect(result.document.inspection.header_available, "inspection metadata should be attached to the document");
 
     const auto objects = copperfin::studio::build_object_snapshot(result.document);
@@ -343,6 +348,41 @@ void test_open_document_attaches_default_designer_contexts() {
                "#960: data designer context should include data-environment builders");
         expect(context.toolbox_items.empty(), "#960: data designer context should not expose toolbox items");
     }
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_open_document_preserves_launch_selection_record_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_selection_metadata_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path form_path = temp_dir / "customer.scx";
+    const auto bytes = make_vfp_header();
+    {
+        std::ofstream output(form_path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    }
+
+    const auto result = copperfin::studio::open_document({
+        .path = form_path.string(),
+        .symbol = "cmdSave.Click",
+        .line = 42U,
+        .column = 7U,
+        .record_index = 5U
+    });
+
+    expect(result.ok, "#964: synthetic form should open for launch selection metadata checks");
+    expect(result.document.selection_symbol == "cmdSave.Click",
+           "#964: open_document should preserve launch selection symbols");
+    expect(result.document.selection_line == 42U,
+           "#964: open_document should preserve launch selection lines");
+    expect(result.document.selection_column == 7U,
+           "#964: open_document should preserve launch selection columns");
+    expect(result.document.selection_record_index == 5U,
+           "#964: open_document should preserve launch selection record indexes");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -1007,6 +1047,7 @@ int main() {
     test_open_document_infers_form_sidecar();
     test_open_document_uses_vfp_filename_for_display_name();
     test_open_document_attaches_default_designer_contexts();
+    test_open_document_preserves_launch_selection_record_metadata();
     test_object_snapshot_preserves_empty_and_null_design_fields();
     test_object_snapshot_suppresses_unresolved_memo_placeholders();
     test_object_snapshot_trims_normalized_display_metadata();

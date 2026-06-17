@@ -2,6 +2,7 @@
 
 ## 2026-06-17
 
+- E2/#964 Studio launch selection metadata shipped: opened Studio documents and `copperfin_studio_host --json` now preserve launch symbol, line, column, and record-index selection metadata.
 - E2/#963 Studio host method-symbol context inference shipped: form/class launches with method-like symbols now infer `visual_method` designer contexts unless an explicit `--selection-context` override is supplied.
 - E2/#962 Studio host selection-context override shipped: `copperfin_studio_host` now accepts explicit `--selection-context` tokens and threads them through opened-document designer contexts and JSON output.
 - E2/#961 Studio host designer-context JSON shipped: `copperfin_studio_host --json` now serializes opened-document designer contexts with stable selection-context tokens, editor actions, builder/wizard entries, and toolbox item metadata.

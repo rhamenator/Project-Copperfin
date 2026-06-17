@@ -243,6 +243,14 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "    \"readOnly\": " << (document.read_only ? "true" : "false") << ",\n";
     std::cout << "    \"launchedFromVisualStudio\": "
               << (document.launched_from_visual_studio ? "true" : "false") << ",\n";
+    std::cout << "    \"launchSelection\": {\n";
+    std::cout << "      \"symbol\": ";
+    print_json_string(document.selection_symbol);
+    std::cout << ",\n";
+    std::cout << "      \"line\": " << document.selection_line << ",\n";
+    std::cout << "      \"column\": " << document.selection_column << ",\n";
+    std::cout << "      \"recordIndex\": " << document.selection_record_index << "\n";
+    std::cout << "    },\n";
     std::cout << "    \"hasSidecar\": " << (document.has_sidecar ? "true" : "false") << ",\n";
     std::cout << "    \"sidecarPath\": ";
     print_json_string(document.sidecar_path);
@@ -808,6 +816,10 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
     std::cout << "document.read_only: " << (document.read_only ? "true" : "false") << "\n";
     std::cout << "document.launched_from_visual_studio: "
               << (document.launched_from_visual_studio ? "true" : "false") << "\n";
+    std::cout << "document.selection_symbol: " << document.selection_symbol << "\n";
+    std::cout << "document.selection_line: " << document.selection_line << "\n";
+    std::cout << "document.selection_column: " << document.selection_column << "\n";
+    std::cout << "document.selection_record_index: " << document.selection_record_index << "\n";
     std::cout << "document.has_sidecar: " << (document.has_sidecar ? "true" : "false") << "\n";
     if (!document.sidecar_path.empty()) {
         std::cout << "document.sidecar_path: " << document.sidecar_path << "\n";

@@ -56,10 +56,14 @@ struct StudioDocumentModel {
     std::string path;
     std::string display_name;
     std::string sidecar_path;
+    std::string selection_symbol;
     StudioAssetKind kind = StudioAssetKind::unknown;
     bool has_sidecar = false;
     bool read_only = false;
     bool launched_from_visual_studio = false;
+    std::size_t selection_line = 0;
+    std::size_t selection_column = 0;
+    std::size_t selection_record_index = 0;
     vfp::AssetInspectionResult inspection{};
     std::vector<runtime::PrgStaticDiagnostic> static_diagnostics;
     bool table_preview_available = false;

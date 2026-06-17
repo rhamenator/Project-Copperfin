@@ -184,7 +184,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
 
     const auto symbol_process = run_process_capture(
         studio_host_path,
-        {"--path", form_path.string(), "--symbol", "cmdSave.Click", "--json"},
+        {
+            "--path", form_path.string(),
+            "--symbol", "cmdSave.Click",
+            "--line", "42",
+            "--column", "7",
+            "--record", "5",
+            "--json"
+        },
         temp_root);
 
     if (symbol_process.exit_code != 0) {
@@ -194,6 +201,16 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     }
 
     expect(symbol_process.exit_code == 0, "#963: Studio host symbol-inferred context JSON smoke should exit successfully");
+    expect_contains(symbol_process.stdout_text, "\"launchSelection\": {",
+                    "#964: Studio host JSON should expose launch selection metadata");
+    expect_contains(symbol_process.stdout_text, "\"symbol\": \"cmdSave.Click\"",
+                    "#964: Studio host JSON should expose launch selection symbols");
+    expect_contains(symbol_process.stdout_text, "\"line\": 42",
+                    "#964: Studio host JSON should expose launch selection lines");
+    expect_contains(symbol_process.stdout_text, "\"column\": 7",
+                    "#964: Studio host JSON should expose launch selection columns");
+    expect_contains(symbol_process.stdout_text, "\"recordIndex\": 5",
+                    "#964: Studio host JSON should expose launch selection record indexes");
     expect_contains(symbol_process.stdout_text, "\"selectionContext\": \"visual_method\"",
                     "#963: method-like launch symbols should infer visual-method JSON contexts");
     expect_contains(symbol_process.stdout_text, "\"id\": \"edit-visual-method\"",
