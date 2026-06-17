@@ -675,6 +675,8 @@ void test_clear_visual_object_property_resets_selected_values() {
         .property_name = "MissingProp"
     });
     expect(clear_result.ok, "#766: clearing missing memo-backed properties should succeed as a no-op");
+    expect(clear_result.affected_object_count == 1U,
+        "#1005: successful property clear should report one affected object");
     expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
         "#766: missing memo-backed property clears should not create undo history");
 
@@ -742,6 +744,8 @@ void test_clear_visual_object_property_resets_selected_values() {
         .property_name = " "
     });
     expect(!clear_result.ok, "#766: property clear should reject empty property names");
+    expect(clear_result.affected_object_count == 0U,
+        "#1005: failed property clear should report zero affected objects");
 
     clear_result = copperfin::vfp::clear_visual_object_property({
         .path = table_path.string(),
@@ -874,6 +878,8 @@ void test_clear_visual_object_properties_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#771: batch property clears should support mixed selectors and missing memo no-ops");
+    expect(batch_result.affected_object_count == 3U,
+        "#1005: successful batch property clear should report affected item count");
 
     auto save_hpos = property_state("save-guid", "HPOS");
     auto name_caption = property_state("name-guid", "Caption");
@@ -905,6 +911,8 @@ void test_clear_visual_object_properties_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#771: batch property clears should fail when a later selection is missing");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property clear should report zero affected objects");
     auto status_vpos = property_state("status-guid", "VPOS");
     expect(status_vpos.ok && status_vpos.exists && status_vpos.value == "433",
         "#771: failed batch clears should roll back earlier direct-field clears");
@@ -940,6 +948,8 @@ void test_clear_visual_object_properties_rolls_back_failed_batches() {
         .properties = {}
     });
     expect(!batch_result.ok, "#771: empty batch clear requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property clear should report zero affected objects");
 
     auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
     expect(undo_result.ok, "#771: undo should restore memo clears from successful batches");
@@ -992,6 +1002,8 @@ void test_copy_visual_object_property_between_selected_objects() {
         .replace_existing = true
     });
     expect(copy_result.ok, "#767: property copy should support UNIQUEID source, object-name target, and direct-field replacement");
+    expect(copy_result.affected_object_count == 1U,
+        "#1005: successful property copy should report one affected object");
 
     copy_result = copperfin::vfp::copy_visual_object_property({
         .path = table_path.string(),
@@ -1064,6 +1076,8 @@ void test_copy_visual_object_property_between_selected_objects() {
         .replace_existing = false
     });
     expect(!copy_result.ok, "#767: property copy should reject target collisions without replacement");
+    expect(copy_result.affected_object_count == 0U,
+        "#1005: failed property copy should report zero affected objects");
 
     copy_result = copperfin::vfp::copy_visual_object_property({
         .path = table_path.string(),
@@ -1247,6 +1261,8 @@ void test_copy_visual_object_properties_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#774: batch property copy should support mixed selectors, direct fields, memo properties, target renames, and replacement");
+    expect(batch_result.affected_object_count == 4U,
+        "#1005: successful batch property copy should report affected item count");
 
     auto name_hpos = property_state("name-guid", "HPOS");
     auto status_copied_caption = property_state("status-guid", "CopiedCaption");
@@ -1292,6 +1308,8 @@ void test_copy_visual_object_properties_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#774: batch property copy should reject target collisions");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property copy should report zero affected objects");
     auto status_temp_left = property_state("status-guid", "TempLeft");
     expect(status_temp_left.ok && !status_temp_left.exists,
         "#774: target-collision failures should roll back earlier memo copy targets");
@@ -1402,6 +1420,8 @@ void test_copy_visual_object_properties_rolls_back_failed_batches() {
         .properties = {}
     });
     expect(!batch_result.ok, "#774: empty batch copy requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property copy should report zero affected objects");
 
     for (int index = 0; index < 4; ++index) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
@@ -1458,6 +1478,8 @@ void test_move_visual_object_property_between_selected_objects() {
         .replace_existing = true
     });
     expect(move_result.ok, "#768: property move should support UNIQUEID source, object-name target, and direct-field replacement");
+    expect(move_result.affected_object_count == 1U,
+        "#1005: successful property move should report one affected object");
 
     move_result = copperfin::vfp::move_visual_object_property({
         .path = table_path.string(),
@@ -1539,6 +1561,8 @@ void test_move_visual_object_property_between_selected_objects() {
         .replace_existing = false
     });
     expect(!move_result.ok, "#768: property move should reject target collisions without replacement");
+    expect(move_result.affected_object_count == 0U,
+        "#1005: failed property move should report zero affected objects");
     auto target_caption_after_failed_copy = copperfin::vfp::query_visual_object_property({
         .path = table_path.string(),
         .record_index = 0U,
@@ -1763,6 +1787,8 @@ void test_move_visual_object_properties_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#775: batch property move should support mixed selectors, direct fields, memo properties, target renames, and replacement");
+    expect(batch_result.affected_object_count == 4U,
+        "#1005: successful batch property move should report affected item count");
 
     auto save_hpos = property_state("save-guid", "HPOS");
     auto save_vpos = property_state("save-guid", "VPOS");
@@ -1817,6 +1843,8 @@ void test_move_visual_object_properties_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#775: batch property move should reject target collisions");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property move should report zero affected objects");
     auto status_temp_left = property_state("status-guid", "TempLeft");
     auto save_left = property_state("save-guid", "Left");
     expect(status_temp_left.ok && !status_temp_left.exists &&
@@ -1956,6 +1984,8 @@ void test_move_visual_object_properties_rolls_back_failed_batches() {
         .properties = {}
     });
     expect(!batch_result.ok, "#775: empty batch move requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property move should report zero affected objects");
 
     for (int index = 0; index < 8; ++index) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
@@ -2018,6 +2048,8 @@ void test_rename_visual_object_memo_property_updates_selected_object() {
         .new_property_name = "DisplayCaption"
     });
     expect(rename_result.ok, "#769: property rename should support UNIQUEID selection and case-insensitive source matching");
+    expect(rename_result.affected_object_count == 1U,
+        "#1005: successful property rename should report one affected object");
 
     rename_result = copperfin::vfp::rename_visual_object_property({
         .path = table_path.string(),
@@ -2090,6 +2122,8 @@ void test_rename_visual_object_memo_property_updates_selected_object() {
         .new_property_name = "HPosition"
     });
     expect(!rename_result.ok, "#769: property rename should reject direct DBF-backed fields");
+    expect(rename_result.affected_object_count == 0U,
+        "#1005: failed property rename should report zero affected objects");
 
     rename_result = copperfin::vfp::rename_visual_object_property({
         .path = table_path.string(),
@@ -2312,6 +2346,8 @@ void test_rename_visual_object_memo_properties_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#772: batch property renames should support mixed selectors");
+    expect(batch_result.affected_object_count == 3U,
+        "#1005: successful batch property rename should report affected item count");
 
     auto display_caption = property_state("save-guid", "DisplayCaption");
     auto old_caption = property_state("save-guid", "Caption");
@@ -2349,6 +2385,8 @@ void test_rename_visual_object_memo_properties_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#772: batch property renames should reject direct DBF-backed fields");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property rename should report zero affected objects");
     save_left = property_state("save-guid", "Left");
     auto left_offset = property_state("save-guid", "LeftOffset");
     expect(save_left.ok && save_left.exists && save_left.value == "10" &&
@@ -2439,6 +2477,8 @@ void test_rename_visual_object_memo_properties_rolls_back_failed_batches() {
         .properties = {}
     });
     expect(!batch_result.ok, "#772: empty batch rename requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property rename should report zero affected objects");
 
     for (int index = 0; index < 3; ++index) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());
@@ -2528,6 +2568,8 @@ void test_reorder_visual_object_memo_properties_within_selected_object() {
         .relative_property_name = {}
     });
     expect(reorder_result.ok, "#770: property reorder should support UNIQUEID selection and first placement");
+    expect(reorder_result.affected_object_count == 1U,
+        "#1005: successful property reorder should report one affected object");
     expect(order_is(memo_property_order("save-guid"), {"Width", "Caption", "Left", "Top"}),
         "#770: first placement should move the requested memo property to the start");
 
@@ -2608,6 +2650,8 @@ void test_reorder_visual_object_memo_properties_within_selected_object() {
         .relative_property_name = {}
     });
     expect(!reorder_result.ok, "#770: property reorder should reject direct DBF-backed source fields");
+    expect(reorder_result.affected_object_count == 0U,
+        "#1005: failed property reorder should report zero affected objects");
 
     reorder_result = copperfin::vfp::reorder_visual_object_property({
         .path = table_path.string(),
@@ -2839,6 +2883,8 @@ void test_reorder_visual_object_memo_properties_rolls_back_failed_batches() {
         }
     });
     expect(batch_result.ok, "#773: batch property reorder should support mixed selectors and all placements");
+    expect(batch_result.affected_object_count == 4U,
+        "#1005: successful batch property reorder should report affected item count");
     expect(order_is(memo_property_order("save-guid"), {"Width", "Caption", "Left", "Top"}) &&
             order_is(memo_property_order("name-guid"), {"Left", "Caption", "Top"}) &&
             order_is(memo_property_order("status-guid"), {"Left", "Caption", "Width"}),
@@ -2876,6 +2922,8 @@ void test_reorder_visual_object_memo_properties_rolls_back_failed_batches() {
         }
     });
     expect(!batch_result.ok, "#773: batch property reorder should reject direct DBF-backed fields");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: failed batch property reorder should report zero affected objects");
     expect(order_is(memo_property_order("save-guid"), {"Width", "Caption", "Left", "Top"}),
         "#773: direct-field failures should roll back earlier memo reorders");
 
@@ -3000,6 +3048,8 @@ void test_reorder_visual_object_memo_properties_rolls_back_failed_batches() {
         .properties = {}
     });
     expect(!batch_result.ok, "#773: empty batch reorder requests should fail explicitly");
+    expect(batch_result.affected_object_count == 0U,
+        "#1005: empty batch property reorder should report zero affected objects");
 
     for (int index = 0; index < 4; ++index) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(table_path.string());

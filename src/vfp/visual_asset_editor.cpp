@@ -2058,7 +2058,7 @@ VisualAssetEditResult update_visual_object_property(const VisualObjectEditReques
 }
 
 VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyClearRequest& request) {
-    return apply_visual_object_property_change({
+    auto clear_result = apply_visual_object_property_change({
         .path = request.path,
         .record_index = request.record_index,
         .object_name = request.object_name,
@@ -2066,6 +2066,10 @@ VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyCle
         .property_name = request.property_name,
         .property_value = {}
     }, true, true);
+    if (clear_result.ok) {
+        clear_result.affected_object_count = 1U;
+    }
+    return clear_result;
 }
 
 VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyClearBatchRequest& request) {
@@ -2118,7 +2122,7 @@ VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyC
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
 }
 
 VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request) {
@@ -2157,7 +2161,7 @@ VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopy
         return {.ok = false, .error = "The target object already has the requested property."};
     }
 
-    return update_visual_object_property({
+    auto copy_result = update_visual_object_property({
         .path = request.path,
         .record_index = request.target_record_index,
         .object_name = request.target_object_name,
@@ -2165,6 +2169,10 @@ VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopy
         .property_name = target_property_name,
         .property_value = source_property.value
     });
+    if (copy_result.ok) {
+        copy_result.affected_object_count = 1U;
+    }
+    return copy_result;
 }
 
 VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCopyBatchRequest& request) {
@@ -2232,7 +2240,7 @@ VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCo
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
 }
 
 VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMoveRequest& request) {
@@ -2306,7 +2314,7 @@ VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMove
         return {.ok = false, .error = clear_result.error};
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = 1U};
 }
 
 VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMoveBatchRequest& request) {
@@ -2374,7 +2382,7 @@ VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMo
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
 }
 
 VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRenameRequest& request) {
@@ -2479,11 +2487,15 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
     }
 
     assignments[source_index].name = target_property_name;
-    return replace_memo_field_value(
+    auto rename_result = replace_memo_field_value(
         request.path,
         record_index,
         "PROPERTIES",
         serialize_visual_property_blob(assignments));
+    if (rename_result.ok) {
+        rename_result.affected_object_count = 1U;
+    }
+    return rename_result;
 }
 
 VisualAssetEditResult rename_visual_object_properties(const VisualObjectPropertyRenameBatchRequest& request) {
@@ -2547,7 +2559,7 @@ VisualAssetEditResult rename_visual_object_properties(const VisualObjectProperty
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
 }
 
 VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyReorderRequest& request) {
@@ -2624,7 +2636,7 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
         return reorder_result;
     }
 
-    return update_visual_object_property({
+    auto update_result = update_visual_object_property({
         .path = request.path,
         .record_index = record_index,
         .object_name = {},
@@ -2632,6 +2644,10 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
         .property_name = "PROPERTIES",
         .property_value = serialize_visual_property_blob(assignments)
     });
+    if (update_result.ok) {
+        update_result.affected_object_count = 1U;
+    }
+    return update_result;
 }
 
 VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropertyReorderBatchRequest& request) {
@@ -2699,7 +2715,7 @@ VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropert
         }
     }
 
-    return {.ok = true, .error = {}};
+    return {.ok = true, .error = {}, .affected_object_count = request.properties.size()};
 }
 
 VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request) {
