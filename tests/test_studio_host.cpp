@@ -21,6 +21,16 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+template <typename Descriptor>
+bool has_descriptor_id(const std::vector<Descriptor>& descriptors, std::string_view id) {
+    for (const auto& descriptor : descriptors) {
+        if (descriptor.id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<std::uint8_t> make_vfp_header() {
     std::vector<std::uint8_t> bytes(32U, 0U);
     bytes[0] = 0x30U;
@@ -163,6 +173,96 @@ void test_open_document_uses_vfp_filename_for_display_name() {
     fs::remove(form_path, ignored);
     fs::remove(sidecar_path, ignored);
     fs::remove(temp_dir, ignored);
+}
+
+void test_open_document_attaches_default_designer_contexts() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() / "copperfin_studio_host_designer_context_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const auto write_synthetic_asset = [&](const std::string& filename) {
+        const fs::path path = temp_dir / filename;
+        const auto bytes = make_vfp_header();
+        std::ofstream output(path, std::ios::binary);
+        output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+        return path;
+    };
+
+    const auto form_result = copperfin::studio::open_document({
+        .path = write_synthetic_asset("customer.scx").string()
+    });
+    expect(form_result.ok, "#960: synthetic form should open for designer-context checks");
+    expect(form_result.document.designer_contexts.size() == 1U,
+           "#960: form documents should expose one default designer context");
+    if (!form_result.document.designer_contexts.empty()) {
+        const auto& context = form_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object,
+               "#960: form documents should expose the visual-object designer context");
+        expect(has_descriptor_id(context.editor_actions, "show-property-grid"),
+               "#960: form designer context should include property-grid actions");
+        expect(has_descriptor_id(context.builders, "control-builder"),
+               "#960: form designer context should include control builders");
+        expect(has_descriptor_id(context.toolbox_items, "textbox"),
+               "#960: form designer context should include form toolbox items");
+    }
+
+    const auto report_result = copperfin::studio::open_document({
+        .path = write_synthetic_asset("summary.frx").string()
+    });
+    expect(report_result.ok, "#960: synthetic report should open for designer-context checks");
+    expect(report_result.document.designer_contexts.size() == 1U,
+           "#960: report documents should expose one default designer context");
+    if (!report_result.document.designer_contexts.empty()) {
+        const auto& context = report_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression,
+               "#960: report documents should expose the report-expression designer context");
+        expect(has_descriptor_id(context.editor_actions, "edit-report-expression"),
+               "#960: report designer context should include expression editor actions");
+        expect(has_descriptor_id(context.builders, "report-builder"),
+               "#960: report designer context should include report builders");
+        expect(has_descriptor_id(context.toolbox_items, "label"),
+               "#960: report designer context should include report-safe toolbox items");
+        expect(!has_descriptor_id(context.toolbox_items, "textbox"),
+               "#960: report designer context should exclude form-only toolbox items");
+    }
+
+    const auto project_result = copperfin::studio::open_document({
+        .path = write_synthetic_asset("demo.pjx").string()
+    });
+    expect(project_result.ok, "#960: synthetic project should open for designer-context checks");
+    expect(project_result.document.designer_contexts.size() == 1U,
+           "#960: project documents should expose one default designer context");
+    if (!project_result.document.designer_contexts.empty()) {
+        const auto& context = project_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::project_item,
+               "#960: project documents should expose the project-item designer context");
+        expect(has_descriptor_id(context.editor_actions, "navigate-project-item"),
+               "#960: project designer context should include project navigation actions");
+        expect(has_descriptor_id(context.builders, "application-wizard"),
+               "#960: project designer context should include application wizard builders");
+        expect(context.toolbox_items.empty(), "#960: project designer context should not expose toolbox items");
+    }
+
+    const auto database_result = copperfin::studio::open_document({
+        .path = write_synthetic_asset("data.dbc").string()
+    });
+    expect(database_result.ok, "#960: synthetic database container should open for designer-context checks");
+    expect(database_result.document.designer_contexts.size() == 1U,
+           "#960: database documents should expose one default designer context");
+    if (!database_result.document.designer_contexts.empty()) {
+        const auto& context = database_result.document.designer_contexts.front();
+        expect(context.selection_context == copperfin::studio::StudioEditorSelectionContext::data_environment,
+               "#960: database documents should expose the data-environment designer context");
+        expect(has_descriptor_id(context.editor_actions, "edit-data-environment"),
+               "#960: data designer context should include data-environment actions");
+        expect(has_descriptor_id(context.builders, "data-environment-builder"),
+               "#960: data designer context should include data-environment builders");
+        expect(context.toolbox_items.empty(), "#960: data designer context should not expose toolbox items");
+    }
+
+    fs::remove_all(temp_dir, ignored);
 }
 
 void test_object_snapshot_preserves_empty_and_null_design_fields() {
@@ -822,6 +922,7 @@ int main() {
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_open_document_infers_form_sidecar();
     test_open_document_uses_vfp_filename_for_display_name();
+    test_open_document_attaches_default_designer_contexts();
     test_object_snapshot_preserves_empty_and_null_design_fields();
     test_object_snapshot_suppresses_unresolved_memo_placeholders();
     test_object_snapshot_trims_normalized_display_metadata();

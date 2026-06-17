@@ -129,6 +129,45 @@ bool supports_visual_property_blob(const StudioDocumentModel& document) {
     return document.kind == StudioAssetKind::form || document.kind == StudioAssetKind::class_library;
 }
 
+std::vector<StudioDesignerContextResult> default_designer_contexts_for_kind(StudioAssetKind kind) {
+    switch (kind) {
+        case StudioAssetKind::form:
+        case StudioAssetKind::class_library:
+            return {
+                studio_designer_context_for_selection({
+                    .selection_context = StudioEditorSelectionContext::visual_object
+                })
+            };
+        case StudioAssetKind::report:
+        case StudioAssetKind::label:
+            return {
+                studio_designer_context_for_selection({
+                    .selection_context = StudioEditorSelectionContext::report_expression
+                })
+            };
+        case StudioAssetKind::project:
+            return {
+                studio_designer_context_for_selection({
+                    .selection_context = StudioEditorSelectionContext::project_item
+                })
+            };
+        case StudioAssetKind::table:
+        case StudioAssetKind::database_container:
+            return {
+                studio_designer_context_for_selection({
+                    .selection_context = StudioEditorSelectionContext::data_environment
+                })
+            };
+        case StudioAssetKind::menu:
+        case StudioAssetKind::index:
+        case StudioAssetKind::program:
+        case StudioAssetKind::header:
+        case StudioAssetKind::unknown:
+            return {};
+    }
+    return {};
+}
+
 void append_property_snapshots(
     const std::vector<vfp::VisualPropertyAssignment>& assignments,
     std::vector<StudioPropertySnapshot>& properties,
@@ -416,6 +455,7 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     document.read_only = request.read_only;
     document.launched_from_visual_studio = request.launched_from_visual_studio;
     document.inspection = inspection;
+    document.designer_contexts = default_designer_contexts_for_kind(document.kind);
     if (document.kind == StudioAssetKind::program) {
         document.static_diagnostics = runtime::analyze_prg_file(request.path);
     }
