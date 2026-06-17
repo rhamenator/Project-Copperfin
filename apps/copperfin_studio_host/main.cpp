@@ -22,7 +22,7 @@
 namespace {
 
 void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--line <n>] [--column <n>] [--symbol <name>]\n";
+    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -1419,6 +1419,22 @@ int main(int argc, char** argv) {
         if (!delete_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << delete_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.restore_object) {
+        const auto restore_result = copperfin::vfp::set_visual_object_deleted_state({
+            .path = parse_result.request.path,
+            .record_index = parse_result.request.record_index,
+            .object_name = parse_result.request.object_name,
+            .unique_id = parse_result.request.unique_id,
+            .deleted = false
+        });
+
+        if (!restore_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << restore_result.error << "\n";
             return 4;
         }
     }

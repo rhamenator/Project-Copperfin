@@ -2,6 +2,7 @@
 
 This file is the working guide for the remaining Copperfin implementation effort.
 
+- 2026-06-17: E2/#1024 host restore-object command is now shipped. `copperfin_studio_host --restore-object` routes record-index, object-name, or unique-id targeted restores through `set_visual_object_deleted_state(... deleted=false)`, rejects ambiguous delete/restore/property command combinations, and preserves no-mutation behavior for missing target objects.
 - 2026-06-17: E2/#1023 host delete-object command is now shipped. `copperfin_studio_host --delete-object` routes record-index, object-name, or unique-id targeted deletes through `set_visual_object_deleted_state(... deleted=true)`, rejects ambiguous delete/property command combinations, and preserves no-mutation behavior for missing target objects.
 - 2026-06-17: E2/#1022 host rename-property command is now shipped. `copperfin_studio_host --rename-property` routes record-index, object-name, or unique-id targeted memo-backed property renames through `rename_visual_object_property`, requires `--new-property-name`, rejects ambiguous property command combinations, and preserves no-mutation behavior for missing target objects.
 - 2026-06-17: E2/#1021 host clear-property command is now shipped. `copperfin_studio_host --clear-property` routes record-index, object-name, or unique-id targeted clears through `clear_visual_object_property`, rejects simultaneous set/clear property requests as ambiguous, and preserves no-mutation behavior for missing target objects.

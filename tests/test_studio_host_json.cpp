@@ -186,6 +186,17 @@ bool visual_object_deleted(const std::filesystem::path& form_path, const std::st
     return false;
 }
 
+void delete_existing_textbox(const std::filesystem::path& form_path, const std::string& evidence) {
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "existing-textbox-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, evidence);
+}
+
 std::filesystem::path write_synthetic_form_table_for_property_rename(
     const std::filesystem::path& temp_root,
     const std::string& file_name) {
@@ -1426,6 +1437,92 @@ void test_studio_host_json_deletes_objects_by_stable_selectors(const std::string
     }
 }
 
+void test_studio_host_json_restores_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_restore_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path object_name_path = temp_root / "object_name.scx";
+    write_synthetic_form_table_for_toolbox_creation(object_name_path);
+    delete_existing_textbox(object_name_path,
+        "#1024: restore-object object-name fixture should start with a deleted target");
+    const auto object_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", object_name_path.string(),
+            "--restore-object",
+            "--object-name", "txt1",
+            "--json"
+        },
+        temp_root);
+    expect(object_name_process.exit_code == 0,
+        "#1024: object-name host object restores should exit successfully");
+    expect(!visual_object_deleted(object_name_path, "existing-textbox-guid"),
+        "#1024: object-name host object restores should clear the targeted object's deleted state");
+
+    const fs::path unique_id_path = temp_root / "unique_id.scx";
+    write_synthetic_form_table_for_toolbox_creation(unique_id_path);
+    delete_existing_textbox(unique_id_path,
+        "#1024: restore-object unique-id fixture should start with a deleted target");
+    const auto unique_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unique_id_path.string(),
+            "--restore-object",
+            "--unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(unique_id_process.exit_code == 0,
+        "#1024: unique-id host object restores should exit successfully");
+    expect(!visual_object_deleted(unique_id_path, "existing-textbox-guid"),
+        "#1024: unique-id host object restores should clear the targeted object's deleted state");
+
+    const fs::path missing_path = temp_root / "missing.scx";
+    write_synthetic_form_table_for_toolbox_creation(missing_path);
+    delete_existing_textbox(missing_path,
+        "#1024: restore-object missing-object fixture should start with a deleted target");
+    const auto missing_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_path.string(),
+            "--restore-object",
+            "--object-name", "missingObject",
+            "--json"
+        },
+        temp_root);
+    expect(missing_process.exit_code == 4,
+        "#1024: missing object-name host object restores should return command failure");
+    expect(visual_object_deleted(missing_path, "existing-textbox-guid"),
+        "#1024: missing object-name host object restores should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_toolbox_creation(ambiguous_path);
+    delete_existing_textbox(ambiguous_path,
+        "#1024: restore-object ambiguity fixture should start with a deleted target");
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--delete-object",
+            "--restore-object",
+            "--unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1024: delete-object plus restore-object requests should fail during launch parsing");
+    expect(visual_object_deleted(ambiguous_path, "existing-textbox-guid"),
+        "#1024: delete-object/restore-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1440,5 +1537,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

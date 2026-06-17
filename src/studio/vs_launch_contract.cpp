@@ -103,6 +103,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--restore-object") {
+            result.request.restore_object = true;
+            continue;
+        }
+
         if (argument == "--json") {
             result.output_json = true;
             continue;
@@ -269,11 +274,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.apply_property_update ? 1 : 0) +
         (result.request.clear_property ? 1 : 0) +
         (result.request.rename_property ? 1 : 0);
+    const int object_command_count =
+        (result.request.delete_object ? 1 : 0) +
+        (result.request.restore_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
     }
-    if (result.request.delete_object && property_command_count > 0) {
-        return {.ok = false, .error = "--delete-object cannot be combined with property commands."};
+    if (object_command_count > 1) {
+        return {.ok = false, .error = "Only one object command can be used at a time."};
+    }
+    if (object_command_count > 0 && property_command_count > 0) {
+        return {.ok = false, .error = "Object commands cannot be combined with property commands."};
     }
 
     result.ok = true;

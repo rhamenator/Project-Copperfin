@@ -54,6 +54,7 @@ struct StudioOpenRequest {
     bool clear_property = false;
     bool rename_property = false;
     bool delete_object = false;
+    bool restore_object = false;
     bool selection_record_available = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};

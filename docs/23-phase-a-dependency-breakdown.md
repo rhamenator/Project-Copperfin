@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-17.
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), or shared design-model lane (`#22`) unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest shipped E2 slice: `#1023`, which exposes host delete-object commands by record index, object name, or unique id.
+- Latest shipped E2 slice: `#1024`, which exposes host restore-object commands by record index, object name, or unique id.
 - Next work: pick an open prompt-sized child under `#23`, or create one before coding if no suitable child exists.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
 
@@ -354,7 +354,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure:
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#23` | open next child | continue designer interaction, builder, and context-aware editor fidelity after `#1023` |
+| `#23` | open next child | continue designer interaction, builder, and context-aware editor fidelity after `#1024` |
 
 Historical-closed prompt-sized native slice queues:
 
@@ -371,7 +371,7 @@ Historical-closed prompt-sized native slice queues:
 Adjacent prompt-sized native slice queues:
 
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
-- `#23`: `#1023` is shipped; continue by opening the next prompt-sized designer interaction/builder/context-aware editor child if no open child remains
+- `#23`: `#1024` is shipped; continue by opening the next prompt-sized designer interaction/builder/context-aware editor child if no open child remains
 - broader repo execution leaves are now also pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document now points to the live post-D1 blocker path
 
 Historical post-D1 execution order through the current E2 queue:
@@ -745,6 +745,7 @@ The numbered list below is retained as closure evidence for the completed D1/E1 
 365. `#1021`
 366. `#1022`
 367. `#1023`
+368. `#1024`
 
 Execution guardrails:
 

@@ -97,6 +97,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.clear_property, "#1021: launch contract should keep clear-property off by default");
     expect(!result.request.rename_property, "#1022: launch contract should keep rename-property off by default");
     expect(!result.request.delete_object, "#1023: launch contract should keep delete-object off by default");
+    expect(!result.request.restore_object, "#1024: launch contract should keep restore-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
     expect(result.request.object_name == "cmdSave", "#1020: launch contract should parse object-name selectors");
@@ -240,6 +241,43 @@ void test_parse_launch_arguments_rejects_delete_object_property_ambiguity() {
 
     expect(!result.ok,
         "#1023: launch contract should reject delete-object combined with property commands");
+}
+
+void test_parse_launch_arguments_for_restore_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--restore-object",
+        "--object-name", "txtName",
+        "--unique-id", "textbox-guid"
+    });
+
+    expect(result.ok, "#1024: launch contract should parse restore-object requests");
+    expect(result.request.restore_object, "#1024: launch contract should detect --restore-object");
+    expect(result.request.object_name == "txtName",
+        "#1024: restore-object requests should carry object-name selectors");
+    expect(result.request.unique_id == "textbox-guid",
+        "#1024: restore-object requests should carry unique-id selectors");
+}
+
+void test_parse_launch_arguments_rejects_restore_object_ambiguity() {
+    const auto delete_restore_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--delete-object",
+        "--restore-object",
+        "--unique-id", "textbox-guid"
+    });
+    expect(!delete_restore_result.ok,
+        "#1024: launch contract should reject simultaneous delete-object and restore-object requests");
+
+    const auto restore_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--restore-object",
+        "--clear-property",
+        "--property-name", "Caption"
+    });
+    expect(!restore_property_result.ok,
+        "#1024: launch contract should reject restore-object combined with property commands");
 }
 
 void test_parse_launch_arguments_rejects_unknown_switch() {
@@ -1468,6 +1506,8 @@ int main() {
     test_parse_launch_arguments_rejects_any_ambiguous_property_commands();
     test_parse_launch_arguments_for_delete_object();
     test_parse_launch_arguments_rejects_delete_object_property_ambiguity();
+    test_parse_launch_arguments_for_restore_object();
+    test_parse_launch_arguments_rejects_restore_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
