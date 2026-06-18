@@ -133,6 +133,10 @@ void test_parse_launch_arguments() {
         "#1100: launch contract should keep disabled-picture-object off by default");
     expect(!result.request.disabled_picture_available,
         "#1100: launch contract should keep disabled-picture unavailable by default");
+    expect(!result.request.ole_drag_picture_object,
+        "#1101: launch contract should keep OLE drag-picture-object off by default");
+    expect(!result.request.ole_drag_picture_available,
+        "#1101: launch contract should keep OLE drag-picture unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2128,6 +2132,84 @@ void test_parse_launch_arguments_rejects_disabled_picture_object_ambiguity() {
     });
     expect(!stray_disabled_picture_result.ok,
         "#1100: launch contract should reject stray disabled-picture arguments");
+}
+
+void test_parse_launch_arguments_for_ole_drag_picture_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--ole-drag-picture-object",
+        "--ole-drag-picture", "forms\\customer_ole_drag.bmp",
+        "--ole-drag-picture-target-object-name", "cmdSave",
+        "--ole-drag-picture-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1101: launch contract should parse OLE drag-picture-object requests");
+    expect(result.request.ole_drag_picture_object,
+        "#1101: launch contract should detect --ole-drag-picture-object");
+    expect(result.request.ole_drag_picture_available &&
+            result.request.ole_drag_picture == "forms\\customer_ole_drag.bmp",
+        "#1101: OLE drag-picture-object requests should carry OLE drag-picture text");
+    expect(result.request.ole_drag_picture_objects.size() == 2U,
+        "#1101: OLE drag-picture-object requests should collect OLE drag-picture target selectors");
+    if (result.request.ole_drag_picture_objects.size() == 2U) {
+        expect(result.request.ole_drag_picture_objects[0].object_name == "cmdSave" &&
+                result.request.ole_drag_picture_objects[0].unique_id.empty(),
+            "#1101: OLE drag-picture-object requests should parse target object-name selectors");
+        expect(result.request.ole_drag_picture_objects[1].object_name.empty() &&
+                result.request.ole_drag_picture_objects[1].unique_id == "two-guid",
+            "#1101: OLE drag-picture-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_ole_drag_picture_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drag-picture-object",
+        "--ole-drag-picture-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1101: launch contract should reject OLE drag-picture-object requests without OLE drag-picture text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drag-picture-object",
+        "--ole-drag-picture", "forms\\customer_ole_drag.bmp"
+    });
+    expect(!missing_targets_result.ok,
+        "#1101: launch contract should reject OLE drag-picture-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_ole_drag_picture_object_ambiguity() {
+    const auto ole_drag_picture_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drag-picture-object",
+        "--locked-object",
+        "--ole-drag-picture", "forms\\customer_ole_drag.bmp",
+        "--ole-drag-picture-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!ole_drag_picture_locked_result.ok,
+        "#1101: launch contract should reject simultaneous OLE drag-picture-object and locked-object requests");
+
+    const auto ole_drag_picture_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drag-picture-object",
+        "--clear-property",
+        "--property-name", "OLEDragPicture",
+        "--ole-drag-picture", "forms\\customer_ole_drag.bmp",
+        "--ole-drag-picture-target-unique-id", "one-guid"
+    });
+    expect(!ole_drag_picture_property_result.ok,
+        "#1101: launch contract should reject OLE drag-picture-object combined with property commands");
+
+    const auto stray_ole_drag_picture_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drag-picture", "forms\\customer_ole_drag.bmp"
+    });
+    expect(!stray_ole_drag_picture_result.ok,
+        "#1101: launch contract should reject stray OLE drag-picture arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -8053,6 +8135,9 @@ int main() {
     test_parse_launch_arguments_for_disabled_picture_object();
     test_parse_launch_arguments_rejects_disabled_picture_object_invalid_inputs();
     test_parse_launch_arguments_rejects_disabled_picture_object_ambiguity();
+    test_parse_launch_arguments_for_ole_drag_picture_object();
+    test_parse_launch_arguments_rejects_ole_drag_picture_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_ole_drag_picture_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

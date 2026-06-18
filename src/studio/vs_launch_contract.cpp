@@ -498,6 +498,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--ole-drag-picture-object") {
+            result.request.ole_drag_picture_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -881,6 +886,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.disabled_picture = args[++index];
             result.request.disabled_picture_available = true;
+            continue;
+        }
+
+        if (argument == "--ole-drag-picture") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --ole-drag-picture."};
+            }
+            result.request.ole_drag_picture = args[++index];
+            result.request.ole_drag_picture_available = true;
             continue;
         }
 
@@ -1902,6 +1916,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --disabled-picture-target-unique-id."};
             }
             result.request.disabled_picture_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--ole-drag-picture-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --ole-drag-picture-target-object-name."};
+            }
+            result.request.ole_drag_picture_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--ole-drag-picture-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --ole-drag-picture-target-unique-id."};
+            }
+            result.request.ole_drag_picture_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -3479,6 +3517,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.disabled_picture_objects.empty())) {
         return {.ok = false, .error = "Disabled-picture arguments can only be used with --disabled-picture-object."};
     }
+    if (result.request.ole_drag_picture_object && !result.request.ole_drag_picture_available) {
+        return {.ok = false, .error = "An object OLE drag-picture assignment requires --ole-drag-picture."};
+    }
+    if (result.request.ole_drag_picture_object && result.request.ole_drag_picture_objects.empty()) {
+        return {.ok = false, .error = "An object OLE drag-picture assignment requires at least one target selector."};
+    }
+    if (!result.request.ole_drag_picture_object &&
+        (result.request.ole_drag_picture_available ||
+         !result.request.ole_drag_picture_objects.empty())) {
+        return {.ok = false, .error = "OLE drag-picture arguments can only be used with --ole-drag-picture-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4153,6 +4202,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.picture_object ? 1 : 0) +
         (result.request.down_picture_object ? 1 : 0) +
         (result.request.disabled_picture_object ? 1 : 0) +
+        (result.request.ole_drag_picture_object ? 1 : 0) +
         (result.request.tooltip_text_object ? 1 : 0) +
         (result.request.status_bar_text_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +
