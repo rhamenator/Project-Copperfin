@@ -228,6 +228,7 @@ struct StudioOpenRequest {
     bool min_width_object = false;
     bool max_height_object = false;
     bool movable_object = false;
+    bool half_height_caption_object = false;
     bool max_width_object = false;
     bool max_left_object = false;
     bool max_top_object = false;
@@ -405,6 +406,7 @@ struct StudioOpenRequest {
     bool min_width_available = false;
     bool max_height_available = false;
     bool movable_available = false;
+    bool half_height_caption_available = false;
     bool max_width_available = false;
     bool max_left_available = false;
     bool max_top_available = false;
@@ -440,6 +442,7 @@ struct StudioOpenRequest {
     bool max_button = false;
     bool min_button = false;
     bool movable = false;
+    bool half_height_caption = false;
     bool auto_center = false;
     bool auto_size = false;
     bool auto_release = false;
@@ -521,6 +524,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> min_width_objects{};
     std::vector<StudioObjectSelector> max_height_objects{};
     std::vector<StudioObjectSelector> movable_objects{};
+    std::vector<StudioObjectSelector> half_height_caption_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
     std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> max_top_objects{};

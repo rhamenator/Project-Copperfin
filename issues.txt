@@ -1,3 +1,4 @@
+1159	OPEN	E2/#23 slice: Expose host half-height-caption-object command		2026-06-18T08:22:24Z
 1158	OPEN	E2/#23 slice: Expose host movable-object command		2026-06-18T08:12:38Z
 1157	OPEN	E2/#23 slice: Expose host min-width-object command		2026-06-18T08:04:10Z
 1156	OPEN	E2/#23 slice: Expose host min-height-object command		2026-06-18T07:55:47Z

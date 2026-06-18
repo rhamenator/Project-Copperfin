@@ -56,6 +56,7 @@ void print_usage() {
     std::cout << "Min-width object: --min-width-object --min-width <n> [--min-width-target-object-name <name>] [--min-width-target-unique-id <id>]\n";
     std::cout << "Max-height object: --max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]\n";
     std::cout << "Movable object: --movable-object --movable <true|false> [--movable-target-object-name <name>] [--movable-target-unique-id <id>]\n";
+    std::cout << "Half-height-caption object: --half-height-caption-object --half-height-caption <true|false> [--half-height-caption-target-object-name <name>] [--half-height-caption-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4071,6 +4072,30 @@ int main(int argc, char** argv) {
         if (!movable_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << movable_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.half_height_caption_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> half_height_caption_objects;
+        half_height_caption_objects.reserve(parse_result.request.half_height_caption_objects.size());
+        for (const auto& half_height_caption_object : parse_result.request.half_height_caption_objects) {
+            half_height_caption_objects.push_back({
+                .record_index = half_height_caption_object.record_index,
+                .object_name = half_height_caption_object.object_name,
+                .unique_id = half_height_caption_object.unique_id
+            });
+        }
+
+        const auto half_height_caption_result = copperfin::vfp::set_visual_object_half_height_caption({
+            .path = parse_result.request.path,
+            .objects = half_height_caption_objects,
+            .half_height_caption = parse_result.request.half_height_caption
+        });
+
+        if (!half_height_caption_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << half_height_caption_result.error << "\n";
             return 4;
         }
     }

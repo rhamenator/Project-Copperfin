@@ -1121,6 +1121,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--half-height-caption-object") {
+            result.request.half_height_caption_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2692,6 +2697,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.movable = *movable;
             result.request.movable_available = true;
+            continue;
+        }
+
+        if (argument == "--half-height-caption") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --half-height-caption."};
+            }
+            const auto half_height_caption = parse_bool_value(args[++index]);
+            if (!half_height_caption.has_value()) {
+                return {.ok = false, .error = "The --half-height-caption value must be true or false."};
+            }
+            result.request.half_height_caption = *half_height_caption;
+            result.request.half_height_caption_available = true;
             continue;
         }
 
@@ -5457,6 +5475,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--half-height-caption-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --half-height-caption-target-object-name."};
+            }
+            result.request.half_height_caption_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--half-height-caption-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --half-height-caption-target-unique-id."};
+            }
+            result.request.half_height_caption_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7252,6 +7294,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.movable_objects.empty())) {
         return {.ok = false, .error = "Movable arguments can only be used with --movable-object."};
     }
+    if (result.request.half_height_caption_object && !result.request.half_height_caption_available) {
+        return {.ok = false, .error = "An object half-height-caption assignment requires --half-height-caption."};
+    }
+    if (result.request.half_height_caption_object && result.request.half_height_caption_objects.empty()) {
+        return {.ok = false, .error = "An object half-height-caption assignment requires at least one target selector."};
+    }
+    if (!result.request.half_height_caption_object &&
+        (result.request.half_height_caption_available ||
+         !result.request.half_height_caption_objects.empty())) {
+        return {.ok = false, .error = "Half-height-caption arguments can only be used with --half-height-caption-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -7634,6 +7687,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.min_width_object ? 1 : 0) +
         (result.request.max_height_object ? 1 : 0) +
         (result.request.movable_object ? 1 : 0) +
+        (result.request.half_height_caption_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

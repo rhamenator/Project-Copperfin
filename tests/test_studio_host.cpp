@@ -447,6 +447,10 @@ void test_parse_launch_arguments() {
         "#1158: launch contract should keep movable-object off by default");
     expect(!result.request.movable_available,
         "#1158: launch contract should keep movable unavailable by default");
+    expect(!result.request.half_height_caption_object,
+        "#1159: launch contract should keep half-height-caption-object off by default");
+    expect(!result.request.half_height_caption_available,
+        "#1159: launch contract should keep half-height-caption unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -10181,6 +10185,92 @@ void test_parse_launch_arguments_rejects_movable_object_ambiguity() {
         "#1158: launch contract should reject stray movable arguments");
 }
 
+void test_parse_launch_arguments_for_half_height_caption_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--half-height-caption-object",
+        "--half-height-caption", "false",
+        "--half-height-caption-target-object-name", "frmCustomer",
+        "--half-height-caption-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1159: launch contract should parse half-height-caption-object requests");
+    expect(result.request.half_height_caption_object,
+        "#1159: launch contract should detect --half-height-caption-object");
+    expect(result.request.half_height_caption_available && !result.request.half_height_caption,
+        "#1159: half-height-caption-object requests should carry half-height-caption state");
+    expect(result.request.half_height_caption_objects.size() == 2U,
+        "#1159: half-height-caption-object requests should collect half-height-caption target selectors");
+    if (result.request.half_height_caption_objects.size() == 2U) {
+        expect(result.request.half_height_caption_objects[0].object_name == "frmCustomer" &&
+                result.request.half_height_caption_objects[0].unique_id.empty(),
+            "#1159: half-height-caption-object requests should parse target object-name selectors");
+        expect(result.request.half_height_caption_objects[1].object_name.empty() &&
+                result.request.half_height_caption_objects[1].unique_id == "two-guid",
+            "#1159: half-height-caption-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_half_height_caption_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--half-height-caption-object",
+        "--half-height-caption-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1159: launch contract should reject half-height-caption-object requests without half-height-caption state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--half-height-caption-object",
+        "--half-height-caption", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1159: launch contract should reject half-height-caption-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--half-height-caption-object",
+        "--half-height-caption", "sometimes",
+        "--half-height-caption-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1159: launch contract should reject invalid half-height-caption boolean values");
+}
+
+void test_parse_launch_arguments_rejects_half_height_caption_object_ambiguity() {
+    const auto half_height_caption_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--half-height-caption-object",
+        "--allow-output-object",
+        "--half-height-caption", "false",
+        "--half-height-caption-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!half_height_caption_allow_output_result.ok,
+        "#1159: launch contract should reject simultaneous half-height-caption-object and allow-output-object requests");
+
+    const auto half_height_caption_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--half-height-caption-object",
+        "--clear-property",
+        "--property-name", "HalfHeightCaption",
+        "--half-height-caption", "false",
+        "--half-height-caption-target-unique-id", "one-guid"
+    });
+    expect(!half_height_caption_property_result.ok,
+        "#1159: launch contract should reject half-height-caption-object combined with property commands");
+
+    const auto stray_half_height_caption_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--half-height-caption", "false"
+    });
+    expect(!stray_half_height_caption_result.ok,
+        "#1159: launch contract should reject stray half-height-caption arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13819,6 +13909,9 @@ int main() {
     test_parse_launch_arguments_for_movable_object();
     test_parse_launch_arguments_rejects_movable_object_invalid_inputs();
     test_parse_launch_arguments_rejects_movable_object_ambiguity();
+    test_parse_launch_arguments_for_half_height_caption_object();
+    test_parse_launch_arguments_rejects_half_height_caption_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_half_height_caption_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
