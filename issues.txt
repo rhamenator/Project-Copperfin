@@ -1,3 +1,4 @@
+1150	OPEN	E2/#23 slice: Expose host max-button-object command		2026-06-18T06:57:20Z
 1149	OPEN	E2/#23 slice: Expose host mac-desktop-object command		2026-06-18T06:49:23Z
 1148	OPEN	E2/#23 slice: Expose host key-preview-object command		2026-06-18T06:41:34Z
 1147	OPEN	E2/#23 slice: Expose host desktop-object command		2026-06-18T06:33:02Z

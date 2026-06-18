@@ -50,6 +50,7 @@ void print_usage() {
     std::cout << "Desktop object: --desktop-object --desktop <true|false> [--desktop-target-object-name <name>] [--desktop-target-unique-id <id>]\n";
     std::cout << "Key-preview object: --key-preview-object --key-preview <true|false> [--key-preview-target-object-name <name>] [--key-preview-target-unique-id <id>]\n";
     std::cout << "Mac-desktop object: --mac-desktop-object --mac-desktop <true|false> [--mac-desktop-target-object-name <name>] [--mac-desktop-target-unique-id <id>]\n";
+    std::cout << "Max-button object: --max-button-object --max-button <true|false> [--max-button-target-object-name <name>] [--max-button-target-unique-id <id>]\n";
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
@@ -3918,6 +3919,30 @@ int main(int argc, char** argv) {
         if (!mac_desktop_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << mac_desktop_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.max_button_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> max_button_objects;
+        max_button_objects.reserve(parse_result.request.max_button_objects.size());
+        for (const auto& max_button_object : parse_result.request.max_button_objects) {
+            max_button_objects.push_back({
+                .record_index = max_button_object.record_index,
+                .object_name = max_button_object.object_name,
+                .unique_id = max_button_object.unique_id
+            });
+        }
+
+        const auto max_button_result = copperfin::vfp::set_visual_object_max_button({
+            .path = parse_result.request.path,
+            .objects = max_button_objects,
+            .max_button = parse_result.request.max_button
+        });
+
+        if (!max_button_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << max_button_result.error << "\n";
             return 4;
         }
     }

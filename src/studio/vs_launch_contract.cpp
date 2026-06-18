@@ -1091,6 +1091,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-button-object") {
+            result.request.max_button_object = true;
+            continue;
+        }
+
         if (argument == "--auto-center-object") {
             result.request.auto_center_object = true;
             continue;
@@ -2560,6 +2565,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.mac_desktop = *mac_desktop;
             result.request.mac_desktop_available = true;
+            continue;
+        }
+
+        if (argument == "--max-button") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-button."};
+            }
+            const auto max_button = parse_bool_value(args[++index]);
+            if (!max_button.has_value()) {
+                return {.ok = false, .error = "The --max-button value must be true or false."};
+            }
+            result.request.max_button = *max_button;
+            result.request.max_button_available = true;
             continue;
         }
 
@@ -5133,6 +5151,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-button-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-button-target-object-name."};
+            }
+            result.request.max_button_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--max-button-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-button-target-unique-id."};
+            }
+            result.request.max_button_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -6790,6 +6832,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.mac_desktop_objects.empty())) {
         return {.ok = false, .error = "Mac-desktop arguments can only be used with --mac-desktop-object."};
     }
+    if (result.request.max_button_object && !result.request.max_button_available) {
+        return {.ok = false, .error = "An object max-button assignment requires --max-button."};
+    }
+    if (result.request.max_button_object && result.request.max_button_objects.empty()) {
+        return {.ok = false, .error = "An object max-button assignment requires at least one target selector."};
+    }
+    if (!result.request.max_button_object &&
+        (result.request.max_button_available ||
+         !result.request.max_button_objects.empty())) {
+        return {.ok = false, .error = "Max-button arguments can only be used with --max-button-object."};
+    }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
         return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
     }
@@ -7133,6 +7186,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.desktop_object ? 1 : 0) +
         (result.request.key_preview_object ? 1 : 0) +
         (result.request.mac_desktop_object ? 1 : 0) +
+        (result.request.max_button_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +
