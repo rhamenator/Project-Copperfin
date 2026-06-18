@@ -80,6 +80,17 @@ const copperfin::studio::StudioToolboxObjectCreateDispatchCatalogEntry* find_cre
     return nullptr;
 }
 
+const copperfin::studio::StudioToolboxObjectCreatePlan* find_create_batch_plan(
+    const std::vector<copperfin::studio::StudioToolboxObjectCreatePlan>& plans,
+    std::string_view id) {
+    for (const auto& plan : plans) {
+        if (plan.toolbox_item.id == id) {
+            return &plan;
+        }
+    }
+    return nullptr;
+}
+
 std::filesystem::path create_toolbox_fixture(const std::filesystem::path& temp_dir) {
     const std::filesystem::path table_path = temp_dir / "toolbox_create.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -402,6 +413,124 @@ void test_toolbox_creation_dispatch_catalog_reports_non_admitted_errors_without_
         "#1253: non-admitted toolbox create dispatch entries should not expose stale arguments");
     expect(object_count(table_path) == before_count,
         "#1253: non-admitted toolbox create dispatch catalogs should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_dispatch_catalog_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto form_catalog = copperfin::studio::plan_visual_object_batch_create_dispatch_catalog({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .path = table_path.string(),
+        .parent_name = "frmMain",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Batch Dispatch Catalog"}
+        },
+        .admit_create_operation = true
+    });
+    const auto* textbox_plan = find_create_batch_plan(form_catalog.dispatch.plan.plans, "textbox");
+    const auto* command_plan = find_create_batch_plan(form_catalog.dispatch.plan.plans, "commandbutton");
+
+    expect(form_catalog.ok &&
+            form_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            form_catalog.item_count == form_catalog.batch_plan.plan.item_count &&
+            form_catalog.batch_plan.ok &&
+            form_catalog.dispatch.ok &&
+            form_catalog.dispatch_count == 1U &&
+            form_catalog.error_count == 0U &&
+            !form_catalog.dry_run &&
+            form_catalog.mutates_asset,
+        "#1255: admitted toolbox batch create dispatch catalogs should summarize one context batch");
+    expect(form_catalog.dispatch.plan.item_count == form_catalog.item_count &&
+            form_catalog.dispatch.plan.plans.size() == form_catalog.item_count &&
+            textbox_plan != nullptr &&
+            textbox_plan->target_record_index > before_count &&
+            textbox_plan->object_name == "txt2" &&
+            command_plan != nullptr &&
+            command_plan->target_record_index > textbox_plan->target_record_index &&
+            command_plan->object_name == "cmd1" &&
+            form_catalog.dispatch.plan.dispatch_admitted &&
+            !form_catalog.dispatch.plan.executed &&
+            form_catalog.dispatch.plan.mutates_asset,
+        "#1255: admitted toolbox batch create dispatch catalogs should preserve batch plan metadata");
+    expect(has_argument(form_catalog.dispatch.plan.dispatch_arguments, "--toolbox-create-batch") &&
+            has_argument_pair(form_catalog.dispatch.plan.dispatch_arguments, "--toolbox-context", "form") &&
+            has_argument_pair(form_catalog.dispatch.plan.dispatch_arguments, "--toolbox-item", "textbox") &&
+            has_argument_pair(form_catalog.dispatch.plan.dispatch_arguments, "--object-name", "txt2") &&
+            has_argument_pair(form_catalog.dispatch.plan.dispatch_arguments, "--toolbox-item", "commandbutton") &&
+            has_argument_pair(form_catalog.dispatch.plan.dispatch_arguments, "--object-name", "cmd1") &&
+            has_argument_pair(form_catalog.dispatch.plan.dispatch_arguments, "--field-value",
+                "CAPTION=Batch Dispatch Catalog"),
+        "#1255: admitted toolbox batch create dispatch catalogs should materialize batch host arguments");
+    expect(object_count(table_path) == before_count,
+        "#1255: toolbox batch create dispatch catalogs should not mutate the visual asset");
+
+    const auto report_catalog = copperfin::studio::plan_visual_object_batch_create_dispatch_catalog({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .path = table_path.string(),
+        .parent_name = "DetailBand",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Report Batch Dispatch"}
+        },
+        .admit_create_operation = true
+    });
+
+    expect(report_catalog.ok &&
+            report_catalog.batch_plan.ok &&
+            report_catalog.dispatch.ok &&
+            report_catalog.dispatch.plan.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            has_argument_pair(report_catalog.dispatch.plan.dispatch_arguments, "--toolbox-context", "report") &&
+            has_argument_pair(report_catalog.dispatch.plan.dispatch_arguments, "--toolbox-item", "label") &&
+            !has_argument_pair(report_catalog.dispatch.plan.dispatch_arguments, "--toolbox-item", "textbox"),
+        "#1255: report toolbox batch create dispatch catalogs should include only report-compatible items");
+    expect(object_count(table_path) == before_count,
+        "#1255: report toolbox batch create dispatch catalogs should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_batch_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_dispatch_catalog_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto catalog = copperfin::studio::plan_visual_object_batch_create_dispatch_catalog({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .path = table_path.string(),
+        .parent_name = "frmMain",
+        .field_values = {},
+        .admit_create_operation = false
+    });
+
+    expect(catalog.ok &&
+            catalog.batch_plan.ok &&
+            !catalog.dispatch.ok &&
+            catalog.dispatch.error ==
+                "A toolbox batch create dispatch request requires an admitted non-dry-run create operation." &&
+            catalog.dispatch_count == 0U &&
+            catalog.error_count == 1U &&
+            catalog.dry_run &&
+            !catalog.mutates_asset,
+        "#1255: non-admitted toolbox batch create dispatch catalogs should report one batch dispatch error");
+    expect(catalog.dispatch.plan.dispatch_arguments.empty(),
+        "#1255: non-admitted toolbox batch create dispatch catalogs should not expose stale arguments");
+    expect(object_count(table_path) == before_count,
+        "#1255: non-admitted toolbox batch create dispatch catalogs should not mutate the visual asset");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -1274,6 +1403,8 @@ int main() {
     test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation();
     test_toolbox_creation_dispatch_catalog_plans_context_dispatches_without_mutation();
     test_toolbox_creation_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
+    test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_mutation();
+    test_toolbox_creation_batch_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
     test_toolbox_creation_batch_planner_reserves_names_without_mutation();
     test_toolbox_creation_batch_planner_rejects_invalid_batches_without_mutation();
     test_toolbox_creation_batch_create_maps_descriptors_and_metadata();
