@@ -2104,6 +2104,24 @@ void write_synthetic_form_table_for_object_max_button(const std::filesystem::pat
     expect(create_result.ok, "#1150: synthetic SCX table for object max button should be created");
 }
 
+void write_synthetic_form_table_for_object_min_button(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "MINBUTTON", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1155: synthetic SCX table for object min button should be created");
+}
+
 void write_synthetic_form_table_for_object_max_height(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -17237,6 +17255,129 @@ void test_studio_host_json_assigns_max_button_by_stable_selectors(const std::str
     }
 }
 
+void test_studio_host_json_assigns_min_button_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_min_button_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path min_button_path = temp_root / "min_button.scx";
+    write_synthetic_form_table_for_object_min_button(min_button_path);
+    const auto min_button_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", min_button_path.string(),
+            "--min-button-object",
+            "--min-button", "false",
+            "--min-button-target-object-name", "frmCustomer",
+            "--min-button-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(min_button_process.exit_code == 0,
+        "#1155: host object min-button assignment should exit successfully");
+    expect(visual_object_property(min_button_path, "one-guid", "MINBUTTON") == "false" &&
+            visual_object_property(min_button_path, "two-guid", "MINBUTTON") == "false" &&
+            visual_object_property(min_button_path, "three-guid", "MINBUTTON") == "false" &&
+            visual_object_property(min_button_path, "other-guid", "MINBUTTON") == "true",
+        "#1155: host object min-button assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_min_button(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--min-button-object",
+            "--min-button", "false",
+            "--min-button-target-unique-id", "one-guid",
+            "--min-button-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1155: missing-target host object min-button assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "MINBUTTON") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "MINBUTTON") == "true",
+        "#1155: missing-target host object min-button assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_min_button(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--min-button-object",
+            "--min-button", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1155: min-button-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "MINBUTTON") == "true",
+        "#1155: min-button-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_min_button(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--min-button-object",
+            "--min-button-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1155: min-button-object without min-button value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "MINBUTTON") == "true",
+        "#1155: min-button-object without min-button value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_min_button(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--min-button-object",
+            "--min-button", "false",
+            "--min-button-target-unique-id", "one-guid",
+            "--min-button-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1155: duplicate-target host object min-button assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "MINBUTTON") == "true",
+        "#1155: duplicate-target host object min-button assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_min_button(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--min-button-object",
+            "--allow-output-object",
+            "--min-button", "false",
+            "--min-button-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1155: min-button-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "MINBUTTON") == "true",
+        "#1155: min-button-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_max_height_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -20739,6 +20880,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_key_preview_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_mac_desktop_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_button_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_min_button_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_height_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_width_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_left_by_stable_selectors(argv[1]);

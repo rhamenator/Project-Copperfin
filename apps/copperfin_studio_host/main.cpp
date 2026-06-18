@@ -51,6 +51,7 @@ void print_usage() {
     std::cout << "Key-preview object: --key-preview-object --key-preview <true|false> [--key-preview-target-object-name <name>] [--key-preview-target-unique-id <id>]\n";
     std::cout << "Mac-desktop object: --mac-desktop-object --mac-desktop <true|false> [--mac-desktop-target-object-name <name>] [--mac-desktop-target-unique-id <id>]\n";
     std::cout << "Max-button object: --max-button-object --max-button <true|false> [--max-button-target-object-name <name>] [--max-button-target-unique-id <id>]\n";
+    std::cout << "Min-button object: --min-button-object --min-button <true|false> [--min-button-target-object-name <name>] [--min-button-target-unique-id <id>]\n";
     std::cout << "Max-height object: --max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
@@ -3947,6 +3948,30 @@ int main(int argc, char** argv) {
         if (!max_button_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << max_button_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.min_button_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> min_button_objects;
+        min_button_objects.reserve(parse_result.request.min_button_objects.size());
+        for (const auto& min_button_object : parse_result.request.min_button_objects) {
+            min_button_objects.push_back({
+                .record_index = min_button_object.record_index,
+                .object_name = min_button_object.object_name,
+                .unique_id = min_button_object.unique_id
+            });
+        }
+
+        const auto min_button_result = copperfin::vfp::set_visual_object_min_button({
+            .path = parse_result.request.path,
+            .objects = min_button_objects,
+            .min_button = parse_result.request.min_button
+        });
+
+        if (!min_button_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << min_button_result.error << "\n";
             return 4;
         }
     }

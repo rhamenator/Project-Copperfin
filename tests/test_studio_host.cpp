@@ -427,6 +427,10 @@ void test_parse_launch_arguments() {
         "#1150: launch contract should keep max-button-object off by default");
     expect(!result.request.max_button_available,
         "#1150: launch contract should keep max button unavailable by default");
+    expect(!result.request.min_button_object,
+        "#1155: launch contract should keep min-button-object off by default");
+    expect(!result.request.min_button_available,
+        "#1155: launch contract should keep min button unavailable by default");
     expect(!result.request.max_height_object,
         "#1151: launch contract should keep max-height-object off by default");
     expect(!result.request.max_height_available,
@@ -9708,6 +9712,92 @@ void test_parse_launch_arguments_rejects_max_button_object_ambiguity() {
         "#1150: launch contract should reject stray max-button arguments");
 }
 
+void test_parse_launch_arguments_for_min_button_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--min-button-object",
+        "--min-button", "false",
+        "--min-button-target-object-name", "frmCustomer",
+        "--min-button-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1155: launch contract should parse min-button-object requests");
+    expect(result.request.min_button_object,
+        "#1155: launch contract should detect --min-button-object");
+    expect(result.request.min_button_available && !result.request.min_button,
+        "#1155: min-button-object requests should carry min button state");
+    expect(result.request.min_button_objects.size() == 2U,
+        "#1155: min-button-object requests should collect min-button target selectors");
+    if (result.request.min_button_objects.size() == 2U) {
+        expect(result.request.min_button_objects[0].object_name == "frmCustomer" &&
+                result.request.min_button_objects[0].unique_id.empty(),
+            "#1155: min-button-object requests should parse target object-name selectors");
+        expect(result.request.min_button_objects[1].object_name.empty() &&
+                result.request.min_button_objects[1].unique_id == "two-guid",
+            "#1155: min-button-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_min_button_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-button-object",
+        "--min-button-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1155: launch contract should reject min-button-object requests without min button state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-button-object",
+        "--min-button", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1155: launch contract should reject min-button-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-button-object",
+        "--min-button", "sometimes",
+        "--min-button-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1155: launch contract should reject invalid min-button boolean values");
+}
+
+void test_parse_launch_arguments_rejects_min_button_object_ambiguity() {
+    const auto min_button_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-button-object",
+        "--allow-output-object",
+        "--min-button", "false",
+        "--min-button-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!min_button_allow_output_result.ok,
+        "#1155: launch contract should reject simultaneous min-button-object and allow-output-object requests");
+
+    const auto min_button_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-button-object",
+        "--clear-property",
+        "--property-name", "MinButton",
+        "--min-button", "false",
+        "--min-button-target-unique-id", "one-guid"
+    });
+    expect(!min_button_property_result.ok,
+        "#1155: launch contract should reject min-button-object combined with property commands");
+
+    const auto stray_min_button_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-button", "false"
+    });
+    expect(!stray_min_button_result.ok,
+        "#1155: launch contract should reject stray min-button arguments");
+}
+
 void test_parse_launch_arguments_for_max_height_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13426,6 +13516,9 @@ int main() {
     test_parse_launch_arguments_for_max_button_object();
     test_parse_launch_arguments_rejects_max_button_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_button_object_ambiguity();
+    test_parse_launch_arguments_for_min_button_object();
+    test_parse_launch_arguments_rejects_min_button_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_min_button_object_ambiguity();
     test_parse_launch_arguments_for_max_height_object();
     test_parse_launch_arguments_rejects_max_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_height_object_ambiguity();

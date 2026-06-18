@@ -1096,6 +1096,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--min-button-object") {
+            result.request.min_button_object = true;
+            continue;
+        }
+
         if (argument == "--max-height-object") {
             result.request.max_height_object = true;
             continue;
@@ -2598,6 +2603,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.max_button = *max_button;
             result.request.max_button_available = true;
+            continue;
+        }
+
+        if (argument == "--min-button") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --min-button."};
+            }
+            const auto min_button = parse_bool_value(args[++index]);
+            if (!min_button.has_value()) {
+                return {.ok = false, .error = "The --min-button value must be true or false."};
+            }
+            result.request.min_button = *min_button;
+            result.request.min_button_available = true;
             continue;
         }
 
@@ -5259,6 +5277,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--min-button-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --min-button-target-object-name."};
+            }
+            result.request.min_button_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--min-button-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --min-button-target-unique-id."};
+            }
+            result.request.min_button_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-height-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-height-target-object-name."};
@@ -7023,6 +7065,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.max_button_objects.empty())) {
         return {.ok = false, .error = "Max-button arguments can only be used with --max-button-object."};
     }
+    if (result.request.min_button_object && !result.request.min_button_available) {
+        return {.ok = false, .error = "An object min-button assignment requires --min-button."};
+    }
+    if (result.request.min_button_object && result.request.min_button_objects.empty()) {
+        return {.ok = false, .error = "An object min-button assignment requires at least one target selector."};
+    }
+    if (!result.request.min_button_object &&
+        (result.request.min_button_available ||
+         !result.request.min_button_objects.empty())) {
+        return {.ok = false, .error = "Min-button arguments can only be used with --min-button-object."};
+    }
     if (result.request.max_height_object && !result.request.max_height_available) {
         return {.ok = false, .error = "An object max-height assignment requires --max-height."};
     }
@@ -7411,6 +7464,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.key_preview_object ? 1 : 0) +
         (result.request.mac_desktop_object ? 1 : 0) +
         (result.request.max_button_object ? 1 : 0) +
+        (result.request.min_button_object ? 1 : 0) +
         (result.request.max_height_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
