@@ -1,3 +1,4 @@
+1191	OPEN	E2/#23 slice: Expose host dynamic-font-italic-object command		2026-06-18T14:42:08Z
 1190	OPEN	E2/#23 slice: Expose host dynamic-font-bold-object command		2026-06-18T14:27:59Z
 1189	OPEN	E2/#23 slice: Expose host dynamic-font-size-object command		2026-06-18T14:13:42Z
 1188	OPEN	E2/#23 slice: Expose host dynamic-font-name-object command		2026-06-18T14:00:15Z
