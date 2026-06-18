@@ -1,3 +1,4 @@
+1138	OPEN	E2/#23 slice: Expose host initial-selected-alias-object command		2026-06-18T05:19:37Z
 1137	OPEN	E2/#23 slice: Expose host default-file-path-object command		2026-06-18T05:11:54Z
 1136	OPEN	E2/#23 slice: Expose host form-set-class-object command		2026-06-18T04:47:34Z
 1135	OPEN	E2/#23 slice: Expose host list-item-id-object command		2026-06-18T04:41:11Z

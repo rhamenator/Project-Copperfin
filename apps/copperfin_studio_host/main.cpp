@@ -73,6 +73,7 @@ void print_usage() {
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "Form-set-class object: --form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]\n";
     std::cout << "Default-file-path object: --default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]\n";
+    std::cout << "Initial-selected-alias object: --initial-selected-alias-object --initial-selected-alias <value> [--initial-selected-alias-target-object-name <name>] [--initial-selected-alias-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2826,6 +2827,30 @@ int main(int argc, char** argv) {
         if (!default_file_path_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << default_file_path_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.initial_selected_alias_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> initial_selected_alias_objects;
+        initial_selected_alias_objects.reserve(parse_result.request.initial_selected_alias_objects.size());
+        for (const auto& initial_selected_alias_object : parse_result.request.initial_selected_alias_objects) {
+            initial_selected_alias_objects.push_back({
+                .record_index = initial_selected_alias_object.record_index,
+                .object_name = initial_selected_alias_object.object_name,
+                .unique_id = initial_selected_alias_object.unique_id
+            });
+        }
+
+        const auto initial_selected_alias_result = copperfin::vfp::set_visual_object_initial_selected_alias({
+            .path = parse_result.request.path,
+            .objects = initial_selected_alias_objects,
+            .initial_selected_alias = parse_result.request.initial_selected_alias
+        });
+
+        if (!initial_selected_alias_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << initial_selected_alias_result.error << "\n";
             return 4;
         }
     }

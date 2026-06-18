@@ -271,6 +271,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.form_set_class_available, "#1136: launch contract should keep form set class unavailable by default");
     expect(!result.request.default_file_path_object, "#1137: launch contract should keep default-file-path-object off by default");
     expect(!result.request.default_file_path_available, "#1137: launch contract should keep default file path unavailable by default");
+    expect(!result.request.initial_selected_alias_object, "#1138: launch contract should keep initial-selected-alias-object off by default");
+    expect(!result.request.initial_selected_alias_available, "#1138: launch contract should keep initial selected alias unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -5578,6 +5580,83 @@ void test_parse_launch_arguments_rejects_default_file_path_object_ambiguity() {
     });
     expect(!stray_default_file_path_result.ok,
         "#1137: launch contract should reject stray default file path arguments");
+}
+
+void test_parse_launch_arguments_for_initial_selected_alias_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--initial-selected-alias-object",
+        "--initial-selected-alias", "customers",
+        "--initial-selected-alias-target-object-name", "cmdInitialAlias",
+        "--initial-selected-alias-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1138: launch contract should parse initial-selected-alias-object requests");
+    expect(result.request.initial_selected_alias_object,
+        "#1138: launch contract should detect --initial-selected-alias-object");
+    expect(result.request.initial_selected_alias_available && result.request.initial_selected_alias == "customers",
+        "#1138: initial-selected-alias-object requests should carry initial selected alias");
+    expect(result.request.initial_selected_alias_objects.size() == 2U,
+        "#1138: initial-selected-alias-object requests should collect initial selected alias target selectors");
+    if (result.request.initial_selected_alias_objects.size() == 2U) {
+        expect(result.request.initial_selected_alias_objects[0].object_name == "cmdInitialAlias" &&
+                result.request.initial_selected_alias_objects[0].unique_id.empty(),
+            "#1138: initial-selected-alias-object requests should parse target object-name selectors");
+        expect(result.request.initial_selected_alias_objects[1].object_name.empty() &&
+                result.request.initial_selected_alias_objects[1].unique_id == "two-guid",
+            "#1138: initial-selected-alias-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_initial_selected_alias_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--initial-selected-alias-object",
+        "--initial-selected-alias-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1138: launch contract should reject initial-selected-alias-object requests without initial selected alias");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--initial-selected-alias-object",
+        "--initial-selected-alias", "customers"
+    });
+    expect(!missing_targets_result.ok,
+        "#1138: launch contract should reject initial-selected-alias-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_initial_selected_alias_object_ambiguity() {
+    const auto initial_selected_alias_caption_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--initial-selected-alias-object",
+        "--caption-object",
+        "--initial-selected-alias", "customers",
+        "--initial-selected-alias-target-unique-id", "one-guid",
+        "--caption", "Initial alias",
+        "--caption-target-unique-id", "one-guid"
+    });
+    expect(!initial_selected_alias_caption_result.ok,
+        "#1138: launch contract should reject simultaneous initial-selected-alias-object and caption-object requests");
+
+    const auto initial_selected_alias_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--initial-selected-alias-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--initial-selected-alias", "customers",
+        "--initial-selected-alias-target-unique-id", "one-guid"
+    });
+    expect(!initial_selected_alias_property_result.ok,
+        "#1138: launch contract should reject initial-selected-alias-object combined with property commands");
+
+    const auto stray_initial_selected_alias_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--initial-selected-alias", "customers"
+    });
+    expect(!stray_initial_selected_alias_result.ok,
+        "#1138: launch contract should reject stray initial selected alias arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -11697,6 +11776,9 @@ int main() {
     test_parse_launch_arguments_for_default_file_path_object();
     test_parse_launch_arguments_rejects_default_file_path_object_invalid_inputs();
     test_parse_launch_arguments_rejects_default_file_path_object_ambiguity();
+    test_parse_launch_arguments_for_initial_selected_alias_object();
+    test_parse_launch_arguments_rejects_initial_selected_alias_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_initial_selected_alias_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

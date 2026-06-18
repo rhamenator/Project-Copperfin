@@ -85,6 +85,7 @@ struct StudioOpenRequest {
     std::string record_source{};
     std::string form_set_class{};
     std::string default_file_path{};
+    std::string initial_selected_alias{};
     std::string display_value{};
     std::string dynamic_back_color{};
     std::string dynamic_fore_color{};
@@ -266,6 +267,7 @@ struct StudioOpenRequest {
     bool record_source_object = false;
     bool form_set_class_object = false;
     bool default_file_path_object = false;
+    bool initial_selected_alias_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -320,6 +322,7 @@ struct StudioOpenRequest {
     bool record_source_available = false;
     bool form_set_class_available = false;
     bool default_file_path_available = false;
+    bool initial_selected_alias_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
@@ -507,6 +510,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> record_source_objects{};
     std::vector<StudioObjectSelector> form_set_class_objects{};
     std::vector<StudioObjectSelector> default_file_path_objects{};
+    std::vector<StudioObjectSelector> initial_selected_alias_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
