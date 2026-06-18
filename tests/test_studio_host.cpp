@@ -403,6 +403,10 @@ void test_parse_launch_arguments() {
         "#1075: launch contract should keep allow-output-object off by default");
     expect(!result.request.allow_output_available,
         "#1075: launch contract should keep allow output unavailable by default");
+    expect(!result.request.bind_controls_object,
+        "#1146: launch contract should keep bind-controls-object off by default");
+    expect(!result.request.bind_controls_available,
+        "#1146: launch contract should keep bind controls unavailable by default");
     expect(!result.request.auto_verb_menu_object,
         "#1145: launch contract should keep auto-verb-menu-object off by default");
     expect(!result.request.auto_verb_menu_available,
@@ -9156,6 +9160,92 @@ void test_parse_launch_arguments_rejects_allow_output_object_ambiguity() {
         "#1075: launch contract should reject stray allow-output arguments");
 }
 
+void test_parse_launch_arguments_for_bind_controls_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--bind-controls-object",
+        "--bind-controls", "false",
+        "--bind-controls-target-object-name", "frmCustomer",
+        "--bind-controls-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1146: launch contract should parse bind-controls-object requests");
+    expect(result.request.bind_controls_object,
+        "#1146: launch contract should detect --bind-controls-object");
+    expect(result.request.bind_controls_available && !result.request.bind_controls,
+        "#1146: bind-controls-object requests should carry bind controls state");
+    expect(result.request.bind_controls_objects.size() == 2U,
+        "#1146: bind-controls-object requests should collect bind-controls target selectors");
+    if (result.request.bind_controls_objects.size() == 2U) {
+        expect(result.request.bind_controls_objects[0].object_name == "frmCustomer" &&
+                result.request.bind_controls_objects[0].unique_id.empty(),
+            "#1146: bind-controls-object requests should parse target object-name selectors");
+        expect(result.request.bind_controls_objects[1].object_name.empty() &&
+                result.request.bind_controls_objects[1].unique_id == "two-guid",
+            "#1146: bind-controls-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_bind_controls_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bind-controls-object",
+        "--bind-controls-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1146: launch contract should reject bind-controls-object requests without bind controls state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bind-controls-object",
+        "--bind-controls", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1146: launch contract should reject bind-controls-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bind-controls-object",
+        "--bind-controls", "sometimes",
+        "--bind-controls-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1146: launch contract should reject invalid bind-controls boolean values");
+}
+
+void test_parse_launch_arguments_rejects_bind_controls_object_ambiguity() {
+    const auto bind_controls_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bind-controls-object",
+        "--allow-output-object",
+        "--bind-controls", "false",
+        "--bind-controls-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!bind_controls_allow_output_result.ok,
+        "#1146: launch contract should reject simultaneous bind-controls-object and allow-output-object requests");
+
+    const auto bind_controls_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bind-controls-object",
+        "--clear-property",
+        "--property-name", "BindControls",
+        "--bind-controls", "false",
+        "--bind-controls-target-unique-id", "one-guid"
+    });
+    expect(!bind_controls_property_result.ok,
+        "#1146: launch contract should reject bind-controls-object combined with property commands");
+
+    const auto stray_bind_controls_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--bind-controls", "false"
+    });
+    expect(!stray_bind_controls_result.ok,
+        "#1146: launch contract should reject stray bind-controls arguments");
+}
+
 void test_parse_launch_arguments_for_auto_verb_menu_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -12562,6 +12652,9 @@ int main() {
     test_parse_launch_arguments_for_allow_output_object();
     test_parse_launch_arguments_rejects_allow_output_object_invalid_inputs();
     test_parse_launch_arguments_rejects_allow_output_object_ambiguity();
+    test_parse_launch_arguments_for_bind_controls_object();
+    test_parse_launch_arguments_rejects_bind_controls_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_bind_controls_object_ambiguity();
     test_parse_launch_arguments_for_auto_verb_menu_object();
     test_parse_launch_arguments_rejects_auto_verb_menu_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_verb_menu_object_ambiguity();

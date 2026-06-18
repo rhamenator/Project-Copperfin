@@ -2014,6 +2014,24 @@ void write_synthetic_form_table_for_object_auto_verb_menu(const std::filesystem:
     expect(create_result.ok, "#1145: synthetic SCX table for object auto verb menu should be created");
 }
 
+void write_synthetic_form_table_for_object_bind_controls(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "BINDCONTROLS", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1146: synthetic SCX table for object bind controls should be created");
+}
+
 void write_synthetic_form_table_for_object_auto_size(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -16460,6 +16478,129 @@ void test_studio_host_json_assigns_allow_output_by_stable_selectors(const std::s
     }
 }
 
+void test_studio_host_json_assigns_bind_controls_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_bind_controls_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path bind_controls_path = temp_root / "bind_controls.scx";
+    write_synthetic_form_table_for_object_bind_controls(bind_controls_path);
+    const auto bind_controls_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", bind_controls_path.string(),
+            "--bind-controls-object",
+            "--bind-controls", "false",
+            "--bind-controls-target-object-name", "frmCustomer",
+            "--bind-controls-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(bind_controls_process.exit_code == 0,
+        "#1146: host object bind-controls assignment should exit successfully");
+    expect(visual_object_property(bind_controls_path, "one-guid", "BINDCONTROLS") == "false" &&
+            visual_object_property(bind_controls_path, "two-guid", "BINDCONTROLS") == "false" &&
+            visual_object_property(bind_controls_path, "three-guid", "BINDCONTROLS") == "false" &&
+            visual_object_property(bind_controls_path, "other-guid", "BINDCONTROLS") == "true",
+        "#1146: host object bind-controls assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_bind_controls(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--bind-controls-object",
+            "--bind-controls", "false",
+            "--bind-controls-target-unique-id", "one-guid",
+            "--bind-controls-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1146: missing-target host object bind-controls assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "BINDCONTROLS") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "BINDCONTROLS") == "true",
+        "#1146: missing-target host object bind-controls assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_bind_controls(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--bind-controls-object",
+            "--bind-controls", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1146: bind-controls-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "BINDCONTROLS") == "true",
+        "#1146: bind-controls-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_bind_controls(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--bind-controls-object",
+            "--bind-controls-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1146: bind-controls-object without bind-controls value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "BINDCONTROLS") == "true",
+        "#1146: bind-controls-object without bind-controls value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_bind_controls(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--bind-controls-object",
+            "--bind-controls", "false",
+            "--bind-controls-target-unique-id", "one-guid",
+            "--bind-controls-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1146: duplicate-target host object bind-controls assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "BINDCONTROLS") == "true",
+        "#1146: duplicate-target host object bind-controls assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_bind_controls(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--bind-controls-object",
+            "--allow-output-object",
+            "--bind-controls", "false",
+            "--bind-controls-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1146: bind-controls-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "BINDCONTROLS") == "true",
+        "#1146: bind-controls-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_auto_center_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -19396,6 +19537,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_closable_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_box_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_allow_output_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_bind_controls_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_verb_menu_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_center_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_size_by_stable_selectors(argv[1]);

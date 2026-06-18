@@ -211,6 +211,7 @@ struct StudioOpenRequest {
     bool closable_object = false;
     bool control_box_object = false;
     bool allow_output_object = false;
+    bool bind_controls_object = false;
     bool auto_verb_menu_object = false;
     bool auto_center_object = false;
     bool auto_size_object = false;
@@ -375,6 +376,7 @@ struct StudioOpenRequest {
     bool closable_available = false;
     bool control_box_available = false;
     bool allow_output_available = false;
+    bool bind_controls_available = false;
     bool auto_verb_menu_available = false;
     bool auto_center_available = false;
     bool auto_size_available = false;
@@ -400,6 +402,7 @@ struct StudioOpenRequest {
     bool closable = false;
     bool control_box = false;
     bool allow_output = false;
+    bool bind_controls = false;
     bool auto_verb_menu = false;
     bool auto_center = false;
     bool auto_size = false;
@@ -471,6 +474,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> closable_objects{};
     std::vector<StudioObjectSelector> control_box_objects{};
     std::vector<StudioObjectSelector> allow_output_objects{};
+    std::vector<StudioObjectSelector> bind_controls_objects{};
     std::vector<StudioObjectSelector> auto_verb_menu_objects{};
     std::vector<StudioObjectSelector> auto_center_objects{};
     std::vector<StudioObjectSelector> auto_size_objects{};

@@ -1,3 +1,4 @@
+1146	OPEN	E2/#23 slice: Expose host bind-controls-object command		2026-06-18T06:24:51Z
 1145	OPEN	E2/#23 slice: Expose host auto-verb-menu-object command		2026-06-18T06:13:35Z
 1144	OPEN	E2/#23 slice: Expose host whats-this-button-object command		2026-06-18T06:05:13Z
 1143	OPEN	E2/#23 slice: Expose host whats-this-help-object command		2026-06-18T05:56:56Z

@@ -1066,6 +1066,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--bind-controls-object") {
+            result.request.bind_controls_object = true;
+            continue;
+        }
+
         if (argument == "--auto-verb-menu-object") {
             result.request.auto_verb_menu_object = true;
             continue;
@@ -2488,6 +2493,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.auto_verb_menu = *auto_verb_menu;
             result.request.auto_verb_menu_available = true;
+            continue;
+        }
+
+        if (argument == "--bind-controls") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --bind-controls."};
+            }
+            const auto bind_controls = parse_bool_value(args[++index]);
+            if (!bind_controls.has_value()) {
+                return {.ok = false, .error = "The --bind-controls value must be true or false."};
+            }
+            result.request.bind_controls = *bind_controls;
+            result.request.bind_controls_available = true;
             continue;
         }
 
@@ -4965,6 +4983,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--bind-controls-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --bind-controls-target-object-name."};
+            }
+            result.request.bind_controls_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--bind-controls-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --bind-controls-target-unique-id."};
+            }
+            result.request.bind_controls_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -6567,6 +6609,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.allow_output_objects.empty())) {
         return {.ok = false, .error = "Allow-output arguments can only be used with --allow-output-object."};
     }
+    if (result.request.bind_controls_object && !result.request.bind_controls_available) {
+        return {.ok = false, .error = "An object bind-controls assignment requires --bind-controls."};
+    }
+    if (result.request.bind_controls_object && result.request.bind_controls_objects.empty()) {
+        return {.ok = false, .error = "An object bind-controls assignment requires at least one target selector."};
+    }
+    if (!result.request.bind_controls_object &&
+        (result.request.bind_controls_available ||
+         !result.request.bind_controls_objects.empty())) {
+        return {.ok = false, .error = "Bind-controls arguments can only be used with --bind-controls-object."};
+    }
     if (result.request.auto_verb_menu_object && !result.request.auto_verb_menu_available) {
         return {.ok = false, .error = "An object auto-verb-menu assignment requires --auto-verb-menu."};
     }
@@ -6916,6 +6969,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.default_file_path_object ? 1 : 0) +
         (result.request.initial_selected_alias_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
+        (result.request.bind_controls_object ? 1 : 0) +
         (result.request.auto_verb_menu_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
