@@ -6493,6 +6493,104 @@ void test_studio_host_json_exposes_designer_dispatch(const std::string& studio_h
     }
 }
 
+void test_studio_host_json_exposes_designer_dispatch_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_designer_dispatch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-catalog",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--symbol", "Click",
+            "--line", "12",
+            "--column", "4",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "false",
+            "--admit-toolbox-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1240: designer dispatch catalog JSON should accept aggregate admission policies");
+    expect_contains(catalog_process.stdout_text, "\"designerDispatchCatalog\": {",
+        "#1240: designer dispatch catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"contextCount\": 9",
+        "#1240: designer dispatch catalog JSON should expose context counts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1240: designer dispatch catalog JSON should include visual-object contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+        "#1240: designer dispatch catalog JSON should include report-expression contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"menu_item\"",
+        "#1240: designer dispatch catalog JSON should include menu-item contexts");
+    expect_contains(catalog_process.stdout_text, "\"editorActionDispatchCount\": ",
+        "#1240: designer dispatch catalog JSON should expose editor dispatch counts");
+    expect_contains(catalog_process.stdout_text, "\"builderDispatchCount\": ",
+        "#1240: designer dispatch catalog JSON should expose builder dispatch counts");
+    expect_contains(catalog_process.stdout_text, "\"toolboxDispatchCount\": ",
+        "#1240: designer dispatch catalog JSON should expose toolbox dispatch counts");
+    expect_contains(catalog_process.stdout_text, "\"dispatchCount\": ",
+        "#1240: designer dispatch catalog JSON should expose aggregate dispatch counts");
+    expect_contains(catalog_process.stdout_text, "\"errorCount\": ",
+        "#1240: designer dispatch catalog JSON should expose aggregate error counts");
+    expect_contains(catalog_process.stdout_text, "\"dryRun\": false",
+        "#1240: designer dispatch catalog JSON should expose non-dry-run admitted contexts");
+    expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#1240: designer dispatch catalog JSON should remain non-mutating");
+    expect_contains(catalog_process.stdout_text, "\"dispatchOk\": true",
+        "#1240: designer dispatch catalog JSON should expose nested aggregate dispatch status");
+    expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"edit-visual-method\"",
+        "#1240: designer dispatch catalog JSON should expose admitted visual editor dispatch ids");
+    expect_contains(catalog_process.stdout_text, "\"edit-report-expression\"",
+        "#1240: designer dispatch catalog JSON should expose admitted report editor dispatch ids");
+    expect_contains(catalog_process.stdout_text, "\"toolboxDispatchOk\": false",
+        "#1240: designer dispatch catalog JSON should expose unsupported toolbox dispatch status");
+    expect_contains(catalog_process.stdout_text,
+        "\"toolboxError\": \"The selected Studio context does not expose a toolbox palette.\"",
+        "#1240: designer dispatch catalog JSON should preserve unsupported toolbox reasons");
+
+    const auto invalid_boolean_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-catalog",
+            "--admit-toolbox-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_boolean_process.exit_code == 2,
+        "#1240: designer dispatch catalog JSON should reject invalid toolbox admission booleans");
+    expect_contains(invalid_boolean_process.stdout_text, "\"designerDispatchCatalog\": null",
+        "#1240: invalid designer dispatch catalog boolean JSON should not expose catalog objects");
+    expect_contains(invalid_boolean_process.stdout_text,
+        "The --admit-toolbox-invocation value must be true or false.",
+        "#1240: invalid designer dispatch catalog boolean JSON should report parser errors");
+
+    const auto invalid_line_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-catalog",
+            "--line", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_line_process.exit_code == 2,
+        "#1240: designer dispatch catalog JSON should reject invalid line values");
+    expect_contains(invalid_line_process.stdout_text, "The --line value must be a non-negative integer.",
+        "#1240: invalid designer dispatch catalog line JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_launch_surface_catalog(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -30508,6 +30606,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_dispatch(argv[1]);
     test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission_catalog(argv[1]);
+    test_studio_host_json_exposes_designer_dispatch_catalog(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
