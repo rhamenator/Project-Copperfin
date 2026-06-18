@@ -493,6 +493,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--disabled-picture-object") {
+            result.request.disabled_picture_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -867,6 +872,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.down_picture = args[++index];
             result.request.down_picture_available = true;
+            continue;
+        }
+
+        if (argument == "--disabled-picture") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --disabled-picture."};
+            }
+            result.request.disabled_picture = args[++index];
+            result.request.disabled_picture_available = true;
             continue;
         }
 
@@ -1864,6 +1878,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --down-picture-target-unique-id."};
             }
             result.request.down_picture_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--disabled-picture-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --disabled-picture-target-object-name."};
+            }
+            result.request.disabled_picture_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--disabled-picture-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --disabled-picture-target-unique-id."};
+            }
+            result.request.disabled_picture_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -3430,6 +3468,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.down_picture_objects.empty())) {
         return {.ok = false, .error = "Down-picture arguments can only be used with --down-picture-object."};
     }
+    if (result.request.disabled_picture_object && !result.request.disabled_picture_available) {
+        return {.ok = false, .error = "An object disabled-picture assignment requires --disabled-picture."};
+    }
+    if (result.request.disabled_picture_object && result.request.disabled_picture_objects.empty()) {
+        return {.ok = false, .error = "An object disabled-picture assignment requires at least one target selector."};
+    }
+    if (!result.request.disabled_picture_object &&
+        (result.request.disabled_picture_available ||
+         !result.request.disabled_picture_objects.empty())) {
+        return {.ok = false, .error = "Disabled-picture arguments can only be used with --disabled-picture-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4103,6 +4152,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.caption_object ? 1 : 0) +
         (result.request.picture_object ? 1 : 0) +
         (result.request.down_picture_object ? 1 : 0) +
+        (result.request.disabled_picture_object ? 1 : 0) +
         (result.request.tooltip_text_object ? 1 : 0) +
         (result.request.status_bar_text_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +

@@ -1,3 +1,4 @@
+1100	OPEN	E2/#23 slice: Expose host disabled-picture-object command		2026-06-18T01:04:36Z
 1099	OPEN	E2/#23 slice: Expose host down-picture-object command		2026-06-18T00:57:53Z
 1098	OPEN	E2/#23 slice: Expose host picture-object command		2026-06-18T00:51:07Z
 1097	OPEN	E2/#23 slice: Expose host always-on-bottom-object command		2026-06-18T00:46:06Z

@@ -592,6 +592,24 @@ void write_synthetic_form_table_for_object_down_picture(const std::filesystem::p
     expect(create_result.ok, "#1099: synthetic SCX table for object down-picture should be created");
 }
 
+void write_synthetic_form_table_for_object_disabled_picture(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "DISABLEDPICTURE", .type = 'C', .length = 64U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "forms\\save_disabled.bmp"},
+        {"cmdCancel", "cmdCancel", "two-guid", "forms\\cancel_disabled.bmp"},
+        {"lblStatus", "lblStatus", "three-guid", "forms\\status_disabled.bmp"},
+        {"cmdOther", "cmdOther", "other-guid", "forms\\other_disabled.bmp"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1100: synthetic SCX table for object disabled-picture should be created");
+}
+
 void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -5191,6 +5209,139 @@ void test_studio_host_json_assigns_down_picture_by_stable_selectors(const std::s
         "#1099: down-picture-object plus locked-object requests should fail during launch parsing");
     expect(visual_object_property(ambiguous_path, "one-guid", "DOWNPICTURE") == "forms\\save_down.bmp",
         "#1099: down-picture-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_assigns_disabled_picture_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_disabled_picture_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path disabled_picture_path = temp_root / "disabled_picture.scx";
+    write_synthetic_form_table_for_object_disabled_picture(disabled_picture_path);
+    const auto disabled_picture_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", disabled_picture_path.string(),
+            "--disabled-picture-object",
+            "--disabled-picture", "forms\\customer disabled hero.bmp",
+            "--disabled-picture-target-object-name", "cmdSave",
+            "--disabled-picture-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(disabled_picture_process.exit_code == 0,
+        "#1100: host object disabled-picture assignment should exit successfully");
+    expect(visual_object_property(disabled_picture_path, "one-guid", "DISABLEDPICTURE") ==
+                "forms\\customer disabled hero.bmp" &&
+            visual_object_property(disabled_picture_path, "two-guid", "DISABLEDPICTURE") ==
+                "forms\\customer disabled hero.bmp" &&
+            visual_object_property(disabled_picture_path, "three-guid", "DISABLEDPICTURE") ==
+                "forms\\status_disabled.bmp" &&
+            visual_object_property(disabled_picture_path, "other-guid", "DISABLEDPICTURE") ==
+                "forms\\other_disabled.bmp",
+        "#1100: host object disabled-picture assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_disabled_picture(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--disabled-picture-object",
+            "--disabled-picture", "forms\\customer disabled hero.bmp",
+            "--disabled-picture-target-unique-id", "one-guid",
+            "--disabled-picture-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1100: missing-target host object disabled-picture assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "DISABLEDPICTURE") ==
+                "forms\\save_disabled.bmp" &&
+            visual_object_property(missing_target_path, "two-guid", "DISABLEDPICTURE") ==
+                "forms\\cancel_disabled.bmp",
+        "#1100: missing-target host object disabled-picture assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_disabled_picture(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--disabled-picture-object",
+            "--disabled-picture", "forms\\customer disabled hero.bmp",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1100: disabled-picture-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "DISABLEDPICTURE") ==
+            "forms\\save_disabled.bmp",
+        "#1100: disabled-picture-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_disabled_picture(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--disabled-picture-object",
+            "--disabled-picture-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1100: disabled-picture-object without disabled-picture value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "DISABLEDPICTURE") ==
+            "forms\\save_disabled.bmp",
+        "#1100: disabled-picture-object without disabled-picture value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_disabled_picture(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--disabled-picture-object",
+            "--disabled-picture", "forms\\customer disabled hero.bmp",
+            "--disabled-picture-target-unique-id", "one-guid",
+            "--disabled-picture-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1100: duplicate-target host object disabled-picture assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "DISABLEDPICTURE") ==
+            "forms\\save_disabled.bmp",
+        "#1100: duplicate-target host object disabled-picture assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_disabled_picture(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--disabled-picture-object",
+            "--locked-object",
+            "--disabled-picture", "forms\\customer disabled hero.bmp",
+            "--disabled-picture-target-unique-id", "one-guid",
+            "--locked", "true",
+            "--locked-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1100: disabled-picture-object plus locked-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "DISABLEDPICTURE") ==
+            "forms\\save_disabled.bmp",
+        "#1100: disabled-picture-object ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -12227,6 +12378,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_caption_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_picture_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_down_picture_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_disabled_picture_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);

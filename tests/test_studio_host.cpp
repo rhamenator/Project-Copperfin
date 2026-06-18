@@ -129,6 +129,10 @@ void test_parse_launch_arguments() {
         "#1099: launch contract should keep down-picture-object off by default");
     expect(!result.request.down_picture_available,
         "#1099: launch contract should keep down-picture unavailable by default");
+    expect(!result.request.disabled_picture_object,
+        "#1100: launch contract should keep disabled-picture-object off by default");
+    expect(!result.request.disabled_picture_available,
+        "#1100: launch contract should keep disabled-picture unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2047,6 +2051,83 @@ void test_parse_launch_arguments_rejects_down_picture_object_ambiguity() {
     });
     expect(!stray_down_picture_result.ok,
         "#1099: launch contract should reject stray down-picture arguments");
+}
+
+void test_parse_launch_arguments_for_disabled_picture_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--disabled-picture-object",
+        "--disabled-picture", "forms\\customer_disabled.bmp",
+        "--disabled-picture-target-object-name", "cmdSave",
+        "--disabled-picture-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1100: launch contract should parse disabled-picture-object requests");
+    expect(result.request.disabled_picture_object, "#1100: launch contract should detect --disabled-picture-object");
+    expect(result.request.disabled_picture_available &&
+            result.request.disabled_picture == "forms\\customer_disabled.bmp",
+        "#1100: disabled-picture-object requests should carry disabled-picture text");
+    expect(result.request.disabled_picture_objects.size() == 2U,
+        "#1100: disabled-picture-object requests should collect disabled-picture target selectors");
+    if (result.request.disabled_picture_objects.size() == 2U) {
+        expect(result.request.disabled_picture_objects[0].object_name == "cmdSave" &&
+                result.request.disabled_picture_objects[0].unique_id.empty(),
+            "#1100: disabled-picture-object requests should parse target object-name selectors");
+        expect(result.request.disabled_picture_objects[1].object_name.empty() &&
+                result.request.disabled_picture_objects[1].unique_id == "two-guid",
+            "#1100: disabled-picture-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_disabled_picture_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--disabled-picture-object",
+        "--disabled-picture-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1100: launch contract should reject disabled-picture-object requests without disabled-picture text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--disabled-picture-object",
+        "--disabled-picture", "forms\\customer_disabled.bmp"
+    });
+    expect(!missing_targets_result.ok,
+        "#1100: launch contract should reject disabled-picture-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_disabled_picture_object_ambiguity() {
+    const auto disabled_picture_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--disabled-picture-object",
+        "--locked-object",
+        "--disabled-picture", "forms\\customer_disabled.bmp",
+        "--disabled-picture-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!disabled_picture_locked_result.ok,
+        "#1100: launch contract should reject simultaneous disabled-picture-object and locked-object requests");
+
+    const auto disabled_picture_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--disabled-picture-object",
+        "--clear-property",
+        "--property-name", "DisabledPicture",
+        "--disabled-picture", "forms\\customer_disabled.bmp",
+        "--disabled-picture-target-unique-id", "one-guid"
+    });
+    expect(!disabled_picture_property_result.ok,
+        "#1100: launch contract should reject disabled-picture-object combined with property commands");
+
+    const auto stray_disabled_picture_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--disabled-picture", "forms\\customer_disabled.bmp"
+    });
+    expect(!stray_disabled_picture_result.ok,
+        "#1100: launch contract should reject stray disabled-picture arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -7969,6 +8050,9 @@ int main() {
     test_parse_launch_arguments_for_down_picture_object();
     test_parse_launch_arguments_rejects_down_picture_object_invalid_inputs();
     test_parse_launch_arguments_rejects_down_picture_object_ambiguity();
+    test_parse_launch_arguments_for_disabled_picture_object();
+    test_parse_launch_arguments_rejects_disabled_picture_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_disabled_picture_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
