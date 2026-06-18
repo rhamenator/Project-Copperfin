@@ -2392,6 +2392,24 @@ void write_synthetic_form_table_for_object_show_window(const std::filesystem::pa
     expect(create_result.ok, "#1169: synthetic SCX table for object show window should be created");
 }
 
+void write_synthetic_form_table_for_object_title_bar(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "TITLEBAR", .type = 'N', .length = 10U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", "0"},
+        {"frmOrder", "frmOrder", "two-guid", "0"},
+        {"cntDetails", "cntDetails", "three-guid", "1"},
+        {"frmOther", "frmOther", "other-guid", "1"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1170: synthetic SCX table for object title bar should be created");
+}
+
 void write_synthetic_form_table_for_object_max_width(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -19662,6 +19680,146 @@ void test_studio_host_json_assigns_show_window_by_stable_selectors(const std::st
     }
 }
 
+void test_studio_host_json_assigns_title_bar_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_title_bar_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path title_bar_path = temp_root / "title_bar.scx";
+    write_synthetic_form_table_for_object_title_bar(title_bar_path);
+    const auto title_bar_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", title_bar_path.string(),
+            "--title-bar-object",
+            "--title-bar", "2",
+            "--title-bar-target-object-name", "frmCustomer",
+            "--title-bar-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(title_bar_process.exit_code == 0,
+        "#1170: host object title-bar assignment should exit successfully");
+    expect(visual_object_property(title_bar_path, "one-guid", "TITLEBAR") == "2" &&
+            visual_object_property(title_bar_path, "two-guid", "TITLEBAR") == "2" &&
+            visual_object_property(title_bar_path, "three-guid", "TITLEBAR") == "1" &&
+            visual_object_property(title_bar_path, "other-guid", "TITLEBAR") == "1",
+        "#1170: host object title-bar assignment should assign selected numeric value and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_title_bar(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--title-bar-object",
+            "--title-bar", "2",
+            "--title-bar-target-unique-id", "one-guid",
+            "--title-bar-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1170: missing-target host object title-bar assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "TITLEBAR") == "0" &&
+            visual_object_property(missing_target_path, "two-guid", "TITLEBAR") == "0",
+        "#1170: missing-target host object title-bar assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_title_bar(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--title-bar-object",
+            "--title-bar", "2",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1170: title-bar-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "TITLEBAR") == "0",
+        "#1170: title-bar-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_title_bar(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--title-bar-object",
+            "--title-bar-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1170: title-bar-object without title-bar value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "TITLEBAR") == "0",
+        "#1170: title-bar-object without title-bar value should not mutate the asset");
+
+    const fs::path negative_value_path = temp_root / "negative_value.scx";
+    write_synthetic_form_table_for_object_title_bar(negative_value_path);
+    const auto negative_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_value_path.string(),
+            "--title-bar-object",
+            "--title-bar", "-1",
+            "--title-bar-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_value_process.exit_code == 2,
+        "#1170: negative title-bar values should fail during launch parsing");
+    expect(visual_object_property(negative_value_path, "one-guid", "TITLEBAR") == "0",
+        "#1170: negative title-bar values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_title_bar(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--title-bar-object",
+            "--title-bar", "2",
+            "--title-bar-target-unique-id", "one-guid",
+            "--title-bar-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1170: duplicate-target host object title-bar assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "TITLEBAR") == "0",
+        "#1170: duplicate-target host object title-bar assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_title_bar(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--title-bar-object",
+            "--allow-output-object",
+            "--title-bar", "2",
+            "--title-bar-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1170: title-bar-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "TITLEBAR") == "0",
+        "#1170: title-bar-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_max_width_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -23040,6 +23198,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_scroll_bars_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_window_state_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_show_window_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_title_bar_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_width_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_left_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_top_by_stable_selectors(argv[1]);

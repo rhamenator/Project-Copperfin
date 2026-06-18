@@ -1,3 +1,4 @@
+1170	OPEN	E2/#23 slice: Expose host title-bar-object command		2026-06-18T10:19:04Z
 1169	OPEN	E2/#23 slice: Expose host show-window-object command		2026-06-18T10:06:11Z
 1168	OPEN	E2/#23 slice: Expose host window-state-object command		2026-06-18T09:54:14Z
 1167	OPEN	E2/#23 slice: Expose host scroll-bars-object command		2026-06-18T09:43:03Z

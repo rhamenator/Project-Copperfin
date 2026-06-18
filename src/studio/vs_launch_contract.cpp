@@ -1176,6 +1176,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--title-bar-object") {
+            result.request.title_bar_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2910,6 +2915,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.show_window = show_window;
             result.request.show_window_available = true;
+            continue;
+        }
+
+        if (argument == "--title-bar") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --title-bar."};
+            }
+            int title_bar = 0;
+            if (!parse_int_value(args[++index], title_bar)) {
+                return {.ok = false, .error = "The --title-bar value must be an integer."};
+            }
+            if (title_bar < 0) {
+                return {.ok = false, .error = "The --title-bar value must not be negative."};
+            }
+            result.request.title_bar = title_bar;
+            result.request.title_bar_available = true;
             continue;
         }
 
@@ -5939,6 +5960,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--title-bar-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --title-bar-target-object-name."};
+            }
+            result.request.title_bar_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--title-bar-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --title-bar-target-unique-id."};
+            }
+            result.request.title_bar_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7855,6 +7900,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.show_window_objects.empty())) {
         return {.ok = false, .error = "Show-window arguments can only be used with --show-window-object."};
     }
+    if (result.request.title_bar_object && !result.request.title_bar_available) {
+        return {.ok = false, .error = "An object title-bar assignment requires --title-bar."};
+    }
+    if (result.request.title_bar_object && result.request.title_bar_objects.empty()) {
+        return {.ok = false, .error = "An object title-bar assignment requires at least one target selector."};
+    }
+    if (!result.request.title_bar_object &&
+        (result.request.title_bar_available ||
+         !result.request.title_bar_objects.empty())) {
+        return {.ok = false, .error = "Title-bar arguments can only be used with --title-bar-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8248,6 +8304,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.scroll_bars_object ? 1 : 0) +
         (result.request.window_state_object ? 1 : 0) +
         (result.request.show_window_object ? 1 : 0) +
+        (result.request.title_bar_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

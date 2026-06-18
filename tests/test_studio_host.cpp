@@ -487,6 +487,10 @@ void test_parse_launch_arguments() {
         "#1169: launch contract should keep show-window-object off by default");
     expect(!result.request.show_window_available,
         "#1169: launch contract should keep show window unavailable by default");
+    expect(!result.request.title_bar_object,
+        "#1170: launch contract should keep title-bar-object off by default");
+    expect(!result.request.title_bar_available,
+        "#1170: launch contract should keep title bar unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11229,6 +11233,101 @@ void test_parse_launch_arguments_rejects_show_window_object_ambiguity() {
         "#1169: launch contract should reject stray show-window arguments");
 }
 
+void test_parse_launch_arguments_for_title_bar_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--title-bar-object",
+        "--title-bar", "2",
+        "--title-bar-target-object-name", "frmCustomer",
+        "--title-bar-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1170: launch contract should parse title-bar-object requests");
+    expect(result.request.title_bar_object,
+        "#1170: launch contract should detect --title-bar-object");
+    expect(result.request.title_bar_available && result.request.title_bar == 2,
+        "#1170: title-bar-object requests should carry title-bar value");
+    expect(result.request.title_bar_objects.size() == 2U,
+        "#1170: title-bar-object requests should collect title-bar target selectors");
+    if (result.request.title_bar_objects.size() == 2U) {
+        expect(result.request.title_bar_objects[0].object_name == "frmCustomer" &&
+                result.request.title_bar_objects[0].unique_id.empty(),
+            "#1170: title-bar-object requests should parse target object-name selectors");
+        expect(result.request.title_bar_objects[1].object_name.empty() &&
+                result.request.title_bar_objects[1].unique_id == "two-guid",
+            "#1170: title-bar-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_title_bar_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--title-bar-object",
+        "--title-bar-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1170: launch contract should reject title-bar-object requests without title-bar value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--title-bar-object",
+        "--title-bar", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1170: launch contract should reject title-bar-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--title-bar-object",
+        "--title-bar", "captioned",
+        "--title-bar-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1170: launch contract should reject non-integer title-bar values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--title-bar-object",
+        "--title-bar", "-1",
+        "--title-bar-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1170: launch contract should reject negative title-bar values");
+}
+
+void test_parse_launch_arguments_rejects_title_bar_object_ambiguity() {
+    const auto title_bar_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--title-bar-object",
+        "--allow-output-object",
+        "--title-bar", "2",
+        "--title-bar-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!title_bar_allow_output_result.ok,
+        "#1170: launch contract should reject simultaneous title-bar-object and allow-output-object requests");
+
+    const auto title_bar_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--title-bar-object",
+        "--clear-property",
+        "--property-name", "TitleBar",
+        "--title-bar", "2",
+        "--title-bar-target-unique-id", "one-guid"
+    });
+    expect(!title_bar_property_result.ok,
+        "#1170: launch contract should reject title-bar-object combined with property commands");
+
+    const auto stray_title_bar_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--title-bar", "2"
+    });
+    expect(!stray_title_bar_result.ok,
+        "#1170: launch contract should reject stray title-bar arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -14900,6 +14999,9 @@ int main() {
     test_parse_launch_arguments_for_show_window_object();
     test_parse_launch_arguments_rejects_show_window_object_invalid_inputs();
     test_parse_launch_arguments_rejects_show_window_object_ambiguity();
+    test_parse_launch_arguments_for_title_bar_object();
+    test_parse_launch_arguments_rejects_title_bar_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_title_bar_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
