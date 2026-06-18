@@ -1,3 +1,4 @@
+1234	OPEN	E2/#23 slice: Expose toolbox palette dispatch through host JSON		2026-06-18T21:04:19Z
 1233	OPEN	E2/#23 slice: Add toolbox palette dispatch planning		2026-06-18T21:01:22Z
 1232	OPEN	E2/#23 slice: Expose builder invocation dispatch catalog through host JSON		2026-06-18T20:57:17Z
 1231	OPEN	E2/#23 slice: Add builder invocation dispatch catalog planning		2026-06-18T20:54:58Z
