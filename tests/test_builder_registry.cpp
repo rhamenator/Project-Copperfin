@@ -1,3 +1,4 @@
+#include "copperfin/studio/builder_invocation_admission.h"
 #include "copperfin/studio/builder_registry.h"
 
 #include <cstdlib>
@@ -131,6 +132,56 @@ int main() {
                std::string(label_launch.plan.builder.vfp9_equivalent) == "Wizards label templates" &&
                label_launch.plan.entry_point == "cf_wizards.label_wizard",
            "#1203: builder launch plans should preserve wizard metadata distinctly from builders");
+
+    const auto admitted_control_invocation = copperfin::studio::plan_studio_builder_invocation_admission({
+        .launch_plan = control_launch.plan,
+        .admit_ui_launch = true
+    });
+    expect(admitted_control_invocation.ok,
+           "#1215: builder invocation admission should accept validated launch plans");
+    expect(std::string(admitted_control_invocation.plan.builder.id) == "grid-builder" &&
+               admitted_control_invocation.plan.context == StudioBuilderContext::control &&
+               admitted_control_invocation.plan.command_token == "studio.builder.invoke" &&
+               admitted_control_invocation.plan.entry_point == "cf_builders.grid_builder" &&
+               admitted_control_invocation.plan.asset_path == "forms/customer.scx" &&
+               admitted_control_invocation.plan.record_index == 4U &&
+               admitted_control_invocation.plan.object_name == "grdOrders" &&
+               admitted_control_invocation.plan.unique_id == "grid-guid",
+           "#1215: builder invocation admission should preserve launch metadata and emit a stable command token");
+    expect(admitted_control_invocation.plan.ui_launch_admitted &&
+               !admitted_control_invocation.plan.dry_run &&
+               !admitted_control_invocation.plan.mutates_asset,
+           "#1215: admitted builder invocation plans should allow UI launch while remaining non-mutating");
+
+    const auto dry_run_label_invocation = copperfin::studio::plan_studio_builder_invocation_admission({
+        .launch_plan = label_launch.plan,
+        .admit_ui_launch = false
+    });
+    expect(dry_run_label_invocation.ok &&
+               std::string(dry_run_label_invocation.plan.builder.id) == "label-wizard" &&
+               dry_run_label_invocation.plan.builder.kind == StudioBuilderKind::wizard &&
+               !dry_run_label_invocation.plan.ui_launch_admitted &&
+               dry_run_label_invocation.plan.dry_run &&
+               !dry_run_label_invocation.plan.mutates_asset,
+           "#1215: non-admitted builder invocation plans should remain deterministic dry runs");
+
+    auto missing_entry_plan = control_launch.plan;
+    missing_entry_plan.entry_point = {};
+    const auto missing_entry_invocation = copperfin::studio::plan_studio_builder_invocation_admission({
+        .launch_plan = missing_entry_plan,
+        .admit_ui_launch = true
+    });
+    expect(!missing_entry_invocation.ok,
+           "#1215: builder invocation admission should reject launch plans without entry points");
+
+    auto missing_builder_plan = control_launch.plan;
+    missing_builder_plan.builder = {};
+    const auto missing_builder_invocation = copperfin::studio::plan_studio_builder_invocation_admission({
+        .launch_plan = missing_builder_plan,
+        .admit_ui_launch = true
+    });
+    expect(!missing_builder_invocation.ok,
+           "#1215: builder invocation admission should reject launch plans without builder ids");
 
     const auto wrong_context_launch = copperfin::studio::plan_studio_builder_launch({
         .context = StudioBuilderContext::report,

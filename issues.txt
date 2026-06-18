@@ -1,3 +1,4 @@
+1215	OPEN	E2/#23 slice: Add builder invocation admission planning		2026-06-18T19:46:39Z
 1214	OPEN	E2/#23 slice: Expose designer launch-surface catalog through host JSON		2026-06-18T19:42:15Z
 1213	OPEN	E2/#23 slice: Add designer launch-surface catalog planning		2026-06-18T19:38:54Z
 1212	OPEN	E2/#23 slice: Expose combined designer launch surfaces through host JSON		2026-06-18T19:33:18Z
