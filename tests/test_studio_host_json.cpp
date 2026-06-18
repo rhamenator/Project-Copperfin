@@ -4798,6 +4798,98 @@ void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& s
     }
 }
 
+void test_studio_host_json_exposes_designer_launch_surface_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_designer_launch_surface_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surface-catalog",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--symbol", "Click",
+            "--line", "12",
+            "--column", "4",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1214: designer launch-surface catalog JSON should exit successfully");
+    expect_contains(catalog_process.stdout_text, "\"designerLaunchSurfaceCatalog\": {",
+        "#1214: designer launch-surface catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"contextCount\": 9",
+        "#1214: designer launch-surface catalog JSON should expose all Studio contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1214: designer launch-surface catalog JSON should include visual-object contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"menu_item\"",
+        "#1214: designer launch-surface catalog JSON should include menu contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"project_item\"",
+        "#1214: designer launch-surface catalog JSON should include project contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"data_environment\"",
+        "#1214: designer launch-surface catalog JSON should include data-environment contexts");
+    expect_contains(catalog_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1214: designer launch-surface catalog JSON should preserve asset paths in nested plans");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1214: designer launch-surface catalog JSON should preserve object names in nested plans");
+    expect_contains(catalog_process.stdout_text, "\"symbol\": \"Click\"",
+        "#1214: designer launch-surface catalog JSON should preserve editor symbols in nested plans");
+    expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"show-property-grid\"",
+        "#1214: designer launch-surface catalog JSON should expose nested editor action ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"form-builder\"",
+        "#1214: designer launch-surface catalog JSON should expose nested builder ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"menu-designer\"]",
+        "#1214: designer launch-surface catalog JSON should expose menu builder ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"application-wizard\"]",
+        "#1214: designer launch-surface catalog JSON should expose project wizard ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"data-environment-builder\"]",
+        "#1214: designer launch-surface catalog JSON should expose data-environment builder ids");
+    expect_contains(catalog_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1214: designer launch-surface catalog JSON should expose visual toolbox context metadata");
+    expect_contains(catalog_process.stdout_text,
+        "\"toolboxError\": \"The selected Studio context does not expose a toolbox palette.\"",
+        "#1214: designer launch-surface catalog JSON should expose unsupported toolbox reasons");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surface-catalog",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1214: designer launch-surface catalog JSON should reject invalid records");
+    expect_contains(invalid_record_process.stdout_text, "\"designerLaunchSurfaceCatalog\": null",
+        "#1214: invalid catalog records should not expose a catalog object");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1214: invalid catalog record JSON should report parser errors");
+
+    const auto invalid_column_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surface-catalog",
+            "--column", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_column_process.exit_code == 2,
+        "#1214: designer launch-surface catalog JSON should reject invalid columns");
+    expect_contains(invalid_column_process.stdout_text, "The --column value must be a non-negative integer.",
+        "#1214: invalid catalog column JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -28614,6 +28706,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
+    test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
