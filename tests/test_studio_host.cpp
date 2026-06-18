@@ -291,6 +291,10 @@ void test_parse_launch_arguments() {
         "#1093: launch contract should keep allow-row-sizing-object off by default");
     expect(!result.request.allow_row_sizing_available,
         "#1093: launch contract should keep allow row sizing unavailable by default");
+    expect(!result.request.resizable_object,
+        "#1094: launch contract should keep resizable-object off by default");
+    expect(!result.request.resizable_available,
+        "#1094: launch contract should keep resizable unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -6166,6 +6170,92 @@ void test_parse_launch_arguments_rejects_allow_row_sizing_object_ambiguity() {
         "#1093: launch contract should reject stray allow-row-sizing arguments");
 }
 
+void test_parse_launch_arguments_for_resizable_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--resizable-object",
+        "--resizable", "false",
+        "--resizable-target-object-name", "frmCustomer",
+        "--resizable-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1094: launch contract should parse resizable-object requests");
+    expect(result.request.resizable_object,
+        "#1094: launch contract should detect --resizable-object");
+    expect(result.request.resizable_available && !result.request.resizable,
+        "#1094: resizable-object requests should carry resizable state");
+    expect(result.request.resizable_objects.size() == 2U,
+        "#1094: resizable-object requests should collect resizable target selectors");
+    if (result.request.resizable_objects.size() == 2U) {
+        expect(result.request.resizable_objects[0].object_name == "frmCustomer" &&
+                result.request.resizable_objects[0].unique_id.empty(),
+            "#1094: resizable-object requests should parse target object-name selectors");
+        expect(result.request.resizable_objects[1].object_name.empty() &&
+                result.request.resizable_objects[1].unique_id == "two-guid",
+            "#1094: resizable-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_resizable_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--resizable-object",
+        "--resizable-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1094: launch contract should reject resizable-object requests without resizable state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--resizable-object",
+        "--resizable", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1094: launch contract should reject resizable-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--resizable-object",
+        "--resizable", "sometimes",
+        "--resizable-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1094: launch contract should reject invalid resizable boolean values");
+}
+
+void test_parse_launch_arguments_rejects_resizable_object_ambiguity() {
+    const auto resizable_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--resizable-object",
+        "--auto-size-object",
+        "--resizable", "false",
+        "--resizable-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!resizable_auto_size_result.ok,
+        "#1094: launch contract should reject simultaneous resizable-object and auto-size-object requests");
+
+    const auto resizable_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--resizable-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--resizable", "false",
+        "--resizable-target-unique-id", "one-guid"
+    });
+    expect(!resizable_property_result.ok,
+        "#1094: launch contract should reject resizable-object combined with property commands");
+
+    const auto stray_resizable_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--resizable", "false"
+    });
+    expect(!stray_resizable_result.ok,
+        "#1094: launch contract should reject stray resizable arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7590,6 +7680,9 @@ int main() {
     test_parse_launch_arguments_for_allow_row_sizing_object();
     test_parse_launch_arguments_rejects_allow_row_sizing_object_invalid_inputs();
     test_parse_launch_arguments_rejects_allow_row_sizing_object_ambiguity();
+    test_parse_launch_arguments_for_resizable_object();
+    test_parse_launch_arguments_rejects_resizable_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_resizable_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

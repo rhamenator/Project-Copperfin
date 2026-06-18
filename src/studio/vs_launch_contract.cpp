@@ -463,6 +463,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--resizable-object") {
+            result.request.resizable_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1234,6 +1239,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.allow_row_sizing = *allow_row_sizing;
             result.request.allow_row_sizing_available = true;
+            continue;
+        }
+
+        if (argument == "--resizable") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --resizable."};
+            }
+            const auto resizable = parse_bool_value(args[++index]);
+            if (!resizable.has_value()) {
+                return {.ok = false, .error = "The --resizable value must be true or false."};
+            }
+            result.request.resizable = *resizable;
+            result.request.resizable_available = true;
             continue;
         }
 
@@ -2899,6 +2917,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--resizable-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --resizable-target-object-name."};
+            }
+            result.request.resizable_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--resizable-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --resizable-target-unique-id."};
+            }
+            result.request.resizable_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3763,6 +3805,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.allow_row_sizing_objects.empty())) {
         return {.ok = false, .error = "Allow-row-sizing arguments can only be used with --allow-row-sizing-object."};
     }
+    if (result.request.resizable_object && !result.request.resizable_available) {
+        return {.ok = false, .error = "An object resizable assignment requires --resizable."};
+    }
+    if (result.request.resizable_object && result.request.resizable_objects.empty()) {
+        return {.ok = false, .error = "An object resizable assignment requires at least one target selector."};
+    }
+    if (!result.request.resizable_object &&
+        (result.request.resizable_available ||
+         !result.request.resizable_objects.empty())) {
+        return {.ok = false, .error = "Resizable arguments can only be used with --resizable-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3840,6 +3893,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.panel_link_object ? 1 : 0) +
         (result.request.allow_header_sizing_object ? 1 : 0) +
         (result.request.allow_row_sizing_object ? 1 : 0) +
+        (result.request.resizable_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

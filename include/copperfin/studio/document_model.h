@@ -183,6 +183,7 @@ struct StudioOpenRequest {
     bool panel_link_object = false;
     bool allow_header_sizing_object = false;
     bool allow_row_sizing_object = false;
+    bool resizable_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -247,6 +248,7 @@ struct StudioOpenRequest {
     bool panel_link_available = false;
     bool allow_header_sizing_available = false;
     bool allow_row_sizing_available = false;
+    bool resizable_available = false;
     bool closable = false;
     bool control_box = false;
     bool allow_output = false;
@@ -266,6 +268,7 @@ struct StudioOpenRequest {
     bool panel_link = false;
     bool allow_header_sizing = false;
     bool allow_row_sizing = false;
+    bool resizable = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -331,6 +334,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> panel_link_objects{};
     std::vector<StudioObjectSelector> allow_header_sizing_objects{};
     std::vector<StudioObjectSelector> allow_row_sizing_objects{};
+    std::vector<StudioObjectSelector> resizable_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
