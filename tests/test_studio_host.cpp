@@ -431,6 +431,10 @@ void test_parse_launch_arguments() {
         "#1155: launch contract should keep min-button-object off by default");
     expect(!result.request.min_button_available,
         "#1155: launch contract should keep min button unavailable by default");
+    expect(!result.request.min_height_object,
+        "#1156: launch contract should keep min-height-object off by default");
+    expect(!result.request.min_height_available,
+        "#1156: launch contract should keep min height unavailable by default");
     expect(!result.request.max_height_object,
         "#1151: launch contract should keep max-height-object off by default");
     expect(!result.request.max_height_available,
@@ -9798,6 +9802,101 @@ void test_parse_launch_arguments_rejects_min_button_object_ambiguity() {
         "#1155: launch contract should reject stray min-button arguments");
 }
 
+void test_parse_launch_arguments_for_min_height_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--min-height-object",
+        "--min-height", "640",
+        "--min-height-target-object-name", "frmCustomer",
+        "--min-height-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1156: launch contract should parse min-height-object requests");
+    expect(result.request.min_height_object,
+        "#1156: launch contract should detect --min-height-object");
+    expect(result.request.min_height_available && result.request.min_height == 640,
+        "#1156: min-height-object requests should carry min height value");
+    expect(result.request.min_height_objects.size() == 2U,
+        "#1156: min-height-object requests should collect min-height target selectors");
+    if (result.request.min_height_objects.size() == 2U) {
+        expect(result.request.min_height_objects[0].object_name == "frmCustomer" &&
+                result.request.min_height_objects[0].unique_id.empty(),
+            "#1156: min-height-object requests should parse target object-name selectors");
+        expect(result.request.min_height_objects[1].object_name.empty() &&
+                result.request.min_height_objects[1].unique_id == "two-guid",
+            "#1156: min-height-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_min_height_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-height-object",
+        "--min-height-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1156: launch contract should reject min-height-object requests without min height value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-height-object",
+        "--min-height", "640"
+    });
+    expect(!missing_targets_result.ok,
+        "#1156: launch contract should reject min-height-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-height-object",
+        "--min-height", "wide",
+        "--min-height-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1156: launch contract should reject non-integer min-height values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-height-object",
+        "--min-height", "-1",
+        "--min-height-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1156: launch contract should reject negative min-height values");
+}
+
+void test_parse_launch_arguments_rejects_min_height_object_ambiguity() {
+    const auto min_height_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-height-object",
+        "--allow-output-object",
+        "--min-height", "640",
+        "--min-height-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!min_height_allow_output_result.ok,
+        "#1156: launch contract should reject simultaneous min-height-object and allow-output-object requests");
+
+    const auto min_height_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-height-object",
+        "--clear-property",
+        "--property-name", "MinHeight",
+        "--min-height", "640",
+        "--min-height-target-unique-id", "one-guid"
+    });
+    expect(!min_height_property_result.ok,
+        "#1156: launch contract should reject min-height-object combined with property commands");
+
+    const auto stray_min_height_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-height", "640"
+    });
+    expect(!stray_min_height_result.ok,
+        "#1156: launch contract should reject stray min-height arguments");
+}
+
 void test_parse_launch_arguments_for_max_height_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13519,6 +13618,9 @@ int main() {
     test_parse_launch_arguments_for_min_button_object();
     test_parse_launch_arguments_rejects_min_button_object_invalid_inputs();
     test_parse_launch_arguments_rejects_min_button_object_ambiguity();
+    test_parse_launch_arguments_for_min_height_object();
+    test_parse_launch_arguments_rejects_min_height_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_min_height_object_ambiguity();
     test_parse_launch_arguments_for_max_height_object();
     test_parse_launch_arguments_rejects_max_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_height_object_ambiguity();
