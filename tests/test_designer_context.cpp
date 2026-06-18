@@ -1,4 +1,5 @@
 #include "copperfin/studio/designer_context.h"
+#include "copperfin/studio/designer_invocation_admission.h"
 #include "copperfin/studio/designer_launch_surfaces.h"
 
 #include <cstdlib>
@@ -66,6 +67,34 @@ bool all_builder_launch_plans_ok(
         }
     }
     return true;
+}
+
+bool has_editor_invocation_admission(
+    const std::vector<copperfin::studio::StudioEditorActionInvocationAdmissionResult>& admissions,
+    std::string_view id,
+    bool admitted) {
+    for (const auto& admission : admissions) {
+        if (admission.ok &&
+            admission.plan.action.id == id &&
+            admission.plan.editor_invocation_admitted == admitted) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_builder_invocation_admission(
+    const std::vector<copperfin::studio::StudioBuilderInvocationAdmissionResult>& admissions,
+    std::string_view id,
+    bool admitted) {
+    for (const auto& admission : admissions) {
+        if (admission.ok &&
+            admission.plan.builder.id == id &&
+            admission.plan.ui_launch_admitted == admitted) {
+            return true;
+        }
+    }
+    return false;
 }
 
 const copperfin::studio::StudioDesignerLaunchSurfaceCatalogEntry* find_catalog_entry(
@@ -465,6 +494,72 @@ int main() {
                menu_launch_surfaces.plan.toolbox_error ==
                    "The selected Studio context does not expose a toolbox palette.",
            "#1211: menu launch surfaces should preserve supported actions/builders and explicit toolbox rejection");
+
+    const auto visual_invocation_admission = copperfin::studio::plan_studio_designer_invocation_admission({
+        .launch_surface_plan = visual_launch_surfaces.plan,
+        .admit_editor_invocations = true,
+        .admit_builder_invocations = true,
+        .admit_toolbox_invocation = true
+    });
+    expect(visual_invocation_admission.ok,
+           "#1221: aggregate designer invocation admission should accept validated visual launch surfaces");
+    expect(visual_invocation_admission.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_invocation_admission.plan.asset_path == "forms/customer.scx" &&
+               visual_invocation_admission.plan.record_index == 1U &&
+               visual_invocation_admission.plan.object_name == "frmCustomer" &&
+               visual_invocation_admission.plan.unique_id == "form-guid" &&
+               visual_invocation_admission.plan.symbol == "Click" &&
+               visual_invocation_admission.plan.line == 12U &&
+               visual_invocation_admission.plan.column == 4U &&
+               visual_invocation_admission.plan.editor_action_invocation_count ==
+                   visual_launch_surfaces.plan.editor_action_launch_plan_count &&
+               visual_invocation_admission.plan.builder_invocation_count ==
+                   visual_launch_surfaces.plan.builder_launch_plan_count &&
+               visual_invocation_admission.plan.toolbox_available &&
+               visual_invocation_admission.plan.toolbox_item_count ==
+                   visual_launch_surfaces.plan.toolbox_item_count &&
+               !visual_invocation_admission.plan.dry_run &&
+               !visual_invocation_admission.plan.mutates_asset,
+           "#1221: aggregate designer invocation admission should preserve metadata, counts, and admitted state");
+    expect(has_editor_invocation_admission(
+               visual_invocation_admission.plan.editor_action_invocations, "edit-visual-method", true) &&
+               has_builder_invocation_admission(
+                   visual_invocation_admission.plan.builder_invocations, "form-builder", true) &&
+               visual_invocation_admission.plan.toolbox_invocation.ok &&
+               visual_invocation_admission.plan.toolbox_invocation.plan.palette_invocation_admitted &&
+               has_id(visual_invocation_admission.plan.toolbox_invocation.plan.items, "textbox"),
+           "#1221: aggregate designer invocation admission should route editor, builder, and toolbox planners");
+
+    const auto menu_invocation_admission = copperfin::studio::plan_studio_designer_invocation_admission({
+        .launch_surface_plan = menu_launch_surfaces.plan,
+        .admit_editor_invocations = false,
+        .admit_builder_invocations = false,
+        .admit_toolbox_invocation = false
+    });
+    expect(menu_invocation_admission.ok &&
+               menu_invocation_admission.plan.selection_context == StudioEditorSelectionContext::menu_item &&
+               menu_invocation_admission.plan.toolbox_available == false &&
+               menu_invocation_admission.plan.toolbox_item_count == 0U &&
+               menu_invocation_admission.plan.toolbox_error ==
+                   "The selected Studio context does not expose a toolbox palette." &&
+               menu_invocation_admission.plan.dry_run &&
+               !menu_invocation_admission.plan.mutates_asset &&
+               has_editor_invocation_admission(
+                   menu_invocation_admission.plan.editor_action_invocations, "show-property-grid", false) &&
+               has_builder_invocation_admission(
+                   menu_invocation_admission.plan.builder_invocations, "menu-designer", false),
+           "#1221: aggregate designer invocation admission should preserve unsupported-toolbox contexts as dry-runs");
+
+    const auto empty_invocation_admission = copperfin::studio::plan_studio_designer_invocation_admission({
+        .launch_surface_plan = {},
+        .admit_editor_invocations = true,
+        .admit_builder_invocations = true,
+        .admit_toolbox_invocation = true
+    });
+    expect(!empty_invocation_admission.ok &&
+               empty_invocation_admission.error ==
+                   "A designer invocation admission request requires at least one validated launch surface.",
+           "#1221: aggregate designer invocation admission should reject empty launch-surface plans");
 
     const auto launch_surface_catalog = copperfin::studio::plan_studio_designer_launch_surface_catalog({
         .asset_path = "forms/customer.scx",
