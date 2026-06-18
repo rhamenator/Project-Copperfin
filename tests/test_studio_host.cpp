@@ -527,6 +527,10 @@ void test_parse_launch_arguments() {
         "#1187: launch contract should keep dynamic-current-control-object off by default");
     expect(!result.request.dynamic_current_control_available,
         "#1187: launch contract should keep dynamic current control unavailable by default");
+    expect(!result.request.dynamic_font_name_object,
+        "#1188: launch contract should keep dynamic-font-name-object off by default");
+    expect(!result.request.dynamic_font_name_available,
+        "#1188: launch contract should keep dynamic font name unavailable by default");
     expect(!result.request.font_name_object,
         "#1178: launch contract should keep font-name-object off by default");
     expect(!result.request.font_name_available,
@@ -12183,6 +12187,84 @@ void test_parse_launch_arguments_rejects_dynamic_current_control_object_ambiguit
         "#1187: launch contract should reject stray dynamic-current-control arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_font_name_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-font-name-object",
+        "--dynamic-font-name", "IIF(.T., 'Arial', 'Tahoma')",
+        "--dynamic-font-name-target-object-name", "txtName",
+        "--dynamic-font-name-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1188: launch contract should parse dynamic-font-name-object requests");
+    expect(result.request.dynamic_font_name_object,
+        "#1188: launch contract should detect --dynamic-font-name-object");
+    expect(result.request.dynamic_font_name_available &&
+            result.request.dynamic_font_name == "IIF(.T., 'Arial', 'Tahoma')",
+        "#1188: dynamic-font-name-object requests should carry raw expression text");
+    expect(result.request.dynamic_font_name_objects.size() == 2U,
+        "#1188: dynamic-font-name-object requests should collect dynamic-font-name target selectors");
+    if (result.request.dynamic_font_name_objects.size() == 2U) {
+        expect(result.request.dynamic_font_name_objects[0].object_name == "txtName" &&
+                result.request.dynamic_font_name_objects[0].unique_id.empty(),
+            "#1188: dynamic-font-name-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_font_name_objects[1].object_name.empty() &&
+                result.request.dynamic_font_name_objects[1].unique_id == "two-guid",
+            "#1188: dynamic-font-name-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_name_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-name-object",
+        "--dynamic-font-name-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1188: launch contract should reject dynamic-font-name-object requests without dynamic font name");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-name-object",
+        "--dynamic-font-name", "IIF(.T., 'Arial', 'Tahoma')"
+    });
+    expect(!missing_targets_result.ok,
+        "#1188: launch contract should reject dynamic-font-name-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_name_object_ambiguity() {
+    const auto dynamic_font_name_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-name-object",
+        "--allow-output-object",
+        "--dynamic-font-name", "IIF(.T., 'Arial', 'Tahoma')",
+        "--dynamic-font-name-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_name_allow_output_result.ok,
+        "#1188: launch contract should reject simultaneous dynamic-font-name-object and allow-output-object requests");
+
+    const auto dynamic_font_name_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-name-object",
+        "--clear-property",
+        "--property-name", "DynamicFontName",
+        "--dynamic-font-name", "IIF(.T., 'Arial', 'Tahoma')",
+        "--dynamic-font-name-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_name_property_result.ok,
+        "#1188: launch contract should reject dynamic-font-name-object combined with property commands");
+
+    const auto stray_dynamic_font_name_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-name", "IIF(.T., 'Arial', 'Tahoma')"
+    });
+    expect(!stray_dynamic_font_name_result.ok,
+        "#1188: launch contract should reject stray dynamic-font-name arguments");
+}
+
 void test_parse_launch_arguments_for_font_name_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16572,6 +16654,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_current_control_object();
     test_parse_launch_arguments_rejects_dynamic_current_control_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_current_control_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_font_name_object();
+    test_parse_launch_arguments_rejects_dynamic_font_name_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_font_name_object_ambiguity();
     test_parse_launch_arguments_for_font_name_object();
     test_parse_launch_arguments_rejects_font_name_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_name_object_ambiguity();
