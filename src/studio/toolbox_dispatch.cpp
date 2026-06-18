@@ -78,4 +78,80 @@ StudioToolboxDispatchResult plan_studio_toolbox_dispatch(
     };
 }
 
+StudioToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog(
+    const StudioToolboxDispatchCatalogRequest& request) {
+    const auto items = studio_toolbox_items_for_context(request.toolbox_context);
+    if (items.empty()) {
+        return {
+            .ok = false,
+            .error = "A toolbox dispatch catalog request requires validated toolbox item metadata.",
+            .toolbox_context = request.toolbox_context,
+            .command_token = {},
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .item_count = 0U,
+            .items = {},
+            .invocation_admission = {},
+            .dispatch = {},
+            .dispatch_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    const auto launch_plan = StudioToolboxPaletteLaunchPlan{
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .toolbox_context = request.toolbox_context,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .item_count = items.size(),
+        .items = items
+    };
+    auto invocation_admission = plan_studio_toolbox_invocation_admission({
+        .launch_plan = launch_plan,
+        .admit_palette_invocation = request.admit_palette_invocation
+    });
+    StudioToolboxDispatchResult dispatch{};
+    if (invocation_admission.ok) {
+        dispatch = plan_studio_toolbox_dispatch({
+            .admission_plan = invocation_admission.plan
+        });
+    } else {
+        dispatch = {
+            .ok = false,
+            .error = invocation_admission.error,
+            .plan = {}
+        };
+    }
+
+    const std::size_t dispatch_count = dispatch.ok ? 1U : 0U;
+    const std::size_t error_count = dispatch.ok ? 0U : 1U;
+    const bool dry_run = dispatch_count == 0U ? true : dispatch.plan.dry_run;
+    const bool mutates_asset = dispatch.ok ? dispatch.plan.mutates_asset : false;
+
+    return {
+        .ok = true,
+        .error = {},
+        .toolbox_context = request.toolbox_context,
+        .command_token = invocation_admission.ok ? invocation_admission.plan.command_token : std::string{},
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .item_count = items.size(),
+        .items = items,
+        .invocation_admission = std::move(invocation_admission),
+        .dispatch = std::move(dispatch),
+        .dispatch_count = dispatch_count,
+        .error_count = error_count,
+        .dry_run = dry_run,
+        .mutates_asset = mutates_asset
+    };
+}
+
 }  // namespace copperfin::studio

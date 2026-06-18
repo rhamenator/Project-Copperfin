@@ -311,6 +311,81 @@ int main() {
             inconsistent_dispatch.error == "A toolbox dispatch request requires consistent toolbox item metadata.",
         "#1233: toolbox dispatch should reject admitted plans with inconsistent item metadata");
 
+    const auto form_dispatch_catalog = copperfin::studio::plan_studio_toolbox_dispatch_catalog({
+        .toolbox_context = StudioToolboxContext::form,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = true
+    });
+    expect(form_dispatch_catalog.ok &&
+            form_dispatch_catalog.toolbox_context == StudioToolboxContext::form &&
+            form_dispatch_catalog.command_token == "studio.toolbox.palette.invoke" &&
+            form_dispatch_catalog.asset_path == "forms/customer.scx" &&
+            form_dispatch_catalog.record_index == 1U &&
+            form_dispatch_catalog.object_name == "frmCustomer" &&
+            form_dispatch_catalog.unique_id == "form-guid" &&
+            form_dispatch_catalog.item_count == form_items.size() &&
+            form_dispatch_catalog.items.size() == form_items.size() &&
+            form_dispatch_catalog.dispatch_count == 1U &&
+            form_dispatch_catalog.error_count == 0U &&
+            !form_dispatch_catalog.dry_run &&
+            !form_dispatch_catalog.mutates_asset &&
+            form_dispatch_catalog.invocation_admission.ok &&
+            form_dispatch_catalog.dispatch.ok &&
+            has_toolbox_item(form_dispatch_catalog.items, "textbox") &&
+            has_argument_pair(
+                form_dispatch_catalog.dispatch.plan.dispatch_arguments,
+                "--toolbox-context",
+                "form"),
+        "#1235: admitted toolbox dispatch catalogs should preserve form item metadata and dispatch once");
+
+    const auto report_dispatch_catalog = copperfin::studio::plan_studio_toolbox_dispatch_catalog({
+        .toolbox_context = StudioToolboxContext::report,
+        .asset_path = "reports/orders.frx",
+        .record_index = 3U,
+        .object_name = "Field1",
+        .unique_id = "field-guid",
+        .admit_palette_invocation = true
+    });
+    expect(report_dispatch_catalog.ok &&
+            report_dispatch_catalog.toolbox_context == StudioToolboxContext::report &&
+            report_dispatch_catalog.item_count == report_items.size() &&
+            report_dispatch_catalog.dispatch_count == 1U &&
+            report_dispatch_catalog.error_count == 0U &&
+            !report_dispatch_catalog.dry_run &&
+            has_toolbox_item(report_dispatch_catalog.items, "label") &&
+            !has_toolbox_item(report_dispatch_catalog.items, "textbox") &&
+            report_dispatch_catalog.dispatch.ok &&
+            report_dispatch_catalog.dispatch.plan.toolbox_context == StudioToolboxContext::report &&
+            has_argument_pair(
+                report_dispatch_catalog.dispatch.plan.dispatch_arguments,
+                "--toolbox-context",
+                "report"),
+        "#1235: admitted report toolbox dispatch catalogs should preserve report-safe item metadata");
+
+    const auto dry_run_dispatch_catalog = copperfin::studio::plan_studio_toolbox_dispatch_catalog({
+        .toolbox_context = StudioToolboxContext::form,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = false
+    });
+    expect(dry_run_dispatch_catalog.ok &&
+            dry_run_dispatch_catalog.item_count == form_items.size() &&
+            dry_run_dispatch_catalog.dispatch_count == 0U &&
+            dry_run_dispatch_catalog.error_count == 1U &&
+            dry_run_dispatch_catalog.dry_run &&
+            !dry_run_dispatch_catalog.mutates_asset &&
+            dry_run_dispatch_catalog.invocation_admission.ok &&
+            !dry_run_dispatch_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            !dry_run_dispatch_catalog.dispatch.ok &&
+            dry_run_dispatch_catalog.dispatch.error ==
+                "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1235: dry-run toolbox dispatch catalogs should report dispatch rejections without mutation");
+
     const auto missing_items_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
         .launch_plan = {},
         .admit_palette_invocation = true
