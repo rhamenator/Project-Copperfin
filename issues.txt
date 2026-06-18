@@ -1,3 +1,4 @@
+1228	OPEN	E2/#23 slice: Expose editor action dispatch catalog through host JSON		2026-06-18T20:42:47Z
 1227	OPEN	E2/#23 slice: Add editor action dispatch catalog planning		2026-06-18T20:39:42Z
 1226	OPEN	E2/#23 slice: Expose editor action invocation dispatch through host JSON		2026-06-18T20:32:33Z
 1225	OPEN	E2/#23 slice: Add editor action invocation dispatch planning		2026-06-18T20:29:54Z
