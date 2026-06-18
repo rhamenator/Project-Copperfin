@@ -194,6 +194,100 @@ int main() {
                data_context.toolbox_item_count == 0U,
            "#1009: data-environment context should report filtered descriptor counts");
 
+    const auto visual_form_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .builder_id = "form-builder",
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid"
+    });
+    expect(visual_form_plan.ok,
+           "#1205: visual-object selection contexts should plan form builders");
+    expect(visual_form_plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               std::string(visual_form_plan.plan.builder.id) == "form-builder" &&
+               visual_form_plan.plan.context == copperfin::studio::StudioBuilderContext::form &&
+               visual_form_plan.plan.asset_path == "forms/customer.scx" &&
+               visual_form_plan.plan.record_index == 1U &&
+               visual_form_plan.plan.object_name == "frmCustomer" &&
+               visual_form_plan.plan.unique_id == "form-guid",
+           "#1205: selection-context builder launch plans should preserve visual selection metadata");
+    expect(visual_form_plan.plan.entry_point == "cf_builders.form_builder",
+           "#1205: selection-context builder launch plans should preserve entry-point metadata");
+
+    const auto visual_grid_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .builder_id = "grid-builder",
+        .asset_path = "forms/customer.scx",
+        .record_index = 4U,
+        .object_name = "grdOrders",
+        .unique_id = "grid-guid"
+    });
+    expect(visual_grid_plan.ok &&
+               std::string(visual_grid_plan.plan.builder.id) == "grid-builder" &&
+               visual_grid_plan.plan.context == copperfin::studio::StudioBuilderContext::control,
+           "#1205: visual-object selection contexts should also plan control builders");
+
+    const auto container_form_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
+        .selection_context = StudioEditorSelectionContext::container_object,
+        .builder_id = "form-builder",
+        .asset_path = "forms/customer.scx",
+        .record_index = 2U,
+        .object_name = "pgAddress",
+        .unique_id = "page-guid"
+    });
+    expect(!container_form_plan.ok,
+           "#1205: container selection contexts should reject form-only builders");
+
+    const auto label_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
+        .selection_context = StudioEditorSelectionContext::label_expression,
+        .builder_id = "label-wizard",
+        .asset_path = "labels/mailing.lbx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(label_plan.ok &&
+               std::string(label_plan.plan.builder.id) == "label-wizard" &&
+               label_plan.plan.builder.kind == copperfin::studio::StudioBuilderKind::wizard &&
+               label_plan.plan.entry_point == "cf_wizards.label_wizard",
+           "#1205: label selection contexts should plan label wizards");
+
+    const auto data_builder_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
+        .selection_context = StudioEditorSelectionContext::data_environment,
+        .builder_id = "data-environment-builder",
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = "Dataenvironment",
+        .unique_id = "de-guid"
+    });
+    expect(data_builder_plan.ok &&
+               std::string(data_builder_plan.plan.builder.id) == "data-environment-builder" &&
+               data_builder_plan.plan.context == copperfin::studio::StudioBuilderContext::data_environment,
+           "#1205: data-environment selection contexts should plan data-environment builders");
+
+    const auto missing_builder_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .builder_id = {},
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(!missing_builder_plan.ok,
+           "#1205: selection-context builder launch plans should reject missing builder ids");
+
+    const auto unknown_builder_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .builder_id = "unknown-builder",
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(!unknown_builder_plan.ok,
+           "#1205: selection-context builder launch plans should reject unknown builders");
+
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
         return EXIT_FAILURE;

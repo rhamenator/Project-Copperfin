@@ -5,6 +5,7 @@
 #include "copperfin/studio/toolbox_palette.h"
 
 #include <cstddef>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -24,7 +25,25 @@ struct StudioDesignerContextResult {
     std::vector<StudioToolboxItemDescriptor> toolbox_items;
 };
 
+struct StudioSelectionBuilderLaunchRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string builder_id;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct StudioSelectionBuilderLaunchPlanResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioBuilderLaunchPlan plan;
+};
+
 [[nodiscard]] StudioDesignerContextResult studio_designer_context_for_selection(
     const StudioDesignerContextRequest& request);
+[[nodiscard]] StudioSelectionBuilderLaunchPlanResult plan_studio_builder_launch_for_selection(
+    const StudioSelectionBuilderLaunchRequest& request);
 
 }  // namespace copperfin::studio
