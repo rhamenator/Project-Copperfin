@@ -265,6 +265,10 @@ void test_parse_launch_arguments() {
         "#1135: launch contract should keep list-item-id-object off by default");
     expect(!result.request.list_item_id_available,
         "#1135: launch contract should keep list-item-id unavailable by default");
+    expect(!result.request.tab_orientation_object,
+        "#1139: launch contract should keep tab-orientation-object off by default");
+    expect(!result.request.tab_orientation_available,
+        "#1139: launch contract should keep tab-orientation unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.form_set_class_object, "#1136: launch contract should keep form-set-class-object off by default");
@@ -5352,6 +5356,101 @@ void test_parse_launch_arguments_rejects_list_item_id_object_ambiguity() {
     });
     expect(!stray_list_item_id_result.ok,
         "#1135: launch contract should reject stray list-item-id arguments");
+}
+
+void test_parse_launch_arguments_for_tab_orientation_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--tab-orientation-object",
+        "--tab-orientation", "9",
+        "--tab-orientation-target-object-name", "cmdSave",
+        "--tab-orientation-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1139: launch contract should parse tab-orientation-object requests");
+    expect(result.request.tab_orientation_object,
+        "#1139: launch contract should detect --tab-orientation-object");
+    expect(result.request.tab_orientation_available && result.request.tab_orientation == 9,
+        "#1139: tab-orientation-object requests should carry tab orientation");
+    expect(result.request.tab_orientation_objects.size() == 2U,
+        "#1139: tab-orientation-object requests should collect tab orientation target selectors");
+    if (result.request.tab_orientation_objects.size() == 2U) {
+        expect(result.request.tab_orientation_objects[0].object_name == "cmdSave" &&
+                result.request.tab_orientation_objects[0].unique_id.empty(),
+            "#1139: tab-orientation-object requests should parse target object-name selectors");
+        expect(result.request.tab_orientation_objects[1].object_name.empty() &&
+                result.request.tab_orientation_objects[1].unique_id == "two-guid",
+            "#1139: tab-orientation-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_tab_orientation_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--tab-orientation-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1139: launch contract should reject tab-orientation-object requests without tab orientation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--tab-orientation", "9"
+    });
+    expect(!missing_targets_result.ok,
+        "#1139: launch contract should reject tab-orientation-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--tab-orientation", "east",
+        "--tab-orientation-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1139: launch contract should reject non-integer tab orientation values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--tab-orientation", "-1",
+        "--tab-orientation-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1139: launch contract should reject negative tab orientation values");
+}
+
+void test_parse_launch_arguments_rejects_tab_orientation_object_ambiguity() {
+    const auto tab_orientation_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--locked-object",
+        "--tab-orientation", "9",
+        "--tab-orientation-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!tab_orientation_locked_result.ok,
+        "#1139: launch contract should reject simultaneous tab-orientation-object and locked-object requests");
+
+    const auto tab_orientation_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--tab-orientation", "9",
+        "--tab-orientation-target-unique-id", "one-guid"
+    });
+    expect(!tab_orientation_property_result.ok,
+        "#1139: launch contract should reject tab-orientation-object combined with property commands");
+
+    const auto stray_tab_orientation_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--tab-orientation", "9"
+    });
+    expect(!stray_tab_orientation_result.ok,
+        "#1139: launch contract should reject stray tab-orientation arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -11767,6 +11866,9 @@ int main() {
     test_parse_launch_arguments_for_list_item_id_object();
     test_parse_launch_arguments_rejects_list_item_id_object_invalid_inputs();
     test_parse_launch_arguments_rejects_list_item_id_object_ambiguity();
+    test_parse_launch_arguments_for_tab_orientation_object();
+    test_parse_launch_arguments_rejects_tab_orientation_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_tab_orientation_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();
