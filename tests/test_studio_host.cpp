@@ -443,6 +443,10 @@ void test_parse_launch_arguments() {
         "#1151: launch contract should keep max-height-object off by default");
     expect(!result.request.max_height_available,
         "#1151: launch contract should keep max height unavailable by default");
+    expect(!result.request.movable_object,
+        "#1158: launch contract should keep movable-object off by default");
+    expect(!result.request.movable_available,
+        "#1158: launch contract should keep movable unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -10091,6 +10095,92 @@ void test_parse_launch_arguments_rejects_max_height_object_ambiguity() {
         "#1151: launch contract should reject stray max-height arguments");
 }
 
+void test_parse_launch_arguments_for_movable_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--movable-object",
+        "--movable", "false",
+        "--movable-target-object-name", "frmCustomer",
+        "--movable-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1158: launch contract should parse movable-object requests");
+    expect(result.request.movable_object,
+        "#1158: launch contract should detect --movable-object");
+    expect(result.request.movable_available && !result.request.movable,
+        "#1158: movable-object requests should carry movable state");
+    expect(result.request.movable_objects.size() == 2U,
+        "#1158: movable-object requests should collect movable target selectors");
+    if (result.request.movable_objects.size() == 2U) {
+        expect(result.request.movable_objects[0].object_name == "frmCustomer" &&
+                result.request.movable_objects[0].unique_id.empty(),
+            "#1158: movable-object requests should parse target object-name selectors");
+        expect(result.request.movable_objects[1].object_name.empty() &&
+                result.request.movable_objects[1].unique_id == "two-guid",
+            "#1158: movable-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_movable_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--movable-object",
+        "--movable-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1158: launch contract should reject movable-object requests without movable state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--movable-object",
+        "--movable", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1158: launch contract should reject movable-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--movable-object",
+        "--movable", "sometimes",
+        "--movable-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1158: launch contract should reject invalid movable boolean values");
+}
+
+void test_parse_launch_arguments_rejects_movable_object_ambiguity() {
+    const auto movable_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--movable-object",
+        "--allow-output-object",
+        "--movable", "false",
+        "--movable-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!movable_allow_output_result.ok,
+        "#1158: launch contract should reject simultaneous movable-object and allow-output-object requests");
+
+    const auto movable_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--movable-object",
+        "--clear-property",
+        "--property-name", "Movable",
+        "--movable", "false",
+        "--movable-target-unique-id", "one-guid"
+    });
+    expect(!movable_property_result.ok,
+        "#1158: launch contract should reject movable-object combined with property commands");
+
+    const auto stray_movable_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--movable", "false"
+    });
+    expect(!stray_movable_result.ok,
+        "#1158: launch contract should reject stray movable arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13726,6 +13816,9 @@ int main() {
     test_parse_launch_arguments_for_max_height_object();
     test_parse_launch_arguments_rejects_max_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_height_object_ambiguity();
+    test_parse_launch_arguments_for_movable_object();
+    test_parse_launch_arguments_rejects_movable_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_movable_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

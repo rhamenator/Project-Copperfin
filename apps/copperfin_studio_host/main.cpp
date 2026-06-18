@@ -55,6 +55,7 @@ void print_usage() {
     std::cout << "Min-height object: --min-height-object --min-height <n> [--min-height-target-object-name <name>] [--min-height-target-unique-id <id>]\n";
     std::cout << "Min-width object: --min-width-object --min-width <n> [--min-width-target-object-name <name>] [--min-width-target-unique-id <id>]\n";
     std::cout << "Max-height object: --max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]\n";
+    std::cout << "Movable object: --movable-object --movable <true|false> [--movable-target-object-name <name>] [--movable-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4046,6 +4047,30 @@ int main(int argc, char** argv) {
         if (!max_height_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << max_height_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.movable_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> movable_objects;
+        movable_objects.reserve(parse_result.request.movable_objects.size());
+        for (const auto& movable_object : parse_result.request.movable_objects) {
+            movable_objects.push_back({
+                .record_index = movable_object.record_index,
+                .object_name = movable_object.object_name,
+                .unique_id = movable_object.unique_id
+            });
+        }
+
+        const auto movable_result = copperfin::vfp::set_visual_object_movable({
+            .path = parse_result.request.path,
+            .objects = movable_objects,
+            .movable = parse_result.request.movable
+        });
+
+        if (!movable_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << movable_result.error << "\n";
             return 4;
         }
     }
