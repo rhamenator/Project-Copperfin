@@ -603,6 +603,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--row-height-object") {
+            result.request.row_height_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1426,6 +1431,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.header_height = header_height;
             result.request.header_height_available = true;
+            continue;
+        }
+
+        if (argument == "--row-height") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --row-height."};
+            }
+            int row_height = 0;
+            if (!parse_int_value(args[++index], row_height)) {
+                return {.ok = false, .error = "The --row-height value must be an integer."};
+            }
+            if (row_height < 0) {
+                return {.ok = false, .error = "The --row-height value must be non-negative."};
+            }
+            result.request.row_height = row_height;
+            result.request.row_height_available = true;
             continue;
         }
 
@@ -2799,6 +2820,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --header-height-target-unique-id."};
             }
             result.request.header_height_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--row-height-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --row-height-target-object-name."};
+            }
+            result.request.row_height_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--row-height-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --row-height-target-unique-id."};
+            }
+            result.request.row_height_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4620,6 +4665,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.header_height_objects.empty())) {
         return {.ok = false, .error = "Header-height arguments can only be used with --header-height-object."};
     }
+    if (result.request.row_height_object && !result.request.row_height_available) {
+        return {.ok = false, .error = "An object row-height assignment requires --row-height."};
+    }
+    if (result.request.row_height_object && result.request.row_height_objects.empty()) {
+        return {.ok = false, .error = "An object row-height assignment requires at least one target selector."};
+    }
+    if (!result.request.row_height_object &&
+        (result.request.row_height_available ||
+         !result.request.row_height_objects.empty())) {
+        return {.ok = false, .error = "Row-height arguments can only be used with --row-height-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5357,6 +5413,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.data_session_object ? 1 : 0) +
         (result.request.grid_line_color_object ? 1 : 0) +
         (result.request.header_height_object ? 1 : 0) +
+        (result.request.row_height_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

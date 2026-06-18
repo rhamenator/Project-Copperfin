@@ -213,6 +213,10 @@ void test_parse_launch_arguments() {
         "#1121: launch contract should keep header-height-object off by default");
     expect(!result.request.header_height_available,
         "#1121: launch contract should keep header-height unavailable by default");
+    expect(!result.request.row_height_object,
+        "#1122: launch contract should keep row-height-object off by default");
+    expect(!result.request.row_height_available,
+        "#1122: launch contract should keep row-height unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4057,6 +4061,101 @@ void test_parse_launch_arguments_rejects_header_height_object_ambiguity() {
     });
     expect(!stray_header_height_result.ok,
         "#1121: launch contract should reject stray header-height arguments");
+}
+
+void test_parse_launch_arguments_for_row_height_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--row-height-object",
+        "--row-height", "9",
+        "--row-height-target-object-name", "cmdSave",
+        "--row-height-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1122: launch contract should parse row-height-object requests");
+    expect(result.request.row_height_object,
+        "#1122: launch contract should detect --row-height-object");
+    expect(result.request.row_height_available && result.request.row_height == 9,
+        "#1122: row-height-object requests should carry row-height value");
+    expect(result.request.row_height_objects.size() == 2U,
+        "#1122: row-height-object requests should collect row-height target selectors");
+    if (result.request.row_height_objects.size() == 2U) {
+        expect(result.request.row_height_objects[0].object_name == "cmdSave" &&
+                result.request.row_height_objects[0].unique_id.empty(),
+            "#1122: row-height-object requests should parse target object-name selectors");
+        expect(result.request.row_height_objects[1].object_name.empty() &&
+                result.request.row_height_objects[1].unique_id == "two-guid",
+            "#1122: row-height-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_row_height_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-height-object",
+        "--row-height-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1122: launch contract should reject row-height-object requests without row-height value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-height-object",
+        "--row-height", "manual",
+        "--row-height-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1122: launch contract should reject non-integer row-height values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-height-object",
+        "--row-height", "-1",
+        "--row-height-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1122: launch contract should reject negative row-height values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-height-object",
+        "--row-height", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1122: launch contract should reject row-height-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_row_height_object_ambiguity() {
+    const auto row_height_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-height-object",
+        "--locked-object",
+        "--row-height", "2",
+        "--row-height-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!row_height_locked_result.ok,
+        "#1122: launch contract should reject simultaneous row-height-object and locked-object requests");
+
+    const auto row_height_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-height-object",
+        "--clear-property",
+        "--property-name", "RowHeight",
+        "--row-height", "2",
+        "--row-height-target-unique-id", "one-guid"
+    });
+    expect(!row_height_property_result.ok,
+        "#1122: launch contract should reject row-height-object combined with property commands");
+
+    const auto stray_row_height_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--row-height", "2"
+    });
+    expect(!stray_row_height_result.ok,
+        "#1122: launch contract should reject stray row-height arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10128,6 +10227,9 @@ int main() {
     test_parse_launch_arguments_for_header_height_object();
     test_parse_launch_arguments_rejects_header_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_header_height_object_ambiguity();
+    test_parse_launch_arguments_for_row_height_object();
+    test_parse_launch_arguments_rejects_row_height_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_row_height_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
