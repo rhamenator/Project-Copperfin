@@ -653,6 +653,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--highlight-style-object") {
+            result.request.highlight_style_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1629,6 +1634,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.column_order = column_order;
             result.request.column_order_available = true;
+            continue;
+        }
+
+        if (argument == "--highlight-style") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --highlight-style."};
+            }
+            int highlight_style = 0;
+            if (!parse_int_value(args[++index], highlight_style)) {
+                return {.ok = false, .error = "The --highlight-style value must be an integer."};
+            }
+            if (highlight_style < 0) {
+                return {.ok = false, .error = "The --highlight-style value must be non-negative."};
+            }
+            result.request.highlight_style = highlight_style;
+            result.request.highlight_style_available = true;
             continue;
         }
 
@@ -3218,6 +3239,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --column-order-target-unique-id."};
             }
             result.request.column_order_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--highlight-style-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --highlight-style-target-object-name."};
+            }
+            result.request.highlight_style_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--highlight-style-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --highlight-style-target-unique-id."};
+            }
+            result.request.highlight_style_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -5162,6 +5207,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.column_order_objects.empty())) {
         return {.ok = false, .error = "ColumnOrder arguments can only be used with --column-order-object."};
     }
+    if (result.request.highlight_style_object && !result.request.highlight_style_available) {
+        return {.ok = false, .error = "An object highlight-style assignment requires --highlight-style."};
+    }
+    if (result.request.highlight_style_object && result.request.highlight_style_objects.empty()) {
+        return {.ok = false, .error = "An object highlight-style assignment requires at least one target selector."};
+    }
+    if (!result.request.highlight_style_object &&
+        (result.request.highlight_style_available ||
+         !result.request.highlight_style_objects.empty())) {
+        return {.ok = false, .error = "HighlightStyle arguments can only be used with --highlight-style-object."};
+    }
     if (result.request.record_source_object && !result.request.record_source_available) {
         return {.ok = false, .error = "An object record source assignment requires --record-source."};
     }
@@ -5919,6 +5975,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.partition_object ? 1 : 0) +
         (result.request.record_source_type_object ? 1 : 0) +
         (result.request.column_order_object ? 1 : 0) +
+        (result.request.highlight_style_object ? 1 : 0) +
         (result.request.record_source_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +

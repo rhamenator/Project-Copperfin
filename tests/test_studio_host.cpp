@@ -249,6 +249,10 @@ void test_parse_launch_arguments() {
         "#1131: launch contract should keep column-order-object off by default");
     expect(!result.request.column_order_available,
         "#1131: launch contract should keep column-order unavailable by default");
+    expect(!result.request.highlight_style_object,
+        "#1132: launch contract should keep highlight-style-object off by default");
+    expect(!result.request.highlight_style_available,
+        "#1132: launch contract should keep highlight-style unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
@@ -4950,6 +4954,101 @@ void test_parse_launch_arguments_rejects_column_order_object_ambiguity() {
     });
     expect(!stray_column_order_result.ok,
         "#1131: launch contract should reject stray column-order arguments");
+}
+
+void test_parse_launch_arguments_for_highlight_style_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--highlight-style-object",
+        "--highlight-style", "9",
+        "--highlight-style-target-object-name", "cmdSave",
+        "--highlight-style-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1132: launch contract should parse highlight-style-object requests");
+    expect(result.request.highlight_style_object,
+        "#1132: launch contract should detect --highlight-style-object");
+    expect(result.request.highlight_style_available && result.request.highlight_style == 9,
+        "#1132: highlight-style-object requests should carry highlight-style value");
+    expect(result.request.highlight_style_objects.size() == 2U,
+        "#1132: highlight-style-object requests should collect highlight_style target selectors");
+    if (result.request.highlight_style_objects.size() == 2U) {
+        expect(result.request.highlight_style_objects[0].object_name == "cmdSave" &&
+                result.request.highlight_style_objects[0].unique_id.empty(),
+            "#1132: highlight-style-object requests should parse target object-name selectors");
+        expect(result.request.highlight_style_objects[1].object_name.empty() &&
+                result.request.highlight_style_objects[1].unique_id == "two-guid",
+            "#1132: highlight-style-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_highlight_style_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-style-object",
+        "--highlight-style-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1132: launch contract should reject highlight-style-object requests without highlight-style value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-style-object",
+        "--highlight-style", "manual",
+        "--highlight-style-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1132: launch contract should reject non-integer highlight-style values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-style-object",
+        "--highlight-style", "-1",
+        "--highlight-style-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1132: launch contract should reject negative highlight-style values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-style-object",
+        "--highlight-style", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1132: launch contract should reject highlight-style-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_highlight_style_object_ambiguity() {
+    const auto highlight_style_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-style-object",
+        "--locked-object",
+        "--highlight-style", "2",
+        "--highlight-style-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!highlight_style_locked_result.ok,
+        "#1132: launch contract should reject simultaneous highlight-style-object and locked-object requests");
+
+    const auto highlight_style_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-style-object",
+        "--clear-property",
+        "--property-name", "HighlightStyle",
+        "--highlight-style", "2",
+        "--highlight-style-target-unique-id", "one-guid"
+    });
+    expect(!highlight_style_property_result.ok,
+        "#1132: launch contract should reject highlight-style-object combined with property commands");
+
+    const auto stray_highlight_style_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-style", "2"
+    });
+    expect(!stray_highlight_style_result.ok,
+        "#1132: launch contract should reject stray highlight-style arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -11124,6 +11223,9 @@ int main() {
     test_parse_launch_arguments_for_column_order_object();
     test_parse_launch_arguments_rejects_column_order_object_invalid_inputs();
     test_parse_launch_arguments_rejects_column_order_object_ambiguity();
+    test_parse_launch_arguments_for_highlight_style_object();
+    test_parse_launch_arguments_rejects_highlight_style_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_highlight_style_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();

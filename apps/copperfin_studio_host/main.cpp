@@ -66,6 +66,7 @@ void print_usage() {
     std::cout << "Partition object: --partition-object --partition <n> [--partition-target-object-name <name>] [--partition-target-unique-id <id>]\n";
     std::cout << "Record-source-type object: --record-source-type-object --record-source-type <n> [--record-source-type-target-object-name <name>] [--record-source-type-target-unique-id <id>]\n";
     std::cout << "Column-order object: --column-order-object --column-order <n> [--column-order-target-object-name <name>] [--column-order-target-unique-id <id>]\n";
+    std::cout << "Highlight-style object: --highlight-style-object --highlight-style <n> [--highlight-style-target-object-name <name>] [--highlight-style-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -2652,6 +2653,30 @@ int main(int argc, char** argv) {
         if (!column_order_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << column_order_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.highlight_style_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> highlight_style_objects;
+        highlight_style_objects.reserve(parse_result.request.highlight_style_objects.size());
+        for (const auto& highlight_style_object : parse_result.request.highlight_style_objects) {
+            highlight_style_objects.push_back({
+                .record_index = highlight_style_object.record_index,
+                .object_name = highlight_style_object.object_name,
+                .unique_id = highlight_style_object.unique_id
+            });
+        }
+
+        const auto highlight_style_result = copperfin::vfp::set_visual_object_highlight_style({
+            .path = parse_result.request.path,
+            .objects = highlight_style_objects,
+            .highlight_style = parse_result.request.highlight_style
+        });
+
+        if (!highlight_style_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << highlight_style_result.error << "\n";
             return 4;
         }
     }
