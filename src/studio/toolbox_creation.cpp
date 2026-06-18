@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace copperfin::studio {
@@ -44,6 +45,14 @@ namespace {
 }
 
 [[nodiscard]] StudioToolboxObjectCreateBatchPlanResult failed_batch_plan_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .plan = {}
+    };
+}
+
+[[nodiscard]] StudioToolboxObjectCreateDispatchResult failed_dispatch_result(std::string error) {
     return {
         .ok = false,
         .error = std::move(error),
@@ -164,6 +173,23 @@ namespace {
     const StudioToolboxItemDescriptor& item,
     StudioToolboxContext context) {
     return std::find(item.contexts.begin(), item.contexts.end(), context) != item.contexts.end();
+}
+
+[[nodiscard]] bool has_field_value_named(
+    const std::vector<vfp::VisualObjectPropertyChange>& field_values,
+    std::string_view property_name) {
+    const std::string normalized_property_name = normalized_identity(property_name);
+    return std::find_if(
+        field_values.begin(),
+        field_values.end(),
+        [&](const vfp::VisualObjectPropertyChange& field_value) {
+            return normalized_identity(field_value.property_name) == normalized_property_name;
+        }) != field_values.end();
+}
+
+void append_argument(std::vector<std::string>& arguments, std::string key, std::string value) {
+    arguments.push_back(std::move(key));
+    arguments.push_back(std::move(value));
 }
 
 [[nodiscard]] StudioToolboxObjectCreatePlanResult build_plan_from_toolbox_item(
@@ -325,6 +351,70 @@ StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
             .plans = std::move(plans),
             .dry_run = true,
             .mutates_asset = false
+        }
+    };
+}
+
+StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
+    const StudioToolboxObjectCreateDispatchRequest& request) {
+    const auto& create_plan = request.create_plan;
+    if (create_plan.toolbox_item.id.empty() ||
+        create_plan.toolbox_item.vfp_class.empty() ||
+        create_plan.toolbox_item.base_class.empty()) {
+        return failed_dispatch_result("A toolbox create dispatch request requires validated toolbox item metadata.");
+    }
+    if (create_plan.path.empty()) {
+        return failed_dispatch_result("A toolbox create dispatch request requires an asset path.");
+    }
+    if (trimmed_copy(create_plan.object_name).empty()) {
+        return failed_dispatch_result("A toolbox create dispatch request requires a planned object name.");
+    }
+    if (create_plan.field_values.empty() ||
+        !has_field_value_named(create_plan.field_values, "OBJNAME") ||
+        !has_field_value_named(create_plan.field_values, "NAME") ||
+        !has_field_value_named(create_plan.field_values, "CLASS") ||
+        !has_field_value_named(create_plan.field_values, "BASECLASS")) {
+        return failed_dispatch_result("A toolbox create dispatch request requires descriptor field values.");
+    }
+    if (!request.admit_create_operation) {
+        return failed_dispatch_result("A toolbox create dispatch request requires an admitted non-dry-run create operation.");
+    }
+
+    std::vector<std::string> arguments;
+    append_argument(arguments, "--path", create_plan.path);
+    append_argument(arguments, "--toolbox-create", std::string(create_plan.toolbox_item.id));
+    if (create_plan.toolbox_context_provided) {
+        append_argument(arguments, "--toolbox-context", studio_toolbox_context_name(create_plan.toolbox_context));
+    }
+    append_argument(arguments, "--object-name", create_plan.object_name);
+    if (!create_plan.unique_id.empty()) {
+        append_argument(arguments, "--unique-id", create_plan.unique_id);
+    }
+    if (!create_plan.parent_name.empty()) {
+        append_argument(arguments, "--parent-name", create_plan.parent_name);
+    }
+    for (const auto& field_value : create_plan.field_values) {
+        append_argument(arguments, "--field-value", field_value.property_name + "=" + field_value.property_value);
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .plan = {
+            .path = create_plan.path,
+            .toolbox_item = create_plan.toolbox_item,
+            .toolbox_context_provided = create_plan.toolbox_context_provided,
+            .toolbox_context = create_plan.toolbox_context,
+            .target_record_index = create_plan.target_record_index,
+            .object_name = create_plan.object_name,
+            .unique_id = create_plan.unique_id,
+            .parent_name = create_plan.parent_name,
+            .field_values = create_plan.field_values,
+            .dispatch_arguments = std::move(arguments),
+            .dispatch_admitted = true,
+            .dry_run = false,
+            .executed = false,
+            .mutates_asset = true
         }
     };
 }

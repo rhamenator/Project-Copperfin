@@ -44,6 +44,15 @@ bool has_field_value(
     return false;
 }
 
+bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
+    for (std::size_t index = 0U; (index + 1U) < arguments.size(); index += 2U) {
+        if (arguments[index] == key && arguments[index + 1U] == value) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const copperfin::studio::StudioToolboxObjectCreatePlanCatalogEntry* find_create_plan_entry(
     const std::vector<copperfin::studio::StudioToolboxObjectCreatePlanCatalogEntry>& entries,
     std::string_view id) {
@@ -650,6 +659,135 @@ void test_toolbox_creation_batch_create_rejects_invalid_batches_without_partial_
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_dispatch_plans_host_arguments_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_dispatch_plan_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto create_plan = copperfin::studio::plan_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "dispatch-textbox-guid",
+        .parent_name = "frmMain",
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Dispatch Planned"}
+        }
+    });
+    expect(create_plan.ok,
+        "#1249: toolbox create dispatch fixture should produce a valid create plan");
+
+    const auto dispatch = copperfin::studio::plan_visual_object_create_dispatch({
+        .create_plan = create_plan.plan,
+        .admit_create_operation = true
+    });
+
+    expect(dispatch.ok &&
+            dispatch.plan.path == table_path.string() &&
+            std::string(dispatch.plan.toolbox_item.id) == "textbox" &&
+            dispatch.plan.toolbox_context_provided &&
+            dispatch.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            dispatch.plan.target_record_index == before_count &&
+            dispatch.plan.object_name == "txt2" &&
+            dispatch.plan.unique_id == "dispatch-textbox-guid" &&
+            dispatch.plan.parent_name == "frmMain" &&
+            dispatch.plan.dispatch_admitted &&
+            !dispatch.plan.dry_run &&
+            !dispatch.plan.executed &&
+            dispatch.plan.mutates_asset,
+        "#1249: toolbox create dispatch planning should preserve planned metadata and mutation intent");
+    expect(has_argument_pair(dispatch.plan.dispatch_arguments, "--path", table_path.string()) &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--toolbox-create", "textbox") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--toolbox-context", "form") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--object-name", "txt2") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--unique-id", "dispatch-textbox-guid") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--parent-name", "frmMain") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--field-value", "OBJNAME=txt2") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--field-value", "CLASS=TextBox") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--field-value", "CAPTION=Dispatch Planned"),
+        "#1249: toolbox create dispatch planning should materialize deterministic host arguments");
+    expect(object_count(table_path) == before_count,
+        "#1249: toolbox create dispatch planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_dispatch_rejects_invalid_plans_without_stale_arguments() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_dispatch_plan_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto create_plan = copperfin::studio::plan_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "dispatch-reject-guid",
+        .parent_name = "frmMain",
+        .field_values = {}
+    });
+    expect(create_plan.ok,
+        "#1249: toolbox create dispatch rejection fixture should produce a valid create plan");
+
+    auto dispatch = copperfin::studio::plan_visual_object_create_dispatch({
+        .create_plan = create_plan.plan,
+        .admit_create_operation = false
+    });
+    expect(!dispatch.ok &&
+            dispatch.error == "A toolbox create dispatch request requires an admitted non-dry-run create operation." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1249: toolbox create dispatch planning should reject non-admitted create operations");
+
+    dispatch = copperfin::studio::plan_visual_object_create_dispatch({
+        .create_plan = {},
+        .admit_create_operation = true
+    });
+    expect(!dispatch.ok &&
+            dispatch.error == "A toolbox create dispatch request requires validated toolbox item metadata." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1249: toolbox create dispatch planning should reject missing toolbox metadata");
+
+    auto missing_path_plan = create_plan.plan;
+    missing_path_plan.path.clear();
+    dispatch = copperfin::studio::plan_visual_object_create_dispatch({
+        .create_plan = missing_path_plan,
+        .admit_create_operation = true
+    });
+    expect(!dispatch.ok &&
+            dispatch.error == "A toolbox create dispatch request requires an asset path." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1249: toolbox create dispatch planning should reject missing asset paths");
+
+    auto missing_descriptor_fields_plan = create_plan.plan;
+    missing_descriptor_fields_plan.field_values.clear();
+    dispatch = copperfin::studio::plan_visual_object_create_dispatch({
+        .create_plan = missing_descriptor_fields_plan,
+        .admit_create_operation = true
+    });
+    expect(!dispatch.ok &&
+            dispatch.error == "A toolbox create dispatch request requires descriptor field values." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1249: toolbox create dispatch planning should reject incomplete descriptor field values");
+
+    expect(object_count(table_path) == before_count,
+        "#1249: rejected toolbox create dispatch plans should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_maps_descriptors_and_defaults() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -849,6 +987,8 @@ int main() {
     test_toolbox_creation_batch_planner_rejects_invalid_batches_without_mutation();
     test_toolbox_creation_batch_create_maps_descriptors_and_metadata();
     test_toolbox_creation_batch_create_rejects_invalid_batches_without_partial_mutation();
+    test_toolbox_creation_dispatch_plans_host_arguments_without_mutation();
+    test_toolbox_creation_dispatch_rejects_invalid_plans_without_stale_arguments();
     test_toolbox_creation_maps_descriptors_and_defaults();
     test_toolbox_creation_respects_explicit_object_name();
     test_toolbox_creation_rejects_unknown_toolbox_without_mutation();
