@@ -415,6 +415,10 @@ void test_parse_launch_arguments() {
         "#1147: launch contract should keep desktop-object off by default");
     expect(!result.request.desktop_available,
         "#1147: launch contract should keep desktop unavailable by default");
+    expect(!result.request.key_preview_object,
+        "#1148: launch contract should keep key-preview-object off by default");
+    expect(!result.request.key_preview_available,
+        "#1148: launch contract should keep key preview unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9422,6 +9426,92 @@ void test_parse_launch_arguments_rejects_desktop_object_ambiguity() {
         "#1147: launch contract should reject stray desktop arguments");
 }
 
+void test_parse_launch_arguments_for_key_preview_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--key-preview-object",
+        "--key-preview", "false",
+        "--key-preview-target-object-name", "frmCustomer",
+        "--key-preview-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1148: launch contract should parse key-preview-object requests");
+    expect(result.request.key_preview_object,
+        "#1148: launch contract should detect --key-preview-object");
+    expect(result.request.key_preview_available && !result.request.key_preview,
+        "#1148: key-preview-object requests should carry key preview state");
+    expect(result.request.key_preview_objects.size() == 2U,
+        "#1148: key-preview-object requests should collect key-preview target selectors");
+    if (result.request.key_preview_objects.size() == 2U) {
+        expect(result.request.key_preview_objects[0].object_name == "frmCustomer" &&
+                result.request.key_preview_objects[0].unique_id.empty(),
+            "#1148: key-preview-object requests should parse target object-name selectors");
+        expect(result.request.key_preview_objects[1].object_name.empty() &&
+                result.request.key_preview_objects[1].unique_id == "two-guid",
+            "#1148: key-preview-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_key_preview_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--key-preview-object",
+        "--key-preview-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1148: launch contract should reject key-preview-object requests without key preview state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--key-preview-object",
+        "--key-preview", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1148: launch contract should reject key-preview-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--key-preview-object",
+        "--key-preview", "sometimes",
+        "--key-preview-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1148: launch contract should reject invalid key-preview boolean values");
+}
+
+void test_parse_launch_arguments_rejects_key_preview_object_ambiguity() {
+    const auto key_preview_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--key-preview-object",
+        "--allow-output-object",
+        "--key-preview", "false",
+        "--key-preview-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!key_preview_allow_output_result.ok,
+        "#1148: launch contract should reject simultaneous key-preview-object and allow-output-object requests");
+
+    const auto key_preview_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--key-preview-object",
+        "--clear-property",
+        "--property-name", "KeyPreview",
+        "--key-preview", "false",
+        "--key-preview-target-unique-id", "one-guid"
+    });
+    expect(!key_preview_property_result.ok,
+        "#1148: launch contract should reject key-preview-object combined with property commands");
+
+    const auto stray_key_preview_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--key-preview", "false"
+    });
+    expect(!stray_key_preview_result.ok,
+        "#1148: launch contract should reject stray key-preview arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -12751,6 +12841,9 @@ int main() {
     test_parse_launch_arguments_for_desktop_object();
     test_parse_launch_arguments_rejects_desktop_object_invalid_inputs();
     test_parse_launch_arguments_rejects_desktop_object_ambiguity();
+    test_parse_launch_arguments_for_key_preview_object();
+    test_parse_launch_arguments_rejects_key_preview_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_key_preview_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();

@@ -48,6 +48,7 @@ void print_usage() {
     std::cout << "Bind-controls object: --bind-controls-object --bind-controls <true|false> [--bind-controls-target-object-name <name>] [--bind-controls-target-unique-id <id>]\n";
     std::cout << "Auto-verb-menu object: --auto-verb-menu-object --auto-verb-menu <true|false> [--auto-verb-menu-target-object-name <name>] [--auto-verb-menu-target-unique-id <id>]\n";
     std::cout << "Desktop object: --desktop-object --desktop <true|false> [--desktop-target-object-name <name>] [--desktop-target-unique-id <id>]\n";
+    std::cout << "Key-preview object: --key-preview-object --key-preview <true|false> [--key-preview-target-object-name <name>] [--key-preview-target-unique-id <id>]\n";
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
@@ -3868,6 +3869,30 @@ int main(int argc, char** argv) {
         if (!desktop_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << desktop_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.key_preview_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> key_preview_objects;
+        key_preview_objects.reserve(parse_result.request.key_preview_objects.size());
+        for (const auto& key_preview_object : parse_result.request.key_preview_objects) {
+            key_preview_objects.push_back({
+                .record_index = key_preview_object.record_index,
+                .object_name = key_preview_object.object_name,
+                .unique_id = key_preview_object.unique_id
+            });
+        }
+
+        const auto key_preview_result = copperfin::vfp::set_visual_object_key_preview({
+            .path = parse_result.request.path,
+            .objects = key_preview_objects,
+            .key_preview = parse_result.request.key_preview
+        });
+
+        if (!key_preview_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << key_preview_result.error << "\n";
             return 4;
         }
     }
