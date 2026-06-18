@@ -427,6 +427,10 @@ void test_parse_launch_arguments() {
         "#1150: launch contract should keep max-button-object off by default");
     expect(!result.request.max_button_available,
         "#1150: launch contract should keep max button unavailable by default");
+    expect(!result.request.max_height_object,
+        "#1151: launch contract should keep max-height-object off by default");
+    expect(!result.request.max_height_available,
+        "#1151: launch contract should keep max height unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9692,6 +9696,101 @@ void test_parse_launch_arguments_rejects_max_button_object_ambiguity() {
         "#1150: launch contract should reject stray max-button arguments");
 }
 
+void test_parse_launch_arguments_for_max_height_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--max-height-object",
+        "--max-height", "640",
+        "--max-height-target-object-name", "frmCustomer",
+        "--max-height-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1151: launch contract should parse max-height-object requests");
+    expect(result.request.max_height_object,
+        "#1151: launch contract should detect --max-height-object");
+    expect(result.request.max_height_available && result.request.max_height == 640,
+        "#1151: max-height-object requests should carry max height value");
+    expect(result.request.max_height_objects.size() == 2U,
+        "#1151: max-height-object requests should collect max-height target selectors");
+    if (result.request.max_height_objects.size() == 2U) {
+        expect(result.request.max_height_objects[0].object_name == "frmCustomer" &&
+                result.request.max_height_objects[0].unique_id.empty(),
+            "#1151: max-height-object requests should parse target object-name selectors");
+        expect(result.request.max_height_objects[1].object_name.empty() &&
+                result.request.max_height_objects[1].unique_id == "two-guid",
+            "#1151: max-height-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_max_height_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-height-object",
+        "--max-height-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1151: launch contract should reject max-height-object requests without max height value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-height-object",
+        "--max-height", "640"
+    });
+    expect(!missing_targets_result.ok,
+        "#1151: launch contract should reject max-height-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-height-object",
+        "--max-height", "tall",
+        "--max-height-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1151: launch contract should reject non-integer max-height values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-height-object",
+        "--max-height", "-1",
+        "--max-height-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1151: launch contract should reject negative max-height values");
+}
+
+void test_parse_launch_arguments_rejects_max_height_object_ambiguity() {
+    const auto max_height_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-height-object",
+        "--allow-output-object",
+        "--max-height", "640",
+        "--max-height-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!max_height_allow_output_result.ok,
+        "#1151: launch contract should reject simultaneous max-height-object and allow-output-object requests");
+
+    const auto max_height_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-height-object",
+        "--clear-property",
+        "--property-name", "MaxHeight",
+        "--max-height", "640",
+        "--max-height-target-unique-id", "one-guid"
+    });
+    expect(!max_height_property_result.ok,
+        "#1151: launch contract should reject max-height-object combined with property commands");
+
+    const auto stray_max_height_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-height", "640"
+    });
+    expect(!stray_max_height_result.ok,
+        "#1151: launch contract should reject stray max-height arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13030,6 +13129,9 @@ int main() {
     test_parse_launch_arguments_for_max_button_object();
     test_parse_launch_arguments_rejects_max_button_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_button_object_ambiguity();
+    test_parse_launch_arguments_for_max_height_object();
+    test_parse_launch_arguments_rejects_max_height_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_max_height_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();

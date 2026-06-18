@@ -1096,6 +1096,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-height-object") {
+            result.request.max_height_object = true;
+            continue;
+        }
+
         if (argument == "--auto-center-object") {
             result.request.auto_center_object = true;
             continue;
@@ -2578,6 +2583,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.max_button = *max_button;
             result.request.max_button_available = true;
+            continue;
+        }
+
+        if (argument == "--max-height") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-height."};
+            }
+            int max_height = 0;
+            if (!parse_int_value(args[++index], max_height)) {
+                return {.ok = false, .error = "The --max-height value must be an integer."};
+            }
+            if (max_height < 0) {
+                return {.ok = false, .error = "The --max-height value must not be negative."};
+            }
+            result.request.max_height = max_height;
+            result.request.max_height_available = true;
             continue;
         }
 
@@ -5175,6 +5196,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-height-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-height-target-object-name."};
+            }
+            result.request.max_height_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--max-height-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-height-target-unique-id."};
+            }
+            result.request.max_height_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -6843,6 +6888,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.max_button_objects.empty())) {
         return {.ok = false, .error = "Max-button arguments can only be used with --max-button-object."};
     }
+    if (result.request.max_height_object && !result.request.max_height_available) {
+        return {.ok = false, .error = "An object max-height assignment requires --max-height."};
+    }
+    if (result.request.max_height_object && result.request.max_height_objects.empty()) {
+        return {.ok = false, .error = "An object max-height assignment requires at least one target selector."};
+    }
+    if (!result.request.max_height_object &&
+        (result.request.max_height_available ||
+         !result.request.max_height_objects.empty())) {
+        return {.ok = false, .error = "Max-height arguments can only be used with --max-height-object."};
+    }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
         return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
     }
@@ -7187,6 +7243,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.key_preview_object ? 1 : 0) +
         (result.request.mac_desktop_object ? 1 : 0) +
         (result.request.max_button_object ? 1 : 0) +
+        (result.request.max_height_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +
