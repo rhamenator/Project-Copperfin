@@ -53,6 +53,7 @@ void print_usage() {
     std::cout << "Max-button object: --max-button-object --max-button <true|false> [--max-button-target-object-name <name>] [--max-button-target-unique-id <id>]\n";
     std::cout << "Min-button object: --min-button-object --min-button <true|false> [--min-button-target-object-name <name>] [--min-button-target-unique-id <id>]\n";
     std::cout << "Min-height object: --min-height-object --min-height <n> [--min-height-target-object-name <name>] [--min-height-target-unique-id <id>]\n";
+    std::cout << "Min-width object: --min-width-object --min-width <n> [--min-width-target-object-name <name>] [--min-width-target-unique-id <id>]\n";
     std::cout << "Max-height object: --max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
@@ -3997,6 +3998,30 @@ int main(int argc, char** argv) {
         if (!min_height_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << min_height_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.min_width_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> min_width_objects;
+        min_width_objects.reserve(parse_result.request.min_width_objects.size());
+        for (const auto& min_width_object : parse_result.request.min_width_objects) {
+            min_width_objects.push_back({
+                .record_index = min_width_object.record_index,
+                .object_name = min_width_object.object_name,
+                .unique_id = min_width_object.unique_id
+            });
+        }
+
+        const auto min_width_result = copperfin::vfp::set_visual_object_min_width({
+            .path = parse_result.request.path,
+            .objects = min_width_objects,
+            .min_width = parse_result.request.min_width
+        });
+
+        if (!min_width_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << min_width_result.error << "\n";
             return 4;
         }
     }

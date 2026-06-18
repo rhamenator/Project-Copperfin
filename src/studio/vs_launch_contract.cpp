@@ -1106,6 +1106,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--min-width-object") {
+            result.request.min_width_object = true;
+            continue;
+        }
+
         if (argument == "--max-height-object") {
             result.request.max_height_object = true;
             continue;
@@ -2637,6 +2642,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.min_height = min_height;
             result.request.min_height_available = true;
+            continue;
+        }
+
+        if (argument == "--min-width") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --min-width."};
+            }
+            int min_width = 0;
+            if (!parse_int_value(args[++index], min_width)) {
+                return {.ok = false, .error = "The --min-width value must be an integer."};
+            }
+            if (min_width < 0) {
+                return {.ok = false, .error = "The --min-width value must not be negative."};
+            }
+            result.request.min_width = min_width;
+            result.request.min_width_available = true;
             continue;
         }
 
@@ -5346,6 +5367,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--min-width-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --min-width-target-object-name."};
+            }
+            result.request.min_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--min-width-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --min-width-target-unique-id."};
+            }
+            result.request.min_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-height-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-height-target-object-name."};
@@ -7132,6 +7177,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.min_height_objects.empty())) {
         return {.ok = false, .error = "Min-height arguments can only be used with --min-height-object."};
     }
+    if (result.request.min_width_object && !result.request.min_width_available) {
+        return {.ok = false, .error = "An object min-width assignment requires --min-width."};
+    }
+    if (result.request.min_width_object && result.request.min_width_objects.empty()) {
+        return {.ok = false, .error = "An object min-width assignment requires at least one target selector."};
+    }
+    if (!result.request.min_width_object &&
+        (result.request.min_width_available ||
+         !result.request.min_width_objects.empty())) {
+        return {.ok = false, .error = "Min-width arguments can only be used with --min-width-object."};
+    }
     if (result.request.max_height_object && !result.request.max_height_available) {
         return {.ok = false, .error = "An object max-height assignment requires --max-height."};
     }
@@ -7522,6 +7578,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.max_button_object ? 1 : 0) +
         (result.request.min_button_object ? 1 : 0) +
         (result.request.min_height_object ? 1 : 0) +
+        (result.request.min_width_object ? 1 : 0) +
         (result.request.max_height_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +

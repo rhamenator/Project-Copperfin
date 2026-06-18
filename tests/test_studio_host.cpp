@@ -435,6 +435,10 @@ void test_parse_launch_arguments() {
         "#1156: launch contract should keep min-height-object off by default");
     expect(!result.request.min_height_available,
         "#1156: launch contract should keep min height unavailable by default");
+    expect(!result.request.min_width_object,
+        "#1157: launch contract should keep min-width-object off by default");
+    expect(!result.request.min_width_available,
+        "#1157: launch contract should keep min width unavailable by default");
     expect(!result.request.max_height_object,
         "#1151: launch contract should keep max-height-object off by default");
     expect(!result.request.max_height_available,
@@ -9897,6 +9901,101 @@ void test_parse_launch_arguments_rejects_min_height_object_ambiguity() {
         "#1156: launch contract should reject stray min-height arguments");
 }
 
+void test_parse_launch_arguments_for_min_width_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--min-width-object",
+        "--min-width", "640",
+        "--min-width-target-object-name", "frmCustomer",
+        "--min-width-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1157: launch contract should parse min-width-object requests");
+    expect(result.request.min_width_object,
+        "#1157: launch contract should detect --min-width-object");
+    expect(result.request.min_width_available && result.request.min_width == 640,
+        "#1157: min-width-object requests should carry min width value");
+    expect(result.request.min_width_objects.size() == 2U,
+        "#1157: min-width-object requests should collect min-width target selectors");
+    if (result.request.min_width_objects.size() == 2U) {
+        expect(result.request.min_width_objects[0].object_name == "frmCustomer" &&
+                result.request.min_width_objects[0].unique_id.empty(),
+            "#1157: min-width-object requests should parse target object-name selectors");
+        expect(result.request.min_width_objects[1].object_name.empty() &&
+                result.request.min_width_objects[1].unique_id == "two-guid",
+            "#1157: min-width-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_min_width_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-width-object",
+        "--min-width-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1157: launch contract should reject min-width-object requests without min width value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-width-object",
+        "--min-width", "640"
+    });
+    expect(!missing_targets_result.ok,
+        "#1157: launch contract should reject min-width-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-width-object",
+        "--min-width", "wide",
+        "--min-width-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1157: launch contract should reject non-integer min-width values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-width-object",
+        "--min-width", "-1",
+        "--min-width-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1157: launch contract should reject negative min-width values");
+}
+
+void test_parse_launch_arguments_rejects_min_width_object_ambiguity() {
+    const auto min_width_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-width-object",
+        "--allow-output-object",
+        "--min-width", "640",
+        "--min-width-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!min_width_allow_output_result.ok,
+        "#1157: launch contract should reject simultaneous min-width-object and allow-output-object requests");
+
+    const auto min_width_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-width-object",
+        "--clear-property",
+        "--property-name", "MinWidth",
+        "--min-width", "640",
+        "--min-width-target-unique-id", "one-guid"
+    });
+    expect(!min_width_property_result.ok,
+        "#1157: launch contract should reject min-width-object combined with property commands");
+
+    const auto stray_min_width_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--min-width", "640"
+    });
+    expect(!stray_min_width_result.ok,
+        "#1157: launch contract should reject stray min-width arguments");
+}
+
 void test_parse_launch_arguments_for_max_height_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13621,6 +13720,9 @@ int main() {
     test_parse_launch_arguments_for_min_height_object();
     test_parse_launch_arguments_rejects_min_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_min_height_object_ambiguity();
+    test_parse_launch_arguments_for_min_width_object();
+    test_parse_launch_arguments_rejects_min_width_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_min_width_object_ambiguity();
     test_parse_launch_arguments_for_max_height_object();
     test_parse_launch_arguments_rejects_max_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_height_object_ambiguity();
