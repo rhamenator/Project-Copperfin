@@ -148,6 +148,17 @@ const copperfin::studio::StudioDesignerInvocationAdmissionCatalogEntry* find_inv
     return nullptr;
 }
 
+const copperfin::studio::StudioDesignerDispatchCatalogEntry* find_dispatch_catalog_entry(
+    const std::vector<copperfin::studio::StudioDesignerDispatchCatalogEntry>& entries,
+    copperfin::studio::StudioEditorSelectionContext context) {
+    for (const auto& entry : entries) {
+        if (entry.selection_context == context) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -744,6 +755,69 @@ int main() {
                    "edit-data-environment",
                    true),
            "#1223: designer invocation admission catalog should include data-environment editor admissions");
+
+    const auto dispatch_catalog = copperfin::studio::plan_studio_designer_dispatch_catalog({
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .symbol = "Click",
+        .line = 12U,
+        .column = 4U,
+        .admit_editor_invocations = true,
+        .admit_builder_invocations = false,
+        .admit_toolbox_invocation = true
+    });
+    expect(dispatch_catalog.ok && dispatch_catalog.context_count == dispatch_catalog.contexts.size(),
+           "#1239: designer dispatch catalog should include every known Studio context");
+
+    const auto* visual_dispatch_entry = find_dispatch_catalog_entry(
+        dispatch_catalog.contexts, StudioEditorSelectionContext::visual_object);
+    expect(visual_dispatch_entry != nullptr &&
+               visual_dispatch_entry->dispatch.ok &&
+               visual_dispatch_entry->editor_action_dispatch_count > 0U &&
+               visual_dispatch_entry->builder_dispatch_count > 0U &&
+               visual_dispatch_entry->toolbox_dispatch_count == 1U &&
+               visual_dispatch_entry->dispatch_count ==
+                   visual_dispatch_entry->editor_action_dispatch_count + visual_dispatch_entry->toolbox_dispatch_count &&
+               visual_dispatch_entry->error_count == visual_dispatch_entry->builder_dispatch_count &&
+               !visual_dispatch_entry->dry_run &&
+               !visual_dispatch_entry->mutates_asset &&
+               has_editor_dispatch(
+                   visual_dispatch_entry->dispatch.plan.editor_action_dispatches, "edit-visual-method", true) &&
+               visual_dispatch_entry->dispatch.plan.toolbox_dispatch.ok &&
+               visual_dispatch_entry->dispatch.plan.toolbox_dispatch.plan.dispatch_admitted,
+           "#1239: designer dispatch catalog should summarize visual dispatches and requested policies");
+
+    const auto* report_dispatch_entry = find_dispatch_catalog_entry(
+        dispatch_catalog.contexts, StudioEditorSelectionContext::report_expression);
+    expect(report_dispatch_entry != nullptr &&
+               report_dispatch_entry->dispatch.ok &&
+               report_dispatch_entry->toolbox_dispatch_count == 1U &&
+               report_dispatch_entry->dispatch.plan.toolbox_dispatch.ok &&
+               report_dispatch_entry->dispatch.plan.toolbox_dispatch.plan.toolbox_context ==
+                   copperfin::studio::StudioToolboxContext::report &&
+               has_editor_dispatch(
+                   report_dispatch_entry->dispatch.plan.editor_action_dispatches,
+                   "edit-report-expression",
+                   true),
+           "#1239: designer dispatch catalog should preserve report editor and toolbox dispatches");
+
+    const auto* menu_dispatch_entry = find_dispatch_catalog_entry(
+        dispatch_catalog.contexts, StudioEditorSelectionContext::menu_item);
+    expect(menu_dispatch_entry != nullptr &&
+               menu_dispatch_entry->dispatch.ok &&
+               menu_dispatch_entry->toolbox_dispatch_count == 0U &&
+               menu_dispatch_entry->dispatch_count == menu_dispatch_entry->editor_action_dispatch_count &&
+               menu_dispatch_entry->error_count == menu_dispatch_entry->builder_dispatch_count + 1U &&
+               !menu_dispatch_entry->dry_run &&
+               !menu_dispatch_entry->mutates_asset &&
+               !menu_dispatch_entry->dispatch.plan.toolbox_dispatch.ok &&
+               menu_dispatch_entry->dispatch.plan.toolbox_dispatch.error ==
+                   "The selected Studio context does not expose a toolbox palette." &&
+               has_editor_dispatch(
+                   menu_dispatch_entry->dispatch.plan.editor_action_dispatches, "show-property-grid", true),
+           "#1239: designer dispatch catalog should summarize menu dispatches and unsupported toolbox errors");
 
     const auto launch_surface_catalog = copperfin::studio::plan_studio_designer_launch_surface_catalog({
         .asset_path = "forms/customer.scx",
