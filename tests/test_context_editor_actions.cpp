@@ -1,4 +1,5 @@
 #include "copperfin/studio/context_editor_actions.h"
+#include "copperfin/studio/editor_action_dispatch.h"
 #include "copperfin/studio/editor_action_invocation_admission.h"
 
 #include <cstdlib>
@@ -21,6 +22,15 @@ bool has_action(
     std::string_view id) {
     for (const auto& action : actions) {
         if (action.id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
+    for (std::size_t index = 0U; (index + 1U) < arguments.size(); index += 2U) {
+        if (arguments[index] == key && arguments[index + 1U] == value) {
             return true;
         }
     }
@@ -248,6 +258,49 @@ int main() {
                !dry_run_property_invocation.plan.mutates_asset,
            "#1217: non-admitted editor action invocation plans should remain deterministic dry runs");
 
+    const auto method_dispatch = copperfin::studio::plan_studio_editor_action_dispatch({
+        .admission_plan = admitted_method_invocation.plan
+    });
+    expect(method_dispatch.ok,
+           "#1225: editor action dispatch should accept admitted method editor invocations");
+    expect(std::string(method_dispatch.plan.action.id) == "edit-visual-method" &&
+               method_dispatch.plan.action.kind == StudioEditorActionKind::source_editor &&
+               method_dispatch.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               method_dispatch.plan.command_token == "studio.method_editor.open" &&
+               method_dispatch.plan.target_surface == "method-editor" &&
+               method_dispatch.plan.asset_path == "forms/customer.scx" &&
+               method_dispatch.plan.record_index == 1U &&
+               method_dispatch.plan.object_name == "cmdSave" &&
+               method_dispatch.plan.unique_id == "button-guid" &&
+               method_dispatch.plan.symbol == "cmdSave.Click" &&
+               method_dispatch.plan.line == 42U &&
+               method_dispatch.plan.column == 7U &&
+               method_dispatch.plan.dispatch_admitted &&
+               !method_dispatch.plan.dry_run &&
+               !method_dispatch.plan.executed &&
+               !method_dispatch.plan.mutates_asset,
+           "#1225: editor action dispatch should preserve admission metadata without executing");
+    expect(has_argument_pair(method_dispatch.plan.dispatch_arguments, "--command-token", "studio.method_editor.open") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--action-id", "edit-visual-method") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--selection-context", "visual_object") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--target-surface", "method-editor") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--path", "forms/customer.scx") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--record", "1") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--object-name", "cmdSave") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--unique-id", "button-guid") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--symbol", "cmdSave.Click") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--line", "42") &&
+               has_argument_pair(method_dispatch.plan.dispatch_arguments, "--column", "7"),
+           "#1225: editor action dispatch should materialize a deterministic argument contract");
+
+    const auto dry_run_dispatch = copperfin::studio::plan_studio_editor_action_dispatch({
+        .admission_plan = dry_run_property_invocation.plan
+    });
+    expect(!dry_run_dispatch.ok &&
+               dry_run_dispatch.error ==
+                   "An editor action dispatch request requires an admitted non-dry-run invocation.",
+           "#1225: editor action dispatch should reject dry-run admission plans");
+
     auto missing_command_plan = method_plan.plan;
     missing_command_plan.command_token = {};
     const auto missing_command_invocation = copperfin::studio::plan_studio_editor_action_invocation_admission({
@@ -281,6 +334,41 @@ int main() {
                expression_plan.plan.action.kind == StudioEditorActionKind::expression_editor &&
                expression_plan.plan.target_surface == "expression-editor",
            "#1207: report-expression editor action launch plans should accept expression editor actions");
+
+    const auto expression_invocation = copperfin::studio::plan_studio_editor_action_invocation_admission({
+        .launch_plan = expression_plan.plan,
+        .admit_editor_invocation = true
+    });
+    const auto expression_dispatch = copperfin::studio::plan_studio_editor_action_dispatch({
+        .admission_plan = expression_invocation.plan
+    });
+    expect(expression_dispatch.ok &&
+               expression_dispatch.plan.action.kind == StudioEditorActionKind::expression_editor &&
+               expression_dispatch.plan.command_token == "studio.expression_editor.open" &&
+               expression_dispatch.plan.target_surface == "expression-editor" &&
+               has_argument_pair(expression_dispatch.plan.dispatch_arguments, "--selection-context", "report_expression") &&
+               has_argument_pair(expression_dispatch.plan.dispatch_arguments, "--path", "reports/orders.frx") &&
+               has_argument_pair(expression_dispatch.plan.dispatch_arguments, "--record", "2") &&
+               has_argument_pair(expression_dispatch.plan.dispatch_arguments, "--symbol", "Expr1.Expression"),
+           "#1225: editor action dispatch should support admitted expression editor invocations");
+
+    auto missing_dispatch_command_plan = admitted_method_invocation.plan;
+    missing_dispatch_command_plan.command_token = {};
+    const auto missing_dispatch_command = copperfin::studio::plan_studio_editor_action_dispatch({
+        .admission_plan = missing_dispatch_command_plan
+    });
+    expect(!missing_dispatch_command.ok &&
+               missing_dispatch_command.error == "An editor action dispatch request requires a command token.",
+           "#1225: editor action dispatch should reject admitted plans without command tokens");
+
+    auto missing_dispatch_action_plan = admitted_method_invocation.plan;
+    missing_dispatch_action_plan.action = {};
+    const auto missing_dispatch_action = copperfin::studio::plan_studio_editor_action_dispatch({
+        .admission_plan = missing_dispatch_action_plan
+    });
+    expect(!missing_dispatch_action.ok &&
+               missing_dispatch_action.error == "An editor action dispatch request requires a validated action id.",
+           "#1225: editor action dispatch should reject admitted plans without action ids");
 
     const auto data_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::data_environment,
