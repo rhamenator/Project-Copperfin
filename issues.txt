@@ -1,3 +1,4 @@
+1129	OPEN	E2/#23 slice: Expose host record-source-type-object command		2026-06-18T04:04:30Z
 1128	OPEN	E2/#23 slice: Expose host partition-object command		2026-06-18T03:57:26Z
 1127	OPEN	E2/#23 slice: Expose host highlight-row-line-width-object command		2026-06-18T03:50:09Z
 1126	OPEN	E2/#23 slice: Expose host grid-lines-object command		2026-06-18T03:44:13Z

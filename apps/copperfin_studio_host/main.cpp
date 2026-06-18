@@ -64,6 +64,7 @@ void print_usage() {
     std::cout << "Grid-lines object: --grid-lines-object --grid-lines <n> [--grid-lines-target-object-name <name>] [--grid-lines-target-unique-id <id>]\n";
     std::cout << "Highlight-row-line-width object: --highlight-row-line-width-object --highlight-row-line-width <n> [--highlight-row-line-width-target-object-name <name>] [--highlight-row-line-width-target-unique-id <id>]\n";
     std::cout << "Partition object: --partition-object --partition <n> [--partition-target-object-name <name>] [--partition-target-unique-id <id>]\n";
+    std::cout << "Record-source-type object: --record-source-type-object --record-source-type <n> [--record-source-type-target-object-name <name>] [--record-source-type-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2601,6 +2602,30 @@ int main(int argc, char** argv) {
         if (!partition_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << partition_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.record_source_type_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> record_source_type_objects;
+        record_source_type_objects.reserve(parse_result.request.record_source_type_objects.size());
+        for (const auto& record_source_type_object : parse_result.request.record_source_type_objects) {
+            record_source_type_objects.push_back({
+                .record_index = record_source_type_object.record_index,
+                .object_name = record_source_type_object.object_name,
+                .unique_id = record_source_type_object.unique_id
+            });
+        }
+
+        const auto record_source_type_result = copperfin::vfp::set_visual_object_record_source_type({
+            .path = parse_result.request.path,
+            .objects = record_source_type_objects,
+            .record_source_type = parse_result.request.record_source_type
+        });
+
+        if (!record_source_type_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << record_source_type_result.error << "\n";
             return 4;
         }
     }

@@ -638,6 +638,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--record-source-type-object") {
+            result.request.record_source_type_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1573,6 +1578,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.partition = partition;
             result.request.partition_available = true;
+            continue;
+        }
+
+        if (argument == "--record-source-type") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --record-source-type."};
+            }
+            int record_source_type = 0;
+            if (!parse_int_value(args[++index], record_source_type)) {
+                return {.ok = false, .error = "The --record-source-type value must be an integer."};
+            }
+            if (record_source_type < 0) {
+                return {.ok = false, .error = "The --record-source-type value must be non-negative."};
+            }
+            result.request.record_source_type = record_source_type;
+            result.request.record_source_type_available = true;
             continue;
         }
 
@@ -3114,6 +3135,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --partition-target-unique-id."};
             }
             result.request.partition_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--record-source-type-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --record-source-type-target-object-name."};
+            }
+            result.request.record_source_type_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--record-source-type-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --record-source-type-target-unique-id."};
+            }
+            result.request.record_source_type_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -5012,6 +5057,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.partition_objects.empty())) {
         return {.ok = false, .error = "Partition arguments can only be used with --partition-object."};
     }
+    if (result.request.record_source_type_object && !result.request.record_source_type_available) {
+        return {.ok = false, .error = "An object record-source-type assignment requires --record-source-type."};
+    }
+    if (result.request.record_source_type_object && result.request.record_source_type_objects.empty()) {
+        return {.ok = false, .error = "An object record-source-type assignment requires at least one target selector."};
+    }
+    if (!result.request.record_source_type_object &&
+        (result.request.record_source_type_available ||
+         !result.request.record_source_type_objects.empty())) {
+        return {.ok = false, .error = "RecordSourceType arguments can only be used with --record-source-type-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5756,6 +5812,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.grid_lines_object ? 1 : 0) +
         (result.request.highlight_row_line_width_object ? 1 : 0) +
         (result.request.partition_object ? 1 : 0) +
+        (result.request.record_source_type_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
