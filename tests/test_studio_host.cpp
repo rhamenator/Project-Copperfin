@@ -161,6 +161,10 @@ void test_parse_launch_arguments() {
         "#1107: launch contract should keep OLE drop-effects-object off by default");
     expect(!result.request.ole_drop_effects_available,
         "#1107: launch contract should keep OLE drop-effects unavailable by default");
+    expect(!result.request.ole_drop_text_insertion_object,
+        "#1108: launch contract should keep OLE drop text-insertion-object off by default");
+    expect(!result.request.ole_drop_text_insertion_available,
+        "#1108: launch contract should keep OLE drop text-insertion unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2765,6 +2769,102 @@ void test_parse_launch_arguments_rejects_ole_drop_effects_object_ambiguity() {
     });
     expect(!stray_ole_drop_effects_result.ok,
         "#1107: launch contract should reject stray OLE drop-effects arguments");
+}
+
+void test_parse_launch_arguments_for_ole_drop_text_insertion_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--ole-drop-text-insertion-object",
+        "--ole-drop-text-insertion", "3",
+        "--ole-drop-text-insertion-target-object-name", "cmdSave",
+        "--ole-drop-text-insertion-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1108: launch contract should parse OLE drop text-insertion-object requests");
+    expect(result.request.ole_drop_text_insertion_object,
+        "#1108: launch contract should detect --ole-drop-text-insertion-object");
+    expect(result.request.ole_drop_text_insertion_available &&
+            result.request.ole_drop_text_insertion == 3,
+        "#1108: OLE drop text-insertion-object requests should carry OLE drop text-insertion value");
+    expect(result.request.ole_drop_text_insertion_objects.size() == 2U,
+        "#1108: OLE drop text-insertion-object requests should collect OLE drop text-insertion target selectors");
+    if (result.request.ole_drop_text_insertion_objects.size() == 2U) {
+        expect(result.request.ole_drop_text_insertion_objects[0].object_name == "cmdSave" &&
+                result.request.ole_drop_text_insertion_objects[0].unique_id.empty(),
+            "#1108: OLE drop text-insertion-object requests should parse target object-name selectors");
+        expect(result.request.ole_drop_text_insertion_objects[1].object_name.empty() &&
+                result.request.ole_drop_text_insertion_objects[1].unique_id == "two-guid",
+            "#1108: OLE drop text-insertion-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_ole_drop_text_insertion_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-text-insertion-object",
+        "--ole-drop-text-insertion-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1108: launch contract should reject OLE drop text-insertion-object requests without OLE drop text-insertion value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-text-insertion-object",
+        "--ole-drop-text-insertion", "manual",
+        "--ole-drop-text-insertion-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1108: launch contract should reject non-integer OLE drop text-insertion values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-text-insertion-object",
+        "--ole-drop-text-insertion", "-1",
+        "--ole-drop-text-insertion-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1108: launch contract should reject negative OLE drop text-insertion values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-text-insertion-object",
+        "--ole-drop-text-insertion", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1108: launch contract should reject OLE drop text-insertion-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_ole_drop_text_insertion_object_ambiguity() {
+    const auto ole_drop_text_insertion_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-text-insertion-object",
+        "--locked-object",
+        "--ole-drop-text-insertion", "2",
+        "--ole-drop-text-insertion-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!ole_drop_text_insertion_locked_result.ok,
+        "#1108: launch contract should reject simultaneous OLE drop text-insertion-object and locked-object requests");
+
+    const auto ole_drop_text_insertion_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-text-insertion-object",
+        "--clear-property",
+        "--property-name", "OLEDropTextInsertion",
+        "--ole-drop-text-insertion", "2",
+        "--ole-drop-text-insertion-target-unique-id", "one-guid"
+    });
+    expect(!ole_drop_text_insertion_property_result.ok,
+        "#1108: launch contract should reject OLE drop text-insertion-object combined with property commands");
+
+    const auto stray_ole_drop_text_insertion_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-text-insertion", "2"
+    });
+    expect(!stray_ole_drop_text_insertion_result.ok,
+        "#1108: launch contract should reject stray OLE drop text-insertion arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -8711,6 +8811,9 @@ int main() {
     test_parse_launch_arguments_for_ole_drop_effects_object();
     test_parse_launch_arguments_rejects_ole_drop_effects_object_invalid_inputs();
     test_parse_launch_arguments_rejects_ole_drop_effects_object_ambiguity();
+    test_parse_launch_arguments_for_ole_drop_text_insertion_object();
+    test_parse_launch_arguments_rejects_ole_drop_text_insertion_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_ole_drop_text_insertion_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
