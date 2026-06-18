@@ -2068,6 +2068,24 @@ void write_synthetic_form_table_for_object_key_preview(const std::filesystem::pa
     expect(create_result.ok, "#1148: synthetic SCX table for object key preview should be created");
 }
 
+void write_synthetic_form_table_for_object_mac_desktop(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "MACDESKTOP", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1149: synthetic SCX table for object mac desktop should be created");
+}
+
 void write_synthetic_form_table_for_object_auto_size(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -16883,6 +16901,129 @@ void test_studio_host_json_assigns_key_preview_by_stable_selectors(const std::st
     }
 }
 
+void test_studio_host_json_assigns_mac_desktop_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_mac_desktop_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mac_desktop_path = temp_root / "mac_desktop.scx";
+    write_synthetic_form_table_for_object_mac_desktop(mac_desktop_path);
+    const auto mac_desktop_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", mac_desktop_path.string(),
+            "--mac-desktop-object",
+            "--mac-desktop", "false",
+            "--mac-desktop-target-object-name", "frmCustomer",
+            "--mac-desktop-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(mac_desktop_process.exit_code == 0,
+        "#1149: host object mac-desktop assignment should exit successfully");
+    expect(visual_object_property(mac_desktop_path, "one-guid", "MACDESKTOP") == "false" &&
+            visual_object_property(mac_desktop_path, "two-guid", "MACDESKTOP") == "false" &&
+            visual_object_property(mac_desktop_path, "three-guid", "MACDESKTOP") == "false" &&
+            visual_object_property(mac_desktop_path, "other-guid", "MACDESKTOP") == "true",
+        "#1149: host object mac-desktop assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_mac_desktop(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--mac-desktop-object",
+            "--mac-desktop", "false",
+            "--mac-desktop-target-unique-id", "one-guid",
+            "--mac-desktop-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1149: missing-target host object mac-desktop assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "MACDESKTOP") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "MACDESKTOP") == "true",
+        "#1149: missing-target host object mac-desktop assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_mac_desktop(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--mac-desktop-object",
+            "--mac-desktop", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1149: mac-desktop-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "MACDESKTOP") == "true",
+        "#1149: mac-desktop-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_mac_desktop(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--mac-desktop-object",
+            "--mac-desktop-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1149: mac-desktop-object without mac-desktop value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "MACDESKTOP") == "true",
+        "#1149: mac-desktop-object without mac-desktop value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_mac_desktop(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--mac-desktop-object",
+            "--mac-desktop", "false",
+            "--mac-desktop-target-unique-id", "one-guid",
+            "--mac-desktop-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1149: duplicate-target host object mac-desktop assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "MACDESKTOP") == "true",
+        "#1149: duplicate-target host object mac-desktop assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_mac_desktop(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--mac-desktop-object",
+            "--allow-output-object",
+            "--mac-desktop", "false",
+            "--mac-desktop-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1149: mac-desktop-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "MACDESKTOP") == "true",
+        "#1149: mac-desktop-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_auto_center_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -19823,6 +19964,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_auto_verb_menu_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_desktop_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_key_preview_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_mac_desktop_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_center_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_size_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_release_by_stable_selectors(argv[1]);

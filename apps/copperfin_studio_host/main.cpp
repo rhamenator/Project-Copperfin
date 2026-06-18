@@ -49,6 +49,7 @@ void print_usage() {
     std::cout << "Auto-verb-menu object: --auto-verb-menu-object --auto-verb-menu <true|false> [--auto-verb-menu-target-object-name <name>] [--auto-verb-menu-target-unique-id <id>]\n";
     std::cout << "Desktop object: --desktop-object --desktop <true|false> [--desktop-target-object-name <name>] [--desktop-target-unique-id <id>]\n";
     std::cout << "Key-preview object: --key-preview-object --key-preview <true|false> [--key-preview-target-object-name <name>] [--key-preview-target-unique-id <id>]\n";
+    std::cout << "Mac-desktop object: --mac-desktop-object --mac-desktop <true|false> [--mac-desktop-target-object-name <name>] [--mac-desktop-target-unique-id <id>]\n";
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
@@ -3893,6 +3894,30 @@ int main(int argc, char** argv) {
         if (!key_preview_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << key_preview_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.mac_desktop_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> mac_desktop_objects;
+        mac_desktop_objects.reserve(parse_result.request.mac_desktop_objects.size());
+        for (const auto& mac_desktop_object : parse_result.request.mac_desktop_objects) {
+            mac_desktop_objects.push_back({
+                .record_index = mac_desktop_object.record_index,
+                .object_name = mac_desktop_object.object_name,
+                .unique_id = mac_desktop_object.unique_id
+            });
+        }
+
+        const auto mac_desktop_result = copperfin::vfp::set_visual_object_mac_desktop({
+            .path = parse_result.request.path,
+            .objects = mac_desktop_objects,
+            .mac_desktop = parse_result.request.mac_desktop
+        });
+
+        if (!mac_desktop_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << mac_desktop_result.error << "\n";
             return 4;
         }
     }

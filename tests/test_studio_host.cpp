@@ -419,6 +419,10 @@ void test_parse_launch_arguments() {
         "#1148: launch contract should keep key-preview-object off by default");
     expect(!result.request.key_preview_available,
         "#1148: launch contract should keep key preview unavailable by default");
+    expect(!result.request.mac_desktop_object,
+        "#1149: launch contract should keep mac-desktop-object off by default");
+    expect(!result.request.mac_desktop_available,
+        "#1149: launch contract should keep mac desktop unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9512,6 +9516,92 @@ void test_parse_launch_arguments_rejects_key_preview_object_ambiguity() {
         "#1148: launch contract should reject stray key-preview arguments");
 }
 
+void test_parse_launch_arguments_for_mac_desktop_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--mac-desktop-object",
+        "--mac-desktop", "false",
+        "--mac-desktop-target-object-name", "frmCustomer",
+        "--mac-desktop-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1149: launch contract should parse mac-desktop-object requests");
+    expect(result.request.mac_desktop_object,
+        "#1149: launch contract should detect --mac-desktop-object");
+    expect(result.request.mac_desktop_available && !result.request.mac_desktop,
+        "#1149: mac-desktop-object requests should carry mac desktop state");
+    expect(result.request.mac_desktop_objects.size() == 2U,
+        "#1149: mac-desktop-object requests should collect mac-desktop target selectors");
+    if (result.request.mac_desktop_objects.size() == 2U) {
+        expect(result.request.mac_desktop_objects[0].object_name == "frmCustomer" &&
+                result.request.mac_desktop_objects[0].unique_id.empty(),
+            "#1149: mac-desktop-object requests should parse target object-name selectors");
+        expect(result.request.mac_desktop_objects[1].object_name.empty() &&
+                result.request.mac_desktop_objects[1].unique_id == "two-guid",
+            "#1149: mac-desktop-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_mac_desktop_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mac-desktop-object",
+        "--mac-desktop-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1149: launch contract should reject mac-desktop-object requests without mac desktop state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mac-desktop-object",
+        "--mac-desktop", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1149: launch contract should reject mac-desktop-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mac-desktop-object",
+        "--mac-desktop", "sometimes",
+        "--mac-desktop-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1149: launch contract should reject invalid mac-desktop boolean values");
+}
+
+void test_parse_launch_arguments_rejects_mac_desktop_object_ambiguity() {
+    const auto mac_desktop_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mac-desktop-object",
+        "--allow-output-object",
+        "--mac-desktop", "false",
+        "--mac-desktop-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!mac_desktop_allow_output_result.ok,
+        "#1149: launch contract should reject simultaneous mac-desktop-object and allow-output-object requests");
+
+    const auto mac_desktop_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mac-desktop-object",
+        "--clear-property",
+        "--property-name", "MacDesktop",
+        "--mac-desktop", "false",
+        "--mac-desktop-target-unique-id", "one-guid"
+    });
+    expect(!mac_desktop_property_result.ok,
+        "#1149: launch contract should reject mac-desktop-object combined with property commands");
+
+    const auto stray_mac_desktop_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mac-desktop", "false"
+    });
+    expect(!stray_mac_desktop_result.ok,
+        "#1149: launch contract should reject stray mac-desktop arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -12844,6 +12934,9 @@ int main() {
     test_parse_launch_arguments_for_key_preview_object();
     test_parse_launch_arguments_rejects_key_preview_object_invalid_inputs();
     test_parse_launch_arguments_rejects_key_preview_object_ambiguity();
+    test_parse_launch_arguments_for_mac_desktop_object();
+    test_parse_launch_arguments_rejects_mac_desktop_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_mac_desktop_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();

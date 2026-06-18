@@ -1086,6 +1086,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--mac-desktop-object") {
+            result.request.mac_desktop_object = true;
+            continue;
+        }
+
         if (argument == "--auto-center-object") {
             result.request.auto_center_object = true;
             continue;
@@ -2542,6 +2547,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.key_preview = *key_preview;
             result.request.key_preview_available = true;
+            continue;
+        }
+
+        if (argument == "--mac-desktop") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mac-desktop."};
+            }
+            const auto mac_desktop = parse_bool_value(args[++index]);
+            if (!mac_desktop.has_value()) {
+                return {.ok = false, .error = "The --mac-desktop value must be true or false."};
+            }
+            result.request.mac_desktop = *mac_desktop;
+            result.request.mac_desktop_available = true;
             continue;
         }
 
@@ -5091,6 +5109,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--mac-desktop-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mac-desktop-target-object-name."};
+            }
+            result.request.mac_desktop_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--mac-desktop-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mac-desktop-target-unique-id."};
+            }
+            result.request.mac_desktop_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -6737,6 +6779,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.key_preview_objects.empty())) {
         return {.ok = false, .error = "Key-preview arguments can only be used with --key-preview-object."};
     }
+    if (result.request.mac_desktop_object && !result.request.mac_desktop_available) {
+        return {.ok = false, .error = "An object mac-desktop assignment requires --mac-desktop."};
+    }
+    if (result.request.mac_desktop_object && result.request.mac_desktop_objects.empty()) {
+        return {.ok = false, .error = "An object mac-desktop assignment requires at least one target selector."};
+    }
+    if (!result.request.mac_desktop_object &&
+        (result.request.mac_desktop_available ||
+         !result.request.mac_desktop_objects.empty())) {
+        return {.ok = false, .error = "Mac-desktop arguments can only be used with --mac-desktop-object."};
+    }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
         return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
     }
@@ -7079,6 +7132,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.auto_verb_menu_object ? 1 : 0) +
         (result.request.desktop_object ? 1 : 0) +
         (result.request.key_preview_object ? 1 : 0) +
+        (result.request.mac_desktop_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +
