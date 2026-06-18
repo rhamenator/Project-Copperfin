@@ -1,3 +1,4 @@
+- 2026-06-18: E2/#1111 host curvature-object command is now implemented. `copperfin_studio_host --curvature-object` routes stable target selector curvature assignment through `set_visual_object_curvature`, accepts non-negative integer `--curvature <n>`, rejects non-integer or negative values and ambiguous curvature-object/locked-object/property command combinations before mutation, and preserves no-mutation behavior for missing targets, missing selectors, missing values, duplicate targets, or incomplete requests. Focused validation passed with `make -C build -j4 test_studio_host test_studio_host_json copperfin_studio_host`, `./build/tests/test_studio_host`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Issue closure remains pending explicit user approval if the no-close-without-approval standing rule is active.
 # Remaining Work
 
 This file is the working guide for the remaining Copperfin implementation effort.

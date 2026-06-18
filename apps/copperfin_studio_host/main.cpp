@@ -46,6 +46,7 @@ void print_usage() {
     std::cout << "OLE drop text-insertion object: --ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]\n";
     std::cout << "Hide-selection object: --hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]\n";
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
+    std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2151,6 +2152,30 @@ int main(int argc, char** argv) {
         if (!button_count_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << button_count_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.curvature_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> curvature_objects;
+        curvature_objects.reserve(parse_result.request.curvature_objects.size());
+        for (const auto& curvature_object : parse_result.request.curvature_objects) {
+            curvature_objects.push_back({
+                .record_index = curvature_object.record_index,
+                .object_name = curvature_object.object_name,
+                .unique_id = curvature_object.unique_id
+            });
+        }
+
+        const auto curvature_result = copperfin::vfp::set_visual_object_curvature({
+            .path = parse_result.request.path,
+            .objects = curvature_objects,
+            .curvature = parse_result.request.curvature
+        });
+
+        if (!curvature_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << curvature_result.error << "\n";
             return 4;
         }
     }

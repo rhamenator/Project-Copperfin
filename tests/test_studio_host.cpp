@@ -169,6 +169,10 @@ void test_parse_launch_arguments() {
         "#1110: launch contract should keep button-count-object off by default");
     expect(!result.request.button_count_available,
         "#1110: launch contract should keep button-count unavailable by default");
+    expect(!result.request.curvature_object,
+        "#1111: launch contract should keep curvature-object off by default");
+    expect(!result.request.curvature_available,
+        "#1111: launch contract should keep curvature unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2968,6 +2972,101 @@ void test_parse_launch_arguments_rejects_button_count_object_ambiguity() {
     });
     expect(!stray_button_count_result.ok,
         "#1110: launch contract should reject stray button-count arguments");
+}
+
+void test_parse_launch_arguments_for_curvature_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--curvature-object",
+        "--curvature", "4",
+        "--curvature-target-object-name", "cmdSave",
+        "--curvature-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1111: launch contract should parse curvature-object requests");
+    expect(result.request.curvature_object,
+        "#1111: launch contract should detect --curvature-object");
+    expect(result.request.curvature_available && result.request.curvature == 4,
+        "#1111: curvature-object requests should carry curvature value");
+    expect(result.request.curvature_objects.size() == 2U,
+        "#1111: curvature-object requests should collect curvature target selectors");
+    if (result.request.curvature_objects.size() == 2U) {
+        expect(result.request.curvature_objects[0].object_name == "cmdSave" &&
+                result.request.curvature_objects[0].unique_id.empty(),
+            "#1111: curvature-object requests should parse target object-name selectors");
+        expect(result.request.curvature_objects[1].object_name.empty() &&
+                result.request.curvature_objects[1].unique_id == "two-guid",
+            "#1111: curvature-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_curvature_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--curvature-object",
+        "--curvature-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1111: launch contract should reject curvature-object requests without curvature value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--curvature-object",
+        "--curvature", "manual",
+        "--curvature-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1111: launch contract should reject non-integer curvature values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--curvature-object",
+        "--curvature", "-1",
+        "--curvature-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1111: launch contract should reject negative curvature values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--curvature-object",
+        "--curvature", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1111: launch contract should reject curvature-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_curvature_object_ambiguity() {
+    const auto curvature_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--curvature-object",
+        "--locked-object",
+        "--curvature", "2",
+        "--curvature-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!curvature_locked_result.ok,
+        "#1111: launch contract should reject simultaneous curvature-object and locked-object requests");
+
+    const auto curvature_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--curvature-object",
+        "--clear-property",
+        "--property-name", "Curvature",
+        "--curvature", "2",
+        "--curvature-target-unique-id", "one-guid"
+    });
+    expect(!curvature_property_result.ok,
+        "#1111: launch contract should reject curvature-object combined with property commands");
+
+    const auto stray_curvature_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--curvature", "2"
+    });
+    expect(!stray_curvature_result.ok,
+        "#1111: launch contract should reject stray curvature arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9006,6 +9105,9 @@ int main() {
     test_parse_launch_arguments_for_button_count_object();
     test_parse_launch_arguments_rejects_button_count_object_invalid_inputs();
     test_parse_launch_arguments_rejects_button_count_object_ambiguity();
+    test_parse_launch_arguments_for_curvature_object();
+    test_parse_launch_arguments_rejects_curvature_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_curvature_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
