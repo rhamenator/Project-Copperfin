@@ -473,6 +473,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--always-on-top-object") {
+            result.request.always_on_top_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1270,6 +1275,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.add_line_feeds = *add_line_feeds;
             result.request.add_line_feeds_available = true;
+            continue;
+        }
+
+        if (argument == "--always-on-top") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --always-on-top."};
+            }
+            const auto always_on_top = parse_bool_value(args[++index]);
+            if (!always_on_top.has_value()) {
+                return {.ok = false, .error = "The --always-on-top value must be true or false."};
+            }
+            result.request.always_on_top = *always_on_top;
+            result.request.always_on_top_available = true;
             continue;
         }
 
@@ -2983,6 +3001,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--always-on-top-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --always-on-top-target-object-name."};
+            }
+            result.request.always_on_top_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--always-on-top-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --always-on-top-target-unique-id."};
+            }
+            result.request.always_on_top_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3869,6 +3911,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.add_line_feeds_objects.empty())) {
         return {.ok = false, .error = "Add-line-feeds arguments can only be used with --add-line-feeds-object."};
     }
+    if (result.request.always_on_top_object && !result.request.always_on_top_available) {
+        return {.ok = false, .error = "An object always-on-top assignment requires --always-on-top."};
+    }
+    if (result.request.always_on_top_object && result.request.always_on_top_objects.empty()) {
+        return {.ok = false, .error = "An object always-on-top assignment requires at least one target selector."};
+    }
+    if (!result.request.always_on_top_object &&
+        (result.request.always_on_top_available ||
+         !result.request.always_on_top_objects.empty())) {
+        return {.ok = false, .error = "Always-on-top arguments can only be used with --always-on-top-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3948,6 +4001,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.allow_row_sizing_object ? 1 : 0) +
         (result.request.resizable_object ? 1 : 0) +
         (result.request.add_line_feeds_object ? 1 : 0) +
+        (result.request.always_on_top_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

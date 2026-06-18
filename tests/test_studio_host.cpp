@@ -299,6 +299,10 @@ void test_parse_launch_arguments() {
         "#1095: launch contract should keep add-line-feeds-object off by default");
     expect(!result.request.add_line_feeds_available,
         "#1095: launch contract should keep add line feeds unavailable by default");
+    expect(!result.request.always_on_top_object,
+        "#1096: launch contract should keep always-on-top-object off by default");
+    expect(!result.request.always_on_top_available,
+        "#1096: launch contract should keep always on top unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -6346,6 +6350,92 @@ void test_parse_launch_arguments_rejects_add_line_feeds_object_ambiguity() {
         "#1095: launch contract should reject stray add-line-feeds arguments");
 }
 
+void test_parse_launch_arguments_for_always_on_top_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--always-on-top-object",
+        "--always-on-top", "false",
+        "--always-on-top-target-object-name", "frmCustomer",
+        "--always-on-top-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1096: launch contract should parse always-on-top-object requests");
+    expect(result.request.always_on_top_object,
+        "#1096: launch contract should detect --always-on-top-object");
+    expect(result.request.always_on_top_available && !result.request.always_on_top,
+        "#1096: always-on-top-object requests should carry always on top state");
+    expect(result.request.always_on_top_objects.size() == 2U,
+        "#1096: always-on-top-object requests should collect always_on_top target selectors");
+    if (result.request.always_on_top_objects.size() == 2U) {
+        expect(result.request.always_on_top_objects[0].object_name == "frmCustomer" &&
+                result.request.always_on_top_objects[0].unique_id.empty(),
+            "#1096: always-on-top-object requests should parse target object-name selectors");
+        expect(result.request.always_on_top_objects[1].object_name.empty() &&
+                result.request.always_on_top_objects[1].unique_id == "two-guid",
+            "#1096: always-on-top-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_always_on_top_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-top-object",
+        "--always-on-top-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1096: launch contract should reject always-on-top-object requests without always on top state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-top-object",
+        "--always-on-top", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1096: launch contract should reject always-on-top-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-top-object",
+        "--always-on-top", "sometimes",
+        "--always-on-top-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1096: launch contract should reject invalid always-on-top boolean values");
+}
+
+void test_parse_launch_arguments_rejects_always_on_top_object_ambiguity() {
+    const auto always_on_top_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-top-object",
+        "--auto-size-object",
+        "--always-on-top", "false",
+        "--always-on-top-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!always_on_top_auto_size_result.ok,
+        "#1096: launch contract should reject simultaneous always-on-top-object and auto-size-object requests");
+
+    const auto always_on_top_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-top-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--always-on-top", "false",
+        "--always-on-top-target-unique-id", "one-guid"
+    });
+    expect(!always_on_top_property_result.ok,
+        "#1096: launch contract should reject always-on-top-object combined with property commands");
+
+    const auto stray_always_on_top_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-top", "false"
+    });
+    expect(!stray_always_on_top_result.ok,
+        "#1096: launch contract should reject stray always-on-top arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7776,6 +7866,9 @@ int main() {
     test_parse_launch_arguments_for_add_line_feeds_object();
     test_parse_launch_arguments_rejects_add_line_feeds_object_invalid_inputs();
     test_parse_launch_arguments_rejects_add_line_feeds_object_ambiguity();
+    test_parse_launch_arguments_for_always_on_top_object();
+    test_parse_launch_arguments_rejects_always_on_top_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_always_on_top_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
