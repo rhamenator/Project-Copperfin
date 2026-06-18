@@ -285,6 +285,10 @@ void test_parse_launch_arguments() {
         "#1143: launch contract should keep whats-this-help-object off by default");
     expect(!result.request.whats_this_help_available,
         "#1143: launch contract should keep whats-this-help unavailable by default");
+    expect(!result.request.whats_this_button_object,
+        "#1144: launch contract should keep whats-this-button-object off by default");
+    expect(!result.request.whats_this_button_available,
+        "#1144: launch contract should keep whats-this-button unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.form_set_class_object, "#1136: launch contract should keep form-set-class-object off by default");
@@ -5838,6 +5842,92 @@ void test_parse_launch_arguments_rejects_whats_this_help_object_ambiguity() {
     });
     expect(!stray_whats_this_help_result.ok,
         "#1143: launch contract should reject stray whats-this-help arguments");
+}
+
+void test_parse_launch_arguments_for_whats_this_button_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--whats-this-button-object",
+        "--whats-this-button", ".T.",
+        "--whats-this-button-target-object-name", "cmdSave",
+        "--whats-this-button-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1144: launch contract should parse whats-this-button-object requests");
+    expect(result.request.whats_this_button_object,
+        "#1144: launch contract should detect --whats-this-button-object");
+    expect(result.request.whats_this_button_available && result.request.whats_this_button,
+        "#1144: whats-this-button-object requests should carry WhatsThis button state");
+    expect(result.request.whats_this_button_objects.size() == 2U,
+        "#1144: whats-this-button-object requests should collect WhatsThis button target selectors");
+    if (result.request.whats_this_button_objects.size() == 2U) {
+        expect(result.request.whats_this_button_objects[0].object_name == "cmdSave" &&
+                result.request.whats_this_button_objects[0].unique_id.empty(),
+            "#1144: whats-this-button-object requests should parse target object-name selectors");
+        expect(result.request.whats_this_button_objects[1].object_name.empty() &&
+                result.request.whats_this_button_objects[1].unique_id == "two-guid",
+            "#1144: whats-this-button-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_whats_this_button_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--whats-this-button-object",
+        "--whats-this-button-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1144: launch contract should reject whats-this-button-object requests without WhatsThis button value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--whats-this-button-object",
+        "--whats-this-button", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1144: launch contract should reject whats-this-button-object requests without target selectors");
+
+    const auto invalid_logical_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--whats-this-button-object",
+        "--whats-this-button", "maybe",
+        "--whats-this-button-target-unique-id", "one-guid"
+    });
+    expect(!invalid_logical_result.ok,
+        "#1144: launch contract should reject invalid WhatsThis button logical values");
+}
+
+void test_parse_launch_arguments_rejects_whats_this_button_object_ambiguity() {
+    const auto whats_this_button_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--whats-this-button-object",
+        "--locked-object",
+        "--whats-this-button", "true",
+        "--whats-this-button-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!whats_this_button_locked_result.ok,
+        "#1144: launch contract should reject simultaneous whats-this-button-object and locked-object requests");
+
+    const auto whats_this_button_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--whats-this-button-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--whats-this-button", "true",
+        "--whats-this-button-target-unique-id", "one-guid"
+    });
+    expect(!whats_this_button_property_result.ok,
+        "#1144: launch contract should reject whats-this-button-object combined with property commands");
+
+    const auto stray_whats_this_button_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--whats-this-button", "true"
+    });
+    expect(!stray_whats_this_button_result.ok,
+        "#1144: launch contract should reject stray whats-this-button arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -12268,6 +12358,9 @@ int main() {
     test_parse_launch_arguments_for_whats_this_help_object();
     test_parse_launch_arguments_rejects_whats_this_help_object_invalid_inputs();
     test_parse_launch_arguments_rejects_whats_this_help_object_ambiguity();
+    test_parse_launch_arguments_for_whats_this_button_object();
+    test_parse_launch_arguments_rejects_whats_this_button_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_whats_this_button_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();
