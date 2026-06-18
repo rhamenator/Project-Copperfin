@@ -1,4 +1,5 @@
 #include "copperfin/studio/designer_context.h"
+#include "copperfin/studio/designer_dispatch.h"
 #include "copperfin/studio/designer_invocation_admission.h"
 #include "copperfin/studio/designer_launch_surfaces.h"
 
@@ -91,6 +92,34 @@ bool has_builder_invocation_admission(
         if (admission.ok &&
             admission.plan.builder.id == id &&
             admission.plan.ui_launch_admitted == admitted) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_editor_dispatch(
+    const std::vector<copperfin::studio::StudioEditorActionDispatchResult>& dispatches,
+    std::string_view id,
+    bool admitted) {
+    for (const auto& dispatch : dispatches) {
+        if (dispatch.ok &&
+            dispatch.plan.action.id == id &&
+            dispatch.plan.dispatch_admitted == admitted) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_builder_dispatch(
+    const std::vector<copperfin::studio::StudioBuilderDispatchResult>& dispatches,
+    std::string_view id,
+    bool admitted) {
+    for (const auto& dispatch : dispatches) {
+        if (dispatch.ok &&
+            dispatch.plan.builder.id == id &&
+            dispatch.plan.dispatch_admitted == admitted) {
             return true;
         }
     }
@@ -571,6 +600,65 @@ int main() {
                empty_invocation_admission.error ==
                    "A designer invocation admission request requires at least one validated launch surface.",
            "#1221: aggregate designer invocation admission should reject empty launch-surface plans");
+
+    const auto visual_dispatch = copperfin::studio::plan_studio_designer_dispatch({
+        .invocation_admission_plan = visual_invocation_admission.plan
+    });
+    const auto expected_visual_dispatch_count =
+        visual_invocation_admission.plan.editor_action_invocations.size() +
+        visual_invocation_admission.plan.builder_invocations.size() + 1U;
+    expect(visual_dispatch.ok &&
+               visual_dispatch.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_dispatch.plan.asset_path == "forms/customer.scx" &&
+               visual_dispatch.plan.record_index == 1U &&
+               visual_dispatch.plan.object_name == "frmCustomer" &&
+               visual_dispatch.plan.unique_id == "form-guid" &&
+               visual_dispatch.plan.symbol == "Click" &&
+               visual_dispatch.plan.line == 12U &&
+               visual_dispatch.plan.column == 4U &&
+               visual_dispatch.plan.editor_action_dispatch_count ==
+                   visual_invocation_admission.plan.editor_action_invocations.size() &&
+               visual_dispatch.plan.builder_dispatch_count ==
+                   visual_invocation_admission.plan.builder_invocations.size() &&
+               visual_dispatch.plan.toolbox_dispatch_count == 1U &&
+               visual_dispatch.plan.dispatch_count == expected_visual_dispatch_count &&
+               visual_dispatch.plan.error_count == 0U &&
+               !visual_dispatch.plan.dry_run &&
+               !visual_dispatch.plan.mutates_asset,
+           "#1237: aggregate designer dispatch should preserve metadata and admitted dispatch counts");
+    expect(has_editor_dispatch(visual_dispatch.plan.editor_action_dispatches, "edit-visual-method", true) &&
+               has_builder_dispatch(visual_dispatch.plan.builder_dispatches, "form-builder", true) &&
+               visual_dispatch.plan.toolbox_dispatch.ok &&
+               visual_dispatch.plan.toolbox_dispatch.plan.dispatch_admitted &&
+               has_id(visual_dispatch.plan.toolbox_dispatch.plan.items, "textbox"),
+           "#1237: aggregate designer dispatch should route editor, builder, and toolbox dispatch planners");
+
+    const auto menu_dispatch = copperfin::studio::plan_studio_designer_dispatch({
+        .invocation_admission_plan = menu_invocation_admission.plan
+    });
+    expect(menu_dispatch.ok &&
+               menu_dispatch.plan.selection_context == StudioEditorSelectionContext::menu_item &&
+               menu_dispatch.plan.editor_action_dispatch_count ==
+                   menu_invocation_admission.plan.editor_action_invocations.size() &&
+               menu_dispatch.plan.builder_dispatch_count ==
+                   menu_invocation_admission.plan.builder_invocations.size() &&
+               menu_dispatch.plan.toolbox_dispatch_count == 0U &&
+               menu_dispatch.plan.dispatch_count == 0U &&
+               menu_dispatch.plan.error_count ==
+                   menu_dispatch.plan.editor_action_dispatch_count + menu_dispatch.plan.builder_dispatch_count + 1U &&
+               menu_dispatch.plan.dry_run &&
+               !menu_dispatch.plan.mutates_asset &&
+               !menu_dispatch.plan.toolbox_dispatch.ok &&
+               menu_dispatch.plan.toolbox_dispatch.error ==
+                   "The selected Studio context does not expose a toolbox palette.",
+           "#1237: aggregate designer dispatch should preserve dry-run rejections and unsupported toolbox errors");
+
+    const auto empty_dispatch = copperfin::studio::plan_studio_designer_dispatch({
+        .invocation_admission_plan = {}
+    });
+    expect(!empty_dispatch.ok &&
+               empty_dispatch.error == "A designer dispatch request requires at least one invocation admission.",
+           "#1237: aggregate designer dispatch should reject empty invocation inputs");
 
     const auto invocation_catalog = copperfin::studio::plan_studio_designer_invocation_admission_catalog({
         .asset_path = "forms/customer.scx",
