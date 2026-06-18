@@ -405,6 +405,63 @@ StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
     };
 }
 
+StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateBatchFromPaletteDispatchRequest& request) {
+    const auto& dispatch_plan = request.dispatch_plan;
+    if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run || dispatch_plan.executed) {
+        return failed_batch_plan_result(
+            "A toolbox batch create-from-dispatch request requires an admitted non-executed toolbox dispatch.");
+    }
+    if (dispatch_plan.asset_path.empty()) {
+        return failed_batch_plan_result("A toolbox batch create-from-dispatch request requires an asset path.");
+    }
+    if (dispatch_plan.items.empty() || dispatch_plan.item_count == 0U) {
+        return failed_batch_plan_result(
+            "A toolbox batch create-from-dispatch request requires validated toolbox item metadata.");
+    }
+    if (dispatch_plan.item_count != dispatch_plan.items.size()) {
+        return failed_batch_plan_result(
+            "A toolbox batch create-from-dispatch request requires consistent toolbox item metadata.");
+    }
+    if (request.items.empty()) {
+        return failed_batch_plan_result("No toolbox object creates were provided.");
+    }
+
+    std::vector<StudioToolboxObjectCreateBatchItem> batch_items;
+    batch_items.reserve(request.items.size());
+    for (const auto& item_request : request.items) {
+        const std::string requested_item_id = normalized_identity(item_request.toolbox_item_id);
+        const auto item_found = std::find_if(
+            dispatch_plan.items.begin(),
+            dispatch_plan.items.end(),
+            [&](const StudioToolboxItemDescriptor& item) {
+                return normalized_identity(item.id) == requested_item_id;
+            });
+        if (item_found == dispatch_plan.items.end()) {
+            return failed_batch_plan_result(
+                "The requested toolbox item is not available in the admitted toolbox dispatch.");
+        }
+
+        const std::string parent_name = trimmed_copy(item_request.parent_name).empty()
+            ? dispatch_plan.object_name
+            : item_request.parent_name;
+        batch_items.push_back({
+            .toolbox_item_id = item_request.toolbox_item_id,
+            .object_name = item_request.object_name,
+            .unique_id = item_request.unique_id,
+            .parent_name = parent_name,
+            .field_values = item_request.field_values
+        });
+    }
+
+    return plan_visual_objects_from_toolbox_items({
+        .path = dispatch_plan.asset_path,
+        .toolbox_context_provided = true,
+        .toolbox_context = dispatch_plan.toolbox_context,
+        .items = std::move(batch_items)
+    });
+}
+
 StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
     const StudioToolboxObjectCreateDispatchRequest& request) {
     const auto& create_plan = request.create_plan;

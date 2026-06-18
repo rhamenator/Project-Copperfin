@@ -58,6 +58,11 @@ struct StudioToolboxObjectCreateBatchItem {
     std::vector<vfp::VisualObjectPropertyChange> field_values;
 };
 
+struct StudioToolboxObjectCreateBatchFromPaletteDispatchRequest {
+    StudioToolboxDispatchPlan dispatch_plan;
+    std::vector<StudioToolboxObjectCreateBatchItem> items;
+};
+
 struct StudioToolboxObjectCreateBatchPlan {
     std::string path;
     bool toolbox_context_provided = false;
@@ -229,6 +234,8 @@ struct StudioToolboxObjectCreateBatchDispatchCatalogResult {
     const StudioToolboxObjectCreateFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request);
+[[nodiscard]] StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateBatchFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
     const StudioToolboxObjectCreateDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch(
