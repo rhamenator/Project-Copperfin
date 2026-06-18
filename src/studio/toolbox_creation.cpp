@@ -613,6 +613,18 @@ StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dis
     };
 }
 
+StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateBatchDispatchFromPaletteDispatchRequest& request) {
+    const auto batch_plan = plan_visual_objects_from_toolbox_dispatch(request.create_request);
+    if (!batch_plan.ok) {
+        return failed_batch_dispatch_result(batch_plan.error);
+    }
+    return plan_visual_object_batch_create_dispatch({
+        .batch_plan = batch_plan.plan,
+        .admit_create_operation = request.admit_create_operation
+    });
+}
+
 StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolbox_context(
     const StudioToolboxObjectCreatePlanCatalogRequest& request) {
     const auto items = studio_toolbox_items_for_context(request.toolbox_context);
