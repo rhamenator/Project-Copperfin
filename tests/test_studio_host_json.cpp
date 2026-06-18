@@ -4662,6 +4662,142 @@ void test_studio_host_json_exposes_toolbox_palette_launch_plans(const std::strin
     }
 }
 
+void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_designer_launch_surfaces_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surfaces",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--symbol", "Click",
+            "--line", "12",
+            "--column", "4",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1212: designer launch-surface JSON should accept visual-object contexts");
+    expect_contains(visual_process.stdout_text, "\"designerLaunchSurfaces\": {",
+        "#1212: designer launch-surface JSON should expose a plan object");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1212: designer launch-surface JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1212: designer launch-surface JSON should preserve asset paths");
+    expect_contains(visual_process.stdout_text, "\"recordIndex\": 1",
+        "#1212: designer launch-surface JSON should preserve record indexes");
+    expect_contains(visual_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1212: designer launch-surface JSON should preserve object names");
+    expect_contains(visual_process.stdout_text, "\"uniqueId\": \"form-guid\"",
+        "#1212: designer launch-surface JSON should preserve unique ids");
+    expect_contains(visual_process.stdout_text, "\"symbol\": \"Click\"",
+        "#1212: designer launch-surface JSON should preserve editor symbols");
+    expect_contains(visual_process.stdout_text, "\"line\": 12",
+        "#1212: designer launch-surface JSON should preserve editor lines");
+    expect_contains(visual_process.stdout_text, "\"column\": 4",
+        "#1212: designer launch-surface JSON should preserve editor columns");
+    expect_contains(visual_process.stdout_text, "\"editorActionLaunchPlanCount\": ",
+        "#1212: designer launch-surface JSON should expose action launch-plan counts");
+    expect_contains(visual_process.stdout_text, "\"builderLaunchPlanCount\": ",
+        "#1212: designer launch-surface JSON should expose builder launch-plan counts");
+    expect_contains(visual_process.stdout_text, "\"toolboxAvailable\": true",
+        "#1212: designer launch-surface JSON should expose toolbox availability");
+    expect_contains(visual_process.stdout_text, "\"actionId\": \"show-property-grid\"",
+        "#1212: designer launch-surface JSON should include property-grid action plans");
+    expect_contains(visual_process.stdout_text, "\"actionId\": \"show-toolbox\"",
+        "#1212: designer launch-surface JSON should include toolbox action plans");
+    expect_contains(visual_process.stdout_text, "\"builderId\": \"form-builder\"",
+        "#1212: designer launch-surface JSON should include form builder plans");
+    expect_contains(visual_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1212: designer launch-surface JSON should include control builder plans");
+    expect_contains(visual_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1212: designer launch-surface JSON should include resolved toolbox contexts");
+    expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
+        "#1212: designer launch-surface JSON should include toolbox item descriptors");
+
+    const auto menu_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surfaces",
+            "--selection-context", "menu_item",
+            "--path", "menus/main.mnx",
+            "--record", "5",
+            "--object-name", "FileExit",
+            "--unique-id", "menu-guid",
+            "--json"
+        },
+        temp_root);
+    expect(menu_process.exit_code == 0,
+        "#1212: designer launch-surface JSON should keep unsupported toolbox contexts as aggregate successes");
+    expect_contains(menu_process.stdout_text, "\"selectionContext\": \"menu_item\"",
+        "#1212: menu launch-surface JSON should expose selected Studio contexts");
+    expect_contains(menu_process.stdout_text, "\"toolboxAvailable\": false",
+        "#1212: menu launch-surface JSON should expose unsupported toolbox availability");
+    expect_contains(menu_process.stdout_text, "\"toolboxPaletteLaunchPlan\": null",
+        "#1212: menu launch-surface JSON should expose null toolbox plans");
+    expect_contains(menu_process.stdout_text,
+        "\"toolboxError\": \"The selected Studio context does not expose a toolbox palette.\"",
+        "#1212: menu launch-surface JSON should preserve unsupported toolbox reasons");
+    expect_contains(menu_process.stdout_text, "\"actionId\": \"show-property-grid\"",
+        "#1212: menu launch-surface JSON should still include supported editor actions");
+    expect_contains(menu_process.stdout_text, "\"builderId\": \"menu-designer\"",
+        "#1212: menu launch-surface JSON should still include supported builders");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surfaces",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1212: designer launch-surface JSON should reject unknown selection contexts");
+    expect_contains(unknown_context_process.stdout_text, "\"designerLaunchSurfaces\": null",
+        "#1212: unknown context JSON should not expose a plan object");
+    expect_contains(unknown_context_process.stdout_text, "Unknown selection context token: unknown",
+        "#1212: unknown designer launch-surface context JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surfaces",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1212: designer launch-surface JSON should reject missing selection contexts");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1212: missing designer launch-surface context JSON should report parser errors");
+
+    const auto invalid_line_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-launch-surfaces",
+            "--selection-context", "visual_object",
+            "--line", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_line_process.exit_code == 2,
+        "#1212: designer launch-surface JSON should reject invalid line values");
+    expect_contains(invalid_line_process.stdout_text, "The --line value must be a non-negative integer.",
+        "#1212: invalid designer launch-surface line JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -28477,6 +28613,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
+    test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);

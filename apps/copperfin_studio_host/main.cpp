@@ -4,6 +4,7 @@
 #include "copperfin/security/process_hardening.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/studio/builder_registry.h"
+#include "copperfin/studio/designer_launch_surfaces.h"
 #include "copperfin/studio/project_workspace.h"
 #include "copperfin/studio/product_subsystems.h"
 #include "copperfin/studio/report_layout.h"
@@ -27,6 +28,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --builder-launch-plan <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --editor-action-launch-plan <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --toolbox-palette-launch-plan --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --designer-launch-surfaces --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "Display-value object: --display-value-object --display-value <value> [--display-value-target-object-name <name>] [--display-value-target-unique-id <id>]\n";
     std::cout << "Selected-back-color object: --selected-back-color-object --selected-back-color <n> [--selected-back-color-target-object-name <name>] [--selected-back-color-target-unique-id <id>]\n";
@@ -218,6 +220,15 @@ struct ToolboxPaletteLaunchPlanParseResult {
     bool selection_context_provided = false;
     std::string error;
     copperfin::studio::StudioToolboxPaletteLaunchRequest request;
+};
+
+struct DesignerLaunchSurfacesParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool selection_context_provided = false;
+    std::string error;
+    copperfin::studio::StudioDesignerLaunchSurfaceRequest request;
 };
 
 bool parse_size_t_token(const std::string& token, std::size_t& value) {
@@ -494,6 +505,85 @@ ToolboxPaletteLaunchPlanParseResult parse_toolbox_palette_launch_plan_arguments(
             result.request.unique_id = require_value(argument);
         } else {
             fail("Unknown toolbox-palette-launch-plan option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.selection_context_provided) {
+        fail("No selection context was provided.");
+    }
+    return result;
+}
+
+DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(const std::vector<std::string>& args) {
+    DesignerLaunchSurfacesParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--designer-launch-surfaces") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--designer-launch-surfaces") {
+            continue;
+        }
+        if (argument == "--selection-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioEditorSelectionContext parsed_context{};
+            if (!parse_editor_selection_context_token(token, parsed_context)) {
+                fail("Unknown selection context token: " + token);
+                continue;
+            }
+            result.selection_context_provided = true;
+            result.request.selection_context = parsed_context;
+        } else if (argument == "--path") {
+            result.request.asset_path = require_value(argument);
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--symbol") {
+            result.request.symbol = require_value(argument);
+        } else if (argument == "--line") {
+            const std::string token = require_value(argument);
+            std::size_t line = 0U;
+            if (!parse_size_t_token(token, line)) {
+                fail("The --line value must be a non-negative integer.");
+                continue;
+            }
+            result.request.line = line;
+        } else if (argument == "--column") {
+            const std::string token = require_value(argument);
+            std::size_t column = 0U;
+            if (!parse_size_t_token(token, column)) {
+                fail("The --column value must be a non-negative integer.");
+                continue;
+            }
+            result.request.column = column;
+        } else {
+            fail("Unknown designer-launch-surfaces option: " + argument);
         }
     }
 
@@ -792,6 +882,159 @@ void print_json_toolbox_palette_launch_plan_result(
     std::cout << "}\n";
 }
 
+void print_json_designer_launch_surface_action(
+    const copperfin::studio::StudioEditorActionLaunchPlanResult& result,
+    const std::string& indent) {
+    std::cout << indent << "{\n";
+    std::cout << indent << "  \"ok\": " << (result.ok ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"error\": ";
+    print_json_string(result.error);
+    if (!result.ok) {
+        std::cout << "\n";
+        std::cout << indent << "}";
+        return;
+    }
+    const auto& plan = result.plan;
+    const auto& action = plan.action;
+    std::cout << ",\n";
+    std::cout << indent << "  \"actionId\": ";
+    print_json_string_view(action.id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"label\": ";
+    print_json_string_view(action.label);
+    std::cout << ",\n";
+    std::cout << indent << "  \"kind\": ";
+    print_json_string(copperfin::studio::studio_editor_action_kind_name(action.kind));
+    std::cout << ",\n";
+    std::cout << indent << "  \"commandToken\": ";
+    print_json_string(plan.command_token);
+    std::cout << ",\n";
+    std::cout << indent << "  \"targetSurface\": ";
+    print_json_string(plan.target_surface);
+    std::cout << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_designer_launch_surface_builder(
+    const copperfin::studio::StudioSelectionBuilderLaunchPlanResult& result,
+    const std::string& indent) {
+    std::cout << indent << "{\n";
+    std::cout << indent << "  \"ok\": " << (result.ok ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"error\": ";
+    print_json_string(result.error);
+    if (!result.ok) {
+        std::cout << "\n";
+        std::cout << indent << "}";
+        return;
+    }
+    const auto& plan = result.plan;
+    const auto& builder = plan.builder;
+    std::cout << ",\n";
+    std::cout << indent << "  \"builderId\": ";
+    print_json_string_view(builder.id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"title\": ";
+    print_json_string_view(builder.title);
+    std::cout << ",\n";
+    std::cout << indent << "  \"kind\": ";
+    print_json_string(copperfin::studio::studio_builder_kind_name(builder.kind));
+    std::cout << ",\n";
+    std::cout << indent << "  \"context\": ";
+    print_json_string(copperfin::studio::studio_builder_context_name(plan.context));
+    std::cout << ",\n";
+    std::cout << indent << "  \"entryPoint\": ";
+    print_json_string(plan.entry_point);
+    std::cout << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_designer_launch_surfaces_result(
+    const copperfin::studio::StudioDesignerLaunchSurfacePlanResult& result) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"designerLaunchSurfaces\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    const auto& plan = result.plan;
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"selectionContext\": ";
+    print_json_string(copperfin::studio::studio_editor_selection_context_name(plan.selection_context));
+    std::cout << ",\n";
+    std::cout << "    \"assetPath\": ";
+    print_json_string(plan.asset_path);
+    std::cout << ",\n";
+    std::cout << "    \"recordIndex\": " << plan.record_index << ",\n";
+    std::cout << "    \"objectName\": ";
+    print_json_string(plan.object_name);
+    std::cout << ",\n";
+    std::cout << "    \"uniqueId\": ";
+    print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"symbol\": ";
+    print_json_string(plan.symbol);
+    std::cout << ",\n";
+    std::cout << "    \"line\": " << plan.line << ",\n";
+    std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"editorActionLaunchPlanCount\": " << plan.editor_action_launch_plan_count << ",\n";
+    std::cout << "    \"builderLaunchPlanCount\": " << plan.builder_launch_plan_count << ",\n";
+    std::cout << "    \"toolboxAvailable\": " << (plan.toolbox_available ? "true" : "false") << ",\n";
+    std::cout << "    \"toolboxItemCount\": " << plan.toolbox_item_count << ",\n";
+    std::cout << "    \"toolboxError\": ";
+    print_json_string(plan.toolbox_error);
+    std::cout << ",\n";
+    std::cout << "    \"editorActionLaunchPlans\": [\n";
+    for (std::size_t index = 0U; index < plan.editor_action_launch_plans.size(); ++index) {
+        print_json_designer_launch_surface_action(plan.editor_action_launch_plans[index], "      ");
+        if ((index + 1U) != plan.editor_action_launch_plans.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ],\n";
+    std::cout << "    \"builderLaunchPlans\": [\n";
+    for (std::size_t index = 0U; index < plan.builder_launch_plans.size(); ++index) {
+        print_json_designer_launch_surface_builder(plan.builder_launch_plans[index], "      ");
+        if ((index + 1U) != plan.builder_launch_plans.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ],\n";
+    std::cout << "    \"toolboxPaletteLaunchPlan\": ";
+    if (!plan.toolbox_palette_launch_plan.ok) {
+        std::cout << "null\n";
+    } else {
+        const auto& toolbox_plan = plan.toolbox_palette_launch_plan.plan;
+        std::cout << "{\n";
+        std::cout << "      \"toolboxContext\": ";
+        print_json_string(copperfin::studio::studio_toolbox_context_name(toolbox_plan.toolbox_context));
+        std::cout << ",\n";
+        std::cout << "      \"itemCount\": " << toolbox_plan.item_count << ",\n";
+        std::cout << "      \"items\": [\n";
+        for (std::size_t index = 0U; index < toolbox_plan.items.size(); ++index) {
+            print_json_toolbox_item_descriptor(toolbox_plan.items[index], "        ");
+            if ((index + 1U) != toolbox_plan.items.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "      ]\n";
+        std::cout << "    }\n";
+    }
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_text_toolbox_create_result(const copperfin::vfp::VisualObjectCreateResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
@@ -876,6 +1119,32 @@ void print_text_toolbox_palette_launch_plan_result(
     for (const auto& item : plan.items) {
         std::cout << "item: " << item.id << " " << item.title << "\n";
     }
+}
+
+void print_text_designer_launch_surfaces_result(
+    const copperfin::studio::StudioDesignerLaunchSurfacePlanResult& result) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    if (!result.ok) {
+        return;
+    }
+    const auto& plan = result.plan;
+    std::cout << "selection_context: "
+              << copperfin::studio::studio_editor_selection_context_name(plan.selection_context) << "\n";
+    std::cout << "asset_path: " << plan.asset_path << "\n";
+    std::cout << "record_index: " << plan.record_index << "\n";
+    std::cout << "object_name: " << plan.object_name << "\n";
+    std::cout << "unique_id: " << plan.unique_id << "\n";
+    std::cout << "symbol: " << plan.symbol << "\n";
+    std::cout << "line: " << plan.line << "\n";
+    std::cout << "column: " << plan.column << "\n";
+    std::cout << "editor_action_launch_plan_count: " << plan.editor_action_launch_plan_count << "\n";
+    std::cout << "builder_launch_plan_count: " << plan.builder_launch_plan_count << "\n";
+    std::cout << "toolbox_available: " << (plan.toolbox_available ? "true" : "false") << "\n";
+    std::cout << "toolbox_item_count: " << plan.toolbox_item_count << "\n";
+    std::cout << "toolbox_error: " << plan.toolbox_error << "\n";
 }
 
 void print_json_line_index_or_null(std::size_t line_index) {
@@ -2104,6 +2373,33 @@ int main(int argc, char** argv) {
             print_json_toolbox_palette_launch_plan_result(result);
         } else {
             print_text_toolbox_palette_launch_plan_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto designer_launch_surfaces_parse = parse_designer_launch_surfaces_arguments(args);
+    if (designer_launch_surfaces_parse.requested) {
+        if (!designer_launch_surfaces_parse.ok) {
+            const auto result = copperfin::studio::StudioDesignerLaunchSurfacePlanResult{
+                .ok = false,
+                .error = designer_launch_surfaces_parse.error,
+                .plan = {}
+            };
+            if (designer_launch_surfaces_parse.output_json) {
+                print_json_designer_launch_surfaces_result(result);
+            } else {
+                print_text_designer_launch_surfaces_result(result);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::studio::plan_studio_designer_launch_surfaces(
+            designer_launch_surfaces_parse.request);
+        if (designer_launch_surfaces_parse.output_json) {
+            print_json_designer_launch_surfaces_result(result);
+        } else {
+            print_text_designer_launch_surfaces_result(result);
         }
         return result.ok ? 0 : 4;
     }
