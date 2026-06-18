@@ -4657,6 +4657,145 @@ void test_studio_host_json_exposes_editor_action_launch_plans(const std::string&
     }
 }
 
+void test_studio_host_json_exposes_editor_action_invocation_admission(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_editor_action_invocation_admission_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto method_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-invocation-admission", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "cmdSave",
+            "--unique-id", "button-guid",
+            "--symbol", "cmdSave.Click",
+            "--line", "42",
+            "--column", "7",
+            "--admit-editor-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(method_process.exit_code == 0,
+        "#1218: editor action invocation-admission JSON should accept admitted method editor actions");
+    expect_contains(method_process.stdout_text, "\"editorActionInvocationAdmission\": {",
+        "#1218: editor action invocation-admission JSON should expose a plan object");
+    expect_contains(method_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
+        "#1218: editor action invocation-admission JSON should expose action ids");
+    expect_contains(method_process.stdout_text, "\"kind\": \"source_editor\"",
+        "#1218: editor action invocation-admission JSON should expose action kind metadata");
+    expect_contains(method_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1218: editor action invocation-admission JSON should expose selected Studio contexts");
+    expect_contains(method_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
+        "#1218: editor action invocation-admission JSON should expose command tokens");
+    expect_contains(method_process.stdout_text, "\"targetSurface\": \"method-editor\"",
+        "#1218: editor action invocation-admission JSON should expose target surfaces");
+    expect_contains(method_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1218: editor action invocation-admission JSON should carry asset paths");
+    expect_contains(method_process.stdout_text, "\"recordIndex\": 4",
+        "#1218: editor action invocation-admission JSON should carry record indexes");
+    expect_contains(method_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1218: editor action invocation-admission JSON should carry object-name selectors");
+    expect_contains(method_process.stdout_text, "\"uniqueId\": \"button-guid\"",
+        "#1218: editor action invocation-admission JSON should carry unique-id selectors");
+    expect_contains(method_process.stdout_text, "\"symbol\": \"cmdSave.Click\"",
+        "#1218: editor action invocation-admission JSON should carry launch symbols");
+    expect_contains(method_process.stdout_text, "\"line\": 42",
+        "#1218: editor action invocation-admission JSON should carry line metadata");
+    expect_contains(method_process.stdout_text, "\"column\": 7",
+        "#1218: editor action invocation-admission JSON should carry column metadata");
+    expect_contains(method_process.stdout_text, "\"editorInvocationAdmitted\": true",
+        "#1218: admitted editor action invocation-admission JSON should expose admitted state");
+    expect_contains(method_process.stdout_text, "\"dryRun\": false",
+        "#1218: admitted editor action invocation-admission JSON should not be marked dry-run");
+    expect_contains(method_process.stdout_text, "\"mutatesAsset\": false",
+        "#1218: editor action invocation-admission JSON should remain non-mutating");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-invocation-admission", "show-property-grid",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1218: editor action invocation-admission JSON should default to dry-run admission");
+    expect_contains(dry_run_process.stdout_text, "\"actionId\": \"show-property-grid\"",
+        "#1218: dry-run editor action invocation-admission JSON should expose action ids");
+    expect_contains(dry_run_process.stdout_text, "\"editorInvocationAdmitted\": false",
+        "#1218: default editor action invocation-admission JSON should not admit invocation");
+    expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
+        "#1218: default editor action invocation-admission JSON should expose dry-run state");
+
+    const auto wrong_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-invocation-admission", "edit-report-expression",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(wrong_context_process.exit_code == 4,
+        "#1218: editor action invocation-admission JSON should reject wrong-context actions");
+    expect_contains(wrong_context_process.stdout_text, "\"editorActionInvocationAdmission\": null",
+        "#1218: wrong-context editor action invocation-admission JSON should expose null plans");
+    expect_contains(wrong_context_process.stdout_text,
+        "The requested editor action is not available for the selected Studio context.",
+        "#1218: wrong-context editor action invocation-admission JSON should report validation errors");
+
+    const auto invalid_boolean_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-invocation-admission", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_boolean_process.exit_code == 2,
+        "#1218: editor action invocation-admission JSON should reject invalid admission booleans");
+    expect_contains(invalid_boolean_process.stdout_text,
+        "The --admit-editor-invocation value must be true or false.",
+        "#1218: invalid editor action invocation-admission boolean JSON should report parser errors");
+
+    const auto invalid_line_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-invocation-admission", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--line", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_line_process.exit_code == 2,
+        "#1218: editor action invocation-admission JSON should reject invalid line values");
+    expect_contains(invalid_line_process.stdout_text, "The --line value must be a non-negative integer.",
+        "#1218: invalid-line editor action invocation-admission JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-invocation-admission", "edit-visual-method",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1218: editor action invocation-admission JSON should reject missing selection contexts");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1218: missing-context editor action invocation-admission JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_palette_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -28842,6 +28981,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
+    test_studio_host_json_exposes_editor_action_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
     test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);

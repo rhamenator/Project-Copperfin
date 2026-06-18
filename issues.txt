@@ -1,3 +1,4 @@
+1218	OPEN	E2/#23 slice: Expose editor action invocation admission through host JSON		2026-06-18T20:00:11Z
 1217	OPEN	E2/#23 slice: Add editor action invocation admission planning		2026-06-18T19:57:04Z
 1216	OPEN	E2/#23 slice: Expose builder invocation admission through host JSON		2026-06-18T19:50:54Z
 1215	OPEN	E2/#23 slice: Add builder invocation admission planning		2026-06-18T19:46:39Z
