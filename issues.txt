@@ -1,3 +1,4 @@
+1119	OPEN	E2/#23 slice: Expose host data-session-object command		2026-06-18T03:05:17Z
 1118	OPEN	E2/#23 slice: Expose host buffer-mode-override-object command		2026-06-18T03:00:13Z
 1117	OPEN	E2/#23 slice: Expose host buffer-mode-object command		2026-06-18T02:55:05Z
 1116	OPEN	E2/#23 slice: Expose host scale-mode-object command		2026-06-18T02:48:26Z

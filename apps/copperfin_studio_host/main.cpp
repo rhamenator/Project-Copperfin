@@ -54,6 +54,7 @@ void print_usage() {
     std::cout << "Scale-mode object: --scale-mode-object --scale-mode <n> [--scale-mode-target-object-name <name>] [--scale-mode-target-unique-id <id>]\n";
     std::cout << "Buffer-mode object: --buffer-mode-object --buffer-mode <n> [--buffer-mode-target-object-name <name>] [--buffer-mode-target-unique-id <id>]\n";
     std::cout << "Buffer-mode-override object: --buffer-mode-override-object --buffer-mode-override <n> [--buffer-mode-override-target-object-name <name>] [--buffer-mode-override-target-unique-id <id>]\n";
+    std::cout << "Data-session object: --data-session-object --data-session <n> [--data-session-target-object-name <name>] [--data-session-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2351,6 +2352,30 @@ int main(int argc, char** argv) {
         if (!buffer_mode_override_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << buffer_mode_override_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.data_session_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> data_session_objects;
+        data_session_objects.reserve(parse_result.request.data_session_objects.size());
+        for (const auto& data_session_object : parse_result.request.data_session_objects) {
+            data_session_objects.push_back({
+                .record_index = data_session_object.record_index,
+                .object_name = data_session_object.object_name,
+                .unique_id = data_session_object.unique_id
+            });
+        }
+
+        const auto data_session_result = copperfin::vfp::set_visual_object_data_session({
+            .path = parse_result.request.path,
+            .objects = data_session_objects,
+            .data_session = parse_result.request.data_session
+        });
+
+        if (!data_session_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << data_session_result.error << "\n";
             return 4;
         }
     }

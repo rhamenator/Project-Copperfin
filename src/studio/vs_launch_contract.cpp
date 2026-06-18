@@ -588,6 +588,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--data-session-object") {
+            result.request.data_session_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1363,6 +1368,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.buffer_mode_override = buffer_mode_override;
             result.request.buffer_mode_override_available = true;
+            continue;
+        }
+
+        if (argument == "--data-session") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --data-session."};
+            }
+            int data_session = 0;
+            if (!parse_int_value(args[++index], data_session)) {
+                return {.ok = false, .error = "The --data-session value must be an integer."};
+            }
+            if (data_session < 0) {
+                return {.ok = false, .error = "The --data-session value must be non-negative."};
+            }
+            result.request.data_session = data_session;
+            result.request.data_session_available = true;
             continue;
         }
 
@@ -2664,6 +2685,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --buffer-mode-override-target-unique-id."};
             }
             result.request.buffer_mode_override_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--data-session-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --data-session-target-object-name."};
+            }
+            result.request.data_session_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--data-session-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --data-session-target-unique-id."};
+            }
+            result.request.data_session_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4452,6 +4497,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.buffer_mode_override_objects.empty())) {
         return {.ok = false, .error = "Buffer-mode-override arguments can only be used with --buffer-mode-override-object."};
     }
+    if (result.request.data_session_object && !result.request.data_session_available) {
+        return {.ok = false, .error = "An object data-session assignment requires --data-session."};
+    }
+    if (result.request.data_session_object && result.request.data_session_objects.empty()) {
+        return {.ok = false, .error = "An object data-session assignment requires at least one target selector."};
+    }
+    if (!result.request.data_session_object &&
+        (result.request.data_session_available ||
+         !result.request.data_session_objects.empty())) {
+        return {.ok = false, .error = "Data-session arguments can only be used with --data-session-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5186,6 +5242,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.scale_mode_object ? 1 : 0) +
         (result.request.buffer_mode_object ? 1 : 0) +
         (result.request.buffer_mode_override_object ? 1 : 0) +
+        (result.request.data_session_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

@@ -201,6 +201,10 @@ void test_parse_launch_arguments() {
         "#1118: launch contract should keep buffer-mode-override-object off by default");
     expect(!result.request.buffer_mode_override_available,
         "#1118: launch contract should keep buffer-mode-override unavailable by default");
+    expect(!result.request.data_session_object,
+        "#1119: launch contract should keep data-session-object off by default");
+    expect(!result.request.data_session_available,
+        "#1119: launch contract should keep data-session unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3760,6 +3764,101 @@ void test_parse_launch_arguments_rejects_buffer_mode_override_object_ambiguity()
     });
     expect(!stray_buffer_mode_override_result.ok,
         "#1118: launch contract should reject stray buffer-mode-override arguments");
+}
+
+void test_parse_launch_arguments_for_data_session_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--data-session-object",
+        "--data-session", "9",
+        "--data-session-target-object-name", "cmdSave",
+        "--data-session-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1119: launch contract should parse data-session-object requests");
+    expect(result.request.data_session_object,
+        "#1119: launch contract should detect --data-session-object");
+    expect(result.request.data_session_available && result.request.data_session == 9,
+        "#1119: data-session-object requests should carry data-session value");
+    expect(result.request.data_session_objects.size() == 2U,
+        "#1119: data-session-object requests should collect data-session target selectors");
+    if (result.request.data_session_objects.size() == 2U) {
+        expect(result.request.data_session_objects[0].object_name == "cmdSave" &&
+                result.request.data_session_objects[0].unique_id.empty(),
+            "#1119: data-session-object requests should parse target object-name selectors");
+        expect(result.request.data_session_objects[1].object_name.empty() &&
+                result.request.data_session_objects[1].unique_id == "two-guid",
+            "#1119: data-session-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_data_session_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--data-session-object",
+        "--data-session-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1119: launch contract should reject data-session-object requests without data-session value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--data-session-object",
+        "--data-session", "manual",
+        "--data-session-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1119: launch contract should reject non-integer data-session values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--data-session-object",
+        "--data-session", "-1",
+        "--data-session-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1119: launch contract should reject negative data-session values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--data-session-object",
+        "--data-session", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1119: launch contract should reject data-session-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_data_session_object_ambiguity() {
+    const auto data_session_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--data-session-object",
+        "--locked-object",
+        "--data-session", "2",
+        "--data-session-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!data_session_locked_result.ok,
+        "#1119: launch contract should reject simultaneous data-session-object and locked-object requests");
+
+    const auto data_session_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--data-session-object",
+        "--clear-property",
+        "--property-name", "DataSession",
+        "--data-session", "2",
+        "--data-session-target-unique-id", "one-guid"
+    });
+    expect(!data_session_property_result.ok,
+        "#1119: launch contract should reject data-session-object combined with property commands");
+
+    const auto stray_data_session_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--data-session", "2"
+    });
+    expect(!stray_data_session_result.ok,
+        "#1119: launch contract should reject stray data-session arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9822,6 +9921,9 @@ int main() {
     test_parse_launch_arguments_for_buffer_mode_override_object();
     test_parse_launch_arguments_rejects_buffer_mode_override_object_invalid_inputs();
     test_parse_launch_arguments_rejects_buffer_mode_override_object_ambiguity();
+    test_parse_launch_arguments_for_data_session_object();
+    test_parse_launch_arguments_rejects_data_session_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_data_session_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
