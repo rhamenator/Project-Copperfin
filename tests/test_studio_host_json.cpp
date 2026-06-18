@@ -6993,6 +6993,128 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
     }
 }
 
+void test_studio_host_json_plans_toolbox_object_creation_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_batch_plan_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto batch_plan_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan",
+            "--toolbox-context", "form",
+            "--toolbox-item", "textbox",
+            "--unique-id", "first-textbox-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=First",
+            "--toolbox-item", "textbox",
+            "--unique-id", "second-textbox-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Second",
+            "--toolbox-item", "commandbutton",
+            "--object-name", "cmdRun",
+            "--unique-id", "command-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Run",
+            "--json"
+        },
+        temp_root);
+    expect(batch_plan_process.exit_code == 0,
+        "#1246: toolbox-create-batch-plan JSON command should exit successfully");
+    expect_contains(batch_plan_process.stdout_text, "\"toolboxCreateBatchPlan\": {",
+        "#1246: toolbox-create-batch-plan JSON should expose a batch plan object");
+    expect_contains(batch_plan_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#1246: toolbox-create-batch-plan JSON should expose requested context state");
+    expect_contains(batch_plan_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1246: toolbox-create-batch-plan JSON should expose requested contexts");
+    expect_contains(batch_plan_process.stdout_text, "\"itemCount\": 3",
+        "#1246: toolbox-create-batch-plan JSON should expose batch item counts");
+    expect_contains(batch_plan_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1246: toolbox-create-batch-plan JSON should expose textbox descriptors");
+    expect_contains(batch_plan_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
+        "#1246: toolbox-create-batch-plan JSON should expose command button descriptors");
+    expect_contains(batch_plan_process.stdout_text, "\"targetRecordIndex\": 2",
+        "#1246: toolbox-create-batch-plan JSON should expose first append target indexes");
+    expect_contains(batch_plan_process.stdout_text, "\"targetRecordIndex\": 4",
+        "#1246: toolbox-create-batch-plan JSON should expose later append target indexes");
+    expect_contains(batch_plan_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1246: toolbox-create-batch-plan JSON should expose first generated names");
+    expect_contains(batch_plan_process.stdout_text, "\"objectName\": \"txt3\"",
+        "#1246: toolbox-create-batch-plan JSON should reserve generated names across the batch");
+    expect_contains(batch_plan_process.stdout_text, "\"objectName\": \"cmdRun\"",
+        "#1246: toolbox-create-batch-plan JSON should preserve explicit names");
+    expect_contains(batch_plan_process.stdout_text, "\"uniqueId\": \"first-textbox-guid\"",
+        "#1246: toolbox-create-batch-plan JSON should expose per-item unique ids");
+    expect_contains(batch_plan_process.stdout_text, "\"parentName\": \"frmCustomer\"",
+        "#1246: toolbox-create-batch-plan JSON should expose per-item parents");
+    expect_contains(batch_plan_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#1246: toolbox-create-batch-plan JSON should expose per-item field values");
+    expect_contains(batch_plan_process.stdout_text, "\"dryRun\": true",
+        "#1246: toolbox-create-batch-plan JSON should expose dry-run state");
+    expect_contains(batch_plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#1246: toolbox-create-batch-plan JSON should remain non-mutating");
+    expect(visual_object_count(form_path) == before_count,
+        "#1246: toolbox-create-batch-plan host command should not mutate the visual asset");
+
+    const auto missing_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan",
+            "--json"
+        },
+        temp_root);
+    expect(missing_items_process.exit_code == 2,
+        "#1246: toolbox-create-batch-plan JSON should reject empty item lists");
+    expect_contains(missing_items_process.stdout_text, "No toolbox item ids were provided.",
+        "#1246: empty toolbox-create-batch-plan item lists should report parser errors");
+
+    const auto orphan_item_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan",
+            "--parent-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(orphan_item_option_process.exit_code == 2,
+        "#1246: toolbox-create-batch-plan JSON should reject item options before items");
+    expect_contains(orphan_item_option_process.stdout_text,
+        "Toolbox batch item options require a preceding --toolbox-item.",
+        "#1246: orphan toolbox-create-batch-plan item options should report parser errors");
+
+    const auto malformed_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan",
+            "--toolbox-item", "textbox",
+            "--field-value", "BROKEN",
+            "--json"
+        },
+        temp_root);
+    expect(malformed_field_process.exit_code == 2,
+        "#1246: toolbox-create-batch-plan JSON should reject malformed field values");
+    expect_contains(malformed_field_process.stdout_text, "Toolbox field values must use name=value syntax.",
+        "#1246: malformed toolbox-create-batch-plan field values should report parser errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1246: rejected toolbox-create-batch-plan host commands should not mutate the visual asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -30825,6 +30947,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_catalog(argv[1]);
+    test_studio_host_json_plans_toolbox_object_creation_batches(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
