@@ -1166,6 +1166,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--window-state-object") {
+            result.request.window_state_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2868,6 +2873,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.scroll_bars = scroll_bars;
             result.request.scroll_bars_available = true;
+            continue;
+        }
+
+        if (argument == "--window-state") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --window-state."};
+            }
+            int window_state = 0;
+            if (!parse_int_value(args[++index], window_state)) {
+                return {.ok = false, .error = "The --window-state value must be an integer."};
+            }
+            if (window_state < 0) {
+                return {.ok = false, .error = "The --window-state value must not be negative."};
+            }
+            result.request.window_state = window_state;
+            result.request.window_state_available = true;
             continue;
         }
 
@@ -5849,6 +5870,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--window-state-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --window-state-target-object-name."};
+            }
+            result.request.window_state_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--window-state-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --window-state-target-unique-id."};
+            }
+            result.request.window_state_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7743,6 +7788,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.scroll_bars_objects.empty())) {
         return {.ok = false, .error = "Scroll-bars arguments can only be used with --scroll-bars-object."};
     }
+    if (result.request.window_state_object && !result.request.window_state_available) {
+        return {.ok = false, .error = "An object window-state assignment requires --window-state."};
+    }
+    if (result.request.window_state_object && result.request.window_state_objects.empty()) {
+        return {.ok = false, .error = "An object window-state assignment requires at least one target selector."};
+    }
+    if (!result.request.window_state_object &&
+        (result.request.window_state_available ||
+         !result.request.window_state_objects.empty())) {
+        return {.ok = false, .error = "Window-state arguments can only be used with --window-state-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8134,6 +8190,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.border_color_object ? 1 : 0) +
         (result.request.special_effect_object ? 1 : 0) +
         (result.request.scroll_bars_object ? 1 : 0) +
+        (result.request.window_state_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

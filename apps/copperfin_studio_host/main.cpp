@@ -65,6 +65,7 @@ void print_usage() {
     std::cout << "Border-color object: --border-color-object --border-color <n> [--border-color-target-object-name <name>] [--border-color-target-unique-id <id>]\n";
     std::cout << "Special-effect object: --special-effect-object --special-effect <n> [--special-effect-target-object-name <name>] [--special-effect-target-unique-id <id>]\n";
     std::cout << "Scroll-bars object: --scroll-bars-object --scroll-bars <n> [--scroll-bars-target-object-name <name>] [--scroll-bars-target-unique-id <id>]\n";
+    std::cout << "Window-state object: --window-state-object --window-state <n> [--window-state-target-object-name <name>] [--window-state-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4296,6 +4297,30 @@ int main(int argc, char** argv) {
         if (!scroll_bars_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << scroll_bars_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.window_state_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> window_state_objects;
+        window_state_objects.reserve(parse_result.request.window_state_objects.size());
+        for (const auto& window_state_object : parse_result.request.window_state_objects) {
+            window_state_objects.push_back({
+                .record_index = window_state_object.record_index,
+                .object_name = window_state_object.object_name,
+                .unique_id = window_state_object.unique_id
+            });
+        }
+
+        const auto window_state_result = copperfin::vfp::set_visual_object_window_state({
+            .path = parse_result.request.path,
+            .objects = window_state_objects,
+            .window_state = parse_result.request.window_state
+        });
+
+        if (!window_state_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << window_state_result.error << "\n";
             return 4;
         }
     }
