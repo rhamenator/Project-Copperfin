@@ -315,6 +315,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.row_source_available, "#1048: launch contract should keep row source unavailable by default");
     expect(!result.request.column_widths_object, "#1196: launch contract should keep column-widths-object off by default");
     expect(!result.request.column_widths_available, "#1196: launch contract should keep column widths unavailable by default");
+    expect(!result.request.column_lines_object, "#1197: launch contract should keep column-lines-object off by default");
+    expect(!result.request.column_lines_available, "#1197: launch contract should keep column lines unavailable by default");
     expect(!result.request.row_source_type_object, "#1049: launch contract should keep row-source-type-object off by default");
     expect(!result.request.row_source_type_available, "#1049: launch contract should keep row source type unavailable by default");
     expect(!result.request.bound_column_object, "#1050: launch contract should keep bound-column-object off by default");
@@ -7120,6 +7122,92 @@ void test_parse_launch_arguments_rejects_column_widths_object_ambiguity() {
     });
     expect(!stray_column_widths_result.ok,
         "#1196: launch contract should reject stray column-widths arguments");
+}
+
+
+void test_parse_launch_arguments_for_column_lines_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--column-lines-object",
+        "--column-lines", "true",
+        "--column-lines-target-object-name", "cboCustomer",
+        "--column-lines-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1197: launch contract should parse column-lines-object requests");
+    expect(result.request.column_lines_object, "#1197: launch contract should detect --column-lines-object");
+    expect(result.request.column_lines_available && result.request.column_lines,
+        "#1197: column-lines-object requests should carry column lines state");
+    expect(result.request.column_lines_objects.size() == 2U,
+        "#1197: column-lines-object requests should collect column-lines target selectors");
+    if (result.request.column_lines_objects.size() == 2U) {
+        expect(result.request.column_lines_objects[0].object_name == "cboCustomer" &&
+                result.request.column_lines_objects[0].unique_id.empty(),
+            "#1197: column-lines-object requests should parse target object-name selectors");
+        expect(result.request.column_lines_objects[1].object_name.empty() &&
+                result.request.column_lines_objects[1].unique_id == "two-guid",
+            "#1197: column-lines-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_column_lines_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-lines-object",
+        "--column-lines-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1197: launch contract should reject column-lines-object requests without column lines state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-lines-object",
+        "--column-lines", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1197: launch contract should reject column-lines-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-lines-object",
+        "--column-lines", "sometimes",
+        "--column-lines-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1197: launch contract should reject invalid column-lines logical values");
+}
+
+void test_parse_launch_arguments_rejects_column_lines_object_ambiguity() {
+    const auto column_lines_row_source_type_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-lines-object",
+        "--row-source-type-object",
+        "--column-lines", "true",
+        "--column-lines-target-unique-id", "one-guid",
+        "--row-source-type", "2",
+        "--row-source-type-target-unique-id", "one-guid"
+    });
+    expect(!column_lines_row_source_type_result.ok,
+        "#1197: launch contract should reject simultaneous column-lines-object and row-source-type-object requests");
+
+    const auto column_lines_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-lines-object",
+        "--clear-property",
+        "--property-name", "ColumnLines",
+        "--column-lines", "true",
+        "--column-lines-target-unique-id", "one-guid"
+    });
+    expect(!column_lines_property_result.ok,
+        "#1197: launch contract should reject column-lines-object combined with property commands");
+
+    const auto stray_column_lines_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-lines", "true"
+    });
+    expect(!stray_column_lines_result.ok,
+        "#1197: launch contract should reject stray column-lines arguments");
 }
 
 void test_parse_launch_arguments_for_row_source_type_object() {
@@ -17138,6 +17226,9 @@ int main() {
     test_parse_launch_arguments_for_column_widths_object();
     test_parse_launch_arguments_rejects_column_widths_object_invalid_inputs();
     test_parse_launch_arguments_rejects_column_widths_object_ambiguity();
+    test_parse_launch_arguments_for_column_lines_object();
+    test_parse_launch_arguments_rejects_column_lines_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_column_lines_object_ambiguity();
     test_parse_launch_arguments_for_row_source_type_object();
     test_parse_launch_arguments_rejects_row_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_source_type_object_ambiguity();

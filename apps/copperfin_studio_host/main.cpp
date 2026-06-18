@@ -3263,6 +3263,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.column_lines_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> column_lines_objects;
+        column_lines_objects.reserve(parse_result.request.column_lines_objects.size());
+        for (const auto& column_lines_object : parse_result.request.column_lines_objects) {
+            column_lines_objects.push_back({
+                .record_index = column_lines_object.record_index,
+                .object_name = column_lines_object.object_name,
+                .unique_id = column_lines_object.unique_id
+            });
+        }
+
+        const auto column_lines_result = copperfin::vfp::set_visual_object_column_lines({
+            .path = parse_result.request.path,
+            .objects = column_lines_objects,
+            .column_lines = parse_result.request.column_lines
+        });
+
+        if (!column_lines_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << column_lines_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.row_source_type_object) {
         std::vector<copperfin::vfp::VisualObjectAlignmentTarget> row_source_type_objects;
         row_source_type_objects.reserve(parse_result.request.row_source_type_objects.size());
