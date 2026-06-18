@@ -229,6 +229,10 @@ void test_parse_launch_arguments() {
         "#1125: launch contract should keep grid-line-width-object off by default");
     expect(!result.request.grid_line_width_available,
         "#1125: launch contract should keep grid-line-width unavailable by default");
+    expect(!result.request.grid_lines_object,
+        "#1126: launch contract should keep grid-lines-object off by default");
+    expect(!result.request.grid_lines_available,
+        "#1126: launch contract should keep grid-lines unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4453,6 +4457,101 @@ void test_parse_launch_arguments_rejects_grid_line_width_object_ambiguity() {
     });
     expect(!stray_grid_line_width_result.ok,
         "#1125: launch contract should reject stray grid-line-width arguments");
+}
+
+void test_parse_launch_arguments_for_grid_lines_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--grid-lines-object",
+        "--grid-lines", "9",
+        "--grid-lines-target-object-name", "cmdSave",
+        "--grid-lines-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1126: launch contract should parse grid-lines-object requests");
+    expect(result.request.grid_lines_object,
+        "#1126: launch contract should detect --grid-lines-object");
+    expect(result.request.grid_lines_available && result.request.grid_lines == 9,
+        "#1126: grid-lines-object requests should carry grid-lines value");
+    expect(result.request.grid_lines_objects.size() == 2U,
+        "#1126: grid-lines-object requests should collect grid-lines target selectors");
+    if (result.request.grid_lines_objects.size() == 2U) {
+        expect(result.request.grid_lines_objects[0].object_name == "cmdSave" &&
+                result.request.grid_lines_objects[0].unique_id.empty(),
+            "#1126: grid-lines-object requests should parse target object-name selectors");
+        expect(result.request.grid_lines_objects[1].object_name.empty() &&
+                result.request.grid_lines_objects[1].unique_id == "two-guid",
+            "#1126: grid-lines-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_grid_lines_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-lines-object",
+        "--grid-lines-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1126: launch contract should reject grid-lines-object requests without grid-lines value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-lines-object",
+        "--grid-lines", "manual",
+        "--grid-lines-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1126: launch contract should reject non-integer grid-lines values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-lines-object",
+        "--grid-lines", "-1",
+        "--grid-lines-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1126: launch contract should reject negative grid-lines values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-lines-object",
+        "--grid-lines", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1126: launch contract should reject grid-lines-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_grid_lines_object_ambiguity() {
+    const auto grid_lines_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-lines-object",
+        "--locked-object",
+        "--grid-lines", "2",
+        "--grid-lines-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!grid_lines_locked_result.ok,
+        "#1126: launch contract should reject simultaneous grid-lines-object and locked-object requests");
+
+    const auto grid_lines_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-lines-object",
+        "--clear-property",
+        "--property-name", "GridLines",
+        "--grid-lines", "2",
+        "--grid-lines-target-unique-id", "one-guid"
+    });
+    expect(!grid_lines_property_result.ok,
+        "#1126: launch contract should reject grid-lines-object combined with property commands");
+
+    const auto stray_grid_lines_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-lines", "2"
+    });
+    expect(!stray_grid_lines_result.ok,
+        "#1126: launch contract should reject stray grid-lines arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10536,6 +10635,9 @@ int main() {
     test_parse_launch_arguments_for_grid_line_width_object();
     test_parse_launch_arguments_rejects_grid_line_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_grid_line_width_object_ambiguity();
+    test_parse_launch_arguments_for_grid_lines_object();
+    test_parse_launch_arguments_rejects_grid_lines_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_grid_lines_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

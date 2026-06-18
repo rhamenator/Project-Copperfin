@@ -61,6 +61,7 @@ void print_usage() {
     std::cout << "Lock-columns object: --lock-columns-object --lock-columns <n> [--lock-columns-target-object-name <name>] [--lock-columns-target-unique-id <id>]\n";
     std::cout << "Lock-columns-left object: --lock-columns-left-object --lock-columns-left <n> [--lock-columns-left-target-object-name <name>] [--lock-columns-left-target-unique-id <id>]\n";
     std::cout << "Grid-line-width object: --grid-line-width-object --grid-line-width <n> [--grid-line-width-target-object-name <name>] [--grid-line-width-target-unique-id <id>]\n";
+    std::cout << "Grid-lines object: --grid-lines-object --grid-lines <n> [--grid-lines-target-object-name <name>] [--grid-lines-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2526,6 +2527,30 @@ int main(int argc, char** argv) {
         if (!grid_line_width_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << grid_line_width_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.grid_lines_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> grid_lines_objects;
+        grid_lines_objects.reserve(parse_result.request.grid_lines_objects.size());
+        for (const auto& grid_lines_object : parse_result.request.grid_lines_objects) {
+            grid_lines_objects.push_back({
+                .record_index = grid_lines_object.record_index,
+                .object_name = grid_lines_object.object_name,
+                .unique_id = grid_lines_object.unique_id
+            });
+        }
+
+        const auto grid_lines_result = copperfin::vfp::set_visual_object_grid_lines({
+            .path = parse_result.request.path,
+            .objects = grid_lines_objects,
+            .grid_lines = parse_result.request.grid_lines
+        });
+
+        if (!grid_lines_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << grid_lines_result.error << "\n";
             return 4;
         }
     }

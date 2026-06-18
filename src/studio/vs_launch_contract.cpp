@@ -623,6 +623,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--grid-lines-object") {
+            result.request.grid_lines_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1510,6 +1515,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.grid_line_width = grid_line_width;
             result.request.grid_line_width_available = true;
+            continue;
+        }
+
+        if (argument == "--grid-lines") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-lines."};
+            }
+            int grid_lines = 0;
+            if (!parse_int_value(args[++index], grid_lines)) {
+                return {.ok = false, .error = "The --grid-lines value must be an integer."};
+            }
+            if (grid_lines < 0) {
+                return {.ok = false, .error = "The --grid-lines value must be non-negative."};
+            }
+            result.request.grid_lines = grid_lines;
+            result.request.grid_lines_available = true;
             continue;
         }
 
@@ -2979,6 +3000,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --grid-line-width-target-unique-id."};
             }
             result.request.grid_line_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--grid-lines-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-lines-target-object-name."};
+            }
+            result.request.grid_lines_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--grid-lines-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-lines-target-unique-id."};
+            }
+            result.request.grid_lines_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4844,6 +4889,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.grid_line_width_objects.empty())) {
         return {.ok = false, .error = "Grid-line-width arguments can only be used with --grid-line-width-object."};
     }
+    if (result.request.grid_lines_object && !result.request.grid_lines_available) {
+        return {.ok = false, .error = "An object grid-lines assignment requires --grid-lines."};
+    }
+    if (result.request.grid_lines_object && result.request.grid_lines_objects.empty()) {
+        return {.ok = false, .error = "An object grid-lines assignment requires at least one target selector."};
+    }
+    if (!result.request.grid_lines_object &&
+        (result.request.grid_lines_available ||
+         !result.request.grid_lines_objects.empty())) {
+        return {.ok = false, .error = "Grid-lines arguments can only be used with --grid-lines-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5585,6 +5641,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.lock_columns_object ? 1 : 0) +
         (result.request.lock_columns_left_object ? 1 : 0) +
         (result.request.grid_line_width_object ? 1 : 0) +
+        (result.request.grid_lines_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
