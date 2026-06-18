@@ -121,6 +121,10 @@ void test_parse_launch_arguments() {
     expect(!result.request.locked_available, "#1041: launch contract should keep locked unavailable by default");
     expect(!result.request.caption_object, "#1042: launch contract should keep caption-object off by default");
     expect(!result.request.caption_available, "#1042: launch contract should keep caption unavailable by default");
+    expect(!result.request.picture_object,
+        "#1098: launch contract should keep picture-object off by default");
+    expect(!result.request.picture_available,
+        "#1098: launch contract should keep picture unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -1887,6 +1891,82 @@ void test_parse_launch_arguments_rejects_caption_object_ambiguity() {
     });
     expect(!stray_caption_result.ok,
         "#1042: launch contract should reject stray caption arguments");
+}
+
+void test_parse_launch_arguments_for_picture_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--picture-object",
+        "--picture", "forms\\customer.bmp",
+        "--picture-target-object-name", "cmdSave",
+        "--picture-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1098: launch contract should parse picture-object requests");
+    expect(result.request.picture_object, "#1098: launch contract should detect --picture-object");
+    expect(result.request.picture_available && result.request.picture == "forms\\customer.bmp",
+        "#1098: picture-object requests should carry picture text");
+    expect(result.request.picture_objects.size() == 2U,
+        "#1098: picture-object requests should collect picture target selectors");
+    if (result.request.picture_objects.size() == 2U) {
+        expect(result.request.picture_objects[0].object_name == "cmdSave" &&
+                result.request.picture_objects[0].unique_id.empty(),
+            "#1098: picture-object requests should parse target object-name selectors");
+        expect(result.request.picture_objects[1].object_name.empty() &&
+                result.request.picture_objects[1].unique_id == "two-guid",
+            "#1098: picture-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_picture_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-object",
+        "--picture-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1098: launch contract should reject picture-object requests without picture text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-object",
+        "--picture", "forms\\customer.bmp"
+    });
+    expect(!missing_targets_result.ok,
+        "#1098: launch contract should reject picture-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_picture_object_ambiguity() {
+    const auto picture_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-object",
+        "--locked-object",
+        "--picture", "forms\\customer.bmp",
+        "--picture-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!picture_locked_result.ok,
+        "#1098: launch contract should reject simultaneous picture-object and locked-object requests");
+
+    const auto picture_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-object",
+        "--clear-property",
+        "--property-name", "Picture",
+        "--picture", "forms\\customer.bmp",
+        "--picture-target-unique-id", "one-guid"
+    });
+    expect(!picture_property_result.ok,
+        "#1098: launch contract should reject picture-object combined with property commands");
+
+    const auto stray_picture_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture", "forms\\customer.bmp"
+    });
+    expect(!stray_picture_result.ok,
+        "#1098: launch contract should reject stray picture arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -7803,6 +7883,9 @@ int main() {
     test_parse_launch_arguments_for_caption_object();
     test_parse_launch_arguments_rejects_caption_object_invalid_inputs();
     test_parse_launch_arguments_rejects_caption_object_ambiguity();
+    test_parse_launch_arguments_for_picture_object();
+    test_parse_launch_arguments_rejects_picture_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_picture_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

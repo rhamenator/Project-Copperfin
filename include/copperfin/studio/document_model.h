@@ -69,6 +69,7 @@ struct StudioOpenRequest {
     std::string snap_mode{};
     std::string nudge_mode{};
     std::string caption{};
+    std::string picture{};
     std::string tooltip_text{};
     std::string status_bar_text{};
     std::string control_source{};
@@ -187,6 +188,7 @@ struct StudioOpenRequest {
     bool add_line_feeds_object = false;
     bool always_on_top_object = false;
     bool always_on_bottom_object = false;
+    bool picture_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -202,6 +204,7 @@ struct StudioOpenRequest {
     bool object_read_only_available = false;
     bool locked_available = false;
     bool caption_available = false;
+    bool picture_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
@@ -347,6 +350,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> add_line_feeds_objects{};
     std::vector<StudioObjectSelector> always_on_top_objects{};
     std::vector<StudioObjectSelector> always_on_bottom_objects{};
+    std::vector<StudioObjectSelector> picture_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
