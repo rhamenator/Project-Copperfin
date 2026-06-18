@@ -527,6 +527,10 @@ void test_parse_launch_arguments() {
         "#1179: launch contract should keep font-size-object off by default");
     expect(!result.request.font_size_available,
         "#1179: launch contract should keep font size unavailable by default");
+    expect(!result.request.font_bold_object,
+        "#1180: launch contract should keep font-bold-object off by default");
+    expect(!result.request.font_bold_available,
+        "#1180: launch contract should keep font bold unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -12167,6 +12171,92 @@ void test_parse_launch_arguments_rejects_font_size_object_ambiguity() {
         "#1179: launch contract should reject stray font-size arguments");
 }
 
+void test_parse_launch_arguments_for_font_bold_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-bold-object",
+        "--font-bold", "true",
+        "--font-bold-target-object-name", "txtName",
+        "--font-bold-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1180: launch contract should parse font-bold-object requests");
+    expect(result.request.font_bold_object,
+        "#1180: launch contract should detect --font-bold-object");
+    expect(result.request.font_bold_available && result.request.font_bold,
+        "#1180: font-bold-object requests should carry font bold state");
+    expect(result.request.font_bold_objects.size() == 2U,
+        "#1180: font-bold-object requests should collect font-bold target selectors");
+    if (result.request.font_bold_objects.size() == 2U) {
+        expect(result.request.font_bold_objects[0].object_name == "txtName" &&
+                result.request.font_bold_objects[0].unique_id.empty(),
+            "#1180: font-bold-object requests should parse target object-name selectors");
+        expect(result.request.font_bold_objects[1].object_name.empty() &&
+                result.request.font_bold_objects[1].unique_id == "two-guid",
+            "#1180: font-bold-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_bold_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-bold-object",
+        "--font-bold-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1180: launch contract should reject font-bold-object requests without font bold state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-bold-object",
+        "--font-bold", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1180: launch contract should reject font-bold-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-bold-object",
+        "--font-bold", "sometimes",
+        "--font-bold-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1180: launch contract should reject invalid font-bold boolean values");
+}
+
+void test_parse_launch_arguments_rejects_font_bold_object_ambiguity() {
+    const auto font_bold_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-bold-object",
+        "--allow-output-object",
+        "--font-bold", "true",
+        "--font-bold-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_bold_allow_output_result.ok,
+        "#1180: launch contract should reject simultaneous font-bold-object and allow-output-object requests");
+
+    const auto font_bold_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-bold-object",
+        "--clear-property",
+        "--property-name", "FontBold",
+        "--font-bold", "true",
+        "--font-bold-target-unique-id", "one-guid"
+    });
+    expect(!font_bold_property_result.ok,
+        "#1180: launch contract should reject font-bold-object combined with property commands");
+
+    const auto stray_font_bold_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-bold", "true"
+    });
+    expect(!stray_font_bold_result.ok,
+        "#1180: launch contract should reject stray font-bold arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15868,6 +15958,9 @@ int main() {
     test_parse_launch_arguments_for_font_size_object();
     test_parse_launch_arguments_rejects_font_size_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_size_object_ambiguity();
+    test_parse_launch_arguments_for_font_bold_object();
+    test_parse_launch_arguments_rejects_font_bold_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_bold_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
