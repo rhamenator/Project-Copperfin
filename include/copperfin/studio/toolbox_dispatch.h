@@ -1,6 +1,6 @@
 #pragma once
 
-#include "copperfin/studio/toolbox_palette.h"
+#include "copperfin/studio/toolbox_invocation_admission.h"
 
 #include <cstddef>
 #include <string>
@@ -8,12 +8,11 @@
 
 namespace copperfin::studio {
 
-struct StudioToolboxInvocationAdmissionRequest {
-    StudioToolboxPaletteLaunchPlan launch_plan;
-    bool admit_palette_invocation = false;
+struct StudioToolboxDispatchRequest {
+    StudioToolboxInvocationAdmissionPlan admission_plan;
 };
 
-struct StudioToolboxInvocationAdmissionPlan {
+struct StudioToolboxDispatchPlan {
     StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
     StudioToolboxContext toolbox_context = StudioToolboxContext::form;
     std::string command_token;
@@ -23,18 +22,20 @@ struct StudioToolboxInvocationAdmissionPlan {
     std::string unique_id;
     std::size_t item_count = 0;
     std::vector<StudioToolboxItemDescriptor> items;
-    bool palette_invocation_admitted = false;
+    std::vector<std::string> dispatch_arguments;
+    bool dispatch_admitted = false;
     bool dry_run = true;
+    bool executed = false;
     bool mutates_asset = false;
 };
 
-struct StudioToolboxInvocationAdmissionResult {
+struct StudioToolboxDispatchResult {
     bool ok = false;
     std::string error;
-    StudioToolboxInvocationAdmissionPlan plan;
+    StudioToolboxDispatchPlan plan;
 };
 
-[[nodiscard]] StudioToolboxInvocationAdmissionResult plan_studio_toolbox_invocation_admission(
-    const StudioToolboxInvocationAdmissionRequest& request);
+[[nodiscard]] StudioToolboxDispatchResult plan_studio_toolbox_dispatch(
+    const StudioToolboxDispatchRequest& request);
 
 }  // namespace copperfin::studio

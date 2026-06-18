@@ -25,6 +25,7 @@ StudioToolboxInvocationAdmissionResult plan_studio_toolbox_invocation_admission(
         .plan = {
             .selection_context = request.launch_plan.selection_context,
             .toolbox_context = request.launch_plan.toolbox_context,
+            .command_token = "studio.toolbox.palette.invoke",
             .asset_path = request.launch_plan.asset_path,
             .record_index = request.launch_plan.record_index,
             .object_name = request.launch_plan.object_name,

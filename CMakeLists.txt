@@ -88,6 +88,7 @@ add_library(cf_design_model
     src/studio/product_subsystems.cpp
     src/studio/report_layout.cpp
     src/studio/toolbox_creation.cpp
+    src/studio/toolbox_dispatch.cpp
     src/studio/toolbox_invocation_admission.cpp
     src/studio/toolbox_palette.cpp
     src/studio/vs_launch_contract.cpp

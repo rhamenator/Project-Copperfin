@@ -1,4 +1,5 @@
 #include "copperfin/studio/toolbox_palette.h"
+#include "copperfin/studio/toolbox_dispatch.h"
 #include "copperfin/studio/toolbox_invocation_admission.h"
 
 #include <cstdlib>
@@ -21,6 +22,15 @@ bool has_toolbox_item(
     std::string_view id) {
     for (const auto& item : items) {
         if (item.id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
+    for (std::size_t index = 0U; (index + 1U) < arguments.size(); index += 2U) {
+        if (arguments[index] == key && arguments[index + 1U] == value) {
             return true;
         }
     }
@@ -208,6 +218,7 @@ int main() {
         "#1219: toolbox invocation admission should accept validated launch plans");
     expect(admitted_invocation.plan.selection_context == StudioEditorSelectionContext::visual_object &&
             admitted_invocation.plan.toolbox_context == StudioToolboxContext::form &&
+            admitted_invocation.plan.command_token == "studio.toolbox.palette.invoke" &&
             admitted_invocation.plan.asset_path == "forms/customer.scx" &&
             admitted_invocation.plan.record_index == 1U &&
             admitted_invocation.plan.object_name == "frmCustomer" &&
@@ -219,6 +230,37 @@ int main() {
             !admitted_invocation.plan.mutates_asset &&
             has_toolbox_item(admitted_invocation.plan.items, "textbox"),
         "#1219: toolbox invocation admission should preserve palette metadata and admitted state");
+
+    const auto toolbox_dispatch = copperfin::studio::plan_studio_toolbox_dispatch({
+        .admission_plan = admitted_invocation.plan
+    });
+    expect(toolbox_dispatch.ok,
+        "#1233: toolbox dispatch should accept admitted toolbox palette invocations");
+    expect(toolbox_dispatch.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+            toolbox_dispatch.plan.toolbox_context == StudioToolboxContext::form &&
+            toolbox_dispatch.plan.command_token == "studio.toolbox.palette.invoke" &&
+            toolbox_dispatch.plan.asset_path == "forms/customer.scx" &&
+            toolbox_dispatch.plan.record_index == 1U &&
+            toolbox_dispatch.plan.object_name == "frmCustomer" &&
+            toolbox_dispatch.plan.unique_id == "form-guid" &&
+            toolbox_dispatch.plan.item_count == visual_plan.plan.item_count &&
+            toolbox_dispatch.plan.items.size() == visual_plan.plan.items.size() &&
+            toolbox_dispatch.plan.dispatch_admitted &&
+            !toolbox_dispatch.plan.dry_run &&
+            !toolbox_dispatch.plan.executed &&
+            !toolbox_dispatch.plan.mutates_asset &&
+            has_toolbox_item(toolbox_dispatch.plan.items, "textbox"),
+        "#1233: toolbox dispatch should preserve palette admission metadata without executing");
+    expect(has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--command-token", "studio.toolbox.palette.invoke") &&
+            has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--selection-context", "visual_object") &&
+            has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--toolbox-context", "form") &&
+            has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--path", "forms/customer.scx") &&
+            has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--record", "1") &&
+            has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--object-name", "frmCustomer") &&
+            has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--unique-id", "form-guid") &&
+            has_argument_pair(toolbox_dispatch.plan.dispatch_arguments, "--item-count",
+                std::to_string(visual_plan.plan.item_count)),
+        "#1233: toolbox dispatch should materialize a deterministic argument contract");
 
     const auto dry_run_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
         .launch_plan = report_plan.plan,
@@ -233,6 +275,41 @@ int main() {
             has_toolbox_item(dry_run_invocation.plan.items, "label") &&
             !has_toolbox_item(dry_run_invocation.plan.items, "textbox"),
         "#1219: toolbox invocation admission should default to dry-run and preserve filtered report items");
+
+    const auto dry_run_dispatch = copperfin::studio::plan_studio_toolbox_dispatch({
+        .admission_plan = dry_run_invocation.plan
+    });
+    expect(!dry_run_dispatch.ok &&
+            dry_run_dispatch.error == "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1233: toolbox dispatch should reject dry-run admission plans");
+
+    auto missing_command_plan = admitted_invocation.plan;
+    missing_command_plan.command_token = {};
+    const auto missing_command_dispatch = copperfin::studio::plan_studio_toolbox_dispatch({
+        .admission_plan = missing_command_plan
+    });
+    expect(!missing_command_dispatch.ok &&
+            missing_command_dispatch.error == "A toolbox dispatch request requires a command token.",
+        "#1233: toolbox dispatch should reject admitted plans without command tokens");
+
+    auto missing_items_plan = admitted_invocation.plan;
+    missing_items_plan.items.clear();
+    missing_items_plan.item_count = 0U;
+    const auto missing_items_dispatch = copperfin::studio::plan_studio_toolbox_dispatch({
+        .admission_plan = missing_items_plan
+    });
+    expect(!missing_items_dispatch.ok &&
+            missing_items_dispatch.error == "A toolbox dispatch request requires validated toolbox item metadata.",
+        "#1233: toolbox dispatch should reject admitted plans without item metadata");
+
+    auto inconsistent_dispatch_plan = admitted_invocation.plan;
+    inconsistent_dispatch_plan.item_count += 1U;
+    const auto inconsistent_dispatch = copperfin::studio::plan_studio_toolbox_dispatch({
+        .admission_plan = inconsistent_dispatch_plan
+    });
+    expect(!inconsistent_dispatch.ok &&
+            inconsistent_dispatch.error == "A toolbox dispatch request requires consistent toolbox item metadata.",
+        "#1233: toolbox dispatch should reject admitted plans with inconsistent item metadata");
 
     const auto missing_items_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
         .launch_plan = {},
