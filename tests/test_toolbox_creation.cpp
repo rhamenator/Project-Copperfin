@@ -225,6 +225,139 @@ void test_toolbox_creation_planner_respects_explicit_names_and_rejections() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_planner_uses_admitted_palette_dispatch_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_dispatch_source_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto dispatch_catalog = copperfin::studio::plan_studio_toolbox_dispatch_catalog({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .asset_path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "frmMain",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = true
+    });
+    expect(dispatch_catalog.ok && dispatch_catalog.dispatch.ok,
+        "#1260: toolbox create-from-dispatch fixture should produce an admitted dispatch");
+
+    const auto plan_result = copperfin::studio::plan_visual_object_from_toolbox_dispatch({
+        .dispatch_plan = dispatch_catalog.dispatch.plan,
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "dispatch-textbox-guid",
+        .parent_name = {},
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Dispatch Text"}
+        }
+    });
+
+    expect(plan_result.ok &&
+            plan_result.plan.path == table_path.string() &&
+            plan_result.plan.toolbox_context_provided &&
+            plan_result.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            plan_result.plan.object_name == "txt2" &&
+            plan_result.plan.unique_id == "dispatch-textbox-guid" &&
+            plan_result.plan.parent_name == "frmMain" &&
+            plan_result.plan.dry_run &&
+            !plan_result.plan.mutates_asset,
+        "#1260: toolbox create-from-dispatch planning should preserve dispatch context and selected parent");
+    expect(has_field_value(plan_result.plan.field_values, "CLASS", "TextBox") &&
+            has_field_value(plan_result.plan.field_values, "PARENT", "frmMain") &&
+            has_field_value(plan_result.plan.field_values, "CAPTION", "Dispatch Text"),
+        "#1260: toolbox create-from-dispatch planning should reuse descriptor field mapping");
+    expect(object_count(table_path) == before_count,
+        "#1260: toolbox create-from-dispatch planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_planner_rejects_invalid_palette_dispatches_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_dispatch_source_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto dry_run_catalog = copperfin::studio::plan_studio_toolbox_dispatch_catalog({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .asset_path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "frmMain",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = false
+    });
+    expect(dry_run_catalog.ok && !dry_run_catalog.dispatch.ok,
+        "#1260: dry-run toolbox dispatch fixture should preserve rejected dispatch state");
+
+    auto dry_run_plan = dry_run_catalog.invocation_admission.plan;
+    const auto dry_run_result = copperfin::studio::plan_visual_object_from_toolbox_dispatch({
+        .dispatch_plan = {
+            .selection_context = dry_run_plan.selection_context,
+            .toolbox_context = dry_run_plan.toolbox_context,
+            .command_token = dry_run_plan.command_token,
+            .asset_path = dry_run_plan.asset_path,
+            .record_index = dry_run_plan.record_index,
+            .object_name = dry_run_plan.object_name,
+            .unique_id = dry_run_plan.unique_id,
+            .item_count = dry_run_plan.item_count,
+            .items = dry_run_plan.items,
+            .dispatch_arguments = {},
+            .dispatch_admitted = false,
+            .dry_run = true,
+            .executed = false,
+            .mutates_asset = false
+        },
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = {},
+        .parent_name = {},
+        .field_values = {}
+    });
+    expect(!dry_run_result.ok &&
+            dry_run_result.error ==
+                "A toolbox create-from-dispatch request requires an admitted non-executed toolbox dispatch.",
+        "#1260: toolbox create-from-dispatch planning should reject dry-run dispatch plans");
+
+    const auto report_catalog = copperfin::studio::plan_studio_toolbox_dispatch_catalog({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .asset_path = table_path.string(),
+        .record_index = 0U,
+        .object_name = "DetailBand",
+        .unique_id = "report-guid",
+        .admit_palette_invocation = true
+    });
+    expect(report_catalog.ok && report_catalog.dispatch.ok,
+        "#1260: report toolbox dispatch fixture should produce admitted dispatches");
+
+    const auto unavailable_result = copperfin::studio::plan_visual_object_from_toolbox_dispatch({
+        .dispatch_plan = report_catalog.dispatch.plan,
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = {},
+        .parent_name = {},
+        .field_values = {}
+    });
+    expect(!unavailable_result.ok &&
+            unavailable_result.error ==
+                "The requested toolbox item is not available in the admitted toolbox dispatch.",
+        "#1260: toolbox create-from-dispatch planning should reject unavailable dispatch items");
+    expect(object_count(table_path) == before_count,
+        "#1260: rejected toolbox create-from-dispatch planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1506,6 +1639,8 @@ void test_toolbox_creation_enforces_optional_context_filters() {
 int main() {
     test_toolbox_creation_planner_maps_descriptors_without_mutation();
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
+    test_toolbox_creation_planner_uses_admitted_palette_dispatch_without_mutation();
+    test_toolbox_creation_planner_rejects_invalid_palette_dispatches_without_mutation();
     test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation();
     test_toolbox_creation_dispatch_catalog_plans_context_dispatches_without_mutation();
     test_toolbox_creation_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();

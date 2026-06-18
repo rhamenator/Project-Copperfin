@@ -1,5 +1,6 @@
 #pragma once
 
+#include "copperfin/studio/toolbox_dispatch.h"
 #include "copperfin/studio/toolbox_palette.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
@@ -17,6 +18,15 @@ struct StudioToolboxObjectCreateRequest {
     std::string parent_name;
     bool toolbox_context_provided = false;
     StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::vector<vfp::VisualObjectPropertyChange> field_values;
+};
+
+struct StudioToolboxObjectCreateFromPaletteDispatchRequest {
+    StudioToolboxDispatchPlan dispatch_plan;
+    std::string toolbox_item_id;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_name;
     std::vector<vfp::VisualObjectPropertyChange> field_values;
 };
 
@@ -215,6 +225,8 @@ struct StudioToolboxObjectCreateBatchDispatchCatalogResult {
 
 [[nodiscard]] StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request);
+[[nodiscard]] StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(

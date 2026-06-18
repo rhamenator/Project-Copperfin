@@ -290,6 +290,48 @@ StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
         {});
 }
 
+StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateFromPaletteDispatchRequest& request) {
+    const auto& dispatch_plan = request.dispatch_plan;
+    if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run || dispatch_plan.executed) {
+        return failed_plan_result("A toolbox create-from-dispatch request requires an admitted non-executed toolbox dispatch.");
+    }
+    if (dispatch_plan.asset_path.empty()) {
+        return failed_plan_result("A toolbox create-from-dispatch request requires an asset path.");
+    }
+    if (dispatch_plan.items.empty() || dispatch_plan.item_count == 0U) {
+        return failed_plan_result("A toolbox create-from-dispatch request requires validated toolbox item metadata.");
+    }
+    if (dispatch_plan.item_count != dispatch_plan.items.size()) {
+        return failed_plan_result("A toolbox create-from-dispatch request requires consistent toolbox item metadata.");
+    }
+
+    const std::string requested_item_id = normalized_identity(request.toolbox_item_id);
+    const auto item_found = std::find_if(
+        dispatch_plan.items.begin(),
+        dispatch_plan.items.end(),
+        [&](const StudioToolboxItemDescriptor& item) {
+            return normalized_identity(item.id) == requested_item_id;
+        });
+    if (item_found == dispatch_plan.items.end()) {
+        return failed_plan_result("The requested toolbox item is not available in the admitted toolbox dispatch.");
+    }
+
+    const std::string parent_name = trimmed_copy(request.parent_name).empty()
+        ? dispatch_plan.object_name
+        : request.parent_name;
+    return plan_visual_object_from_toolbox_item({
+        .path = dispatch_plan.asset_path,
+        .toolbox_item_id = request.toolbox_item_id,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .parent_name = parent_name,
+        .toolbox_context_provided = true,
+        .toolbox_context = dispatch_plan.toolbox_context,
+        .field_values = request.field_values
+    });
+}
+
 StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request) {
     if (request.path.empty()) {
