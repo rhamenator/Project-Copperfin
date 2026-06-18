@@ -13,6 +13,7 @@
 #define _getpid getpid
 #endif
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -41,6 +42,17 @@ bool has_field_value(
         }
     }
     return false;
+}
+
+const copperfin::studio::StudioToolboxObjectCreatePlanCatalogEntry* find_create_plan_entry(
+    const std::vector<copperfin::studio::StudioToolboxObjectCreatePlanCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.toolbox_item.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
 }
 
 std::filesystem::path create_toolbox_fixture(const std::filesystem::path& temp_dir) {
@@ -173,6 +185,78 @@ void test_toolbox_creation_planner_respects_explicit_names_and_rejections() {
         "#1241: toolbox creation planning should reject incompatible toolbox contexts");
     expect(object_count(table_path) == before_count,
         "#1241: rejected context toolbox creation planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_catalog_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto form_catalog = copperfin::studio::plan_visual_object_catalog_from_toolbox_context({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .path = table_path.string(),
+        .parent_name = "frmMain",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Planned"}
+        }
+    });
+    const auto* textbox_entry = find_create_plan_entry(form_catalog.entries, "textbox");
+    const auto* command_entry = find_create_plan_entry(form_catalog.entries, "commandbutton");
+    expect(form_catalog.ok &&
+            form_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            form_catalog.item_count == form_catalog.entries.size() &&
+            form_catalog.plan_count == form_catalog.item_count &&
+            form_catalog.error_count == 0U &&
+            form_catalog.dry_run &&
+            !form_catalog.mutates_asset,
+        "#1243: form toolbox creation catalogs should summarize all form-compatible plans");
+    expect(textbox_entry != nullptr &&
+            textbox_entry->create_plan.ok &&
+            textbox_entry->create_plan.plan.target_record_index == before_count &&
+            textbox_entry->create_plan.plan.object_name == "txt2" &&
+            textbox_entry->create_plan.plan.parent_name == "frmMain" &&
+            has_field_value(textbox_entry->create_plan.plan.field_values, "CLASS", "TextBox") &&
+            has_field_value(textbox_entry->create_plan.plan.field_values, "CAPTION", "Planned"),
+        "#1243: form toolbox creation catalogs should preserve textbox generated names and field values");
+    expect(command_entry != nullptr &&
+            command_entry->create_plan.ok &&
+            command_entry->create_plan.plan.object_name == "cmd1" &&
+            has_field_value(command_entry->create_plan.plan.field_values, "CLASS", "CommandButton"),
+        "#1243: form toolbox creation catalogs should preserve command button generated names");
+    expect(object_count(table_path) == before_count,
+        "#1243: form toolbox creation catalogs should not mutate the visual asset");
+
+    const auto report_catalog = copperfin::studio::plan_visual_object_catalog_from_toolbox_context({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .path = table_path.string(),
+        .parent_name = "DetailBand",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Report Planned"}
+        }
+    });
+    const auto* report_label_entry = find_create_plan_entry(report_catalog.entries, "label");
+    expect(report_catalog.ok &&
+            report_catalog.item_count == report_catalog.entries.size() &&
+            report_catalog.plan_count == report_catalog.item_count &&
+            report_catalog.error_count == 0U &&
+            report_label_entry != nullptr &&
+            report_label_entry->create_plan.ok &&
+            report_label_entry->create_plan.plan.object_name == "lbl1" &&
+            report_label_entry->create_plan.plan.parent_name == "DetailBand" &&
+            has_field_value(report_label_entry->create_plan.plan.field_values, "CLASS", "Label"),
+        "#1243: report toolbox creation catalogs should include report-compatible label plans");
+    expect(find_create_plan_entry(report_catalog.entries, "textbox") == nullptr,
+        "#1243: report toolbox creation catalogs should exclude form-only textbox plans");
+    expect(object_count(table_path) == before_count,
+        "#1243: report toolbox creation catalogs should not mutate the visual asset");
 
     fs::remove_all(temp_dir, ignored);
 }
@@ -371,6 +455,7 @@ void test_toolbox_creation_enforces_optional_context_filters() {
 int main() {
     test_toolbox_creation_planner_maps_descriptors_without_mutation();
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
+    test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation();
     test_toolbox_creation_maps_descriptors_and_defaults();
     test_toolbox_creation_respects_explicit_object_name();
     test_toolbox_creation_rejects_unknown_toolbox_without_mutation();

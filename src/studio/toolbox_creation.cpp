@@ -183,6 +183,66 @@ StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
     };
 }
 
+StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolbox_context(
+    const StudioToolboxObjectCreatePlanCatalogRequest& request) {
+    const auto items = studio_toolbox_items_for_context(request.toolbox_context);
+    if (items.empty()) {
+        return {
+            .ok = false,
+            .error = "A toolbox object creation catalog request requires validated toolbox item metadata.",
+            .toolbox_context = request.toolbox_context,
+            .item_count = 0U,
+            .plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioToolboxObjectCreatePlanCatalogEntry> entries;
+    entries.reserve(items.size());
+    std::size_t plan_count = 0U;
+    std::size_t error_count = 0U;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    for (const auto& item : items) {
+        auto create_plan = plan_visual_object_from_toolbox_item({
+            .path = request.path,
+            .toolbox_item_id = std::string(item.id),
+            .object_name = {},
+            .unique_id = {},
+            .parent_name = request.parent_name,
+            .toolbox_context_provided = true,
+            .toolbox_context = request.toolbox_context,
+            .field_values = request.field_values
+        });
+        if (create_plan.ok) {
+            ++plan_count;
+            dry_run = dry_run && create_plan.plan.dry_run;
+            mutates_asset = mutates_asset || create_plan.plan.mutates_asset;
+        } else {
+            ++error_count;
+        }
+        entries.push_back({
+            .toolbox_item = item,
+            .create_plan = std::move(create_plan)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .toolbox_context = request.toolbox_context,
+        .item_count = items.size(),
+        .plan_count = plan_count,
+        .error_count = error_count,
+        .dry_run = dry_run,
+        .mutates_asset = mutates_asset,
+        .entries = std::move(entries)
+    };
+}
+
 vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request) {
     const auto plan_result = plan_visual_object_from_toolbox_item(request);
