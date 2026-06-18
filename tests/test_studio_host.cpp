@@ -411,6 +411,10 @@ void test_parse_launch_arguments() {
         "#1145: launch contract should keep auto-verb-menu-object off by default");
     expect(!result.request.auto_verb_menu_available,
         "#1145: launch contract should keep auto verb menu unavailable by default");
+    expect(!result.request.desktop_object,
+        "#1147: launch contract should keep desktop-object off by default");
+    expect(!result.request.desktop_available,
+        "#1147: launch contract should keep desktop unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9332,6 +9336,92 @@ void test_parse_launch_arguments_rejects_auto_verb_menu_object_ambiguity() {
         "#1145: launch contract should reject stray auto-verb-menu arguments");
 }
 
+void test_parse_launch_arguments_for_desktop_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--desktop-object",
+        "--desktop", "false",
+        "--desktop-target-object-name", "frmCustomer",
+        "--desktop-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1147: launch contract should parse desktop-object requests");
+    expect(result.request.desktop_object,
+        "#1147: launch contract should detect --desktop-object");
+    expect(result.request.desktop_available && !result.request.desktop,
+        "#1147: desktop-object requests should carry desktop state");
+    expect(result.request.desktop_objects.size() == 2U,
+        "#1147: desktop-object requests should collect desktop target selectors");
+    if (result.request.desktop_objects.size() == 2U) {
+        expect(result.request.desktop_objects[0].object_name == "frmCustomer" &&
+                result.request.desktop_objects[0].unique_id.empty(),
+            "#1147: desktop-object requests should parse target object-name selectors");
+        expect(result.request.desktop_objects[1].object_name.empty() &&
+                result.request.desktop_objects[1].unique_id == "two-guid",
+            "#1147: desktop-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_desktop_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--desktop-object",
+        "--desktop-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1147: launch contract should reject desktop-object requests without desktop state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--desktop-object",
+        "--desktop", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1147: launch contract should reject desktop-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--desktop-object",
+        "--desktop", "sometimes",
+        "--desktop-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1147: launch contract should reject invalid desktop boolean values");
+}
+
+void test_parse_launch_arguments_rejects_desktop_object_ambiguity() {
+    const auto desktop_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--desktop-object",
+        "--allow-output-object",
+        "--desktop", "false",
+        "--desktop-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!desktop_allow_output_result.ok,
+        "#1147: launch contract should reject simultaneous desktop-object and allow-output-object requests");
+
+    const auto desktop_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--desktop-object",
+        "--clear-property",
+        "--property-name", "Desktop",
+        "--desktop", "false",
+        "--desktop-target-unique-id", "one-guid"
+    });
+    expect(!desktop_property_result.ok,
+        "#1147: launch contract should reject desktop-object combined with property commands");
+
+    const auto stray_desktop_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--desktop", "false"
+    });
+    expect(!stray_desktop_result.ok,
+        "#1147: launch contract should reject stray desktop arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -12658,6 +12748,9 @@ int main() {
     test_parse_launch_arguments_for_auto_verb_menu_object();
     test_parse_launch_arguments_rejects_auto_verb_menu_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_verb_menu_object_ambiguity();
+    test_parse_launch_arguments_for_desktop_object();
+    test_parse_launch_arguments_rejects_desktop_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_desktop_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();

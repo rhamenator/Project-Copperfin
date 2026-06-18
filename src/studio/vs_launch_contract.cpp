@@ -1076,6 +1076,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--desktop-object") {
+            result.request.desktop_object = true;
+            continue;
+        }
+
         if (argument == "--auto-center-object") {
             result.request.auto_center_object = true;
             continue;
@@ -2506,6 +2511,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.bind_controls = *bind_controls;
             result.request.bind_controls_available = true;
+            continue;
+        }
+
+        if (argument == "--desktop") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --desktop."};
+            }
+            const auto desktop = parse_bool_value(args[++index]);
+            if (!desktop.has_value()) {
+                return {.ok = false, .error = "The --desktop value must be true or false."};
+            }
+            result.request.desktop = *desktop;
+            result.request.desktop_available = true;
             continue;
         }
 
@@ -5007,6 +5025,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--desktop-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --desktop-target-object-name."};
+            }
+            result.request.desktop_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--desktop-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --desktop-target-unique-id."};
+            }
+            result.request.desktop_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -6631,6 +6673,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.auto_verb_menu_objects.empty())) {
         return {.ok = false, .error = "Auto-verb-menu arguments can only be used with --auto-verb-menu-object."};
     }
+    if (result.request.desktop_object && !result.request.desktop_available) {
+        return {.ok = false, .error = "An object desktop assignment requires --desktop."};
+    }
+    if (result.request.desktop_object && result.request.desktop_objects.empty()) {
+        return {.ok = false, .error = "An object desktop assignment requires at least one target selector."};
+    }
+    if (!result.request.desktop_object &&
+        (result.request.desktop_available ||
+         !result.request.desktop_objects.empty())) {
+        return {.ok = false, .error = "Desktop arguments can only be used with --desktop-object."};
+    }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
         return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
     }
@@ -6971,6 +7024,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.bind_controls_object ? 1 : 0) +
         (result.request.auto_verb_menu_object ? 1 : 0) +
+        (result.request.desktop_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +
