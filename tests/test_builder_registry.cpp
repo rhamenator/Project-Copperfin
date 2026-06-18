@@ -35,6 +35,17 @@ bool has_argument_pair(const std::vector<std::string>& arguments, const std::str
     return false;
 }
 
+const copperfin::studio::StudioBuilderDispatchCatalogEntry* find_dispatch_catalog_entry(
+    const std::vector<copperfin::studio::StudioBuilderDispatchCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.builder.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -238,6 +249,102 @@ int main() {
     expect(!missing_dispatch_builder.ok &&
                missing_dispatch_builder.error == "A builder dispatch request requires a validated builder id.",
            "#1229: builder dispatch should reject admitted plans without builder ids");
+
+    const auto admitted_control_dispatch_catalog = copperfin::studio::plan_studio_builder_dispatch_catalog({
+        .context = StudioBuilderContext::control,
+        .asset_path = "forms/customer.scx",
+        .record_index = 4U,
+        .object_name = "grdOrders",
+        .unique_id = "grid-guid",
+        .admit_ui_launches = true
+    });
+    expect(admitted_control_dispatch_catalog.ok &&
+               admitted_control_dispatch_catalog.context == StudioBuilderContext::control &&
+               admitted_control_dispatch_catalog.builder_count == control_builders.size() &&
+               admitted_control_dispatch_catalog.dispatch_count == control_builders.size() &&
+               admitted_control_dispatch_catalog.error_count == 0U &&
+               !admitted_control_dispatch_catalog.dry_run &&
+               !admitted_control_dispatch_catalog.mutates_asset,
+           "#1231: admitted builder dispatch catalogs should dispatch every context builder without mutation");
+    const auto* catalog_grid_dispatch = find_dispatch_catalog_entry(
+        admitted_control_dispatch_catalog.entries, "grid-builder");
+    expect(catalog_grid_dispatch != nullptr &&
+               catalog_grid_dispatch->launch_plan.ok &&
+               catalog_grid_dispatch->invocation_admission.ok &&
+               catalog_grid_dispatch->dispatch.ok &&
+               std::string(catalog_grid_dispatch->dispatch.plan.builder.id) == "grid-builder" &&
+               catalog_grid_dispatch->dispatch.plan.builder.kind == StudioBuilderKind::builder &&
+               catalog_grid_dispatch->dispatch.plan.context == StudioBuilderContext::control &&
+               catalog_grid_dispatch->dispatch.plan.asset_path == "forms/customer.scx" &&
+               catalog_grid_dispatch->dispatch.plan.record_index == 4U &&
+               catalog_grid_dispatch->dispatch.plan.object_name == "grdOrders" &&
+               catalog_grid_dispatch->dispatch.plan.unique_id == "grid-guid" &&
+               has_argument_pair(
+                   catalog_grid_dispatch->dispatch.plan.dispatch_arguments,
+                   "--builder-id",
+                   "grid-builder") &&
+               has_argument_pair(
+                   catalog_grid_dispatch->dispatch.plan.dispatch_arguments,
+                   "--builder-context",
+                   "control"),
+           "#1231: builder dispatch catalog entries should preserve builder and target metadata");
+
+    const auto dry_run_control_dispatch_catalog = copperfin::studio::plan_studio_builder_dispatch_catalog({
+        .context = StudioBuilderContext::control,
+        .asset_path = "forms/customer.scx",
+        .record_index = 4U,
+        .object_name = "grdOrders",
+        .unique_id = "grid-guid",
+        .admit_ui_launches = false
+    });
+    expect(dry_run_control_dispatch_catalog.ok &&
+               dry_run_control_dispatch_catalog.builder_count == control_builders.size() &&
+               dry_run_control_dispatch_catalog.dispatch_count == 0U &&
+               dry_run_control_dispatch_catalog.error_count == control_builders.size() &&
+               dry_run_control_dispatch_catalog.dry_run &&
+               !dry_run_control_dispatch_catalog.mutates_asset,
+           "#1231: dry-run builder dispatch catalogs should report per-builder dispatch rejections");
+    const auto* dry_run_grid_dispatch = find_dispatch_catalog_entry(
+        dry_run_control_dispatch_catalog.entries, "grid-builder");
+    expect(dry_run_grid_dispatch != nullptr &&
+               dry_run_grid_dispatch->launch_plan.ok &&
+               dry_run_grid_dispatch->invocation_admission.ok &&
+               !dry_run_grid_dispatch->invocation_admission.plan.ui_launch_admitted &&
+               !dry_run_grid_dispatch->dispatch.ok &&
+               dry_run_grid_dispatch->dispatch.error ==
+                   "A builder dispatch request requires an admitted non-dry-run invocation.",
+           "#1231: dry-run builder dispatch catalog entries should preserve admission failures");
+
+    const auto label_dispatch_catalog = copperfin::studio::plan_studio_builder_dispatch_catalog({
+        .context = StudioBuilderContext::label,
+        .asset_path = "labels/mailing.lbx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .admit_ui_launches = true
+    });
+    const auto label_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::label);
+    const auto* label_wizard_dispatch = find_dispatch_catalog_entry(
+        label_dispatch_catalog.entries, "label-wizard");
+    expect(label_dispatch_catalog.ok &&
+               label_dispatch_catalog.builder_count == label_builders.size() &&
+               label_dispatch_catalog.dispatch_count == label_builders.size() &&
+               label_dispatch_catalog.error_count == 0U &&
+               label_wizard_dispatch != nullptr &&
+               label_wizard_dispatch->dispatch.ok &&
+               label_wizard_dispatch->dispatch.plan.builder.kind == StudioBuilderKind::wizard &&
+               label_wizard_dispatch->dispatch.plan.context == StudioBuilderContext::label &&
+               label_wizard_dispatch->dispatch.plan.entry_point == "cf_wizards.label_wizard" &&
+               label_wizard_dispatch->dispatch.plan.asset_path == "labels/mailing.lbx" &&
+               has_argument_pair(
+                   label_wizard_dispatch->dispatch.plan.dispatch_arguments,
+                   "--builder-id",
+                   "label-wizard") &&
+               has_argument_pair(
+                   label_wizard_dispatch->dispatch.plan.dispatch_arguments,
+                   "--builder-context",
+                   "label"),
+           "#1231: label dispatch catalogs should include wizard dispatch metadata");
 
     auto missing_entry_plan = control_launch.plan;
     missing_entry_plan.entry_point = {};
