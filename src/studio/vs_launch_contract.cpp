@@ -1106,6 +1106,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-left-object") {
+            result.request.max_left_object = true;
+            continue;
+        }
+
         if (argument == "--auto-center-object") {
             result.request.auto_center_object = true;
             continue;
@@ -2620,6 +2625,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.max_width = max_width;
             result.request.max_width_available = true;
+            continue;
+        }
+
+        if (argument == "--max-left") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-left."};
+            }
+            int max_left = 0;
+            if (!parse_int_value(args[++index], max_left)) {
+                return {.ok = false, .error = "The --max-left value must be an integer."};
+            }
+            if (max_left < 0) {
+                return {.ok = false, .error = "The --max-left value must not be negative."};
+            }
+            result.request.max_left = max_left;
+            result.request.max_left_available = true;
             continue;
         }
 
@@ -5265,6 +5286,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-left-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-left-target-object-name."};
+            }
+            result.request.max_left_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--max-left-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-left-target-unique-id."};
+            }
+            result.request.max_left_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -6955,6 +7000,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.max_width_objects.empty())) {
         return {.ok = false, .error = "Max-width arguments can only be used with --max-width-object."};
     }
+    if (result.request.max_left_object && !result.request.max_left_available) {
+        return {.ok = false, .error = "An object max-left assignment requires --max-left."};
+    }
+    if (result.request.max_left_object && result.request.max_left_objects.empty()) {
+        return {.ok = false, .error = "An object max-left assignment requires at least one target selector."};
+    }
+    if (!result.request.max_left_object &&
+        (result.request.max_left_available ||
+         !result.request.max_left_objects.empty())) {
+        return {.ok = false, .error = "Max-left arguments can only be used with --max-left-object."};
+    }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
         return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
     }
@@ -7301,6 +7357,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.max_button_object ? 1 : 0) +
         (result.request.max_height_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
+        (result.request.max_left_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +

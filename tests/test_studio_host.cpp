@@ -435,6 +435,10 @@ void test_parse_launch_arguments() {
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
         "#1152: launch contract should keep max width unavailable by default");
+    expect(!result.request.max_left_object,
+        "#1153: launch contract should keep max-left-object off by default");
+    expect(!result.request.max_left_available,
+        "#1153: launch contract should keep max left unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9890,6 +9894,101 @@ void test_parse_launch_arguments_rejects_max_width_object_ambiguity() {
         "#1152: launch contract should reject stray max-width arguments");
 }
 
+void test_parse_launch_arguments_for_max_left_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--max-left-object",
+        "--max-left", "640",
+        "--max-left-target-object-name", "frmCustomer",
+        "--max-left-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1153: launch contract should parse max-left-object requests");
+    expect(result.request.max_left_object,
+        "#1153: launch contract should detect --max-left-object");
+    expect(result.request.max_left_available && result.request.max_left == 640,
+        "#1153: max-left-object requests should carry max left value");
+    expect(result.request.max_left_objects.size() == 2U,
+        "#1153: max-left-object requests should collect max-left target selectors");
+    if (result.request.max_left_objects.size() == 2U) {
+        expect(result.request.max_left_objects[0].object_name == "frmCustomer" &&
+                result.request.max_left_objects[0].unique_id.empty(),
+            "#1153: max-left-object requests should parse target object-name selectors");
+        expect(result.request.max_left_objects[1].object_name.empty() &&
+                result.request.max_left_objects[1].unique_id == "two-guid",
+            "#1153: max-left-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_max_left_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-left-object",
+        "--max-left-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1153: launch contract should reject max-left-object requests without max left value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-left-object",
+        "--max-left", "640"
+    });
+    expect(!missing_targets_result.ok,
+        "#1153: launch contract should reject max-left-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-left-object",
+        "--max-left", "wide",
+        "--max-left-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1153: launch contract should reject non-integer max-left values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-left-object",
+        "--max-left", "-1",
+        "--max-left-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1153: launch contract should reject negative max-left values");
+}
+
+void test_parse_launch_arguments_rejects_max_left_object_ambiguity() {
+    const auto max_left_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-left-object",
+        "--allow-output-object",
+        "--max-left", "640",
+        "--max-left-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!max_left_allow_output_result.ok,
+        "#1153: launch contract should reject simultaneous max-left-object and allow-output-object requests");
+
+    const auto max_left_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-left-object",
+        "--clear-property",
+        "--property-name", "MaxLeft",
+        "--max-left", "640",
+        "--max-left-target-unique-id", "one-guid"
+    });
+    expect(!max_left_property_result.ok,
+        "#1153: launch contract should reject max-left-object combined with property commands");
+
+    const auto stray_max_left_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-left", "640"
+    });
+    expect(!stray_max_left_result.ok,
+        "#1153: launch contract should reject stray max-left arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13234,6 +13333,9 @@ int main() {
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
+    test_parse_launch_arguments_for_max_left_object();
+    test_parse_launch_arguments_rejects_max_left_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_max_left_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();

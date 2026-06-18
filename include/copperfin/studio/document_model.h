@@ -126,6 +126,7 @@ struct StudioOpenRequest {
     int row_height = 0;
     int max_height = 0;
     int max_width = 0;
+    int max_left = 0;
     int lock_columns = 0;
     int lock_columns_left = 0;
     int grid_line_width = 0;
@@ -221,6 +222,7 @@ struct StudioOpenRequest {
     bool max_button_object = false;
     bool max_height_object = false;
     bool max_width_object = false;
+    bool max_left_object = false;
     bool auto_center_object = false;
     bool auto_size_object = false;
     bool auto_release_object = false;
@@ -392,6 +394,7 @@ struct StudioOpenRequest {
     bool max_button_available = false;
     bool max_height_available = false;
     bool max_width_available = false;
+    bool max_left_available = false;
     bool auto_center_available = false;
     bool auto_size_available = false;
     bool auto_release_available = false;
@@ -500,6 +503,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> max_button_objects{};
     std::vector<StudioObjectSelector> max_height_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
+    std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> auto_center_objects{};
     std::vector<StudioObjectSelector> auto_size_objects{};
     std::vector<StudioObjectSelector> auto_release_objects{};
