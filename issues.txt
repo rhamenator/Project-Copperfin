@@ -1,3 +1,4 @@
+1196	OPEN	E2/#23 slice: Expose host column-widths-object command		2026-06-18T15:59:27Z
 1195	OPEN	E2/#23 slice: Expose host dynamic-font-shadow-object command		2026-06-18T15:43:01Z
 1194	OPEN	E2/#23 slice: Expose host dynamic-font-outline-object command		2026-06-18T15:27:18Z
 1193	OPEN	E2/#23 slice: Expose host dynamic-font-strikethru-object command		2026-06-18T15:12:02Z

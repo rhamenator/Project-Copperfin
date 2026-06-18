@@ -1528,6 +1528,24 @@ void write_synthetic_form_table_for_object_row_source(const std::filesystem::pat
     expect(create_result.ok, "#1048: synthetic SCX table for object row source should be created");
 }
 
+void write_synthetic_form_table_for_object_column_widths(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "COLUMNWIDTHS", .type = 'C', .length = 80U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cboCustomer", "cboCustomer", "one-guid", "75,125"},
+        {"lstOrders", "lstOrders", "two-guid", "60,80,100"},
+        {"lblStatus", "lblStatus", "three-guid", "20"},
+        {"cboOther", "cboOther", "other-guid", "90,90"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1196: synthetic SCX table for object column widths should be created");
+}
+
 void write_synthetic_form_table_for_object_row_source_type(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -13921,6 +13939,129 @@ void test_studio_host_json_assigns_row_source_by_stable_selectors(const std::str
         "#1048: row-source-object plus format-object requests should fail during launch parsing");
     expect(visual_object_property(ambiguous_path, "one-guid", "ROWSOURCE") == "customers.name,customer_id",
         "#1048: row-source-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_assigns_column_widths_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_column_widths_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path column_widths_path = temp_root / "column_widths.scx";
+    write_synthetic_form_table_for_object_column_widths(column_widths_path);
+    const auto column_widths_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", column_widths_path.string(),
+            "--column-widths-object",
+            "--column-widths", "40,90,120",
+            "--column-widths-target-object-name", "cboCustomer",
+            "--column-widths-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(column_widths_process.exit_code == 0,
+        "#1196: host object column-widths assignment should exit successfully");
+    expect(visual_object_property(column_widths_path, "one-guid", "COLUMNWIDTHS") == "40,90,120" &&
+            visual_object_property(column_widths_path, "two-guid", "COLUMNWIDTHS") == "40,90,120" &&
+            visual_object_property(column_widths_path, "three-guid", "COLUMNWIDTHS") == "20" &&
+            visual_object_property(column_widths_path, "other-guid", "COLUMNWIDTHS") == "90,90",
+        "#1196: host object column-widths assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_column_widths(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--column-widths-object",
+            "--column-widths", "40,90,120",
+            "--column-widths-target-unique-id", "one-guid",
+            "--column-widths-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1196: missing-target host object column-widths assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "COLUMNWIDTHS") == "75,125" &&
+            visual_object_property(missing_target_path, "two-guid", "COLUMNWIDTHS") == "60,80,100",
+        "#1196: missing-target host object column-widths assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_column_widths(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--column-widths-object",
+            "--column-widths", "40,90,120",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1196: column-widths-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "COLUMNWIDTHS") == "75,125",
+        "#1196: column-widths-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_column_widths(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--column-widths-object",
+            "--column-widths-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1196: column-widths-object without column-widths value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "COLUMNWIDTHS") == "75,125",
+        "#1196: column-widths-object without column-widths value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_column_widths(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--column-widths-object",
+            "--column-widths", "40,90,120",
+            "--column-widths-target-unique-id", "one-guid",
+            "--column-widths-target-object-name", "cboCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1196: duplicate-target host object column-widths assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "COLUMNWIDTHS") == "75,125",
+        "#1196: duplicate-target host object column-widths assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_column_widths(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--column-widths-object",
+            "--row-source-object",
+            "--column-widths", "40,90,120",
+            "--column-widths-target-unique-id", "one-guid",
+            "--row-source", "products.name",
+            "--row-source-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1196: column-widths-object plus row-source-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "COLUMNWIDTHS") == "75,125",
+        "#1196: column-widths-object ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -26893,6 +27034,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_input_mask_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_format_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_row_source_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_column_widths_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_row_source_type_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_bound_column_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_column_count_by_stable_selectors(argv[1]);

@@ -313,6 +313,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.format_available, "#1047: launch contract should keep format unavailable by default");
     expect(!result.request.row_source_object, "#1048: launch contract should keep row-source-object off by default");
     expect(!result.request.row_source_available, "#1048: launch contract should keep row source unavailable by default");
+    expect(!result.request.column_widths_object, "#1196: launch contract should keep column-widths-object off by default");
+    expect(!result.request.column_widths_available, "#1196: launch contract should keep column widths unavailable by default");
     expect(!result.request.row_source_type_object, "#1049: launch contract should keep row-source-type-object off by default");
     expect(!result.request.row_source_type_available, "#1049: launch contract should keep row source type unavailable by default");
     expect(!result.request.bound_column_object, "#1050: launch contract should keep bound-column-object off by default");
@@ -7042,6 +7044,82 @@ void test_parse_launch_arguments_rejects_row_source_object_ambiguity() {
     });
     expect(!stray_row_source_result.ok,
         "#1048: launch contract should reject stray row-source arguments");
+}
+
+void test_parse_launch_arguments_for_column_widths_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--column-widths-object",
+        "--column-widths", "40,90,120",
+        "--column-widths-target-object-name", "cboCustomer",
+        "--column-widths-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1196: launch contract should parse column-widths-object requests");
+    expect(result.request.column_widths_object, "#1196: launch contract should detect --column-widths-object");
+    expect(result.request.column_widths_available && result.request.column_widths == "40,90,120",
+        "#1196: column-widths-object requests should carry column widths text");
+    expect(result.request.column_widths_objects.size() == 2U,
+        "#1196: column-widths-object requests should collect column-widths target selectors");
+    if (result.request.column_widths_objects.size() == 2U) {
+        expect(result.request.column_widths_objects[0].object_name == "cboCustomer" &&
+                result.request.column_widths_objects[0].unique_id.empty(),
+            "#1196: column-widths-object requests should parse target object-name selectors");
+        expect(result.request.column_widths_objects[1].object_name.empty() &&
+                result.request.column_widths_objects[1].unique_id == "two-guid",
+            "#1196: column-widths-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_column_widths_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-widths-object",
+        "--column-widths-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1196: launch contract should reject column-widths-object requests without column widths text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-widths-object",
+        "--column-widths", "40,90,120"
+    });
+    expect(!missing_targets_result.ok,
+        "#1196: launch contract should reject column-widths-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_column_widths_object_ambiguity() {
+    const auto column_widths_row_source_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-widths-object",
+        "--row-source-object",
+        "--column-widths", "40,90,120",
+        "--column-widths-target-unique-id", "one-guid",
+        "--row-source", "customers.name",
+        "--row-source-target-unique-id", "one-guid"
+    });
+    expect(!column_widths_row_source_result.ok,
+        "#1196: launch contract should reject simultaneous column-widths-object and row-source-object requests");
+
+    const auto column_widths_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-widths-object",
+        "--clear-property",
+        "--property-name", "ColumnWidths",
+        "--column-widths", "40,90,120",
+        "--column-widths-target-unique-id", "one-guid"
+    });
+    expect(!column_widths_property_result.ok,
+        "#1196: launch contract should reject column-widths-object combined with property commands");
+
+    const auto stray_column_widths_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-widths", "40,90,120"
+    });
+    expect(!stray_column_widths_result.ok,
+        "#1196: launch contract should reject stray column-widths arguments");
 }
 
 void test_parse_launch_arguments_for_row_source_type_object() {
@@ -17057,6 +17135,9 @@ int main() {
     test_parse_launch_arguments_for_row_source_object();
     test_parse_launch_arguments_rejects_row_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_source_object_ambiguity();
+    test_parse_launch_arguments_for_column_widths_object();
+    test_parse_launch_arguments_rejects_column_widths_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_column_widths_object_ambiguity();
     test_parse_launch_arguments_for_row_source_type_object();
     test_parse_launch_arguments_rejects_row_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_source_type_object_ambiguity();

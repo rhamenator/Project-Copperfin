@@ -942,6 +942,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--column-widths-object") {
+            result.request.column_widths_object = true;
+            continue;
+        }
+
         if (argument == "--row-source-type-object") {
             result.request.row_source_type_object = true;
             continue;
@@ -2098,6 +2103,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.row_source = args[++index];
             result.request.row_source_available = true;
+            continue;
+        }
+
+        if (argument == "--column-widths") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --column-widths."};
+            }
+            result.request.column_widths = args[++index];
+            result.request.column_widths_available = true;
             continue;
         }
 
@@ -5225,6 +5239,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--column-widths-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --column-widths-target-object-name."};
+            }
+            result.request.column_widths_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--column-widths-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --column-widths-target-unique-id."};
+            }
+            result.request.column_widths_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--row-source-type-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --row-source-type-target-object-name."};
@@ -8340,6 +8378,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.row_source_objects.empty())) {
         return {.ok = false, .error = "Row-source arguments can only be used with --row-source-object."};
     }
+    if (result.request.column_widths_object && !result.request.column_widths_available) {
+        return {.ok = false, .error = "An object column-widths assignment requires --column-widths."};
+    }
+    if (result.request.column_widths_object && result.request.column_widths_objects.empty()) {
+        return {.ok = false, .error = "An object column-widths assignment requires at least one target selector."};
+    }
+    if (!result.request.column_widths_object &&
+        (result.request.column_widths_available ||
+         !result.request.column_widths_objects.empty())) {
+        return {.ok = false, .error = "Column-widths arguments can only be used with --column-widths-object."};
+    }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {
         return {.ok = false, .error = "An object row-source-type assignment requires --row-source-type."};
     }
@@ -9514,6 +9563,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.input_mask_object ? 1 : 0) +
         (result.request.format_object ? 1 : 0) +
         (result.request.row_source_object ? 1 : 0) +
+        (result.request.column_widths_object ? 1 : 0) +
         (result.request.row_source_type_object ? 1 : 0) +
         (result.request.bound_column_object ? 1 : 0) +
         (result.request.column_count_object ? 1 : 0) +
