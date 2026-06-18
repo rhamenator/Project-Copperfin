@@ -97,6 +97,72 @@ int main() {
     expect(project_builders.size() == 1U, "#956: project context should expose application wizard");
     expect(has_builder(project_builders, "application-wizard"), "#956: project context should include application wizard");
 
+    const auto control_launch = copperfin::studio::plan_studio_builder_launch({
+        .context = StudioBuilderContext::control,
+        .builder_id = "grid-builder",
+        .asset_path = "forms/customer.scx",
+        .record_index = 4U,
+        .object_name = "grdOrders",
+        .unique_id = "grid-guid"
+    });
+    expect(control_launch.ok, "#1203: builder launch plans should accept context-valid builders");
+    expect(std::string(control_launch.plan.builder.id) == "grid-builder" &&
+               control_launch.plan.context == StudioBuilderContext::control &&
+               control_launch.plan.asset_path == "forms/customer.scx" &&
+               control_launch.plan.record_index == 4U &&
+               control_launch.plan.object_name == "grdOrders" &&
+               control_launch.plan.unique_id == "grid-guid",
+           "#1203: builder launch plans should preserve target asset and selector metadata");
+    expect(std::string(control_launch.plan.builder.vfp9_equivalent) == "builder.app grid builder" &&
+               std::string(control_launch.plan.builder.copperfin_component) == "cf_form_surface" &&
+               control_launch.plan.entry_point == "cf_builders.grid_builder",
+           "#1203: builder launch plans should preserve stable builder descriptor metadata");
+
+    const auto label_launch = copperfin::studio::plan_studio_builder_launch({
+        .context = StudioBuilderContext::label,
+        .builder_id = "label-wizard",
+        .asset_path = "labels/mailing.lbx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(label_launch.ok, "#1203: builder launch plans should accept context-valid wizards");
+    expect(label_launch.plan.builder.kind == StudioBuilderKind::wizard &&
+               std::string(label_launch.plan.builder.vfp9_equivalent) == "Wizards label templates" &&
+               label_launch.plan.entry_point == "cf_wizards.label_wizard",
+           "#1203: builder launch plans should preserve wizard metadata distinctly from builders");
+
+    const auto wrong_context_launch = copperfin::studio::plan_studio_builder_launch({
+        .context = StudioBuilderContext::report,
+        .builder_id = "grid-builder",
+        .asset_path = "reports/orders.frx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(!wrong_context_launch.ok,
+           "#1203: builder launch plans should reject builders outside the selected context");
+
+    const auto unknown_launch = copperfin::studio::plan_studio_builder_launch({
+        .context = StudioBuilderContext::form,
+        .builder_id = "unknown-builder",
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(!unknown_launch.ok, "#1203: builder launch plans should reject unknown builder ids");
+
+    const auto missing_id_launch = copperfin::studio::plan_studio_builder_launch({
+        .context = StudioBuilderContext::form,
+        .builder_id = {},
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(!missing_id_launch.ok, "#1203: builder launch plans should reject missing builder ids");
+
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
         return EXIT_FAILURE;

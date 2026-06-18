@@ -14,9 +14,9 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest implemented E2 slice: `#1202`, which exposes host subtree-deleted-state commands by stable root selectors. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
+- Latest implemented E2 slice: `#1203`, which adds validated non-executing Studio builder launch plans. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
 - Current continuation shape: expose already-implemented rollback-safe visual-object editor APIs through `copperfin_studio_host` one property command at a time, with stable selectors, no-mutation failure coverage, docs, validation, commit, push, and issue closure per slice.
-- Next work: create or pick the next prompt-sized `#23` child for the next implemented visual-object editor API that still lacks a host wrapper, unless the live issue tracker already contains a more specific open child.
+- Next work: continue prompt-sized `#23` children in designer interactions, builder/wizard invocation, toolbox flows, or context-aware editors. The visual-object host-wrapper gap scanner reported zero missing wrappers after `#1202`, so do not open more wrapper slices unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
 - If any older handoff, prompt, transfer note, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, `#94`, or `#154`-`#203` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
 - Do not continue work by counting forward through any historical numbered issue list in this file; use the live GitHub issue tree and the "Current Active Queue" table instead.

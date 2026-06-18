@@ -1,3 +1,4 @@
+1203	OPEN	E2/#23 slice: Add validated Studio builder launch plans		2026-06-18T17:59:47Z
 1202	OPEN	E2/#23 slice: Expose host subtree-deleted-state command		2026-06-18T17:41:10Z
 1201	OPEN	E2/#23 slice: Expose host deleted-states command		2026-06-18T17:23:32Z
 1200	OPEN	E2/#23 slice: Expose host multi-select-object command		2026-06-18T17:06:17Z

@@ -1,6 +1,7 @@
 #include "copperfin/studio/builder_registry.h"
 
 #include <algorithm>
+#include <string>
 
 namespace copperfin::studio {
 
@@ -144,6 +145,46 @@ std::vector<StudioBuilderDescriptor> studio_builders_for_context(StudioBuilderCo
             return builder.context == context;
         });
     return filtered;
+}
+
+StudioBuilderLaunchPlanResult plan_studio_builder_launch(const StudioBuilderLaunchRequest& request) {
+    if (request.builder_id.empty()) {
+        return {
+            .ok = false,
+            .error = "A builder launch request requires a builder id.",
+            .plan = {}
+        };
+    }
+
+    const auto builders = studio_builders_for_context(request.context);
+    const auto builder = std::find_if(
+        builders.begin(),
+        builders.end(),
+        [&](const StudioBuilderDescriptor& candidate) {
+            return candidate.id == request.builder_id;
+        });
+
+    if (builder == builders.end()) {
+        return {
+            .ok = false,
+            .error = "The requested builder is not available for the selected designer context.",
+            .plan = {}
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .plan = {
+            .builder = *builder,
+            .context = request.context,
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .entry_point = std::string(builder->entry_point)
+        }
+    };
 }
 
 }  // namespace copperfin::studio
