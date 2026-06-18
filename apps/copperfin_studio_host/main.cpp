@@ -68,6 +68,7 @@ void print_usage() {
     std::cout << "Window-state object: --window-state-object --window-state <n> [--window-state-target-object-name <name>] [--window-state-target-unique-id <id>]\n";
     std::cout << "Show-window object: --show-window-object --show-window <n> [--show-window-target-object-name <name>] [--show-window-target-unique-id <id>]\n";
     std::cout << "Title-bar object: --title-bar-object --title-bar <n> [--title-bar-target-object-name <name>] [--title-bar-target-unique-id <id>]\n";
+    std::cout << "Mouse-pointer object: --mouse-pointer-object --mouse-pointer <n> [--mouse-pointer-target-object-name <name>] [--mouse-pointer-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4371,6 +4372,30 @@ int main(int argc, char** argv) {
         if (!title_bar_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << title_bar_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.mouse_pointer_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> mouse_pointer_objects;
+        mouse_pointer_objects.reserve(parse_result.request.mouse_pointer_objects.size());
+        for (const auto& mouse_pointer_object : parse_result.request.mouse_pointer_objects) {
+            mouse_pointer_objects.push_back({
+                .record_index = mouse_pointer_object.record_index,
+                .object_name = mouse_pointer_object.object_name,
+                .unique_id = mouse_pointer_object.unique_id
+            });
+        }
+
+        const auto mouse_pointer_result = copperfin::vfp::set_visual_object_mouse_pointer({
+            .path = parse_result.request.path,
+            .objects = mouse_pointer_objects,
+            .mouse_pointer = parse_result.request.mouse_pointer
+        });
+
+        if (!mouse_pointer_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << mouse_pointer_result.error << "\n";
             return 4;
         }
     }

@@ -1181,6 +1181,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--mouse-pointer-object") {
+            result.request.mouse_pointer_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2931,6 +2936,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.title_bar = title_bar;
             result.request.title_bar_available = true;
+            continue;
+        }
+
+        if (argument == "--mouse-pointer") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mouse-pointer."};
+            }
+            int mouse_pointer = 0;
+            if (!parse_int_value(args[++index], mouse_pointer)) {
+                return {.ok = false, .error = "The --mouse-pointer value must be an integer."};
+            }
+            if (mouse_pointer < 0) {
+                return {.ok = false, .error = "The --mouse-pointer value must not be negative."};
+            }
+            result.request.mouse_pointer = mouse_pointer;
+            result.request.mouse_pointer_available = true;
             continue;
         }
 
@@ -5984,6 +6005,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--mouse-pointer-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mouse-pointer-target-object-name."};
+            }
+            result.request.mouse_pointer_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--mouse-pointer-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mouse-pointer-target-unique-id."};
+            }
+            result.request.mouse_pointer_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7911,6 +7956,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.title_bar_objects.empty())) {
         return {.ok = false, .error = "Title-bar arguments can only be used with --title-bar-object."};
     }
+    if (result.request.mouse_pointer_object && !result.request.mouse_pointer_available) {
+        return {.ok = false, .error = "An object mouse-pointer assignment requires --mouse-pointer."};
+    }
+    if (result.request.mouse_pointer_object && result.request.mouse_pointer_objects.empty()) {
+        return {.ok = false, .error = "An object mouse-pointer assignment requires at least one target selector."};
+    }
+    if (!result.request.mouse_pointer_object &&
+        (result.request.mouse_pointer_available ||
+         !result.request.mouse_pointer_objects.empty())) {
+        return {.ok = false, .error = "Mouse-pointer arguments can only be used with --mouse-pointer-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8305,6 +8361,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.window_state_object ? 1 : 0) +
         (result.request.show_window_object ? 1 : 0) +
         (result.request.title_bar_object ? 1 : 0) +
+        (result.request.mouse_pointer_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +
