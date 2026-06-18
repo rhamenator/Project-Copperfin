@@ -4727,6 +4727,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.dynamic_font_strikethru_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> dynamic_font_strikethru_objects;
+        dynamic_font_strikethru_objects.reserve(parse_result.request.dynamic_font_strikethru_objects.size());
+        for (const auto& dynamic_font_strikethru_object : parse_result.request.dynamic_font_strikethru_objects) {
+            dynamic_font_strikethru_objects.push_back({
+                .record_index = dynamic_font_strikethru_object.record_index,
+                .object_name = dynamic_font_strikethru_object.object_name,
+                .unique_id = dynamic_font_strikethru_object.unique_id
+            });
+        }
+
+        const auto dynamic_font_strikethru_result = copperfin::vfp::set_visual_object_dynamic_font_strikethru({
+            .path = parse_result.request.path,
+            .objects = dynamic_font_strikethru_objects,
+            .dynamic_font_strikethru = parse_result.request.dynamic_font_strikethru
+        });
+
+        if (!dynamic_font_strikethru_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << dynamic_font_strikethru_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.font_name_object) {
         std::vector<copperfin::vfp::VisualObjectAlignmentTarget> font_name_objects;
         font_name_objects.reserve(parse_result.request.font_name_objects.size());
