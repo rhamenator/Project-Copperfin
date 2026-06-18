@@ -513,6 +513,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--drag-mode-object") {
+            result.request.drag_mode_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1064,6 +1069,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.left_column = left_column;
             result.request.left_column_available = true;
+            continue;
+        }
+
+        if (argument == "--drag-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --drag-mode."};
+            }
+            int drag_mode = 0;
+            if (!parse_int_value(args[++index], drag_mode)) {
+                return {.ok = false, .error = "The --drag-mode value must be an integer."};
+            }
+            if (drag_mode < 0) {
+                return {.ok = false, .error = "The --drag-mode value must be non-negative."};
+            }
+            result.request.drag_mode = drag_mode;
+            result.request.drag_mode_available = true;
             continue;
         }
 
@@ -2016,6 +2037,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --drag-icon-target-unique-id."};
             }
             result.request.drag_icon_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--drag-mode-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --drag-mode-target-object-name."};
+            }
+            result.request.drag_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--drag-mode-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --drag-mode-target-unique-id."};
+            }
+            result.request.drag_mode_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -3626,6 +3671,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.drag_icon_objects.empty())) {
         return {.ok = false, .error = "Drag-icon arguments can only be used with --drag-icon-object."};
     }
+    if (result.request.drag_mode_object && !result.request.drag_mode_available) {
+        return {.ok = false, .error = "An object drag-mode assignment requires --drag-mode."};
+    }
+    if (result.request.drag_mode_object && result.request.drag_mode_objects.empty()) {
+        return {.ok = false, .error = "An object drag-mode assignment requires at least one target selector."};
+    }
+    if (!result.request.drag_mode_object &&
+        (result.request.drag_mode_available ||
+         !result.request.drag_mode_objects.empty())) {
+        return {.ok = false, .error = "Drag-mode arguments can only be used with --drag-mode-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4303,6 +4359,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.ole_drag_picture_object ? 1 : 0) +
         (result.request.mouse_icon_object ? 1 : 0) +
         (result.request.drag_icon_object ? 1 : 0) +
+        (result.request.drag_mode_object ? 1 : 0) +
         (result.request.tooltip_text_object ? 1 : 0) +
         (result.request.status_bar_text_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +

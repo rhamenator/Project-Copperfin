@@ -145,6 +145,10 @@ void test_parse_launch_arguments() {
         "#1103: launch contract should keep drag-icon-object off by default");
     expect(!result.request.drag_icon_available,
         "#1103: launch contract should keep drag-icon unavailable by default");
+    expect(!result.request.drag_mode_object,
+        "#1104: launch contract should keep drag-mode-object off by default");
+    expect(!result.request.drag_mode_available,
+        "#1104: launch contract should keep drag-mode unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2370,6 +2374,100 @@ void test_parse_launch_arguments_rejects_drag_icon_object_ambiguity() {
     });
     expect(!stray_drag_icon_result.ok,
         "#1103: launch contract should reject stray drag-icon arguments");
+}
+
+void test_parse_launch_arguments_for_drag_mode_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--drag-mode-object",
+        "--drag-mode", "3",
+        "--drag-mode-target-object-name", "cmdSave",
+        "--drag-mode-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1104: launch contract should parse drag-mode-object requests");
+    expect(result.request.drag_mode_object, "#1104: launch contract should detect --drag-mode-object");
+    expect(result.request.drag_mode_available && result.request.drag_mode == 3,
+        "#1104: drag-mode-object requests should carry drag-mode value");
+    expect(result.request.drag_mode_objects.size() == 2U,
+        "#1104: drag-mode-object requests should collect drag-mode target selectors");
+    if (result.request.drag_mode_objects.size() == 2U) {
+        expect(result.request.drag_mode_objects[0].object_name == "cmdSave" &&
+                result.request.drag_mode_objects[0].unique_id.empty(),
+            "#1104: drag-mode-object requests should parse target object-name selectors");
+        expect(result.request.drag_mode_objects[1].object_name.empty() &&
+                result.request.drag_mode_objects[1].unique_id == "two-guid",
+            "#1104: drag-mode-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_drag_mode_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-mode-object",
+        "--drag-mode-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1104: launch contract should reject drag-mode-object requests without drag-mode value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-mode-object",
+        "--drag-mode", "manual",
+        "--drag-mode-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1104: launch contract should reject non-integer drag-mode values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-mode-object",
+        "--drag-mode", "-1",
+        "--drag-mode-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1104: launch contract should reject negative drag-mode values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-mode-object",
+        "--drag-mode", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1104: launch contract should reject drag-mode-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_drag_mode_object_ambiguity() {
+    const auto drag_mode_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-mode-object",
+        "--locked-object",
+        "--drag-mode", "2",
+        "--drag-mode-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!drag_mode_locked_result.ok,
+        "#1104: launch contract should reject simultaneous drag-mode-object and locked-object requests");
+
+    const auto drag_mode_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-mode-object",
+        "--clear-property",
+        "--property-name", "DragMode",
+        "--drag-mode", "2",
+        "--drag-mode-target-unique-id", "one-guid"
+    });
+    expect(!drag_mode_property_result.ok,
+        "#1104: launch contract should reject drag-mode-object combined with property commands");
+
+    const auto stray_drag_mode_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-mode", "2"
+    });
+    expect(!stray_drag_mode_result.ok,
+        "#1104: launch contract should reject stray drag-mode arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -8304,6 +8402,9 @@ int main() {
     test_parse_launch_arguments_for_drag_icon_object();
     test_parse_launch_arguments_rejects_drag_icon_object_invalid_inputs();
     test_parse_launch_arguments_rejects_drag_icon_object_ambiguity();
+    test_parse_launch_arguments_for_drag_mode_object();
+    test_parse_launch_arguments_rejects_drag_mode_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_drag_mode_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

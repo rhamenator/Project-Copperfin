@@ -664,6 +664,24 @@ void write_synthetic_form_table_for_object_drag_icon(const std::filesystem::path
     expect(create_result.ok, "#1103: synthetic SCX table for object drag-icon should be created");
 }
 
+void write_synthetic_form_table_for_object_drag_mode(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "DRAGMODE", .type = 'N', .length = 3U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "0"},
+        {"cmdCancel", "cmdCancel", "two-guid", "1"},
+        {"lblStatus", "lblStatus", "three-guid", "2"},
+        {"cmdOther", "cmdOther", "other-guid", "0"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1104: synthetic SCX table for object drag-mode should be created");
+}
+
 void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -5781,6 +5799,146 @@ void test_studio_host_json_assigns_drag_icon_by_stable_selectors(const std::stri
         "#1103: drag-icon-object plus locked-object requests should fail during launch parsing");
     expect(visual_object_property(ambiguous_path, "one-guid", "DRAGICON") == "forms\\save_drag.cur",
         "#1103: drag-icon-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_assigns_drag_mode_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_drag_mode_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path drag_mode_path = temp_root / "drag_mode.scx";
+    write_synthetic_form_table_for_object_drag_mode(drag_mode_path);
+    const auto drag_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", drag_mode_path.string(),
+            "--drag-mode-object",
+            "--drag-mode", "3",
+            "--drag-mode-target-object-name", "cmdSave",
+            "--drag-mode-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(drag_mode_process.exit_code == 0,
+        "#1104: host object drag-mode assignment should exit successfully");
+    expect(visual_object_property(drag_mode_path, "one-guid", "DRAGMODE") == "3" &&
+            visual_object_property(drag_mode_path, "two-guid", "DRAGMODE") == "3" &&
+            visual_object_property(drag_mode_path, "three-guid", "DRAGMODE") == "2" &&
+            visual_object_property(drag_mode_path, "other-guid", "DRAGMODE") == "0",
+        "#1104: host object drag-mode assignment should assign selected values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_drag_mode(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--drag-mode-object",
+            "--drag-mode", "2",
+            "--drag-mode-target-unique-id", "one-guid",
+            "--drag-mode-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1104: missing-target host object drag-mode assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "DRAGMODE") == "0" &&
+            visual_object_property(missing_target_path, "two-guid", "DRAGMODE") == "1",
+        "#1104: missing-target host object drag-mode assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_drag_mode(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--drag-mode-object",
+            "--drag-mode", "2",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1104: drag-mode-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "DRAGMODE") == "0",
+        "#1104: drag-mode-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_drag_mode(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--drag-mode-object",
+            "--drag-mode-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1104: drag-mode-object without drag-mode value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "DRAGMODE") == "0",
+        "#1104: drag-mode-object without drag-mode value should not mutate the asset");
+
+    const fs::path negative_value_path = temp_root / "negative_value.scx";
+    write_synthetic_form_table_for_object_drag_mode(negative_value_path);
+    const auto negative_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_value_path.string(),
+            "--drag-mode-object",
+            "--drag-mode", "-1",
+            "--drag-mode-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_value_process.exit_code == 2,
+        "#1104: negative drag-mode values should fail during launch parsing");
+    expect(visual_object_property(negative_value_path, "one-guid", "DRAGMODE") == "0",
+        "#1104: negative drag-mode values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_drag_mode(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--drag-mode-object",
+            "--drag-mode", "2",
+            "--drag-mode-target-unique-id", "one-guid",
+            "--drag-mode-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1104: duplicate-target host object drag-mode assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "DRAGMODE") == "0",
+        "#1104: duplicate-target host object drag-mode assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_drag_mode(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--drag-mode-object",
+            "--locked-object",
+            "--drag-mode", "2",
+            "--drag-mode-target-unique-id", "one-guid",
+            "--locked", "true",
+            "--locked-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1104: drag-mode-object plus locked-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "DRAGMODE") == "0",
+        "#1104: drag-mode-object ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -12821,6 +12979,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_ole_drag_picture_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_mouse_icon_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_drag_icon_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_drag_mode_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);
