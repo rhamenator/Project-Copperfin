@@ -1,3 +1,4 @@
+1142	OPEN	E2/#23 slice: Expose host whats-this-help-id-object command		2026-06-18T05:49:27Z
 1141	OPEN	E2/#23 slice: Expose host help-context-id-object command		2026-06-18T05:41:25Z
 1140	OPEN	E2/#23 slice: Expose host display-orientation-object command		2026-06-18T05:34:16Z
 1139	OPEN	E2/#23 slice: Expose host tab-orientation-object command		2026-06-18T05:27:06Z
