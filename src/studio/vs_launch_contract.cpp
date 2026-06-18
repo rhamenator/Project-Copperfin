@@ -1242,6 +1242,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-strikethru-object") {
+            result.request.font_strikethru_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -3154,6 +3159,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.font_underline = *font_underline;
             result.request.font_underline_available = true;
+            continue;
+        }
+
+        if (argument == "--font-strikethru") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-strikethru."};
+            }
+            const auto font_strikethru = parse_bool_value(args[++index]);
+            if (!font_strikethru.has_value()) {
+                return {.ok = false, .error = "The --font-strikethru value must be true or false."};
+            }
+            result.request.font_strikethru = *font_strikethru;
+            result.request.font_strikethru_available = true;
             continue;
         }
 
@@ -6495,6 +6513,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-strikethru-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-strikethru-target-object-name."};
+            }
+            result.request.font_strikethru_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--font-strikethru-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-strikethru-target-unique-id."};
+            }
+            result.request.font_strikethru_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -8554,6 +8596,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.font_underline_objects.empty())) {
         return {.ok = false, .error = "Font-underline arguments can only be used with --font-underline-object."};
     }
+    if (result.request.font_strikethru_object && !result.request.font_strikethru_available) {
+        return {.ok = false, .error = "An object font-strikethru assignment requires --font-strikethru."};
+    }
+    if (result.request.font_strikethru_object && result.request.font_strikethru_objects.empty()) {
+        return {.ok = false, .error = "An object font-strikethru assignment requires at least one target selector."};
+    }
+    if (!result.request.font_strikethru_object &&
+        (result.request.font_strikethru_available ||
+         !result.request.font_strikethru_objects.empty())) {
+        return {.ok = false, .error = "Font-strikethru arguments can only be used with --font-strikethru-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8960,6 +9013,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.font_bold_object ? 1 : 0) +
         (result.request.font_italic_object ? 1 : 0) +
         (result.request.font_underline_object ? 1 : 0) +
+        (result.request.font_strikethru_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

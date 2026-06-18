@@ -539,6 +539,10 @@ void test_parse_launch_arguments() {
         "#1182: launch contract should keep font-underline-object off by default");
     expect(!result.request.font_underline_available,
         "#1182: launch contract should keep font underline unavailable by default");
+    expect(!result.request.font_strikethru_object,
+        "#1183: launch contract should keep font-strikethru-object off by default");
+    expect(!result.request.font_strikethru_available,
+        "#1183: launch contract should keep font strikethru unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -12437,6 +12441,92 @@ void test_parse_launch_arguments_rejects_font_underline_object_ambiguity() {
         "#1182: launch contract should reject stray font-underline arguments");
 }
 
+void test_parse_launch_arguments_for_font_strikethru_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-strikethru-object",
+        "--font-strikethru", "true",
+        "--font-strikethru-target-object-name", "txtName",
+        "--font-strikethru-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1183: launch contract should parse font-strikethru-object requests");
+    expect(result.request.font_strikethru_object,
+        "#1183: launch contract should detect --font-strikethru-object");
+    expect(result.request.font_strikethru_available && result.request.font_strikethru,
+        "#1183: font-strikethru-object requests should carry font strikethru state");
+    expect(result.request.font_strikethru_objects.size() == 2U,
+        "#1183: font-strikethru-object requests should collect font-strikethru target selectors");
+    if (result.request.font_strikethru_objects.size() == 2U) {
+        expect(result.request.font_strikethru_objects[0].object_name == "txtName" &&
+                result.request.font_strikethru_objects[0].unique_id.empty(),
+            "#1183: font-strikethru-object requests should parse target object-name selectors");
+        expect(result.request.font_strikethru_objects[1].object_name.empty() &&
+                result.request.font_strikethru_objects[1].unique_id == "two-guid",
+            "#1183: font-strikethru-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_strikethru_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-strikethru-object",
+        "--font-strikethru-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1183: launch contract should reject font-strikethru-object requests without font strikethru state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-strikethru-object",
+        "--font-strikethru", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1183: launch contract should reject font-strikethru-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-strikethru-object",
+        "--font-strikethru", "sometimes",
+        "--font-strikethru-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1183: launch contract should reject invalid font-strikethru boolean values");
+}
+
+void test_parse_launch_arguments_rejects_font_strikethru_object_ambiguity() {
+    const auto font_strikethru_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-strikethru-object",
+        "--allow-output-object",
+        "--font-strikethru", "true",
+        "--font-strikethru-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_strikethru_allow_output_result.ok,
+        "#1183: launch contract should reject simultaneous font-strikethru-object and allow-output-object requests");
+
+    const auto font_strikethru_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-strikethru-object",
+        "--clear-property",
+        "--property-name", "FontStrikethru",
+        "--font-strikethru", "true",
+        "--font-strikethru-target-unique-id", "one-guid"
+    });
+    expect(!font_strikethru_property_result.ok,
+        "#1183: launch contract should reject font-strikethru-object combined with property commands");
+
+    const auto stray_font_strikethru_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-strikethru", "true"
+    });
+    expect(!stray_font_strikethru_result.ok,
+        "#1183: launch contract should reject stray font-strikethru arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16147,6 +16237,9 @@ int main() {
     test_parse_launch_arguments_for_font_underline_object();
     test_parse_launch_arguments_rejects_font_underline_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_underline_object_ambiguity();
+    test_parse_launch_arguments_for_font_strikethru_object();
+    test_parse_launch_arguments_rejects_font_strikethru_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_strikethru_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
