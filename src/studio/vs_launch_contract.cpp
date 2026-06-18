@@ -1141,6 +1141,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--border-width-object") {
+            result.request.border_width_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2770,6 +2775,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.border_style = border_style;
             result.request.border_style_available = true;
+            continue;
+        }
+
+        if (argument == "--border-width") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --border-width."};
+            }
+            int border_width = 0;
+            if (!parse_int_value(args[++index], border_width)) {
+                return {.ok = false, .error = "The --border-width value must be an integer."};
+            }
+            if (border_width < 0) {
+                return {.ok = false, .error = "The --border-width value must not be negative."};
+            }
+            result.request.border_width = border_width;
+            result.request.border_width_available = true;
             continue;
         }
 
@@ -5631,6 +5652,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--border-width-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --border-width-target-object-name."};
+            }
+            result.request.border_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--border-width-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --border-width-target-unique-id."};
+            }
+            result.request.border_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7470,6 +7515,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.border_style_objects.empty())) {
         return {.ok = false, .error = "Border-style arguments can only be used with --border-style-object."};
     }
+    if (result.request.border_width_object && !result.request.border_width_available) {
+        return {.ok = false, .error = "An object border-width assignment requires --border-width."};
+    }
+    if (result.request.border_width_object && result.request.border_width_objects.empty()) {
+        return {.ok = false, .error = "An object border-width assignment requires at least one target selector."};
+    }
+    if (!result.request.border_width_object &&
+        (result.request.border_width_available ||
+         !result.request.border_width_objects.empty())) {
+        return {.ok = false, .error = "Border-width arguments can only be used with --border-width-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -7856,6 +7912,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.mdi_form_object ? 1 : 0) +
         (result.request.back_style_object ? 1 : 0) +
         (result.request.border_style_object ? 1 : 0) +
+        (result.request.border_width_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

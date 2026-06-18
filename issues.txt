@@ -1,3 +1,4 @@
+1163	OPEN	E2/#23 slice: Expose host border-width-object command		2026-06-18T08:59:40Z
 1162	OPEN	E2/#23 slice: Expose host border-style-object command		2026-06-18T08:50:50Z
 1161	OPEN	E2/#23 slice: Expose host back-style-object command		2026-06-18T08:41:50Z
 1160	OPEN	E2/#23 slice: Expose host mdi-form-object command		2026-06-18T08:31:44Z

@@ -60,6 +60,7 @@ void print_usage() {
     std::cout << "MDI-form object: --mdi-form-object --mdi-form <true|false> [--mdi-form-target-object-name <name>] [--mdi-form-target-unique-id <id>]\n";
     std::cout << "Back-style object: --back-style-object --back-style <n> [--back-style-target-object-name <name>] [--back-style-target-unique-id <id>]\n";
     std::cout << "Border-style object: --border-style-object --border-style <n> [--border-style-target-object-name <name>] [--border-style-target-unique-id <id>]\n";
+    std::cout << "Border-width object: --border-width-object --border-width <n> [--border-width-target-object-name <name>] [--border-width-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4171,6 +4172,30 @@ int main(int argc, char** argv) {
         if (!border_style_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << border_style_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.border_width_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> border_width_objects;
+        border_width_objects.reserve(parse_result.request.border_width_objects.size());
+        for (const auto& border_width_object : parse_result.request.border_width_objects) {
+            border_width_objects.push_back({
+                .record_index = border_width_object.record_index,
+                .object_name = border_width_object.object_name,
+                .unique_id = border_width_object.unique_id
+            });
+        }
+
+        const auto border_width_result = copperfin::vfp::set_visual_object_border_width({
+            .path = parse_result.request.path,
+            .objects = border_width_objects,
+            .border_width = parse_result.request.border_width
+        });
+
+        if (!border_width_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << border_width_result.error << "\n";
             return 4;
         }
     }

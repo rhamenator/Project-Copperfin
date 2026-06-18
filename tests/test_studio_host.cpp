@@ -463,6 +463,10 @@ void test_parse_launch_arguments() {
         "#1162: launch contract should keep border-style-object off by default");
     expect(!result.request.border_style_available,
         "#1162: launch contract should keep border style unavailable by default");
+    expect(!result.request.border_width_object,
+        "#1163: launch contract should keep border-width-object off by default");
+    expect(!result.request.border_width_available,
+        "#1163: launch contract should keep border width unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -10559,6 +10563,101 @@ void test_parse_launch_arguments_rejects_border_style_object_ambiguity() {
         "#1162: launch contract should reject stray border-style arguments");
 }
 
+void test_parse_launch_arguments_for_border_width_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--border-width-object",
+        "--border-width", "2",
+        "--border-width-target-object-name", "frmCustomer",
+        "--border-width-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1163: launch contract should parse border-width-object requests");
+    expect(result.request.border_width_object,
+        "#1163: launch contract should detect --border-width-object");
+    expect(result.request.border_width_available && result.request.border_width == 2,
+        "#1163: border-width-object requests should carry border-width value");
+    expect(result.request.border_width_objects.size() == 2U,
+        "#1163: border-width-object requests should collect border-width target selectors");
+    if (result.request.border_width_objects.size() == 2U) {
+        expect(result.request.border_width_objects[0].object_name == "frmCustomer" &&
+                result.request.border_width_objects[0].unique_id.empty(),
+            "#1163: border-width-object requests should parse target object-name selectors");
+        expect(result.request.border_width_objects[1].object_name.empty() &&
+                result.request.border_width_objects[1].unique_id == "two-guid",
+            "#1163: border-width-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_border_width_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--border-width-object",
+        "--border-width-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1163: launch contract should reject border-width-object requests without border-width value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--border-width-object",
+        "--border-width", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1163: launch contract should reject border-width-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--border-width-object",
+        "--border-width", "wide",
+        "--border-width-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1163: launch contract should reject non-integer border-width values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--border-width-object",
+        "--border-width", "-1",
+        "--border-width-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1163: launch contract should reject negative border-width values");
+}
+
+void test_parse_launch_arguments_rejects_border_width_object_ambiguity() {
+    const auto border_width_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--border-width-object",
+        "--allow-output-object",
+        "--border-width", "2",
+        "--border-width-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!border_width_allow_output_result.ok,
+        "#1163: launch contract should reject simultaneous border-width-object and allow-output-object requests");
+
+    const auto border_width_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--border-width-object",
+        "--clear-property",
+        "--property-name", "BorderWidth",
+        "--border-width", "2",
+        "--border-width-target-unique-id", "one-guid"
+    });
+    expect(!border_width_property_result.ok,
+        "#1163: launch contract should reject border-width-object combined with property commands");
+
+    const auto stray_border_width_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--border-width", "2"
+    });
+    expect(!stray_border_width_result.ok,
+        "#1163: launch contract should reject stray border-width arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -14209,6 +14308,9 @@ int main() {
     test_parse_launch_arguments_for_border_style_object();
     test_parse_launch_arguments_rejects_border_style_object_invalid_inputs();
     test_parse_launch_arguments_rejects_border_style_object_ambiguity();
+    test_parse_launch_arguments_for_border_width_object();
+    test_parse_launch_arguments_rejects_border_width_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_border_width_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
