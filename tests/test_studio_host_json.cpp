@@ -862,6 +862,24 @@ void write_synthetic_form_table_for_object_fill_style(const std::filesystem::pat
     expect(create_result.ok, "#1115: synthetic SCX table for object fill-style should be created");
 }
 
+void write_synthetic_form_table_for_object_scale_mode(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "SCALEMODE", .type = 'N', .length = 3U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "0"},
+        {"cmdCancel", "cmdCancel", "two-guid", "1"},
+        {"lblStatus", "lblStatus", "three-guid", "2"},
+        {"cmdOther", "cmdOther", "other-guid", "0"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1116: synthetic SCX table for object scale-mode should be created");
+}
+
 void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -7539,6 +7557,146 @@ void test_studio_host_json_assigns_fill_style_by_stable_selectors(const std::str
         "#1115: fill-style-object plus locked-object requests should fail during launch parsing");
     expect(visual_object_property(ambiguous_path, "one-guid", "FILLSTYLE") == "0",
         "#1115: fill-style-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_assigns_scale_mode_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_scale_mode_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path scale_mode_path = temp_root / "scale_mode.scx";
+    write_synthetic_form_table_for_object_scale_mode(scale_mode_path);
+    const auto scale_mode_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", scale_mode_path.string(),
+            "--scale-mode-object",
+            "--scale-mode", "9",
+            "--scale-mode-target-object-name", "cmdSave",
+            "--scale-mode-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(scale_mode_process.exit_code == 0,
+        "#1116: host object scale-mode assignment should exit successfully");
+    expect(visual_object_property(scale_mode_path, "one-guid", "SCALEMODE") == "9" &&
+            visual_object_property(scale_mode_path, "two-guid", "SCALEMODE") == "9" &&
+            visual_object_property(scale_mode_path, "three-guid", "SCALEMODE") == "2" &&
+            visual_object_property(scale_mode_path, "other-guid", "SCALEMODE") == "0",
+        "#1116: host object scale-mode assignment should assign selected values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_scale_mode(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--scale-mode-object",
+            "--scale-mode", "2",
+            "--scale-mode-target-unique-id", "one-guid",
+            "--scale-mode-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1116: missing-target host object scale-mode assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "SCALEMODE") == "0" &&
+            visual_object_property(missing_target_path, "two-guid", "SCALEMODE") == "1",
+        "#1116: missing-target host object scale-mode assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_scale_mode(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--scale-mode-object",
+            "--scale-mode", "2",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1116: scale-mode-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "SCALEMODE") == "0",
+        "#1116: scale-mode-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_scale_mode(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--scale-mode-object",
+            "--scale-mode-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1116: scale-mode-object without scale-mode value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "SCALEMODE") == "0",
+        "#1116: scale-mode-object without scale-mode value should not mutate the asset");
+
+    const fs::path negative_value_path = temp_root / "negative_value.scx";
+    write_synthetic_form_table_for_object_scale_mode(negative_value_path);
+    const auto negative_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_value_path.string(),
+            "--scale-mode-object",
+            "--scale-mode", "-1",
+            "--scale-mode-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_value_process.exit_code == 2,
+        "#1116: negative scale-mode values should fail during launch parsing");
+    expect(visual_object_property(negative_value_path, "one-guid", "SCALEMODE") == "0",
+        "#1116: negative scale-mode values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_scale_mode(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--scale-mode-object",
+            "--scale-mode", "2",
+            "--scale-mode-target-unique-id", "one-guid",
+            "--scale-mode-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1116: duplicate-target host object scale-mode assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "SCALEMODE") == "0",
+        "#1116: duplicate-target host object scale-mode assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_scale_mode(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--scale-mode-object",
+            "--locked-object",
+            "--scale-mode", "2",
+            "--scale-mode-target-unique-id", "one-guid",
+            "--locked", "true",
+            "--locked-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1116: scale-mode-object plus locked-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "SCALEMODE") == "0",
+        "#1116: scale-mode-object ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -14713,6 +14871,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_draw_style_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_draw_width_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_fill_style_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_scale_mode_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);

@@ -51,6 +51,7 @@ void print_usage() {
     std::cout << "Draw-style object: --draw-style-object --draw-style <n> [--draw-style-target-object-name <name>] [--draw-style-target-unique-id <id>]\n";
     std::cout << "Draw-width object: --draw-width-object --draw-width <n> [--draw-width-target-object-name <name>] [--draw-width-target-unique-id <id>]\n";
     std::cout << "Fill-style object: --fill-style-object --fill-style <n> [--fill-style-target-object-name <name>] [--fill-style-target-unique-id <id>]\n";
+    std::cout << "Scale-mode object: --scale-mode-object --scale-mode <n> [--scale-mode-target-object-name <name>] [--scale-mode-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2276,6 +2277,30 @@ int main(int argc, char** argv) {
         if (!fill_style_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << fill_style_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.scale_mode_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> scale_mode_objects;
+        scale_mode_objects.reserve(parse_result.request.scale_mode_objects.size());
+        for (const auto& scale_mode_object : parse_result.request.scale_mode_objects) {
+            scale_mode_objects.push_back({
+                .record_index = scale_mode_object.record_index,
+                .object_name = scale_mode_object.object_name,
+                .unique_id = scale_mode_object.unique_id
+            });
+        }
+
+        const auto scale_mode_result = copperfin::vfp::set_visual_object_scale_mode({
+            .path = parse_result.request.path,
+            .objects = scale_mode_objects,
+            .scale_mode = parse_result.request.scale_mode
+        });
+
+        if (!scale_mode_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << scale_mode_result.error << "\n";
             return 4;
         }
     }
