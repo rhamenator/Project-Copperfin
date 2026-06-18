@@ -4110,6 +4110,143 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     }
 }
 
+void test_studio_host_json_exposes_builder_launch_plans(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_builder_launch_plan_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto valid_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--json"
+        },
+        temp_root);
+    expect(valid_process.exit_code == 0,
+        "#1204: builder launch-plan JSON requests should exit successfully for context-valid builders");
+    expect_contains(valid_process.stdout_text, "\"builderLaunchPlan\": {",
+        "#1204: builder launch-plan JSON should expose a plan object");
+    expect_contains(valid_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1204: builder launch-plan JSON should expose builder ids");
+    expect_contains(valid_process.stdout_text, "\"kind\": \"builder\"",
+        "#1204: builder launch-plan JSON should expose builder kind metadata");
+    expect_contains(valid_process.stdout_text, "\"context\": \"control\"",
+        "#1204: builder launch-plan JSON should expose selected builder contexts");
+    expect_contains(valid_process.stdout_text, "\"vfp9Equivalent\": \"builder.app grid builder\"",
+        "#1204: builder launch-plan JSON should preserve VFP 9 equivalent metadata");
+    expect_contains(valid_process.stdout_text, "\"copperfinComponent\": \"cf_form_surface\"",
+        "#1204: builder launch-plan JSON should preserve Copperfin component metadata");
+    expect_contains(valid_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1204: builder launch-plan JSON should expose entry-point metadata");
+    expect_contains(valid_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1204: builder launch-plan JSON should carry asset paths without opening or mutating assets");
+    expect_contains(valid_process.stdout_text, "\"recordIndex\": 4",
+        "#1204: builder launch-plan JSON should carry selected record indexes");
+    expect_contains(valid_process.stdout_text, "\"objectName\": \"grdOrders\"",
+        "#1204: builder launch-plan JSON should carry object-name selectors");
+    expect_contains(valid_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
+        "#1204: builder launch-plan JSON should carry unique-id selectors");
+
+    const auto wizard_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "label-wizard",
+            "--builder-context", "label",
+            "--path", "labels/mailing.lbx",
+            "--json"
+        },
+        temp_root);
+    expect(wizard_process.exit_code == 0,
+        "#1204: builder launch-plan JSON requests should accept context-valid wizards");
+    expect_contains(wizard_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1204: builder launch-plan JSON should preserve wizard kind metadata");
+    expect_contains(wizard_process.stdout_text, "\"entryPoint\": \"cf_wizards.label_wizard\"",
+        "#1204: builder launch-plan JSON should expose wizard entry points");
+
+    const auto wrong_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--builder-context", "report",
+            "--path", "reports/orders.frx",
+            "--json"
+        },
+        temp_root);
+    expect(wrong_context_process.exit_code == 4,
+        "#1204: builder launch-plan JSON should reject wrong-context builders");
+    expect_contains(wrong_context_process.stdout_text, "\"builderLaunchPlan\": null",
+        "#1204: wrong-context builder launch-plan JSON should not expose a plan object");
+    expect_contains(wrong_context_process.stdout_text,
+        "The requested builder is not available for the selected designer context.",
+        "#1204: wrong-context builder launch-plan JSON should report validation errors");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--builder-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1204: builder launch-plan JSON should reject unknown context tokens during parsing");
+    expect_contains(unknown_context_process.stdout_text, "\"builderLaunchPlan\": null",
+        "#1204: invalid builder context JSON should not expose a plan object");
+    expect_contains(unknown_context_process.stdout_text, "Unknown builder context token: unknown",
+        "#1204: invalid builder context JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "form-builder",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1204: builder launch-plan JSON should reject missing context tokens");
+    expect_contains(missing_context_process.stdout_text, "No builder context was provided.",
+        "#1204: missing builder context JSON should report parser errors");
+
+    const auto missing_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan",
+            "--builder-context", "form",
+            "--json"
+        },
+        temp_root);
+    expect(missing_id_process.exit_code == 2,
+        "#1204: builder launch-plan JSON should reject missing builder ids");
+    expect_contains(missing_id_process.stdout_text, "Missing value for --builder-launch-plan.",
+        "#1204: missing builder id JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "form-builder",
+            "--builder-context", "form",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1204: builder launch-plan JSON should reject invalid record indexes");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1204: invalid builder launch-plan record JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -27922,6 +28059,7 @@ int main(int argc, char** argv) {
     }
 
     test_studio_host_json_exposes_designer_contexts(argv[1]);
+    test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
