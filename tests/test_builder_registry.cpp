@@ -1,3 +1,4 @@
+#include "copperfin/studio/builder_dispatch.h"
 #include "copperfin/studio/builder_invocation_admission.h"
 #include "copperfin/studio/builder_registry.h"
 
@@ -19,6 +20,15 @@ void expect(bool condition, const std::string& message) {
 bool has_builder(const std::vector<copperfin::studio::StudioBuilderDescriptor>& builders, std::string_view id) {
     for (const auto& builder : builders) {
         if (builder.id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
+    for (std::size_t index = 0U; (index + 1U) < arguments.size(); index += 2U) {
+        if (arguments[index] == key && arguments[index + 1U] == value) {
             return true;
         }
     }
@@ -164,6 +174,70 @@ int main() {
                dry_run_label_invocation.plan.dry_run &&
                !dry_run_label_invocation.plan.mutates_asset,
            "#1215: non-admitted builder invocation plans should remain deterministic dry runs");
+
+    const auto control_dispatch = copperfin::studio::plan_studio_builder_dispatch({
+        .admission_plan = admitted_control_invocation.plan
+    });
+    expect(control_dispatch.ok,
+           "#1229: builder dispatch should accept admitted builder invocations");
+    expect(std::string(control_dispatch.plan.builder.id) == "grid-builder" &&
+               control_dispatch.plan.builder.kind == StudioBuilderKind::builder &&
+               control_dispatch.plan.context == StudioBuilderContext::control &&
+               control_dispatch.plan.command_token == "studio.builder.invoke" &&
+               control_dispatch.plan.entry_point == "cf_builders.grid_builder" &&
+               control_dispatch.plan.asset_path == "forms/customer.scx" &&
+               control_dispatch.plan.record_index == 4U &&
+               control_dispatch.plan.object_name == "grdOrders" &&
+               control_dispatch.plan.unique_id == "grid-guid" &&
+               control_dispatch.plan.dispatch_admitted &&
+               !control_dispatch.plan.dry_run &&
+               !control_dispatch.plan.executed &&
+               !control_dispatch.plan.mutates_asset,
+           "#1229: builder dispatch should preserve admission metadata without executing");
+    expect(has_argument_pair(control_dispatch.plan.dispatch_arguments, "--command-token", "studio.builder.invoke") &&
+               has_argument_pair(control_dispatch.plan.dispatch_arguments, "--builder-id", "grid-builder") &&
+               has_argument_pair(control_dispatch.plan.dispatch_arguments, "--builder-context", "control") &&
+               has_argument_pair(control_dispatch.plan.dispatch_arguments, "--entry-point", "cf_builders.grid_builder") &&
+               has_argument_pair(control_dispatch.plan.dispatch_arguments, "--path", "forms/customer.scx") &&
+               has_argument_pair(control_dispatch.plan.dispatch_arguments, "--record", "4") &&
+               has_argument_pair(control_dispatch.plan.dispatch_arguments, "--object-name", "grdOrders") &&
+               has_argument_pair(control_dispatch.plan.dispatch_arguments, "--unique-id", "grid-guid"),
+           "#1229: builder dispatch should materialize a deterministic argument contract");
+
+    const auto dry_run_builder_dispatch = copperfin::studio::plan_studio_builder_dispatch({
+        .admission_plan = dry_run_label_invocation.plan
+    });
+    expect(!dry_run_builder_dispatch.ok &&
+               dry_run_builder_dispatch.error ==
+                   "A builder dispatch request requires an admitted non-dry-run invocation.",
+           "#1229: builder dispatch should reject dry-run admission plans");
+
+    auto missing_dispatch_command_plan = admitted_control_invocation.plan;
+    missing_dispatch_command_plan.command_token = {};
+    const auto missing_dispatch_command = copperfin::studio::plan_studio_builder_dispatch({
+        .admission_plan = missing_dispatch_command_plan
+    });
+    expect(!missing_dispatch_command.ok &&
+               missing_dispatch_command.error == "A builder dispatch request requires a command token.",
+           "#1229: builder dispatch should reject admitted plans without command tokens");
+
+    auto missing_dispatch_entry_plan = admitted_control_invocation.plan;
+    missing_dispatch_entry_plan.entry_point = {};
+    const auto missing_dispatch_entry = copperfin::studio::plan_studio_builder_dispatch({
+        .admission_plan = missing_dispatch_entry_plan
+    });
+    expect(!missing_dispatch_entry.ok &&
+               missing_dispatch_entry.error == "A builder dispatch request requires a launch entry point.",
+           "#1229: builder dispatch should reject admitted plans without entry points");
+
+    auto missing_dispatch_builder_plan = admitted_control_invocation.plan;
+    missing_dispatch_builder_plan.builder = {};
+    const auto missing_dispatch_builder = copperfin::studio::plan_studio_builder_dispatch({
+        .admission_plan = missing_dispatch_builder_plan
+    });
+    expect(!missing_dispatch_builder.ok &&
+               missing_dispatch_builder.error == "A builder dispatch request requires a validated builder id.",
+           "#1229: builder dispatch should reject admitted plans without builder ids");
 
     auto missing_entry_plan = control_launch.plan;
     missing_entry_plan.entry_point = {};

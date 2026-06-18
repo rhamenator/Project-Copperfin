@@ -74,6 +74,7 @@ else()
 endif()
 
 add_library(cf_design_model
+    src/studio/builder_dispatch.cpp
     src/studio/builder_invocation_admission.cpp
     src/studio/builder_registry.cpp
     src/studio/context_editor_actions.cpp
