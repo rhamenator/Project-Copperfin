@@ -269,6 +269,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.form_set_class_object, "#1136: launch contract should keep form-set-class-object off by default");
     expect(!result.request.form_set_class_available, "#1136: launch contract should keep form set class unavailable by default");
+    expect(!result.request.default_file_path_object, "#1137: launch contract should keep default-file-path-object off by default");
+    expect(!result.request.default_file_path_available, "#1137: launch contract should keep default file path unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -5500,6 +5502,82 @@ void test_parse_launch_arguments_rejects_form_set_class_object_ambiguity() {
     });
     expect(!stray_form_set_class_result.ok,
         "#1136: launch contract should reject stray form set class arguments");
+}
+
+void test_parse_launch_arguments_for_default_file_path_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--default-file-path-object",
+        "--default-file-path", "Data\\Customers",
+        "--default-file-path-target-object-name", "cmdDefaultPath",
+        "--default-file-path-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1137: launch contract should parse default-file-path-object requests");
+    expect(result.request.default_file_path_object, "#1137: launch contract should detect --default-file-path-object");
+    expect(result.request.default_file_path_available && result.request.default_file_path == "Data\\Customers",
+        "#1137: default-file-path-object requests should carry default file path");
+    expect(result.request.default_file_path_objects.size() == 2U,
+        "#1137: default-file-path-object requests should collect default file path target selectors");
+    if (result.request.default_file_path_objects.size() == 2U) {
+        expect(result.request.default_file_path_objects[0].object_name == "cmdDefaultPath" &&
+                result.request.default_file_path_objects[0].unique_id.empty(),
+            "#1137: default-file-path-object requests should parse target object-name selectors");
+        expect(result.request.default_file_path_objects[1].object_name.empty() &&
+                result.request.default_file_path_objects[1].unique_id == "two-guid",
+            "#1137: default-file-path-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_default_file_path_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--default-file-path-object",
+        "--default-file-path-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1137: launch contract should reject default-file-path-object requests without default file path");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--default-file-path-object",
+        "--default-file-path", "Data\\Customers"
+    });
+    expect(!missing_targets_result.ok,
+        "#1137: launch contract should reject default-file-path-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_default_file_path_object_ambiguity() {
+    const auto default_file_path_caption_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--default-file-path-object",
+        "--caption-object",
+        "--default-file-path", "Data\\Customers",
+        "--default-file-path-target-unique-id", "one-guid",
+        "--caption", "Default path",
+        "--caption-target-unique-id", "one-guid"
+    });
+    expect(!default_file_path_caption_result.ok,
+        "#1137: launch contract should reject simultaneous default-file-path-object and caption-object requests");
+
+    const auto default_file_path_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--default-file-path-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--default-file-path", "Data\\Customers",
+        "--default-file-path-target-unique-id", "one-guid"
+    });
+    expect(!default_file_path_property_result.ok,
+        "#1137: launch contract should reject default-file-path-object combined with property commands");
+
+    const auto stray_default_file_path_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--default-file-path", "Data\\Customers"
+    });
+    expect(!stray_default_file_path_result.ok,
+        "#1137: launch contract should reject stray default file path arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -11616,6 +11694,9 @@ int main() {
     test_parse_launch_arguments_for_form_set_class_object();
     test_parse_launch_arguments_rejects_form_set_class_object_invalid_inputs();
     test_parse_launch_arguments_rejects_form_set_class_object_ambiguity();
+    test_parse_launch_arguments_for_default_file_path_object();
+    test_parse_launch_arguments_rejects_default_file_path_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_default_file_path_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

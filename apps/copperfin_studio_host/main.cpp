@@ -72,6 +72,7 @@ void print_usage() {
     std::cout << "List-item-id object: --list-item-id-object --list-item-id <n> [--list-item-id-target-object-name <name>] [--list-item-id-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "Form-set-class object: --form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]\n";
+    std::cout << "Default-file-path object: --default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2801,6 +2802,30 @@ int main(int argc, char** argv) {
         if (!form_set_class_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << form_set_class_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.default_file_path_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> default_file_path_objects;
+        default_file_path_objects.reserve(parse_result.request.default_file_path_objects.size());
+        for (const auto& default_file_path_object : parse_result.request.default_file_path_objects) {
+            default_file_path_objects.push_back({
+                .record_index = default_file_path_object.record_index,
+                .object_name = default_file_path_object.object_name,
+                .unique_id = default_file_path_object.unique_id
+            });
+        }
+
+        const auto default_file_path_result = copperfin::vfp::set_visual_object_default_file_path({
+            .path = parse_result.request.path,
+            .objects = default_file_path_objects,
+            .default_file_path = parse_result.request.default_file_path
+        });
+
+        if (!default_file_path_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << default_file_path_result.error << "\n";
             return 4;
         }
     }

@@ -133,6 +133,55 @@ bool parse_form_set_class_argument(const std::string& argument,
     return false;
 }
 
+bool parse_default_file_path_argument(const std::string& argument,
+                                      const std::vector<std::string>& args,
+                                      std::size_t& index,
+                                      LaunchParseResult& result,
+                                      std::string& error) {
+    if (argument == "--default-file-path-object") {
+        result.request.default_file_path_object = true;
+        return true;
+    }
+
+    if (argument == "--default-file-path") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --default-file-path.";
+            return true;
+        }
+        result.request.default_file_path = args[++index];
+        result.request.default_file_path_available = true;
+        return true;
+    }
+
+    if (argument == "--default-file-path-target-object-name") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --default-file-path-target-object-name.";
+            return true;
+        }
+        result.request.default_file_path_objects.push_back({
+            .record_index = 0U,
+            .object_name = args[++index],
+            .unique_id = {}
+        });
+        return true;
+    }
+
+    if (argument == "--default-file-path-target-unique-id") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --default-file-path-target-unique-id.";
+            return true;
+        }
+        result.request.default_file_path_objects.push_back({
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = args[++index]
+        });
+        return true;
+    }
+
+    return false;
+}
+
 std::optional<std::string> validate_form_set_class_request(const StudioOpenRequest& request) {
     if (request.form_set_class_object && !request.form_set_class_available) {
         return "An object form set class assignment requires --form-set-class.";
@@ -148,6 +197,21 @@ std::optional<std::string> validate_form_set_class_request(const StudioOpenReque
     return std::nullopt;
 }
 
+std::optional<std::string> validate_default_file_path_request(const StudioOpenRequest& request) {
+    if (request.default_file_path_object && !request.default_file_path_available) {
+        return "An object default file path assignment requires --default-file-path.";
+    }
+    if (request.default_file_path_object && request.default_file_path_objects.empty()) {
+        return "An object default file path assignment requires at least one target selector.";
+    }
+    if (!request.default_file_path_object &&
+        (request.default_file_path_available ||
+         !request.default_file_path_objects.empty())) {
+        return "Default-file-path arguments can only be used with --default-file-path-object.";
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
@@ -158,6 +222,12 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         std::string parsed_argument_error;
 
         if (parse_form_set_class_argument(argument, args, index, result, parsed_argument_error)) {
+            if (!parsed_argument_error.empty()) {
+                return {.ok = false, .error = parsed_argument_error};
+            }
+            continue;
+        }
+        if (parse_default_file_path_argument(argument, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
@@ -5472,6 +5542,9 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
     if (const auto form_set_class_error = validate_form_set_class_request(result.request)) {
         return {.ok = false, .error = *form_set_class_error};
     }
+    if (const auto default_file_path_error = validate_default_file_path_request(result.request)) {
+        return {.ok = false, .error = *default_file_path_error};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -6224,6 +6297,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.list_item_id_object ? 1 : 0) +
         (result.request.record_source_object ? 1 : 0) +
         (result.request.form_set_class_object ? 1 : 0) +
+        (result.request.default_file_path_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
