@@ -6880,6 +6880,119 @@ void test_studio_host_json_plans_toolbox_object_creation(const std::string& stud
     }
 }
 
+void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_plan_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan-catalog",
+            "--toolbox-context", "form",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Planned",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1244: toolbox-create-plan-catalog JSON command should exit successfully");
+    expect_contains(catalog_process.stdout_text, "\"toolboxCreatePlanCatalog\": {",
+        "#1244: toolbox-create-plan-catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1244: toolbox-create-plan-catalog JSON should expose toolbox contexts");
+    expect_contains(catalog_process.stdout_text, "\"itemCount\": ",
+        "#1244: toolbox-create-plan-catalog JSON should expose item counts");
+    expect_contains(catalog_process.stdout_text, "\"planCount\": ",
+        "#1244: toolbox-create-plan-catalog JSON should expose plan counts");
+    expect_contains(catalog_process.stdout_text, "\"errorCount\": 0",
+        "#1244: toolbox-create-plan-catalog JSON should expose zero error counts");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1244: form toolbox-create-plan-catalog JSON should include textbox plans");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
+        "#1244: form toolbox-create-plan-catalog JSON should include command button plans");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1244: form toolbox-create-plan-catalog JSON should expose generated textbox names");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"cmd1\"",
+        "#1244: form toolbox-create-plan-catalog JSON should expose generated command names");
+    expect_contains(catalog_process.stdout_text, "\"parentName\": \"frmCustomer\"",
+        "#1244: toolbox-create-plan-catalog JSON should expose planned parent names");
+    expect_contains(catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#1244: toolbox-create-plan-catalog JSON should expose caller field values");
+    expect_contains(catalog_process.stdout_text, "\"dryRun\": true",
+        "#1244: toolbox-create-plan-catalog JSON should expose dry-run state");
+    expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#1244: toolbox-create-plan-catalog JSON should remain non-mutating");
+    expect(visual_object_count(form_path) == before_count,
+        "#1244: toolbox-create-plan-catalog host command should not mutate the visual asset");
+
+    const auto report_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan-catalog",
+            "--toolbox-context", "report",
+            "--parent-name", "DetailBand",
+            "--json"
+        },
+        temp_root);
+    expect(report_catalog_process.exit_code == 0,
+        "#1244: report toolbox-create-plan-catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1244: report toolbox-create-plan-catalog JSON should expose report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#1244: report toolbox-create-plan-catalog JSON should include label plans");
+    expect_contains(report_catalog_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#1244: report toolbox-create-plan-catalog JSON should expose generated label names");
+    expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1244: report toolbox-create-plan-catalog JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#1244: report toolbox-create-plan-catalog host command should not mutate the visual asset");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1244: toolbox-create-plan-catalog JSON should reject missing contexts");
+    expect_contains(missing_context_process.stdout_text, "No toolbox context was provided.",
+        "#1244: missing toolbox-create-plan-catalog context JSON should report parser errors");
+
+    const auto invalid_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan-catalog",
+            "--toolbox-context", "form",
+            "--field-value", "BROKEN",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_field_process.exit_code == 2,
+        "#1244: toolbox-create-plan-catalog JSON should reject malformed field values");
+    expect_contains(invalid_field_process.stdout_text, "Toolbox field values must use name=value syntax.",
+        "#1244: malformed toolbox-create-plan-catalog field values should report parser errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1244: rejected toolbox-create-plan-catalog host commands should not mutate the visual asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -30711,6 +30824,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_designer_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation(argv[1]);
+    test_studio_host_json_plans_toolbox_object_creation_catalog(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);

@@ -53,6 +53,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --designer-invocation-admission-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --designer-dispatch-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-plan <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-plan-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "Display-value object: --display-value-object --display-value <value> [--display-value-target-object-name <name>] [--display-value-target-unique-id <id>]\n";
     std::cout << "Selected-back-color object: --selected-back-color-object --selected-back-color <n> [--selected-back-color-target-object-name <name>] [--selected-back-color-target-unique-id <id>]\n";
@@ -222,6 +223,15 @@ struct ToolboxCreatePlanParseResult {
     bool output_json = false;
     std::string error;
     copperfin::studio::StudioToolboxObjectCreateRequest request;
+};
+
+struct ToolboxCreatePlanCatalogParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool context_provided = false;
+    std::string error;
+    copperfin::studio::StudioToolboxObjectCreatePlanCatalogRequest request;
 };
 
 struct BuilderLaunchPlanParseResult {
@@ -2068,6 +2078,72 @@ ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(const std::vect
     return result;
 }
 
+ToolboxCreatePlanCatalogParseResult parse_toolbox_create_plan_catalog_arguments(
+    const std::vector<std::string>& args) {
+    ToolboxCreatePlanCatalogParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--toolbox-create-plan-catalog") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size()) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--toolbox-create-plan-catalog") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+        } else if (argument == "--toolbox-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioToolboxContext parsed_context{};
+            if (!parse_toolbox_context_token(token, parsed_context)) {
+                fail("Unknown toolbox context token: " + token);
+                continue;
+            }
+            result.context_provided = true;
+            result.request.toolbox_context = parsed_context;
+        } else if (argument == "--parent-name") {
+            result.request.parent_name = require_value(argument);
+        } else if (argument == "--field-value") {
+            const std::string assignment = require_value(argument);
+            const auto separator = assignment.find('=');
+            if (separator == std::string::npos || separator == 0U) {
+                fail("Toolbox field values must use name=value syntax.");
+                continue;
+            }
+            result.request.field_values.push_back({
+                .property_name = assignment.substr(0U, separator),
+                .property_value = assignment.substr(separator + 1U)
+            });
+        } else {
+            fail("Unknown toolbox-create-plan-catalog option: " + argument);
+        }
+    }
+
+    if (result.ok && result.request.path.empty()) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && !result.context_provided) {
+        fail("No toolbox context was provided.");
+    }
+    return result;
+}
+
 ToolboxCreateParseResult parse_toolbox_create_arguments(const std::vector<std::string>& args) {
     ToolboxCreateParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -2222,6 +2298,98 @@ void print_json_toolbox_create_plan_result(
     std::cout << "    ],\n";
     std::cout << "    \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (plan.mutates_asset ? "true" : "false") << "\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
+void print_json_toolbox_create_plan_catalog_entry(
+    const copperfin::studio::StudioToolboxObjectCreatePlanCatalogEntry& entry,
+    const std::string& indent) {
+    std::cout << indent << "{\n";
+    std::cout << indent << "  \"toolboxItemId\": ";
+    print_json_string_view(entry.toolbox_item.id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"title\": ";
+    print_json_string_view(entry.toolbox_item.title);
+    std::cout << ",\n";
+    std::cout << indent << "  \"className\": ";
+    print_json_string_view(entry.toolbox_item.vfp_class);
+    std::cout << ",\n";
+    std::cout << indent << "  \"baseClassName\": ";
+    print_json_string_view(entry.toolbox_item.base_class);
+    std::cout << ",\n";
+    std::cout << indent << "  \"planOk\": " << (entry.create_plan.ok ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"error\": ";
+    print_json_string(entry.create_plan.error);
+    if (!entry.create_plan.ok) {
+        std::cout << "\n";
+        std::cout << indent << "}";
+        return;
+    }
+
+    const auto& plan = entry.create_plan.plan;
+    std::cout << ",\n";
+    std::cout << indent << "  \"targetRecordIndex\": " << plan.target_record_index << ",\n";
+    std::cout << indent << "  \"objectName\": ";
+    print_json_string(plan.object_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"parentName\": ";
+    print_json_string(plan.parent_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"fieldValues\": [\n";
+    for (std::size_t index = 0U; index < plan.field_values.size(); ++index) {
+        const auto& field_value = plan.field_values[index];
+        std::cout << indent << "    {\"propertyName\": ";
+        print_json_string(field_value.property_name);
+        std::cout << ", \"propertyValue\": ";
+        print_json_string(field_value.property_value);
+        std::cout << "}";
+        if ((index + 1U) != plan.field_values.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << indent << "  ],\n";
+    std::cout << indent << "  \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"mutatesAsset\": " << (plan.mutates_asset ? "true" : "false") << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_toolbox_create_plan_catalog_result(
+    const copperfin::studio::StudioToolboxObjectCreatePlanCatalogResult& result) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"toolboxCreatePlanCatalog\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"toolboxContext\": ";
+    print_json_string(copperfin::studio::studio_toolbox_context_name(result.toolbox_context));
+    std::cout << ",\n";
+    std::cout << "    \"itemCount\": " << result.item_count << ",\n";
+    std::cout << "    \"planCount\": " << result.plan_count << ",\n";
+    std::cout << "    \"errorCount\": " << result.error_count << ",\n";
+    std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
+    std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"entries\": [\n";
+    for (std::size_t index = 0U; index < result.entries.size(); ++index) {
+        print_json_toolbox_create_plan_catalog_entry(result.entries[index], "      ");
+        if ((index + 1U) != result.entries.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ]\n";
     std::cout << "  },\n";
     std::cout << "  \"error\": \"\"\n";
     std::cout << "}\n";
@@ -3843,6 +4011,33 @@ void print_text_toolbox_create_plan_result(
     }
     std::cout << "dry_run: " << (plan.dry_run ? "true" : "false") << "\n";
     std::cout << "mutates_asset: " << (plan.mutates_asset ? "true" : "false") << "\n";
+}
+
+void print_text_toolbox_create_plan_catalog_result(
+    const copperfin::studio::StudioToolboxObjectCreatePlanCatalogResult& result) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    if (!result.ok) {
+        return;
+    }
+    std::cout << "toolbox_context: " << copperfin::studio::studio_toolbox_context_name(result.toolbox_context)
+              << "\n";
+    std::cout << "item_count: " << result.item_count << "\n";
+    std::cout << "plan_count: " << result.plan_count << "\n";
+    std::cout << "error_count: " << result.error_count << "\n";
+    std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
+    std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
+    for (const auto& entry : result.entries) {
+        std::cout << "entry_toolbox_item_id: " << entry.toolbox_item.id << "\n";
+        std::cout << "entry_plan_ok: " << (entry.create_plan.ok ? "true" : "false") << "\n";
+        if (entry.create_plan.ok) {
+            std::cout << "entry_object_name: " << entry.create_plan.plan.object_name << "\n";
+        } else if (!entry.create_plan.error.empty()) {
+            std::cout << "entry_error: " << entry.create_plan.error << "\n";
+        }
+    }
 }
 
 void print_text_builder_launch_plan_result(
@@ -6281,6 +6476,39 @@ int main(int argc, char** argv) {
             print_text_designer_launch_surface_catalog_result(result);
         }
         return result.ok ? 0 : 4;
+    }
+
+    const auto toolbox_create_plan_catalog_parse = parse_toolbox_create_plan_catalog_arguments(args);
+    if (toolbox_create_plan_catalog_parse.requested) {
+        if (!toolbox_create_plan_catalog_parse.ok) {
+            const auto result = copperfin::studio::StudioToolboxObjectCreatePlanCatalogResult{
+                .ok = false,
+                .error = toolbox_create_plan_catalog_parse.error,
+                .toolbox_context = {},
+                .item_count = 0U,
+                .plan_count = 0U,
+                .error_count = 0U,
+                .dry_run = true,
+                .mutates_asset = false,
+                .entries = {}
+            };
+            if (toolbox_create_plan_catalog_parse.output_json) {
+                print_json_toolbox_create_plan_catalog_result(result);
+            } else {
+                print_text_toolbox_create_plan_catalog_result(result);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto catalog_result = copperfin::studio::plan_visual_object_catalog_from_toolbox_context(
+            toolbox_create_plan_catalog_parse.request);
+        if (toolbox_create_plan_catalog_parse.output_json) {
+            print_json_toolbox_create_plan_catalog_result(catalog_result);
+        } else {
+            print_text_toolbox_create_plan_catalog_result(catalog_result);
+        }
+        return catalog_result.ok ? 0 : 4;
     }
 
     const auto toolbox_create_plan_parse = parse_toolbox_create_plan_arguments(args);
