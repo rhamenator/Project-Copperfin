@@ -453,6 +453,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--allow-header-sizing-object") {
+            result.request.allow_header_sizing_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1198,6 +1203,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.panel_link = *panel_link;
             result.request.panel_link_available = true;
+            continue;
+        }
+
+        if (argument == "--allow-header-sizing") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --allow-header-sizing."};
+            }
+            const auto allow_header_sizing = parse_bool_value(args[++index]);
+            if (!allow_header_sizing.has_value()) {
+                return {.ok = false, .error = "The --allow-header-sizing value must be true or false."};
+            }
+            result.request.allow_header_sizing = *allow_header_sizing;
+            result.request.allow_header_sizing_available = true;
             continue;
         }
 
@@ -2815,6 +2833,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--allow-header-sizing-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --allow-header-sizing-target-object-name."};
+            }
+            result.request.allow_header_sizing_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--allow-header-sizing-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --allow-header-sizing-target-unique-id."};
+            }
+            result.request.allow_header_sizing_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3657,6 +3699,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.panel_link_objects.empty())) {
         return {.ok = false, .error = "Panel-link arguments can only be used with --panel-link-object."};
     }
+    if (result.request.allow_header_sizing_object && !result.request.allow_header_sizing_available) {
+        return {.ok = false, .error = "An object allow-header-sizing assignment requires --allow-header-sizing."};
+    }
+    if (result.request.allow_header_sizing_object && result.request.allow_header_sizing_objects.empty()) {
+        return {.ok = false, .error = "An object allow-header-sizing assignment requires at least one target selector."};
+    }
+    if (!result.request.allow_header_sizing_object &&
+        (result.request.allow_header_sizing_available ||
+         !result.request.allow_header_sizing_objects.empty())) {
+        return {.ok = false, .error = "Allow-header-sizing arguments can only be used with --allow-header-sizing-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3732,6 +3785,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.split_bar_object ? 1 : 0) +
         (result.request.highlight_row_object ? 1 : 0) +
         (result.request.panel_link_object ? 1 : 0) +
+        (result.request.allow_header_sizing_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
