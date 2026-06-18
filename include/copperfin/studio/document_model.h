@@ -88,6 +88,7 @@ struct StudioOpenRequest {
     std::string default_file_path{};
     std::string initial_selected_alias{};
     std::string display_value{};
+    std::string font_name{};
     std::string dynamic_back_color{};
     std::string dynamic_fore_color{};
     std::string dynamic_input_mask{};
@@ -264,6 +265,7 @@ struct StudioOpenRequest {
     bool picture_selection_display_object = false;
     bool dynamic_input_mask_object = false;
     bool dynamic_line_height_object = false;
+    bool font_name_object = false;
     bool max_width_object = false;
     bool max_left_object = false;
     bool max_top_object = false;
@@ -460,6 +462,7 @@ struct StudioOpenRequest {
     bool picture_selection_display_available = false;
     bool dynamic_input_mask_available = false;
     bool dynamic_line_height_available = false;
+    bool font_name_available = false;
     bool max_width_available = false;
     bool max_left_available = false;
     bool max_top_available = false;
@@ -597,6 +600,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> picture_selection_display_objects{};
     std::vector<StudioObjectSelector> dynamic_input_mask_objects{};
     std::vector<StudioObjectSelector> dynamic_line_height_objects{};
+    std::vector<StudioObjectSelector> font_name_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
     std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> max_top_objects{};

@@ -519,6 +519,10 @@ void test_parse_launch_arguments() {
         "#1177: launch contract should keep dynamic-line-height-object off by default");
     expect(!result.request.dynamic_line_height_available,
         "#1177: launch contract should keep dynamic line height unavailable by default");
+    expect(!result.request.font_name_object,
+        "#1178: launch contract should keep font-name-object off by default");
+    expect(!result.request.font_name_available,
+        "#1178: launch contract should keep font name unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11987,6 +11991,83 @@ void test_parse_launch_arguments_rejects_dynamic_line_height_object_ambiguity() 
         "#1177: launch contract should reject stray dynamic-line-height arguments");
 }
 
+void test_parse_launch_arguments_for_font_name_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-name-object",
+        "--font-name", "Courier New",
+        "--font-name-target-object-name", "txtName",
+        "--font-name-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1178: launch contract should parse font-name-object requests");
+    expect(result.request.font_name_object,
+        "#1178: launch contract should detect --font-name-object");
+    expect(result.request.font_name_available && result.request.font_name == "Courier New",
+        "#1178: font-name-object requests should carry font name text");
+    expect(result.request.font_name_objects.size() == 2U,
+        "#1178: font-name-object requests should collect font-name target selectors");
+    if (result.request.font_name_objects.size() == 2U) {
+        expect(result.request.font_name_objects[0].object_name == "txtName" &&
+                result.request.font_name_objects[0].unique_id.empty(),
+            "#1178: font-name-object requests should parse target object-name selectors");
+        expect(result.request.font_name_objects[1].object_name.empty() &&
+                result.request.font_name_objects[1].unique_id == "two-guid",
+            "#1178: font-name-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_name_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-name-object",
+        "--font-name-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1178: launch contract should reject font-name-object requests without font name");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-name-object",
+        "--font-name", "Courier New"
+    });
+    expect(!missing_targets_result.ok,
+        "#1178: launch contract should reject font-name-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_font_name_object_ambiguity() {
+    const auto font_name_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-name-object",
+        "--allow-output-object",
+        "--font-name", "Courier New",
+        "--font-name-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_name_allow_output_result.ok,
+        "#1178: launch contract should reject simultaneous font-name-object and allow-output-object requests");
+
+    const auto font_name_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-name-object",
+        "--clear-property",
+        "--property-name", "FontName",
+        "--font-name", "Courier New",
+        "--font-name-target-unique-id", "one-guid"
+    });
+    expect(!font_name_property_result.ok,
+        "#1178: launch contract should reject font-name-object combined with property commands");
+
+    const auto stray_font_name_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-name", "Courier New"
+    });
+    expect(!stray_font_name_result.ok,
+        "#1178: launch contract should reject stray font-name arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15682,6 +15763,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_line_height_object();
     test_parse_launch_arguments_rejects_dynamic_line_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_line_height_object_ambiguity();
+    test_parse_launch_arguments_for_font_name_object();
+    test_parse_launch_arguments_rejects_font_name_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_name_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

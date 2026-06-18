@@ -2536,6 +2536,24 @@ void write_synthetic_form_table_for_object_dynamic_line_height(const std::filesy
     expect(create_result.ok, "#1177: synthetic SCX table for object dynamic line height should be created");
 }
 
+void write_synthetic_form_table_for_object_font_name(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "FONTNAME", .type = 'C', .length = 40U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtName", "txtName", "one-guid", "Arial"},
+        {"txtMemo", "txtMemo", "two-guid", "Tahoma"},
+        {"cntDetails", "cntDetails", "three-guid", "Verdana"},
+        {"txtOther", "txtOther", "other-guid", "Consolas"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1178: synthetic SCX table for object font name should be created");
+}
+
 void write_synthetic_form_table_for_object_max_width(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -20894,6 +20912,130 @@ void test_studio_host_json_assigns_dynamic_line_height_by_stable_selectors(const
     }
 }
 
+void test_studio_host_json_assigns_font_name_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_font_name_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::string font_name = "Courier New";
+    const fs::path font_name_path = temp_root / "font_name.scx";
+    write_synthetic_form_table_for_object_font_name(font_name_path);
+    const auto font_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", font_name_path.string(),
+            "--font-name-object",
+            "--font-name", font_name,
+            "--font-name-target-object-name", "txtName",
+            "--font-name-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(font_name_process.exit_code == 0,
+        "#1178: host object font-name assignment should exit successfully");
+    expect(visual_object_property(font_name_path, "one-guid", "FONTNAME") == font_name &&
+            visual_object_property(font_name_path, "two-guid", "FONTNAME") == font_name &&
+            visual_object_property(font_name_path, "three-guid", "FONTNAME") == "Verdana" &&
+            visual_object_property(font_name_path, "other-guid", "FONTNAME") == "Consolas",
+        "#1178: host object font-name assignment should assign selected font text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_font_name(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--font-name-object",
+            "--font-name", font_name,
+            "--font-name-target-unique-id", "one-guid",
+            "--font-name-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1178: missing-target host object font-name assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "FONTNAME") == "Arial" &&
+            visual_object_property(missing_target_path, "two-guid", "FONTNAME") == "Tahoma",
+        "#1178: missing-target host object font-name assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_font_name(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--font-name-object",
+            "--font-name", font_name,
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1178: font-name-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "FONTNAME") == "Arial",
+        "#1178: font-name-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_font_name(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--font-name-object",
+            "--font-name-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1178: font-name-object without font-name value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "FONTNAME") == "Arial",
+        "#1178: font-name-object without font-name value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_font_name(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--font-name-object",
+            "--font-name", font_name,
+            "--font-name-target-unique-id", "one-guid",
+            "--font-name-target-object-name", "txtName",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1178: duplicate-target host object font-name assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "FONTNAME") == "Arial",
+        "#1178: duplicate-target host object font-name assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_font_name(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--font-name-object",
+            "--allow-output-object",
+            "--font-name", font_name,
+            "--font-name-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1178: font-name-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "FONTNAME") == "Arial",
+        "#1178: font-name-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_max_width_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -24280,6 +24422,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_picture_selection_display_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_input_mask_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_line_height_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_font_name_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_width_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_left_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_top_by_stable_selectors(argv[1]);
