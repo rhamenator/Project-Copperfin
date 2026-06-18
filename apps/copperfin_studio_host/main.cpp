@@ -25,6 +25,7 @@ namespace {
 void print_usage() {
     std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--align-object|--resize-object|--distribute-object|--snap-object|--nudge-object|--tab-order-object|--tab-stop-object|--visibility-object|--enabled-object|--read-only-object|--locked-object|--caption-object|--picture-object|--down-picture-object|--disabled-picture-object|--ole-drag-picture-object|--mouse-icon-object|--drag-icon-object|--drag-mode-object|--ole-drag-mode-object|--tooltip-text-object|--status-bar-text-object|--control-source-object|--input-mask-object|--format-object|--row-source-object|--row-source-type-object|--bound-column-object|--column-count-object|--style-object|--list-index-object|--left-column-object|--auto-center-object|--auto-size-object|--auto-release-object|--continuous-scroll-object|--dockable-object|--clip-controls-object|--sparse-object|--lock-screen-object|--allow-cell-selection-object|--delete-mark-object|--record-mark-object|--split-bar-object|--highlight-row-object|--panel-link-object|--allow-header-sizing-object|--allow-row-sizing-object|--resizable-object|--add-line-feeds-object|--always-on-top-object|--always-on-bottom-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--alignment-mode <mode>] [--resize-mode <width|height|size>] [--distribution-mode <horizontal|vertical>] [--snap-mode <horizontal|vertical|both>] [--nudge-mode <horizontal|vertical|both>] [--grid-width <n>] [--grid-height <n>] [--delta-hpos <n>] [--delta-vpos <n>] [--starting-tab-index <n>] [--tab-stop <true|false>] [--visible <true|false>] [--enabled <true|false>] [--object-read-only <true|false>] [--locked <true|false>] [--caption <value>] [--picture <value>] [--down-picture <value>] [--disabled-picture <value>] [--ole-drag-picture <value>] [--mouse-icon <value>] [--drag-icon <value>] [--drag-mode <n>] [--ole-drag-mode <n>] [--tooltip-text <value>] [--status-bar-text <value>] [--control-source <value>] [--input-mask <value>] [--format <value>] [--row-source <value>] [--row-source-type <n>] [--bound-column <n>] [--column-count <n>] [--style <n>] [--list-index <n>] [--left-column <n>] [--auto-center <true|false>] [--auto-size <true|false>] [--auto-release <true|false>] [--continuous-scroll <true|false>] [--dockable <true|false>] [--clip-controls <true|false>] [--sparse <true|false>] [--lock-screen <true|false>] [--allow-cell-selection <true|false>] [--delete-mark <true|false>] [--record-mark <true|false>] [--split-bar <true|false>] [--highlight-row <true|false>] [--panel-link <true|false>] [--allow-header-sizing <true|false>] [--allow-row-sizing <true|false>] [--resizable <true|false>] [--add-line-feeds <true|false>] [--always-on-top <true|false>] [--always-on-bottom <true|false>] [--anchor-object-name <name>] [--anchor-unique-id <id>] [--align-target-object-name <name>] [--align-target-unique-id <id>] [--resize-target-object-name <name>] [--resize-target-unique-id <id>] [--distribute-target-object-name <name>] [--distribute-target-unique-id <id>] [--snap-target-object-name <name>] [--snap-target-unique-id <id>] [--nudge-target-object-name <name>] [--nudge-target-unique-id <id>] [--tab-order-target-object-name <name>] [--tab-order-target-unique-id <id>] [--tab-stop-target-object-name <name>] [--tab-stop-target-unique-id <id>] [--visibility-target-object-name <name>] [--visibility-target-unique-id <id>] [--enabled-target-object-name <name>] [--enabled-target-unique-id <id>] [--read-only-target-object-name <name>] [--read-only-target-unique-id <id>] [--locked-target-object-name <name>] [--locked-target-unique-id <id>] [--caption-target-object-name <name>] [--caption-target-unique-id <id>] [--picture-target-object-name <name>] [--picture-target-unique-id <id>] [--down-picture-target-object-name <name>] [--down-picture-target-unique-id <id>] [--disabled-picture-target-object-name <name>] [--disabled-picture-target-unique-id <id>] [--ole-drag-picture-target-object-name <name>] [--ole-drag-picture-target-unique-id <id>] [--mouse-icon-target-object-name <name>] [--mouse-icon-target-unique-id <id>] [--drag-icon-target-object-name <name>] [--drag-icon-target-unique-id <id>] [--drag-mode-target-object-name <name>] [--drag-mode-target-unique-id <id>] [--ole-drag-mode-target-object-name <name>] [--ole-drag-mode-target-unique-id <id>] [--tooltip-text-target-object-name <name>] [--tooltip-text-target-unique-id <id>] [--status-bar-text-target-object-name <name>] [--status-bar-text-target-unique-id <id>] [--control-source-target-object-name <name>] [--control-source-target-unique-id <id>] [--input-mask-target-object-name <name>] [--input-mask-target-unique-id <id>] [--format-target-object-name <name>] [--format-target-unique-id <id>] [--row-source-target-object-name <name>] [--row-source-target-unique-id <id>] [--row-source-type-target-object-name <name>] [--row-source-type-target-unique-id <id>] [--bound-column-target-object-name <name>] [--bound-column-target-unique-id <id>] [--column-count-target-object-name <name>] [--column-count-target-unique-id <id>] [--style-target-object-name <name>] [--style-target-unique-id <id>] [--list-index-target-object-name <name>] [--list-index-target-unique-id <id>] [--left-column-target-object-name <name>] [--left-column-target-unique-id <id>] [--auto-center-target-object-name <name>] [--auto-center-target-unique-id <id>] [--auto-size-target-object-name <name>] [--auto-size-target-unique-id <id>] [--auto-release-target-object-name <name>] [--auto-release-target-unique-id <id>] [--continuous-scroll-target-object-name <name>] [--continuous-scroll-target-unique-id <id>] [--dockable-target-object-name <name>] [--dockable-target-unique-id <id>] [--clip-controls-target-object-name <name>] [--clip-controls-target-unique-id <id>] [--sparse-target-object-name <name>] [--sparse-target-unique-id <id>] [--lock-screen-target-object-name <name>] [--lock-screen-target-unique-id <id>] [--allow-cell-selection-target-object-name <name>] [--allow-cell-selection-target-unique-id <id>] [--delete-mark-target-object-name <name>] [--delete-mark-target-unique-id <id>] [--record-mark-target-object-name <name>] [--record-mark-target-unique-id <id>] [--split-bar-target-object-name <name>] [--split-bar-target-unique-id <id>] [--highlight-row-target-object-name <name>] [--highlight-row-target-unique-id <id>] [--panel-link-target-object-name <name>] [--panel-link-target-unique-id <id>] [--allow-header-sizing-target-object-name <name>] [--allow-header-sizing-target-unique-id <id>] [--allow-row-sizing-target-object-name <name>] [--allow-row-sizing-target-unique-id <id>] [--resizable-target-object-name <name>] [--resizable-target-unique-id <id>] [--add-line-feeds-target-object-name <name>] [--add-line-feeds-target-unique-id <id>] [--always-on-top-target-object-name <name>] [--always-on-top-target-unique-id <id>] [--always-on-bottom-target-object-name <name>] [--always-on-bottom-target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
     std::cout << "   or: copperfin_studio_host --builder-launch-plan <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --editor-action-launch-plan <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "Display-value object: --display-value-object --display-value <value> [--display-value-target-object-name <name>] [--display-value-target-unique-id <id>]\n";
     std::cout << "Selected-back-color object: --selected-back-color-object --selected-back-color <n> [--selected-back-color-target-object-name <name>] [--selected-back-color-target-unique-id <id>]\n";
@@ -200,6 +201,15 @@ struct BuilderLaunchPlanParseResult {
         copperfin::studio::StudioEditorSelectionContext::visual_object;
 };
 
+struct EditorActionLaunchPlanParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool selection_context_provided = false;
+    std::string error;
+    copperfin::studio::StudioEditorActionLaunchRequest request;
+};
+
 bool parse_size_t_token(const std::string& token, std::size_t& value) {
     if (token.empty() || token.front() == '-' || token.front() == '+') {
         return false;
@@ -334,6 +344,90 @@ BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(const std::vect
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
         fail("No builder or selection context was provided.");
+    }
+    return result;
+}
+
+EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(const std::vector<std::string>& args) {
+    EditorActionLaunchPlanParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--editor-action-launch-plan") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json") {
+            continue;
+        }
+        if (argument == "--editor-action-launch-plan") {
+            result.request.action_id = require_value(argument);
+        } else if (argument == "--selection-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioEditorSelectionContext parsed_context{};
+            if (!parse_editor_selection_context_token(token, parsed_context)) {
+                fail("Unknown selection context token: " + token);
+                continue;
+            }
+            result.selection_context_provided = true;
+            result.request.selection_context = parsed_context;
+        } else if (argument == "--path") {
+            result.request.asset_path = require_value(argument);
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--symbol") {
+            result.request.symbol = require_value(argument);
+        } else if (argument == "--line") {
+            const std::string token = require_value(argument);
+            std::size_t line = 0U;
+            if (!parse_size_t_token(token, line)) {
+                fail("The --line value must be a non-negative integer.");
+                continue;
+            }
+            result.request.line = line;
+        } else if (argument == "--column") {
+            const std::string token = require_value(argument);
+            std::size_t column = 0U;
+            if (!parse_size_t_token(token, column)) {
+                fail("The --column value must be a non-negative integer.");
+                continue;
+            }
+            result.request.column = column;
+        } else {
+            fail("Unknown editor-action-launch-plan option: " + argument);
+        }
+    }
+
+    if (result.ok && result.request.action_id.empty()) {
+        fail("No editor action id was provided.");
+    }
+    if (result.ok && !result.selection_context_provided) {
+        fail("No selection context was provided.");
     }
     return result;
 }
@@ -514,6 +608,66 @@ void print_json_builder_launch_plan_result(
     std::cout << "}\n";
 }
 
+void print_json_editor_action_launch_plan_result(
+    const copperfin::studio::StudioEditorActionLaunchPlanResult& result) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"editorActionLaunchPlan\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    const auto& plan = result.plan;
+    const auto& action = plan.action;
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"actionId\": ";
+    print_json_string_view(action.id);
+    std::cout << ",\n";
+    std::cout << "    \"label\": ";
+    print_json_string_view(action.label);
+    std::cout << ",\n";
+    std::cout << "    \"kind\": ";
+    print_json_string(copperfin::studio::studio_editor_action_kind_name(action.kind));
+    std::cout << ",\n";
+    std::cout << "    \"selectionContext\": ";
+    print_json_string(copperfin::studio::studio_editor_selection_context_name(plan.selection_context));
+    std::cout << ",\n";
+    std::cout << "    \"commandToken\": ";
+    print_json_string(plan.command_token);
+    std::cout << ",\n";
+    std::cout << "    \"targetSurface\": ";
+    print_json_string(plan.target_surface);
+    std::cout << ",\n";
+    std::cout << "    \"assetPath\": ";
+    print_json_string(plan.asset_path);
+    std::cout << ",\n";
+    std::cout << "    \"recordIndex\": " << plan.record_index << ",\n";
+    std::cout << "    \"objectName\": ";
+    print_json_string(plan.object_name);
+    std::cout << ",\n";
+    std::cout << "    \"uniqueId\": ";
+    print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"symbol\": ";
+    print_json_string(plan.symbol);
+    std::cout << ",\n";
+    std::cout << "    \"line\": " << plan.line << ",\n";
+    std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"description\": ";
+    print_json_string_view(action.description);
+    std::cout << "\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_text_toolbox_create_result(const copperfin::vfp::VisualObjectCreateResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
@@ -550,6 +704,31 @@ void print_text_builder_launch_plan_result(
     std::cout << "record_index: " << plan.record_index << "\n";
     std::cout << "object_name: " << plan.object_name << "\n";
     std::cout << "unique_id: " << plan.unique_id << "\n";
+}
+
+void print_text_editor_action_launch_plan_result(
+    const copperfin::studio::StudioEditorActionLaunchPlanResult& result) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    if (!result.ok) {
+        return;
+    }
+    const auto& plan = result.plan;
+    std::cout << "action_id: " << plan.action.id << "\n";
+    std::cout << "kind: " << copperfin::studio::studio_editor_action_kind_name(plan.action.kind) << "\n";
+    std::cout << "selection_context: "
+              << copperfin::studio::studio_editor_selection_context_name(plan.selection_context) << "\n";
+    std::cout << "command_token: " << plan.command_token << "\n";
+    std::cout << "target_surface: " << plan.target_surface << "\n";
+    std::cout << "asset_path: " << plan.asset_path << "\n";
+    std::cout << "record_index: " << plan.record_index << "\n";
+    std::cout << "object_name: " << plan.object_name << "\n";
+    std::cout << "unique_id: " << plan.unique_id << "\n";
+    std::cout << "symbol: " << plan.symbol << "\n";
+    std::cout << "line: " << plan.line << "\n";
+    std::cout << "column: " << plan.column << "\n";
 }
 
 void print_json_line_index_or_null(std::size_t line_index) {
@@ -1692,6 +1871,33 @@ int main(int argc, char** argv) {
             print_json_builder_launch_plan_result(result);
         } else {
             print_text_builder_launch_plan_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto editor_action_launch_parse = parse_editor_action_launch_plan_arguments(args);
+    if (editor_action_launch_parse.requested) {
+        if (!editor_action_launch_parse.ok) {
+            const auto result = copperfin::studio::StudioEditorActionLaunchPlanResult{
+                .ok = false,
+                .error = editor_action_launch_parse.error,
+                .plan = {}
+            };
+            if (editor_action_launch_parse.output_json) {
+                print_json_editor_action_launch_plan_result(result);
+            } else {
+                print_text_editor_action_launch_plan_result(result);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::studio::plan_studio_editor_action_launch(
+            editor_action_launch_parse.request);
+        if (editor_action_launch_parse.output_json) {
+            print_json_editor_action_launch_plan_result(result);
+        } else {
+            print_text_editor_action_launch_plan_result(result);
         }
         return result.ok ? 0 : 4;
     }

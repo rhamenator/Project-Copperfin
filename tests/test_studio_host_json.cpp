@@ -4346,6 +4346,180 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
     }
 }
 
+void test_studio_host_json_exposes_editor_action_launch_plans(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_editor_action_launch_plan_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto method_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "cmdSave",
+            "--unique-id", "button-guid",
+            "--symbol", "cmdSave.Click",
+            "--line", "42",
+            "--column", "7",
+            "--json"
+        },
+        temp_root);
+    expect(method_process.exit_code == 0,
+        "#1208: editor action launch-plan JSON should accept context-valid method editor actions");
+    expect_contains(method_process.stdout_text, "\"editorActionLaunchPlan\": {",
+        "#1208: editor action launch-plan JSON should expose a plan object");
+    expect_contains(method_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
+        "#1208: editor action launch-plan JSON should expose action ids");
+    expect_contains(method_process.stdout_text, "\"kind\": \"source_editor\"",
+        "#1208: editor action launch-plan JSON should expose action kind metadata");
+    expect_contains(method_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1208: editor action launch-plan JSON should expose selected Studio contexts");
+    expect_contains(method_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
+        "#1208: editor action launch-plan JSON should expose command tokens");
+    expect_contains(method_process.stdout_text, "\"targetSurface\": \"method-editor\"",
+        "#1208: editor action launch-plan JSON should expose target surfaces");
+    expect_contains(method_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1208: editor action launch-plan JSON should carry asset paths");
+    expect_contains(method_process.stdout_text, "\"recordIndex\": 4",
+        "#1208: editor action launch-plan JSON should carry record indexes");
+    expect_contains(method_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1208: editor action launch-plan JSON should carry object-name selectors");
+    expect_contains(method_process.stdout_text, "\"uniqueId\": \"button-guid\"",
+        "#1208: editor action launch-plan JSON should carry unique-id selectors");
+    expect_contains(method_process.stdout_text, "\"symbol\": \"cmdSave.Click\"",
+        "#1208: editor action launch-plan JSON should carry launch symbols");
+    expect_contains(method_process.stdout_text, "\"line\": 42",
+        "#1208: editor action launch-plan JSON should carry line metadata");
+    expect_contains(method_process.stdout_text, "\"column\": 7",
+        "#1208: editor action launch-plan JSON should carry column metadata");
+
+    const auto expression_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "edit-report-expression",
+            "--selection-context", "report_expression",
+            "--path", "reports/orders.frx",
+            "--record", "2",
+            "--symbol", "Expr1.Expression",
+            "--json"
+        },
+        temp_root);
+    expect(expression_process.exit_code == 0,
+        "#1208: editor action launch-plan JSON should accept report expression actions");
+    expect_contains(expression_process.stdout_text, "\"kind\": \"expression_editor\"",
+        "#1208: expression editor launch-plan JSON should expose expression-editor metadata");
+    expect_contains(expression_process.stdout_text, "\"targetSurface\": \"expression-editor\"",
+        "#1208: expression editor launch-plan JSON should expose expression editor target surfaces");
+
+    const auto data_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "edit-data-environment",
+            "--selection-context", "data_environment",
+            "--path", "forms/customer.scx",
+            "--record", "0",
+            "--object-name", "Dataenvironment",
+            "--symbol", "Dataenvironment.OpenTables",
+            "--json"
+        },
+        temp_root);
+    expect(data_process.exit_code == 0,
+        "#1208: editor action launch-plan JSON should accept data-environment actions");
+    expect_contains(data_process.stdout_text, "\"commandToken\": \"studio.data_environment.open\"",
+        "#1208: data-environment editor launch-plan JSON should expose command tokens");
+
+    const auto project_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "navigate-project-item",
+            "--selection-context", "project_item",
+            "--path", "apps/customer.pjx",
+            "--record", "5",
+            "--symbol", "forms/customer.scx",
+            "--json"
+        },
+        temp_root);
+    expect(project_process.exit_code == 0,
+        "#1208: editor action launch-plan JSON should accept project navigation actions");
+    expect_contains(project_process.stdout_text, "\"kind\": \"navigator\"",
+        "#1208: project navigation launch-plan JSON should expose navigator metadata");
+
+    const auto wrong_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "edit-report-expression",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(wrong_context_process.exit_code == 4,
+        "#1208: editor action launch-plan JSON should reject wrong-context actions");
+    expect_contains(wrong_context_process.stdout_text,
+        "The requested editor action is not available for the selected Studio context.",
+        "#1208: wrong-context editor action launch-plan JSON should report validation errors");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "show-property-grid",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1208: editor action launch-plan JSON should reject unknown selection tokens");
+    expect_contains(unknown_context_process.stdout_text, "Unknown selection context token: unknown",
+        "#1208: unknown-context editor action launch-plan JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "show-property-grid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1208: editor action launch-plan JSON should reject missing selection contexts");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1208: missing-context editor action launch-plan JSON should report parser errors");
+
+    const auto missing_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(missing_id_process.exit_code == 2,
+        "#1208: editor action launch-plan JSON should reject missing action ids");
+    expect_contains(missing_id_process.stdout_text, "Missing value for --editor-action-launch-plan.",
+        "#1208: missing-id editor action launch-plan JSON should report parser errors");
+
+    const auto invalid_line_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-plan", "show-property-grid",
+            "--selection-context", "visual_object",
+            "--line", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_line_process.exit_code == 2,
+        "#1208: editor action launch-plan JSON should reject invalid line values");
+    expect_contains(invalid_line_process.stdout_text, "The --line value must be a non-negative integer.",
+        "#1208: invalid-line editor action launch-plan JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -28159,6 +28333,7 @@ int main(int argc, char** argv) {
 
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
+    test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
