@@ -439,6 +439,10 @@ void test_parse_launch_arguments() {
         "#1153: launch contract should keep max-left-object off by default");
     expect(!result.request.max_left_available,
         "#1153: launch contract should keep max left unavailable by default");
+    expect(!result.request.max_top_object,
+        "#1154: launch contract should keep max-top-object off by default");
+    expect(!result.request.max_top_available,
+        "#1154: launch contract should keep max top unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9989,6 +9993,101 @@ void test_parse_launch_arguments_rejects_max_left_object_ambiguity() {
         "#1153: launch contract should reject stray max-left arguments");
 }
 
+void test_parse_launch_arguments_for_max_top_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--max-top-object",
+        "--max-top", "640",
+        "--max-top-target-object-name", "frmCustomer",
+        "--max-top-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1154: launch contract should parse max-top-object requests");
+    expect(result.request.max_top_object,
+        "#1154: launch contract should detect --max-top-object");
+    expect(result.request.max_top_available && result.request.max_top == 640,
+        "#1154: max-top-object requests should carry max top value");
+    expect(result.request.max_top_objects.size() == 2U,
+        "#1154: max-top-object requests should collect max-top target selectors");
+    if (result.request.max_top_objects.size() == 2U) {
+        expect(result.request.max_top_objects[0].object_name == "frmCustomer" &&
+                result.request.max_top_objects[0].unique_id.empty(),
+            "#1154: max-top-object requests should parse target object-name selectors");
+        expect(result.request.max_top_objects[1].object_name.empty() &&
+                result.request.max_top_objects[1].unique_id == "two-guid",
+            "#1154: max-top-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_max_top_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-top-object",
+        "--max-top-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1154: launch contract should reject max-top-object requests without max top value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-top-object",
+        "--max-top", "640"
+    });
+    expect(!missing_targets_result.ok,
+        "#1154: launch contract should reject max-top-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-top-object",
+        "--max-top", "wide",
+        "--max-top-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1154: launch contract should reject non-integer max-top values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-top-object",
+        "--max-top", "-1",
+        "--max-top-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1154: launch contract should reject negative max-top values");
+}
+
+void test_parse_launch_arguments_rejects_max_top_object_ambiguity() {
+    const auto max_top_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-top-object",
+        "--allow-output-object",
+        "--max-top", "640",
+        "--max-top-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!max_top_allow_output_result.ok,
+        "#1154: launch contract should reject simultaneous max-top-object and allow-output-object requests");
+
+    const auto max_top_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-top-object",
+        "--clear-property",
+        "--property-name", "MaxTop",
+        "--max-top", "640",
+        "--max-top-target-unique-id", "one-guid"
+    });
+    expect(!max_top_property_result.ok,
+        "#1154: launch contract should reject max-top-object combined with property commands");
+
+    const auto stray_max_top_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-top", "640"
+    });
+    expect(!stray_max_top_result.ok,
+        "#1154: launch contract should reject stray max-top arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13336,6 +13435,9 @@ int main() {
     test_parse_launch_arguments_for_max_left_object();
     test_parse_launch_arguments_rejects_max_left_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_left_object_ambiguity();
+    test_parse_launch_arguments_for_max_top_object();
+    test_parse_launch_arguments_rejects_max_top_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_max_top_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();

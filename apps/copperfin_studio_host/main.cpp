@@ -54,6 +54,7 @@ void print_usage() {
     std::cout << "Max-height object: --max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
+    std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
@@ -4018,6 +4019,30 @@ int main(int argc, char** argv) {
         if (!max_left_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << max_left_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.max_top_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> max_top_objects;
+        max_top_objects.reserve(parse_result.request.max_top_objects.size());
+        for (const auto& max_top_object : parse_result.request.max_top_objects) {
+            max_top_objects.push_back({
+                .record_index = max_top_object.record_index,
+                .object_name = max_top_object.object_name,
+                .unique_id = max_top_object.unique_id
+            });
+        }
+
+        const auto max_top_result = copperfin::vfp::set_visual_object_max_top({
+            .path = parse_result.request.path,
+            .objects = max_top_objects,
+            .max_top = parse_result.request.max_top
+        });
+
+        if (!max_top_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << max_top_result.error << "\n";
             return 4;
         }
     }

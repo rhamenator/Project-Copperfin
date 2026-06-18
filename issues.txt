@@ -1,3 +1,4 @@
+1154	OPEN	E2/#23 slice: Expose host max-top-object command		2026-06-18T07:37:34Z
 1153	OPEN	E2/#23 slice: Expose host max-left-object command		2026-06-18T07:29:08Z
 1152	OPEN	E2/#23 slice: Expose host max-width-object command		2026-06-18T07:17:43Z
 1151	OPEN	E2/#23 slice: Expose host max-height-object command		2026-06-18T07:05:38Z

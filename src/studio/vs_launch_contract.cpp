@@ -1111,6 +1111,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-top-object") {
+            result.request.max_top_object = true;
+            continue;
+        }
+
         if (argument == "--auto-center-object") {
             result.request.auto_center_object = true;
             continue;
@@ -2641,6 +2646,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.max_left = max_left;
             result.request.max_left_available = true;
+            continue;
+        }
+
+        if (argument == "--max-top") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-top."};
+            }
+            int max_top = 0;
+            if (!parse_int_value(args[++index], max_top)) {
+                return {.ok = false, .error = "The --max-top value must be an integer."};
+            }
+            if (max_top < 0) {
+                return {.ok = false, .error = "The --max-top value must not be negative."};
+            }
+            result.request.max_top = max_top;
+            result.request.max_top_available = true;
             continue;
         }
 
@@ -5310,6 +5331,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--max-top-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-top-target-object-name."};
+            }
+            result.request.max_top_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--max-top-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --max-top-target-unique-id."};
+            }
+            result.request.max_top_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -7011,6 +7056,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.max_left_objects.empty())) {
         return {.ok = false, .error = "Max-left arguments can only be used with --max-left-object."};
     }
+    if (result.request.max_top_object && !result.request.max_top_available) {
+        return {.ok = false, .error = "An object max-top assignment requires --max-top."};
+    }
+    if (result.request.max_top_object && result.request.max_top_objects.empty()) {
+        return {.ok = false, .error = "An object max-top assignment requires at least one target selector."};
+    }
+    if (!result.request.max_top_object &&
+        (result.request.max_top_available ||
+         !result.request.max_top_objects.empty())) {
+        return {.ok = false, .error = "Max-top arguments can only be used with --max-top-object."};
+    }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
         return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
     }
@@ -7358,6 +7414,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.max_height_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
+        (result.request.max_top_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +
