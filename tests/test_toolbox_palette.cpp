@@ -29,6 +29,7 @@ bool has_toolbox_item(
 }  // namespace
 
 int main() {
+    using copperfin::studio::StudioEditorSelectionContext;
     using copperfin::studio::StudioToolboxContext;
 
     const auto& items = copperfin::studio::studio_toolbox_palette();
@@ -96,6 +97,107 @@ int main() {
     expect(has_toolbox_item(report_items, "line"), "#957: report context should expose Line");
     expect(!has_toolbox_item(report_items, "textbox"), "#957: report context should exclude form-only TextBox");
     expect(!has_toolbox_item(report_items, "pageframe"), "#957: report context should exclude form-only PageFrame");
+
+    const auto visual_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid"
+    });
+    expect(visual_plan.ok,
+        "#1209: visual-object selection contexts should plan toolbox palettes");
+    expect(visual_plan.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+            visual_plan.plan.toolbox_context == StudioToolboxContext::form &&
+            visual_plan.plan.asset_path == "forms/customer.scx" &&
+            visual_plan.plan.record_index == 1U &&
+            visual_plan.plan.object_name == "frmCustomer" &&
+            visual_plan.plan.unique_id == "form-guid" &&
+            visual_plan.plan.item_count == visual_plan.plan.items.size() &&
+            has_toolbox_item(visual_plan.plan.items, "textbox") &&
+            has_toolbox_item(visual_plan.plan.items, "pageframe"),
+        "#1209: toolbox palette plans should preserve visual selection metadata and form items");
+
+    const auto container_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::container_object,
+        .asset_path = "forms/customer.scx",
+        .record_index = 2U,
+        .object_name = "pgAddress",
+        .unique_id = "page-guid"
+    });
+    expect(container_plan.ok &&
+            container_plan.plan.toolbox_context == StudioToolboxContext::container &&
+            has_toolbox_item(container_plan.plan.items, "checkbox") &&
+            has_toolbox_item(container_plan.plan.items, "grid"),
+        "#1209: container selection contexts should plan container-safe toolbox palettes");
+
+    const auto class_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::class_designer,
+        .asset_path = "classes/controls.vcx",
+        .record_index = 0U,
+        .object_name = "txtBase",
+        .unique_id = "class-guid"
+    });
+    expect(class_plan.ok &&
+            class_plan.plan.toolbox_context == StudioToolboxContext::class_designer &&
+            has_toolbox_item(class_plan.plan.items, "textbox"),
+        "#1209: class-designer selection contexts should plan class-safe toolbox palettes");
+
+    const auto report_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::report_expression,
+        .asset_path = "reports/orders.frx",
+        .record_index = 3U,
+        .object_name = "Field1",
+        .unique_id = "field-guid"
+    });
+    expect(report_plan.ok &&
+            report_plan.plan.toolbox_context == StudioToolboxContext::report &&
+            has_toolbox_item(report_plan.plan.items, "label") &&
+            !has_toolbox_item(report_plan.plan.items, "textbox"),
+        "#1209: report selection contexts should plan report-safe toolbox palettes");
+
+    const auto label_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::label_expression,
+        .asset_path = "labels/mailing.lbx",
+        .record_index = 0U,
+        .object_name = "Label1",
+        .unique_id = "label-guid"
+    });
+    expect(label_plan.ok &&
+            label_plan.plan.toolbox_context == StudioToolboxContext::report &&
+            has_toolbox_item(label_plan.plan.items, "label") &&
+            !has_toolbox_item(label_plan.plan.items, "pageframe"),
+        "#1209: label selection contexts should reuse report-safe toolbox palettes");
+
+    const auto menu_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::menu_item,
+        .asset_path = "menus/main.mnx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(!menu_plan.ok,
+        "#1209: menu selection contexts should reject toolbox palette launch planning");
+
+    const auto project_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::project_item,
+        .asset_path = "apps/customer.pjx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    expect(!project_plan.ok,
+        "#1209: project selection contexts should reject toolbox palette launch planning");
+
+    const auto data_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::data_environment,
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = "Dataenvironment",
+        .unique_id = "de-guid"
+    });
+    expect(!data_plan.ok,
+        "#1209: data-environment selection contexts should reject toolbox palette launch planning");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

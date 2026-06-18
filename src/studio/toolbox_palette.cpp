@@ -1,6 +1,8 @@
 #include "copperfin/studio/toolbox_palette.h"
 
 #include <algorithm>
+#include <optional>
+#include <utility>
 
 namespace copperfin::studio {
 
@@ -8,6 +10,27 @@ namespace {
 
 bool supports_context(const StudioToolboxItemDescriptor& item, StudioToolboxContext context) {
     return std::find(item.contexts.begin(), item.contexts.end(), context) != item.contexts.end();
+}
+
+std::optional<StudioToolboxContext> toolbox_context_for_selection_context(
+    StudioEditorSelectionContext context) {
+    switch (context) {
+        case StudioEditorSelectionContext::visual_object:
+        case StudioEditorSelectionContext::visual_method:
+            return StudioToolboxContext::form;
+        case StudioEditorSelectionContext::container_object:
+            return StudioToolboxContext::container;
+        case StudioEditorSelectionContext::class_designer:
+            return StudioToolboxContext::class_designer;
+        case StudioEditorSelectionContext::report_expression:
+        case StudioEditorSelectionContext::label_expression:
+            return StudioToolboxContext::report;
+        case StudioEditorSelectionContext::menu_item:
+        case StudioEditorSelectionContext::project_item:
+        case StudioEditorSelectionContext::data_environment:
+            return std::nullopt;
+    }
+    return std::nullopt;
 }
 
 }  // namespace
@@ -195,6 +218,43 @@ std::vector<StudioToolboxItemDescriptor> studio_toolbox_items_for_context(Studio
         return supports_context(item, context);
     });
     return filtered;
+}
+
+StudioToolboxPaletteLaunchPlanResult plan_studio_toolbox_palette_launch(
+    const StudioToolboxPaletteLaunchRequest& request) {
+    const auto toolbox_context = toolbox_context_for_selection_context(request.selection_context);
+    if (!toolbox_context.has_value()) {
+        return {
+            .ok = false,
+            .error = "The selected Studio context does not expose a toolbox palette.",
+            .plan = {}
+        };
+    }
+
+    auto items = studio_toolbox_items_for_context(*toolbox_context);
+    if (items.empty()) {
+        return {
+            .ok = false,
+            .error = "The selected Studio context has no toolbox items.",
+            .plan = {}
+        };
+    }
+
+    const auto item_count = items.size();
+    return {
+        .ok = true,
+        .error = {},
+        .plan = {
+            .selection_context = request.selection_context,
+            .toolbox_context = *toolbox_context,
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .item_count = item_count,
+            .items = std::move(items)
+        }
+    };
 }
 
 }  // namespace copperfin::studio
