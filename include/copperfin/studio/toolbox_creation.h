@@ -103,5 +103,7 @@ struct StudioToolboxObjectCreatePlanCatalogResult {
     const StudioToolboxObjectCreatePlanCatalogRequest& request);
 [[nodiscard]] vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request);
+[[nodiscard]] vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
+    const StudioToolboxObjectCreateBatchPlanRequest& request);
 
 }  // namespace copperfin::studio

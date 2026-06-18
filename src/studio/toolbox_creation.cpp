@@ -26,6 +26,15 @@ namespace {
     };
 }
 
+[[nodiscard]] vfp::VisualObjectCreateBatchResult failed_batch_create_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .record_indexes = {},
+        .created_objects = {}
+    };
+}
+
 [[nodiscard]] StudioToolboxObjectCreatePlanResult failed_plan_result(std::string error) {
     return {
         .ok = false,
@@ -390,6 +399,27 @@ vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
     return vfp::create_visual_object({
         .path = plan_result.plan.path,
         .field_values = plan_result.plan.field_values
+    });
+}
+
+vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
+    const StudioToolboxObjectCreateBatchPlanRequest& request) {
+    const auto plan_result = plan_visual_objects_from_toolbox_items(request);
+    if (!plan_result.ok) {
+        return failed_batch_create_result(plan_result.error);
+    }
+
+    std::vector<vfp::VisualObjectCreateBatchItem> objects;
+    objects.reserve(plan_result.plan.plans.size());
+    for (const auto& plan : plan_result.plan.plans) {
+        objects.push_back({
+            .field_values = plan.field_values
+        });
+    }
+
+    return vfp::create_visual_objects({
+        .path = plan_result.plan.path,
+        .objects = std::move(objects)
     });
 }
 

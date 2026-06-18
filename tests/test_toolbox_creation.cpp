@@ -445,6 +445,211 @@ void test_toolbox_creation_batch_planner_rejects_invalid_batches_without_mutatio
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_batch_create_maps_descriptors_and_metadata() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_create_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto create_result = copperfin::studio::create_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "first-batch-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "First Batch"}
+                }
+            },
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "second-batch-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Second Batch"}
+                }
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = "cmdBatchRun",
+                .unique_id = "batch-command-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Run Batch"}
+                }
+            }
+        }
+    });
+
+    expect(create_result.ok &&
+            create_result.record_indexes.size() == 3U &&
+            create_result.record_indexes[0] == before_count &&
+            create_result.record_indexes[1] == before_count + 1U &&
+            create_result.record_indexes[2] == before_count + 2U,
+        "#1247: toolbox batch creates should append every planned object in order");
+    expect(create_result.created_objects.size() == 3U &&
+            create_result.created_objects[0].object_name == "txt2" &&
+            create_result.created_objects[0].unique_id == "first-batch-textbox-guid" &&
+            create_result.created_objects[0].parent_name == "frmMain" &&
+            create_result.created_objects[1].object_name == "txt3" &&
+            create_result.created_objects[1].unique_id == "second-batch-textbox-guid" &&
+            create_result.created_objects[1].parent_name == "frmMain" &&
+            create_result.created_objects[2].object_name == "cmdBatchRun" &&
+            create_result.created_objects[2].unique_id == "batch-command-guid" &&
+            create_result.created_objects[2].parent_name == "frmMain",
+        "#1247: toolbox batch creates should report created object identity metadata in append order");
+
+    const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == before_count + 3U,
+        "#1247: toolbox batch creates should persist every created object");
+    if (list_result.ok && list_result.objects.size() == before_count + 3U) {
+        expect(list_result.objects[2].object_name == "txt2" &&
+                list_result.objects[2].class_name == "TextBox" &&
+                list_result.objects[2].baseclass_name == "TextBox",
+            "#1247: first toolbox batch-created object should map textbox descriptors");
+        expect(list_result.objects[3].object_name == "txt3" &&
+                list_result.objects[3].class_name == "TextBox",
+            "#1247: second toolbox batch-created object should reserve generated names");
+        expect(list_result.objects[4].object_name == "cmdBatchRun" &&
+                list_result.objects[4].class_name == "CommandButton" &&
+                list_result.objects[4].baseclass_name == "CommandButton",
+            "#1247: explicit toolbox batch-created objects should map command descriptors");
+    }
+    const auto first_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "first-batch-textbox-guid",
+        .property_name = "CAPTION"
+    });
+    const auto second_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "second-batch-textbox-guid",
+        .property_name = "CAPTION"
+    });
+    const auto command_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "batch-command-guid",
+        .property_name = "CAPTION"
+    });
+    expect(first_caption.ok && first_caption.exists && first_caption.value == "First Batch" &&
+            second_caption.ok && second_caption.exists && second_caption.value == "Second Batch" &&
+            command_caption.ok && command_caption.exists && command_caption.value == "Run Batch",
+        "#1247: toolbox batch creates should persist caller-provided direct fields");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_batch_create_rejects_invalid_batches_without_partial_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_create_failure_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    auto create_result = copperfin::studio::create_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "report-textbox-guid",
+                .parent_name = "DetailBand",
+                .field_values = {}
+            }
+        }
+    });
+    expect(!create_result.ok &&
+            create_result.error == "The requested toolbox item is not available in the requested designer context." &&
+            create_result.record_indexes.empty() &&
+            create_result.created_objects.empty(),
+        "#1247: toolbox batch creates should reject context-incompatible items before mutation");
+    expect(object_count(table_path) == before_count,
+        "#1247: context-rejected toolbox batch creates should not mutate the visual asset");
+
+    create_result = copperfin::studio::create_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = "dupBatchName",
+                .unique_id = "dup-batch-guid-1",
+                .parent_name = "frmMain",
+                .field_values = {}
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = "dupBatchName",
+                .unique_id = "dup-batch-guid-2",
+                .parent_name = "frmMain",
+                .field_values = {}
+            }
+        }
+    });
+    expect(!create_result.ok &&
+            create_result.error == "The requested toolbox object identity already exists in the asset." &&
+            create_result.record_indexes.empty() &&
+            create_result.created_objects.empty(),
+        "#1247: toolbox batch creates should reject duplicate explicit identities before mutation");
+    expect(object_count(table_path) == before_count,
+        "#1247: duplicate-rejected toolbox batch creates should not mutate the visual asset");
+
+    create_result = copperfin::studio::create_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "valid-before-invalid-guid",
+                .parent_name = "frmMain",
+                .field_values = {}
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = {},
+                .unique_id = "invalid-field-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "UNKNOWN", .property_value = "value"}
+                }
+            }
+        }
+    });
+    expect(!create_result.ok &&
+            create_result.error == "The requested field was not found in the asset." &&
+            create_result.record_indexes.empty() &&
+            create_result.created_objects.empty(),
+        "#1247: toolbox batch creates should reject lower-layer invalid fields without stale metadata");
+    expect(object_count(table_path) == before_count,
+        "#1247: lower-layer toolbox batch create failures should not partially mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_maps_descriptors_and_defaults() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -642,6 +847,8 @@ int main() {
     test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation();
     test_toolbox_creation_batch_planner_reserves_names_without_mutation();
     test_toolbox_creation_batch_planner_rejects_invalid_batches_without_mutation();
+    test_toolbox_creation_batch_create_maps_descriptors_and_metadata();
+    test_toolbox_creation_batch_create_rejects_invalid_batches_without_partial_mutation();
     test_toolbox_creation_maps_descriptors_and_defaults();
     test_toolbox_creation_respects_explicit_object_name();
     test_toolbox_creation_rejects_unknown_toolbox_without_mutation();
