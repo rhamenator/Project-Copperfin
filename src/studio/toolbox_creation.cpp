@@ -526,6 +526,18 @@ StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
     };
 }
 
+StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateDispatchFromPaletteDispatchRequest& request) {
+    const auto create_plan = plan_visual_object_from_toolbox_dispatch(request.create_request);
+    if (!create_plan.ok) {
+        return failed_dispatch_result(create_plan.error);
+    }
+    return plan_visual_object_create_dispatch({
+        .create_plan = create_plan.plan,
+        .admit_create_operation = request.admit_create_operation
+    });
+}
+
 StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch(
     const StudioToolboxObjectCreateBatchDispatchRequest& request) {
     const auto& batch_plan = request.batch_plan;

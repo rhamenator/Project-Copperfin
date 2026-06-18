@@ -91,6 +91,11 @@ struct StudioToolboxObjectCreateDispatchRequest {
     bool admit_create_operation = false;
 };
 
+struct StudioToolboxObjectCreateDispatchFromPaletteDispatchRequest {
+    StudioToolboxObjectCreateFromPaletteDispatchRequest create_request;
+    bool admit_create_operation = false;
+};
+
 struct StudioToolboxObjectCreateDispatchPlan {
     std::string path;
     StudioToolboxItemDescriptor toolbox_item;
@@ -238,6 +243,8 @@ struct StudioToolboxObjectCreateBatchDispatchCatalogResult {
     const StudioToolboxObjectCreateBatchFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
     const StudioToolboxObjectCreateDispatchRequest& request);
+[[nodiscard]] StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateDispatchFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch(
     const StudioToolboxObjectCreateBatchDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolbox_context(
