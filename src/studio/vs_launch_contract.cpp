@@ -1252,6 +1252,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-shadow-object") {
+            result.request.font_shadow_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -3190,6 +3195,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.font_outline = *font_outline;
             result.request.font_outline_available = true;
+            continue;
+        }
+
+        if (argument == "--font-shadow") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-shadow."};
+            }
+            const auto font_shadow = parse_bool_value(args[++index]);
+            if (!font_shadow.has_value()) {
+                return {.ok = false, .error = "The --font-shadow value must be true or false."};
+            }
+            result.request.font_shadow = *font_shadow;
+            result.request.font_shadow_available = true;
             continue;
         }
 
@@ -6579,6 +6597,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-shadow-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-shadow-target-object-name."};
+            }
+            result.request.font_shadow_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--font-shadow-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-shadow-target-unique-id."};
+            }
+            result.request.font_shadow_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -8660,6 +8702,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.font_outline_objects.empty())) {
         return {.ok = false, .error = "Font-outline arguments can only be used with --font-outline-object."};
     }
+    if (result.request.font_shadow_object && !result.request.font_shadow_available) {
+        return {.ok = false, .error = "An object font-shadow assignment requires --font-shadow."};
+    }
+    if (result.request.font_shadow_object && result.request.font_shadow_objects.empty()) {
+        return {.ok = false, .error = "An object font-shadow assignment requires at least one target selector."};
+    }
+    if (!result.request.font_shadow_object &&
+        (result.request.font_shadow_available ||
+         !result.request.font_shadow_objects.empty())) {
+        return {.ok = false, .error = "Font-shadow arguments can only be used with --font-shadow-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -9068,6 +9121,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.font_underline_object ? 1 : 0) +
         (result.request.font_strikethru_object ? 1 : 0) +
         (result.request.font_outline_object ? 1 : 0) +
+        (result.request.font_shadow_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

@@ -273,6 +273,7 @@ struct StudioOpenRequest {
     bool font_underline_object = false;
     bool font_strikethru_object = false;
     bool font_outline_object = false;
+    bool font_shadow_object = false;
     bool max_width_object = false;
     bool max_left_object = false;
     bool max_top_object = false;
@@ -476,6 +477,7 @@ struct StudioOpenRequest {
     bool font_underline_available = false;
     bool font_strikethru_available = false;
     bool font_outline_available = false;
+    bool font_shadow_available = false;
     bool max_width_available = false;
     bool max_left_available = false;
     bool max_top_available = false;
@@ -508,6 +510,7 @@ struct StudioOpenRequest {
     bool font_underline = false;
     bool font_strikethru = false;
     bool font_outline = false;
+    bool font_shadow = false;
     bool bind_controls = false;
     bool auto_verb_menu = false;
     bool desktop = false;
@@ -625,6 +628,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> font_underline_objects{};
     std::vector<StudioObjectSelector> font_strikethru_objects{};
     std::vector<StudioObjectSelector> font_outline_objects{};
+    std::vector<StudioObjectSelector> font_shadow_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
     std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> max_top_objects{};

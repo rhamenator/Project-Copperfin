@@ -547,6 +547,10 @@ void test_parse_launch_arguments() {
         "#1184: launch contract should keep font-outline-object off by default");
     expect(!result.request.font_outline_available,
         "#1184: launch contract should keep font outline unavailable by default");
+    expect(!result.request.font_shadow_object,
+        "#1185: launch contract should keep font-shadow-object off by default");
+    expect(!result.request.font_shadow_available,
+        "#1185: launch contract should keep font shadow unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -12617,6 +12621,92 @@ void test_parse_launch_arguments_rejects_font_outline_object_ambiguity() {
         "#1184: launch contract should reject stray font-outline arguments");
 }
 
+void test_parse_launch_arguments_for_font_shadow_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-shadow-object",
+        "--font-shadow", "true",
+        "--font-shadow-target-object-name", "txtName",
+        "--font-shadow-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1185: launch contract should parse font-shadow-object requests");
+    expect(result.request.font_shadow_object,
+        "#1185: launch contract should detect --font-shadow-object");
+    expect(result.request.font_shadow_available && result.request.font_shadow,
+        "#1185: font-shadow-object requests should carry font shadow state");
+    expect(result.request.font_shadow_objects.size() == 2U,
+        "#1185: font-shadow-object requests should collect font-shadow target selectors");
+    if (result.request.font_shadow_objects.size() == 2U) {
+        expect(result.request.font_shadow_objects[0].object_name == "txtName" &&
+                result.request.font_shadow_objects[0].unique_id.empty(),
+            "#1185: font-shadow-object requests should parse target object-name selectors");
+        expect(result.request.font_shadow_objects[1].object_name.empty() &&
+                result.request.font_shadow_objects[1].unique_id == "two-guid",
+            "#1185: font-shadow-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_shadow_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-shadow-object",
+        "--font-shadow-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1185: launch contract should reject font-shadow-object requests without font shadow state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-shadow-object",
+        "--font-shadow", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1185: launch contract should reject font-shadow-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-shadow-object",
+        "--font-shadow", "sometimes",
+        "--font-shadow-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1185: launch contract should reject invalid font-shadow boolean values");
+}
+
+void test_parse_launch_arguments_rejects_font_shadow_object_ambiguity() {
+    const auto font_shadow_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-shadow-object",
+        "--allow-output-object",
+        "--font-shadow", "true",
+        "--font-shadow-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_shadow_allow_output_result.ok,
+        "#1185: launch contract should reject simultaneous font-shadow-object and allow-output-object requests");
+
+    const auto font_shadow_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-shadow-object",
+        "--clear-property",
+        "--property-name", "FontShadow",
+        "--font-shadow", "true",
+        "--font-shadow-target-unique-id", "one-guid"
+    });
+    expect(!font_shadow_property_result.ok,
+        "#1185: launch contract should reject font-shadow-object combined with property commands");
+
+    const auto stray_font_shadow_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-shadow", "true"
+    });
+    expect(!stray_font_shadow_result.ok,
+        "#1185: launch contract should reject stray font-shadow arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16333,6 +16423,9 @@ int main() {
     test_parse_launch_arguments_for_font_outline_object();
     test_parse_launch_arguments_rejects_font_outline_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_outline_object_ambiguity();
+    test_parse_launch_arguments_for_font_shadow_object();
+    test_parse_launch_arguments_rejects_font_shadow_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_shadow_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

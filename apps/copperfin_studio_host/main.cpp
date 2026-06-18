@@ -82,6 +82,7 @@ void print_usage() {
     std::cout << "Font-underline object: --font-underline-object --font-underline <true|false> [--font-underline-target-object-name <name>] [--font-underline-target-unique-id <id>]\n";
     std::cout << "Font-strikethru object: --font-strikethru-object --font-strikethru <true|false> [--font-strikethru-target-object-name <name>] [--font-strikethru-target-unique-id <id>]\n";
     std::cout << "Font-outline object: --font-outline-object --font-outline <true|false> [--font-outline-target-object-name <name>] [--font-outline-target-unique-id <id>]\n";
+    std::cout << "Font-shadow object: --font-shadow-object --font-shadow <true|false> [--font-shadow-target-object-name <name>] [--font-shadow-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4721,6 +4722,30 @@ int main(int argc, char** argv) {
         if (!font_outline_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << font_outline_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.font_shadow_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> font_shadow_objects;
+        font_shadow_objects.reserve(parse_result.request.font_shadow_objects.size());
+        for (const auto& font_shadow_object : parse_result.request.font_shadow_objects) {
+            font_shadow_objects.push_back({
+                .record_index = font_shadow_object.record_index,
+                .object_name = font_shadow_object.object_name,
+                .unique_id = font_shadow_object.unique_id
+            });
+        }
+
+        const auto font_shadow_result = copperfin::vfp::set_visual_object_font_shadow({
+            .path = parse_result.request.path,
+            .objects = font_shadow_objects,
+            .font_shadow = parse_result.request.font_shadow
+        });
+
+        if (!font_shadow_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << font_shadow_result.error << "\n";
             return 4;
         }
     }
