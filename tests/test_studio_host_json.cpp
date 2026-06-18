@@ -4171,6 +4171,105 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
     expect_contains(wizard_process.stdout_text, "\"entryPoint\": \"cf_wizards.label_wizard\"",
         "#1204: builder launch-plan JSON should expose wizard entry points");
 
+    const auto selection_visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "form-builder",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(selection_visual_process.exit_code == 0,
+        "#1206: selection-context builder launch-plan JSON should accept visual-object form builders");
+    expect_contains(selection_visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1206: selection-context builder launch-plan JSON should expose Studio selection contexts");
+    expect_contains(selection_visual_process.stdout_text, "\"builderId\": \"form-builder\"",
+        "#1206: selection-context builder launch-plan JSON should expose resolved form builders");
+    expect_contains(selection_visual_process.stdout_text, "\"context\": \"form\"",
+        "#1206: selection-context builder launch-plan JSON should expose resolved builder contexts");
+
+    const auto selection_grid_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--json"
+        },
+        temp_root);
+    expect(selection_grid_process.exit_code == 0,
+        "#1206: visual-object selection-context builder launch-plan JSON should also accept control builders");
+    expect_contains(selection_grid_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1206: visual-object control-builder launch plans should expose Studio selection contexts");
+    expect_contains(selection_grid_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1206: visual-object control-builder launch plans should expose resolved builder ids");
+
+    const auto selection_label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "label-wizard",
+            "--selection-context", "label_expression",
+            "--path", "labels/mailing.lbx",
+            "--json"
+        },
+        temp_root);
+    expect(selection_label_process.exit_code == 0,
+        "#1206: label selection-context builder launch-plan JSON should accept label wizards");
+    expect_contains(selection_label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#1206: label selection-context builder launch-plan JSON should expose Studio selection contexts");
+    expect_contains(selection_label_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1206: label selection-context builder launch-plan JSON should preserve wizard metadata");
+
+    const auto selection_wrong_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "form-builder",
+            "--selection-context", "container_object",
+            "--path", "forms/customer.scx",
+            "--json"
+        },
+        temp_root);
+    expect(selection_wrong_context_process.exit_code == 4,
+        "#1206: selection-context builder launch-plan JSON should reject unavailable builders");
+    expect_contains(selection_wrong_context_process.stdout_text,
+        "The requested builder is not available for the selected Studio context.",
+        "#1206: wrong selection-context builder launch-plan JSON should report validation errors");
+
+    const auto unknown_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_selection_process.exit_code == 2,
+        "#1206: selection-context builder launch-plan JSON should reject unknown selection tokens");
+    expect_contains(unknown_selection_process.stdout_text, "Unknown selection context token: unknown",
+        "#1206: unknown selection-context builder launch-plan JSON should report parser errors");
+
+    const auto ambiguous_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--builder-context", "control",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_context_process.exit_code == 2,
+        "#1206: builder launch-plan JSON should reject simultaneous builder and selection contexts");
+    expect_contains(ambiguous_context_process.stdout_text,
+        "Builder launch-plan requests cannot provide both --builder-context and --selection-context.",
+        "#1206: ambiguous builder launch-plan JSON should report parser errors");
+
     const auto wrong_context_process = run_process_capture(
         studio_host_path,
         {
@@ -4212,7 +4311,7 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
         temp_root);
     expect(missing_context_process.exit_code == 2,
         "#1204: builder launch-plan JSON should reject missing context tokens");
-    expect_contains(missing_context_process.stdout_text, "No builder context was provided.",
+    expect_contains(missing_context_process.stdout_text, "No builder or selection context was provided.",
         "#1204: missing builder context JSON should report parser errors");
 
     const auto missing_id_process = run_process_capture(
