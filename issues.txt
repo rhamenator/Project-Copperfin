@@ -1,3 +1,4 @@
+1194	OPEN	E2/#23 slice: Expose host dynamic-font-outline-object command		2026-06-18T15:27:18Z
 1193	OPEN	E2/#23 slice: Expose host dynamic-font-strikethru-object command		2026-06-18T15:12:02Z
 1192	OPEN	E2/#23 slice: Expose host dynamic-font-underline-object command		2026-06-18T14:57:07Z
 1191	OPEN	E2/#23 slice: Expose host dynamic-font-italic-object command		2026-06-18T14:42:08Z

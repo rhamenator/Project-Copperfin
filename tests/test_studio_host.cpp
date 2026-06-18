@@ -551,6 +551,10 @@ void test_parse_launch_arguments() {
         "#1193: launch contract should keep dynamic-font-strikethru-object off by default");
     expect(!result.request.dynamic_font_strikethru_available,
         "#1193: launch contract should keep dynamic font strikethru unavailable by default");
+    expect(!result.request.dynamic_font_outline_object,
+        "#1194: launch contract should keep dynamic-font-outline-object off by default");
+    expect(!result.request.dynamic_font_outline_available,
+        "#1194: launch contract should keep dynamic font outline unavailable by default");
     expect(!result.request.font_name_object,
         "#1178: launch contract should keep font-name-object off by default");
     expect(!result.request.font_name_available,
@@ -12675,6 +12679,84 @@ void test_parse_launch_arguments_rejects_dynamic_font_strikethru_object_ambiguit
         "#1193: launch contract should reject stray dynamic-font-strikethru arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_font_outline_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-font-outline-object",
+        "--dynamic-font-outline", "IIF(.T., .T., .F.)",
+        "--dynamic-font-outline-target-object-name", "txtName",
+        "--dynamic-font-outline-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1194: launch contract should parse dynamic-font-outline-object requests");
+    expect(result.request.dynamic_font_outline_object,
+        "#1194: launch contract should detect --dynamic-font-outline-object");
+    expect(result.request.dynamic_font_outline_available &&
+            result.request.dynamic_font_outline == "IIF(.T., .T., .F.)",
+        "#1194: dynamic-font-outline-object requests should carry raw expression text");
+    expect(result.request.dynamic_font_outline_objects.size() == 2U,
+        "#1194: dynamic-font-outline-object requests should collect dynamic-font-outline target selectors");
+    if (result.request.dynamic_font_outline_objects.size() == 2U) {
+        expect(result.request.dynamic_font_outline_objects[0].object_name == "txtName" &&
+                result.request.dynamic_font_outline_objects[0].unique_id.empty(),
+            "#1194: dynamic-font-outline-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_font_outline_objects[1].object_name.empty() &&
+                result.request.dynamic_font_outline_objects[1].unique_id == "two-guid",
+            "#1194: dynamic-font-outline-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_outline_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-outline-object",
+        "--dynamic-font-outline-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1194: launch contract should reject dynamic-font-outline-object requests without dynamic font outline");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-outline-object",
+        "--dynamic-font-outline", "IIF(.T., .T., .F.)"
+    });
+    expect(!missing_targets_result.ok,
+        "#1194: launch contract should reject dynamic-font-outline-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_outline_object_ambiguity() {
+    const auto dynamic_font_outline_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-outline-object",
+        "--allow-output-object",
+        "--dynamic-font-outline", "IIF(.T., .T., .F.)",
+        "--dynamic-font-outline-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_outline_allow_output_result.ok,
+        "#1194: launch contract should reject simultaneous dynamic-font-outline-object and allow-output-object requests");
+
+    const auto dynamic_font_outline_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-outline-object",
+        "--clear-property",
+        "--property-name", "DynamicFontOutline",
+        "--dynamic-font-outline", "IIF(.T., .T., .F.)",
+        "--dynamic-font-outline-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_outline_property_result.ok,
+        "#1194: launch contract should reject dynamic-font-outline-object combined with property commands");
+
+    const auto stray_dynamic_font_outline_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-outline", "IIF(.T., .T., .F.)"
+    });
+    expect(!stray_dynamic_font_outline_result.ok,
+        "#1194: launch contract should reject stray dynamic-font-outline arguments");
+}
+
 void test_parse_launch_arguments_for_font_name_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -17082,6 +17164,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_font_strikethru_object();
     test_parse_launch_arguments_rejects_dynamic_font_strikethru_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_font_strikethru_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_font_outline_object();
+    test_parse_launch_arguments_rejects_dynamic_font_outline_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_font_outline_object_ambiguity();
     test_parse_launch_arguments_for_font_name_object();
     test_parse_launch_arguments_rejects_font_name_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_name_object_ambiguity();
