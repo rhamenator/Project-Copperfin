@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 
 namespace copperfin::studio {
 
@@ -184,6 +185,63 @@ StudioBuilderLaunchPlanResult plan_studio_builder_launch(const StudioBuilderLaun
             .unique_id = request.unique_id,
             .entry_point = std::string(builder->entry_point)
         }
+    };
+}
+
+StudioBuilderLaunchCatalogResult plan_studio_builder_launch_catalog(
+    const StudioBuilderLaunchCatalogRequest& request) {
+    const auto builders = studio_builders_for_context(request.context);
+    if (builders.empty()) {
+        return {
+            .ok = false,
+            .error = "A builder launch catalog request requires at least one context builder.",
+            .context = request.context,
+            .builder_count = 0U,
+            .launch_plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioBuilderLaunchCatalogEntry> entries;
+    entries.reserve(builders.size());
+    std::size_t launch_plan_count = 0U;
+    std::size_t error_count = 0U;
+
+    for (const auto& builder : builders) {
+        auto launch_plan = plan_studio_builder_launch({
+            .context = request.context,
+            .builder_id = std::string(builder.id),
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id
+        });
+
+        if (launch_plan.ok) {
+            ++launch_plan_count;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .builder = builder,
+            .launch_plan = std::move(launch_plan)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .context = request.context,
+        .builder_count = builders.size(),
+        .launch_plan_count = launch_plan_count,
+        .error_count = error_count,
+        .dry_run = true,
+        .mutates_asset = false,
+        .entries = std::move(entries)
     };
 }
 

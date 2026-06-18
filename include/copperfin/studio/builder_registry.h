@@ -59,11 +59,38 @@ struct StudioBuilderLaunchPlanResult {
     StudioBuilderLaunchPlan plan;
 };
 
+struct StudioBuilderLaunchCatalogRequest {
+    StudioBuilderContext context = StudioBuilderContext::form;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct StudioBuilderLaunchCatalogEntry {
+    StudioBuilderDescriptor builder;
+    StudioBuilderLaunchPlanResult launch_plan;
+};
+
+struct StudioBuilderLaunchCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioBuilderContext context = StudioBuilderContext::form;
+    std::size_t builder_count = 0;
+    std::size_t launch_plan_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioBuilderLaunchCatalogEntry> entries;
+};
+
 [[nodiscard]] const char* studio_builder_kind_name(StudioBuilderKind kind);
 [[nodiscard]] const char* studio_builder_context_name(StudioBuilderContext context);
 [[nodiscard]] const std::vector<StudioBuilderDescriptor>& studio_builder_registry();
 [[nodiscard]] std::vector<StudioBuilderDescriptor> studio_builders_for_context(StudioBuilderContext context);
 [[nodiscard]] StudioBuilderLaunchPlanResult plan_studio_builder_launch(
     const StudioBuilderLaunchRequest& request);
+[[nodiscard]] StudioBuilderLaunchCatalogResult plan_studio_builder_launch_catalog(
+    const StudioBuilderLaunchCatalogRequest& request);
 
 }  // namespace copperfin::studio

@@ -46,6 +46,17 @@ const copperfin::studio::StudioBuilderDispatchCatalogEntry* find_dispatch_catalo
     return nullptr;
 }
 
+const copperfin::studio::StudioBuilderLaunchCatalogEntry* find_launch_catalog_entry(
+    const std::vector<copperfin::studio::StudioBuilderLaunchCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.builder.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -105,6 +116,51 @@ int main() {
     expect(has_builder(control_builders, "control-builder"), "#956: control context should include control builder");
     expect(has_builder(control_builders, "grid-builder"), "#956: control context should include grid builder");
     expect(!has_builder(control_builders, "report-builder"), "#956: control context should not include report builders");
+
+    const auto control_launch_catalog = copperfin::studio::plan_studio_builder_launch_catalog({
+        .context = StudioBuilderContext::control,
+        .asset_path = "forms/customer.scx",
+        .record_index = 4U,
+        .object_name = "grdOrders",
+        .unique_id = "grid-guid"
+    });
+    expect(control_launch_catalog.ok &&
+               control_launch_catalog.context == StudioBuilderContext::control &&
+               control_launch_catalog.builder_count == control_builders.size() &&
+               control_launch_catalog.launch_plan_count == control_builders.size() &&
+               control_launch_catalog.error_count == 0U &&
+               control_launch_catalog.dry_run &&
+               !control_launch_catalog.mutates_asset,
+           "#1268: builder launch catalogs should plan every context builder without mutation");
+    const auto* catalog_grid_launch = find_launch_catalog_entry(control_launch_catalog.entries, "grid-builder");
+    expect(catalog_grid_launch != nullptr &&
+               catalog_grid_launch->launch_plan.ok &&
+               std::string(catalog_grid_launch->launch_plan.plan.builder.id) == "grid-builder" &&
+               catalog_grid_launch->launch_plan.plan.builder.kind == StudioBuilderKind::builder &&
+               catalog_grid_launch->launch_plan.plan.context == StudioBuilderContext::control &&
+               catalog_grid_launch->launch_plan.plan.asset_path == "forms/customer.scx" &&
+               catalog_grid_launch->launch_plan.plan.record_index == 4U &&
+               catalog_grid_launch->launch_plan.plan.object_name == "grdOrders" &&
+               catalog_grid_launch->launch_plan.plan.unique_id == "grid-guid" &&
+               catalog_grid_launch->launch_plan.plan.entry_point == "cf_builders.grid_builder",
+           "#1268: builder launch catalog entries should preserve builder and target metadata");
+
+    const auto missing_launch_catalog = copperfin::studio::plan_studio_builder_launch_catalog({
+        .context = static_cast<StudioBuilderContext>(999),
+        .asset_path = "forms/customer.scx",
+        .record_index = 4U,
+        .object_name = "grdOrders",
+        .unique_id = "grid-guid"
+    });
+    expect(!missing_launch_catalog.ok &&
+               missing_launch_catalog.error ==
+                   "A builder launch catalog request requires at least one context builder." &&
+               missing_launch_catalog.builder_count == 0U &&
+               missing_launch_catalog.launch_plan_count == 0U &&
+               missing_launch_catalog.error_count == 0U &&
+               missing_launch_catalog.dry_run &&
+               !missing_launch_catalog.mutates_asset,
+           "#1268: builder launch catalogs should reject empty builder contexts without mutation");
 
     const auto report_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::report);
     expect(report_builders.size() == 1U, "#956: report context should expose only report actions for now");
