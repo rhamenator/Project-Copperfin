@@ -1222,6 +1222,24 @@ void write_synthetic_form_table_for_object_record_source(const std::filesystem::
     expect(create_result.ok, "#1130: synthetic SCX table for object record source should be created");
 }
 
+void write_synthetic_form_table_for_object_form_set_class(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "FORMSETCLASS", .type = 'C', .length = 64U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSaveFormSet", "cmdSaveFormSet", "one-guid", "SaveFormSet"},
+        {"cmdCancelFormSet", "cmdCancelFormSet", "two-guid", "CancelFormSet"},
+        {"lblStatus", "lblStatus", "three-guid", "StatusFormSet"},
+        {"cmdOtherFormSet", "cmdOtherFormSet", "other-guid", "OtherFormSet"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1136: synthetic SCX table for object form set class should be created");
+}
+
 void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -10688,6 +10706,129 @@ void test_studio_host_json_assigns_record_source_by_stable_selectors(const std::
     }
 }
 
+void test_studio_host_json_assigns_form_set_class_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_form_set_class_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_set_class_path = temp_root / "form_set_class.scx";
+    write_synthetic_form_table_for_object_form_set_class(form_set_class_path);
+    const auto form_set_class_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_set_class_path.string(),
+            "--form-set-class-object",
+            "--form-set-class", "BaseFormSet",
+            "--form-set-class-target-object-name", "cmdSaveFormSet",
+            "--form-set-class-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(form_set_class_process.exit_code == 0,
+        "#1136: host object form set class assignment should exit successfully");
+    expect(visual_object_property(form_set_class_path, "one-guid", "FORMSETCLASS") == "BaseFormSet" &&
+            visual_object_property(form_set_class_path, "two-guid", "FORMSETCLASS") == "BaseFormSet" &&
+            visual_object_property(form_set_class_path, "three-guid", "FORMSETCLASS") == "StatusFormSet" &&
+            visual_object_property(form_set_class_path, "other-guid", "FORMSETCLASS") == "OtherFormSet",
+        "#1136: host object form set class assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_form_set_class(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--form-set-class-object",
+            "--form-set-class", "BaseFormSet",
+            "--form-set-class-target-unique-id", "one-guid",
+            "--form-set-class-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1136: missing-target host object form set class assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "FORMSETCLASS") == "SaveFormSet" &&
+            visual_object_property(missing_target_path, "two-guid", "FORMSETCLASS") == "CancelFormSet",
+        "#1136: missing-target host object form set class assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_form_set_class(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--form-set-class-object",
+            "--form-set-class", "BaseFormSet",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1136: form-set-class-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "FORMSETCLASS") == "SaveFormSet",
+        "#1136: form-set-class-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_form_set_class(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--form-set-class-object",
+            "--form-set-class-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1136: form-set-class-object without form set class value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "FORMSETCLASS") == "SaveFormSet",
+        "#1136: form-set-class-object without form set class value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_form_set_class(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--form-set-class-object",
+            "--form-set-class", "BaseFormSet",
+            "--form-set-class-target-unique-id", "one-guid",
+            "--form-set-class-target-object-name", "cmdSaveFormSet",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1136: duplicate-target host object form set class assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "FORMSETCLASS") == "SaveFormSet",
+        "#1136: duplicate-target host object form set class assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_form_set_class(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--form-set-class-object",
+            "--caption-object",
+            "--form-set-class", "BaseFormSet",
+            "--form-set-class-target-unique-id", "one-guid",
+            "--caption", "SaveFormSet Customer",
+            "--caption-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1136: form-set-class-object plus caption-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "FORMSETCLASS") == "SaveFormSet",
+        "#1136: form-set-class-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_tooltip_text_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -17876,6 +18017,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_fill_color_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_list_item_id_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_record_source_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_form_set_class_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);

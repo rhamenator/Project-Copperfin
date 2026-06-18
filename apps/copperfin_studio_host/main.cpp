@@ -71,6 +71,7 @@ void print_usage() {
     std::cout << "Fill-color object: --fill-color-object --fill-color <n> [--fill-color-target-object-name <name>] [--fill-color-target-unique-id <id>]\n";
     std::cout << "List-item-id object: --list-item-id-object --list-item-id <n> [--list-item-id-target-object-name <name>] [--list-item-id-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
+    std::cout << "Form-set-class object: --form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2776,6 +2777,30 @@ int main(int argc, char** argv) {
         if (!record_source_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << record_source_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.form_set_class_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> form_set_class_objects;
+        form_set_class_objects.reserve(parse_result.request.form_set_class_objects.size());
+        for (const auto& form_set_class_object : parse_result.request.form_set_class_objects) {
+            form_set_class_objects.push_back({
+                .record_index = form_set_class_object.record_index,
+                .object_name = form_set_class_object.object_name,
+                .unique_id = form_set_class_object.unique_id
+            });
+        }
+
+        const auto form_set_class_result = copperfin::vfp::set_visual_object_form_set_class({
+            .path = parse_result.request.path,
+            .objects = form_set_class_objects,
+            .form_set_class = parse_result.request.form_set_class
+        });
+
+        if (!form_set_class_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << form_set_class_result.error << "\n";
             return 4;
         }
     }

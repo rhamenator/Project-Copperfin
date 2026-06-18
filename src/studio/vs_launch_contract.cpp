@@ -84,6 +84,70 @@ std::string selection_context_error() {
     return "The --selection-context value must be visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.";
 }
 
+bool parse_form_set_class_argument(const std::string& argument,
+                                   const std::vector<std::string>& args,
+                                   std::size_t& index,
+                                   LaunchParseResult& result,
+                                   std::string& error) {
+    if (argument == "--form-set-class-object") {
+        result.request.form_set_class_object = true;
+        return true;
+    }
+
+    if (argument == "--form-set-class") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --form-set-class.";
+            return true;
+        }
+        result.request.form_set_class = args[++index];
+        result.request.form_set_class_available = true;
+        return true;
+    }
+
+    if (argument == "--form-set-class-target-object-name") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --form-set-class-target-object-name.";
+            return true;
+        }
+        result.request.form_set_class_objects.push_back({
+            .record_index = 0U,
+            .object_name = args[++index],
+            .unique_id = {}
+        });
+        return true;
+    }
+
+    if (argument == "--form-set-class-target-unique-id") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --form-set-class-target-unique-id.";
+            return true;
+        }
+        result.request.form_set_class_objects.push_back({
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = args[++index]
+        });
+        return true;
+    }
+
+    return false;
+}
+
+std::optional<std::string> validate_form_set_class_request(const StudioOpenRequest& request) {
+    if (request.form_set_class_object && !request.form_set_class_available) {
+        return "An object form set class assignment requires --form-set-class.";
+    }
+    if (request.form_set_class_object && request.form_set_class_objects.empty()) {
+        return "An object form set class assignment requires at least one target selector.";
+    }
+    if (!request.form_set_class_object &&
+        (request.form_set_class_available ||
+         !request.form_set_class_objects.empty())) {
+        return "Form-set-class arguments can only be used with --form-set-class-object.";
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
@@ -91,6 +155,14 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
 
     for (std::size_t index = 0; index < args.size(); ++index) {
         const std::string& argument = args[index];
+        std::string parsed_argument_error;
+
+        if (parse_form_set_class_argument(argument, args, index, result, parsed_argument_error)) {
+            if (!parsed_argument_error.empty()) {
+                return {.ok = false, .error = parsed_argument_error};
+            }
+            continue;
+        }
 
         if (argument == "--help" || argument == "-h" || argument == "/?") {
             result.ok = true;
@@ -5397,6 +5469,9 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.record_source_objects.empty())) {
         return {.ok = false, .error = "Record source arguments can only be used with --record-source-object."};
     }
+    if (const auto form_set_class_error = validate_form_set_class_request(result.request)) {
+        return {.ok = false, .error = *form_set_class_error};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -6148,6 +6223,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.fill_color_object ? 1 : 0) +
         (result.request.list_item_id_object ? 1 : 0) +
         (result.request.record_source_object ? 1 : 0) +
+        (result.request.form_set_class_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

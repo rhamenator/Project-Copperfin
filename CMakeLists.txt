@@ -86,6 +86,10 @@ add_library(cf_design_model
     src/studio/vs_launch_contract.cpp
 )
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set_source_files_properties(src/studio/vs_launch_contract.cpp PROPERTIES COMPILE_OPTIONS "-g1;-fno-var-tracking;-fno-var-tracking-assignments;-fzero-init-padding-bits=standard")
+endif()
+
 add_library(cf_runtime_pipeline
     src/runtime/runtime_pipeline.cpp
 )

@@ -267,6 +267,8 @@ void test_parse_launch_arguments() {
         "#1135: launch contract should keep list-item-id unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
+    expect(!result.request.form_set_class_object, "#1136: launch contract should keep form-set-class-object off by default");
+    expect(!result.request.form_set_class_available, "#1136: launch contract should keep form set class unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -5422,6 +5424,82 @@ void test_parse_launch_arguments_rejects_record_source_object_ambiguity() {
     });
     expect(!stray_record_source_result.ok,
         "#1130: launch contract should reject stray record source arguments");
+}
+
+void test_parse_launch_arguments_for_form_set_class_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--form-set-class-object",
+        "--form-set-class", "BaseFormSet",
+        "--form-set-class-target-object-name", "cmdSaveFormSet",
+        "--form-set-class-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1136: launch contract should parse form-set-class-object requests");
+    expect(result.request.form_set_class_object, "#1136: launch contract should detect --form-set-class-object");
+    expect(result.request.form_set_class_available && result.request.form_set_class == "BaseFormSet",
+        "#1136: form-set-class-object requests should carry form set class");
+    expect(result.request.form_set_class_objects.size() == 2U,
+        "#1136: form-set-class-object requests should collect form set class target selectors");
+    if (result.request.form_set_class_objects.size() == 2U) {
+        expect(result.request.form_set_class_objects[0].object_name == "cmdSaveFormSet" &&
+                result.request.form_set_class_objects[0].unique_id.empty(),
+            "#1136: form-set-class-object requests should parse target object-name selectors");
+        expect(result.request.form_set_class_objects[1].object_name.empty() &&
+                result.request.form_set_class_objects[1].unique_id == "two-guid",
+            "#1136: form-set-class-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_form_set_class_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--form-set-class-object",
+        "--form-set-class-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1136: launch contract should reject form-set-class-object requests without form set class");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--form-set-class-object",
+        "--form-set-class", "SaveFormSet"
+    });
+    expect(!missing_targets_result.ok,
+        "#1136: launch contract should reject form-set-class-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_form_set_class_object_ambiguity() {
+    const auto form_set_class_caption_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--form-set-class-object",
+        "--caption-object",
+        "--form-set-class", "SaveFormSet",
+        "--form-set-class-target-unique-id", "one-guid",
+        "--caption", "SaveFormSet",
+        "--caption-target-unique-id", "one-guid"
+    });
+    expect(!form_set_class_caption_result.ok,
+        "#1136: launch contract should reject simultaneous form-set-class-object and caption-object requests");
+
+    const auto form_set_class_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--form-set-class-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--form-set-class", "SaveFormSet",
+        "--form-set-class-target-unique-id", "one-guid"
+    });
+    expect(!form_set_class_property_result.ok,
+        "#1136: launch contract should reject form-set-class-object combined with property commands");
+
+    const auto stray_form_set_class_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--form-set-class", "SaveFormSet"
+    });
+    expect(!stray_form_set_class_result.ok,
+        "#1136: launch contract should reject stray form set class arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -11535,6 +11613,9 @@ int main() {
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();
+    test_parse_launch_arguments_for_form_set_class_object();
+    test_parse_launch_arguments_rejects_form_set_class_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_form_set_class_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
