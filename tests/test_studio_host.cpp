@@ -99,6 +99,9 @@ void test_parse_launch_arguments() {
     expect(!result.request.delete_object, "#1023: launch contract should keep delete-object off by default");
     expect(!result.request.restore_object, "#1024: launch contract should keep restore-object off by default");
     expect(!result.request.deleted_states, "#1201: launch contract should keep deleted-states off by default");
+    expect(!result.request.subtree_deleted_state, "#1202: launch contract should keep subtree-deleted-state off by default");
+    expect(!result.request.subtree_deleted_available,
+        "#1202: launch contract should keep subtree deleted-state unavailable by default");
     expect(!result.request.duplicate_object, "#1025: launch contract should keep duplicate-object off by default");
     expect(!result.request.rename_object, "#1026: launch contract should keep rename-object off by default");
     expect(!result.request.reparent_object, "#1027: launch contract should keep reparent-object off by default");
@@ -975,6 +978,84 @@ void test_parse_launch_arguments_rejects_deleted_states_ambiguity() {
     });
     expect(!deleted_states_property_result.ok,
         "#1201: launch contract should reject deleted-states combined with property commands");
+}
+
+void test_parse_launch_arguments_for_subtree_deleted_state() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--subtree-deleted-state",
+        "--subtree-deleted", "true",
+        "--object-name", "cntMain",
+        "--unique-id", "container-guid"
+    });
+
+    expect(result.ok, "#1202: launch contract should parse subtree deleted-state requests");
+    expect(result.request.subtree_deleted_state,
+        "#1202: launch contract should detect --subtree-deleted-state");
+    expect(result.request.subtree_deleted_available && result.request.subtree_deleted,
+        "#1202: launch contract should parse subtree deleted-state logical values");
+    expect(result.request.object_name == "cntMain" &&
+            result.request.unique_id == "container-guid",
+        "#1202: subtree deleted-state requests should preserve root selectors");
+}
+
+void test_parse_launch_arguments_rejects_subtree_deleted_state_invalid_inputs() {
+    const auto missing_state_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--subtree-deleted-state",
+        "--unique-id", "container-guid"
+    });
+    expect(!missing_state_result.ok,
+        "#1202: launch contract should reject subtree deleted-state requests without state");
+
+    const auto missing_selector_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--subtree-deleted-state",
+        "--subtree-deleted", "true"
+    });
+    expect(!missing_selector_result.ok,
+        "#1202: launch contract should reject subtree deleted-state requests without root selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--subtree-deleted-state",
+        "--unique-id", "container-guid",
+        "--subtree-deleted", "sometimes"
+    });
+    expect(!invalid_value_result.ok,
+        "#1202: launch contract should reject invalid subtree deleted-state logical values");
+
+    const auto stray_state_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--subtree-deleted", "true",
+        "--unique-id", "container-guid"
+    });
+    expect(!stray_state_result.ok,
+        "#1202: launch contract should reject stray subtree deleted-state arguments");
+}
+
+void test_parse_launch_arguments_rejects_subtree_deleted_state_ambiguity() {
+    const auto subtree_delete_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--subtree-deleted-state",
+        "--subtree-deleted", "true",
+        "--unique-id", "container-guid",
+        "--delete-object"
+    });
+    expect(!subtree_delete_result.ok,
+        "#1202: launch contract should reject simultaneous subtree deleted-state and delete-object requests");
+
+    const auto subtree_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--subtree-deleted-state",
+        "--subtree-deleted", "true",
+        "--unique-id", "container-guid",
+        "--clear-property",
+        "--property-name", "Caption"
+    });
+    expect(!subtree_property_result.ok,
+        "#1202: launch contract should reject subtree deleted-state combined with property commands");
 }
 
 void test_parse_launch_arguments_for_duplicate_object() {
@@ -17376,6 +17457,9 @@ int main() {
     test_parse_launch_arguments_for_deleted_states();
     test_parse_launch_arguments_rejects_deleted_states_invalid_inputs();
     test_parse_launch_arguments_rejects_deleted_states_ambiguity();
+    test_parse_launch_arguments_for_subtree_deleted_state();
+    test_parse_launch_arguments_rejects_subtree_deleted_state_invalid_inputs();
+    test_parse_launch_arguments_rejects_subtree_deleted_state_ambiguity();
     test_parse_launch_arguments_for_duplicate_object();
     test_parse_launch_arguments_rejects_duplicate_object_ambiguity();
     test_parse_launch_arguments_for_rename_object();

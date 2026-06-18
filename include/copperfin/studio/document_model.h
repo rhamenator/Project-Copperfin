@@ -210,6 +210,7 @@ struct StudioOpenRequest {
     bool delete_object = false;
     bool restore_object = false;
     bool deleted_states = false;
+    bool subtree_deleted_state = false;
     bool duplicate_object = false;
     bool rename_object = false;
     bool reparent_object = false;
@@ -387,6 +388,7 @@ struct StudioOpenRequest {
     bool tab_stop = false;
     bool visible = false;
     bool enabled = false;
+    bool subtree_deleted = false;
     bool object_read_only = false;
     bool locked = false;
     bool whats_this_help = false;
@@ -397,6 +399,7 @@ struct StudioOpenRequest {
     bool tab_stop_available = false;
     bool visible_available = false;
     bool enabled_available = false;
+    bool subtree_deleted_available = false;
     bool object_read_only_available = false;
     bool locked_available = false;
     bool caption_available = false;

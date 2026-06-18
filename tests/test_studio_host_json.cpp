@@ -181,6 +181,26 @@ void mark_deleted_for_deleted_states_fixture(const std::filesystem::path& form_p
     expect(delete_result.ok, message);
 }
 
+void write_synthetic_form_table_for_subtree_deleted_state(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "PARENT", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cntMain", "cntMain", "container-guid", ""},
+        {"cmdSave", "cmdSave", "save-guid", "cntMain"},
+        {"txtName", "txtName", "name-guid", "cntMain"},
+        {"lblNested", "lblNested", "nested-guid", "txtName"},
+        {"cmdOther", "cmdOther", "other-guid", ""},
+        {"", "", "nameless-guid", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1202: synthetic SCX table for subtree deleted-state should be created");
+}
+
 void write_synthetic_form_table_for_toolbox_creation(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -4685,6 +4705,150 @@ void test_studio_host_json_applies_deleted_states_by_stable_selectors(const std:
         "#1201: deleted-states plus delete-object should fail during launch parsing");
     expect(!visual_object_deleted(ambiguous_path, "save-guid"),
         "#1201: deleted-states ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_applies_subtree_deleted_state_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_subtree_deleted_state_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path unique_id_path = temp_root / "unique_id.scx";
+    write_synthetic_form_table_for_subtree_deleted_state(unique_id_path);
+    const auto unique_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unique_id_path.string(),
+            "--subtree-deleted-state",
+            "--subtree-deleted", "true",
+            "--unique-id", "container-guid",
+            "--json"
+        },
+        temp_root);
+    expect(unique_id_process.exit_code == 0,
+        "#1202: host subtree deleted-state by unique id should exit successfully");
+    expect(visual_object_deleted(unique_id_path, "container-guid") &&
+            visual_object_deleted(unique_id_path, "save-guid") &&
+            visual_object_deleted(unique_id_path, "name-guid") &&
+            visual_object_deleted(unique_id_path, "nested-guid") &&
+            !visual_object_deleted(unique_id_path, "other-guid"),
+        "#1202: host subtree deleted-state should delete root and descendants while preserving unrelated records");
+
+    const auto restore_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", unique_id_path.string(),
+            "--subtree-deleted-state",
+            "--subtree-deleted", "false",
+            "--object-name", "cntMain",
+            "--json"
+        },
+        temp_root);
+    expect(restore_process.exit_code == 0,
+        "#1202: host subtree restore by object name should exit successfully");
+    expect(!visual_object_deleted(unique_id_path, "container-guid") &&
+            !visual_object_deleted(unique_id_path, "save-guid") &&
+            !visual_object_deleted(unique_id_path, "name-guid") &&
+            !visual_object_deleted(unique_id_path, "nested-guid") &&
+            !visual_object_deleted(unique_id_path, "other-guid"),
+        "#1202: host subtree restore should restore root and descendants while preserving unrelated records");
+
+    const fs::path missing_path = temp_root / "missing.scx";
+    write_synthetic_form_table_for_subtree_deleted_state(missing_path);
+    const auto missing_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_path.string(),
+            "--subtree-deleted-state",
+            "--subtree-deleted", "true",
+            "--unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_process.exit_code == 4,
+        "#1202: missing-root host subtree deleted-state should return command failure");
+    expect(!visual_object_deleted(missing_path, "container-guid") &&
+            !visual_object_deleted(missing_path, "save-guid") &&
+            !visual_object_deleted(missing_path, "name-guid") &&
+            !visual_object_deleted(missing_path, "nested-guid") &&
+            !visual_object_deleted(missing_path, "other-guid"),
+        "#1202: missing-root host subtree deleted-state should not mutate the asset");
+
+    const fs::path nameless_path = temp_root / "nameless.scx";
+    write_synthetic_form_table_for_subtree_deleted_state(nameless_path);
+    const auto nameless_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", nameless_path.string(),
+            "--subtree-deleted-state",
+            "--subtree-deleted", "true",
+            "--unique-id", "nameless-guid",
+            "--json"
+        },
+        temp_root);
+    expect(nameless_process.exit_code == 4,
+        "#1202: nameless-root host subtree deleted-state should return command failure");
+    expect(!visual_object_deleted(nameless_path, "nameless-guid") &&
+            !visual_object_deleted(nameless_path, "container-guid"),
+        "#1202: nameless-root host subtree deleted-state should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_subtree_deleted_state(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--subtree-deleted-state",
+            "--subtree-deleted", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1202: subtree deleted-state without root selectors should fail during launch parsing");
+    expect(!visual_object_deleted(missing_selector_path, "container-guid"),
+        "#1202: subtree deleted-state missing-selector parse failure should not mutate the asset");
+
+    const fs::path invalid_value_path = temp_root / "invalid_value.scx";
+    write_synthetic_form_table_for_subtree_deleted_state(invalid_value_path);
+    const auto invalid_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", invalid_value_path.string(),
+            "--subtree-deleted-state",
+            "--unique-id", "container-guid",
+            "--subtree-deleted", "sometimes",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_value_process.exit_code == 2,
+        "#1202: subtree deleted-state invalid logical values should fail during launch parsing");
+    expect(!visual_object_deleted(invalid_value_path, "container-guid"),
+        "#1202: subtree deleted-state invalid-value parse failure should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_subtree_deleted_state(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--subtree-deleted-state",
+            "--subtree-deleted", "true",
+            "--unique-id", "container-guid",
+            "--delete-object",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1202: subtree deleted-state plus delete-object should fail during launch parsing");
+    expect(!visual_object_deleted(ambiguous_path, "container-guid") &&
+            !visual_object_deleted(ambiguous_path, "save-guid"),
+        "#1202: subtree deleted-state ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -27763,6 +27927,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_applies_deleted_states_by_stable_selectors(argv[1]);
+    test_studio_host_json_applies_subtree_deleted_state_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);

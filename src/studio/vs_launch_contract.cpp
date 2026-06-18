@@ -817,6 +817,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--subtree-deleted-state") {
+            result.request.subtree_deleted_state = true;
+            continue;
+        }
+
         if (argument == "--duplicate-object") {
             result.request.duplicate_object = true;
             continue;
@@ -5486,6 +5491,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--subtree-deleted") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --subtree-deleted."};
+            }
+            const auto subtree_deleted = parse_bool_value(args[++index]);
+            if (!subtree_deleted.has_value()) {
+                return {.ok = false, .error = "The --subtree-deleted value must be true or false."};
+            }
+            result.request.subtree_deleted = *subtree_deleted;
+            result.request.subtree_deleted_available = true;
+            continue;
+        }
+
         if (argument == "--row-source-type-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --row-source-type-target-object-name."};
@@ -8669,6 +8687,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
     if (!result.request.deleted_states && !result.request.deleted_state_objects.empty()) {
         return {.ok = false, .error = "Deleted-state target arguments can only be used with --deleted-states."};
     }
+    if (result.request.subtree_deleted_state && !result.request.subtree_deleted_available) {
+        return {.ok = false, .error = "A subtree deleted-state request requires --subtree-deleted."};
+    }
+    if (result.request.subtree_deleted_state &&
+        result.request.object_name.empty() &&
+        result.request.unique_id.empty()) {
+        return {.ok = false, .error = "A subtree deleted-state request requires at least one root selector."};
+    }
+    if (!result.request.subtree_deleted_state && result.request.subtree_deleted_available) {
+        return {.ok = false, .error = "Subtree deleted-state arguments can only be used with --subtree-deleted-state."};
+    }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {
         return {.ok = false, .error = "An object row-source-type assignment requires --row-source-type."};
     }
@@ -9808,6 +9837,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.delete_object ? 1 : 0) +
         (result.request.restore_object ? 1 : 0) +
         (result.request.deleted_states ? 1 : 0) +
+        (result.request.subtree_deleted_state ? 1 : 0) +
         (result.request.duplicate_object ? 1 : 0) +
         (result.request.rename_object ? 1 : 0) +
         (result.request.reparent_object ? 1 : 0) +

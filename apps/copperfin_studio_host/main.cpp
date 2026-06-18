@@ -1561,6 +1561,22 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.subtree_deleted_state) {
+        const auto subtree_result = copperfin::vfp::set_visual_object_subtree_deleted_state({
+            .path = parse_result.request.path,
+            .record_index = parse_result.request.record_index,
+            .object_name = parse_result.request.object_name,
+            .unique_id = parse_result.request.unique_id,
+            .deleted = parse_result.request.subtree_deleted
+        });
+
+        if (!subtree_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << subtree_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.duplicate_object) {
         const auto duplicate_result = copperfin::vfp::duplicate_visual_object({
             .path = parse_result.request.path,
