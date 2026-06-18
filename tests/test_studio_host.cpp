@@ -233,6 +233,10 @@ void test_parse_launch_arguments() {
         "#1126: launch contract should keep grid-lines-object off by default");
     expect(!result.request.grid_lines_available,
         "#1126: launch contract should keep grid-lines unavailable by default");
+    expect(!result.request.highlight_row_line_width_object,
+        "#1127: launch contract should keep highlight-row-line-width-object off by default");
+    expect(!result.request.highlight_row_line_width_available,
+        "#1127: launch contract should keep highlight-row-line-width unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4552,6 +4556,101 @@ void test_parse_launch_arguments_rejects_grid_lines_object_ambiguity() {
     });
     expect(!stray_grid_lines_result.ok,
         "#1126: launch contract should reject stray grid-lines arguments");
+}
+
+void test_parse_launch_arguments_for_highlight_row_line_width_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--highlight-row-line-width-object",
+        "--highlight-row-line-width", "9",
+        "--highlight-row-line-width-target-object-name", "cmdSave",
+        "--highlight-row-line-width-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1127: launch contract should parse highlight-row-line-width-object requests");
+    expect(result.request.highlight_row_line_width_object,
+        "#1127: launch contract should detect --highlight-row-line-width-object");
+    expect(result.request.highlight_row_line_width_available && result.request.highlight_row_line_width == 9,
+        "#1127: highlight-row-line-width-object requests should carry highlight-row-line-width value");
+    expect(result.request.highlight_row_line_width_objects.size() == 2U,
+        "#1127: highlight-row-line-width-object requests should collect highlight-row-line-width target selectors");
+    if (result.request.highlight_row_line_width_objects.size() == 2U) {
+        expect(result.request.highlight_row_line_width_objects[0].object_name == "cmdSave" &&
+                result.request.highlight_row_line_width_objects[0].unique_id.empty(),
+            "#1127: highlight-row-line-width-object requests should parse target object-name selectors");
+        expect(result.request.highlight_row_line_width_objects[1].object_name.empty() &&
+                result.request.highlight_row_line_width_objects[1].unique_id == "two-guid",
+            "#1127: highlight-row-line-width-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_highlight_row_line_width_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-line-width-object",
+        "--highlight-row-line-width-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1127: launch contract should reject highlight-row-line-width-object requests without highlight-row-line-width value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-line-width-object",
+        "--highlight-row-line-width", "manual",
+        "--highlight-row-line-width-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1127: launch contract should reject non-integer highlight-row-line-width values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-line-width-object",
+        "--highlight-row-line-width", "-1",
+        "--highlight-row-line-width-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1127: launch contract should reject negative highlight-row-line-width values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-line-width-object",
+        "--highlight-row-line-width", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1127: launch contract should reject highlight-row-line-width-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_highlight_row_line_width_object_ambiguity() {
+    const auto highlight_row_line_width_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-line-width-object",
+        "--locked-object",
+        "--highlight-row-line-width", "2",
+        "--highlight-row-line-width-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!highlight_row_line_width_locked_result.ok,
+        "#1127: launch contract should reject simultaneous highlight-row-line-width-object and locked-object requests");
+
+    const auto highlight_row_line_width_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-line-width-object",
+        "--clear-property",
+        "--property-name", "HighlightRowLineWidth",
+        "--highlight-row-line-width", "2",
+        "--highlight-row-line-width-target-unique-id", "one-guid"
+    });
+    expect(!highlight_row_line_width_property_result.ok,
+        "#1127: launch contract should reject highlight-row-line-width-object combined with property commands");
+
+    const auto stray_highlight_row_line_width_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-line-width", "2"
+    });
+    expect(!stray_highlight_row_line_width_result.ok,
+        "#1127: launch contract should reject stray highlight-row-line-width arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10638,6 +10737,9 @@ int main() {
     test_parse_launch_arguments_for_grid_lines_object();
     test_parse_launch_arguments_rejects_grid_lines_object_invalid_inputs();
     test_parse_launch_arguments_rejects_grid_lines_object_ambiguity();
+    test_parse_launch_arguments_for_highlight_row_line_width_object();
+    test_parse_launch_arguments_rejects_highlight_row_line_width_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_highlight_row_line_width_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

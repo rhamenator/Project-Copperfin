@@ -628,6 +628,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--highlight-row-line-width-object") {
+            result.request.highlight_row_line_width_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1531,6 +1536,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.grid_lines = grid_lines;
             result.request.grid_lines_available = true;
+            continue;
+        }
+
+        if (argument == "--highlight-row-line-width") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --highlight-row-line-width."};
+            }
+            int highlight_row_line_width = 0;
+            if (!parse_int_value(args[++index], highlight_row_line_width)) {
+                return {.ok = false, .error = "The --highlight-row-line-width value must be an integer."};
+            }
+            if (highlight_row_line_width < 0) {
+                return {.ok = false, .error = "The --highlight-row-line-width value must be non-negative."};
+            }
+            result.request.highlight_row_line_width = highlight_row_line_width;
+            result.request.highlight_row_line_width_available = true;
             continue;
         }
 
@@ -3024,6 +3045,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --grid-lines-target-unique-id."};
             }
             result.request.grid_lines_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--highlight-row-line-width-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --highlight-row-line-width-target-object-name."};
+            }
+            result.request.highlight_row_line_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--highlight-row-line-width-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --highlight-row-line-width-target-unique-id."};
+            }
+            result.request.highlight_row_line_width_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4900,6 +4945,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.grid_lines_objects.empty())) {
         return {.ok = false, .error = "Grid-lines arguments can only be used with --grid-lines-object."};
     }
+    if (result.request.highlight_row_line_width_object && !result.request.highlight_row_line_width_available) {
+        return {.ok = false, .error = "An object highlight-row-line-width assignment requires --highlight-row-line-width."};
+    }
+    if (result.request.highlight_row_line_width_object && result.request.highlight_row_line_width_objects.empty()) {
+        return {.ok = false, .error = "An object highlight-row-line-width assignment requires at least one target selector."};
+    }
+    if (!result.request.highlight_row_line_width_object &&
+        (result.request.highlight_row_line_width_available ||
+         !result.request.highlight_row_line_width_objects.empty())) {
+        return {.ok = false, .error = "Highlight-row-line-width arguments can only be used with --highlight-row-line-width-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5642,6 +5698,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.lock_columns_left_object ? 1 : 0) +
         (result.request.grid_line_width_object ? 1 : 0) +
         (result.request.grid_lines_object ? 1 : 0) +
+        (result.request.highlight_row_line_width_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

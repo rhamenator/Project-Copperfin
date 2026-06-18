@@ -62,6 +62,7 @@ void print_usage() {
     std::cout << "Lock-columns-left object: --lock-columns-left-object --lock-columns-left <n> [--lock-columns-left-target-object-name <name>] [--lock-columns-left-target-unique-id <id>]\n";
     std::cout << "Grid-line-width object: --grid-line-width-object --grid-line-width <n> [--grid-line-width-target-object-name <name>] [--grid-line-width-target-unique-id <id>]\n";
     std::cout << "Grid-lines object: --grid-lines-object --grid-lines <n> [--grid-lines-target-object-name <name>] [--grid-lines-target-unique-id <id>]\n";
+    std::cout << "Highlight-row-line-width object: --highlight-row-line-width-object --highlight-row-line-width <n> [--highlight-row-line-width-target-object-name <name>] [--highlight-row-line-width-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2551,6 +2552,30 @@ int main(int argc, char** argv) {
         if (!grid_lines_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << grid_lines_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.highlight_row_line_width_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> highlight_row_line_width_objects;
+        highlight_row_line_width_objects.reserve(parse_result.request.highlight_row_line_width_objects.size());
+        for (const auto& highlight_row_line_width_object : parse_result.request.highlight_row_line_width_objects) {
+            highlight_row_line_width_objects.push_back({
+                .record_index = highlight_row_line_width_object.record_index,
+                .object_name = highlight_row_line_width_object.object_name,
+                .unique_id = highlight_row_line_width_object.unique_id
+            });
+        }
+
+        const auto highlight_row_line_width_result = copperfin::vfp::set_visual_object_highlight_row_line_width({
+            .path = parse_result.request.path,
+            .objects = highlight_row_line_width_objects,
+            .highlight_row_line_width = parse_result.request.highlight_row_line_width
+        });
+
+        if (!highlight_row_line_width_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << highlight_row_line_width_result.error << "\n";
             return 4;
         }
     }
