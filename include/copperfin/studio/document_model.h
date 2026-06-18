@@ -101,6 +101,7 @@ struct StudioOpenRequest {
     int drag_mode = 0;
     int ole_drag_mode = 0;
     int ole_drop_mode = 0;
+    int ole_drop_effects = 0;
     int selected_back_color = 0;
     int selected_fore_color = 0;
     int selected_item_back_color = 0;
@@ -205,6 +206,7 @@ struct StudioOpenRequest {
     bool drag_mode_object = false;
     bool ole_drag_mode_object = false;
     bool ole_drop_mode_object = false;
+    bool ole_drop_effects_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -229,6 +231,7 @@ struct StudioOpenRequest {
     bool drag_mode_available = false;
     bool ole_drag_mode_available = false;
     bool ole_drop_mode_available = false;
+    bool ole_drop_effects_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
@@ -383,6 +386,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> drag_mode_objects{};
     std::vector<StudioObjectSelector> ole_drag_mode_objects{};
     std::vector<StudioObjectSelector> ole_drop_mode_objects{};
+    std::vector<StudioObjectSelector> ole_drop_effects_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

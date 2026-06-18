@@ -157,6 +157,10 @@ void test_parse_launch_arguments() {
         "#1106: launch contract should keep OLE drop-mode-object off by default");
     expect(!result.request.ole_drop_mode_available,
         "#1106: launch contract should keep OLE drop-mode unavailable by default");
+    expect(!result.request.ole_drop_effects_object,
+        "#1107: launch contract should keep OLE drop-effects-object off by default");
+    expect(!result.request.ole_drop_effects_available,
+        "#1107: launch contract should keep OLE drop-effects unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2666,6 +2670,101 @@ void test_parse_launch_arguments_rejects_ole_drop_mode_object_ambiguity() {
     });
     expect(!stray_ole_drop_mode_result.ok,
         "#1106: launch contract should reject stray OLE drop-mode arguments");
+}
+
+void test_parse_launch_arguments_for_ole_drop_effects_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--ole-drop-effects-object",
+        "--ole-drop-effects", "3",
+        "--ole-drop-effects-target-object-name", "cmdSave",
+        "--ole-drop-effects-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1107: launch contract should parse OLE drop-effects-object requests");
+    expect(result.request.ole_drop_effects_object,
+        "#1107: launch contract should detect --ole-drop-effects-object");
+    expect(result.request.ole_drop_effects_available && result.request.ole_drop_effects == 3,
+        "#1107: OLE drop-effects-object requests should carry OLE drop-effects value");
+    expect(result.request.ole_drop_effects_objects.size() == 2U,
+        "#1107: OLE drop-effects-object requests should collect OLE drop-effects target selectors");
+    if (result.request.ole_drop_effects_objects.size() == 2U) {
+        expect(result.request.ole_drop_effects_objects[0].object_name == "cmdSave" &&
+                result.request.ole_drop_effects_objects[0].unique_id.empty(),
+            "#1107: OLE drop-effects-object requests should parse target object-name selectors");
+        expect(result.request.ole_drop_effects_objects[1].object_name.empty() &&
+                result.request.ole_drop_effects_objects[1].unique_id == "two-guid",
+            "#1107: OLE drop-effects-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_ole_drop_effects_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-effects-object",
+        "--ole-drop-effects-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1107: launch contract should reject OLE drop-effects-object requests without OLE drop-effects value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-effects-object",
+        "--ole-drop-effects", "manual",
+        "--ole-drop-effects-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1107: launch contract should reject non-integer OLE drop-effects values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-effects-object",
+        "--ole-drop-effects", "-1",
+        "--ole-drop-effects-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1107: launch contract should reject negative OLE drop-effects values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-effects-object",
+        "--ole-drop-effects", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1107: launch contract should reject OLE drop-effects-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_ole_drop_effects_object_ambiguity() {
+    const auto ole_drop_effects_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-effects-object",
+        "--locked-object",
+        "--ole-drop-effects", "2",
+        "--ole-drop-effects-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!ole_drop_effects_locked_result.ok,
+        "#1107: launch contract should reject simultaneous OLE drop-effects-object and locked-object requests");
+
+    const auto ole_drop_effects_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-effects-object",
+        "--clear-property",
+        "--property-name", "OLEDropEffects",
+        "--ole-drop-effects", "2",
+        "--ole-drop-effects-target-unique-id", "one-guid"
+    });
+    expect(!ole_drop_effects_property_result.ok,
+        "#1107: launch contract should reject OLE drop-effects-object combined with property commands");
+
+    const auto stray_ole_drop_effects_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--ole-drop-effects", "2"
+    });
+    expect(!stray_ole_drop_effects_result.ok,
+        "#1107: launch contract should reject stray OLE drop-effects arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -8609,6 +8708,9 @@ int main() {
     test_parse_launch_arguments_for_ole_drop_mode_object();
     test_parse_launch_arguments_rejects_ole_drop_mode_object_invalid_inputs();
     test_parse_launch_arguments_rejects_ole_drop_mode_object_ambiguity();
+    test_parse_launch_arguments_for_ole_drop_effects_object();
+    test_parse_launch_arguments_rejects_ole_drop_effects_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_ole_drop_effects_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
