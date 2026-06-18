@@ -185,6 +185,10 @@ void test_parse_launch_arguments() {
         "#1114: launch contract should keep draw-width-object off by default");
     expect(!result.request.draw_width_available,
         "#1114: launch contract should keep draw-width unavailable by default");
+    expect(!result.request.fill_style_object,
+        "#1115: launch contract should keep fill-style-object off by default");
+    expect(!result.request.fill_style_available,
+        "#1115: launch contract should keep fill-style unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3364,6 +3368,101 @@ void test_parse_launch_arguments_rejects_draw_width_object_ambiguity() {
     });
     expect(!stray_draw_width_result.ok,
         "#1114: launch contract should reject stray draw-width arguments");
+}
+
+void test_parse_launch_arguments_for_fill_style_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--fill-style-object",
+        "--fill-style", "8",
+        "--fill-style-target-object-name", "cmdSave",
+        "--fill-style-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1115: launch contract should parse fill-style-object requests");
+    expect(result.request.fill_style_object,
+        "#1115: launch contract should detect --fill-style-object");
+    expect(result.request.fill_style_available && result.request.fill_style == 8,
+        "#1115: fill-style-object requests should carry fill-style value");
+    expect(result.request.fill_style_objects.size() == 2U,
+        "#1115: fill-style-object requests should collect fill-style target selectors");
+    if (result.request.fill_style_objects.size() == 2U) {
+        expect(result.request.fill_style_objects[0].object_name == "cmdSave" &&
+                result.request.fill_style_objects[0].unique_id.empty(),
+            "#1115: fill-style-object requests should parse target object-name selectors");
+        expect(result.request.fill_style_objects[1].object_name.empty() &&
+                result.request.fill_style_objects[1].unique_id == "two-guid",
+            "#1115: fill-style-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_fill_style_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-style-object",
+        "--fill-style-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1115: launch contract should reject fill-style-object requests without fill-style value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-style-object",
+        "--fill-style", "manual",
+        "--fill-style-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1115: launch contract should reject non-integer fill-style values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-style-object",
+        "--fill-style", "-1",
+        "--fill-style-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1115: launch contract should reject negative fill-style values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-style-object",
+        "--fill-style", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1115: launch contract should reject fill-style-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_fill_style_object_ambiguity() {
+    const auto fill_style_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-style-object",
+        "--locked-object",
+        "--fill-style", "2",
+        "--fill-style-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!fill_style_locked_result.ok,
+        "#1115: launch contract should reject simultaneous fill-style-object and locked-object requests");
+
+    const auto fill_style_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-style-object",
+        "--clear-property",
+        "--property-name", "FillStyle",
+        "--fill-style", "2",
+        "--fill-style-target-unique-id", "one-guid"
+    });
+    expect(!fill_style_property_result.ok,
+        "#1115: launch contract should reject fill-style-object combined with property commands");
+
+    const auto stray_fill_style_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-style", "2"
+    });
+    expect(!stray_fill_style_result.ok,
+        "#1115: launch contract should reject stray fill-style arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9414,6 +9513,9 @@ int main() {
     test_parse_launch_arguments_for_draw_width_object();
     test_parse_launch_arguments_rejects_draw_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_draw_width_object_ambiguity();
+    test_parse_launch_arguments_for_fill_style_object();
+    test_parse_launch_arguments_rejects_fill_style_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_fill_style_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

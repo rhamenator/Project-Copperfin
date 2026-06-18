@@ -50,6 +50,7 @@ void print_usage() {
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
     std::cout << "Draw-style object: --draw-style-object --draw-style <n> [--draw-style-target-object-name <name>] [--draw-style-target-unique-id <id>]\n";
     std::cout << "Draw-width object: --draw-width-object --draw-width <n> [--draw-width-target-object-name <name>] [--draw-width-target-unique-id <id>]\n";
+    std::cout << "Fill-style object: --fill-style-object --fill-style <n> [--fill-style-target-object-name <name>] [--fill-style-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2251,6 +2252,30 @@ int main(int argc, char** argv) {
         if (!draw_width_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << draw_width_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.fill_style_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> fill_style_objects;
+        fill_style_objects.reserve(parse_result.request.fill_style_objects.size());
+        for (const auto& fill_style_object : parse_result.request.fill_style_objects) {
+            fill_style_objects.push_back({
+                .record_index = fill_style_object.record_index,
+                .object_name = fill_style_object.object_name,
+                .unique_id = fill_style_object.unique_id
+            });
+        }
+
+        const auto fill_style_result = copperfin::vfp::set_visual_object_fill_style({
+            .path = parse_result.request.path,
+            .objects = fill_style_objects,
+            .fill_style = parse_result.request.fill_style
+        });
+
+        if (!fill_style_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << fill_style_result.error << "\n";
             return 4;
         }
     }

@@ -108,6 +108,7 @@ struct StudioOpenRequest {
     int draw_mode = 0;
     int draw_style = 0;
     int draw_width = 0;
+    int fill_style = 0;
     int selected_back_color = 0;
     int selected_fore_color = 0;
     int selected_item_back_color = 0;
@@ -220,6 +221,7 @@ struct StudioOpenRequest {
     bool draw_mode_object = false;
     bool draw_style_object = false;
     bool draw_width_object = false;
+    bool fill_style_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -251,6 +253,7 @@ struct StudioOpenRequest {
     bool draw_mode_available = false;
     bool draw_style_available = false;
     bool draw_width_available = false;
+    bool fill_style_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
@@ -415,6 +418,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> draw_mode_objects{};
     std::vector<StudioObjectSelector> draw_style_objects{};
     std::vector<StudioObjectSelector> draw_width_objects{};
+    std::vector<StudioObjectSelector> fill_style_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
