@@ -6777,6 +6777,109 @@ void test_studio_host_json_exposes_designer_invocation_admission_catalog(const s
     }
 }
 
+void test_studio_host_json_plans_toolbox_object_creation(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_plan_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto plan_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan", "textbox",
+            "--toolbox-context", "form",
+            "--unique-id", "planned-textbox-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Customer",
+            "--field-value", "PROPERTIES=ControlSource = \"customer.name\"",
+            "--json"
+        },
+        temp_root);
+
+    expect(plan_process.exit_code == 0,
+        "#1242: toolbox-create-plan JSON command should exit successfully");
+    expect_contains(plan_process.stdout_text, "\"status\": \"ok\"",
+        "#1242: successful toolbox-create-plan JSON should report ok status");
+    expect_contains(plan_process.stdout_text, "\"toolboxCreatePlan\": {",
+        "#1242: toolbox-create-plan JSON should expose a stable result object");
+    expect_contains(plan_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1242: toolbox-create-plan JSON should expose toolbox item ids");
+    expect_contains(plan_process.stdout_text, "\"className\": \"TextBox\"",
+        "#1242: toolbox-create-plan JSON should expose descriptor class names");
+    expect_contains(plan_process.stdout_text, "\"baseClassName\": \"TextBox\"",
+        "#1242: toolbox-create-plan JSON should expose descriptor base class names");
+    expect_contains(plan_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#1242: toolbox-create-plan JSON should expose requested toolbox context state");
+    expect_contains(plan_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1242: toolbox-create-plan JSON should expose requested toolbox contexts");
+    expect_contains(plan_process.stdout_text, "\"targetRecordIndex\": 2",
+        "#1242: toolbox-create-plan JSON should expose target record indexes");
+    expect_contains(plan_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1242: toolbox-create-plan JSON should expose generated object names");
+    expect_contains(plan_process.stdout_text, "\"uniqueId\": \"planned-textbox-guid\"",
+        "#1242: toolbox-create-plan JSON should expose planned unique ids");
+    expect_contains(plan_process.stdout_text, "\"parentName\": \"frmCustomer\"",
+        "#1242: toolbox-create-plan JSON should expose planned parent names");
+    expect_contains(plan_process.stdout_text, "\"propertyName\": \"OBJNAME\"",
+        "#1242: toolbox-create-plan JSON should expose generated field values");
+    expect_contains(plan_process.stdout_text, "\"propertyValue\": \"txt2\"",
+        "#1242: toolbox-create-plan JSON should expose generated object-name values");
+    expect_contains(plan_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#1242: toolbox-create-plan JSON should expose caller direct fields");
+    expect_contains(plan_process.stdout_text, "\"propertyName\": \"PROPERTIES\"",
+        "#1242: toolbox-create-plan JSON should expose caller memo fields");
+    expect_contains(plan_process.stdout_text, "\"dryRun\": true",
+        "#1242: toolbox-create-plan JSON should expose dry-run state");
+    expect_contains(plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#1242: toolbox-create-plan JSON should remain non-mutating");
+    expect(visual_object_count(form_path) == before_count,
+        "#1242: toolbox-create-plan host command should not mutate the visual asset");
+
+    const auto unknown_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan", "missing-toolbox-item",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_process.exit_code == 4,
+        "#1242: unknown toolbox-create-plan ids should return command failure");
+    expect_contains(unknown_process.stdout_text, "\"toolboxCreatePlan\": null",
+        "#1242: failed toolbox-create-plan JSON should not expose stale plans");
+    expect_contains(unknown_process.stdout_text, "The requested toolbox item was not found.",
+        "#1242: failed toolbox-create-plan JSON should expose clean errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1242: failed toolbox-create-plan host commands should not mutate the visual asset");
+
+    const auto invalid_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan", "textbox",
+            "--toolbox-context", "missing",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_context_process.exit_code == 2,
+        "#1242: toolbox-create-plan JSON should reject invalid toolbox contexts");
+    expect_contains(invalid_context_process.stdout_text, "Unknown toolbox context token: missing",
+        "#1242: invalid toolbox-create-plan context JSON should report parser errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1242: invalid toolbox-create-plan host commands should not mutate the visual asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -30607,6 +30710,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_designer_dispatch_catalog(argv[1]);
+    test_studio_host_json_plans_toolbox_object_creation(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
