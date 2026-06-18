@@ -511,6 +511,10 @@ void test_parse_launch_arguments() {
         "#1175: launch contract should keep picture-selection-display-object off by default");
     expect(!result.request.picture_selection_display_available,
         "#1175: launch contract should keep picture selection display unavailable by default");
+    expect(!result.request.dynamic_input_mask_object,
+        "#1176: launch contract should keep dynamic-input-mask-object off by default");
+    expect(!result.request.dynamic_input_mask_available,
+        "#1176: launch contract should keep dynamic input mask unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11823,6 +11827,84 @@ void test_parse_launch_arguments_rejects_picture_selection_display_object_ambigu
         "#1175: launch contract should reject stray picture-selection-display arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_input_mask_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-input-mask-object",
+        "--dynamic-input-mask", "IIF(.T., '999-99-9999', '')",
+        "--dynamic-input-mask-target-object-name", "txtSsn",
+        "--dynamic-input-mask-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1176: launch contract should parse dynamic-input-mask-object requests");
+    expect(result.request.dynamic_input_mask_object,
+        "#1176: launch contract should detect --dynamic-input-mask-object");
+    expect(result.request.dynamic_input_mask_available &&
+            result.request.dynamic_input_mask == "IIF(.T., '999-99-9999', '')",
+        "#1176: dynamic-input-mask-object requests should carry raw expression text");
+    expect(result.request.dynamic_input_mask_objects.size() == 2U,
+        "#1176: dynamic-input-mask-object requests should collect dynamic-input-mask target selectors");
+    if (result.request.dynamic_input_mask_objects.size() == 2U) {
+        expect(result.request.dynamic_input_mask_objects[0].object_name == "txtSsn" &&
+                result.request.dynamic_input_mask_objects[0].unique_id.empty(),
+            "#1176: dynamic-input-mask-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_input_mask_objects[1].object_name.empty() &&
+                result.request.dynamic_input_mask_objects[1].unique_id == "two-guid",
+            "#1176: dynamic-input-mask-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_input_mask_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-input-mask-object",
+        "--dynamic-input-mask-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1176: launch contract should reject dynamic-input-mask-object requests without dynamic input mask");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-input-mask-object",
+        "--dynamic-input-mask", "IIF(.T., '999', '')"
+    });
+    expect(!missing_targets_result.ok,
+        "#1176: launch contract should reject dynamic-input-mask-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_input_mask_object_ambiguity() {
+    const auto dynamic_input_mask_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-input-mask-object",
+        "--allow-output-object",
+        "--dynamic-input-mask", "IIF(.T., '999', '')",
+        "--dynamic-input-mask-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_input_mask_allow_output_result.ok,
+        "#1176: launch contract should reject simultaneous dynamic-input-mask-object and allow-output-object requests");
+
+    const auto dynamic_input_mask_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-input-mask-object",
+        "--clear-property",
+        "--property-name", "DynamicInputMask",
+        "--dynamic-input-mask", "IIF(.T., '999', '')",
+        "--dynamic-input-mask-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_input_mask_property_result.ok,
+        "#1176: launch contract should reject dynamic-input-mask-object combined with property commands");
+
+    const auto stray_dynamic_input_mask_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-input-mask", "IIF(.T., '999', '')"
+    });
+    expect(!stray_dynamic_input_mask_result.ok,
+        "#1176: launch contract should reject stray dynamic-input-mask arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15512,6 +15594,9 @@ int main() {
     test_parse_launch_arguments_for_picture_selection_display_object();
     test_parse_launch_arguments_rejects_picture_selection_display_object_invalid_inputs();
     test_parse_launch_arguments_rejects_picture_selection_display_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_input_mask_object();
+    test_parse_launch_arguments_rejects_dynamic_input_mask_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_input_mask_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

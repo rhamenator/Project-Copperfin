@@ -90,6 +90,7 @@ struct StudioOpenRequest {
     std::string display_value{};
     std::string dynamic_back_color{};
     std::string dynamic_fore_color{};
+    std::string dynamic_input_mask{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     double grid_width = 0.0;
@@ -260,6 +261,7 @@ struct StudioOpenRequest {
     bool picture_position_object = false;
     bool picture_spacing_object = false;
     bool picture_selection_display_object = false;
+    bool dynamic_input_mask_object = false;
     bool max_width_object = false;
     bool max_left_object = false;
     bool max_top_object = false;
@@ -454,6 +456,7 @@ struct StudioOpenRequest {
     bool picture_position_available = false;
     bool picture_spacing_available = false;
     bool picture_selection_display_available = false;
+    bool dynamic_input_mask_available = false;
     bool max_width_available = false;
     bool max_left_available = false;
     bool max_top_available = false;
@@ -589,6 +592,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> picture_position_objects{};
     std::vector<StudioObjectSelector> picture_spacing_objects{};
     std::vector<StudioObjectSelector> picture_selection_display_objects{};
+    std::vector<StudioObjectSelector> dynamic_input_mask_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
     std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> max_top_objects{};

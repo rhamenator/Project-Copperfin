@@ -73,6 +73,7 @@ void print_usage() {
     std::cout << "Picture-position object: --picture-position-object --picture-position <n> [--picture-position-target-object-name <name>] [--picture-position-target-unique-id <id>]\n";
     std::cout << "Picture-spacing object: --picture-spacing-object --picture-spacing <n> [--picture-spacing-target-object-name <name>] [--picture-spacing-target-unique-id <id>]\n";
     std::cout << "Picture-selection-display object: --picture-selection-display-object --picture-selection-display <n> [--picture-selection-display-target-object-name <name>] [--picture-selection-display-target-unique-id <id>]\n";
+    std::cout << "Dynamic-input-mask object: --dynamic-input-mask-object --dynamic-input-mask <expr> [--dynamic-input-mask-target-object-name <name>] [--dynamic-input-mask-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4496,6 +4497,30 @@ int main(int argc, char** argv) {
         if (!picture_selection_display_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << picture_selection_display_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.dynamic_input_mask_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> dynamic_input_mask_objects;
+        dynamic_input_mask_objects.reserve(parse_result.request.dynamic_input_mask_objects.size());
+        for (const auto& dynamic_input_mask_object : parse_result.request.dynamic_input_mask_objects) {
+            dynamic_input_mask_objects.push_back({
+                .record_index = dynamic_input_mask_object.record_index,
+                .object_name = dynamic_input_mask_object.object_name,
+                .unique_id = dynamic_input_mask_object.unique_id
+            });
+        }
+
+        const auto dynamic_input_mask_result = copperfin::vfp::set_visual_object_dynamic_input_mask({
+            .path = parse_result.request.path,
+            .objects = dynamic_input_mask_objects,
+            .dynamic_input_mask = parse_result.request.dynamic_input_mask
+        });
+
+        if (!dynamic_input_mask_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << dynamic_input_mask_result.error << "\n";
             return 4;
         }
     }
