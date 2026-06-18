@@ -49,6 +49,7 @@ void print_usage() {
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
     std::cout << "Draw-style object: --draw-style-object --draw-style <n> [--draw-style-target-object-name <name>] [--draw-style-target-unique-id <id>]\n";
+    std::cout << "Draw-width object: --draw-width-object --draw-width <n> [--draw-width-target-object-name <name>] [--draw-width-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2226,6 +2227,30 @@ int main(int argc, char** argv) {
         if (!draw_style_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << draw_style_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.draw_width_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> draw_width_objects;
+        draw_width_objects.reserve(parse_result.request.draw_width_objects.size());
+        for (const auto& draw_width_object : parse_result.request.draw_width_objects) {
+            draw_width_objects.push_back({
+                .record_index = draw_width_object.record_index,
+                .object_name = draw_width_object.object_name,
+                .unique_id = draw_width_object.unique_id
+            });
+        }
+
+        const auto draw_width_result = copperfin::vfp::set_visual_object_draw_width({
+            .path = parse_result.request.path,
+            .objects = draw_width_objects,
+            .draw_width = parse_result.request.draw_width
+        });
+
+        if (!draw_width_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << draw_width_result.error << "\n";
             return 4;
         }
     }

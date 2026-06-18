@@ -563,6 +563,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--draw-width-object") {
+            result.request.draw_width_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1258,6 +1263,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.draw_style = draw_style;
             result.request.draw_style_available = true;
+            continue;
+        }
+
+        if (argument == "--draw-width") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-width."};
+            }
+            int draw_width = 0;
+            if (!parse_int_value(args[++index], draw_width)) {
+                return {.ok = false, .error = "The --draw-width value must be an integer."};
+            }
+            if (draw_width < 0) {
+                return {.ok = false, .error = "The --draw-width value must be non-negative."};
+            }
+            result.request.draw_width = draw_width;
+            result.request.draw_width_available = true;
             continue;
         }
 
@@ -2439,6 +2460,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --draw-style-target-unique-id."};
             }
             result.request.draw_style_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--draw-width-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-width-target-object-name."};
+            }
+            result.request.draw_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--draw-width-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-width-target-unique-id."};
+            }
+            result.request.draw_width_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4172,6 +4217,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.draw_style_objects.empty())) {
         return {.ok = false, .error = "Draw-style arguments can only be used with --draw-style-object."};
     }
+    if (result.request.draw_width_object && !result.request.draw_width_available) {
+        return {.ok = false, .error = "An object draw-width assignment requires --draw-width."};
+    }
+    if (result.request.draw_width_object && result.request.draw_width_objects.empty()) {
+        return {.ok = false, .error = "An object draw-width assignment requires at least one target selector."};
+    }
+    if (!result.request.draw_width_object &&
+        (result.request.draw_width_available ||
+         !result.request.draw_width_objects.empty())) {
+        return {.ok = false, .error = "Draw-width arguments can only be used with --draw-width-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4901,6 +4957,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.curvature_object ? 1 : 0) +
         (result.request.draw_mode_object ? 1 : 0) +
         (result.request.draw_style_object ? 1 : 0) +
+        (result.request.draw_width_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

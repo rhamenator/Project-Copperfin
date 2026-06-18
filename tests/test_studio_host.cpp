@@ -181,6 +181,10 @@ void test_parse_launch_arguments() {
         "#1113: launch contract should keep draw-style-object off by default");
     expect(!result.request.draw_style_available,
         "#1113: launch contract should keep draw-style unavailable by default");
+    expect(!result.request.draw_width_object,
+        "#1114: launch contract should keep draw-width-object off by default");
+    expect(!result.request.draw_width_available,
+        "#1114: launch contract should keep draw-width unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3265,6 +3269,101 @@ void test_parse_launch_arguments_rejects_draw_style_object_ambiguity() {
     });
     expect(!stray_draw_style_result.ok,
         "#1113: launch contract should reject stray draw-style arguments");
+}
+
+void test_parse_launch_arguments_for_draw_width_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--draw-width-object",
+        "--draw-width", "7",
+        "--draw-width-target-object-name", "cmdSave",
+        "--draw-width-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1114: launch contract should parse draw-width-object requests");
+    expect(result.request.draw_width_object,
+        "#1114: launch contract should detect --draw-width-object");
+    expect(result.request.draw_width_available && result.request.draw_width == 7,
+        "#1114: draw-width-object requests should carry draw-width value");
+    expect(result.request.draw_width_objects.size() == 2U,
+        "#1114: draw-width-object requests should collect draw-width target selectors");
+    if (result.request.draw_width_objects.size() == 2U) {
+        expect(result.request.draw_width_objects[0].object_name == "cmdSave" &&
+                result.request.draw_width_objects[0].unique_id.empty(),
+            "#1114: draw-width-object requests should parse target object-name selectors");
+        expect(result.request.draw_width_objects[1].object_name.empty() &&
+                result.request.draw_width_objects[1].unique_id == "two-guid",
+            "#1114: draw-width-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_draw_width_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-width-object",
+        "--draw-width-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1114: launch contract should reject draw-width-object requests without draw-width value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-width-object",
+        "--draw-width", "manual",
+        "--draw-width-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1114: launch contract should reject non-integer draw-width values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-width-object",
+        "--draw-width", "-1",
+        "--draw-width-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1114: launch contract should reject negative draw-width values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-width-object",
+        "--draw-width", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1114: launch contract should reject draw-width-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_draw_width_object_ambiguity() {
+    const auto draw_width_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-width-object",
+        "--locked-object",
+        "--draw-width", "2",
+        "--draw-width-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!draw_width_locked_result.ok,
+        "#1114: launch contract should reject simultaneous draw-width-object and locked-object requests");
+
+    const auto draw_width_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-width-object",
+        "--clear-property",
+        "--property-name", "DrawWidth",
+        "--draw-width", "2",
+        "--draw-width-target-unique-id", "one-guid"
+    });
+    expect(!draw_width_property_result.ok,
+        "#1114: launch contract should reject draw-width-object combined with property commands");
+
+    const auto stray_draw_width_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-width", "2"
+    });
+    expect(!stray_draw_width_result.ok,
+        "#1114: launch contract should reject stray draw-width arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9312,6 +9411,9 @@ int main() {
     test_parse_launch_arguments_for_draw_style_object();
     test_parse_launch_arguments_rejects_draw_style_object_invalid_inputs();
     test_parse_launch_arguments_rejects_draw_style_object_ambiguity();
+    test_parse_launch_arguments_for_draw_width_object();
+    test_parse_launch_arguments_rejects_draw_width_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_draw_width_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

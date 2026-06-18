@@ -1,3 +1,4 @@
+1114	OPEN	E2/#23 slice: Expose host draw-width-object command		2026-06-18T02:36:44Z
 1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
 1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
 1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
