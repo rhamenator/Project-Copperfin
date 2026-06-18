@@ -754,6 +754,24 @@ void write_synthetic_form_table_for_object_ole_drop_text_insertion(const std::fi
     expect(create_result.ok, "#1108: synthetic SCX table for object OLE drop text-insertion should be created");
 }
 
+void write_synthetic_form_table_for_object_button_count(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "BUTTONCOUNT", .type = 'N', .length = 3U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "0"},
+        {"cmdCancel", "cmdCancel", "two-guid", "1"},
+        {"lblStatus", "lblStatus", "three-guid", "2"},
+        {"cmdOther", "cmdOther", "other-guid", "0"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1110: synthetic SCX table for object button-count should be created");
+}
+
 void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -6591,6 +6609,146 @@ void test_studio_host_json_assigns_ole_drop_text_insertion_by_stable_selectors(
         "#1108: OLE drop text-insertion-object plus locked-object requests should fail during launch parsing");
     expect(visual_object_property(ambiguous_path, "one-guid", "OLEDROPTEXTINSERTION") == "0",
         "#1108: OLE drop text-insertion-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_assigns_button_count_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_button_count_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path button_count_path = temp_root / "button_count.scx";
+    write_synthetic_form_table_for_object_button_count(button_count_path);
+    const auto button_count_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", button_count_path.string(),
+            "--button-count-object",
+            "--button-count", "3",
+            "--button-count-target-object-name", "cmdSave",
+            "--button-count-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(button_count_process.exit_code == 0,
+        "#1110: host object button-count assignment should exit successfully");
+    expect(visual_object_property(button_count_path, "one-guid", "BUTTONCOUNT") == "3" &&
+            visual_object_property(button_count_path, "two-guid", "BUTTONCOUNT") == "3" &&
+            visual_object_property(button_count_path, "three-guid", "BUTTONCOUNT") == "2" &&
+            visual_object_property(button_count_path, "other-guid", "BUTTONCOUNT") == "0",
+        "#1110: host object button-count assignment should assign selected values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_button_count(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--button-count-object",
+            "--button-count", "2",
+            "--button-count-target-unique-id", "one-guid",
+            "--button-count-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1110: missing-target host object button-count assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "BUTTONCOUNT") == "0" &&
+            visual_object_property(missing_target_path, "two-guid", "BUTTONCOUNT") == "1",
+        "#1110: missing-target host object button-count assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_button_count(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--button-count-object",
+            "--button-count", "2",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1110: button-count-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "BUTTONCOUNT") == "0",
+        "#1110: button-count-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_button_count(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--button-count-object",
+            "--button-count-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1110: button-count-object without button-count value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "BUTTONCOUNT") == "0",
+        "#1110: button-count-object without button-count value should not mutate the asset");
+
+    const fs::path negative_value_path = temp_root / "negative_value.scx";
+    write_synthetic_form_table_for_object_button_count(negative_value_path);
+    const auto negative_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_value_path.string(),
+            "--button-count-object",
+            "--button-count", "-1",
+            "--button-count-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_value_process.exit_code == 2,
+        "#1110: negative button-count values should fail during launch parsing");
+    expect(visual_object_property(negative_value_path, "one-guid", "BUTTONCOUNT") == "0",
+        "#1110: negative button-count values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_button_count(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--button-count-object",
+            "--button-count", "2",
+            "--button-count-target-unique-id", "one-guid",
+            "--button-count-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1110: duplicate-target host object button-count assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "BUTTONCOUNT") == "0",
+        "#1110: duplicate-target host object button-count assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_button_count(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--button-count-object",
+            "--locked-object",
+            "--button-count", "2",
+            "--button-count-target-unique-id", "one-guid",
+            "--locked", "true",
+            "--locked-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1110: button-count-object plus locked-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "BUTTONCOUNT") == "0",
+        "#1110: button-count-object ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -13759,6 +13917,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_ole_drop_mode_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_ole_drop_effects_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_ole_drop_text_insertion_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_button_count_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);

@@ -45,6 +45,7 @@ void print_usage() {
     std::cout << "OLE drop-effects object: --ole-drop-effects-object --ole-drop-effects <n> [--ole-drop-effects-target-object-name <name>] [--ole-drop-effects-target-unique-id <id>]\n";
     std::cout << "OLE drop text-insertion object: --ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]\n";
     std::cout << "Hide-selection object: --hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]\n";
+    std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2126,6 +2127,30 @@ int main(int argc, char** argv) {
         if (!ole_drop_text_insertion_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << ole_drop_text_insertion_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.button_count_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> button_count_objects;
+        button_count_objects.reserve(parse_result.request.button_count_objects.size());
+        for (const auto& button_count_object : parse_result.request.button_count_objects) {
+            button_count_objects.push_back({
+                .record_index = button_count_object.record_index,
+                .object_name = button_count_object.object_name,
+                .unique_id = button_count_object.unique_id
+            });
+        }
+
+        const auto button_count_result = copperfin::vfp::set_visual_object_button_count({
+            .path = parse_result.request.path,
+            .objects = button_count_objects,
+            .button_count = parse_result.request.button_count
+        });
+
+        if (!button_count_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << button_count_result.error << "\n";
             return 4;
         }
     }

@@ -543,6 +543,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--button-count-object") {
+            result.request.button_count_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1174,6 +1179,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.ole_drop_text_insertion = ole_drop_text_insertion;
             result.request.ole_drop_text_insertion_available = true;
+            continue;
+        }
+
+        if (argument == "--button-count") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --button-count."};
+            }
+            int button_count = 0;
+            if (!parse_int_value(args[++index], button_count)) {
+                return {.ok = false, .error = "The --button-count value must be an integer."};
+            }
+            if (button_count < 0) {
+                return {.ok = false, .error = "The --button-count value must be non-negative."};
+            }
+            result.request.button_count = button_count;
+            result.request.button_count_available = true;
             continue;
         }
 
@@ -2259,6 +2280,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --ole-drop-text-insertion-target-unique-id."};
             }
             result.request.ole_drop_text_insertion_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--button-count-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --button-count-target-object-name."};
+            }
+            result.request.button_count_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--button-count-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --button-count-target-unique-id."};
+            }
+            result.request.button_count_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -3948,6 +3993,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.ole_drop_text_insertion_objects.empty())) {
         return {.ok = false, .error = "OLE drop text-insertion arguments can only be used with --ole-drop-text-insertion-object."};
     }
+    if (result.request.button_count_object && !result.request.button_count_available) {
+        return {.ok = false, .error = "An object button-count assignment requires --button-count."};
+    }
+    if (result.request.button_count_object && result.request.button_count_objects.empty()) {
+        return {.ok = false, .error = "An object button-count assignment requires at least one target selector."};
+    }
+    if (!result.request.button_count_object &&
+        (result.request.button_count_available ||
+         !result.request.button_count_objects.empty())) {
+        return {.ok = false, .error = "Button-count arguments can only be used with --button-count-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4673,6 +4729,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.dynamic_fore_color_object ? 1 : 0) +
         (result.request.closable_object ? 1 : 0) +
         (result.request.control_box_object ? 1 : 0) +
+        (result.request.button_count_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
