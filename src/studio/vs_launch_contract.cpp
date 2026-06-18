@@ -518,6 +518,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--ole-drag-mode-object") {
+            result.request.ole_drag_mode_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1085,6 +1090,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.drag_mode = drag_mode;
             result.request.drag_mode_available = true;
+            continue;
+        }
+
+        if (argument == "--ole-drag-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --ole-drag-mode."};
+            }
+            int ole_drag_mode = 0;
+            if (!parse_int_value(args[++index], ole_drag_mode)) {
+                return {.ok = false, .error = "The --ole-drag-mode value must be an integer."};
+            }
+            if (ole_drag_mode < 0) {
+                return {.ok = false, .error = "The --ole-drag-mode value must be non-negative."};
+            }
+            result.request.ole_drag_mode = ole_drag_mode;
+            result.request.ole_drag_mode_available = true;
             continue;
         }
 
@@ -2061,6 +2082,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --drag-mode-target-unique-id."};
             }
             result.request.drag_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--ole-drag-mode-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --ole-drag-mode-target-object-name."};
+            }
+            result.request.ole_drag_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--ole-drag-mode-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --ole-drag-mode-target-unique-id."};
+            }
+            result.request.ole_drag_mode_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -3682,6 +3727,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.drag_mode_objects.empty())) {
         return {.ok = false, .error = "Drag-mode arguments can only be used with --drag-mode-object."};
     }
+    if (result.request.ole_drag_mode_object && !result.request.ole_drag_mode_available) {
+        return {.ok = false, .error = "An object OLE drag-mode assignment requires --ole-drag-mode."};
+    }
+    if (result.request.ole_drag_mode_object && result.request.ole_drag_mode_objects.empty()) {
+        return {.ok = false, .error = "An object OLE drag-mode assignment requires at least one target selector."};
+    }
+    if (!result.request.ole_drag_mode_object &&
+        (result.request.ole_drag_mode_available ||
+         !result.request.ole_drag_mode_objects.empty())) {
+        return {.ok = false, .error = "OLE drag-mode arguments can only be used with --ole-drag-mode-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4360,6 +4416,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.mouse_icon_object ? 1 : 0) +
         (result.request.drag_icon_object ? 1 : 0) +
         (result.request.drag_mode_object ? 1 : 0) +
+        (result.request.ole_drag_mode_object ? 1 : 0) +
         (result.request.tooltip_text_object ? 1 : 0) +
         (result.request.status_bar_text_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +
