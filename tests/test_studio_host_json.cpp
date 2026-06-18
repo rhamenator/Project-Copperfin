@@ -4346,6 +4346,143 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
     }
 }
 
+void test_studio_host_json_exposes_builder_invocation_admission(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_builder_invocation_admission_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission", "grid-builder",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(admitted_process.exit_code == 0,
+        "#1216: builder invocation-admission JSON should accept context-valid builders");
+    expect_contains(admitted_process.stdout_text, "\"builderInvocationAdmission\": {",
+        "#1216: builder invocation-admission JSON should expose a result object");
+    expect_contains(admitted_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1216: builder invocation-admission JSON should expose builder ids");
+    expect_contains(admitted_process.stdout_text, "\"kind\": \"builder\"",
+        "#1216: builder invocation-admission JSON should expose builder kind metadata");
+    expect_contains(admitted_process.stdout_text, "\"context\": \"control\"",
+        "#1216: builder invocation-admission JSON should expose resolved builder contexts");
+    expect_contains(admitted_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1216: builder invocation-admission JSON should expose stable command tokens");
+    expect_contains(admitted_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1216: builder invocation-admission JSON should expose entry points");
+    expect_contains(admitted_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1216: builder invocation-admission JSON should preserve asset paths");
+    expect_contains(admitted_process.stdout_text, "\"recordIndex\": 4",
+        "#1216: builder invocation-admission JSON should preserve record indexes");
+    expect_contains(admitted_process.stdout_text, "\"objectName\": \"grdOrders\"",
+        "#1216: builder invocation-admission JSON should preserve object names");
+    expect_contains(admitted_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
+        "#1216: builder invocation-admission JSON should preserve unique ids");
+    expect_contains(admitted_process.stdout_text, "\"uiLaunchAdmitted\": true",
+        "#1216: builder invocation-admission JSON should expose UI-admission state");
+    expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
+        "#1216: admitted builder invocation JSON should report non-dry-run admission");
+    expect_contains(admitted_process.stdout_text, "\"mutatesAsset\": false",
+        "#1216: builder invocation-admission JSON should remain non-mutating");
+
+    const auto selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission", "label-wizard",
+            "--selection-context", "label_expression",
+            "--path", "labels/mailing.lbx",
+            "--json"
+        },
+        temp_root);
+    expect(selection_process.exit_code == 0,
+        "#1216: builder invocation-admission JSON should accept selection-context builders");
+    expect_contains(selection_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#1216: selection-context invocation-admission JSON should expose Studio selection contexts");
+    expect_contains(selection_process.stdout_text, "\"builderId\": \"label-wizard\"",
+        "#1216: selection-context invocation-admission JSON should expose wizard ids");
+    expect_contains(selection_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1216: selection-context invocation-admission JSON should preserve wizard kind metadata");
+    expect_contains(selection_process.stdout_text, "\"uiLaunchAdmitted\": false",
+        "#1216: omitted UI admission should default to false");
+    expect_contains(selection_process.stdout_text, "\"dryRun\": true",
+        "#1216: omitted UI admission should keep invocation plans as dry runs");
+
+    const auto wrong_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission", "form-builder",
+            "--selection-context", "container_object",
+            "--json"
+        },
+        temp_root);
+    expect(wrong_context_process.exit_code == 4,
+        "#1216: builder invocation-admission JSON should reject wrong-context builders");
+    expect_contains(wrong_context_process.stdout_text, "\"builderInvocationAdmission\": null",
+        "#1216: wrong-context invocation-admission JSON should not expose a result object");
+    expect_contains(wrong_context_process.stdout_text,
+        "The requested builder is not available for the selected Studio context.",
+        "#1216: wrong-context invocation-admission JSON should report launch validation errors");
+
+    const auto invalid_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_bool_process.exit_code == 2,
+        "#1216: builder invocation-admission JSON should reject invalid UI-admission booleans");
+    expect_contains(invalid_bool_process.stdout_text, "The --admit-ui-launch value must be true or false.",
+        "#1216: invalid UI-admission JSON should report parser errors");
+
+    const auto ambiguous_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission", "grid-builder",
+            "--builder-context", "control",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_context_process.exit_code == 2,
+        "#1216: builder invocation-admission JSON should reject simultaneous builder and selection contexts");
+    expect_contains(ambiguous_context_process.stdout_text,
+        "Builder invocation-admission requests cannot provide both --builder-context and --selection-context.",
+        "#1216: ambiguous invocation-admission JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission", "grid-builder",
+            "--builder-context", "control",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1216: builder invocation-admission JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1216: invalid invocation-admission record JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_editor_action_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -28703,6 +28840,7 @@ int main(int argc, char** argv) {
 
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
+    test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
