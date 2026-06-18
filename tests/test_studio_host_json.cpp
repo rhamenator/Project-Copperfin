@@ -4796,6 +4796,170 @@ void test_studio_host_json_exposes_editor_action_invocation_admission(const std:
     }
 }
 
+void test_studio_host_json_exposes_editor_action_dispatch(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_editor_action_dispatch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto method_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "cmdSave",
+            "--unique-id", "button-guid",
+            "--symbol", "cmdSave.Click",
+            "--line", "42",
+            "--column", "7",
+            "--admit-editor-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(method_process.exit_code == 0,
+        "#1226: editor action dispatch JSON should accept admitted method editor actions");
+    expect_contains(method_process.stdout_text, "\"editorActionDispatch\": {",
+        "#1226: editor action dispatch JSON should expose a dispatch object");
+    expect_contains(method_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
+        "#1226: editor action dispatch JSON should expose action ids");
+    expect_contains(method_process.stdout_text, "\"kind\": \"source_editor\"",
+        "#1226: editor action dispatch JSON should expose action kind metadata");
+    expect_contains(method_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1226: editor action dispatch JSON should expose selected Studio contexts");
+    expect_contains(method_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
+        "#1226: editor action dispatch JSON should expose command tokens");
+    expect_contains(method_process.stdout_text, "\"targetSurface\": \"method-editor\"",
+        "#1226: editor action dispatch JSON should expose target surfaces");
+    expect_contains(method_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1226: editor action dispatch JSON should carry asset paths");
+    expect_contains(method_process.stdout_text, "\"recordIndex\": 4",
+        "#1226: editor action dispatch JSON should carry record indexes");
+    expect_contains(method_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1226: editor action dispatch JSON should carry object-name selectors");
+    expect_contains(method_process.stdout_text, "\"uniqueId\": \"button-guid\"",
+        "#1226: editor action dispatch JSON should carry unique-id selectors");
+    expect_contains(method_process.stdout_text, "\"symbol\": \"cmdSave.Click\"",
+        "#1226: editor action dispatch JSON should carry launch symbols");
+    expect_contains(method_process.stdout_text, "\"line\": 42",
+        "#1226: editor action dispatch JSON should carry line metadata");
+    expect_contains(method_process.stdout_text, "\"column\": 7",
+        "#1226: editor action dispatch JSON should carry column metadata");
+    expect_contains(method_process.stdout_text, "\"dispatchArguments\": [",
+        "#1226: editor action dispatch JSON should expose dispatch arguments");
+    expect_contains(method_process.stdout_text, "\"--command-token\"",
+        "#1226: editor action dispatch JSON should expose command-token arguments");
+    expect_contains(method_process.stdout_text, "\"studio.method_editor.open\"",
+        "#1226: editor action dispatch JSON should expose command-token values");
+    expect_contains(method_process.stdout_text, "\"--action-id\"",
+        "#1226: editor action dispatch JSON should expose action-id arguments");
+    expect_contains(method_process.stdout_text, "\"edit-visual-method\"",
+        "#1226: editor action dispatch JSON should expose action-id values");
+    expect_contains(method_process.stdout_text, "\"--selection-context\"",
+        "#1226: editor action dispatch JSON should expose selection-context arguments");
+    expect_contains(method_process.stdout_text, "\"visual_object\"",
+        "#1226: editor action dispatch JSON should expose selection-context values");
+    expect_contains(method_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1226: editor action dispatch JSON should expose admitted dispatch state");
+    expect_contains(method_process.stdout_text, "\"dryRun\": false",
+        "#1226: editor action dispatch JSON should not be dry-run when admitted");
+    expect_contains(method_process.stdout_text, "\"executed\": false",
+        "#1226: editor action dispatch JSON should not execute editor processes");
+    expect_contains(method_process.stdout_text, "\"mutatesAsset\": false",
+        "#1226: editor action dispatch JSON should remain non-mutating");
+
+    const auto expression_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch", "edit-report-expression",
+            "--selection-context", "report_expression",
+            "--path", "reports/orders.frx",
+            "--record", "2",
+            "--symbol", "Expr1.Expression",
+            "--admit-editor-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(expression_process.exit_code == 0,
+        "#1226: editor action dispatch JSON should accept admitted report expression actions");
+    expect_contains(expression_process.stdout_text, "\"kind\": \"expression_editor\"",
+        "#1226: expression editor dispatch JSON should expose expression-editor metadata");
+    expect_contains(expression_process.stdout_text, "\"targetSurface\": \"expression-editor\"",
+        "#1226: expression editor dispatch JSON should expose expression editor target surfaces");
+    expect_contains(expression_process.stdout_text, "\"--selection-context\"",
+        "#1226: expression editor dispatch JSON should expose selection-context arguments");
+    expect_contains(expression_process.stdout_text, "\"report_expression\"",
+        "#1226: expression editor dispatch JSON should expose selection-context values");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch", "show-property-grid",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 4,
+        "#1226: editor action dispatch JSON should reject unadmitted dry-run dispatch requests");
+    expect_contains(dry_run_process.stdout_text, "\"editorActionDispatch\": null",
+        "#1226: dry-run editor action dispatch JSON should expose null plans");
+    expect_contains(dry_run_process.stdout_text,
+        "An editor action dispatch request requires an admitted non-dry-run invocation.",
+        "#1226: dry-run editor action dispatch JSON should report admission errors");
+
+    const auto wrong_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch", "edit-report-expression",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(wrong_context_process.exit_code == 4,
+        "#1226: editor action dispatch JSON should reject wrong-context actions");
+    expect_contains(wrong_context_process.stdout_text, "\"editorActionDispatch\": null",
+        "#1226: wrong-context editor action dispatch JSON should expose null plans");
+    expect_contains(wrong_context_process.stdout_text,
+        "The requested editor action is not available for the selected Studio context.",
+        "#1226: wrong-context editor action dispatch JSON should report validation errors");
+
+    const auto invalid_boolean_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_boolean_process.exit_code == 2,
+        "#1226: editor action dispatch JSON should reject invalid admission booleans");
+    expect_contains(invalid_boolean_process.stdout_text,
+        "The --admit-editor-invocation value must be true or false.",
+        "#1226: invalid editor action dispatch boolean JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch", "edit-visual-method",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1226: editor action dispatch JSON should reject missing selection contexts");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1226: missing-context editor action dispatch JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_palette_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -29372,6 +29536,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_editor_action_invocation_admission(argv[1]);
+    test_studio_host_json_exposes_editor_action_dispatch(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
