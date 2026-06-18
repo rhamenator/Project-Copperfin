@@ -1217,6 +1217,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--dynamic-alignment-object") {
+            result.request.dynamic_alignment_object = true;
+            continue;
+        }
+
         if (argument == "--font-name-object") {
             result.request.font_name_object = true;
             continue;
@@ -3105,6 +3110,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.dynamic_line_height = args[++index];
             result.request.dynamic_line_height_available = true;
+            continue;
+        }
+
+        if (argument == "--dynamic-alignment") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --dynamic-alignment."};
+            }
+            result.request.dynamic_alignment = args[++index];
+            result.request.dynamic_alignment_available = true;
             continue;
         }
 
@@ -6429,6 +6443,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--dynamic-alignment-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --dynamic-alignment-target-object-name."};
+            }
+            result.request.dynamic_alignment_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--dynamic-alignment-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --dynamic-alignment-target-unique-id."};
+            }
+            result.request.dynamic_alignment_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--font-name-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --font-name-target-object-name."};
@@ -8625,6 +8663,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.dynamic_line_height_objects.empty())) {
         return {.ok = false, .error = "Dynamic-line-height arguments can only be used with --dynamic-line-height-object."};
     }
+    if (result.request.dynamic_alignment_object && !result.request.dynamic_alignment_available) {
+        return {.ok = false, .error = "An object dynamic-alignment assignment requires --dynamic-alignment."};
+    }
+    if (result.request.dynamic_alignment_object && result.request.dynamic_alignment_objects.empty()) {
+        return {.ok = false, .error = "An object dynamic-alignment assignment requires at least one target selector."};
+    }
+    if (!result.request.dynamic_alignment_object &&
+        (result.request.dynamic_alignment_available ||
+         !result.request.dynamic_alignment_objects.empty())) {
+        return {.ok = false, .error = "Dynamic-alignment arguments can only be used with --dynamic-alignment-object."};
+    }
     if (result.request.font_name_object && !result.request.font_name_available) {
         return {.ok = false, .error = "An object font-name assignment requires --font-name."};
     }
@@ -9114,6 +9163,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.picture_selection_display_object ? 1 : 0) +
         (result.request.dynamic_input_mask_object ? 1 : 0) +
         (result.request.dynamic_line_height_object ? 1 : 0) +
+        (result.request.dynamic_alignment_object ? 1 : 0) +
         (result.request.font_name_object ? 1 : 0) +
         (result.request.font_size_object ? 1 : 0) +
         (result.request.font_bold_object ? 1 : 0) +

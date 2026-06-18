@@ -75,6 +75,7 @@ void print_usage() {
     std::cout << "Picture-selection-display object: --picture-selection-display-object --picture-selection-display <n> [--picture-selection-display-target-object-name <name>] [--picture-selection-display-target-unique-id <id>]\n";
     std::cout << "Dynamic-input-mask object: --dynamic-input-mask-object --dynamic-input-mask <expr> [--dynamic-input-mask-target-object-name <name>] [--dynamic-input-mask-target-unique-id <id>]\n";
     std::cout << "Dynamic-line-height object: --dynamic-line-height-object --dynamic-line-height <expr> [--dynamic-line-height-target-object-name <name>] [--dynamic-line-height-target-unique-id <id>]\n";
+    std::cout << "Dynamic-alignment object: --dynamic-alignment-object --dynamic-alignment <expr> [--dynamic-alignment-target-object-name <name>] [--dynamic-alignment-target-unique-id <id>]\n";
     std::cout << "Font-name object: --font-name-object --font-name <value> [--font-name-target-object-name <name>] [--font-name-target-unique-id <id>]\n";
     std::cout << "Font-size object: --font-size-object --font-size <n> [--font-size-target-object-name <name>] [--font-size-target-unique-id <id>]\n";
     std::cout << "Font-bold object: --font-bold-object --font-bold <true|false> [--font-bold-target-object-name <name>] [--font-bold-target-unique-id <id>]\n";
@@ -4554,6 +4555,30 @@ int main(int argc, char** argv) {
         if (!dynamic_line_height_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << dynamic_line_height_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.dynamic_alignment_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> dynamic_alignment_objects;
+        dynamic_alignment_objects.reserve(parse_result.request.dynamic_alignment_objects.size());
+        for (const auto& dynamic_alignment_object : parse_result.request.dynamic_alignment_objects) {
+            dynamic_alignment_objects.push_back({
+                .record_index = dynamic_alignment_object.record_index,
+                .object_name = dynamic_alignment_object.object_name,
+                .unique_id = dynamic_alignment_object.unique_id
+            });
+        }
+
+        const auto dynamic_alignment_result = copperfin::vfp::set_visual_object_dynamic_alignment({
+            .path = parse_result.request.path,
+            .objects = dynamic_alignment_objects,
+            .dynamic_alignment = parse_result.request.dynamic_alignment
+        });
+
+        if (!dynamic_alignment_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << dynamic_alignment_result.error << "\n";
             return 4;
         }
     }

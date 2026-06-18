@@ -519,6 +519,10 @@ void test_parse_launch_arguments() {
         "#1177: launch contract should keep dynamic-line-height-object off by default");
     expect(!result.request.dynamic_line_height_available,
         "#1177: launch contract should keep dynamic line height unavailable by default");
+    expect(!result.request.dynamic_alignment_object,
+        "#1186: launch contract should keep dynamic-alignment-object off by default");
+    expect(!result.request.dynamic_alignment_available,
+        "#1186: launch contract should keep dynamic alignment unavailable by default");
     expect(!result.request.font_name_object,
         "#1178: launch contract should keep font-name-object off by default");
     expect(!result.request.font_name_available,
@@ -12019,6 +12023,84 @@ void test_parse_launch_arguments_rejects_dynamic_line_height_object_ambiguity() 
         "#1177: launch contract should reject stray dynamic-line-height arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_alignment_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-alignment-object",
+        "--dynamic-alignment", "IIF(.T., 2, 0)",
+        "--dynamic-alignment-target-object-name", "txtNotes",
+        "--dynamic-alignment-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1186: launch contract should parse dynamic-alignment-object requests");
+    expect(result.request.dynamic_alignment_object,
+        "#1186: launch contract should detect --dynamic-alignment-object");
+    expect(result.request.dynamic_alignment_available &&
+            result.request.dynamic_alignment == "IIF(.T., 2, 0)",
+        "#1186: dynamic-alignment-object requests should carry raw expression text");
+    expect(result.request.dynamic_alignment_objects.size() == 2U,
+        "#1186: dynamic-alignment-object requests should collect dynamic-alignment target selectors");
+    if (result.request.dynamic_alignment_objects.size() == 2U) {
+        expect(result.request.dynamic_alignment_objects[0].object_name == "txtNotes" &&
+                result.request.dynamic_alignment_objects[0].unique_id.empty(),
+            "#1186: dynamic-alignment-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_alignment_objects[1].object_name.empty() &&
+                result.request.dynamic_alignment_objects[1].unique_id == "two-guid",
+            "#1186: dynamic-alignment-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_alignment_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-alignment-object",
+        "--dynamic-alignment-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1186: launch contract should reject dynamic-alignment-object requests without dynamic alignment");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-alignment-object",
+        "--dynamic-alignment", "IIF(.T., 2, 0)"
+    });
+    expect(!missing_targets_result.ok,
+        "#1186: launch contract should reject dynamic-alignment-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_alignment_object_ambiguity() {
+    const auto dynamic_alignment_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-alignment-object",
+        "--allow-output-object",
+        "--dynamic-alignment", "IIF(.T., 2, 0)",
+        "--dynamic-alignment-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_alignment_allow_output_result.ok,
+        "#1186: launch contract should reject simultaneous dynamic-alignment-object and allow-output-object requests");
+
+    const auto dynamic_alignment_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-alignment-object",
+        "--clear-property",
+        "--property-name", "DynamicAlignment",
+        "--dynamic-alignment", "IIF(.T., 2, 0)",
+        "--dynamic-alignment-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_alignment_property_result.ok,
+        "#1186: launch contract should reject dynamic-alignment-object combined with property commands");
+
+    const auto stray_dynamic_alignment_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-alignment", "IIF(.T., 2, 0)"
+    });
+    expect(!stray_dynamic_alignment_result.ok,
+        "#1186: launch contract should reject stray dynamic-alignment arguments");
+}
+
 void test_parse_launch_arguments_for_font_name_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16402,6 +16484,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_line_height_object();
     test_parse_launch_arguments_rejects_dynamic_line_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_line_height_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_alignment_object();
+    test_parse_launch_arguments_rejects_dynamic_alignment_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_alignment_object_ambiguity();
     test_parse_launch_arguments_for_font_name_object();
     test_parse_launch_arguments_rejects_font_name_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_name_object_ambiguity();
