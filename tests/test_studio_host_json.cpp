@@ -2590,6 +2590,24 @@ void write_synthetic_form_table_for_object_dynamic_font_name(const std::filesyst
     expect(create_result.ok, "#1188: synthetic SCX table for object dynamic font name should be created");
 }
 
+void write_synthetic_form_table_for_object_dynamic_font_size(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "DYNAMICFONTSIZE", .type = 'C', .length = 96U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"txtName", "txtName", "one-guid", "10"},
+        {"txtMemo", "txtMemo", "two-guid", "9"},
+        {"cntDetails", "cntDetails", "three-guid", "11"},
+        {"txtOther", "txtOther", "other-guid", "12"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1189: synthetic SCX table for object dynamic font size should be created");
+}
+
 void write_synthetic_form_table_for_object_font_name(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -21464,6 +21482,130 @@ void test_studio_host_json_assigns_dynamic_font_name_by_stable_selectors(const s
     }
 }
 
+void test_studio_host_json_assigns_dynamic_font_size_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_dynamic_font_size_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::string expression = "IIF(.T., 14, 10)";
+    const fs::path dynamic_font_size_path = temp_root / "dynamic_font_size.scx";
+    write_synthetic_form_table_for_object_dynamic_font_size(dynamic_font_size_path);
+    const auto dynamic_font_size_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", dynamic_font_size_path.string(),
+            "--dynamic-font-size-object",
+            "--dynamic-font-size", expression,
+            "--dynamic-font-size-target-object-name", "txtName",
+            "--dynamic-font-size-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(dynamic_font_size_process.exit_code == 0,
+        "#1189: host object dynamic-font-size assignment should exit successfully");
+    expect(visual_object_property(dynamic_font_size_path, "one-guid", "DYNAMICFONTSIZE") == expression &&
+            visual_object_property(dynamic_font_size_path, "two-guid", "DYNAMICFONTSIZE") == expression &&
+            visual_object_property(dynamic_font_size_path, "three-guid", "DYNAMICFONTSIZE") == "11" &&
+            visual_object_property(dynamic_font_size_path, "other-guid", "DYNAMICFONTSIZE") == "12",
+        "#1189: host object dynamic-font-size assignment should assign raw expression text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_dynamic_font_size(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--dynamic-font-size-object",
+            "--dynamic-font-size", expression,
+            "--dynamic-font-size-target-unique-id", "one-guid",
+            "--dynamic-font-size-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1189: missing-target host object dynamic-font-size assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "DYNAMICFONTSIZE") == "10" &&
+            visual_object_property(missing_target_path, "two-guid", "DYNAMICFONTSIZE") == "9",
+        "#1189: missing-target host object dynamic-font-size assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_dynamic_font_size(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--dynamic-font-size-object",
+            "--dynamic-font-size", expression,
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1189: dynamic-font-size-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "DYNAMICFONTSIZE") == "10",
+        "#1189: dynamic-font-size-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_dynamic_font_size(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--dynamic-font-size-object",
+            "--dynamic-font-size-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1189: dynamic-font-size-object without dynamic-font-size value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "DYNAMICFONTSIZE") == "10",
+        "#1189: dynamic-font-size-object without dynamic-font-size value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_dynamic_font_size(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--dynamic-font-size-object",
+            "--dynamic-font-size", expression,
+            "--dynamic-font-size-target-unique-id", "one-guid",
+            "--dynamic-font-size-target-object-name", "txtName",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1189: duplicate-target host object dynamic-font-size assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "DYNAMICFONTSIZE") == "10",
+        "#1189: duplicate-target host object dynamic-font-size assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_dynamic_font_size(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--dynamic-font-size-object",
+            "--allow-output-object",
+            "--dynamic-font-size", expression,
+            "--dynamic-font-size-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1189: dynamic-font-size-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "DYNAMICFONTSIZE") == "10",
+        "#1189: dynamic-font-size-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_font_name_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -25957,6 +26099,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_dynamic_alignment_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_current_control_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_dynamic_font_name_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_dynamic_font_size_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_font_name_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_font_size_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_font_bold_by_stable_selectors(argv[1]);

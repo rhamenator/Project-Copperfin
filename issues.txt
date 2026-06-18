@@ -1,3 +1,4 @@
+1189	OPEN	E2/#23 slice: Expose host dynamic-font-size-object command		2026-06-18T14:13:42Z
 1188	OPEN	E2/#23 slice: Expose host dynamic-font-name-object command		2026-06-18T14:00:15Z
 1187	OPEN	E2/#23 slice: Expose host dynamic-current-control-object command		2026-06-18T13:46:05Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
