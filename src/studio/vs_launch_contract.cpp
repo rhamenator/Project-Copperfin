@@ -1126,6 +1126,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--mdi-form-object") {
+            result.request.mdi_form_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2710,6 +2715,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.half_height_caption = *half_height_caption;
             result.request.half_height_caption_available = true;
+            continue;
+        }
+
+        if (argument == "--mdi-form") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mdi-form."};
+            }
+            const auto mdi_form = parse_bool_value(args[++index]);
+            if (!mdi_form.has_value()) {
+                return {.ok = false, .error = "The --mdi-form value must be true or false."};
+            }
+            result.request.mdi_form = *mdi_form;
+            result.request.mdi_form_available = true;
             continue;
         }
 
@@ -5499,6 +5517,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--mdi-form-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mdi-form-target-object-name."};
+            }
+            result.request.mdi_form_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--mdi-form-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --mdi-form-target-unique-id."};
+            }
+            result.request.mdi_form_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7305,6 +7347,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.half_height_caption_objects.empty())) {
         return {.ok = false, .error = "Half-height-caption arguments can only be used with --half-height-caption-object."};
     }
+    if (result.request.mdi_form_object && !result.request.mdi_form_available) {
+        return {.ok = false, .error = "An object MDI-form assignment requires --mdi-form."};
+    }
+    if (result.request.mdi_form_object && result.request.mdi_form_objects.empty()) {
+        return {.ok = false, .error = "An object MDI-form assignment requires at least one target selector."};
+    }
+    if (!result.request.mdi_form_object &&
+        (result.request.mdi_form_available ||
+         !result.request.mdi_form_objects.empty())) {
+        return {.ok = false, .error = "MDI-form arguments can only be used with --mdi-form-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -7688,6 +7741,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.max_height_object ? 1 : 0) +
         (result.request.movable_object ? 1 : 0) +
         (result.request.half_height_caption_object ? 1 : 0) +
+        (result.request.mdi_form_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

@@ -451,6 +451,10 @@ void test_parse_launch_arguments() {
         "#1159: launch contract should keep half-height-caption-object off by default");
     expect(!result.request.half_height_caption_available,
         "#1159: launch contract should keep half-height-caption unavailable by default");
+    expect(!result.request.mdi_form_object,
+        "#1160: launch contract should keep mdi-form-object off by default");
+    expect(!result.request.mdi_form_available,
+        "#1160: launch contract should keep MDI form unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -10271,6 +10275,92 @@ void test_parse_launch_arguments_rejects_half_height_caption_object_ambiguity() 
         "#1159: launch contract should reject stray half-height-caption arguments");
 }
 
+void test_parse_launch_arguments_for_mdi_form_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--mdi-form-object",
+        "--mdi-form", "false",
+        "--mdi-form-target-object-name", "frmCustomer",
+        "--mdi-form-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1160: launch contract should parse mdi-form-object requests");
+    expect(result.request.mdi_form_object,
+        "#1160: launch contract should detect --mdi-form-object");
+    expect(result.request.mdi_form_available && !result.request.mdi_form,
+        "#1160: mdi-form-object requests should carry MDI-form state");
+    expect(result.request.mdi_form_objects.size() == 2U,
+        "#1160: mdi-form-object requests should collect MDI-form target selectors");
+    if (result.request.mdi_form_objects.size() == 2U) {
+        expect(result.request.mdi_form_objects[0].object_name == "frmCustomer" &&
+                result.request.mdi_form_objects[0].unique_id.empty(),
+            "#1160: mdi-form-object requests should parse target object-name selectors");
+        expect(result.request.mdi_form_objects[1].object_name.empty() &&
+                result.request.mdi_form_objects[1].unique_id == "two-guid",
+            "#1160: mdi-form-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_mdi_form_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mdi-form-object",
+        "--mdi-form-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1160: launch contract should reject mdi-form-object requests without MDI-form state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mdi-form-object",
+        "--mdi-form", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1160: launch contract should reject mdi-form-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mdi-form-object",
+        "--mdi-form", "sometimes",
+        "--mdi-form-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1160: launch contract should reject invalid MDI-form boolean values");
+}
+
+void test_parse_launch_arguments_rejects_mdi_form_object_ambiguity() {
+    const auto mdi_form_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mdi-form-object",
+        "--allow-output-object",
+        "--mdi-form", "false",
+        "--mdi-form-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!mdi_form_allow_output_result.ok,
+        "#1160: launch contract should reject simultaneous mdi-form-object and allow-output-object requests");
+
+    const auto mdi_form_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mdi-form-object",
+        "--clear-property",
+        "--property-name", "MDIForm",
+        "--mdi-form", "false",
+        "--mdi-form-target-unique-id", "one-guid"
+    });
+    expect(!mdi_form_property_result.ok,
+        "#1160: launch contract should reject mdi-form-object combined with property commands");
+
+    const auto stray_mdi_form_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mdi-form", "false"
+    });
+    expect(!stray_mdi_form_result.ok,
+        "#1160: launch contract should reject stray MDI-form arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13912,6 +14002,9 @@ int main() {
     test_parse_launch_arguments_for_half_height_caption_object();
     test_parse_launch_arguments_rejects_half_height_caption_object_invalid_inputs();
     test_parse_launch_arguments_rejects_half_height_caption_object_ambiguity();
+    test_parse_launch_arguments_for_mdi_form_object();
+    test_parse_launch_arguments_rejects_mdi_form_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_mdi_form_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

@@ -2212,6 +2212,24 @@ void write_synthetic_form_table_for_object_half_height_caption(const std::filesy
     expect(create_result.ok, "#1159: synthetic SCX table for object half-height-caption should be created");
 }
 
+void write_synthetic_form_table_for_object_mdi_form(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "MDIFORM", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1160: synthetic SCX table for object MDI form should be created");
+}
+
 void write_synthetic_form_table_for_object_max_width(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -18116,6 +18134,129 @@ void test_studio_host_json_assigns_half_height_caption_by_stable_selectors(const
     }
 }
 
+void test_studio_host_json_assigns_mdi_form_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_mdi_form_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path mdi_form_path = temp_root / "mdi_form.scx";
+    write_synthetic_form_table_for_object_mdi_form(mdi_form_path);
+    const auto mdi_form_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", mdi_form_path.string(),
+            "--mdi-form-object",
+            "--mdi-form", "false",
+            "--mdi-form-target-object-name", "frmCustomer",
+            "--mdi-form-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(mdi_form_process.exit_code == 0,
+        "#1160: host object MDI-form assignment should exit successfully");
+    expect(visual_object_property(mdi_form_path, "one-guid", "MDIFORM") == "false" &&
+            visual_object_property(mdi_form_path, "two-guid", "MDIFORM") == "false" &&
+            visual_object_property(mdi_form_path, "three-guid", "MDIFORM") == "false" &&
+            visual_object_property(mdi_form_path, "other-guid", "MDIFORM") == "true",
+        "#1160: host object MDI-form assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_mdi_form(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--mdi-form-object",
+            "--mdi-form", "false",
+            "--mdi-form-target-unique-id", "one-guid",
+            "--mdi-form-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1160: missing-target host object MDI-form assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "MDIFORM") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "MDIFORM") == "true",
+        "#1160: missing-target host object MDI-form assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_mdi_form(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--mdi-form-object",
+            "--mdi-form", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1160: mdi-form-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "MDIFORM") == "true",
+        "#1160: mdi-form-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_mdi_form(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--mdi-form-object",
+            "--mdi-form-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1160: mdi-form-object without MDI-form value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "MDIFORM") == "true",
+        "#1160: mdi-form-object without MDI-form value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_mdi_form(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--mdi-form-object",
+            "--mdi-form", "false",
+            "--mdi-form-target-unique-id", "one-guid",
+            "--mdi-form-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1160: duplicate-target host object MDI-form assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "MDIFORM") == "true",
+        "#1160: duplicate-target host object MDI-form assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_mdi_form(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--mdi-form-object",
+            "--allow-output-object",
+            "--mdi-form", "false",
+            "--mdi-form-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1160: mdi-form-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "MDIFORM") == "true",
+        "#1160: mdi-form-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_max_width_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -21484,6 +21625,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_max_height_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_movable_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_half_height_caption_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_mdi_form_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_width_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_left_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_top_by_stable_selectors(argv[1]);
