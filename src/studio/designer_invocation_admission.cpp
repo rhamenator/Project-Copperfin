@@ -111,4 +111,56 @@ StudioDesignerInvocationAdmissionResult plan_studio_designer_invocation_admissio
     };
 }
 
+StudioDesignerInvocationAdmissionCatalogResult plan_studio_designer_invocation_admission_catalog(
+    const StudioDesignerInvocationAdmissionCatalogRequest& request) {
+    const auto launch_surface_catalog = plan_studio_designer_launch_surface_catalog({
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .symbol = request.symbol,
+        .line = request.line,
+        .column = request.column
+    });
+    if (!launch_surface_catalog.ok) {
+        return {
+            .ok = false,
+            .error = launch_surface_catalog.error,
+            .context_count = 0U,
+            .contexts = {}
+        };
+    }
+
+    std::vector<StudioDesignerInvocationAdmissionCatalogEntry> entries;
+    entries.reserve(launch_surface_catalog.contexts.size());
+    for (const auto& context : launch_surface_catalog.contexts) {
+        auto invocation_admission = plan_studio_designer_invocation_admission({
+            .launch_surface_plan = context.launch_surface_plan.plan,
+            .admit_editor_invocations = request.admit_editor_invocations,
+            .admit_builder_invocations = request.admit_builder_invocations,
+            .admit_toolbox_invocation = request.admit_toolbox_invocation
+        });
+        const auto& plan = invocation_admission.plan;
+        entries.push_back({
+            .selection_context = context.selection_context,
+            .editor_action_invocation_count = invocation_admission.ok ? plan.editor_action_invocation_count : 0U,
+            .builder_invocation_count = invocation_admission.ok ? plan.builder_invocation_count : 0U,
+            .toolbox_available = invocation_admission.ok && plan.toolbox_available,
+            .toolbox_item_count = invocation_admission.ok ? plan.toolbox_item_count : 0U,
+            .toolbox_error = invocation_admission.ok ? plan.toolbox_error : invocation_admission.error,
+            .dry_run = invocation_admission.ok ? plan.dry_run : true,
+            .mutates_asset = invocation_admission.ok ? plan.mutates_asset : false,
+            .invocation_admission = std::move(invocation_admission)
+        });
+    }
+
+    const auto context_count = entries.size();
+    return {
+        .ok = true,
+        .error = {},
+        .context_count = context_count,
+        .contexts = std::move(entries)
+    };
+}
+
 }  // namespace copperfin::studio

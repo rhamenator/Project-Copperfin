@@ -108,6 +108,17 @@ const copperfin::studio::StudioDesignerLaunchSurfaceCatalogEntry* find_catalog_e
     return nullptr;
 }
 
+const copperfin::studio::StudioDesignerInvocationAdmissionCatalogEntry* find_invocation_catalog_entry(
+    const std::vector<copperfin::studio::StudioDesignerInvocationAdmissionCatalogEntry>& entries,
+    copperfin::studio::StudioEditorSelectionContext context) {
+    for (const auto& entry : entries) {
+        if (entry.selection_context == context) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -560,6 +571,91 @@ int main() {
                empty_invocation_admission.error ==
                    "A designer invocation admission request requires at least one validated launch surface.",
            "#1221: aggregate designer invocation admission should reject empty launch-surface plans");
+
+    const auto invocation_catalog = copperfin::studio::plan_studio_designer_invocation_admission_catalog({
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .symbol = "Click",
+        .line = 12U,
+        .column = 4U,
+        .admit_editor_invocations = true,
+        .admit_builder_invocations = false,
+        .admit_toolbox_invocation = true
+    });
+    expect(invocation_catalog.ok && invocation_catalog.context_count == invocation_catalog.contexts.size(),
+           "#1223: designer invocation admission catalog should include every known Studio context");
+
+    const auto* visual_invocation_entry = find_invocation_catalog_entry(
+        invocation_catalog.contexts, StudioEditorSelectionContext::visual_object);
+    expect(visual_invocation_entry != nullptr &&
+               visual_invocation_entry->invocation_admission.ok &&
+               visual_invocation_entry->editor_action_invocation_count > 0U &&
+               visual_invocation_entry->builder_invocation_count > 0U &&
+               visual_invocation_entry->toolbox_available &&
+               visual_invocation_entry->toolbox_item_count > 0U &&
+               !visual_invocation_entry->dry_run &&
+               !visual_invocation_entry->mutates_asset &&
+               has_editor_invocation_admission(
+                   visual_invocation_entry->invocation_admission.plan.editor_action_invocations,
+                   "edit-visual-method",
+                   true) &&
+               has_builder_invocation_admission(
+                   visual_invocation_entry->invocation_admission.plan.builder_invocations,
+                   "form-builder",
+                   false) &&
+               visual_invocation_entry->invocation_admission.plan.toolbox_invocation.ok &&
+               visual_invocation_entry->invocation_admission.plan.toolbox_invocation.plan.palette_invocation_admitted,
+           "#1223: designer invocation admission catalog should summarize visual admissions and requested policies");
+
+    const auto* report_invocation_entry = find_invocation_catalog_entry(
+        invocation_catalog.contexts, StudioEditorSelectionContext::report_expression);
+    expect(report_invocation_entry != nullptr &&
+               report_invocation_entry->invocation_admission.ok &&
+               report_invocation_entry->toolbox_available &&
+               report_invocation_entry->invocation_admission.plan.toolbox_invocation.ok &&
+               report_invocation_entry->invocation_admission.plan.toolbox_invocation.plan.toolbox_context ==
+                   copperfin::studio::StudioToolboxContext::report &&
+               has_editor_invocation_admission(
+                   report_invocation_entry->invocation_admission.plan.editor_action_invocations,
+                   "edit-report-expression",
+                   true) &&
+               has_builder_invocation_admission(
+                   report_invocation_entry->invocation_admission.plan.builder_invocations,
+                   "report-builder",
+                   false),
+           "#1223: designer invocation admission catalog should preserve report editor, builder, and toolbox admissions");
+
+    const auto* menu_invocation_entry = find_invocation_catalog_entry(
+        invocation_catalog.contexts, StudioEditorSelectionContext::menu_item);
+    expect(menu_invocation_entry != nullptr &&
+               menu_invocation_entry->invocation_admission.ok &&
+               !menu_invocation_entry->toolbox_available &&
+               menu_invocation_entry->toolbox_item_count == 0U &&
+               menu_invocation_entry->toolbox_error ==
+                   "The selected Studio context does not expose a toolbox palette." &&
+               !menu_invocation_entry->invocation_admission.plan.toolbox_invocation.ok &&
+               has_editor_invocation_admission(
+                   menu_invocation_entry->invocation_admission.plan.editor_action_invocations,
+                   "show-property-grid",
+                   true) &&
+               has_builder_invocation_admission(
+                   menu_invocation_entry->invocation_admission.plan.builder_invocations,
+                   "menu-designer",
+                   false),
+           "#1223: designer invocation admission catalog should preserve unsupported-toolbox menu contexts");
+
+    const auto* data_invocation_entry = find_invocation_catalog_entry(
+        invocation_catalog.contexts, StudioEditorSelectionContext::data_environment);
+    expect(data_invocation_entry != nullptr &&
+               data_invocation_entry->invocation_admission.ok &&
+               !data_invocation_entry->toolbox_available &&
+               has_editor_invocation_admission(
+                   data_invocation_entry->invocation_admission.plan.editor_action_invocations,
+                   "edit-data-environment",
+                   true),
+           "#1223: designer invocation admission catalog should include data-environment editor admissions");
 
     const auto launch_surface_catalog = copperfin::studio::plan_studio_designer_launch_surface_catalog({
         .asset_path = "forms/customer.scx",
