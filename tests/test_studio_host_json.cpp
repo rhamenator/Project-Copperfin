@@ -7119,6 +7119,167 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
     }
 }
 
+void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_dispatch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Dispatch Catalog",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1254: toolbox-create-dispatch-catalog JSON command should exit successfully");
+    expect_contains(catalog_process.stdout_text, "\"toolboxCreateDispatchCatalog\": {",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose requested contexts");
+    expect_contains(catalog_process.stdout_text, "\"itemCount\": ",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose item counts");
+    expect_contains(catalog_process.stdout_text, "\"dispatchCount\": ",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose dispatch counts");
+    expect_contains(catalog_process.stdout_text, "\"errorCount\": 0",
+        "#1254: admitted toolbox-create-dispatch-catalog JSON should expose zero errors");
+    expect_contains(catalog_process.stdout_text, "\"dryRun\": false",
+        "#1254: admitted toolbox-create-dispatch-catalog JSON should expose non-dry-run dispatch state");
+    expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": true",
+        "#1254: admitted toolbox-create-dispatch-catalog JSON should expose mutation intent");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should include textbox entries");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should include command button entries");
+    expect_contains(catalog_process.stdout_text, "\"createPlanOk\": true",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose create plan state");
+    expect_contains(catalog_process.stdout_text, "\"dispatchOk\": true",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose dispatch state");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose generated textbox names");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"cmd1\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose generated command names");
+    expect_contains(catalog_process.stdout_text, "\"dispatchArguments\": [",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose dispatch arguments");
+    expect_contains(catalog_process.stdout_text, "\"--toolbox-create\", \"textbox\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should emit textbox dispatch arguments");
+    expect_contains(catalog_process.stdout_text, "\"--toolbox-create\", \"commandbutton\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should emit command dispatch arguments");
+    expect_contains(catalog_process.stdout_text, "\"--field-value\", \"CAPTION=Dispatch Catalog\"",
+        "#1254: toolbox-create-dispatch-catalog JSON should preserve shared field values");
+    expect_contains(catalog_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1254: toolbox-create-dispatch-catalog JSON should expose dispatch admission state");
+    expect(visual_object_count(form_path) == before_count,
+        "#1254: toolbox-create-dispatch-catalog host command should not mutate the visual asset");
+
+    const auto dry_run_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--parent-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_catalog_process.exit_code == 0,
+        "#1254: non-admitted toolbox-create-dispatch-catalog JSON should return a catalog");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchCount\": 0",
+        "#1254: non-admitted toolbox-create-dispatch-catalog JSON should expose zero dispatches");
+    expect_contains(dry_run_catalog_process.stdout_text,
+        "A toolbox create dispatch request requires an admitted non-dry-run create operation.",
+        "#1254: non-admitted toolbox-create-dispatch-catalog JSON should expose per-item errors");
+    expect_not_contains(dry_run_catalog_process.stdout_text, "\"--toolbox-create\"",
+        "#1254: non-admitted toolbox-create-dispatch-catalog JSON should not expose stale dispatch arguments");
+    expect(visual_object_count(form_path) == before_count,
+        "#1254: non-admitted toolbox-create-dispatch-catalog host command should not mutate the asset");
+
+    const auto report_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-catalog",
+            "--toolbox-context", "report",
+            "--parent-name", "DetailBand",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(report_catalog_process.exit_code == 0,
+        "#1254: report toolbox-create-dispatch-catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1254: report toolbox-create-dispatch-catalog JSON should expose report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#1254: report toolbox-create-dispatch-catalog JSON should include label dispatches");
+    expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
+        "#1254: report toolbox-create-dispatch-catalog JSON should preserve report dispatch context");
+    expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1254: report toolbox-create-dispatch-catalog JSON should exclude form-only textbox dispatches");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1254: toolbox-create-dispatch-catalog JSON should reject missing contexts");
+    expect_contains(missing_context_process.stdout_text, "No toolbox context was provided.",
+        "#1254: missing toolbox-create-dispatch-catalog context JSON should report parser errors");
+
+    const auto invalid_admission_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--admit-create-operation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_admission_process.exit_code == 2,
+        "#1254: toolbox-create-dispatch-catalog JSON should reject invalid admission tokens");
+    expect_contains(invalid_admission_process.stdout_text,
+        "The --admit-create-operation value must be true or false.",
+        "#1254: invalid toolbox-create-dispatch-catalog admission tokens should report parser errors");
+
+    const auto invalid_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--field-value", "BROKEN",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_field_process.exit_code == 2,
+        "#1254: toolbox-create-dispatch-catalog JSON should reject malformed field values");
+    expect_contains(invalid_field_process.stdout_text, "Toolbox field values must use name=value syntax.",
+        "#1254: malformed toolbox-create-dispatch-catalog field values should report parser errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1254: rejected toolbox-create-dispatch-catalog host commands should not mutate the visual asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_plans_toolbox_object_creation_batches(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -31403,6 +31564,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_toolbox_object_creation(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_dispatch(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_catalog(argv[1]);
+    test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batches(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(argv[1]);
     test_studio_host_json_creates_toolbox_object_batches(argv[1]);
