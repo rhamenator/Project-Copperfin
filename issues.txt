@@ -1,3 +1,4 @@
+1175	OPEN	E2/#23 slice: Expose host picture-selection-display-object command		2026-06-18T11:15:29Z
 1174	OPEN	E2/#23 slice: Expose host picture-spacing-object command		2026-06-18T11:03:08Z
 1173	OPEN	E2/#23 slice: Expose host picture-position-object command		2026-06-18T10:51:58Z
 1172	OPEN	E2/#23 slice: Expose host picture-margin-object command		2026-06-18T10:41:01Z

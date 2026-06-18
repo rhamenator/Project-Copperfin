@@ -507,6 +507,10 @@ void test_parse_launch_arguments() {
         "#1174: launch contract should keep picture-spacing-object off by default");
     expect(!result.request.picture_spacing_available,
         "#1174: launch contract should keep picture spacing unavailable by default");
+    expect(!result.request.picture_selection_display_object,
+        "#1175: launch contract should keep picture-selection-display-object off by default");
+    expect(!result.request.picture_selection_display_available,
+        "#1175: launch contract should keep picture selection display unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11724,6 +11728,101 @@ void test_parse_launch_arguments_rejects_picture_spacing_object_ambiguity() {
         "#1174: launch contract should reject stray picture-spacing arguments");
 }
 
+void test_parse_launch_arguments_for_picture_selection_display_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--picture-selection-display-object",
+        "--picture-selection-display", "2",
+        "--picture-selection-display-target-object-name", "frmCustomer",
+        "--picture-selection-display-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1175: launch contract should parse picture-selection-display-object requests");
+    expect(result.request.picture_selection_display_object,
+        "#1175: launch contract should detect --picture-selection-display-object");
+    expect(result.request.picture_selection_display_available && result.request.picture_selection_display == 2,
+        "#1175: picture-selection-display-object requests should carry picture-selection-display value");
+    expect(result.request.picture_selection_display_objects.size() == 2U,
+        "#1175: picture-selection-display-object requests should collect picture-selection-display target selectors");
+    if (result.request.picture_selection_display_objects.size() == 2U) {
+        expect(result.request.picture_selection_display_objects[0].object_name == "frmCustomer" &&
+                result.request.picture_selection_display_objects[0].unique_id.empty(),
+            "#1175: picture-selection-display-object requests should parse target object-name selectors");
+        expect(result.request.picture_selection_display_objects[1].object_name.empty() &&
+                result.request.picture_selection_display_objects[1].unique_id == "two-guid",
+            "#1175: picture-selection-display-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_picture_selection_display_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-selection-display-object",
+        "--picture-selection-display-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1175: launch contract should reject picture-selection-display-object requests without picture-selection-display value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-selection-display-object",
+        "--picture-selection-display", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1175: launch contract should reject picture-selection-display-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-selection-display-object",
+        "--picture-selection-display", "selected",
+        "--picture-selection-display-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1175: launch contract should reject non-integer picture-selection-display values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-selection-display-object",
+        "--picture-selection-display", "-1",
+        "--picture-selection-display-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1175: launch contract should reject negative picture-selection-display values");
+}
+
+void test_parse_launch_arguments_rejects_picture_selection_display_object_ambiguity() {
+    const auto picture_selection_display_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-selection-display-object",
+        "--allow-output-object",
+        "--picture-selection-display", "2",
+        "--picture-selection-display-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!picture_selection_display_allow_output_result.ok,
+        "#1175: launch contract should reject simultaneous picture-selection-display-object and allow-output-object requests");
+
+    const auto picture_selection_display_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-selection-display-object",
+        "--clear-property",
+        "--property-name", "PictureSelectionDisplay",
+        "--picture-selection-display", "2",
+        "--picture-selection-display-target-unique-id", "one-guid"
+    });
+    expect(!picture_selection_display_property_result.ok,
+        "#1175: launch contract should reject picture-selection-display-object combined with property commands");
+
+    const auto stray_picture_selection_display_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-selection-display", "2"
+    });
+    expect(!stray_picture_selection_display_result.ok,
+        "#1175: launch contract should reject stray picture-selection-display arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15410,6 +15509,9 @@ int main() {
     test_parse_launch_arguments_for_picture_spacing_object();
     test_parse_launch_arguments_rejects_picture_spacing_object_invalid_inputs();
     test_parse_launch_arguments_rejects_picture_spacing_object_ambiguity();
+    test_parse_launch_arguments_for_picture_selection_display_object();
+    test_parse_launch_arguments_rejects_picture_selection_display_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_picture_selection_display_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
