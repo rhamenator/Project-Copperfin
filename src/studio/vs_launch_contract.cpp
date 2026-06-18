@@ -448,6 +448,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--panel-link-object") {
+            result.request.panel_link_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1180,6 +1185,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.highlight_row = *highlight_row;
             result.request.highlight_row_available = true;
+            continue;
+        }
+
+        if (argument == "--panel-link") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --panel-link."};
+            }
+            const auto panel_link = parse_bool_value(args[++index]);
+            if (!panel_link.has_value()) {
+                return {.ok = false, .error = "The --panel-link value must be true or false."};
+            }
+            result.request.panel_link = *panel_link;
+            result.request.panel_link_available = true;
             continue;
         }
 
@@ -2773,6 +2791,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--panel-link-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --panel-link-target-object-name."};
+            }
+            result.request.panel_link_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--panel-link-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --panel-link-target-unique-id."};
+            }
+            result.request.panel_link_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3604,6 +3646,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.highlight_row_objects.empty())) {
         return {.ok = false, .error = "Highlight-row arguments can only be used with --highlight-row-object."};
     }
+    if (result.request.panel_link_object && !result.request.panel_link_available) {
+        return {.ok = false, .error = "An object panel-link assignment requires --panel-link."};
+    }
+    if (result.request.panel_link_object && result.request.panel_link_objects.empty()) {
+        return {.ok = false, .error = "An object panel-link assignment requires at least one target selector."};
+    }
+    if (!result.request.panel_link_object &&
+        (result.request.panel_link_available ||
+         !result.request.panel_link_objects.empty())) {
+        return {.ok = false, .error = "Panel-link arguments can only be used with --panel-link-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3678,6 +3731,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.record_mark_object ? 1 : 0) +
         (result.request.split_bar_object ? 1 : 0) +
         (result.request.highlight_row_object ? 1 : 0) +
+        (result.request.panel_link_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

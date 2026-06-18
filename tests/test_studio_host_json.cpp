@@ -1384,6 +1384,24 @@ void write_synthetic_form_table_for_object_highlight_row(const std::filesystem::
     expect(create_result.ok, "#1090: synthetic SCX table for object highlight row should be created");
 }
 
+void write_synthetic_form_table_for_object_panel_link(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "PANELLINK", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1091: synthetic SCX table for object panel link should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -10805,6 +10823,129 @@ void test_studio_host_json_assigns_highlight_row_by_stable_selectors(const std::
     }
 }
 
+void test_studio_host_json_assigns_panel_link_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_panel_link_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path panel_link_path = temp_root / "panel_link.scx";
+    write_synthetic_form_table_for_object_panel_link(panel_link_path);
+    const auto panel_link_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", panel_link_path.string(),
+            "--panel-link-object",
+            "--panel-link", "false",
+            "--panel-link-target-object-name", "frmCustomer",
+            "--panel-link-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(panel_link_process.exit_code == 0,
+        "#1091: host object panel-link assignment should exit successfully");
+    expect(visual_object_property(panel_link_path, "one-guid", "PANELLINK") == "false" &&
+            visual_object_property(panel_link_path, "two-guid", "PANELLINK") == "false" &&
+            visual_object_property(panel_link_path, "three-guid", "PANELLINK") == "false" &&
+            visual_object_property(panel_link_path, "other-guid", "PANELLINK") == "true",
+        "#1091: host object panel-link assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_panel_link(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--panel-link-object",
+            "--panel-link", "false",
+            "--panel-link-target-unique-id", "one-guid",
+            "--panel-link-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1091: missing-target host object panel-link assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "PANELLINK") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "PANELLINK") == "true",
+        "#1091: missing-target host object panel-link assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_panel_link(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--panel-link-object",
+            "--panel-link", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1091: panel-link-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "PANELLINK") == "true",
+        "#1091: panel-link-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_panel_link(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--panel-link-object",
+            "--panel-link-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1091: panel-link-object without panel-link value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "PANELLINK") == "true",
+        "#1091: panel-link-object without panel-link value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_panel_link(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--panel-link-object",
+            "--panel-link", "false",
+            "--panel-link-target-unique-id", "one-guid",
+            "--panel-link-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1091: duplicate-target host object panel-link assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "PANELLINK") == "true",
+        "#1091: duplicate-target host object panel-link assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_panel_link(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--panel-link-object",
+            "--auto-size-object",
+            "--panel-link", "false",
+            "--panel-link-target-unique-id", "one-guid",
+            "--auto-size", "false",
+            "--auto-size-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1091: panel-link-object plus auto-size-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "PANELLINK") == "true",
+        "#1091: panel-link-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -11002,6 +11143,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_record_mark_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_split_bar_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_highlight_row_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_panel_link_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

@@ -279,6 +279,10 @@ void test_parse_launch_arguments() {
         "#1090: launch contract should keep highlight-row-object off by default");
     expect(!result.request.highlight_row_available,
         "#1090: launch contract should keep highlight row unavailable by default");
+    expect(!result.request.panel_link_object,
+        "#1091: launch contract should keep panel-link-object off by default");
+    expect(!result.request.panel_link_available,
+        "#1091: launch contract should keep panel link unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5896,6 +5900,92 @@ void test_parse_launch_arguments_rejects_highlight_row_object_ambiguity() {
         "#1090: launch contract should reject stray highlight-row arguments");
 }
 
+void test_parse_launch_arguments_for_panel_link_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--panel-link-object",
+        "--panel-link", "false",
+        "--panel-link-target-object-name", "frmCustomer",
+        "--panel-link-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1091: launch contract should parse panel-link-object requests");
+    expect(result.request.panel_link_object,
+        "#1091: launch contract should detect --panel-link-object");
+    expect(result.request.panel_link_available && !result.request.panel_link,
+        "#1091: panel-link-object requests should carry panel link state");
+    expect(result.request.panel_link_objects.size() == 2U,
+        "#1091: panel-link-object requests should collect panel_link target selectors");
+    if (result.request.panel_link_objects.size() == 2U) {
+        expect(result.request.panel_link_objects[0].object_name == "frmCustomer" &&
+                result.request.panel_link_objects[0].unique_id.empty(),
+            "#1091: panel-link-object requests should parse target object-name selectors");
+        expect(result.request.panel_link_objects[1].object_name.empty() &&
+                result.request.panel_link_objects[1].unique_id == "two-guid",
+            "#1091: panel-link-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_panel_link_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--panel-link-object",
+        "--panel-link-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1091: launch contract should reject panel-link-object requests without panel link state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--panel-link-object",
+        "--panel-link", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1091: launch contract should reject panel-link-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--panel-link-object",
+        "--panel-link", "sometimes",
+        "--panel-link-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1091: launch contract should reject invalid panel-link boolean values");
+}
+
+void test_parse_launch_arguments_rejects_panel_link_object_ambiguity() {
+    const auto panel_link_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--panel-link-object",
+        "--auto-size-object",
+        "--panel-link", "false",
+        "--panel-link-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!panel_link_auto_size_result.ok,
+        "#1091: launch contract should reject simultaneous panel-link-object and auto-size-object requests");
+
+    const auto panel_link_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--panel-link-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--panel-link", "false",
+        "--panel-link-target-unique-id", "one-guid"
+    });
+    expect(!panel_link_property_result.ok,
+        "#1091: launch contract should reject panel-link-object combined with property commands");
+
+    const auto stray_panel_link_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--panel-link", "false"
+    });
+    expect(!stray_panel_link_result.ok,
+        "#1091: launch contract should reject stray panel-link arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7311,6 +7401,9 @@ int main() {
     test_parse_launch_arguments_for_highlight_row_object();
     test_parse_launch_arguments_rejects_highlight_row_object_invalid_inputs();
     test_parse_launch_arguments_rejects_highlight_row_object_ambiguity();
+    test_parse_launch_arguments_for_panel_link_object();
+    test_parse_launch_arguments_rejects_panel_link_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_panel_link_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

@@ -180,6 +180,7 @@ struct StudioOpenRequest {
     bool record_mark_object = false;
     bool split_bar_object = false;
     bool highlight_row_object = false;
+    bool panel_link_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -241,6 +242,7 @@ struct StudioOpenRequest {
     bool record_mark_available = false;
     bool split_bar_available = false;
     bool highlight_row_available = false;
+    bool panel_link_available = false;
     bool closable = false;
     bool control_box = false;
     bool allow_output = false;
@@ -257,6 +259,7 @@ struct StudioOpenRequest {
     bool record_mark = false;
     bool split_bar = false;
     bool highlight_row = false;
+    bool panel_link = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -319,6 +322,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> record_mark_objects{};
     std::vector<StudioObjectSelector> split_bar_objects{};
     std::vector<StudioObjectSelector> highlight_row_objects{};
+    std::vector<StudioObjectSelector> panel_link_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
