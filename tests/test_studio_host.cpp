@@ -319,6 +319,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.column_lines_available, "#1197: launch contract should keep column lines unavailable by default");
     expect(!result.request.integral_height_object, "#1198: launch contract should keep integral-height-object off by default");
     expect(!result.request.integral_height_available, "#1198: launch contract should keep integral height unavailable by default");
+    expect(!result.request.incremental_search_object, "#1199: launch contract should keep incremental-search-object off by default");
+    expect(!result.request.incremental_search_available, "#1199: launch contract should keep incremental search unavailable by default");
     expect(!result.request.row_source_type_object, "#1049: launch contract should keep row-source-type-object off by default");
     expect(!result.request.row_source_type_available, "#1049: launch contract should keep row source type unavailable by default");
     expect(!result.request.bound_column_object, "#1050: launch contract should keep bound-column-object off by default");
@@ -7296,6 +7298,92 @@ void test_parse_launch_arguments_rejects_integral_height_object_ambiguity() {
     });
     expect(!stray_integral_height_result.ok,
         "#1198: launch contract should reject stray integral-height arguments");
+}
+
+
+void test_parse_launch_arguments_for_incremental_search_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--incremental-search-object",
+        "--incremental-search", "true",
+        "--incremental-search-target-object-name", "cboCustomer",
+        "--incremental-search-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1199: launch contract should parse incremental-search-object requests");
+    expect(result.request.incremental_search_object, "#1199: launch contract should detect --incremental-search-object");
+    expect(result.request.incremental_search_available && result.request.incremental_search,
+        "#1199: incremental-search-object requests should carry incremental search state");
+    expect(result.request.incremental_search_objects.size() == 2U,
+        "#1199: incremental-search-object requests should collect incremental-search target selectors");
+    if (result.request.incremental_search_objects.size() == 2U) {
+        expect(result.request.incremental_search_objects[0].object_name == "cboCustomer" &&
+                result.request.incremental_search_objects[0].unique_id.empty(),
+            "#1199: incremental-search-object requests should parse target object-name selectors");
+        expect(result.request.incremental_search_objects[1].object_name.empty() &&
+                result.request.incremental_search_objects[1].unique_id == "two-guid",
+            "#1199: incremental-search-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_incremental_search_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--incremental-search-object",
+        "--incremental-search-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1199: launch contract should reject incremental-search-object requests without incremental search state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--incremental-search-object",
+        "--incremental-search", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1199: launch contract should reject incremental-search-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--incremental-search-object",
+        "--incremental-search", "sometimes",
+        "--incremental-search-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1199: launch contract should reject invalid incremental-search logical values");
+}
+
+void test_parse_launch_arguments_rejects_incremental_search_object_ambiguity() {
+    const auto incremental_search_row_source_type_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--incremental-search-object",
+        "--row-source-type-object",
+        "--incremental-search", "true",
+        "--incremental-search-target-unique-id", "one-guid",
+        "--row-source-type", "2",
+        "--row-source-type-target-unique-id", "one-guid"
+    });
+    expect(!incremental_search_row_source_type_result.ok,
+        "#1199: launch contract should reject simultaneous incremental-search-object and row-source-type-object requests");
+
+    const auto incremental_search_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--incremental-search-object",
+        "--clear-property",
+        "--property-name", "IncrementalSearch",
+        "--incremental-search", "true",
+        "--incremental-search-target-unique-id", "one-guid"
+    });
+    expect(!incremental_search_property_result.ok,
+        "#1199: launch contract should reject incremental-search-object combined with property commands");
+
+    const auto stray_incremental_search_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--incremental-search", "true"
+    });
+    expect(!stray_incremental_search_result.ok,
+        "#1199: launch contract should reject stray incremental-search arguments");
 }
 
 void test_parse_launch_arguments_for_row_source_type_object() {
@@ -17320,6 +17408,9 @@ int main() {
     test_parse_launch_arguments_for_integral_height_object();
     test_parse_launch_arguments_rejects_integral_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_integral_height_object_ambiguity();
+    test_parse_launch_arguments_for_incremental_search_object();
+    test_parse_launch_arguments_rejects_incremental_search_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_incremental_search_object_ambiguity();
     test_parse_launch_arguments_for_row_source_type_object();
     test_parse_launch_arguments_rejects_row_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_source_type_object_ambiguity();

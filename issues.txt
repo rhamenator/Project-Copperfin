@@ -1,3 +1,4 @@
+1199	OPEN	E2/#23 slice: Expose host incremental-search-object command		2026-06-18T16:49:54Z
 1198	OPEN	E2/#23 slice: Expose host integral-height-object command		2026-06-18T16:33:17Z
 1197	OPEN	E2/#23 slice: Expose host column-lines-object command		2026-06-18T16:16:43Z
 1196	OPEN	E2/#23 slice: Expose host column-widths-object command		2026-06-18T15:59:27Z

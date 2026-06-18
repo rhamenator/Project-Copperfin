@@ -3311,6 +3311,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.incremental_search_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> incremental_search_objects;
+        incremental_search_objects.reserve(parse_result.request.incremental_search_objects.size());
+        for (const auto& incremental_search_object : parse_result.request.incremental_search_objects) {
+            incremental_search_objects.push_back({
+                .record_index = incremental_search_object.record_index,
+                .object_name = incremental_search_object.object_name,
+                .unique_id = incremental_search_object.unique_id
+            });
+        }
+
+        const auto incremental_search_result = copperfin::vfp::set_visual_object_incremental_search({
+            .path = parse_result.request.path,
+            .objects = incremental_search_objects,
+            .incremental_search = parse_result.request.incremental_search
+        });
+
+        if (!incremental_search_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << incremental_search_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.row_source_type_object) {
         std::vector<copperfin::vfp::VisualObjectAlignmentTarget> row_source_type_objects;
         row_source_type_objects.reserve(parse_result.request.row_source_type_objects.size());
