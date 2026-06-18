@@ -1146,6 +1146,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--border-color-object") {
+            result.request.border_color_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2791,6 +2796,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.border_width = border_width;
             result.request.border_width_available = true;
+            continue;
+        }
+
+        if (argument == "--border-color") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --border-color."};
+            }
+            int border_color = 0;
+            if (!parse_int_value(args[++index], border_color)) {
+                return {.ok = false, .error = "The --border-color value must be an integer."};
+            }
+            if (border_color < 0) {
+                return {.ok = false, .error = "The --border-color value must not be negative."};
+            }
+            result.request.border_color = border_color;
+            result.request.border_color_available = true;
             continue;
         }
 
@@ -5676,6 +5697,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--border-color-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --border-color-target-object-name."};
+            }
+            result.request.border_color_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--border-color-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --border-color-target-unique-id."};
+            }
+            result.request.border_color_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7526,6 +7571,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.border_width_objects.empty())) {
         return {.ok = false, .error = "Border-width arguments can only be used with --border-width-object."};
     }
+    if (result.request.border_color_object && !result.request.border_color_available) {
+        return {.ok = false, .error = "An object border-color assignment requires --border-color."};
+    }
+    if (result.request.border_color_object && result.request.border_color_objects.empty()) {
+        return {.ok = false, .error = "An object border-color assignment requires at least one target selector."};
+    }
+    if (!result.request.border_color_object &&
+        (result.request.border_color_available ||
+         !result.request.border_color_objects.empty())) {
+        return {.ok = false, .error = "Border-color arguments can only be used with --border-color-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -7913,6 +7969,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.back_style_object ? 1 : 0) +
         (result.request.border_style_object ? 1 : 0) +
         (result.request.border_width_object ? 1 : 0) +
+        (result.request.border_color_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +
