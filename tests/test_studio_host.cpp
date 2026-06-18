@@ -221,6 +221,10 @@ void test_parse_launch_arguments() {
         "#1123: launch contract should keep lock-columns-object off by default");
     expect(!result.request.lock_columns_available,
         "#1123: launch contract should keep lock-columns unavailable by default");
+    expect(!result.request.lock_columns_left_object,
+        "#1124: launch contract should keep lock-columns-left-object off by default");
+    expect(!result.request.lock_columns_left_available,
+        "#1124: launch contract should keep lock-columns-left unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4255,6 +4259,101 @@ void test_parse_launch_arguments_rejects_lock_columns_object_ambiguity() {
     });
     expect(!stray_lock_columns_result.ok,
         "#1123: launch contract should reject stray lock-columns arguments");
+}
+
+void test_parse_launch_arguments_for_lock_columns_left_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--lock-columns-left-object",
+        "--lock-columns-left", "9",
+        "--lock-columns-left-target-object-name", "cmdSave",
+        "--lock-columns-left-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1124: launch contract should parse lock-columns-left-object requests");
+    expect(result.request.lock_columns_left_object,
+        "#1124: launch contract should detect --lock-columns-left-object");
+    expect(result.request.lock_columns_left_available && result.request.lock_columns_left == 9,
+        "#1124: lock-columns-left-object requests should carry lock-columns-left value");
+    expect(result.request.lock_columns_left_objects.size() == 2U,
+        "#1124: lock-columns-left-object requests should collect lock-columns-left target selectors");
+    if (result.request.lock_columns_left_objects.size() == 2U) {
+        expect(result.request.lock_columns_left_objects[0].object_name == "cmdSave" &&
+                result.request.lock_columns_left_objects[0].unique_id.empty(),
+            "#1124: lock-columns-left-object requests should parse target object-name selectors");
+        expect(result.request.lock_columns_left_objects[1].object_name.empty() &&
+                result.request.lock_columns_left_objects[1].unique_id == "two-guid",
+            "#1124: lock-columns-left-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_lock_columns_left_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-left-object",
+        "--lock-columns-left-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1124: launch contract should reject lock-columns-left-object requests without lock-columns-left value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-left-object",
+        "--lock-columns-left", "manual",
+        "--lock-columns-left-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1124: launch contract should reject non-integer lock-columns-left values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-left-object",
+        "--lock-columns-left", "-1",
+        "--lock-columns-left-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1124: launch contract should reject negative lock-columns-left values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-left-object",
+        "--lock-columns-left", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1124: launch contract should reject lock-columns-left-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_lock_columns_left_object_ambiguity() {
+    const auto lock_columns_left_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-left-object",
+        "--locked-object",
+        "--lock-columns-left", "2",
+        "--lock-columns-left-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!lock_columns_left_locked_result.ok,
+        "#1124: launch contract should reject simultaneous lock-columns-left-object and locked-object requests");
+
+    const auto lock_columns_left_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-left-object",
+        "--clear-property",
+        "--property-name", "LockColumnsLeft",
+        "--lock-columns-left", "2",
+        "--lock-columns-left-target-unique-id", "one-guid"
+    });
+    expect(!lock_columns_left_property_result.ok,
+        "#1124: launch contract should reject lock-columns-left-object combined with property commands");
+
+    const auto stray_lock_columns_left_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-left", "2"
+    });
+    expect(!stray_lock_columns_left_result.ok,
+        "#1124: launch contract should reject stray lock-columns-left arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10332,6 +10431,9 @@ int main() {
     test_parse_launch_arguments_for_lock_columns_object();
     test_parse_launch_arguments_rejects_lock_columns_object_invalid_inputs();
     test_parse_launch_arguments_rejects_lock_columns_object_ambiguity();
+    test_parse_launch_arguments_for_lock_columns_left_object();
+    test_parse_launch_arguments_rejects_lock_columns_left_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_lock_columns_left_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

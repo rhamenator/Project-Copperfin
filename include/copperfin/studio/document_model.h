@@ -117,6 +117,7 @@ struct StudioOpenRequest {
     int header_height = 0;
     int row_height = 0;
     int lock_columns = 0;
+    int lock_columns_left = 0;
     int selected_back_color = 0;
     int selected_fore_color = 0;
     int selected_item_back_color = 0;
@@ -238,6 +239,7 @@ struct StudioOpenRequest {
     bool header_height_object = false;
     bool row_height_object = false;
     bool lock_columns_object = false;
+    bool lock_columns_left_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -278,6 +280,7 @@ struct StudioOpenRequest {
     bool header_height_available = false;
     bool row_height_available = false;
     bool lock_columns_available = false;
+    bool lock_columns_left_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
@@ -451,6 +454,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> header_height_objects{};
     std::vector<StudioObjectSelector> row_height_objects{};
     std::vector<StudioObjectSelector> lock_columns_objects{};
+    std::vector<StudioObjectSelector> lock_columns_left_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

@@ -613,6 +613,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--lock-columns-left-object") {
+            result.request.lock_columns_left_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1468,6 +1473,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.lock_columns = lock_columns;
             result.request.lock_columns_available = true;
+            continue;
+        }
+
+        if (argument == "--lock-columns-left") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-columns-left."};
+            }
+            int lock_columns_left = 0;
+            if (!parse_int_value(args[++index], lock_columns_left)) {
+                return {.ok = false, .error = "The --lock-columns-left value must be an integer."};
+            }
+            if (lock_columns_left < 0) {
+                return {.ok = false, .error = "The --lock-columns-left value must be non-negative."};
+            }
+            result.request.lock_columns_left = lock_columns_left;
+            result.request.lock_columns_left_available = true;
             continue;
         }
 
@@ -2889,6 +2910,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --lock-columns-target-unique-id."};
             }
             result.request.lock_columns_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--lock-columns-left-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-columns-left-target-object-name."};
+            }
+            result.request.lock_columns_left_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--lock-columns-left-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-columns-left-target-unique-id."};
+            }
+            result.request.lock_columns_left_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4732,6 +4777,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.lock_columns_objects.empty())) {
         return {.ok = false, .error = "Lock-columns arguments can only be used with --lock-columns-object."};
     }
+    if (result.request.lock_columns_left_object && !result.request.lock_columns_left_available) {
+        return {.ok = false, .error = "An object lock-columns-left assignment requires --lock-columns-left."};
+    }
+    if (result.request.lock_columns_left_object && result.request.lock_columns_left_objects.empty()) {
+        return {.ok = false, .error = "An object lock-columns-left assignment requires at least one target selector."};
+    }
+    if (!result.request.lock_columns_left_object &&
+        (result.request.lock_columns_left_available ||
+         !result.request.lock_columns_left_objects.empty())) {
+        return {.ok = false, .error = "Lock-columns-left arguments can only be used with --lock-columns-left-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5471,6 +5527,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.header_height_object ? 1 : 0) +
         (result.request.row_height_object ? 1 : 0) +
         (result.request.lock_columns_object ? 1 : 0) +
+        (result.request.lock_columns_left_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
