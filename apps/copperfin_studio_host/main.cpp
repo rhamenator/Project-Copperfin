@@ -52,6 +52,7 @@ void print_usage() {
     std::cout << "Draw-width object: --draw-width-object --draw-width <n> [--draw-width-target-object-name <name>] [--draw-width-target-unique-id <id>]\n";
     std::cout << "Fill-style object: --fill-style-object --fill-style <n> [--fill-style-target-object-name <name>] [--fill-style-target-unique-id <id>]\n";
     std::cout << "Scale-mode object: --scale-mode-object --scale-mode <n> [--scale-mode-target-object-name <name>] [--scale-mode-target-unique-id <id>]\n";
+    std::cout << "Buffer-mode object: --buffer-mode-object --buffer-mode <n> [--buffer-mode-target-object-name <name>] [--buffer-mode-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2301,6 +2302,30 @@ int main(int argc, char** argv) {
         if (!scale_mode_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << scale_mode_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.buffer_mode_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> buffer_mode_objects;
+        buffer_mode_objects.reserve(parse_result.request.buffer_mode_objects.size());
+        for (const auto& buffer_mode_object : parse_result.request.buffer_mode_objects) {
+            buffer_mode_objects.push_back({
+                .record_index = buffer_mode_object.record_index,
+                .object_name = buffer_mode_object.object_name,
+                .unique_id = buffer_mode_object.unique_id
+            });
+        }
+
+        const auto buffer_mode_result = copperfin::vfp::set_visual_object_buffer_mode({
+            .path = parse_result.request.path,
+            .objects = buffer_mode_objects,
+            .buffer_mode = parse_result.request.buffer_mode
+        });
+
+        if (!buffer_mode_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << buffer_mode_result.error << "\n";
             return 4;
         }
     }

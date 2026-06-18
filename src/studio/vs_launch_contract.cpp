@@ -578,6 +578,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--buffer-mode-object") {
+            result.request.buffer_mode_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1321,6 +1326,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.scale_mode = scale_mode;
             result.request.scale_mode_available = true;
+            continue;
+        }
+
+        if (argument == "--buffer-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --buffer-mode."};
+            }
+            int buffer_mode = 0;
+            if (!parse_int_value(args[++index], buffer_mode)) {
+                return {.ok = false, .error = "The --buffer-mode value must be an integer."};
+            }
+            if (buffer_mode < 0) {
+                return {.ok = false, .error = "The --buffer-mode value must be non-negative."};
+            }
+            result.request.buffer_mode = buffer_mode;
+            result.request.buffer_mode_available = true;
             continue;
         }
 
@@ -2574,6 +2595,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --scale-mode-target-unique-id."};
             }
             result.request.scale_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--buffer-mode-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --buffer-mode-target-object-name."};
+            }
+            result.request.buffer_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--buffer-mode-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --buffer-mode-target-unique-id."};
+            }
+            result.request.buffer_mode_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4340,6 +4385,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.scale_mode_objects.empty())) {
         return {.ok = false, .error = "Scale-mode arguments can only be used with --scale-mode-object."};
     }
+    if (result.request.buffer_mode_object && !result.request.buffer_mode_available) {
+        return {.ok = false, .error = "An object buffer-mode assignment requires --buffer-mode."};
+    }
+    if (result.request.buffer_mode_object && result.request.buffer_mode_objects.empty()) {
+        return {.ok = false, .error = "An object buffer-mode assignment requires at least one target selector."};
+    }
+    if (!result.request.buffer_mode_object &&
+        (result.request.buffer_mode_available ||
+         !result.request.buffer_mode_objects.empty())) {
+        return {.ok = false, .error = "Buffer-mode arguments can only be used with --buffer-mode-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5072,6 +5128,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.draw_width_object ? 1 : 0) +
         (result.request.fill_style_object ? 1 : 0) +
         (result.request.scale_mode_object ? 1 : 0) +
+        (result.request.buffer_mode_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

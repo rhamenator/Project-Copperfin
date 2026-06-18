@@ -1,3 +1,4 @@
+1117	OPEN	E2/#23 slice: Expose host buffer-mode-object command		2026-06-18T02:55:05Z
 1116	OPEN	E2/#23 slice: Expose host scale-mode-object command		2026-06-18T02:48:26Z
 1115	OPEN	E2/#23 slice: Expose host fill-style-object command		2026-06-18T02:42:41Z
 1114	OPEN	E2/#23 slice: Expose host draw-width-object command		2026-06-18T02:36:44Z

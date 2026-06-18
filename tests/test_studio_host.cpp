@@ -193,6 +193,10 @@ void test_parse_launch_arguments() {
         "#1116: launch contract should keep scale-mode-object off by default");
     expect(!result.request.scale_mode_available,
         "#1116: launch contract should keep scale-mode unavailable by default");
+    expect(!result.request.buffer_mode_object,
+        "#1117: launch contract should keep buffer-mode-object off by default");
+    expect(!result.request.buffer_mode_available,
+        "#1117: launch contract should keep buffer-mode unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3562,6 +3566,101 @@ void test_parse_launch_arguments_rejects_scale_mode_object_ambiguity() {
     });
     expect(!stray_scale_mode_result.ok,
         "#1116: launch contract should reject stray scale-mode arguments");
+}
+
+void test_parse_launch_arguments_for_buffer_mode_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--buffer-mode-object",
+        "--buffer-mode", "9",
+        "--buffer-mode-target-object-name", "cmdSave",
+        "--buffer-mode-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1117: launch contract should parse buffer-mode-object requests");
+    expect(result.request.buffer_mode_object,
+        "#1117: launch contract should detect --buffer-mode-object");
+    expect(result.request.buffer_mode_available && result.request.buffer_mode == 9,
+        "#1117: buffer-mode-object requests should carry buffer-mode value");
+    expect(result.request.buffer_mode_objects.size() == 2U,
+        "#1117: buffer-mode-object requests should collect buffer-mode target selectors");
+    if (result.request.buffer_mode_objects.size() == 2U) {
+        expect(result.request.buffer_mode_objects[0].object_name == "cmdSave" &&
+                result.request.buffer_mode_objects[0].unique_id.empty(),
+            "#1117: buffer-mode-object requests should parse target object-name selectors");
+        expect(result.request.buffer_mode_objects[1].object_name.empty() &&
+                result.request.buffer_mode_objects[1].unique_id == "two-guid",
+            "#1117: buffer-mode-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_buffer_mode_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-object",
+        "--buffer-mode-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1117: launch contract should reject buffer-mode-object requests without buffer-mode value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-object",
+        "--buffer-mode", "manual",
+        "--buffer-mode-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1117: launch contract should reject non-integer buffer-mode values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-object",
+        "--buffer-mode", "-1",
+        "--buffer-mode-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1117: launch contract should reject negative buffer-mode values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-object",
+        "--buffer-mode", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1117: launch contract should reject buffer-mode-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_buffer_mode_object_ambiguity() {
+    const auto buffer_mode_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-object",
+        "--locked-object",
+        "--buffer-mode", "2",
+        "--buffer-mode-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!buffer_mode_locked_result.ok,
+        "#1117: launch contract should reject simultaneous buffer-mode-object and locked-object requests");
+
+    const auto buffer_mode_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-object",
+        "--clear-property",
+        "--property-name", "BufferMode",
+        "--buffer-mode", "2",
+        "--buffer-mode-target-unique-id", "one-guid"
+    });
+    expect(!buffer_mode_property_result.ok,
+        "#1117: launch contract should reject buffer-mode-object combined with property commands");
+
+    const auto stray_buffer_mode_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode", "2"
+    });
+    expect(!stray_buffer_mode_result.ok,
+        "#1117: launch contract should reject stray buffer-mode arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9618,6 +9717,9 @@ int main() {
     test_parse_launch_arguments_for_scale_mode_object();
     test_parse_launch_arguments_rejects_scale_mode_object_invalid_inputs();
     test_parse_launch_arguments_rejects_scale_mode_object_ambiguity();
+    test_parse_launch_arguments_for_buffer_mode_object();
+    test_parse_launch_arguments_rejects_buffer_mode_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_buffer_mode_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
