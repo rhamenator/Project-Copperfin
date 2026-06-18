@@ -1,4 +1,5 @@
 #include "copperfin/studio/toolbox_palette.h"
+#include "copperfin/studio/toolbox_invocation_admission.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -198,6 +199,60 @@ int main() {
     });
     expect(!data_plan.ok,
         "#1209: data-environment selection contexts should reject toolbox palette launch planning");
+
+    const auto admitted_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
+        .launch_plan = visual_plan.plan,
+        .admit_palette_invocation = true
+    });
+    expect(admitted_invocation.ok,
+        "#1219: toolbox invocation admission should accept validated launch plans");
+    expect(admitted_invocation.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+            admitted_invocation.plan.toolbox_context == StudioToolboxContext::form &&
+            admitted_invocation.plan.asset_path == "forms/customer.scx" &&
+            admitted_invocation.plan.record_index == 1U &&
+            admitted_invocation.plan.object_name == "frmCustomer" &&
+            admitted_invocation.plan.unique_id == "form-guid" &&
+            admitted_invocation.plan.item_count == visual_plan.plan.item_count &&
+            admitted_invocation.plan.items.size() == visual_plan.plan.items.size() &&
+            admitted_invocation.plan.palette_invocation_admitted &&
+            !admitted_invocation.plan.dry_run &&
+            !admitted_invocation.plan.mutates_asset &&
+            has_toolbox_item(admitted_invocation.plan.items, "textbox"),
+        "#1219: toolbox invocation admission should preserve palette metadata and admitted state");
+
+    const auto dry_run_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
+        .launch_plan = report_plan.plan,
+        .admit_palette_invocation = false
+    });
+    expect(dry_run_invocation.ok &&
+            dry_run_invocation.plan.selection_context == StudioEditorSelectionContext::report_expression &&
+            dry_run_invocation.plan.toolbox_context == StudioToolboxContext::report &&
+            !dry_run_invocation.plan.palette_invocation_admitted &&
+            dry_run_invocation.plan.dry_run &&
+            !dry_run_invocation.plan.mutates_asset &&
+            has_toolbox_item(dry_run_invocation.plan.items, "label") &&
+            !has_toolbox_item(dry_run_invocation.plan.items, "textbox"),
+        "#1219: toolbox invocation admission should default to dry-run and preserve filtered report items");
+
+    const auto missing_items_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
+        .launch_plan = {},
+        .admit_palette_invocation = true
+    });
+    expect(!missing_items_invocation.ok &&
+            missing_items_invocation.error ==
+                "A toolbox invocation admission request requires validated toolbox item metadata.",
+        "#1219: toolbox invocation admission should reject missing item metadata");
+
+    auto inconsistent_plan = visual_plan.plan;
+    inconsistent_plan.item_count += 1U;
+    const auto inconsistent_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
+        .launch_plan = inconsistent_plan,
+        .admit_palette_invocation = true
+    });
+    expect(!inconsistent_invocation.ok &&
+            inconsistent_invocation.error ==
+                "A toolbox invocation admission request requires consistent toolbox item metadata.",
+        "#1219: toolbox invocation admission should reject inconsistent item metadata");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
