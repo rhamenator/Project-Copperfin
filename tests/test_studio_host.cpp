@@ -245,6 +245,10 @@ void test_parse_launch_arguments() {
         "#1129: launch contract should keep record-source-type-object off by default");
     expect(!result.request.record_source_type_available,
         "#1129: launch contract should keep record-source-type unavailable by default");
+    expect(!result.request.column_order_object,
+        "#1131: launch contract should keep column-order-object off by default");
+    expect(!result.request.column_order_available,
+        "#1131: launch contract should keep column-order unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
@@ -4851,6 +4855,101 @@ void test_parse_launch_arguments_rejects_record_source_type_object_ambiguity() {
     });
     expect(!stray_record_source_type_result.ok,
         "#1129: launch contract should reject stray record-source-type arguments");
+}
+
+void test_parse_launch_arguments_for_column_order_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--column-order-object",
+        "--column-order", "9",
+        "--column-order-target-object-name", "cmdSave",
+        "--column-order-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1131: launch contract should parse column-order-object requests");
+    expect(result.request.column_order_object,
+        "#1131: launch contract should detect --column-order-object");
+    expect(result.request.column_order_available && result.request.column_order == 9,
+        "#1131: column-order-object requests should carry column-order value");
+    expect(result.request.column_order_objects.size() == 2U,
+        "#1131: column-order-object requests should collect column_order target selectors");
+    if (result.request.column_order_objects.size() == 2U) {
+        expect(result.request.column_order_objects[0].object_name == "cmdSave" &&
+                result.request.column_order_objects[0].unique_id.empty(),
+            "#1131: column-order-object requests should parse target object-name selectors");
+        expect(result.request.column_order_objects[1].object_name.empty() &&
+                result.request.column_order_objects[1].unique_id == "two-guid",
+            "#1131: column-order-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_column_order_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-order-object",
+        "--column-order-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1131: launch contract should reject column-order-object requests without column-order value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-order-object",
+        "--column-order", "manual",
+        "--column-order-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1131: launch contract should reject non-integer column-order values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-order-object",
+        "--column-order", "-1",
+        "--column-order-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1131: launch contract should reject negative column-order values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-order-object",
+        "--column-order", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1131: launch contract should reject column-order-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_column_order_object_ambiguity() {
+    const auto column_order_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-order-object",
+        "--locked-object",
+        "--column-order", "2",
+        "--column-order-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!column_order_locked_result.ok,
+        "#1131: launch contract should reject simultaneous column-order-object and locked-object requests");
+
+    const auto column_order_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-order-object",
+        "--clear-property",
+        "--property-name", "ColumnOrder",
+        "--column-order", "2",
+        "--column-order-target-unique-id", "one-guid"
+    });
+    expect(!column_order_property_result.ok,
+        "#1131: launch contract should reject column-order-object combined with property commands");
+
+    const auto stray_column_order_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column-order", "2"
+    });
+    expect(!stray_column_order_result.ok,
+        "#1131: launch contract should reject stray column-order arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -11022,6 +11121,9 @@ int main() {
     test_parse_launch_arguments_for_record_source_type_object();
     test_parse_launch_arguments_rejects_record_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_type_object_ambiguity();
+    test_parse_launch_arguments_for_column_order_object();
+    test_parse_launch_arguments_rejects_column_order_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_column_order_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();

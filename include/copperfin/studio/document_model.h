@@ -124,6 +124,7 @@ struct StudioOpenRequest {
     int highlight_row_line_width = 0;
     int partition = 0;
     int record_source_type = 0;
+    int column_order = 0;
     int selected_back_color = 0;
     int selected_fore_color = 0;
     int selected_item_back_color = 0;
@@ -251,6 +252,7 @@ struct StudioOpenRequest {
     bool highlight_row_line_width_object = false;
     bool partition_object = false;
     bool record_source_type_object = false;
+    bool column_order_object = false;
     bool record_source_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
@@ -298,6 +300,7 @@ struct StudioOpenRequest {
     bool highlight_row_line_width_available = false;
     bool partition_available = false;
     bool record_source_type_available = false;
+    bool column_order_available = false;
     bool record_source_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
@@ -478,6 +481,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> highlight_row_line_width_objects{};
     std::vector<StudioObjectSelector> partition_objects{};
     std::vector<StudioObjectSelector> record_source_type_objects{};
+    std::vector<StudioObjectSelector> column_order_objects{};
     std::vector<StudioObjectSelector> record_source_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };

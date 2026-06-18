@@ -648,6 +648,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--column-order-object") {
+            result.request.column_order_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1608,6 +1613,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.record_source_type = record_source_type;
             result.request.record_source_type_available = true;
+            continue;
+        }
+
+        if (argument == "--column-order") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --column-order."};
+            }
+            int column_order = 0;
+            if (!parse_int_value(args[++index], column_order)) {
+                return {.ok = false, .error = "The --column-order value must be an integer."};
+            }
+            if (column_order < 0) {
+                return {.ok = false, .error = "The --column-order value must be non-negative."};
+            }
+            result.request.column_order = column_order;
+            result.request.column_order_available = true;
             continue;
         }
 
@@ -3173,6 +3194,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --record-source-type-target-unique-id."};
             }
             result.request.record_source_type_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--column-order-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --column-order-target-object-name."};
+            }
+            result.request.column_order_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--column-order-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --column-order-target-unique-id."};
+            }
+            result.request.column_order_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -5106,6 +5151,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.record_source_type_objects.empty())) {
         return {.ok = false, .error = "RecordSourceType arguments can only be used with --record-source-type-object."};
     }
+    if (result.request.column_order_object && !result.request.column_order_available) {
+        return {.ok = false, .error = "An object column-order assignment requires --column-order."};
+    }
+    if (result.request.column_order_object && result.request.column_order_objects.empty()) {
+        return {.ok = false, .error = "An object column-order assignment requires at least one target selector."};
+    }
+    if (!result.request.column_order_object &&
+        (result.request.column_order_available ||
+         !result.request.column_order_objects.empty())) {
+        return {.ok = false, .error = "ColumnOrder arguments can only be used with --column-order-object."};
+    }
     if (result.request.record_source_object && !result.request.record_source_available) {
         return {.ok = false, .error = "An object record source assignment requires --record-source."};
     }
@@ -5862,6 +5918,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.highlight_row_line_width_object ? 1 : 0) +
         (result.request.partition_object ? 1 : 0) +
         (result.request.record_source_type_object ? 1 : 0) +
+        (result.request.column_order_object ? 1 : 0) +
         (result.request.record_source_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
