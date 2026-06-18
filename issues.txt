@@ -1,3 +1,4 @@
+1210	OPEN	E2/#23 slice: Expose toolbox palette launch plans through host JSON		2026-06-18T19:10:28Z
 1209	OPEN	E2/#23 slice: Add selection-context toolbox palette launch planning		2026-06-18T18:56:01Z
 1208	OPEN	E2/#23 slice: Expose editor action launch plans through host JSON		2026-06-18T18:51:48Z
 1207	OPEN	E2/#23 slice: Add selection-context editor action launch planning		2026-06-18T18:37:32Z
