@@ -31,6 +31,18 @@ std::size_t object_count(const std::filesystem::path& table_path) {
     return list_result.ok ? list_result.objects.size() : 0U;
 }
 
+bool has_field_value(
+    const std::vector<copperfin::vfp::VisualObjectPropertyChange>& changes,
+    const std::string& property_name,
+    const std::string& property_value) {
+    for (const auto& change : changes) {
+        if (change.property_name == property_name && change.property_value == property_value) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::filesystem::path create_toolbox_fixture(const std::filesystem::path& temp_dir) {
     const std::filesystem::path table_path = temp_dir / "toolbox_create.scx";
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -50,6 +62,119 @@ std::filesystem::path create_toolbox_fixture(const std::filesystem::path& temp_d
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
     expect(create_result.ok, "#1017: toolbox creation fixture should be writable");
     return table_path;
+}
+
+void test_toolbox_creation_planner_maps_descriptors_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_plan_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto plan_result = copperfin::studio::plan_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "planned-textbox-guid",
+        .parent_name = "frmMain",
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Planned Customer"},
+            {.property_name = "PROPERTIES", .property_value = "ControlSource = \"customer.name\"\r\n"}
+        }
+    });
+
+    expect(plan_result.ok,
+        "#1241: toolbox creation planning should accept known toolbox items");
+    expect(plan_result.plan.path == table_path.string() &&
+            std::string(plan_result.plan.toolbox_item.id) == "textbox" &&
+            plan_result.plan.toolbox_context_provided &&
+            plan_result.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            plan_result.plan.target_record_index == before_count &&
+            plan_result.plan.object_name == "txt2" &&
+            plan_result.plan.unique_id == "planned-textbox-guid" &&
+            plan_result.plan.parent_name == "frmMain" &&
+            plan_result.plan.dry_run &&
+            !plan_result.plan.mutates_asset,
+        "#1241: toolbox creation planning should preserve descriptor, target, identity, and dry-run metadata");
+    expect(has_field_value(plan_result.plan.field_values, "OBJNAME", "txt2") &&
+            has_field_value(plan_result.plan.field_values, "NAME", "txt2") &&
+            has_field_value(plan_result.plan.field_values, "CLASS", "TextBox") &&
+            has_field_value(plan_result.plan.field_values, "BASECLASS", "TextBox") &&
+            has_field_value(plan_result.plan.field_values, "UNIQUEID", "planned-textbox-guid") &&
+            has_field_value(plan_result.plan.field_values, "PARENT", "frmMain") &&
+            has_field_value(plan_result.plan.field_values, "CAPTION", "Planned Customer") &&
+            has_field_value(plan_result.plan.field_values, "PROPERTIES", "ControlSource = \"customer.name\"\r\n"),
+        "#1241: toolbox creation planning should preserve the field values used by mutating creates");
+    expect(object_count(table_path) == before_count,
+        "#1241: toolbox creation planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_planner_respects_explicit_names_and_rejections() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_plan_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto explicit_plan = copperfin::studio::plan_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "commandbutton",
+        .object_name = "cmdRun",
+        .unique_id = "command-guid",
+        .parent_name = "frmMain",
+        .field_values = {}
+    });
+    expect(explicit_plan.ok &&
+            explicit_plan.plan.object_name == "cmdRun" &&
+            explicit_plan.plan.target_record_index == before_count &&
+            has_field_value(explicit_plan.plan.field_values, "CLASS", "CommandButton"),
+        "#1241: toolbox creation planning should preserve explicit object names and descriptor metadata");
+    expect(object_count(table_path) == before_count,
+        "#1241: explicit-name toolbox creation planning should not mutate the visual asset");
+
+    const auto unknown_plan = copperfin::studio::plan_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "missing-toolbox-item",
+        .object_name = {},
+        .unique_id = "should-not-exist",
+        .parent_name = "frmMain",
+        .field_values = {}
+    });
+    expect(!unknown_plan.ok && unknown_plan.error == "The requested toolbox item was not found.",
+        "#1241: toolbox creation planning should reject unknown toolbox ids");
+    expect(object_count(table_path) == before_count,
+        "#1241: unknown toolbox creation planning should not mutate the visual asset");
+
+    const auto rejected_context_plan = copperfin::studio::plan_visual_object_from_toolbox_item({
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "report-textbox-guid",
+        .parent_name = "DetailBand",
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .field_values = {}
+    });
+    expect(!rejected_context_plan.ok &&
+            rejected_context_plan.error ==
+                "The requested toolbox item is not available in the requested designer context.",
+        "#1241: toolbox creation planning should reject incompatible toolbox contexts");
+    expect(object_count(table_path) == before_count,
+        "#1241: rejected context toolbox creation planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
 }
 
 void test_toolbox_creation_maps_descriptors_and_defaults() {
@@ -244,6 +369,8 @@ void test_toolbox_creation_enforces_optional_context_filters() {
 }  // namespace
 
 int main() {
+    test_toolbox_creation_planner_maps_descriptors_without_mutation();
+    test_toolbox_creation_planner_respects_explicit_names_and_rejections();
     test_toolbox_creation_maps_descriptors_and_defaults();
     test_toolbox_creation_respects_explicit_object_name();
     test_toolbox_creation_rejects_unknown_toolbox_without_mutation();

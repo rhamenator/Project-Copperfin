@@ -26,6 +26,14 @@ namespace {
     };
 }
 
+[[nodiscard]] StudioToolboxObjectCreatePlanResult failed_plan_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .plan = {}
+    };
+}
+
 [[nodiscard]] std::string trimmed_copy(std::string_view value) {
     std::size_t first = 0U;
     while (first < value.size() && std::isspace(static_cast<unsigned char>(value[first])) != 0) {
@@ -113,23 +121,23 @@ namespace {
 
 }  // namespace
 
-vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
+StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request) {
     if (request.path.empty()) {
-        return failed_create_result("No asset path was provided.");
+        return failed_plan_result("No asset path was provided.");
     }
 
     const auto item = find_toolbox_item(request.toolbox_item_id);
     if (!item.has_value()) {
-        return failed_create_result("The requested toolbox item was not found.");
+        return failed_plan_result("The requested toolbox item was not found.");
     }
     if (request.toolbox_context_provided && !toolbox_item_supports_context(*item, request.toolbox_context)) {
-        return failed_create_result("The requested toolbox item is not available in the requested designer context.");
+        return failed_plan_result("The requested toolbox item is not available in the requested designer context.");
     }
 
     const auto table_result = vfp::parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
     if (!table_result.ok) {
-        return failed_create_result(table_result.error);
+        return failed_plan_result(table_result.error);
     }
 
     std::string object_name = trimmed_copy(request.object_name);
@@ -137,7 +145,7 @@ vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
         object_name = generate_default_object_name(*item, table_result.table);
     }
     if (object_name.empty()) {
-        return failed_create_result("A unique object name could not be generated for the requested toolbox item.");
+        return failed_plan_result("A unique object name could not be generated for the requested toolbox item.");
     }
 
     std::vector<vfp::VisualObjectPropertyChange> field_values{
@@ -156,9 +164,35 @@ vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
 
     field_values.insert(field_values.end(), request.field_values.begin(), request.field_values.end());
 
+    return {
+        .ok = true,
+        .error = {},
+        .plan = {
+            .path = request.path,
+            .toolbox_item = *item,
+            .toolbox_context_provided = request.toolbox_context_provided,
+            .toolbox_context = request.toolbox_context,
+            .target_record_index = table_result.table.records.size(),
+            .object_name = object_name,
+            .unique_id = trimmed_copy(request.unique_id),
+            .parent_name = trimmed_copy(request.parent_name),
+            .field_values = std::move(field_values),
+            .dry_run = true,
+            .mutates_asset = false
+        }
+    };
+}
+
+vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
+    const StudioToolboxObjectCreateRequest& request) {
+    const auto plan_result = plan_visual_object_from_toolbox_item(request);
+    if (!plan_result.ok) {
+        return failed_create_result(plan_result.error);
+    }
+
     return vfp::create_visual_object({
-        .path = request.path,
-        .field_values = std::move(field_values)
+        .path = plan_result.plan.path,
+        .field_values = plan_result.plan.field_values
     });
 }
 
