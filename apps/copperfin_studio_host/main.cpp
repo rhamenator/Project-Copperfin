@@ -76,6 +76,7 @@ void print_usage() {
     std::cout << "Dynamic-input-mask object: --dynamic-input-mask-object --dynamic-input-mask <expr> [--dynamic-input-mask-target-object-name <name>] [--dynamic-input-mask-target-unique-id <id>]\n";
     std::cout << "Dynamic-line-height object: --dynamic-line-height-object --dynamic-line-height <expr> [--dynamic-line-height-target-object-name <name>] [--dynamic-line-height-target-unique-id <id>]\n";
     std::cout << "Font-name object: --font-name-object --font-name <value> [--font-name-target-object-name <name>] [--font-name-target-unique-id <id>]\n";
+    std::cout << "Font-size object: --font-size-object --font-size <n> [--font-size-target-object-name <name>] [--font-size-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4571,6 +4572,30 @@ int main(int argc, char** argv) {
         if (!font_name_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << font_name_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.font_size_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> font_size_objects;
+        font_size_objects.reserve(parse_result.request.font_size_objects.size());
+        for (const auto& font_size_object : parse_result.request.font_size_objects) {
+            font_size_objects.push_back({
+                .record_index = font_size_object.record_index,
+                .object_name = font_size_object.object_name,
+                .unique_id = font_size_object.unique_id
+            });
+        }
+
+        const auto font_size_result = copperfin::vfp::set_visual_object_font_size({
+            .path = parse_result.request.path,
+            .objects = font_size_objects,
+            .font_size = parse_result.request.font_size
+        });
+
+        if (!font_size_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << font_size_result.error << "\n";
             return 4;
         }
     }

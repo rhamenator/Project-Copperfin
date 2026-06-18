@@ -99,6 +99,7 @@ struct StudioOpenRequest {
     double grid_height = 0.0;
     double delta_hpos = 0.0;
     double delta_vpos = 0.0;
+    double font_size = 0.0;
     int starting_tab_index = 0;
     int row_source_type = 0;
     int bound_column = 0;
@@ -266,6 +267,7 @@ struct StudioOpenRequest {
     bool dynamic_input_mask_object = false;
     bool dynamic_line_height_object = false;
     bool font_name_object = false;
+    bool font_size_object = false;
     bool max_width_object = false;
     bool max_left_object = false;
     bool max_top_object = false;
@@ -463,6 +465,7 @@ struct StudioOpenRequest {
     bool dynamic_input_mask_available = false;
     bool dynamic_line_height_available = false;
     bool font_name_available = false;
+    bool font_size_available = false;
     bool max_width_available = false;
     bool max_left_available = false;
     bool max_top_available = false;
@@ -601,6 +604,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> dynamic_input_mask_objects{};
     std::vector<StudioObjectSelector> dynamic_line_height_objects{};
     std::vector<StudioObjectSelector> font_name_objects{};
+    std::vector<StudioObjectSelector> font_size_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
     std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> max_top_objects{};

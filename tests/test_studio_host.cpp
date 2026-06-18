@@ -523,6 +523,10 @@ void test_parse_launch_arguments() {
         "#1178: launch contract should keep font-name-object off by default");
     expect(!result.request.font_name_available,
         "#1178: launch contract should keep font name unavailable by default");
+    expect(!result.request.font_size_object,
+        "#1179: launch contract should keep font-size-object off by default");
+    expect(!result.request.font_size_available,
+        "#1179: launch contract should keep font size unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -12068,6 +12072,101 @@ void test_parse_launch_arguments_rejects_font_name_object_ambiguity() {
         "#1178: launch contract should reject stray font-name arguments");
 }
 
+void test_parse_launch_arguments_for_font_size_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-size-object",
+        "--font-size", "13.5",
+        "--font-size-target-object-name", "txtName",
+        "--font-size-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1179: launch contract should parse font-size-object requests");
+    expect(result.request.font_size_object,
+        "#1179: launch contract should detect --font-size-object");
+    expect(result.request.font_size_available && result.request.font_size == 13.5,
+        "#1179: font-size-object requests should carry numeric font size");
+    expect(result.request.font_size_objects.size() == 2U,
+        "#1179: font-size-object requests should collect font-size target selectors");
+    if (result.request.font_size_objects.size() == 2U) {
+        expect(result.request.font_size_objects[0].object_name == "txtName" &&
+                result.request.font_size_objects[0].unique_id.empty(),
+            "#1179: font-size-object requests should parse target object-name selectors");
+        expect(result.request.font_size_objects[1].object_name.empty() &&
+                result.request.font_size_objects[1].unique_id == "two-guid",
+            "#1179: font-size-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_size_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-size-object",
+        "--font-size-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1179: launch contract should reject font-size-object requests without font size");
+
+    const auto non_numeric_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-size-object",
+        "--font-size", "large",
+        "--font-size-target-unique-id", "one-guid"
+    });
+    expect(!non_numeric_result.ok,
+        "#1179: launch contract should reject non-numeric font-size values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-size-object",
+        "--font-size", "-1",
+        "--font-size-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1179: launch contract should reject negative font-size values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-size-object",
+        "--font-size", "13.5"
+    });
+    expect(!missing_targets_result.ok,
+        "#1179: launch contract should reject font-size-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_font_size_object_ambiguity() {
+    const auto font_size_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-size-object",
+        "--allow-output-object",
+        "--font-size", "13.5",
+        "--font-size-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_size_allow_output_result.ok,
+        "#1179: launch contract should reject simultaneous font-size-object and allow-output-object requests");
+
+    const auto font_size_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-size-object",
+        "--clear-property",
+        "--property-name", "FontSize",
+        "--font-size", "13.5",
+        "--font-size-target-unique-id", "one-guid"
+    });
+    expect(!font_size_property_result.ok,
+        "#1179: launch contract should reject font-size-object combined with property commands");
+
+    const auto stray_font_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-size", "13.5"
+    });
+    expect(!stray_font_size_result.ok,
+        "#1179: launch contract should reject stray font-size arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15766,6 +15865,9 @@ int main() {
     test_parse_launch_arguments_for_font_name_object();
     test_parse_launch_arguments_rejects_font_name_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_name_object_ambiguity();
+    test_parse_launch_arguments_for_font_size_object();
+    test_parse_launch_arguments_rejects_font_size_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_size_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

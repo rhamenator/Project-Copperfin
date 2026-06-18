@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <charconv>
 #include <cctype>
+#include <cmath>
 #include <optional>
 
 namespace copperfin::studio {
@@ -1218,6 +1219,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
 
         if (argument == "--font-name-object") {
             result.request.font_name_object = true;
+            continue;
+        }
+
+        if (argument == "--font-size-object") {
+            result.request.font_size_object = true;
             continue;
         }
 
@@ -3078,6 +3084,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.font_name = args[++index];
             result.request.font_name_available = true;
+            continue;
+        }
+
+        if (argument == "--font-size") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-size."};
+            }
+            double font_size = 0.0;
+            if (!parse_double_value(args[++index], font_size) || !std::isfinite(font_size)) {
+                return {.ok = false, .error = "The --font-size value must be numeric."};
+            }
+            if (font_size < 0.0) {
+                return {.ok = false, .error = "The --font-size value must not be negative."};
+            }
+            result.request.font_size = font_size;
+            result.request.font_size_available = true;
             continue;
         }
 
@@ -6323,6 +6345,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-size-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-size-target-object-name."};
+            }
+            result.request.font_size_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--font-size-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-size-target-unique-id."};
+            }
+            result.request.font_size_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -8338,6 +8384,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.font_name_objects.empty())) {
         return {.ok = false, .error = "Font-name arguments can only be used with --font-name-object."};
     }
+    if (result.request.font_size_object && !result.request.font_size_available) {
+        return {.ok = false, .error = "An object font-size assignment requires --font-size."};
+    }
+    if (result.request.font_size_object && result.request.font_size_objects.empty()) {
+        return {.ok = false, .error = "An object font-size assignment requires at least one target selector."};
+    }
+    if (!result.request.font_size_object &&
+        (result.request.font_size_available ||
+         !result.request.font_size_objects.empty())) {
+        return {.ok = false, .error = "Font-size arguments can only be used with --font-size-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8740,6 +8797,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.dynamic_input_mask_object ? 1 : 0) +
         (result.request.dynamic_line_height_object ? 1 : 0) +
         (result.request.font_name_object ? 1 : 0) +
+        (result.request.font_size_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

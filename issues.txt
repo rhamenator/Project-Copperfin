@@ -1,3 +1,4 @@
+1179	OPEN	E2/#23 slice: Expose host font-size-object command		2026-06-18T12:05:52Z
 1178	OPEN	E2/#23 slice: Expose host font-name-object command		2026-06-18T11:53:55Z
 1177	OPEN	E2/#23 slice: Expose host dynamic-line-height-object command		2026-06-18T11:39:58Z
 1176	OPEN	E2/#23 slice: Expose host dynamic-input-mask-object command		2026-06-18T11:27:39Z
