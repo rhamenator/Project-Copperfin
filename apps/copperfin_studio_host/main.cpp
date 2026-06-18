@@ -58,6 +58,7 @@ void print_usage() {
     std::cout << "Movable object: --movable-object --movable <true|false> [--movable-target-object-name <name>] [--movable-target-unique-id <id>]\n";
     std::cout << "Half-height-caption object: --half-height-caption-object --half-height-caption <true|false> [--half-height-caption-target-object-name <name>] [--half-height-caption-target-unique-id <id>]\n";
     std::cout << "MDI-form object: --mdi-form-object --mdi-form <true|false> [--mdi-form-target-object-name <name>] [--mdi-form-target-unique-id <id>]\n";
+    std::cout << "Back-style object: --back-style-object --back-style <n> [--back-style-target-object-name <name>] [--back-style-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4121,6 +4122,30 @@ int main(int argc, char** argv) {
         if (!mdi_form_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << mdi_form_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.back_style_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> back_style_objects;
+        back_style_objects.reserve(parse_result.request.back_style_objects.size());
+        for (const auto& back_style_object : parse_result.request.back_style_objects) {
+            back_style_objects.push_back({
+                .record_index = back_style_object.record_index,
+                .object_name = back_style_object.object_name,
+                .unique_id = back_style_object.unique_id
+            });
+        }
+
+        const auto back_style_result = copperfin::vfp::set_visual_object_back_style({
+            .path = parse_result.request.path,
+            .objects = back_style_objects,
+            .back_style = parse_result.request.back_style
+        });
+
+        if (!back_style_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << back_style_result.error << "\n";
             return 4;
         }
     }
