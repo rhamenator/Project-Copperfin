@@ -1492,6 +1492,24 @@ void write_synthetic_form_table_for_object_always_on_top(const std::filesystem::
     expect(create_result.ok, "#1096: synthetic SCX table for object always on top should be created");
 }
 
+void write_synthetic_form_table_for_object_always_on_bottom(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "ALWAYSONBOTTOM", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1097: synthetic SCX table for object always on bottom should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -11651,6 +11669,129 @@ void test_studio_host_json_assigns_always_on_top_by_stable_selectors(const std::
     }
 }
 
+void test_studio_host_json_assigns_always_on_bottom_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_always_on_bottom_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path always_on_bottom_path = temp_root / "always_on_bottom.scx";
+    write_synthetic_form_table_for_object_always_on_bottom(always_on_bottom_path);
+    const auto always_on_bottom_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", always_on_bottom_path.string(),
+            "--always-on-bottom-object",
+            "--always-on-bottom", "false",
+            "--always-on-bottom-target-object-name", "frmCustomer",
+            "--always-on-bottom-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(always_on_bottom_process.exit_code == 0,
+        "#1097: host object always-on-bottom assignment should exit successfully");
+    expect(visual_object_property(always_on_bottom_path, "one-guid", "ALWAYSONBOTTOM") == "false" &&
+            visual_object_property(always_on_bottom_path, "two-guid", "ALWAYSONBOTTOM") == "false" &&
+            visual_object_property(always_on_bottom_path, "three-guid", "ALWAYSONBOTTOM") == "false" &&
+            visual_object_property(always_on_bottom_path, "other-guid", "ALWAYSONBOTTOM") == "true",
+        "#1097: host object always-on-bottom assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_always_on_bottom(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--always-on-bottom-object",
+            "--always-on-bottom", "false",
+            "--always-on-bottom-target-unique-id", "one-guid",
+            "--always-on-bottom-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1097: missing-target host object always-on-bottom assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "ALWAYSONBOTTOM") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "ALWAYSONBOTTOM") == "true",
+        "#1097: missing-target host object always-on-bottom assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_always_on_bottom(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--always-on-bottom-object",
+            "--always-on-bottom", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1097: always-on-bottom-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "ALWAYSONBOTTOM") == "true",
+        "#1097: always-on-bottom-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_always_on_bottom(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--always-on-bottom-object",
+            "--always-on-bottom-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1097: always-on-bottom-object without always-on-bottom value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "ALWAYSONBOTTOM") == "true",
+        "#1097: always-on-bottom-object without always-on-bottom value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_always_on_bottom(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--always-on-bottom-object",
+            "--always-on-bottom", "false",
+            "--always-on-bottom-target-unique-id", "one-guid",
+            "--always-on-bottom-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1097: duplicate-target host object always-on-bottom assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "ALWAYSONBOTTOM") == "true",
+        "#1097: duplicate-target host object always-on-bottom assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_always_on_bottom(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--always-on-bottom-object",
+            "--auto-size-object",
+            "--always-on-bottom", "false",
+            "--always-on-bottom-target-unique-id", "one-guid",
+            "--auto-size", "false",
+            "--auto-size-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1097: always-on-bottom-object plus auto-size-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "ALWAYSONBOTTOM") == "true",
+        "#1097: always-on-bottom-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -11854,6 +11995,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_resizable_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_add_line_feeds_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_always_on_top_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_always_on_bottom_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

@@ -1,3 +1,4 @@
+1097	OPEN	E2/#23 slice: Expose host always-on-bottom-object command		2026-06-18T00:46:06Z
 1096	OPEN	E2/#23 slice: Expose host always-on-top-object command		2026-06-18T00:40:56Z
 1095	OPEN	E2/#23 slice: Expose host add-line-feeds-object command		2026-06-18T00:36:07Z
 1094	OPEN	E2/#23 slice: Expose host resizable-object command		2026-06-18T00:31:13Z

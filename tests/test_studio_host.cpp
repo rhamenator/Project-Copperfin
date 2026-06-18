@@ -303,6 +303,10 @@ void test_parse_launch_arguments() {
         "#1096: launch contract should keep always-on-top-object off by default");
     expect(!result.request.always_on_top_available,
         "#1096: launch contract should keep always on top unavailable by default");
+    expect(!result.request.always_on_bottom_object,
+        "#1097: launch contract should keep always-on-bottom-object off by default");
+    expect(!result.request.always_on_bottom_available,
+        "#1097: launch contract should keep always on bottom unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -6436,6 +6440,92 @@ void test_parse_launch_arguments_rejects_always_on_top_object_ambiguity() {
         "#1096: launch contract should reject stray always-on-top arguments");
 }
 
+void test_parse_launch_arguments_for_always_on_bottom_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--always-on-bottom-object",
+        "--always-on-bottom", "false",
+        "--always-on-bottom-target-object-name", "frmCustomer",
+        "--always-on-bottom-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1097: launch contract should parse always-on-bottom-object requests");
+    expect(result.request.always_on_bottom_object,
+        "#1097: launch contract should detect --always-on-bottom-object");
+    expect(result.request.always_on_bottom_available && !result.request.always_on_bottom,
+        "#1097: always-on-bottom-object requests should carry always on bottom state");
+    expect(result.request.always_on_bottom_objects.size() == 2U,
+        "#1097: always-on-bottom-object requests should collect always_on_bottom target selectors");
+    if (result.request.always_on_bottom_objects.size() == 2U) {
+        expect(result.request.always_on_bottom_objects[0].object_name == "frmCustomer" &&
+                result.request.always_on_bottom_objects[0].unique_id.empty(),
+            "#1097: always-on-bottom-object requests should parse target object-name selectors");
+        expect(result.request.always_on_bottom_objects[1].object_name.empty() &&
+                result.request.always_on_bottom_objects[1].unique_id == "two-guid",
+            "#1097: always-on-bottom-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_always_on_bottom_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-bottom-object",
+        "--always-on-bottom-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1097: launch contract should reject always-on-bottom-object requests without always on bottom state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-bottom-object",
+        "--always-on-bottom", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1097: launch contract should reject always-on-bottom-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-bottom-object",
+        "--always-on-bottom", "sometimes",
+        "--always-on-bottom-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1097: launch contract should reject invalid always-on-bottom boolean values");
+}
+
+void test_parse_launch_arguments_rejects_always_on_bottom_object_ambiguity() {
+    const auto always_on_bottom_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-bottom-object",
+        "--auto-size-object",
+        "--always-on-bottom", "false",
+        "--always-on-bottom-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!always_on_bottom_auto_size_result.ok,
+        "#1097: launch contract should reject simultaneous always-on-bottom-object and auto-size-object requests");
+
+    const auto always_on_bottom_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-bottom-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--always-on-bottom", "false",
+        "--always-on-bottom-target-unique-id", "one-guid"
+    });
+    expect(!always_on_bottom_property_result.ok,
+        "#1097: launch contract should reject always-on-bottom-object combined with property commands");
+
+    const auto stray_always_on_bottom_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--always-on-bottom", "false"
+    });
+    expect(!stray_always_on_bottom_result.ok,
+        "#1097: launch contract should reject stray always-on-bottom arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7869,6 +7959,9 @@ int main() {
     test_parse_launch_arguments_for_always_on_top_object();
     test_parse_launch_arguments_rejects_always_on_top_object_invalid_inputs();
     test_parse_launch_arguments_rejects_always_on_top_object_ambiguity();
+    test_parse_launch_arguments_for_always_on_bottom_object();
+    test_parse_launch_arguments_rejects_always_on_bottom_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_always_on_bottom_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

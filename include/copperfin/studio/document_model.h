@@ -186,6 +186,7 @@ struct StudioOpenRequest {
     bool resizable_object = false;
     bool add_line_feeds_object = false;
     bool always_on_top_object = false;
+    bool always_on_bottom_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -253,6 +254,7 @@ struct StudioOpenRequest {
     bool resizable_available = false;
     bool add_line_feeds_available = false;
     bool always_on_top_available = false;
+    bool always_on_bottom_available = false;
     bool closable = false;
     bool control_box = false;
     bool allow_output = false;
@@ -275,6 +277,7 @@ struct StudioOpenRequest {
     bool resizable = false;
     bool add_line_feeds = false;
     bool always_on_top = false;
+    bool always_on_bottom = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -343,6 +346,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> resizable_objects{};
     std::vector<StudioObjectSelector> add_line_feeds_objects{};
     std::vector<StudioObjectSelector> always_on_top_objects{};
+    std::vector<StudioObjectSelector> always_on_bottom_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
