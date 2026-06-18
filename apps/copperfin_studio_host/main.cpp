@@ -71,6 +71,7 @@ void print_usage() {
     std::cout << "Fill-color object: --fill-color-object --fill-color <n> [--fill-color-target-object-name <name>] [--fill-color-target-unique-id <id>]\n";
     std::cout << "List-item-id object: --list-item-id-object --list-item-id <n> [--list-item-id-target-object-name <name>] [--list-item-id-target-unique-id <id>]\n";
     std::cout << "Tab-orientation object: --tab-orientation-object --tab-orientation <n> [--tab-orientation-target-object-name <name>] [--tab-orientation-target-unique-id <id>]\n";
+    std::cout << "Display-orientation object: --display-orientation-object --display-orientation <n> [--display-orientation-target-object-name <name>] [--display-orientation-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "Form-set-class object: --form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]\n";
     std::cout << "Default-file-path object: --default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]\n";
@@ -2780,6 +2781,30 @@ int main(int argc, char** argv) {
         if (!tab_orientation_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << tab_orientation_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.display_orientation_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> display_orientation_objects;
+        display_orientation_objects.reserve(parse_result.request.display_orientation_objects.size());
+        for (const auto& display_orientation_object : parse_result.request.display_orientation_objects) {
+            display_orientation_objects.push_back({
+                .record_index = display_orientation_object.record_index,
+                .object_name = display_orientation_object.object_name,
+                .unique_id = display_orientation_object.unique_id
+            });
+        }
+
+        const auto display_orientation_result = copperfin::vfp::set_visual_object_display_orientation({
+            .path = parse_result.request.path,
+            .objects = display_orientation_objects,
+            .display_orientation = parse_result.request.display_orientation
+        });
+
+        if (!display_orientation_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << display_orientation_result.error << "\n";
             return 4;
         }
     }

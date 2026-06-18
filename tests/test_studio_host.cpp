@@ -269,6 +269,10 @@ void test_parse_launch_arguments() {
         "#1139: launch contract should keep tab-orientation-object off by default");
     expect(!result.request.tab_orientation_available,
         "#1139: launch contract should keep tab-orientation unavailable by default");
+    expect(!result.request.display_orientation_object,
+        "#1140: launch contract should keep display-orientation-object off by default");
+    expect(!result.request.display_orientation_available,
+        "#1140: launch contract should keep display-orientation unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.form_set_class_object, "#1136: launch contract should keep form-set-class-object off by default");
@@ -5451,6 +5455,101 @@ void test_parse_launch_arguments_rejects_tab_orientation_object_ambiguity() {
     });
     expect(!stray_tab_orientation_result.ok,
         "#1139: launch contract should reject stray tab-orientation arguments");
+}
+
+void test_parse_launch_arguments_for_display_orientation_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--display-orientation-object",
+        "--display-orientation", "9",
+        "--display-orientation-target-object-name", "cmdSave",
+        "--display-orientation-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1140: launch contract should parse display-orientation-object requests");
+    expect(result.request.display_orientation_object,
+        "#1140: launch contract should detect --display-orientation-object");
+    expect(result.request.display_orientation_available && result.request.display_orientation == 9,
+        "#1140: display-orientation-object requests should carry display orientation");
+    expect(result.request.display_orientation_objects.size() == 2U,
+        "#1140: display-orientation-object requests should collect display orientation target selectors");
+    if (result.request.display_orientation_objects.size() == 2U) {
+        expect(result.request.display_orientation_objects[0].object_name == "cmdSave" &&
+                result.request.display_orientation_objects[0].unique_id.empty(),
+            "#1140: display-orientation-object requests should parse target object-name selectors");
+        expect(result.request.display_orientation_objects[1].object_name.empty() &&
+                result.request.display_orientation_objects[1].unique_id == "two-guid",
+            "#1140: display-orientation-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_display_orientation_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-orientation-object",
+        "--display-orientation-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1140: launch contract should reject display-orientation-object requests without display orientation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-orientation-object",
+        "--display-orientation", "9"
+    });
+    expect(!missing_targets_result.ok,
+        "#1140: launch contract should reject display-orientation-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-orientation-object",
+        "--display-orientation", "east",
+        "--display-orientation-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1140: launch contract should reject non-integer display orientation values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-orientation-object",
+        "--display-orientation", "-1",
+        "--display-orientation-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1140: launch contract should reject negative display orientation values");
+}
+
+void test_parse_launch_arguments_rejects_display_orientation_object_ambiguity() {
+    const auto display_orientation_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-orientation-object",
+        "--locked-object",
+        "--display-orientation", "9",
+        "--display-orientation-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!display_orientation_locked_result.ok,
+        "#1140: launch contract should reject simultaneous display-orientation-object and locked-object requests");
+
+    const auto display_orientation_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-orientation-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--display-orientation", "9",
+        "--display-orientation-target-unique-id", "one-guid"
+    });
+    expect(!display_orientation_property_result.ok,
+        "#1140: launch contract should reject display-orientation-object combined with property commands");
+
+    const auto stray_display_orientation_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--display-orientation", "9"
+    });
+    expect(!stray_display_orientation_result.ok,
+        "#1140: launch contract should reject stray display-orientation arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -11869,6 +11968,9 @@ int main() {
     test_parse_launch_arguments_for_tab_orientation_object();
     test_parse_launch_arguments_rejects_tab_orientation_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tab_orientation_object_ambiguity();
+    test_parse_launch_arguments_for_display_orientation_object();
+    test_parse_launch_arguments_rejects_display_orientation_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_display_orientation_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();

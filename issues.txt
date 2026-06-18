@@ -1,3 +1,4 @@
+1140	OPEN	E2/#23 slice: Expose host display-orientation-object command		2026-06-18T05:34:16Z
 1139	OPEN	E2/#23 slice: Expose host tab-orientation-object command		2026-06-18T05:27:06Z
 1138	OPEN	E2/#23 slice: Expose host initial-selected-alias-object command		2026-06-18T05:19:37Z
 1137	OPEN	E2/#23 slice: Expose host default-file-path-object command		2026-06-18T05:11:54Z

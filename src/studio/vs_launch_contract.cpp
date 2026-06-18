@@ -289,6 +289,64 @@ bool parse_tab_orientation_argument(const std::string& argument,
     return false;
 }
 
+bool parse_display_orientation_argument(const std::string& argument,
+                                        const std::vector<std::string>& args,
+                                        std::size_t& index,
+                                        LaunchParseResult& result,
+                                        std::string& error) {
+    if (argument == "--display-orientation-object") {
+        result.request.display_orientation_object = true;
+        return true;
+    }
+
+    if (argument == "--display-orientation") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --display-orientation.";
+            return true;
+        }
+        int display_orientation = 0;
+        if (!parse_int_value(args[++index], display_orientation)) {
+            error = "The --display-orientation value must be an integer.";
+            return true;
+        }
+        if (display_orientation < 0) {
+            error = "The --display-orientation value must not be negative.";
+            return true;
+        }
+        result.request.display_orientation = display_orientation;
+        result.request.display_orientation_available = true;
+        return true;
+    }
+
+    if (argument == "--display-orientation-target-object-name") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --display-orientation-target-object-name.";
+            return true;
+        }
+        result.request.display_orientation_objects.push_back({
+            .record_index = 0U,
+            .object_name = args[++index],
+            .unique_id = {}
+        });
+        return true;
+    }
+
+    if (argument == "--display-orientation-target-unique-id") {
+        if ((index + 1U) >= args.size()) {
+            error = "Missing value after --display-orientation-target-unique-id.";
+            return true;
+        }
+        result.request.display_orientation_objects.push_back({
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = args[++index]
+        });
+        return true;
+    }
+
+    return false;
+}
+
 std::optional<std::string> validate_form_set_class_request(const StudioOpenRequest& request) {
     if (request.form_set_class_object && !request.form_set_class_available) {
         return "An object form set class assignment requires --form-set-class.";
@@ -349,6 +407,21 @@ std::optional<std::string> validate_tab_orientation_request(const StudioOpenRequ
     return std::nullopt;
 }
 
+std::optional<std::string> validate_display_orientation_request(const StudioOpenRequest& request) {
+    if (request.display_orientation_object && !request.display_orientation_available) {
+        return "An object display orientation assignment requires --display-orientation.";
+    }
+    if (request.display_orientation_object && request.display_orientation_objects.empty()) {
+        return "An object display orientation assignment requires at least one target selector.";
+    }
+    if (!request.display_orientation_object &&
+        (request.display_orientation_available ||
+         !request.display_orientation_objects.empty())) {
+        return "Display-orientation arguments can only be used with --display-orientation-object.";
+    }
+    return std::nullopt;
+}
+
 }  // namespace
 
 LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
@@ -377,6 +450,12 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
         if (parse_tab_orientation_argument(argument, args, index, result, parsed_argument_error)) {
+            if (!parsed_argument_error.empty()) {
+                return {.ok = false, .error = parsed_argument_error};
+            }
+            continue;
+        }
+        if (parse_display_orientation_argument(argument, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
@@ -5700,6 +5779,9 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
     if (const auto tab_orientation_error = validate_tab_orientation_request(result.request)) {
         return {.ok = false, .error = *tab_orientation_error};
     }
+    if (const auto display_orientation_error = validate_display_orientation_request(result.request)) {
+        return {.ok = false, .error = *display_orientation_error};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -6451,6 +6533,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.fill_color_object ? 1 : 0) +
         (result.request.list_item_id_object ? 1 : 0) +
         (result.request.tab_orientation_object ? 1 : 0) +
+        (result.request.display_orientation_object ? 1 : 0) +
         (result.request.record_source_object ? 1 : 0) +
         (result.request.form_set_class_object ? 1 : 0) +
         (result.request.default_file_path_object ? 1 : 0) +
