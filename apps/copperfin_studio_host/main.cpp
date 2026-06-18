@@ -71,6 +71,7 @@ void print_usage() {
     std::cout << "Mouse-pointer object: --mouse-pointer-object --mouse-pointer <n> [--mouse-pointer-target-object-name <name>] [--mouse-pointer-target-unique-id <id>]\n";
     std::cout << "Picture-margin object: --picture-margin-object --picture-margin <n> [--picture-margin-target-object-name <name>] [--picture-margin-target-unique-id <id>]\n";
     std::cout << "Picture-position object: --picture-position-object --picture-position <n> [--picture-position-target-object-name <name>] [--picture-position-target-unique-id <id>]\n";
+    std::cout << "Picture-spacing object: --picture-spacing-object --picture-spacing <n> [--picture-spacing-target-object-name <name>] [--picture-spacing-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4446,6 +4447,30 @@ int main(int argc, char** argv) {
         if (!picture_position_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << picture_position_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.picture_spacing_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> picture_spacing_objects;
+        picture_spacing_objects.reserve(parse_result.request.picture_spacing_objects.size());
+        for (const auto& picture_spacing_object : parse_result.request.picture_spacing_objects) {
+            picture_spacing_objects.push_back({
+                .record_index = picture_spacing_object.record_index,
+                .object_name = picture_spacing_object.object_name,
+                .unique_id = picture_spacing_object.unique_id
+            });
+        }
+
+        const auto picture_spacing_result = copperfin::vfp::set_visual_object_picture_spacing({
+            .path = parse_result.request.path,
+            .objects = picture_spacing_objects,
+            .picture_spacing = parse_result.request.picture_spacing
+        });
+
+        if (!picture_spacing_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << picture_spacing_result.error << "\n";
             return 4;
         }
     }

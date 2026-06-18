@@ -503,6 +503,10 @@ void test_parse_launch_arguments() {
         "#1173: launch contract should keep picture-position-object off by default");
     expect(!result.request.picture_position_available,
         "#1173: launch contract should keep picture position unavailable by default");
+    expect(!result.request.picture_spacing_object,
+        "#1174: launch contract should keep picture-spacing-object off by default");
+    expect(!result.request.picture_spacing_available,
+        "#1174: launch contract should keep picture spacing unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11625,6 +11629,101 @@ void test_parse_launch_arguments_rejects_picture_position_object_ambiguity() {
         "#1173: launch contract should reject stray picture-position arguments");
 }
 
+void test_parse_launch_arguments_for_picture_spacing_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--picture-spacing-object",
+        "--picture-spacing", "2",
+        "--picture-spacing-target-object-name", "frmCustomer",
+        "--picture-spacing-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1174: launch contract should parse picture-spacing-object requests");
+    expect(result.request.picture_spacing_object,
+        "#1174: launch contract should detect --picture-spacing-object");
+    expect(result.request.picture_spacing_available && result.request.picture_spacing == 2,
+        "#1174: picture-spacing-object requests should carry picture-spacing value");
+    expect(result.request.picture_spacing_objects.size() == 2U,
+        "#1174: picture-spacing-object requests should collect picture-spacing target selectors");
+    if (result.request.picture_spacing_objects.size() == 2U) {
+        expect(result.request.picture_spacing_objects[0].object_name == "frmCustomer" &&
+                result.request.picture_spacing_objects[0].unique_id.empty(),
+            "#1174: picture-spacing-object requests should parse target object-name selectors");
+        expect(result.request.picture_spacing_objects[1].object_name.empty() &&
+                result.request.picture_spacing_objects[1].unique_id == "two-guid",
+            "#1174: picture-spacing-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_picture_spacing_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-spacing-object",
+        "--picture-spacing-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1174: launch contract should reject picture-spacing-object requests without picture-spacing value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-spacing-object",
+        "--picture-spacing", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1174: launch contract should reject picture-spacing-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-spacing-object",
+        "--picture-spacing", "gap",
+        "--picture-spacing-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1174: launch contract should reject non-integer picture-spacing values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-spacing-object",
+        "--picture-spacing", "-1",
+        "--picture-spacing-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1174: launch contract should reject negative picture-spacing values");
+}
+
+void test_parse_launch_arguments_rejects_picture_spacing_object_ambiguity() {
+    const auto picture_spacing_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-spacing-object",
+        "--allow-output-object",
+        "--picture-spacing", "2",
+        "--picture-spacing-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!picture_spacing_allow_output_result.ok,
+        "#1174: launch contract should reject simultaneous picture-spacing-object and allow-output-object requests");
+
+    const auto picture_spacing_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-spacing-object",
+        "--clear-property",
+        "--property-name", "PictureSpacing",
+        "--picture-spacing", "2",
+        "--picture-spacing-target-unique-id", "one-guid"
+    });
+    expect(!picture_spacing_property_result.ok,
+        "#1174: launch contract should reject picture-spacing-object combined with property commands");
+
+    const auto stray_picture_spacing_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-spacing", "2"
+    });
+    expect(!stray_picture_spacing_result.ok,
+        "#1174: launch contract should reject stray picture-spacing arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15308,6 +15407,9 @@ int main() {
     test_parse_launch_arguments_for_picture_position_object();
     test_parse_launch_arguments_rejects_picture_position_object_invalid_inputs();
     test_parse_launch_arguments_rejects_picture_position_object_ambiguity();
+    test_parse_launch_arguments_for_picture_spacing_object();
+    test_parse_launch_arguments_rejects_picture_spacing_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_picture_spacing_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
