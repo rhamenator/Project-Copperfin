@@ -543,6 +543,10 @@ void test_parse_launch_arguments() {
         "#1183: launch contract should keep font-strikethru-object off by default");
     expect(!result.request.font_strikethru_available,
         "#1183: launch contract should keep font strikethru unavailable by default");
+    expect(!result.request.font_outline_object,
+        "#1184: launch contract should keep font-outline-object off by default");
+    expect(!result.request.font_outline_available,
+        "#1184: launch contract should keep font outline unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -12527,6 +12531,92 @@ void test_parse_launch_arguments_rejects_font_strikethru_object_ambiguity() {
         "#1183: launch contract should reject stray font-strikethru arguments");
 }
 
+void test_parse_launch_arguments_for_font_outline_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-outline-object",
+        "--font-outline", "true",
+        "--font-outline-target-object-name", "txtName",
+        "--font-outline-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1184: launch contract should parse font-outline-object requests");
+    expect(result.request.font_outline_object,
+        "#1184: launch contract should detect --font-outline-object");
+    expect(result.request.font_outline_available && result.request.font_outline,
+        "#1184: font-outline-object requests should carry font outline state");
+    expect(result.request.font_outline_objects.size() == 2U,
+        "#1184: font-outline-object requests should collect font-outline target selectors");
+    if (result.request.font_outline_objects.size() == 2U) {
+        expect(result.request.font_outline_objects[0].object_name == "txtName" &&
+                result.request.font_outline_objects[0].unique_id.empty(),
+            "#1184: font-outline-object requests should parse target object-name selectors");
+        expect(result.request.font_outline_objects[1].object_name.empty() &&
+                result.request.font_outline_objects[1].unique_id == "two-guid",
+            "#1184: font-outline-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_outline_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-outline-object",
+        "--font-outline-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1184: launch contract should reject font-outline-object requests without font outline state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-outline-object",
+        "--font-outline", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1184: launch contract should reject font-outline-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-outline-object",
+        "--font-outline", "sometimes",
+        "--font-outline-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1184: launch contract should reject invalid font-outline boolean values");
+}
+
+void test_parse_launch_arguments_rejects_font_outline_object_ambiguity() {
+    const auto font_outline_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-outline-object",
+        "--allow-output-object",
+        "--font-outline", "true",
+        "--font-outline-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_outline_allow_output_result.ok,
+        "#1184: launch contract should reject simultaneous font-outline-object and allow-output-object requests");
+
+    const auto font_outline_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-outline-object",
+        "--clear-property",
+        "--property-name", "FontOutline",
+        "--font-outline", "true",
+        "--font-outline-target-unique-id", "one-guid"
+    });
+    expect(!font_outline_property_result.ok,
+        "#1184: launch contract should reject font-outline-object combined with property commands");
+
+    const auto stray_font_outline_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-outline", "true"
+    });
+    expect(!stray_font_outline_result.ok,
+        "#1184: launch contract should reject stray font-outline arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16240,6 +16330,9 @@ int main() {
     test_parse_launch_arguments_for_font_strikethru_object();
     test_parse_launch_arguments_rejects_font_strikethru_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_strikethru_object_ambiguity();
+    test_parse_launch_arguments_for_font_outline_object();
+    test_parse_launch_arguments_rejects_font_outline_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_outline_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

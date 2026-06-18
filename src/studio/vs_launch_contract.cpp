@@ -1247,6 +1247,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-outline-object") {
+            result.request.font_outline_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -3172,6 +3177,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.font_strikethru = *font_strikethru;
             result.request.font_strikethru_available = true;
+            continue;
+        }
+
+        if (argument == "--font-outline") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-outline."};
+            }
+            const auto font_outline = parse_bool_value(args[++index]);
+            if (!font_outline.has_value()) {
+                return {.ok = false, .error = "The --font-outline value must be true or false."};
+            }
+            result.request.font_outline = *font_outline;
+            result.request.font_outline_available = true;
             continue;
         }
 
@@ -6537,6 +6555,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-outline-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-outline-target-object-name."};
+            }
+            result.request.font_outline_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--font-outline-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-outline-target-unique-id."};
+            }
+            result.request.font_outline_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -8607,6 +8649,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.font_strikethru_objects.empty())) {
         return {.ok = false, .error = "Font-strikethru arguments can only be used with --font-strikethru-object."};
     }
+    if (result.request.font_outline_object && !result.request.font_outline_available) {
+        return {.ok = false, .error = "An object font-outline assignment requires --font-outline."};
+    }
+    if (result.request.font_outline_object && result.request.font_outline_objects.empty()) {
+        return {.ok = false, .error = "An object font-outline assignment requires at least one target selector."};
+    }
+    if (!result.request.font_outline_object &&
+        (result.request.font_outline_available ||
+         !result.request.font_outline_objects.empty())) {
+        return {.ok = false, .error = "Font-outline arguments can only be used with --font-outline-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -9014,6 +9067,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.font_italic_object ? 1 : 0) +
         (result.request.font_underline_object ? 1 : 0) +
         (result.request.font_strikethru_object ? 1 : 0) +
+        (result.request.font_outline_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +
