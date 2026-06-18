@@ -1,3 +1,4 @@
+1133	OPEN	E2/#23 slice: Expose host child-order-object command		2026-06-18T04:29:03Z
 1132	OPEN	E2/#23 slice: Expose host highlight-style-object command		2026-06-18T04:23:13Z
 1131	OPEN	E2/#23 slice: Expose host column-order-object command		2026-06-18T04:16:49Z
 1130	OPEN	E2/#23 slice: Expose host record-source-object command		2026-06-18T04:10:28Z

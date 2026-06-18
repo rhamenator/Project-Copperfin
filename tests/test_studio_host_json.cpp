@@ -1150,6 +1150,24 @@ void write_synthetic_form_table_for_object_highlight_style(const std::filesystem
     expect(create_result.ok, "#1132: synthetic SCX table for object highlight-style should be created");
 }
 
+void write_synthetic_form_table_for_object_child_order(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "CHILDORDER", .type = 'N', .length = 3U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "0"},
+        {"cmdCancel", "cmdCancel", "two-guid", "1"},
+        {"lblStatus", "lblStatus", "three-guid", "2"},
+        {"cmdOther", "cmdOther", "other-guid", "0"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1133: synthetic SCX table for object child-order should be created");
+}
+
 void write_synthetic_form_table_for_object_record_source(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -10091,6 +10109,146 @@ void test_studio_host_json_assigns_highlight_style_by_stable_selectors(const std
     }
 }
 
+void test_studio_host_json_assigns_child_order_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_child_order_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path child_order_path = temp_root / "child_order.scx";
+    write_synthetic_form_table_for_object_child_order(child_order_path);
+    const auto child_order_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", child_order_path.string(),
+            "--child-order-object",
+            "--child-order", "9",
+            "--child-order-target-object-name", "cmdSave",
+            "--child-order-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(child_order_process.exit_code == 0,
+        "#1133: host object child-order assignment should exit successfully");
+    expect(visual_object_property(child_order_path, "one-guid", "CHILDORDER") == "9" &&
+            visual_object_property(child_order_path, "two-guid", "CHILDORDER") == "9" &&
+            visual_object_property(child_order_path, "three-guid", "CHILDORDER") == "2" &&
+            visual_object_property(child_order_path, "other-guid", "CHILDORDER") == "0",
+        "#1133: host object child-order assignment should assign selected values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_child_order(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--child-order-object",
+            "--child-order", "2",
+            "--child-order-target-unique-id", "one-guid",
+            "--child-order-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1133: missing-target host object child-order assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "CHILDORDER") == "0" &&
+            visual_object_property(missing_target_path, "two-guid", "CHILDORDER") == "1",
+        "#1133: missing-target host object child-order assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_child_order(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--child-order-object",
+            "--child-order", "2",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1133: child-order-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "CHILDORDER") == "0",
+        "#1133: child-order-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_child_order(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--child-order-object",
+            "--child-order-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1133: child-order-object without child-order value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "CHILDORDER") == "0",
+        "#1133: child-order-object without child-order value should not mutate the asset");
+
+    const fs::path negative_value_path = temp_root / "negative_value.scx";
+    write_synthetic_form_table_for_object_child_order(negative_value_path);
+    const auto negative_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_value_path.string(),
+            "--child-order-object",
+            "--child-order", "-1",
+            "--child-order-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_value_process.exit_code == 2,
+        "#1133: negative child-order values should fail during launch parsing");
+    expect(visual_object_property(negative_value_path, "one-guid", "CHILDORDER") == "0",
+        "#1133: negative child-order values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_child_order(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--child-order-object",
+            "--child-order", "2",
+            "--child-order-target-unique-id", "one-guid",
+            "--child-order-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1133: duplicate-target host object child-order assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "CHILDORDER") == "0",
+        "#1133: duplicate-target host object child-order assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_child_order(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--child-order-object",
+            "--locked-object",
+            "--child-order", "2",
+            "--child-order-target-unique-id", "one-guid",
+            "--locked", "true",
+            "--locked-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1133: child-order-object plus locked-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "CHILDORDER") == "0",
+        "#1133: child-order-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_record_source_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -17398,6 +17556,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_record_source_type_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_column_order_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_highlight_style_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_child_order_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_record_source_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);

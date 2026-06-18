@@ -67,6 +67,7 @@ void print_usage() {
     std::cout << "Record-source-type object: --record-source-type-object --record-source-type <n> [--record-source-type-target-object-name <name>] [--record-source-type-target-unique-id <id>]\n";
     std::cout << "Column-order object: --column-order-object --column-order <n> [--column-order-target-object-name <name>] [--column-order-target-unique-id <id>]\n";
     std::cout << "Highlight-style object: --highlight-style-object --highlight-style <n> [--highlight-style-target-object-name <name>] [--highlight-style-target-unique-id <id>]\n";
+    std::cout << "Child-order object: --child-order-object --child-order <n> [--child-order-target-object-name <name>] [--child-order-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -2677,6 +2678,30 @@ int main(int argc, char** argv) {
         if (!highlight_style_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << highlight_style_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.child_order_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> child_order_objects;
+        child_order_objects.reserve(parse_result.request.child_order_objects.size());
+        for (const auto& child_order_object : parse_result.request.child_order_objects) {
+            child_order_objects.push_back({
+                .record_index = child_order_object.record_index,
+                .object_name = child_order_object.object_name,
+                .unique_id = child_order_object.unique_id
+            });
+        }
+
+        const auto child_order_result = copperfin::vfp::set_visual_object_child_order({
+            .path = parse_result.request.path,
+            .objects = child_order_objects,
+            .child_order = parse_result.request.child_order
+        });
+
+        if (!child_order_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << child_order_result.error << "\n";
             return 4;
         }
     }
