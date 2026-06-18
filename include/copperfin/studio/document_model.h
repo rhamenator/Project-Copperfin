@@ -272,6 +272,7 @@ struct StudioOpenRequest {
     bool display_orientation_object = false;
     bool help_context_id_object = false;
     bool whats_this_help_id_object = false;
+    bool whats_this_help_object = false;
     bool record_source_object = false;
     bool form_set_class_object = false;
     bool default_file_path_object = false;
@@ -282,6 +283,7 @@ struct StudioOpenRequest {
     bool enabled = false;
     bool object_read_only = false;
     bool locked = false;
+    bool whats_this_help = false;
     bool clear_parent = false;
     bool selection_record_available = false;
     bool starting_tab_index_available = false;
@@ -331,6 +333,7 @@ struct StudioOpenRequest {
     bool display_orientation_available = false;
     bool help_context_id_available = false;
     bool whats_this_help_id_available = false;
+    bool whats_this_help_available = false;
     bool record_source_available = false;
     bool form_set_class_available = false;
     bool default_file_path_available = false;
@@ -523,6 +526,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> display_orientation_objects{};
     std::vector<StudioObjectSelector> help_context_id_objects{};
     std::vector<StudioObjectSelector> whats_this_help_id_objects{};
+    std::vector<StudioObjectSelector> whats_this_help_objects{};
     std::vector<StudioObjectSelector> record_source_objects{};
     std::vector<StudioObjectSelector> form_set_class_objects{};
     std::vector<StudioObjectSelector> default_file_path_objects{};

@@ -74,6 +74,7 @@ void print_usage() {
     std::cout << "Display-orientation object: --display-orientation-object --display-orientation <n> [--display-orientation-target-object-name <name>] [--display-orientation-target-unique-id <id>]\n";
     std::cout << "Help-context-id object: --help-context-id-object --help-context-id <n> [--help-context-id-target-object-name <name>] [--help-context-id-target-unique-id <id>]\n";
     std::cout << "WhatsThis help-ID object: --whats-this-help-id-object --whats-this-help-id <n> [--whats-this-help-id-target-object-name <name>] [--whats-this-help-id-target-unique-id <id>]\n";
+    std::cout << "WhatsThis help object: --whats-this-help-object --whats-this-help <true|false> [--whats-this-help-target-object-name <name>] [--whats-this-help-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "Form-set-class object: --form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]\n";
     std::cout << "Default-file-path object: --default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]\n";
@@ -2855,6 +2856,30 @@ int main(int argc, char** argv) {
         if (!whats_this_help_id_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << whats_this_help_id_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.whats_this_help_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> whats_this_help_objects;
+        whats_this_help_objects.reserve(parse_result.request.whats_this_help_objects.size());
+        for (const auto& whats_this_help_object : parse_result.request.whats_this_help_objects) {
+            whats_this_help_objects.push_back({
+                .record_index = whats_this_help_object.record_index,
+                .object_name = whats_this_help_object.object_name,
+                .unique_id = whats_this_help_object.unique_id
+            });
+        }
+
+        const auto whats_this_help_result = copperfin::vfp::set_visual_object_whats_this_help({
+            .path = parse_result.request.path,
+            .objects = whats_this_help_objects,
+            .whats_this_help = parse_result.request.whats_this_help
+        });
+
+        if (!whats_this_help_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << whats_this_help_result.error << "\n";
             return 4;
         }
     }
