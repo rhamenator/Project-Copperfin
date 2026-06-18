@@ -531,6 +531,10 @@ void test_parse_launch_arguments() {
         "#1180: launch contract should keep font-bold-object off by default");
     expect(!result.request.font_bold_available,
         "#1180: launch contract should keep font bold unavailable by default");
+    expect(!result.request.font_italic_object,
+        "#1181: launch contract should keep font-italic-object off by default");
+    expect(!result.request.font_italic_available,
+        "#1181: launch contract should keep font italic unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -12257,6 +12261,92 @@ void test_parse_launch_arguments_rejects_font_bold_object_ambiguity() {
         "#1180: launch contract should reject stray font-bold arguments");
 }
 
+void test_parse_launch_arguments_for_font_italic_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-italic-object",
+        "--font-italic", "true",
+        "--font-italic-target-object-name", "txtName",
+        "--font-italic-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1181: launch contract should parse font-italic-object requests");
+    expect(result.request.font_italic_object,
+        "#1181: launch contract should detect --font-italic-object");
+    expect(result.request.font_italic_available && result.request.font_italic,
+        "#1181: font-italic-object requests should carry font italic state");
+    expect(result.request.font_italic_objects.size() == 2U,
+        "#1181: font-italic-object requests should collect font-italic target selectors");
+    if (result.request.font_italic_objects.size() == 2U) {
+        expect(result.request.font_italic_objects[0].object_name == "txtName" &&
+                result.request.font_italic_objects[0].unique_id.empty(),
+            "#1181: font-italic-object requests should parse target object-name selectors");
+        expect(result.request.font_italic_objects[1].object_name.empty() &&
+                result.request.font_italic_objects[1].unique_id == "two-guid",
+            "#1181: font-italic-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_italic_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-italic-object",
+        "--font-italic-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1181: launch contract should reject font-italic-object requests without font italic state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-italic-object",
+        "--font-italic", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1181: launch contract should reject font-italic-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-italic-object",
+        "--font-italic", "sometimes",
+        "--font-italic-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1181: launch contract should reject invalid font-italic boolean values");
+}
+
+void test_parse_launch_arguments_rejects_font_italic_object_ambiguity() {
+    const auto font_italic_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-italic-object",
+        "--allow-output-object",
+        "--font-italic", "true",
+        "--font-italic-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_italic_allow_output_result.ok,
+        "#1181: launch contract should reject simultaneous font-italic-object and allow-output-object requests");
+
+    const auto font_italic_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-italic-object",
+        "--clear-property",
+        "--property-name", "FontItalic",
+        "--font-italic", "true",
+        "--font-italic-target-unique-id", "one-guid"
+    });
+    expect(!font_italic_property_result.ok,
+        "#1181: launch contract should reject font-italic-object combined with property commands");
+
+    const auto stray_font_italic_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-italic", "true"
+    });
+    expect(!stray_font_italic_result.ok,
+        "#1181: launch contract should reject stray font-italic arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15961,6 +16051,9 @@ int main() {
     test_parse_launch_arguments_for_font_bold_object();
     test_parse_launch_arguments_rejects_font_bold_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_bold_object_ambiguity();
+    test_parse_launch_arguments_for_font_italic_object();
+    test_parse_launch_arguments_rejects_font_italic_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_italic_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

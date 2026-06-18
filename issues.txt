@@ -1,3 +1,4 @@
+1181	OPEN	E2/#23 slice: Expose host font-italic-object command		2026-06-18T12:30:24Z
 1180	OPEN	E2/#23 slice: Expose host font-bold-object command		2026-06-18T12:17:54Z
 1179	OPEN	E2/#23 slice: Expose host font-size-object command		2026-06-18T12:05:52Z
 1178	OPEN	E2/#23 slice: Expose host font-name-object command		2026-06-18T11:53:55Z

@@ -1232,6 +1232,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-italic-object") {
+            result.request.font_italic_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -3118,6 +3123,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.font_bold = *font_bold;
             result.request.font_bold_available = true;
+            continue;
+        }
+
+        if (argument == "--font-italic") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-italic."};
+            }
+            const auto font_italic = parse_bool_value(args[++index]);
+            if (!font_italic.has_value()) {
+                return {.ok = false, .error = "The --font-italic value must be true or false."};
+            }
+            result.request.font_italic = *font_italic;
+            result.request.font_italic_available = true;
             continue;
         }
 
@@ -6411,6 +6429,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--font-italic-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-italic-target-object-name."};
+            }
+            result.request.font_italic_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--font-italic-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --font-italic-target-unique-id."};
+            }
+            result.request.font_italic_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -8448,6 +8490,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.font_bold_objects.empty())) {
         return {.ok = false, .error = "Font-bold arguments can only be used with --font-bold-object."};
     }
+    if (result.request.font_italic_object && !result.request.font_italic_available) {
+        return {.ok = false, .error = "An object font-italic assignment requires --font-italic."};
+    }
+    if (result.request.font_italic_object && result.request.font_italic_objects.empty()) {
+        return {.ok = false, .error = "An object font-italic assignment requires at least one target selector."};
+    }
+    if (!result.request.font_italic_object &&
+        (result.request.font_italic_available ||
+         !result.request.font_italic_objects.empty())) {
+        return {.ok = false, .error = "Font-italic arguments can only be used with --font-italic-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8852,6 +8905,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.font_name_object ? 1 : 0) +
         (result.request.font_size_object ? 1 : 0) +
         (result.request.font_bold_object ? 1 : 0) +
+        (result.request.font_italic_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +
