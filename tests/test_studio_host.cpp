@@ -273,6 +273,10 @@ void test_parse_launch_arguments() {
         "#1140: launch contract should keep display-orientation-object off by default");
     expect(!result.request.display_orientation_available,
         "#1140: launch contract should keep display-orientation unavailable by default");
+    expect(!result.request.help_context_id_object,
+        "#1141: launch contract should keep help-context-id-object off by default");
+    expect(!result.request.help_context_id_available,
+        "#1141: launch contract should keep help-context-id unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.form_set_class_object, "#1136: launch contract should keep form-set-class-object off by default");
@@ -5550,6 +5554,101 @@ void test_parse_launch_arguments_rejects_display_orientation_object_ambiguity() 
     });
     expect(!stray_display_orientation_result.ok,
         "#1140: launch contract should reject stray display-orientation arguments");
+}
+
+void test_parse_launch_arguments_for_help_context_id_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--help-context-id-object",
+        "--help-context-id", "900",
+        "--help-context-id-target-object-name", "cmdSave",
+        "--help-context-id-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1141: launch contract should parse help-context-id-object requests");
+    expect(result.request.help_context_id_object,
+        "#1141: launch contract should detect --help-context-id-object");
+    expect(result.request.help_context_id_available && result.request.help_context_id == 900,
+        "#1141: help-context-id-object requests should carry help context ID");
+    expect(result.request.help_context_id_objects.size() == 2U,
+        "#1141: help-context-id-object requests should collect help context ID target selectors");
+    if (result.request.help_context_id_objects.size() == 2U) {
+        expect(result.request.help_context_id_objects[0].object_name == "cmdSave" &&
+                result.request.help_context_id_objects[0].unique_id.empty(),
+            "#1141: help-context-id-object requests should parse target object-name selectors");
+        expect(result.request.help_context_id_objects[1].object_name.empty() &&
+                result.request.help_context_id_objects[1].unique_id == "two-guid",
+            "#1141: help-context-id-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_help_context_id_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--help-context-id-object",
+        "--help-context-id-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1141: launch contract should reject help-context-id-object requests without help context ID");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--help-context-id-object",
+        "--help-context-id", "900"
+    });
+    expect(!missing_targets_result.ok,
+        "#1141: launch contract should reject help-context-id-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--help-context-id-object",
+        "--help-context-id", "topic",
+        "--help-context-id-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1141: launch contract should reject non-integer help context ID values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--help-context-id-object",
+        "--help-context-id", "-1",
+        "--help-context-id-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1141: launch contract should reject negative help context ID values");
+}
+
+void test_parse_launch_arguments_rejects_help_context_id_object_ambiguity() {
+    const auto help_context_id_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--help-context-id-object",
+        "--locked-object",
+        "--help-context-id", "900",
+        "--help-context-id-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!help_context_id_locked_result.ok,
+        "#1141: launch contract should reject simultaneous help-context-id-object and locked-object requests");
+
+    const auto help_context_id_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--help-context-id-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--help-context-id", "900",
+        "--help-context-id-target-unique-id", "one-guid"
+    });
+    expect(!help_context_id_property_result.ok,
+        "#1141: launch contract should reject help-context-id-object combined with property commands");
+
+    const auto stray_help_context_id_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--help-context-id", "900"
+    });
+    expect(!stray_help_context_id_result.ok,
+        "#1141: launch contract should reject stray help-context-id arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -11971,6 +12070,9 @@ int main() {
     test_parse_launch_arguments_for_display_orientation_object();
     test_parse_launch_arguments_rejects_display_orientation_object_invalid_inputs();
     test_parse_launch_arguments_rejects_display_orientation_object_ambiguity();
+    test_parse_launch_arguments_for_help_context_id_object();
+    test_parse_launch_arguments_rejects_help_context_id_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_help_context_id_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();

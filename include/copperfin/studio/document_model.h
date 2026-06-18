@@ -104,6 +104,7 @@ struct StudioOpenRequest {
     int left_column = 0;
     int tab_orientation = 0;
     int display_orientation = 0;
+    int help_context_id = 0;
     int drag_mode = 0;
     int ole_drag_mode = 0;
     int ole_drop_mode = 0;
@@ -268,6 +269,7 @@ struct StudioOpenRequest {
     bool list_item_id_object = false;
     bool tab_orientation_object = false;
     bool display_orientation_object = false;
+    bool help_context_id_object = false;
     bool record_source_object = false;
     bool form_set_class_object = false;
     bool default_file_path_object = false;
@@ -325,6 +327,7 @@ struct StudioOpenRequest {
     bool list_item_id_available = false;
     bool tab_orientation_available = false;
     bool display_orientation_available = false;
+    bool help_context_id_available = false;
     bool record_source_available = false;
     bool form_set_class_available = false;
     bool default_file_path_available = false;
@@ -515,6 +518,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> list_item_id_objects{};
     std::vector<StudioObjectSelector> tab_orientation_objects{};
     std::vector<StudioObjectSelector> display_orientation_objects{};
+    std::vector<StudioObjectSelector> help_context_id_objects{};
     std::vector<StudioObjectSelector> record_source_objects{};
     std::vector<StudioObjectSelector> form_set_class_objects{};
     std::vector<StudioObjectSelector> default_file_path_objects{};
