@@ -5462,6 +5462,100 @@ void test_studio_host_json_exposes_designer_launch_surface_catalog(const std::st
     }
 }
 
+void test_studio_host_json_exposes_designer_invocation_admission_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_designer_invocation_admission_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-invocation-admission-catalog",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--symbol", "Click",
+            "--line", "12",
+            "--column", "4",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "false",
+            "--admit-toolbox-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1224: designer invocation-admission catalog JSON should exit successfully");
+    expect_contains(catalog_process.stdout_text, "\"designerInvocationAdmissionCatalog\": {",
+        "#1224: designer invocation-admission catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"contextCount\": 9",
+        "#1224: designer invocation-admission catalog JSON should expose all Studio contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1224: designer invocation-admission catalog JSON should include visual-object contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+        "#1224: designer invocation-admission catalog JSON should include report contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"menu_item\"",
+        "#1224: designer invocation-admission catalog JSON should include menu contexts");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"data_environment\"",
+        "#1224: designer invocation-admission catalog JSON should include data-environment contexts");
+    expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"show-property-grid\"",
+        "#1224: designer invocation-admission catalog JSON should expose nested editor action ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"form-builder\"",
+        "#1224: designer invocation-admission catalog JSON should expose visual builder ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"menu-designer\"]",
+        "#1224: designer invocation-admission catalog JSON should expose menu builder ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"data-environment-builder\"]",
+        "#1224: designer invocation-admission catalog JSON should expose data-environment builder ids");
+    expect_contains(catalog_process.stdout_text, "\"editorInvocationsAdmitted\": true",
+        "#1224: designer invocation-admission catalog JSON should expose editor admission policy");
+    expect_contains(catalog_process.stdout_text, "\"builderInvocationsAdmitted\": false",
+        "#1224: designer invocation-admission catalog JSON should expose builder admission policy");
+    expect_contains(catalog_process.stdout_text, "\"toolboxInvocationAdmitted\": true",
+        "#1224: designer invocation-admission catalog JSON should expose toolbox admission policy");
+    expect_contains(catalog_process.stdout_text,
+        "\"toolboxError\": \"The selected Studio context does not expose a toolbox palette.\"",
+        "#1224: designer invocation-admission catalog JSON should expose unsupported toolbox reasons");
+    expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#1224: designer invocation-admission catalog JSON should remain non-mutating");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-invocation-admission-catalog",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1224: designer invocation-admission catalog JSON should reject invalid records");
+    expect_contains(invalid_record_process.stdout_text, "\"designerInvocationAdmissionCatalog\": null",
+        "#1224: invalid catalog records should not expose a catalog object");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1224: invalid catalog record JSON should report parser errors");
+
+    const auto invalid_boolean_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-invocation-admission-catalog",
+            "--admit-toolbox-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_boolean_process.exit_code == 2,
+        "#1224: designer invocation-admission catalog JSON should reject invalid booleans");
+    expect_contains(invalid_boolean_process.stdout_text,
+        "The --admit-toolbox-invocation value must be true or false.",
+        "#1224: invalid catalog boolean JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -29283,6 +29377,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission(argv[1]);
     test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);
+    test_studio_host_json_exposes_designer_invocation_admission_catalog(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
