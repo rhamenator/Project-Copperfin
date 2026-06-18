@@ -4664,6 +4664,155 @@ void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_ho
     }
 }
 
+void test_studio_host_json_exposes_builder_dispatch_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_builder_dispatch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto control_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-catalog",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(control_process.exit_code == 0,
+        "#1232: builder dispatch catalog JSON should accept admitted control catalogs");
+    expect_contains(control_process.stdout_text, "\"builderDispatchCatalog\": {",
+        "#1232: builder dispatch catalog JSON should expose a catalog object");
+    expect_contains(control_process.stdout_text, "\"context\": \"control\"",
+        "#1232: builder dispatch catalog JSON should expose builder contexts");
+    expect_contains(control_process.stdout_text, "\"builderCount\": 2",
+        "#1232: control builder dispatch catalog JSON should expose builder counts");
+    expect_contains(control_process.stdout_text, "\"dispatchCount\": 2",
+        "#1232: admitted control builder dispatch catalog JSON should expose dispatch counts");
+    expect_contains(control_process.stdout_text, "\"errorCount\": 0",
+        "#1232: admitted control builder dispatch catalog JSON should expose error counts");
+    expect_contains(control_process.stdout_text, "\"dryRun\": false",
+        "#1232: admitted builder dispatch catalog JSON should not be dry-run");
+    expect_contains(control_process.stdout_text, "\"mutatesAsset\": false",
+        "#1232: builder dispatch catalog JSON should remain non-mutating");
+    expect_contains(control_process.stdout_text, "\"entries\": [",
+        "#1232: builder dispatch catalog JSON should expose per-builder entries");
+    expect_contains(control_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1232: builder dispatch catalog JSON should include grid builders");
+    expect_contains(control_process.stdout_text, "\"kind\": \"builder\"",
+        "#1232: builder dispatch catalog JSON should expose builder kind metadata");
+    expect_contains(control_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1232: builder dispatch catalog JSON should expose command tokens");
+    expect_contains(control_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1232: builder dispatch catalog JSON should expose entry points");
+    expect_contains(control_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1232: builder dispatch catalog JSON should preserve asset paths");
+    expect_contains(control_process.stdout_text, "\"recordIndex\": 4",
+        "#1232: builder dispatch catalog JSON should preserve record indexes");
+    expect_contains(control_process.stdout_text, "\"objectName\": \"grdOrders\"",
+        "#1232: builder dispatch catalog JSON should preserve object names");
+    expect_contains(control_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
+        "#1232: builder dispatch catalog JSON should preserve unique ids");
+    expect_contains(control_process.stdout_text, "\"dispatchArguments\": [",
+        "#1232: builder dispatch catalog JSON should expose dispatch arguments");
+    expect_contains(control_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1232: builder dispatch catalog JSON should expose admitted dispatch state");
+    expect_contains(control_process.stdout_text, "\"executed\": false",
+        "#1232: builder dispatch catalog JSON should not execute builder processes");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-catalog",
+            "--builder-context", "control",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1232: builder dispatch catalog JSON should report dry-run per-builder rejections");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchCount\": 0",
+        "#1232: dry-run builder dispatch catalog JSON should expose zero dispatch count");
+    expect_contains(dry_run_process.stdout_text, "\"errorCount\": 2",
+        "#1232: dry-run builder dispatch catalog JSON should expose per-builder error counts");
+    expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
+        "#1232: dry-run builder dispatch catalog JSON should expose aggregate dry-run state");
+    expect_contains(dry_run_process.stdout_text,
+        "A builder dispatch request requires an admitted non-dry-run invocation.",
+        "#1232: dry-run builder dispatch catalog JSON should expose dispatch errors");
+
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-catalog",
+            "--builder-context", "label",
+            "--path", "labels/mailing.lbx",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(label_process.exit_code == 0,
+        "#1232: builder dispatch catalog JSON should accept admitted label catalogs");
+    expect_contains(label_process.stdout_text, "\"context\": \"label\"",
+        "#1232: label dispatch catalog JSON should expose builder contexts");
+    expect_contains(label_process.stdout_text, "\"builderId\": \"label-wizard\"",
+        "#1232: label dispatch catalog JSON should include label wizards");
+    expect_contains(label_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1232: label dispatch catalog JSON should expose wizard metadata");
+    expect_contains(label_process.stdout_text, "\"entryPoint\": \"cf_wizards.label_wizard\"",
+        "#1232: label dispatch catalog JSON should expose wizard entry points");
+
+    const auto invalid_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-catalog",
+            "--builder-context", "control",
+            "--admit-ui-launch", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_bool_process.exit_code == 2,
+        "#1232: builder dispatch catalog JSON should reject invalid UI-admission booleans");
+    expect_contains(invalid_bool_process.stdout_text, "The --admit-ui-launch value must be true or false.",
+        "#1232: invalid builder dispatch catalog UI-admission JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-catalog",
+            "--builder-context", "control",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1232: builder dispatch catalog JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1232: invalid builder dispatch catalog record JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1232: builder dispatch catalog JSON should reject missing contexts");
+    expect_contains(missing_context_process.stdout_text, "No builder context was provided.",
+        "#1232: missing-context builder dispatch catalog JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_editor_action_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -29863,6 +30012,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
+    test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_editor_action_invocation_admission(argv[1]);
     test_studio_host_json_exposes_editor_action_dispatch(argv[1]);

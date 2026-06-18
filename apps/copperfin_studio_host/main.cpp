@@ -35,6 +35,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --builder-launch-plan <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --builder-invocation-admission <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --builder-dispatch <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --builder-dispatch-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --editor-action-launch-plan <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --editor-action-invocation-admission <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --editor-action-dispatch <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
@@ -244,6 +245,15 @@ struct BuilderDispatchParseResult {
     copperfin::studio::StudioBuilderLaunchRequest request;
     copperfin::studio::StudioEditorSelectionContext selection_context =
         copperfin::studio::StudioEditorSelectionContext::visual_object;
+};
+
+struct BuilderDispatchCatalogParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool context_provided = false;
+    std::string error;
+    copperfin::studio::StudioBuilderDispatchCatalogRequest request;
 };
 
 struct EditorActionLaunchPlanParseResult {
@@ -670,6 +680,75 @@ BuilderDispatchParseResult parse_builder_dispatch_arguments(const std::vector<st
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
         fail("No builder or selection context was provided.");
+    }
+    return result;
+}
+
+BuilderDispatchCatalogParseResult parse_builder_dispatch_catalog_arguments(const std::vector<std::string>& args) {
+    BuilderDispatchCatalogParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--builder-dispatch-catalog") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--builder-dispatch-catalog") {
+            continue;
+        }
+        if (argument == "--builder-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioBuilderContext parsed_context{};
+            if (!parse_builder_context_token(token, parsed_context)) {
+                fail("Unknown builder context token: " + token);
+                continue;
+            }
+            result.context_provided = true;
+            result.request.context = parsed_context;
+        } else if (argument == "--path") {
+            result.request.asset_path = require_value(argument);
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--admit-ui-launch") {
+            const std::string token = require_value(argument);
+            bool admitted = false;
+            if (!parse_bool_token(token, admitted)) {
+                fail("The --admit-ui-launch value must be true or false.");
+                continue;
+            }
+            result.request.admit_ui_launches = admitted;
+        } else {
+            fail("Unknown builder-dispatch-catalog option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.context_provided) {
+        fail("No builder context was provided.");
     }
     return result;
 }
@@ -1818,6 +1897,107 @@ void print_json_builder_dispatch_result(
     std::cout << "}\n";
 }
 
+void print_json_builder_dispatch_catalog_entry(
+    const copperfin::studio::StudioBuilderDispatchCatalogEntry& entry,
+    const std::string& indent) {
+    std::cout << indent << "{\n";
+    std::cout << indent << "  \"builderId\": ";
+    print_json_string_view(entry.builder.id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"title\": ";
+    print_json_string_view(entry.builder.title);
+    std::cout << ",\n";
+    std::cout << indent << "  \"kind\": ";
+    print_json_string(copperfin::studio::studio_builder_kind_name(entry.builder.kind));
+    std::cout << ",\n";
+    std::cout << indent << "  \"launchOk\": " << (entry.launch_plan.ok ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"admissionOk\": " << (entry.invocation_admission.ok ? "true" : "false")
+              << ",\n";
+    std::cout << indent << "  \"dispatchOk\": " << (entry.dispatch.ok ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"error\": ";
+    if (!entry.dispatch.ok) {
+        print_json_string(entry.dispatch.error);
+        std::cout << "\n";
+        std::cout << indent << "}";
+        return;
+    }
+
+    print_json_string("");
+    std::cout << ",\n";
+    const auto& plan = entry.dispatch.plan;
+    std::cout << indent << "  \"context\": ";
+    print_json_string(copperfin::studio::studio_builder_context_name(plan.context));
+    std::cout << ",\n";
+    std::cout << indent << "  \"commandToken\": ";
+    print_json_string(plan.command_token);
+    std::cout << ",\n";
+    std::cout << indent << "  \"entryPoint\": ";
+    print_json_string(plan.entry_point);
+    std::cout << ",\n";
+    std::cout << indent << "  \"assetPath\": ";
+    print_json_string(plan.asset_path);
+    std::cout << ",\n";
+    std::cout << indent << "  \"recordIndex\": " << plan.record_index << ",\n";
+    std::cout << indent << "  \"objectName\": ";
+    print_json_string(plan.object_name);
+    std::cout << ",\n";
+    std::cout << indent << "  \"uniqueId\": ";
+    print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"dispatchArguments\": [";
+    for (std::size_t index = 0U; index < plan.dispatch_arguments.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ", ";
+        }
+        print_json_string(plan.dispatch_arguments[index]);
+    }
+    std::cout << "],\n";
+    std::cout << indent << "  \"dispatchAdmitted\": " << (plan.dispatch_admitted ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"executed\": " << (plan.executed ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"mutatesAsset\": " << (plan.mutates_asset ? "true" : "false") << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_builder_dispatch_catalog_result(
+    const copperfin::studio::StudioBuilderDispatchCatalogResult& result) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"builderDispatchCatalog\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"context\": ";
+    print_json_string(copperfin::studio::studio_builder_context_name(result.context));
+    std::cout << ",\n";
+    std::cout << "    \"builderCount\": " << result.builder_count << ",\n";
+    std::cout << "    \"dispatchCount\": " << result.dispatch_count << ",\n";
+    std::cout << "    \"errorCount\": " << result.error_count << ",\n";
+    std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
+    std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"entries\": [\n";
+    for (std::size_t index = 0U; index < result.entries.size(); ++index) {
+        print_json_builder_dispatch_catalog_entry(result.entries[index], "      ");
+        if ((index + 1U) != result.entries.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ]\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_json_editor_action_launch_plan_result(
     const copperfin::studio::StudioEditorActionLaunchPlanResult& result) {
     std::cout << "{\n";
@@ -2828,6 +3008,30 @@ void print_text_builder_dispatch_result(
     std::cout << "dry_run: " << (plan.dry_run ? "true" : "false") << "\n";
     std::cout << "executed: " << (plan.executed ? "true" : "false") << "\n";
     std::cout << "mutates_asset: " << (plan.mutates_asset ? "true" : "false") << "\n";
+}
+
+void print_text_builder_dispatch_catalog_result(
+    const copperfin::studio::StudioBuilderDispatchCatalogResult& result) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    if (!result.ok) {
+        return;
+    }
+    std::cout << "context: " << copperfin::studio::studio_builder_context_name(result.context) << "\n";
+    std::cout << "builder_count: " << result.builder_count << "\n";
+    std::cout << "dispatch_count: " << result.dispatch_count << "\n";
+    std::cout << "error_count: " << result.error_count << "\n";
+    std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
+    std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
+    for (const auto& entry : result.entries) {
+        std::cout << "entry_builder_id: " << entry.builder.id << "\n";
+        std::cout << "entry_dispatch_ok: " << (entry.dispatch.ok ? "true" : "false") << "\n";
+        if (!entry.dispatch.error.empty()) {
+            std::cout << "entry_error: " << entry.dispatch.error << "\n";
+        }
+    }
 }
 
 void print_text_editor_action_launch_plan_result(
@@ -4408,6 +4612,39 @@ int main(int argc, char** argv) {
             print_json_builder_dispatch_result(result, selection_context);
         } else {
             print_text_builder_dispatch_result(result, selection_context);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto builder_dispatch_catalog_parse = parse_builder_dispatch_catalog_arguments(args);
+    if (builder_dispatch_catalog_parse.requested) {
+        if (!builder_dispatch_catalog_parse.ok) {
+            const auto result = copperfin::studio::StudioBuilderDispatchCatalogResult{
+                .ok = false,
+                .error = builder_dispatch_catalog_parse.error,
+                .context = {},
+                .builder_count = 0U,
+                .dispatch_count = 0U,
+                .error_count = 0U,
+                .dry_run = true,
+                .mutates_asset = false,
+                .entries = {}
+            };
+            if (builder_dispatch_catalog_parse.output_json) {
+                print_json_builder_dispatch_catalog_result(result);
+            } else {
+                print_text_builder_dispatch_catalog_result(result);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::studio::plan_studio_builder_dispatch_catalog(
+            builder_dispatch_catalog_parse.request);
+        if (builder_dispatch_catalog_parse.output_json) {
+            print_json_builder_dispatch_catalog_result(result);
+        } else {
+            print_text_builder_dispatch_catalog_result(result);
         }
         return result.ok ? 0 : 4;
     }
