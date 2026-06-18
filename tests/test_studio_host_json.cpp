@@ -7280,6 +7280,116 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
     }
 }
 
+void test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_batch_plan_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan-catalog",
+            "--toolbox-context", "form",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Batch Plan Catalog",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1258: toolbox-create-batch-plan-catalog JSON command should exit successfully");
+    expect_contains(catalog_process.stdout_text, "\"toolboxCreateBatchPlanCatalog\": {",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose requested contexts");
+    expect_contains(catalog_process.stdout_text, "\"planCount\": 1",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose one batch plan");
+    expect_contains(catalog_process.stdout_text, "\"errorCount\": 0",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose zero errors");
+    expect_contains(catalog_process.stdout_text, "\"batchPlanOk\": true",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose batch plan state");
+    expect_contains(catalog_process.stdout_text, "\"batchPlan\": {",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose nested batch plans");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1258: toolbox-create-batch-plan-catalog JSON should include textbox plans");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
+        "#1258: toolbox-create-batch-plan-catalog JSON should include command button plans");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose generated textbox names");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"cmd1\"",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose generated command names");
+    expect_contains(catalog_process.stdout_text, "\"propertyValue\": \"Batch Plan Catalog\"",
+        "#1258: toolbox-create-batch-plan-catalog JSON should preserve shared field values");
+    expect_contains(catalog_process.stdout_text, "\"dryRun\": true",
+        "#1258: toolbox-create-batch-plan-catalog JSON should expose dry-run state");
+    expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#1258: toolbox-create-batch-plan-catalog JSON should remain non-mutating");
+    expect(visual_object_count(form_path) == before_count,
+        "#1258: toolbox-create-batch-plan-catalog host command should not mutate the visual asset");
+
+    const auto report_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan-catalog",
+            "--toolbox-context", "report",
+            "--parent-name", "DetailBand",
+            "--json"
+        },
+        temp_root);
+    expect(report_catalog_process.exit_code == 0,
+        "#1258: report toolbox-create-batch-plan-catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1258: report toolbox-create-batch-plan-catalog JSON should expose report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#1258: report toolbox-create-batch-plan-catalog JSON should include label plans");
+    expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1258: report toolbox-create-batch-plan-catalog JSON should exclude form-only textbox plans");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1258: toolbox-create-batch-plan-catalog JSON should reject missing contexts");
+    expect_contains(missing_context_process.stdout_text, "No toolbox context was provided.",
+        "#1258: missing toolbox-create-batch-plan-catalog context JSON should report parser errors");
+
+    const auto invalid_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan-catalog",
+            "--toolbox-context", "form",
+            "--field-value", "BROKEN",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_field_process.exit_code == 2,
+        "#1258: toolbox-create-batch-plan-catalog JSON should reject malformed field values");
+    expect_contains(invalid_field_process.stdout_text, "Toolbox field values must use name=value syntax.",
+        "#1258: malformed toolbox-create-batch-plan-catalog field values should report parser errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1258: rejected toolbox-create-batch-plan-catalog host commands should not mutate the visual asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -31735,6 +31845,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_toolbox_object_creation_dispatch(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(argv[1]);
+    test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batches(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(argv[1]);

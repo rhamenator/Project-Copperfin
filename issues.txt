@@ -1,3 +1,4 @@
+1258	OPEN	E2/#23 slice: Expose toolbox object batch creation plan catalog through host JSON		2026-06-18T22:53:15Z
 1257	OPEN	E2/#23 slice: Add toolbox object batch creation plan catalog planning		2026-06-18T22:50:06Z
 1256	OPEN	E2/#23 slice: Expose toolbox object batch creation dispatch catalog through host JSON		2026-06-18T22:42:57Z
 1255	OPEN	E2/#23 slice: Add toolbox object batch creation dispatch catalog planning		2026-06-18T22:37:03Z
