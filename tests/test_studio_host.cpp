@@ -535,6 +535,10 @@ void test_parse_launch_arguments() {
         "#1181: launch contract should keep font-italic-object off by default");
     expect(!result.request.font_italic_available,
         "#1181: launch contract should keep font italic unavailable by default");
+    expect(!result.request.font_underline_object,
+        "#1182: launch contract should keep font-underline-object off by default");
+    expect(!result.request.font_underline_available,
+        "#1182: launch contract should keep font underline unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -12347,6 +12351,92 @@ void test_parse_launch_arguments_rejects_font_italic_object_ambiguity() {
         "#1181: launch contract should reject stray font-italic arguments");
 }
 
+void test_parse_launch_arguments_for_font_underline_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--font-underline-object",
+        "--font-underline", "true",
+        "--font-underline-target-object-name", "txtName",
+        "--font-underline-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1182: launch contract should parse font-underline-object requests");
+    expect(result.request.font_underline_object,
+        "#1182: launch contract should detect --font-underline-object");
+    expect(result.request.font_underline_available && result.request.font_underline,
+        "#1182: font-underline-object requests should carry font underline state");
+    expect(result.request.font_underline_objects.size() == 2U,
+        "#1182: font-underline-object requests should collect font-underline target selectors");
+    if (result.request.font_underline_objects.size() == 2U) {
+        expect(result.request.font_underline_objects[0].object_name == "txtName" &&
+                result.request.font_underline_objects[0].unique_id.empty(),
+            "#1182: font-underline-object requests should parse target object-name selectors");
+        expect(result.request.font_underline_objects[1].object_name.empty() &&
+                result.request.font_underline_objects[1].unique_id == "two-guid",
+            "#1182: font-underline-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_font_underline_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-underline-object",
+        "--font-underline-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1182: launch contract should reject font-underline-object requests without font underline state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-underline-object",
+        "--font-underline", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1182: launch contract should reject font-underline-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-underline-object",
+        "--font-underline", "sometimes",
+        "--font-underline-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1182: launch contract should reject invalid font-underline boolean values");
+}
+
+void test_parse_launch_arguments_rejects_font_underline_object_ambiguity() {
+    const auto font_underline_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-underline-object",
+        "--allow-output-object",
+        "--font-underline", "true",
+        "--font-underline-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!font_underline_allow_output_result.ok,
+        "#1182: launch contract should reject simultaneous font-underline-object and allow-output-object requests");
+
+    const auto font_underline_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-underline-object",
+        "--clear-property",
+        "--property-name", "FontUnderline",
+        "--font-underline", "true",
+        "--font-underline-target-unique-id", "one-guid"
+    });
+    expect(!font_underline_property_result.ok,
+        "#1182: launch contract should reject font-underline-object combined with property commands");
+
+    const auto stray_font_underline_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--font-underline", "true"
+    });
+    expect(!stray_font_underline_result.ok,
+        "#1182: launch contract should reject stray font-underline arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16054,6 +16144,9 @@ int main() {
     test_parse_launch_arguments_for_font_italic_object();
     test_parse_launch_arguments_rejects_font_italic_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_italic_object_ambiguity();
+    test_parse_launch_arguments_for_font_underline_object();
+    test_parse_launch_arguments_rejects_font_underline_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_font_underline_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

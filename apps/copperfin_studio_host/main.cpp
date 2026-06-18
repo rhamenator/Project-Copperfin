@@ -79,6 +79,7 @@ void print_usage() {
     std::cout << "Font-size object: --font-size-object --font-size <n> [--font-size-target-object-name <name>] [--font-size-target-unique-id <id>]\n";
     std::cout << "Font-bold object: --font-bold-object --font-bold <true|false> [--font-bold-target-object-name <name>] [--font-bold-target-unique-id <id>]\n";
     std::cout << "Font-italic object: --font-italic-object --font-italic <true|false> [--font-italic-target-object-name <name>] [--font-italic-target-unique-id <id>]\n";
+    std::cout << "Font-underline object: --font-underline-object --font-underline <true|false> [--font-underline-target-object-name <name>] [--font-underline-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4646,6 +4647,30 @@ int main(int argc, char** argv) {
         if (!font_italic_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << font_italic_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.font_underline_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> font_underline_objects;
+        font_underline_objects.reserve(parse_result.request.font_underline_objects.size());
+        for (const auto& font_underline_object : parse_result.request.font_underline_objects) {
+            font_underline_objects.push_back({
+                .record_index = font_underline_object.record_index,
+                .object_name = font_underline_object.object_name,
+                .unique_id = font_underline_object.unique_id
+            });
+        }
+
+        const auto font_underline_result = copperfin::vfp::set_visual_object_font_underline({
+            .path = parse_result.request.path,
+            .objects = font_underline_objects,
+            .font_underline = parse_result.request.font_underline
+        });
+
+        if (!font_underline_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << font_underline_result.error << "\n";
             return 4;
         }
     }
