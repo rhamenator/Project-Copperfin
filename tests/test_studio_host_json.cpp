@@ -7115,6 +7115,179 @@ void test_studio_host_json_plans_toolbox_object_creation_batches(const std::stri
     }
 }
 
+void test_studio_host_json_creates_toolbox_object_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto create_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch",
+            "--toolbox-context", "form",
+            "--toolbox-item", "textbox",
+            "--unique-id", "first-created-textbox-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=First Created",
+            "--toolbox-item", "textbox",
+            "--unique-id", "second-created-textbox-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Second Created",
+            "--toolbox-item", "commandbutton",
+            "--object-name", "cmdCreateBatch",
+            "--unique-id", "created-command-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Create Batch",
+            "--json"
+        },
+        temp_root);
+    expect(create_process.exit_code == 0,
+        "#1248: toolbox-create-batch JSON command should exit successfully");
+    expect_contains(create_process.stdout_text, "\"toolboxCreateBatch\": {",
+        "#1248: toolbox-create-batch JSON should expose a batch result object");
+    expect_contains(create_process.stdout_text, "\"ok\": true",
+        "#1248: toolbox-create-batch JSON should expose successful mutation state");
+    expect_contains(create_process.stdout_text, "\"recordIndexes\": [2, 3, 4]",
+        "#1248: toolbox-create-batch JSON should expose created record indexes in append order");
+    expect_contains(create_process.stdout_text, "\"createdObjects\": [",
+        "#1248: toolbox-create-batch JSON should expose created object metadata");
+    expect_contains(create_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1248: toolbox-create-batch JSON should expose first generated names");
+    expect_contains(create_process.stdout_text, "\"objectName\": \"txt3\"",
+        "#1248: toolbox-create-batch JSON should reserve generated names across the batch");
+    expect_contains(create_process.stdout_text, "\"objectName\": \"cmdCreateBatch\"",
+        "#1248: toolbox-create-batch JSON should preserve explicit names");
+    expect_contains(create_process.stdout_text, "\"uniqueId\": \"first-created-textbox-guid\"",
+        "#1248: toolbox-create-batch JSON should expose first unique ids");
+    expect_contains(create_process.stdout_text, "\"uniqueId\": \"created-command-guid\"",
+        "#1248: toolbox-create-batch JSON should expose later unique ids");
+    expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
+        "#1248: toolbox-create-batch JSON should expose created parent names");
+    expect(visual_object_count(form_path) == before_count + 3U,
+        "#1248: toolbox-create-batch host command should mutate the visual asset exactly once per item");
+
+    const auto first_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "first-created-textbox-guid",
+        .property_name = "CAPTION"
+    });
+    const auto second_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "second-created-textbox-guid",
+        .property_name = "CAPTION"
+    });
+    const auto command_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "created-command-guid",
+        .property_name = "CAPTION"
+    });
+    expect(first_caption.ok && first_caption.exists && first_caption.value == "First Created" &&
+            second_caption.ok && second_caption.exists && second_caption.value == "Second Created" &&
+            command_caption.ok && command_caption.exists && command_caption.value == "Create Batch",
+        "#1248: toolbox-create-batch host command should persist per-item direct fields");
+
+    const std::size_t committed_count = visual_object_count(form_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch",
+            "--toolbox-context", "form",
+            "--toolbox-item", "textbox",
+            "--object-name", "dupHostName",
+            "--unique-id", "dup-host-guid-1",
+            "--toolbox-item", "commandbutton",
+            "--object-name", "dupHostName",
+            "--unique-id", "dup-host-guid-2",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1248: toolbox-create-batch JSON should reject duplicate planned identities");
+    expect_contains(duplicate_process.stdout_text, "The requested toolbox object identity already exists in the asset.",
+        "#1248: duplicate toolbox-create-batch identities should report runtime errors");
+    expect_contains(duplicate_process.stdout_text, "\"recordIndexes\": []",
+        "#1248: failed toolbox-create-batch JSON should not expose stale record indexes");
+    expect_contains(duplicate_process.stdout_text, "\"createdObjects\": [\n    ]",
+        "#1248: failed toolbox-create-batch JSON should not expose stale created objects");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1248: duplicate-rejected toolbox-create-batch commands should not partially mutate");
+
+    const auto invalid_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch",
+            "--toolbox-context", "form",
+            "--toolbox-item", "textbox",
+            "--unique-id", "valid-before-invalid-host-guid",
+            "--toolbox-item", "commandbutton",
+            "--unique-id", "invalid-field-host-guid",
+            "--field-value", "UNKNOWN=value",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_field_process.exit_code == 4,
+        "#1248: toolbox-create-batch JSON should reject invalid fields without partial mutation");
+    expect_contains(invalid_field_process.stdout_text, "The requested field was not found in the asset.",
+        "#1248: invalid toolbox-create-batch fields should report lower-layer errors");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1248: lower-layer toolbox-create-batch failures should not partially mutate");
+
+    const auto orphan_item_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch",
+            "--parent-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(orphan_item_option_process.exit_code == 2,
+        "#1248: toolbox-create-batch JSON should reject item options before items");
+    expect_contains(orphan_item_option_process.stdout_text,
+        "Toolbox batch item options require a preceding --toolbox-item.",
+        "#1248: orphan toolbox-create-batch item options should report parser errors");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1248: parser-rejected toolbox-create-batch commands should not mutate");
+
+    const auto malformed_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch",
+            "--toolbox-item", "textbox",
+            "--field-value", "BROKEN",
+            "--json"
+        },
+        temp_root);
+    expect(malformed_field_process.exit_code == 2,
+        "#1248: toolbox-create-batch JSON should reject malformed field values");
+    expect_contains(malformed_field_process.stdout_text, "Toolbox field values must use name=value syntax.",
+        "#1248: malformed toolbox-create-batch field values should report parser errors");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1248: malformed toolbox-create-batch commands should not mutate");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_objects(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -30948,6 +31121,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_toolbox_object_creation(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batches(argv[1]);
+    test_studio_host_json_creates_toolbox_object_batches(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
