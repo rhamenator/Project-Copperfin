@@ -137,6 +137,10 @@ void test_parse_launch_arguments() {
         "#1101: launch contract should keep OLE drag-picture-object off by default");
     expect(!result.request.ole_drag_picture_available,
         "#1101: launch contract should keep OLE drag-picture unavailable by default");
+    expect(!result.request.mouse_icon_object,
+        "#1102: launch contract should keep mouse-icon-object off by default");
+    expect(!result.request.mouse_icon_available,
+        "#1102: launch contract should keep mouse-icon unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2210,6 +2214,82 @@ void test_parse_launch_arguments_rejects_ole_drag_picture_object_ambiguity() {
     });
     expect(!stray_ole_drag_picture_result.ok,
         "#1101: launch contract should reject stray OLE drag-picture arguments");
+}
+
+void test_parse_launch_arguments_for_mouse_icon_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--mouse-icon-object",
+        "--mouse-icon", "forms\\customer_mouse.cur",
+        "--mouse-icon-target-object-name", "cmdSave",
+        "--mouse-icon-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1102: launch contract should parse mouse-icon-object requests");
+    expect(result.request.mouse_icon_object, "#1102: launch contract should detect --mouse-icon-object");
+    expect(result.request.mouse_icon_available && result.request.mouse_icon == "forms\\customer_mouse.cur",
+        "#1102: mouse-icon-object requests should carry mouse-icon text");
+    expect(result.request.mouse_icon_objects.size() == 2U,
+        "#1102: mouse-icon-object requests should collect mouse-icon target selectors");
+    if (result.request.mouse_icon_objects.size() == 2U) {
+        expect(result.request.mouse_icon_objects[0].object_name == "cmdSave" &&
+                result.request.mouse_icon_objects[0].unique_id.empty(),
+            "#1102: mouse-icon-object requests should parse target object-name selectors");
+        expect(result.request.mouse_icon_objects[1].object_name.empty() &&
+                result.request.mouse_icon_objects[1].unique_id == "two-guid",
+            "#1102: mouse-icon-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_mouse_icon_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mouse-icon-object",
+        "--mouse-icon-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1102: launch contract should reject mouse-icon-object requests without mouse-icon text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mouse-icon-object",
+        "--mouse-icon", "forms\\customer_mouse.cur"
+    });
+    expect(!missing_targets_result.ok,
+        "#1102: launch contract should reject mouse-icon-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_mouse_icon_object_ambiguity() {
+    const auto mouse_icon_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mouse-icon-object",
+        "--locked-object",
+        "--mouse-icon", "forms\\customer_mouse.cur",
+        "--mouse-icon-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!mouse_icon_locked_result.ok,
+        "#1102: launch contract should reject simultaneous mouse-icon-object and locked-object requests");
+
+    const auto mouse_icon_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mouse-icon-object",
+        "--clear-property",
+        "--property-name", "MouseIcon",
+        "--mouse-icon", "forms\\customer_mouse.cur",
+        "--mouse-icon-target-unique-id", "one-guid"
+    });
+    expect(!mouse_icon_property_result.ok,
+        "#1102: launch contract should reject mouse-icon-object combined with property commands");
+
+    const auto stray_mouse_icon_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--mouse-icon", "forms\\customer_mouse.cur"
+    });
+    expect(!stray_mouse_icon_result.ok,
+        "#1102: launch contract should reject stray mouse-icon arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -8138,6 +8218,9 @@ int main() {
     test_parse_launch_arguments_for_ole_drag_picture_object();
     test_parse_launch_arguments_rejects_ole_drag_picture_object_invalid_inputs();
     test_parse_launch_arguments_rejects_ole_drag_picture_object_ambiguity();
+    test_parse_launch_arguments_for_mouse_icon_object();
+    test_parse_launch_arguments_rejects_mouse_icon_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_mouse_icon_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

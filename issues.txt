@@ -1,3 +1,4 @@
+1102	OPEN	E2/#23 slice: Expose host mouse-icon-object command		2026-06-18T01:17:55Z
 1101	OPEN	E2/#23 slice: Expose host ole-drag-picture-object command		2026-06-18T01:11:47Z
 1100	OPEN	E2/#23 slice: Expose host disabled-picture-object command		2026-06-18T01:04:36Z
 1099	OPEN	E2/#23 slice: Expose host down-picture-object command		2026-06-18T00:57:53Z
