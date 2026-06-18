@@ -53,6 +53,7 @@ void print_usage() {
     std::cout << "Fill-style object: --fill-style-object --fill-style <n> [--fill-style-target-object-name <name>] [--fill-style-target-unique-id <id>]\n";
     std::cout << "Scale-mode object: --scale-mode-object --scale-mode <n> [--scale-mode-target-object-name <name>] [--scale-mode-target-unique-id <id>]\n";
     std::cout << "Buffer-mode object: --buffer-mode-object --buffer-mode <n> [--buffer-mode-target-object-name <name>] [--buffer-mode-target-unique-id <id>]\n";
+    std::cout << "Buffer-mode-override object: --buffer-mode-override-object --buffer-mode-override <n> [--buffer-mode-override-target-object-name <name>] [--buffer-mode-override-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2326,6 +2327,30 @@ int main(int argc, char** argv) {
         if (!buffer_mode_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << buffer_mode_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.buffer_mode_override_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> buffer_mode_override_objects;
+        buffer_mode_override_objects.reserve(parse_result.request.buffer_mode_override_objects.size());
+        for (const auto& buffer_mode_override_object : parse_result.request.buffer_mode_override_objects) {
+            buffer_mode_override_objects.push_back({
+                .record_index = buffer_mode_override_object.record_index,
+                .object_name = buffer_mode_override_object.object_name,
+                .unique_id = buffer_mode_override_object.unique_id
+            });
+        }
+
+        const auto buffer_mode_override_result = copperfin::vfp::set_visual_object_buffer_mode_override({
+            .path = parse_result.request.path,
+            .objects = buffer_mode_override_objects,
+            .buffer_mode_override = parse_result.request.buffer_mode_override
+        });
+
+        if (!buffer_mode_override_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << buffer_mode_override_result.error << "\n";
             return 4;
         }
     }

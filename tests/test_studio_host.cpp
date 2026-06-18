@@ -197,6 +197,10 @@ void test_parse_launch_arguments() {
         "#1117: launch contract should keep buffer-mode-object off by default");
     expect(!result.request.buffer_mode_available,
         "#1117: launch contract should keep buffer-mode unavailable by default");
+    expect(!result.request.buffer_mode_override_object,
+        "#1118: launch contract should keep buffer-mode-override-object off by default");
+    expect(!result.request.buffer_mode_override_available,
+        "#1118: launch contract should keep buffer-mode-override unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3661,6 +3665,101 @@ void test_parse_launch_arguments_rejects_buffer_mode_object_ambiguity() {
     });
     expect(!stray_buffer_mode_result.ok,
         "#1117: launch contract should reject stray buffer-mode arguments");
+}
+
+void test_parse_launch_arguments_for_buffer_mode_override_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--buffer-mode-override-object",
+        "--buffer-mode-override", "9",
+        "--buffer-mode-override-target-object-name", "cmdSave",
+        "--buffer-mode-override-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1118: launch contract should parse buffer-mode-override-object requests");
+    expect(result.request.buffer_mode_override_object,
+        "#1118: launch contract should detect --buffer-mode-override-object");
+    expect(result.request.buffer_mode_override_available && result.request.buffer_mode_override == 9,
+        "#1118: buffer-mode-override-object requests should carry buffer-mode-override value");
+    expect(result.request.buffer_mode_override_objects.size() == 2U,
+        "#1118: buffer-mode-override-object requests should collect buffer-mode-override target selectors");
+    if (result.request.buffer_mode_override_objects.size() == 2U) {
+        expect(result.request.buffer_mode_override_objects[0].object_name == "cmdSave" &&
+                result.request.buffer_mode_override_objects[0].unique_id.empty(),
+            "#1118: buffer-mode-override-object requests should parse target object-name selectors");
+        expect(result.request.buffer_mode_override_objects[1].object_name.empty() &&
+                result.request.buffer_mode_override_objects[1].unique_id == "two-guid",
+            "#1118: buffer-mode-override-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_buffer_mode_override_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-override-object",
+        "--buffer-mode-override-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1118: launch contract should reject buffer-mode-override-object requests without buffer-mode-override value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-override-object",
+        "--buffer-mode-override", "manual",
+        "--buffer-mode-override-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1118: launch contract should reject non-integer buffer-mode-override values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-override-object",
+        "--buffer-mode-override", "-1",
+        "--buffer-mode-override-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1118: launch contract should reject negative buffer-mode-override values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-override-object",
+        "--buffer-mode-override", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1118: launch contract should reject buffer-mode-override-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_buffer_mode_override_object_ambiguity() {
+    const auto buffer_mode_override_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-override-object",
+        "--locked-object",
+        "--buffer-mode-override", "2",
+        "--buffer-mode-override-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!buffer_mode_override_locked_result.ok,
+        "#1118: launch contract should reject simultaneous buffer-mode-override-object and locked-object requests");
+
+    const auto buffer_mode_override_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-override-object",
+        "--clear-property",
+        "--property-name", "BufferModeOverride",
+        "--buffer-mode-override", "2",
+        "--buffer-mode-override-target-unique-id", "one-guid"
+    });
+    expect(!buffer_mode_override_property_result.ok,
+        "#1118: launch contract should reject buffer-mode-override-object combined with property commands");
+
+    const auto stray_buffer_mode_override_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--buffer-mode-override", "2"
+    });
+    expect(!stray_buffer_mode_override_result.ok,
+        "#1118: launch contract should reject stray buffer-mode-override arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9720,6 +9819,9 @@ int main() {
     test_parse_launch_arguments_for_buffer_mode_object();
     test_parse_launch_arguments_rejects_buffer_mode_object_invalid_inputs();
     test_parse_launch_arguments_rejects_buffer_mode_object_ambiguity();
+    test_parse_launch_arguments_for_buffer_mode_override_object();
+    test_parse_launch_arguments_rejects_buffer_mode_override_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_buffer_mode_override_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

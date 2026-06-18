@@ -583,6 +583,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--buffer-mode-override-object") {
+            result.request.buffer_mode_override_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1342,6 +1347,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.buffer_mode = buffer_mode;
             result.request.buffer_mode_available = true;
+            continue;
+        }
+
+        if (argument == "--buffer-mode-override") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --buffer-mode-override."};
+            }
+            int buffer_mode_override = 0;
+            if (!parse_int_value(args[++index], buffer_mode_override)) {
+                return {.ok = false, .error = "The --buffer-mode-override value must be an integer."};
+            }
+            if (buffer_mode_override < 0) {
+                return {.ok = false, .error = "The --buffer-mode-override value must be non-negative."};
+            }
+            result.request.buffer_mode_override = buffer_mode_override;
+            result.request.buffer_mode_override_available = true;
             continue;
         }
 
@@ -2619,6 +2640,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --buffer-mode-target-unique-id."};
             }
             result.request.buffer_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--buffer-mode-override-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --buffer-mode-override-target-object-name."};
+            }
+            result.request.buffer_mode_override_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--buffer-mode-override-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --buffer-mode-override-target-unique-id."};
+            }
+            result.request.buffer_mode_override_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4396,6 +4441,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.buffer_mode_objects.empty())) {
         return {.ok = false, .error = "Buffer-mode arguments can only be used with --buffer-mode-object."};
     }
+    if (result.request.buffer_mode_override_object && !result.request.buffer_mode_override_available) {
+        return {.ok = false, .error = "An object buffer-mode-override assignment requires --buffer-mode-override."};
+    }
+    if (result.request.buffer_mode_override_object && result.request.buffer_mode_override_objects.empty()) {
+        return {.ok = false, .error = "An object buffer-mode-override assignment requires at least one target selector."};
+    }
+    if (!result.request.buffer_mode_override_object &&
+        (result.request.buffer_mode_override_available ||
+         !result.request.buffer_mode_override_objects.empty())) {
+        return {.ok = false, .error = "Buffer-mode-override arguments can only be used with --buffer-mode-override-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5129,6 +5185,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.fill_style_object ? 1 : 0) +
         (result.request.scale_mode_object ? 1 : 0) +
         (result.request.buffer_mode_object ? 1 : 0) +
+        (result.request.buffer_mode_override_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
