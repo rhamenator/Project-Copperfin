@@ -168,6 +168,139 @@ int main() {
     expect(has_action(project_actions, "open-builder"), "#958: project-item context should expose builders");
     expect(!has_action(project_actions, "show-toolbox"), "#958: project-item context should exclude toolbox");
 
+    const auto property_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .action_id = "show-property-grid",
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "txtName",
+        .unique_id = "textbox-guid",
+        .symbol = "txtName",
+        .line = 0U,
+        .column = 0U
+    });
+    expect(property_plan.ok,
+           "#1207: visual-object editor action launch plans should accept property-grid actions");
+    expect(property_plan.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               std::string(property_plan.plan.action.id) == "show-property-grid" &&
+               property_plan.plan.action.kind == StudioEditorActionKind::property_grid &&
+               property_plan.plan.command_token == "studio.property_grid.show" &&
+               property_plan.plan.target_surface == "property-grid" &&
+               property_plan.plan.asset_path == "forms/customer.scx" &&
+               property_plan.plan.record_index == 1U &&
+               property_plan.plan.object_name == "txtName" &&
+               property_plan.plan.unique_id == "textbox-guid" &&
+               property_plan.plan.symbol == "txtName",
+           "#1207: editor action launch plans should preserve action and selected-object metadata");
+
+    const auto method_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .action_id = "edit-visual-method",
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "cmdSave",
+        .unique_id = "button-guid",
+        .symbol = "cmdSave.Click",
+        .line = 42U,
+        .column = 7U
+    });
+    expect(method_plan.ok &&
+               method_plan.plan.action.kind == StudioEditorActionKind::source_editor &&
+               method_plan.plan.command_token == "studio.method_editor.open" &&
+               method_plan.plan.line == 42U &&
+               method_plan.plan.column == 7U,
+           "#1207: visual-object editor action launch plans should accept method editor actions");
+
+    const auto expression_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::report_expression,
+        .action_id = "edit-report-expression",
+        .asset_path = "reports/orders.frx",
+        .record_index = 2U,
+        .object_name = "Expr1",
+        .unique_id = "expr-guid",
+        .symbol = "Expr1.Expression",
+        .line = 3U,
+        .column = 11U
+    });
+    expect(expression_plan.ok &&
+               expression_plan.plan.action.kind == StudioEditorActionKind::expression_editor &&
+               expression_plan.plan.target_surface == "expression-editor",
+           "#1207: report-expression editor action launch plans should accept expression editor actions");
+
+    const auto data_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::data_environment,
+        .action_id = "edit-data-environment",
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = "Dataenvironment",
+        .unique_id = "de-guid",
+        .symbol = "Dataenvironment.OpenTables",
+        .line = 0U,
+        .column = 0U
+    });
+    expect(data_plan.ok &&
+               data_plan.plan.command_token == "studio.data_environment.open" &&
+               data_plan.plan.target_surface == "data-environment",
+           "#1207: data-environment editor action launch plans should accept data-environment actions");
+
+    const auto project_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::project_item,
+        .action_id = "navigate-project-item",
+        .asset_path = "apps/customer.pjx",
+        .record_index = 5U,
+        .object_name = {},
+        .unique_id = {},
+        .symbol = "forms/customer.scx",
+        .line = 0U,
+        .column = 0U
+    });
+    expect(project_plan.ok &&
+               project_plan.plan.action.kind == StudioEditorActionKind::navigator &&
+               project_plan.plan.command_token == "studio.project_item.navigate",
+           "#1207: project-item editor action launch plans should accept navigation actions");
+
+    const auto wrong_context_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .action_id = "edit-report-expression",
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "txtName",
+        .unique_id = "textbox-guid",
+        .symbol = "txtName",
+        .line = 0U,
+        .column = 0U
+    });
+    expect(!wrong_context_plan.ok,
+           "#1207: editor action launch plans should reject wrong-context action ids");
+
+    const auto missing_action_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .action_id = {},
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "txtName",
+        .unique_id = "textbox-guid",
+        .symbol = "txtName",
+        .line = 0U,
+        .column = 0U
+    });
+    expect(!missing_action_plan.ok,
+           "#1207: editor action launch plans should reject missing action ids");
+
+    const auto unknown_action_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .action_id = "unknown-action",
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "txtName",
+        .unique_id = "textbox-guid",
+        .symbol = "txtName",
+        .line = 0U,
+        .column = 0U
+    });
+    expect(!unknown_action_plan.ok,
+           "#1207: editor action launch plans should reject unknown action ids");
+
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
         return EXIT_FAILURE;

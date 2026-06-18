@@ -1,6 +1,7 @@
 #include "copperfin/studio/context_editor_actions.h"
 
 #include <algorithm>
+#include <string>
 
 namespace copperfin::studio {
 
@@ -162,6 +163,51 @@ std::vector<StudioEditorActionDescriptor> studio_editor_actions_for_context(Stud
         return supports_context(action, context);
     });
     return filtered;
+}
+
+StudioEditorActionLaunchPlanResult plan_studio_editor_action_launch(
+    const StudioEditorActionLaunchRequest& request) {
+    if (request.action_id.empty()) {
+        return {
+            .ok = false,
+            .error = "An editor action launch request requires an action id.",
+            .plan = {}
+        };
+    }
+
+    const auto actions = studio_editor_actions_for_context(request.selection_context);
+    const auto action = std::find_if(
+        actions.begin(),
+        actions.end(),
+        [&](const StudioEditorActionDescriptor& candidate) {
+            return candidate.id == request.action_id;
+        });
+
+    if (action == actions.end()) {
+        return {
+            .ok = false,
+            .error = "The requested editor action is not available for the selected Studio context.",
+            .plan = {}
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .plan = {
+            .action = *action,
+            .selection_context = request.selection_context,
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .symbol = request.symbol,
+            .line = request.line,
+            .column = request.column,
+            .command_token = std::string(action->command_token),
+            .target_surface = std::string(action->target_surface)
+        }
+    };
 }
 
 }  // namespace copperfin::studio
