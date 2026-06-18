@@ -1161,6 +1161,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--scroll-bars-object") {
+            result.request.scroll_bars_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2847,6 +2852,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.special_effect = special_effect;
             result.request.special_effect_available = true;
+            continue;
+        }
+
+        if (argument == "--scroll-bars") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --scroll-bars."};
+            }
+            int scroll_bars = 0;
+            if (!parse_int_value(args[++index], scroll_bars)) {
+                return {.ok = false, .error = "The --scroll-bars value must be an integer."};
+            }
+            if (scroll_bars < 0) {
+                return {.ok = false, .error = "The --scroll-bars value must not be negative."};
+            }
+            result.request.scroll_bars = scroll_bars;
+            result.request.scroll_bars_available = true;
             continue;
         }
 
@@ -5804,6 +5825,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--scroll-bars-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --scroll-bars-target-object-name."};
+            }
+            result.request.scroll_bars_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--scroll-bars-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --scroll-bars-target-unique-id."};
+            }
+            result.request.scroll_bars_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7687,6 +7732,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.special_effect_objects.empty())) {
         return {.ok = false, .error = "Special-effect arguments can only be used with --special-effect-object."};
     }
+    if (result.request.scroll_bars_object && !result.request.scroll_bars_available) {
+        return {.ok = false, .error = "An object scroll-bars assignment requires --scroll-bars."};
+    }
+    if (result.request.scroll_bars_object && result.request.scroll_bars_objects.empty()) {
+        return {.ok = false, .error = "An object scroll-bars assignment requires at least one target selector."};
+    }
+    if (!result.request.scroll_bars_object &&
+        (result.request.scroll_bars_available ||
+         !result.request.scroll_bars_objects.empty())) {
+        return {.ok = false, .error = "Scroll-bars arguments can only be used with --scroll-bars-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8077,6 +8133,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.border_width_object ? 1 : 0) +
         (result.request.border_color_object ? 1 : 0) +
         (result.request.special_effect_object ? 1 : 0) +
+        (result.request.scroll_bars_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

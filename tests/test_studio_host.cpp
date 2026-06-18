@@ -475,6 +475,10 @@ void test_parse_launch_arguments() {
         "#1166: launch contract should keep special-effect-object off by default");
     expect(!result.request.special_effect_available,
         "#1166: launch contract should keep special effect unavailable by default");
+    expect(!result.request.scroll_bars_object,
+        "#1167: launch contract should keep scroll-bars-object off by default");
+    expect(!result.request.scroll_bars_available,
+        "#1167: launch contract should keep scroll bars unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -10932,6 +10936,101 @@ void test_parse_launch_arguments_rejects_special_effect_object_ambiguity() {
         "#1166: launch contract should reject stray special-effect arguments");
 }
 
+void test_parse_launch_arguments_for_scroll_bars_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--scroll-bars-object",
+        "--scroll-bars", "2",
+        "--scroll-bars-target-object-name", "frmCustomer",
+        "--scroll-bars-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1167: launch contract should parse scroll-bars-object requests");
+    expect(result.request.scroll_bars_object,
+        "#1167: launch contract should detect --scroll-bars-object");
+    expect(result.request.scroll_bars_available && result.request.scroll_bars == 2,
+        "#1167: scroll-bars-object requests should carry scroll-bars value");
+    expect(result.request.scroll_bars_objects.size() == 2U,
+        "#1167: scroll-bars-object requests should collect scroll-bars target selectors");
+    if (result.request.scroll_bars_objects.size() == 2U) {
+        expect(result.request.scroll_bars_objects[0].object_name == "frmCustomer" &&
+                result.request.scroll_bars_objects[0].unique_id.empty(),
+            "#1167: scroll-bars-object requests should parse target object-name selectors");
+        expect(result.request.scroll_bars_objects[1].object_name.empty() &&
+                result.request.scroll_bars_objects[1].unique_id == "two-guid",
+            "#1167: scroll-bars-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_scroll_bars_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--scroll-bars-object",
+        "--scroll-bars-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1167: launch contract should reject scroll-bars-object requests without scroll-bars value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--scroll-bars-object",
+        "--scroll-bars", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1167: launch contract should reject scroll-bars-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--scroll-bars-object",
+        "--scroll-bars", "vertical",
+        "--scroll-bars-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1167: launch contract should reject non-integer scroll-bars values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--scroll-bars-object",
+        "--scroll-bars", "-1",
+        "--scroll-bars-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1167: launch contract should reject negative scroll-bars values");
+}
+
+void test_parse_launch_arguments_rejects_scroll_bars_object_ambiguity() {
+    const auto scroll_bars_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--scroll-bars-object",
+        "--allow-output-object",
+        "--scroll-bars", "2",
+        "--scroll-bars-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!scroll_bars_allow_output_result.ok,
+        "#1167: launch contract should reject simultaneous scroll-bars-object and allow-output-object requests");
+
+    const auto scroll_bars_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--scroll-bars-object",
+        "--clear-property",
+        "--property-name", "ScrollBars",
+        "--scroll-bars", "2",
+        "--scroll-bars-target-unique-id", "one-guid"
+    });
+    expect(!scroll_bars_property_result.ok,
+        "#1167: launch contract should reject scroll-bars-object combined with property commands");
+
+    const auto stray_scroll_bars_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--scroll-bars", "2"
+    });
+    expect(!stray_scroll_bars_result.ok,
+        "#1167: launch contract should reject stray scroll-bars arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -14594,6 +14693,9 @@ int main() {
     test_parse_launch_arguments_for_special_effect_object();
     test_parse_launch_arguments_rejects_special_effect_object_invalid_inputs();
     test_parse_launch_arguments_rejects_special_effect_object_ambiguity();
+    test_parse_launch_arguments_for_scroll_bars_object();
+    test_parse_launch_arguments_rejects_scroll_bars_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_scroll_bars_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
