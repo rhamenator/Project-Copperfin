@@ -1066,6 +1066,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--auto-verb-menu-object") {
+            result.request.auto_verb_menu_object = true;
+            continue;
+        }
+
         if (argument == "--auto-center-object") {
             result.request.auto_center_object = true;
             continue;
@@ -2470,6 +2475,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.auto_center = *auto_center;
             result.request.auto_center_available = true;
+            continue;
+        }
+
+        if (argument == "--auto-verb-menu") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-verb-menu."};
+            }
+            const auto auto_verb_menu = parse_bool_value(args[++index]);
+            if (!auto_verb_menu.has_value()) {
+                return {.ok = false, .error = "The --auto-verb-menu value must be true or false."};
+            }
+            result.request.auto_verb_menu = *auto_verb_menu;
+            result.request.auto_verb_menu_available = true;
             continue;
         }
 
@@ -4923,6 +4941,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--auto-verb-menu-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-verb-menu-target-object-name."};
+            }
+            result.request.auto_verb_menu_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--auto-verb-menu-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --auto-verb-menu-target-unique-id."};
+            }
+            result.request.auto_verb_menu_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--auto-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --auto-size-target-object-name."};
@@ -6525,6 +6567,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.allow_output_objects.empty())) {
         return {.ok = false, .error = "Allow-output arguments can only be used with --allow-output-object."};
     }
+    if (result.request.auto_verb_menu_object && !result.request.auto_verb_menu_available) {
+        return {.ok = false, .error = "An object auto-verb-menu assignment requires --auto-verb-menu."};
+    }
+    if (result.request.auto_verb_menu_object && result.request.auto_verb_menu_objects.empty()) {
+        return {.ok = false, .error = "An object auto-verb-menu assignment requires at least one target selector."};
+    }
+    if (!result.request.auto_verb_menu_object &&
+        (result.request.auto_verb_menu_available ||
+         !result.request.auto_verb_menu_objects.empty())) {
+        return {.ok = false, .error = "Auto-verb-menu arguments can only be used with --auto-verb-menu-object."};
+    }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
         return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
     }
@@ -6863,6 +6916,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.default_file_path_object ? 1 : 0) +
         (result.request.initial_selected_alias_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
+        (result.request.auto_verb_menu_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
         (result.request.auto_release_object ? 1 : 0) +

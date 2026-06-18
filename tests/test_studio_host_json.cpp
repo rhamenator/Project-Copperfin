@@ -1996,6 +1996,24 @@ void write_synthetic_form_table_for_object_auto_center(const std::filesystem::pa
     expect(create_result.ok, "#1078: synthetic SCX table for object auto center should be created");
 }
 
+void write_synthetic_form_table_for_object_auto_verb_menu(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "AUTOVERBMENU", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1145: synthetic SCX table for object auto verb menu should be created");
+}
+
 void write_synthetic_form_table_for_object_auto_size(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -16565,6 +16583,129 @@ void test_studio_host_json_assigns_auto_center_by_stable_selectors(const std::st
     }
 }
 
+void test_studio_host_json_assigns_auto_verb_menu_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_auto_verb_menu_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path auto_verb_menu_path = temp_root / "auto_verb_menu.scx";
+    write_synthetic_form_table_for_object_auto_verb_menu(auto_verb_menu_path);
+    const auto auto_verb_menu_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", auto_verb_menu_path.string(),
+            "--auto-verb-menu-object",
+            "--auto-verb-menu", "false",
+            "--auto-verb-menu-target-object-name", "frmCustomer",
+            "--auto-verb-menu-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(auto_verb_menu_process.exit_code == 0,
+        "#1145: host object auto-verb-menu assignment should exit successfully");
+    expect(visual_object_property(auto_verb_menu_path, "one-guid", "AUTOVERBMENU") == "false" &&
+            visual_object_property(auto_verb_menu_path, "two-guid", "AUTOVERBMENU") == "false" &&
+            visual_object_property(auto_verb_menu_path, "three-guid", "AUTOVERBMENU") == "false" &&
+            visual_object_property(auto_verb_menu_path, "other-guid", "AUTOVERBMENU") == "true",
+        "#1145: host object auto-verb-menu assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_auto_verb_menu(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--auto-verb-menu-object",
+            "--auto-verb-menu", "false",
+            "--auto-verb-menu-target-unique-id", "one-guid",
+            "--auto-verb-menu-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1145: missing-target host object auto-verb-menu assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "AUTOVERBMENU") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "AUTOVERBMENU") == "true",
+        "#1145: missing-target host object auto-verb-menu assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_auto_verb_menu(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--auto-verb-menu-object",
+            "--auto-verb-menu", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1145: auto-verb-menu-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "AUTOVERBMENU") == "true",
+        "#1145: auto-verb-menu-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_auto_verb_menu(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--auto-verb-menu-object",
+            "--auto-verb-menu-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1145: auto-verb-menu-object without auto-verb-menu value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "AUTOVERBMENU") == "true",
+        "#1145: auto-verb-menu-object without auto-verb-menu value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_auto_verb_menu(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--auto-verb-menu-object",
+            "--auto-verb-menu", "false",
+            "--auto-verb-menu-target-unique-id", "one-guid",
+            "--auto-verb-menu-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1145: duplicate-target host object auto-verb-menu assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "AUTOVERBMENU") == "true",
+        "#1145: duplicate-target host object auto-verb-menu assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_auto_verb_menu(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--auto-verb-menu-object",
+            "--allow-output-object",
+            "--auto-verb-menu", "false",
+            "--auto-verb-menu-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1145: auto-verb-menu-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "AUTOVERBMENU") == "true",
+        "#1145: auto-verb-menu-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_auto_size_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -19255,6 +19396,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_closable_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_box_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_allow_output_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_auto_verb_menu_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_center_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_size_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_release_by_stable_selectors(argv[1]);

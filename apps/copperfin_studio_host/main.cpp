@@ -45,6 +45,7 @@ void print_usage() {
     std::cout << "OLE drop-effects object: --ole-drop-effects-object --ole-drop-effects <n> [--ole-drop-effects-target-object-name <name>] [--ole-drop-effects-target-unique-id <id>]\n";
     std::cout << "OLE drop text-insertion object: --ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]\n";
     std::cout << "Hide-selection object: --hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]\n";
+    std::cout << "Auto-verb-menu object: --auto-verb-menu-object --auto-verb-menu <true|false> [--auto-verb-menu-target-object-name <name>] [--auto-verb-menu-target-unique-id <id>]\n";
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
@@ -3793,6 +3794,30 @@ int main(int argc, char** argv) {
         if (!allow_output_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << allow_output_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.auto_verb_menu_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> auto_verb_menu_objects;
+        auto_verb_menu_objects.reserve(parse_result.request.auto_verb_menu_objects.size());
+        for (const auto& auto_verb_menu_object : parse_result.request.auto_verb_menu_objects) {
+            auto_verb_menu_objects.push_back({
+                .record_index = auto_verb_menu_object.record_index,
+                .object_name = auto_verb_menu_object.object_name,
+                .unique_id = auto_verb_menu_object.unique_id
+            });
+        }
+
+        const auto auto_verb_menu_result = copperfin::vfp::set_visual_object_auto_verb_menu({
+            .path = parse_result.request.path,
+            .objects = auto_verb_menu_objects,
+            .auto_verb_menu = parse_result.request.auto_verb_menu
+        });
+
+        if (!auto_verb_menu_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << auto_verb_menu_result.error << "\n";
             return 4;
         }
     }

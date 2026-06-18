@@ -403,6 +403,10 @@ void test_parse_launch_arguments() {
         "#1075: launch contract should keep allow-output-object off by default");
     expect(!result.request.allow_output_available,
         "#1075: launch contract should keep allow output unavailable by default");
+    expect(!result.request.auto_verb_menu_object,
+        "#1145: launch contract should keep auto-verb-menu-object off by default");
+    expect(!result.request.auto_verb_menu_available,
+        "#1145: launch contract should keep auto verb menu unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9152,6 +9156,92 @@ void test_parse_launch_arguments_rejects_allow_output_object_ambiguity() {
         "#1075: launch contract should reject stray allow-output arguments");
 }
 
+void test_parse_launch_arguments_for_auto_verb_menu_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--auto-verb-menu-object",
+        "--auto-verb-menu", "false",
+        "--auto-verb-menu-target-object-name", "frmCustomer",
+        "--auto-verb-menu-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1145: launch contract should parse auto-verb-menu-object requests");
+    expect(result.request.auto_verb_menu_object,
+        "#1145: launch contract should detect --auto-verb-menu-object");
+    expect(result.request.auto_verb_menu_available && !result.request.auto_verb_menu,
+        "#1145: auto-verb-menu-object requests should carry auto verb menu state");
+    expect(result.request.auto_verb_menu_objects.size() == 2U,
+        "#1145: auto-verb-menu-object requests should collect auto-verb-menu target selectors");
+    if (result.request.auto_verb_menu_objects.size() == 2U) {
+        expect(result.request.auto_verb_menu_objects[0].object_name == "frmCustomer" &&
+                result.request.auto_verb_menu_objects[0].unique_id.empty(),
+            "#1145: auto-verb-menu-object requests should parse target object-name selectors");
+        expect(result.request.auto_verb_menu_objects[1].object_name.empty() &&
+                result.request.auto_verb_menu_objects[1].unique_id == "two-guid",
+            "#1145: auto-verb-menu-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_auto_verb_menu_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-verb-menu-object",
+        "--auto-verb-menu-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1145: launch contract should reject auto-verb-menu-object requests without auto verb menu state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-verb-menu-object",
+        "--auto-verb-menu", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1145: launch contract should reject auto-verb-menu-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-verb-menu-object",
+        "--auto-verb-menu", "sometimes",
+        "--auto-verb-menu-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1145: launch contract should reject invalid auto-verb-menu boolean values");
+}
+
+void test_parse_launch_arguments_rejects_auto_verb_menu_object_ambiguity() {
+    const auto auto_verb_menu_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-verb-menu-object",
+        "--allow-output-object",
+        "--auto-verb-menu", "false",
+        "--auto-verb-menu-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!auto_verb_menu_allow_output_result.ok,
+        "#1145: launch contract should reject simultaneous auto-verb-menu-object and allow-output-object requests");
+
+    const auto auto_verb_menu_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-verb-menu-object",
+        "--clear-property",
+        "--property-name", "AutoVerbMenu",
+        "--auto-verb-menu", "false",
+        "--auto-verb-menu-target-unique-id", "one-guid"
+    });
+    expect(!auto_verb_menu_property_result.ok,
+        "#1145: launch contract should reject auto-verb-menu-object combined with property commands");
+
+    const auto stray_auto_verb_menu_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--auto-verb-menu", "false"
+    });
+    expect(!stray_auto_verb_menu_result.ok,
+        "#1145: launch contract should reject stray auto-verb-menu arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -12472,6 +12562,9 @@ int main() {
     test_parse_launch_arguments_for_allow_output_object();
     test_parse_launch_arguments_rejects_allow_output_object_invalid_inputs();
     test_parse_launch_arguments_rejects_allow_output_object_ambiguity();
+    test_parse_launch_arguments_for_auto_verb_menu_object();
+    test_parse_launch_arguments_rejects_auto_verb_menu_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_auto_verb_menu_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();
