@@ -225,6 +225,10 @@ void test_parse_launch_arguments() {
         "#1124: launch contract should keep lock-columns-left-object off by default");
     expect(!result.request.lock_columns_left_available,
         "#1124: launch contract should keep lock-columns-left unavailable by default");
+    expect(!result.request.grid_line_width_object,
+        "#1125: launch contract should keep grid-line-width-object off by default");
+    expect(!result.request.grid_line_width_available,
+        "#1125: launch contract should keep grid-line-width unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4354,6 +4358,101 @@ void test_parse_launch_arguments_rejects_lock_columns_left_object_ambiguity() {
     });
     expect(!stray_lock_columns_left_result.ok,
         "#1124: launch contract should reject stray lock-columns-left arguments");
+}
+
+void test_parse_launch_arguments_for_grid_line_width_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--grid-line-width-object",
+        "--grid-line-width", "9",
+        "--grid-line-width-target-object-name", "cmdSave",
+        "--grid-line-width-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1125: launch contract should parse grid-line-width-object requests");
+    expect(result.request.grid_line_width_object,
+        "#1125: launch contract should detect --grid-line-width-object");
+    expect(result.request.grid_line_width_available && result.request.grid_line_width == 9,
+        "#1125: grid-line-width-object requests should carry grid-line-width value");
+    expect(result.request.grid_line_width_objects.size() == 2U,
+        "#1125: grid-line-width-object requests should collect grid-line-width target selectors");
+    if (result.request.grid_line_width_objects.size() == 2U) {
+        expect(result.request.grid_line_width_objects[0].object_name == "cmdSave" &&
+                result.request.grid_line_width_objects[0].unique_id.empty(),
+            "#1125: grid-line-width-object requests should parse target object-name selectors");
+        expect(result.request.grid_line_width_objects[1].object_name.empty() &&
+                result.request.grid_line_width_objects[1].unique_id == "two-guid",
+            "#1125: grid-line-width-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_grid_line_width_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-width-object",
+        "--grid-line-width-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1125: launch contract should reject grid-line-width-object requests without grid-line-width value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-width-object",
+        "--grid-line-width", "manual",
+        "--grid-line-width-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1125: launch contract should reject non-integer grid-line-width values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-width-object",
+        "--grid-line-width", "-1",
+        "--grid-line-width-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1125: launch contract should reject negative grid-line-width values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-width-object",
+        "--grid-line-width", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1125: launch contract should reject grid-line-width-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_grid_line_width_object_ambiguity() {
+    const auto grid_line_width_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-width-object",
+        "--locked-object",
+        "--grid-line-width", "2",
+        "--grid-line-width-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!grid_line_width_locked_result.ok,
+        "#1125: launch contract should reject simultaneous grid-line-width-object and locked-object requests");
+
+    const auto grid_line_width_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-width-object",
+        "--clear-property",
+        "--property-name", "GridLineWidth",
+        "--grid-line-width", "2",
+        "--grid-line-width-target-unique-id", "one-guid"
+    });
+    expect(!grid_line_width_property_result.ok,
+        "#1125: launch contract should reject grid-line-width-object combined with property commands");
+
+    const auto stray_grid_line_width_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-width", "2"
+    });
+    expect(!stray_grid_line_width_result.ok,
+        "#1125: launch contract should reject stray grid-line-width arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10434,6 +10533,9 @@ int main() {
     test_parse_launch_arguments_for_lock_columns_left_object();
     test_parse_launch_arguments_rejects_lock_columns_left_object_invalid_inputs();
     test_parse_launch_arguments_rejects_lock_columns_left_object_ambiguity();
+    test_parse_launch_arguments_for_grid_line_width_object();
+    test_parse_launch_arguments_rejects_grid_line_width_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_grid_line_width_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
