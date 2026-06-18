@@ -3287,6 +3287,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.integral_height_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> integral_height_objects;
+        integral_height_objects.reserve(parse_result.request.integral_height_objects.size());
+        for (const auto& integral_height_object : parse_result.request.integral_height_objects) {
+            integral_height_objects.push_back({
+                .record_index = integral_height_object.record_index,
+                .object_name = integral_height_object.object_name,
+                .unique_id = integral_height_object.unique_id
+            });
+        }
+
+        const auto integral_height_result = copperfin::vfp::set_visual_object_integral_height({
+            .path = parse_result.request.path,
+            .objects = integral_height_objects,
+            .integral_height = parse_result.request.integral_height
+        });
+
+        if (!integral_height_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << integral_height_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.row_source_type_object) {
         std::vector<copperfin::vfp::VisualObjectAlignmentTarget> row_source_type_objects;
         row_source_type_objects.reserve(parse_result.request.row_source_type_objects.size());

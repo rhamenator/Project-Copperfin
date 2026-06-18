@@ -317,6 +317,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.column_widths_available, "#1196: launch contract should keep column widths unavailable by default");
     expect(!result.request.column_lines_object, "#1197: launch contract should keep column-lines-object off by default");
     expect(!result.request.column_lines_available, "#1197: launch contract should keep column lines unavailable by default");
+    expect(!result.request.integral_height_object, "#1198: launch contract should keep integral-height-object off by default");
+    expect(!result.request.integral_height_available, "#1198: launch contract should keep integral height unavailable by default");
     expect(!result.request.row_source_type_object, "#1049: launch contract should keep row-source-type-object off by default");
     expect(!result.request.row_source_type_available, "#1049: launch contract should keep row source type unavailable by default");
     expect(!result.request.bound_column_object, "#1050: launch contract should keep bound-column-object off by default");
@@ -7208,6 +7210,92 @@ void test_parse_launch_arguments_rejects_column_lines_object_ambiguity() {
     });
     expect(!stray_column_lines_result.ok,
         "#1197: launch contract should reject stray column-lines arguments");
+}
+
+
+void test_parse_launch_arguments_for_integral_height_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--integral-height-object",
+        "--integral-height", "true",
+        "--integral-height-target-object-name", "cboCustomer",
+        "--integral-height-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1198: launch contract should parse integral-height-object requests");
+    expect(result.request.integral_height_object, "#1198: launch contract should detect --integral-height-object");
+    expect(result.request.integral_height_available && result.request.integral_height,
+        "#1198: integral-height-object requests should carry integral height state");
+    expect(result.request.integral_height_objects.size() == 2U,
+        "#1198: integral-height-object requests should collect integral-height target selectors");
+    if (result.request.integral_height_objects.size() == 2U) {
+        expect(result.request.integral_height_objects[0].object_name == "cboCustomer" &&
+                result.request.integral_height_objects[0].unique_id.empty(),
+            "#1198: integral-height-object requests should parse target object-name selectors");
+        expect(result.request.integral_height_objects[1].object_name.empty() &&
+                result.request.integral_height_objects[1].unique_id == "two-guid",
+            "#1198: integral-height-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_integral_height_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--integral-height-object",
+        "--integral-height-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1198: launch contract should reject integral-height-object requests without integral height state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--integral-height-object",
+        "--integral-height", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1198: launch contract should reject integral-height-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--integral-height-object",
+        "--integral-height", "sometimes",
+        "--integral-height-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1198: launch contract should reject invalid integral-height logical values");
+}
+
+void test_parse_launch_arguments_rejects_integral_height_object_ambiguity() {
+    const auto integral_height_row_source_type_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--integral-height-object",
+        "--row-source-type-object",
+        "--integral-height", "true",
+        "--integral-height-target-unique-id", "one-guid",
+        "--row-source-type", "2",
+        "--row-source-type-target-unique-id", "one-guid"
+    });
+    expect(!integral_height_row_source_type_result.ok,
+        "#1198: launch contract should reject simultaneous integral-height-object and row-source-type-object requests");
+
+    const auto integral_height_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--integral-height-object",
+        "--clear-property",
+        "--property-name", "IntegralHeight",
+        "--integral-height", "true",
+        "--integral-height-target-unique-id", "one-guid"
+    });
+    expect(!integral_height_property_result.ok,
+        "#1198: launch contract should reject integral-height-object combined with property commands");
+
+    const auto stray_integral_height_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--integral-height", "true"
+    });
+    expect(!stray_integral_height_result.ok,
+        "#1198: launch contract should reject stray integral-height arguments");
 }
 
 void test_parse_launch_arguments_for_row_source_type_object() {
@@ -17229,6 +17317,9 @@ int main() {
     test_parse_launch_arguments_for_column_lines_object();
     test_parse_launch_arguments_rejects_column_lines_object_invalid_inputs();
     test_parse_launch_arguments_rejects_column_lines_object_ambiguity();
+    test_parse_launch_arguments_for_integral_height_object();
+    test_parse_launch_arguments_rejects_integral_height_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_integral_height_object_ambiguity();
     test_parse_launch_arguments_for_row_source_type_object();
     test_parse_launch_arguments_rejects_row_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_source_type_object_ambiguity();

@@ -952,6 +952,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--integral-height-object") {
+            result.request.integral_height_object = true;
+            continue;
+        }
+
         if (argument == "--row-source-type-object") {
             result.request.row_source_type_object = true;
             continue;
@@ -2130,6 +2135,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.column_lines = *column_lines;
             result.request.column_lines_available = true;
+            continue;
+        }
+
+        if (argument == "--integral-height") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --integral-height."};
+            }
+            const auto integral_height = parse_bool_value(args[++index]);
+            if (!integral_height.has_value()) {
+                return {.ok = false, .error = "The --integral-height value must be true or false."};
+            }
+            result.request.integral_height = *integral_height;
+            result.request.integral_height_available = true;
             continue;
         }
 
@@ -5305,6 +5323,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--integral-height-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --integral-height-target-object-name."};
+            }
+            result.request.integral_height_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--integral-height-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --integral-height-target-unique-id."};
+            }
+            result.request.integral_height_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--row-source-type-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --row-source-type-target-object-name."};
@@ -8442,6 +8484,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.column_lines_objects.empty())) {
         return {.ok = false, .error = "Column-lines arguments can only be used with --column-lines-object."};
     }
+    if (result.request.integral_height_object && !result.request.integral_height_available) {
+        return {.ok = false, .error = "An object integral-height assignment requires --integral-height."};
+    }
+    if (result.request.integral_height_object && result.request.integral_height_objects.empty()) {
+        return {.ok = false, .error = "An object integral-height assignment requires at least one target selector."};
+    }
+    if (!result.request.integral_height_object &&
+        (result.request.integral_height_available ||
+         !result.request.integral_height_objects.empty())) {
+        return {.ok = false, .error = "Integral-height arguments can only be used with --integral-height-object."};
+    }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {
         return {.ok = false, .error = "An object row-source-type assignment requires --row-source-type."};
     }
@@ -9618,6 +9671,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.row_source_object ? 1 : 0) +
         (result.request.column_widths_object ? 1 : 0) +
         (result.request.column_lines_object ? 1 : 0) +
+        (result.request.integral_height_object ? 1 : 0) +
         (result.request.row_source_type_object ? 1 : 0) +
         (result.request.bound_column_object ? 1 : 0) +
         (result.request.column_count_object ? 1 : 0) +
