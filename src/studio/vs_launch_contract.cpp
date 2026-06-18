@@ -593,6 +593,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--grid-line-color-object") {
+            result.request.grid_line_color_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1384,6 +1389,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.data_session = data_session;
             result.request.data_session_available = true;
+            continue;
+        }
+
+        if (argument == "--grid-line-color") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-line-color."};
+            }
+            int grid_line_color = 0;
+            if (!parse_int_value(args[++index], grid_line_color)) {
+                return {.ok = false, .error = "The --grid-line-color value must be an integer."};
+            }
+            if (grid_line_color < 0) {
+                return {.ok = false, .error = "The --grid-line-color value must be non-negative."};
+            }
+            result.request.grid_line_color = grid_line_color;
+            result.request.grid_line_color_available = true;
             continue;
         }
 
@@ -2709,6 +2730,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --data-session-target-unique-id."};
             }
             result.request.data_session_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--grid-line-color-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-line-color-target-object-name."};
+            }
+            result.request.grid_line_color_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--grid-line-color-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --grid-line-color-target-unique-id."};
+            }
+            result.request.grid_line_color_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4508,6 +4553,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.data_session_objects.empty())) {
         return {.ok = false, .error = "Data-session arguments can only be used with --data-session-object."};
     }
+    if (result.request.grid_line_color_object && !result.request.grid_line_color_available) {
+        return {.ok = false, .error = "An object grid-line-color assignment requires --grid-line-color."};
+    }
+    if (result.request.grid_line_color_object && result.request.grid_line_color_objects.empty()) {
+        return {.ok = false, .error = "An object grid-line-color assignment requires at least one target selector."};
+    }
+    if (!result.request.grid_line_color_object &&
+        (result.request.grid_line_color_available ||
+         !result.request.grid_line_color_objects.empty())) {
+        return {.ok = false, .error = "Grid-line-color arguments can only be used with --grid-line-color-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5243,6 +5299,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.buffer_mode_object ? 1 : 0) +
         (result.request.buffer_mode_override_object ? 1 : 0) +
         (result.request.data_session_object ? 1 : 0) +
+        (result.request.grid_line_color_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

@@ -205,6 +205,10 @@ void test_parse_launch_arguments() {
         "#1119: launch contract should keep data-session-object off by default");
     expect(!result.request.data_session_available,
         "#1119: launch contract should keep data-session unavailable by default");
+    expect(!result.request.grid_line_color_object,
+        "#1120: launch contract should keep grid-line-color-object off by default");
+    expect(!result.request.grid_line_color_available,
+        "#1120: launch contract should keep grid-line-color unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3859,6 +3863,101 @@ void test_parse_launch_arguments_rejects_data_session_object_ambiguity() {
     });
     expect(!stray_data_session_result.ok,
         "#1119: launch contract should reject stray data-session arguments");
+}
+
+void test_parse_launch_arguments_for_grid_line_color_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--grid-line-color-object",
+        "--grid-line-color", "9",
+        "--grid-line-color-target-object-name", "cmdSave",
+        "--grid-line-color-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1120: launch contract should parse grid-line-color-object requests");
+    expect(result.request.grid_line_color_object,
+        "#1120: launch contract should detect --grid-line-color-object");
+    expect(result.request.grid_line_color_available && result.request.grid_line_color == 9,
+        "#1120: grid-line-color-object requests should carry grid-line-color value");
+    expect(result.request.grid_line_color_objects.size() == 2U,
+        "#1120: grid-line-color-object requests should collect grid-line-color target selectors");
+    if (result.request.grid_line_color_objects.size() == 2U) {
+        expect(result.request.grid_line_color_objects[0].object_name == "cmdSave" &&
+                result.request.grid_line_color_objects[0].unique_id.empty(),
+            "#1120: grid-line-color-object requests should parse target object-name selectors");
+        expect(result.request.grid_line_color_objects[1].object_name.empty() &&
+                result.request.grid_line_color_objects[1].unique_id == "two-guid",
+            "#1120: grid-line-color-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_grid_line_color_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-color-object",
+        "--grid-line-color-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1120: launch contract should reject grid-line-color-object requests without grid-line-color value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-color-object",
+        "--grid-line-color", "manual",
+        "--grid-line-color-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1120: launch contract should reject non-integer grid-line-color values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-color-object",
+        "--grid-line-color", "-1",
+        "--grid-line-color-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1120: launch contract should reject negative grid-line-color values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-color-object",
+        "--grid-line-color", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1120: launch contract should reject grid-line-color-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_grid_line_color_object_ambiguity() {
+    const auto grid_line_color_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-color-object",
+        "--locked-object",
+        "--grid-line-color", "2",
+        "--grid-line-color-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!grid_line_color_locked_result.ok,
+        "#1120: launch contract should reject simultaneous grid-line-color-object and locked-object requests");
+
+    const auto grid_line_color_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-color-object",
+        "--clear-property",
+        "--property-name", "GridLineColor",
+        "--grid-line-color", "2",
+        "--grid-line-color-target-unique-id", "one-guid"
+    });
+    expect(!grid_line_color_property_result.ok,
+        "#1120: launch contract should reject grid-line-color-object combined with property commands");
+
+    const auto stray_grid_line_color_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--grid-line-color", "2"
+    });
+    expect(!stray_grid_line_color_result.ok,
+        "#1120: launch contract should reject stray grid-line-color arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9924,6 +10023,9 @@ int main() {
     test_parse_launch_arguments_for_data_session_object();
     test_parse_launch_arguments_rejects_data_session_object_invalid_inputs();
     test_parse_launch_arguments_rejects_data_session_object_ambiguity();
+    test_parse_launch_arguments_for_grid_line_color_object();
+    test_parse_launch_arguments_rejects_grid_line_color_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_grid_line_color_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

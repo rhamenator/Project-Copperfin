@@ -55,6 +55,7 @@ void print_usage() {
     std::cout << "Buffer-mode object: --buffer-mode-object --buffer-mode <n> [--buffer-mode-target-object-name <name>] [--buffer-mode-target-unique-id <id>]\n";
     std::cout << "Buffer-mode-override object: --buffer-mode-override-object --buffer-mode-override <n> [--buffer-mode-override-target-object-name <name>] [--buffer-mode-override-target-unique-id <id>]\n";
     std::cout << "Data-session object: --data-session-object --data-session <n> [--data-session-target-object-name <name>] [--data-session-target-unique-id <id>]\n";
+    std::cout << "Grid-line-color object: --grid-line-color-object --grid-line-color <n> [--grid-line-color-target-object-name <name>] [--grid-line-color-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2376,6 +2377,30 @@ int main(int argc, char** argv) {
         if (!data_session_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << data_session_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.grid_line_color_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> grid_line_color_objects;
+        grid_line_color_objects.reserve(parse_result.request.grid_line_color_objects.size());
+        for (const auto& grid_line_color_object : parse_result.request.grid_line_color_objects) {
+            grid_line_color_objects.push_back({
+                .record_index = grid_line_color_object.record_index,
+                .object_name = grid_line_color_object.object_name,
+                .unique_id = grid_line_color_object.unique_id
+            });
+        }
+
+        const auto grid_line_color_result = copperfin::vfp::set_visual_object_grid_line_color({
+            .path = parse_result.request.path,
+            .objects = grid_line_color_objects,
+            .grid_line_color = parse_result.request.grid_line_color
+        });
+
+        if (!grid_line_color_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << grid_line_color_result.error << "\n";
             return 4;
         }
     }

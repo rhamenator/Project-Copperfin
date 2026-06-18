@@ -113,6 +113,7 @@ struct StudioOpenRequest {
     int buffer_mode = 0;
     int buffer_mode_override = 0;
     int data_session = 0;
+    int grid_line_color = 0;
     int selected_back_color = 0;
     int selected_fore_color = 0;
     int selected_item_back_color = 0;
@@ -230,6 +231,7 @@ struct StudioOpenRequest {
     bool buffer_mode_object = false;
     bool buffer_mode_override_object = false;
     bool data_session_object = false;
+    bool grid_line_color_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -266,6 +268,7 @@ struct StudioOpenRequest {
     bool buffer_mode_available = false;
     bool buffer_mode_override_available = false;
     bool data_session_available = false;
+    bool grid_line_color_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
@@ -435,6 +438,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> buffer_mode_objects{};
     std::vector<StudioObjectSelector> buffer_mode_override_objects{};
     std::vector<StudioObjectSelector> data_session_objects{};
+    std::vector<StudioObjectSelector> grid_line_color_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 
