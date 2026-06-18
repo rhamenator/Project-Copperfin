@@ -4583,6 +4583,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.dynamic_current_control_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> dynamic_current_control_objects;
+        dynamic_current_control_objects.reserve(parse_result.request.dynamic_current_control_objects.size());
+        for (const auto& dynamic_current_control_object : parse_result.request.dynamic_current_control_objects) {
+            dynamic_current_control_objects.push_back({
+                .record_index = dynamic_current_control_object.record_index,
+                .object_name = dynamic_current_control_object.object_name,
+                .unique_id = dynamic_current_control_object.unique_id
+            });
+        }
+
+        const auto dynamic_current_control_result = copperfin::vfp::set_visual_object_dynamic_current_control({
+            .path = parse_result.request.path,
+            .objects = dynamic_current_control_objects,
+            .dynamic_current_control = parse_result.request.dynamic_current_control
+        });
+
+        if (!dynamic_current_control_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << dynamic_current_control_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.font_name_object) {
         std::vector<copperfin::vfp::VisualObjectAlignmentTarget> font_name_objects;
         font_name_objects.reserve(parse_result.request.font_name_objects.size());
