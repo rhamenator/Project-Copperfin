@@ -7241,6 +7241,162 @@ void test_studio_host_json_plans_toolbox_object_creation_batches(const std::stri
     }
 }
 
+void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_batch_dispatch_plan_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto dispatch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-dispatch-plan",
+            "--toolbox-context", "form",
+            "--toolbox-item", "textbox",
+            "--unique-id", "first-dispatch-textbox-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=First Dispatch",
+            "--toolbox-item", "commandbutton",
+            "--object-name", "cmdDispatch",
+            "--unique-id", "dispatch-command-guid",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Dispatch Command",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(dispatch_process.exit_code == 0,
+        "#1252: toolbox-create-batch-dispatch-plan JSON command should exit successfully");
+    expect_contains(dispatch_process.stdout_text, "\"toolboxCreateBatchDispatchPlan\": {",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose a dispatch result object");
+    expect_contains(dispatch_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose requested context state");
+    expect_contains(dispatch_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose requested contexts");
+    expect_contains(dispatch_process.stdout_text, "\"itemCount\": 2",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose item counts");
+    expect_contains(dispatch_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose first toolbox item metadata");
+    expect_contains(dispatch_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose later toolbox item metadata");
+    expect_contains(dispatch_process.stdout_text, "\"targetRecordIndex\": 2",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose first target indexes");
+    expect_contains(dispatch_process.stdout_text, "\"targetRecordIndex\": 3",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose later target indexes");
+    expect_contains(dispatch_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose generated names");
+    expect_contains(dispatch_process.stdout_text, "\"objectName\": \"cmdDispatch\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should preserve explicit names");
+    expect_contains(dispatch_process.stdout_text, "\"dispatchArguments\": [",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose dispatch arguments");
+    expect_contains(dispatch_process.stdout_text, "\"--toolbox-create-batch\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should dispatch to toolbox-create-batch");
+    expect_contains(dispatch_process.stdout_text, "\"--toolbox-item\", \"textbox\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should include first toolbox item arguments");
+    expect_contains(dispatch_process.stdout_text, "\"--object-name\", \"txt2\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should include generated object-name arguments");
+    expect_contains(dispatch_process.stdout_text, "\"--field-value\", \"CAPTION=First Dispatch\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should include first field-value arguments");
+    expect_contains(dispatch_process.stdout_text, "\"--toolbox-item\", \"commandbutton\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should include later toolbox item arguments");
+    expect_contains(dispatch_process.stdout_text, "\"--field-value\", \"CAPTION=Dispatch Command\"",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should include later field-value arguments");
+    expect_contains(dispatch_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose dispatch admission state");
+    expect_contains(dispatch_process.stdout_text, "\"dryRun\": false",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose non-dry-run dispatch state");
+    expect_contains(dispatch_process.stdout_text, "\"executed\": false",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should remain non-executing");
+    expect_contains(dispatch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1252: toolbox-create-batch-dispatch-plan JSON should expose mutation intent");
+    expect(visual_object_count(form_path) == before_count,
+        "#1252: toolbox-create-batch-dispatch-plan host command should not mutate the visual asset");
+
+    const auto non_admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-dispatch-plan",
+            "--toolbox-item", "textbox",
+            "--admit-create-operation", "false",
+            "--json"
+        },
+        temp_root);
+    expect(non_admitted_process.exit_code == 4,
+        "#1252: toolbox-create-batch-dispatch-plan JSON should reject non-admitted create operations");
+    expect_contains(non_admitted_process.stdout_text, "\"toolboxCreateBatchDispatchPlan\": null",
+        "#1252: non-admitted toolbox-create-batch-dispatch-plan JSON should not expose stale dispatch plans");
+    expect_contains(non_admitted_process.stdout_text,
+        "A toolbox batch create dispatch request requires an admitted non-dry-run create operation.",
+        "#1252: non-admitted toolbox-create-batch-dispatch-plan JSON should report dispatch errors");
+    expect_not_contains(non_admitted_process.stdout_text, "\"dispatchArguments\": [",
+        "#1252: failed toolbox-create-batch-dispatch-plan JSON should not expose stale dispatch arguments");
+    expect(visual_object_count(form_path) == before_count,
+        "#1252: non-admitted toolbox-create-batch-dispatch-plan commands should not mutate the asset");
+
+    const auto invalid_plan_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-dispatch-plan",
+            "--toolbox-context", "report",
+            "--toolbox-item", "textbox",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_plan_process.exit_code == 4,
+        "#1252: toolbox-create-batch-dispatch-plan JSON should reject invalid batch plans");
+    expect_contains(invalid_plan_process.stdout_text,
+        "The requested toolbox item is not available in the requested designer context.",
+        "#1252: invalid toolbox-create-batch-dispatch-plan batch plans should report planning errors");
+    expect_not_contains(invalid_plan_process.stdout_text, "\"dispatchArguments\": [",
+        "#1252: invalid toolbox-create-batch-dispatch-plan batch plans should not expose stale arguments");
+
+    const auto invalid_admission_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-dispatch-plan",
+            "--toolbox-item", "textbox",
+            "--admit-create-operation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_admission_process.exit_code == 2,
+        "#1252: toolbox-create-batch-dispatch-plan JSON should reject invalid admission tokens");
+    expect_contains(invalid_admission_process.stdout_text,
+        "The --admit-create-operation value must be true or false.",
+        "#1252: invalid toolbox-create-batch-dispatch-plan admission tokens should report parser errors");
+
+    const auto orphan_item_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-dispatch-plan",
+            "--parent-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(orphan_item_option_process.exit_code == 2,
+        "#1252: toolbox-create-batch-dispatch-plan JSON should reject item options before items");
+    expect_contains(orphan_item_option_process.stdout_text,
+        "Toolbox batch item options require a preceding --toolbox-item.",
+        "#1252: orphan toolbox-create-batch-dispatch-plan item options should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_creates_toolbox_object_batches(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -31248,6 +31404,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_toolbox_object_creation_dispatch(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batches(argv[1]);
+    test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(argv[1]);
     test_studio_host_json_creates_toolbox_object_batches(argv[1]);
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
