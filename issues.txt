@@ -1,3 +1,4 @@
+1093	OPEN	E2/#23 slice: Expose host allow-row-sizing-object command		2026-06-18T00:26:16Z
 1092	OPEN	E2/#23 slice: Expose host allow-header-sizing-object command		2026-06-18T00:18:44Z
 1091	OPEN	E2/#23 slice: Expose host panel-link-object command		2026-06-18T00:14:11Z
 1090	OPEN	E2/#23 slice: Expose host highlight-row-object command		2026-06-18T00:10:19Z

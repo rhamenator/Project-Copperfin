@@ -287,6 +287,10 @@ void test_parse_launch_arguments() {
         "#1092: launch contract should keep allow-header-sizing-object off by default");
     expect(!result.request.allow_header_sizing_available,
         "#1092: launch contract should keep allow header sizing unavailable by default");
+    expect(!result.request.allow_row_sizing_object,
+        "#1093: launch contract should keep allow-row-sizing-object off by default");
+    expect(!result.request.allow_row_sizing_available,
+        "#1093: launch contract should keep allow row sizing unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -6076,6 +6080,92 @@ void test_parse_launch_arguments_rejects_allow_header_sizing_object_ambiguity() 
         "#1092: launch contract should reject stray allow-header-sizing arguments");
 }
 
+void test_parse_launch_arguments_for_allow_row_sizing_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--allow-row-sizing-object",
+        "--allow-row-sizing", "false",
+        "--allow-row-sizing-target-object-name", "frmCustomer",
+        "--allow-row-sizing-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1093: launch contract should parse allow-row-sizing-object requests");
+    expect(result.request.allow_row_sizing_object,
+        "#1093: launch contract should detect --allow-row-sizing-object");
+    expect(result.request.allow_row_sizing_available && !result.request.allow_row_sizing,
+        "#1093: allow-row-sizing-object requests should carry allow row sizing state");
+    expect(result.request.allow_row_sizing_objects.size() == 2U,
+        "#1093: allow-row-sizing-object requests should collect allow_row_sizing target selectors");
+    if (result.request.allow_row_sizing_objects.size() == 2U) {
+        expect(result.request.allow_row_sizing_objects[0].object_name == "frmCustomer" &&
+                result.request.allow_row_sizing_objects[0].unique_id.empty(),
+            "#1093: allow-row-sizing-object requests should parse target object-name selectors");
+        expect(result.request.allow_row_sizing_objects[1].object_name.empty() &&
+                result.request.allow_row_sizing_objects[1].unique_id == "two-guid",
+            "#1093: allow-row-sizing-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_allow_row_sizing_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-row-sizing-object",
+        "--allow-row-sizing-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1093: launch contract should reject allow-row-sizing-object requests without allow row sizing state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-row-sizing-object",
+        "--allow-row-sizing", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1093: launch contract should reject allow-row-sizing-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-row-sizing-object",
+        "--allow-row-sizing", "sometimes",
+        "--allow-row-sizing-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1093: launch contract should reject invalid allow-row-sizing boolean values");
+}
+
+void test_parse_launch_arguments_rejects_allow_row_sizing_object_ambiguity() {
+    const auto allow_row_sizing_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-row-sizing-object",
+        "--auto-size-object",
+        "--allow-row-sizing", "false",
+        "--allow-row-sizing-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!allow_row_sizing_auto_size_result.ok,
+        "#1093: launch contract should reject simultaneous allow-row-sizing-object and auto-size-object requests");
+
+    const auto allow_row_sizing_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-row-sizing-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--allow-row-sizing", "false",
+        "--allow-row-sizing-target-unique-id", "one-guid"
+    });
+    expect(!allow_row_sizing_property_result.ok,
+        "#1093: launch contract should reject allow-row-sizing-object combined with property commands");
+
+    const auto stray_allow_row_sizing_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--allow-row-sizing", "false"
+    });
+    expect(!stray_allow_row_sizing_result.ok,
+        "#1093: launch contract should reject stray allow-row-sizing arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7497,6 +7587,9 @@ int main() {
     test_parse_launch_arguments_for_allow_header_sizing_object();
     test_parse_launch_arguments_rejects_allow_header_sizing_object_invalid_inputs();
     test_parse_launch_arguments_rejects_allow_header_sizing_object_ambiguity();
+    test_parse_launch_arguments_for_allow_row_sizing_object();
+    test_parse_launch_arguments_rejects_allow_row_sizing_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_allow_row_sizing_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
