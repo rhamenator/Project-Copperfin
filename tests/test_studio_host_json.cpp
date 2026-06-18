@@ -148,6 +148,39 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
     expect(create_result.ok, "#967: synthetic SCX table with selectable objects should be created");
 }
 
+
+void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "save-guid"},
+        {"txtName", "txtName", "name-guid"},
+        {"lblStatus", "lblStatus", "status-guid"},
+        {"dupControl", "dupOne", "dup-one-guid"},
+        {"dupControl", "dupTwo", "dup-two-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1201: synthetic SCX table for deleted-states should be created");
+}
+
+void mark_deleted_for_deleted_states_fixture(const std::filesystem::path& form_path,
+                                             const std::string& unique_id,
+                                             bool deleted,
+                                             const char* message) {
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = unique_id,
+        .deleted = deleted
+    });
+    expect(delete_result.ok, message);
+}
+
 void write_synthetic_form_table_for_toolbox_creation(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -4524,6 +4557,134 @@ void test_studio_host_json_renames_properties_by_stable_selectors(const std::str
     });
     expect(source_property.ok && source_property.exists && source_property.value == "\"customer.name\"",
         "#1022: ambiguous set/rename property requests should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+
+void test_studio_host_json_applies_deleted_states_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_deleted_states_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path batch_path = temp_root / "batch.scx";
+    write_synthetic_form_table_for_deleted_states(batch_path);
+    mark_deleted_for_deleted_states_fixture(batch_path, "name-guid", true,
+        "#1201: deleted-states fixture should support initially deleted targets");
+    const auto batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", batch_path.string(),
+            "--deleted-states",
+            "--deleted-state-target-object-name", "cmdSave",
+            "--deleted-state", "true",
+            "--deleted-state-target-unique-id", "name-guid",
+            "--deleted-state", "false",
+            "--json"
+        },
+        temp_root);
+    expect(batch_process.exit_code == 0,
+        "#1201: host deleted-states batch should exit successfully");
+    expect(visual_object_deleted(batch_path, "save-guid") &&
+            !visual_object_deleted(batch_path, "name-guid") &&
+            !visual_object_deleted(batch_path, "status-guid") &&
+            !visual_object_deleted(batch_path, "dup-one-guid") &&
+            !visual_object_deleted(batch_path, "dup-two-guid"),
+        "#1201: host deleted-states batch should delete, restore, and preserve unrelated records");
+
+    const fs::path missing_path = temp_root / "missing.scx";
+    write_synthetic_form_table_for_deleted_states(missing_path);
+    const auto missing_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_path.string(),
+            "--deleted-states",
+            "--deleted-state-target-unique-id", "save-guid",
+            "--deleted-state", "true",
+            "--deleted-state-target-unique-id", "missing-guid",
+            "--deleted-state", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_process.exit_code == 4,
+        "#1201: missing-target host deleted-states batch should return command failure");
+    expect(!visual_object_deleted(missing_path, "save-guid") &&
+            !visual_object_deleted(missing_path, "name-guid") &&
+            !visual_object_deleted(missing_path, "status-guid"),
+        "#1201: failed host deleted-states batch should roll back earlier target mutations");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_deleted_states(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--deleted-states",
+            "--deleted-state-target-object-name", "dupControl",
+            "--deleted-state", "true",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1201: ambiguous-target host deleted-states batch should return command failure");
+    expect(!visual_object_deleted(duplicate_path, "dup-one-guid") &&
+            !visual_object_deleted(duplicate_path, "dup-two-guid"),
+        "#1201: ambiguous host deleted-states batch should not mutate duplicate candidates");
+
+    const fs::path missing_state_path = temp_root / "missing_state.scx";
+    write_synthetic_form_table_for_deleted_states(missing_state_path);
+    const auto missing_state_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_state_path.string(),
+            "--deleted-states",
+            "--deleted-state-target-unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_state_process.exit_code == 2,
+        "#1201: deleted-states item without state should fail during launch parsing");
+    expect(!visual_object_deleted(missing_state_path, "save-guid"),
+        "#1201: deleted-states missing-state parse failure should not mutate the asset");
+
+    const fs::path empty_path = temp_root / "empty.scx";
+    write_synthetic_form_table_for_deleted_states(empty_path);
+    const auto empty_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", empty_path.string(),
+            "--deleted-states",
+            "--json"
+        },
+        temp_root);
+    expect(empty_process.exit_code == 2,
+        "#1201: deleted-states without targets should fail during launch parsing");
+    expect(!visual_object_deleted(empty_path, "save-guid"),
+        "#1201: deleted-states empty parse failure should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_deleted_states(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--deleted-states",
+            "--deleted-state-target-unique-id", "save-guid",
+            "--deleted-state", "true",
+            "--delete-object",
+            "--unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1201: deleted-states plus delete-object should fail during launch parsing");
+    expect(!visual_object_deleted(ambiguous_path, "save-guid"),
+        "#1201: deleted-states ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -27601,6 +27762,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
+    test_studio_host_json_applies_deleted_states_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);

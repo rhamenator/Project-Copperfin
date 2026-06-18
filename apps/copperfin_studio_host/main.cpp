@@ -1537,6 +1537,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.deleted_states) {
+        std::vector<copperfin::vfp::VisualObjectDeletedStateBatchItem> deleted_state_objects;
+        deleted_state_objects.reserve(parse_result.request.deleted_state_objects.size());
+        for (const auto& deleted_state_object : parse_result.request.deleted_state_objects) {
+            deleted_state_objects.push_back({
+                .record_index = deleted_state_object.record_index,
+                .object_name = deleted_state_object.object_name,
+                .unique_id = deleted_state_object.unique_id,
+                .deleted = deleted_state_object.deleted
+            });
+        }
+
+        const auto deleted_states_result = copperfin::vfp::set_visual_object_deleted_states({
+            .path = parse_result.request.path,
+            .objects = deleted_state_objects
+        });
+
+        if (!deleted_states_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << deleted_states_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.duplicate_object) {
         const auto duplicate_result = copperfin::vfp::duplicate_visual_object({
             .path = parse_result.request.path,

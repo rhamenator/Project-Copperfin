@@ -98,6 +98,7 @@ void test_parse_launch_arguments() {
     expect(!result.request.rename_property, "#1022: launch contract should keep rename-property off by default");
     expect(!result.request.delete_object, "#1023: launch contract should keep delete-object off by default");
     expect(!result.request.restore_object, "#1024: launch contract should keep restore-object off by default");
+    expect(!result.request.deleted_states, "#1201: launch contract should keep deleted-states off by default");
     expect(!result.request.duplicate_object, "#1025: launch contract should keep duplicate-object off by default");
     expect(!result.request.rename_object, "#1026: launch contract should keep rename-object off by default");
     expect(!result.request.reparent_object, "#1027: launch contract should keep reparent-object off by default");
@@ -878,6 +879,102 @@ void test_parse_launch_arguments_rejects_restore_object_ambiguity() {
     });
     expect(!restore_property_result.ok,
         "#1024: launch contract should reject restore-object combined with property commands");
+}
+
+
+void test_parse_launch_arguments_for_deleted_states() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--deleted-states",
+        "--deleted-state-target-object-name", "cmdSave",
+        "--deleted-state", "true",
+        "--deleted-state-target-unique-id", "name-guid",
+        "--deleted-state", "false"
+    });
+
+    expect(result.ok, "#1201: launch contract should parse deleted-states requests");
+    expect(result.request.deleted_states, "#1201: launch contract should detect --deleted-states");
+    expect(result.request.deleted_state_objects.size() == 2U,
+        "#1201: deleted-states requests should collect target/state pairs");
+    if (result.request.deleted_state_objects.size() == 2U) {
+        expect(result.request.deleted_state_objects[0].object_name == "cmdSave" &&
+                result.request.deleted_state_objects[0].unique_id.empty() &&
+                result.request.deleted_state_objects[0].deleted_available &&
+                result.request.deleted_state_objects[0].deleted,
+            "#1201: deleted-states requests should parse object-name delete items");
+        expect(result.request.deleted_state_objects[1].object_name.empty() &&
+                result.request.deleted_state_objects[1].unique_id == "name-guid" &&
+                result.request.deleted_state_objects[1].deleted_available &&
+                !result.request.deleted_state_objects[1].deleted,
+            "#1201: deleted-states requests should parse unique-id restore items");
+    }
+}
+
+void test_parse_launch_arguments_rejects_deleted_states_invalid_inputs() {
+    const auto missing_state_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--deleted-states",
+        "--deleted-state-target-unique-id", "one-guid"
+    });
+    expect(!missing_state_result.ok,
+        "#1201: launch contract should reject deleted-states items without deleted state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--deleted-states"
+    });
+    expect(!missing_targets_result.ok,
+        "#1201: launch contract should reject deleted-states requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--deleted-states",
+        "--deleted-state-target-unique-id", "one-guid",
+        "--deleted-state", "sometimes"
+    });
+    expect(!invalid_value_result.ok,
+        "#1201: launch contract should reject invalid deleted-state logical values");
+
+    const auto value_without_target_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--deleted-states",
+        "--deleted-state", "true"
+    });
+    expect(!value_without_target_result.ok,
+        "#1201: launch contract should reject deleted-state values without preceding target selectors");
+
+    const auto stray_target_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--deleted-state-target-unique-id", "one-guid",
+        "--deleted-state", "true"
+    });
+    expect(!stray_target_result.ok,
+        "#1201: launch contract should reject stray deleted-state target arguments");
+}
+
+void test_parse_launch_arguments_rejects_deleted_states_ambiguity() {
+    const auto deleted_states_delete_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--deleted-states",
+        "--deleted-state-target-unique-id", "one-guid",
+        "--deleted-state", "true",
+        "--delete-object",
+        "--unique-id", "one-guid"
+    });
+    expect(!deleted_states_delete_result.ok,
+        "#1201: launch contract should reject simultaneous deleted-states and delete-object requests");
+
+    const auto deleted_states_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--deleted-states",
+        "--deleted-state-target-unique-id", "one-guid",
+        "--deleted-state", "true",
+        "--clear-property",
+        "--property-name", "Caption"
+    });
+    expect(!deleted_states_property_result.ok,
+        "#1201: launch contract should reject deleted-states combined with property commands");
 }
 
 void test_parse_launch_arguments_for_duplicate_object() {
@@ -17276,6 +17373,9 @@ int main() {
     test_parse_launch_arguments_rejects_delete_object_property_ambiguity();
     test_parse_launch_arguments_for_restore_object();
     test_parse_launch_arguments_rejects_restore_object_ambiguity();
+    test_parse_launch_arguments_for_deleted_states();
+    test_parse_launch_arguments_rejects_deleted_states_invalid_inputs();
+    test_parse_launch_arguments_rejects_deleted_states_ambiguity();
     test_parse_launch_arguments_for_duplicate_object();
     test_parse_launch_arguments_rejects_duplicate_object_ambiguity();
     test_parse_launch_arguments_for_rename_object();

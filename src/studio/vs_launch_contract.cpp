@@ -812,6 +812,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--deleted-states") {
+            result.request.deleted_states = true;
+            continue;
+        }
+
         if (argument == "--duplicate-object") {
             result.request.duplicate_object = true;
             continue;
@@ -5431,6 +5436,56 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--deleted-state-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --deleted-state-target-object-name."};
+            }
+            result.request.deleted_state_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {},
+                .deleted = false,
+                .deleted_available = false
+            });
+            continue;
+        }
+
+        if (argument == "--deleted-state-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --deleted-state-target-unique-id."};
+            }
+            result.request.deleted_state_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index],
+                .deleted = false,
+                .deleted_available = false
+            });
+            continue;
+        }
+
+        if (argument == "--deleted-state") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --deleted-state."};
+            }
+            const auto deleted_state = parse_bool_value(args[++index]);
+            if (!deleted_state.has_value()) {
+                return {.ok = false, .error = "The --deleted-state value must be true or false."};
+            }
+            auto pending = std::find_if(
+                result.request.deleted_state_objects.rbegin(),
+                result.request.deleted_state_objects.rend(),
+                [](const StudioDeletedStateSelector& object) {
+                    return !object.deleted_available;
+                });
+            if (pending == result.request.deleted_state_objects.rend()) {
+                return {.ok = false, .error = "A deleted-state value requires a preceding deleted-state target selector."};
+            }
+            pending->deleted = *deleted_state;
+            pending->deleted_available = true;
+            continue;
+        }
+
         if (argument == "--row-source-type-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --row-source-type-target-object-name."};
@@ -8601,6 +8656,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.multi_select_objects.empty())) {
         return {.ok = false, .error = "Multi-select arguments can only be used with --multi-select-object."};
     }
+    if (result.request.deleted_states && result.request.deleted_state_objects.empty()) {
+        return {.ok = false, .error = "A deleted-states request requires at least one target selector."};
+    }
+    if (result.request.deleted_states) {
+        for (const auto& object : result.request.deleted_state_objects) {
+            if (!object.deleted_available) {
+                return {.ok = false, .error = "A deleted-states item requires --deleted-state after its target selector."};
+            }
+        }
+    }
+    if (!result.request.deleted_states && !result.request.deleted_state_objects.empty()) {
+        return {.ok = false, .error = "Deleted-state target arguments can only be used with --deleted-states."};
+    }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {
         return {.ok = false, .error = "An object row-source-type assignment requires --row-source-type."};
     }
@@ -9739,6 +9807,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
     const int object_command_count =
         (result.request.delete_object ? 1 : 0) +
         (result.request.restore_object ? 1 : 0) +
+        (result.request.deleted_states ? 1 : 0) +
         (result.request.duplicate_object ? 1 : 0) +
         (result.request.rename_object ? 1 : 0) +
         (result.request.reparent_object ? 1 : 0) +

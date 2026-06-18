@@ -42,6 +42,14 @@ struct StudioObjectSelector {
     std::string unique_id{};
 };
 
+struct StudioDeletedStateSelector {
+    std::size_t record_index = 0;
+    std::string object_name{};
+    std::string unique_id{};
+    bool deleted = false;
+    bool deleted_available = false;
+};
+
 struct StudioFieldValueAssignment {
     std::string property_name{};
     std::string property_value{};
@@ -201,6 +209,7 @@ struct StudioOpenRequest {
     bool rename_property = false;
     bool delete_object = false;
     bool restore_object = false;
+    bool deleted_states = false;
     bool duplicate_object = false;
     bool rename_object = false;
     bool reparent_object = false;
@@ -599,6 +608,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> tab_order_objects{};
     std::vector<StudioObjectSelector> tab_stop_objects{};
     std::vector<StudioObjectSelector> visibility_objects{};
+    std::vector<StudioDeletedStateSelector> deleted_state_objects{};
     std::vector<StudioObjectSelector> enabled_objects{};
     std::vector<StudioObjectSelector> read_only_objects{};
     std::vector<StudioObjectSelector> locked_objects{};
