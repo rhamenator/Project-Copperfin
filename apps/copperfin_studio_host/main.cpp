@@ -57,6 +57,7 @@ void print_usage() {
     std::cout << "Max-height object: --max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]\n";
     std::cout << "Movable object: --movable-object --movable <true|false> [--movable-target-object-name <name>] [--movable-target-unique-id <id>]\n";
     std::cout << "Half-height-caption object: --half-height-caption-object --half-height-caption <true|false> [--half-height-caption-target-object-name <name>] [--half-height-caption-target-unique-id <id>]\n";
+    std::cout << "Link-master object: --link-master-object --link-master <value> [--link-master-target-object-name <name>] [--link-master-target-unique-id <id>]\n";
     std::cout << "MDI-form object: --mdi-form-object --mdi-form <true|false> [--mdi-form-target-object-name <name>] [--mdi-form-target-unique-id <id>]\n";
     std::cout << "Back-style object: --back-style-object --back-style <n> [--back-style-target-object-name <name>] [--back-style-target-unique-id <id>]\n";
     std::cout << "Border-style object: --border-style-object --border-style <n> [--border-style-target-object-name <name>] [--border-style-target-unique-id <id>]\n";
@@ -3069,6 +3070,30 @@ int main(int argc, char** argv) {
         if (!status_bar_text_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << status_bar_text_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.link_master_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> link_master_objects;
+        link_master_objects.reserve(parse_result.request.link_master_objects.size());
+        for (const auto& link_master_object : parse_result.request.link_master_objects) {
+            link_master_objects.push_back({
+                .record_index = link_master_object.record_index,
+                .object_name = link_master_object.object_name,
+                .unique_id = link_master_object.unique_id
+            });
+        }
+
+        const auto link_master_result = copperfin::vfp::set_visual_object_link_master({
+            .path = parse_result.request.path,
+            .objects = link_master_objects,
+            .link_master = parse_result.request.link_master
+        });
+
+        if (!link_master_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << link_master_result.error << "\n";
             return 4;
         }
     }

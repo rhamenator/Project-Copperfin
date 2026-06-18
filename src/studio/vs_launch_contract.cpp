@@ -911,6 +911,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--link-master-object") {
+            result.request.link_master_object = true;
+            continue;
+        }
+
         if (argument == "--control-source-object") {
             result.request.control_source_object = true;
             continue;
@@ -1888,6 +1893,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.status_bar_text = args[++index];
             result.request.status_bar_text_available = true;
+            continue;
+        }
+
+        if (argument == "--link-master") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --link-master."};
+            }
+            result.request.link_master = args[++index];
+            result.request.link_master_available = true;
             continue;
         }
 
@@ -4545,6 +4559,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--link-master-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --link-master-target-object-name."};
+            }
+            result.request.link_master_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--link-master-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --link-master-target-unique-id."};
+            }
+            result.request.link_master_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--control-source-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --control-source-target-object-name."};
@@ -6994,6 +7032,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.status_bar_text_objects.empty())) {
         return {.ok = false, .error = "Status-bar text arguments can only be used with --status-bar-text-object."};
     }
+    if (result.request.link_master_object && !result.request.link_master_available) {
+        return {.ok = false, .error = "An object link-master assignment requires --link-master."};
+    }
+    if (result.request.link_master_object && result.request.link_master_objects.empty()) {
+        return {.ok = false, .error = "An object link-master assignment requires at least one target selector."};
+    }
+    if (!result.request.link_master_object &&
+        (result.request.link_master_available ||
+         !result.request.link_master_objects.empty())) {
+        return {.ok = false, .error = "Link-master arguments can only be used with --link-master-object."};
+    }
     if (result.request.control_source_object && !result.request.control_source_available) {
         return {.ok = false, .error = "An object control-source assignment requires --control-source."};
     }
@@ -7887,6 +7936,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.ole_drop_text_insertion_object ? 1 : 0) +
         (result.request.tooltip_text_object ? 1 : 0) +
         (result.request.status_bar_text_object ? 1 : 0) +
+        (result.request.link_master_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +
         (result.request.current_control_object ? 1 : 0) +
         (result.request.input_mask_object ? 1 : 0) +

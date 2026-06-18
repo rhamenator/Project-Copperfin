@@ -6467,6 +6467,82 @@ void test_parse_launch_arguments_rejects_status_bar_text_object_ambiguity() {
         "#1044: launch contract should reject stray status-bar text arguments");
 }
 
+void test_parse_launch_arguments_for_link_master_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--link-master-object",
+        "--link-master", "customer_id",
+        "--link-master-target-object-name", "cmdSave",
+        "--link-master-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1165: launch contract should parse link-master-object requests");
+    expect(result.request.link_master_object, "#1165: launch contract should detect --link-master-object");
+    expect(result.request.link_master_available && result.request.link_master == "customer_id",
+        "#1165: link-master-object requests should carry link-master text");
+    expect(result.request.link_master_objects.size() == 2U,
+        "#1165: link-master-object requests should collect link-master target selectors");
+    if (result.request.link_master_objects.size() == 2U) {
+        expect(result.request.link_master_objects[0].object_name == "cmdSave" &&
+                result.request.link_master_objects[0].unique_id.empty(),
+            "#1165: link-master-object requests should parse target object-name selectors");
+        expect(result.request.link_master_objects[1].object_name.empty() &&
+                result.request.link_master_objects[1].unique_id == "two-guid",
+            "#1165: link-master-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_link_master_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--link-master-object",
+        "--link-master-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1165: launch contract should reject link-master-object requests without link-master text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--link-master-object",
+        "--link-master", "customer_id"
+    });
+    expect(!missing_targets_result.ok,
+        "#1165: launch contract should reject link-master-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_link_master_object_ambiguity() {
+    const auto link_master_status_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--link-master-object",
+        "--status-bar-text-object",
+        "--link-master", "customer_id",
+        "--link-master-target-unique-id", "one-guid",
+        "--status-bar-text", "Ready",
+        "--status-bar-text-target-unique-id", "one-guid"
+    });
+    expect(!link_master_status_result.ok,
+        "#1165: launch contract should reject simultaneous link-master-object and status-bar-text-object requests");
+
+    const auto link_master_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--link-master-object",
+        "--clear-property",
+        "--property-name", "LinkMaster",
+        "--link-master", "customer_id",
+        "--link-master-target-unique-id", "one-guid"
+    });
+    expect(!link_master_property_result.ok,
+        "#1165: launch contract should reject link-master-object combined with property commands");
+
+    const auto stray_link_master_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--link-master", "customer_id"
+    });
+    expect(!stray_link_master_result.ok,
+        "#1165: launch contract should reject stray link-master arguments");
+}
+
 void test_parse_launch_arguments_for_control_source_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -14269,6 +14345,9 @@ int main() {
     test_parse_launch_arguments_for_status_bar_text_object();
     test_parse_launch_arguments_rejects_status_bar_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_status_bar_text_object_ambiguity();
+    test_parse_launch_arguments_for_link_master_object();
+    test_parse_launch_arguments_rejects_link_master_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_link_master_object_ambiguity();
     test_parse_launch_arguments_for_control_source_object();
     test_parse_launch_arguments_rejects_control_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_control_source_object_ambiguity();

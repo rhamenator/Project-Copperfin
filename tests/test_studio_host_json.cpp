@@ -1420,6 +1420,24 @@ void write_synthetic_form_table_for_object_status_bar_text(const std::filesystem
     expect(create_result.ok, "#1044: synthetic SCX table for object status-bar text should be created");
 }
 
+void write_synthetic_form_table_for_object_link_master(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "LINKMASTER", .type = 'C', .length = 70U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "old_customer_id"},
+        {"cmdCancel", "cmdCancel", "two-guid", "old_order_id"},
+        {"lblStatus", "lblStatus", "three-guid", "status_id"},
+        {"cmdOther", "cmdOther", "other-guid", "other_id"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1165: synthetic SCX table for object link-master should be created");
+}
+
 void write_synthetic_form_table_for_object_control_source(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -12631,6 +12649,129 @@ void test_studio_host_json_assigns_status_bar_text_by_stable_selectors(const std
     }
 }
 
+void test_studio_host_json_assigns_link_master_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_link_master_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path link_master_path = temp_root / "link_master.scx";
+    write_synthetic_form_table_for_object_link_master(link_master_path);
+    const auto link_master_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", link_master_path.string(),
+            "--link-master-object",
+            "--link-master", "customer_id",
+            "--link-master-target-object-name", "cmdSave",
+            "--link-master-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(link_master_process.exit_code == 0,
+        "#1165: host object link-master assignment should exit successfully");
+    expect(visual_object_property(link_master_path, "one-guid", "LINKMASTER") == "customer_id" &&
+            visual_object_property(link_master_path, "two-guid", "LINKMASTER") == "customer_id" &&
+            visual_object_property(link_master_path, "three-guid", "LINKMASTER") == "status_id" &&
+            visual_object_property(link_master_path, "other-guid", "LINKMASTER") == "other_id",
+        "#1165: host object link-master assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_link_master(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--link-master-object",
+            "--link-master", "customer_id",
+            "--link-master-target-unique-id", "one-guid",
+            "--link-master-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1165: missing-target host object link-master assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "LINKMASTER") == "old_customer_id" &&
+            visual_object_property(missing_target_path, "two-guid", "LINKMASTER") == "old_order_id",
+        "#1165: missing-target host object link-master assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_link_master(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--link-master-object",
+            "--link-master", "customer_id",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1165: link-master-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "LINKMASTER") == "old_customer_id",
+        "#1165: link-master-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_link_master(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--link-master-object",
+            "--link-master-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1165: link-master-object without link-master value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "LINKMASTER") == "old_customer_id",
+        "#1165: link-master-object without link-master value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_link_master(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--link-master-object",
+            "--link-master", "customer_id",
+            "--link-master-target-unique-id", "one-guid",
+            "--link-master-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1165: duplicate-target host object link-master assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "LINKMASTER") == "old_customer_id",
+        "#1165: duplicate-target host object link-master assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_link_master(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--link-master-object",
+            "--status-bar-text-object",
+            "--link-master", "customer_id",
+            "--link-master-target-unique-id", "one-guid",
+            "--status-bar-text", "Ready to save",
+            "--status-bar-text-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1165: link-master-object plus status-bar-text-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "LINKMASTER") == "old_customer_id",
+        "#1165: link-master-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_control_source_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -22214,6 +22355,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_initial_selected_alias_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_link_master_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_current_control_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_input_mask_by_stable_selectors(argv[1]);

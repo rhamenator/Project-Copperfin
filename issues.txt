@@ -1,3 +1,4 @@
+1165	OPEN	E2/#23 slice: Expose host link-master-object command		2026-06-18T09:21:31Z
 1164	OPEN	E2/#23 slice: Expose host border-color-object command		2026-06-18T09:10:32Z
 1163	OPEN	E2/#23 slice: Expose host border-width-object command		2026-06-18T08:59:40Z
 1162	OPEN	E2/#23 slice: Expose host border-style-object command		2026-06-18T08:50:50Z
