@@ -60,6 +60,14 @@ namespace {
     };
 }
 
+[[nodiscard]] StudioToolboxObjectCreateBatchDispatchResult failed_batch_dispatch_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .plan = {}
+    };
+}
+
 [[nodiscard]] std::string trimmed_copy(std::string_view value) {
     std::size_t first = 0U;
     while (first < value.size() && std::isspace(static_cast<unsigned char>(value[first])) != 0) {
@@ -410,6 +418,81 @@ StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
             .unique_id = create_plan.unique_id,
             .parent_name = create_plan.parent_name,
             .field_values = create_plan.field_values,
+            .dispatch_arguments = std::move(arguments),
+            .dispatch_admitted = true,
+            .dry_run = false,
+            .executed = false,
+            .mutates_asset = true
+        }
+    };
+}
+
+StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch(
+    const StudioToolboxObjectCreateBatchDispatchRequest& request) {
+    const auto& batch_plan = request.batch_plan;
+    if (batch_plan.path.empty()) {
+        return failed_batch_dispatch_result("A toolbox batch create dispatch request requires an asset path.");
+    }
+    if (batch_plan.plans.empty() || batch_plan.item_count == 0U) {
+        return failed_batch_dispatch_result("A toolbox batch create dispatch request requires planned toolbox creates.");
+    }
+    if (batch_plan.item_count != batch_plan.plans.size()) {
+        return failed_batch_dispatch_result("A toolbox batch create dispatch request requires consistent planned toolbox creates.");
+    }
+    if (!request.admit_create_operation) {
+        return failed_batch_dispatch_result(
+            "A toolbox batch create dispatch request requires an admitted non-dry-run create operation.");
+    }
+
+    std::vector<std::string> arguments;
+    append_argument(arguments, "--path", batch_plan.path);
+    arguments.push_back("--toolbox-create-batch");
+    if (batch_plan.toolbox_context_provided) {
+        append_argument(arguments, "--toolbox-context", studio_toolbox_context_name(batch_plan.toolbox_context));
+    }
+
+    for (const auto& create_plan : batch_plan.plans) {
+        if (create_plan.toolbox_item.id.empty() ||
+            create_plan.toolbox_item.vfp_class.empty() ||
+            create_plan.toolbox_item.base_class.empty()) {
+            return failed_batch_dispatch_result(
+                "A toolbox batch create dispatch request requires validated toolbox item metadata.");
+        }
+        if (trimmed_copy(create_plan.object_name).empty()) {
+            return failed_batch_dispatch_result(
+                "A toolbox batch create dispatch request requires planned object names.");
+        }
+        if (create_plan.field_values.empty() ||
+            !has_field_value_named(create_plan.field_values, "OBJNAME") ||
+            !has_field_value_named(create_plan.field_values, "NAME") ||
+            !has_field_value_named(create_plan.field_values, "CLASS") ||
+            !has_field_value_named(create_plan.field_values, "BASECLASS")) {
+            return failed_batch_dispatch_result(
+                "A toolbox batch create dispatch request requires descriptor field values.");
+        }
+
+        append_argument(arguments, "--toolbox-item", std::string(create_plan.toolbox_item.id));
+        append_argument(arguments, "--object-name", create_plan.object_name);
+        if (!create_plan.unique_id.empty()) {
+            append_argument(arguments, "--unique-id", create_plan.unique_id);
+        }
+        if (!create_plan.parent_name.empty()) {
+            append_argument(arguments, "--parent-name", create_plan.parent_name);
+        }
+        for (const auto& field_value : create_plan.field_values) {
+            append_argument(arguments, "--field-value", field_value.property_name + "=" + field_value.property_value);
+        }
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .plan = {
+            .path = batch_plan.path,
+            .toolbox_context_provided = batch_plan.toolbox_context_provided,
+            .toolbox_context = batch_plan.toolbox_context,
+            .item_count = batch_plan.item_count,
+            .plans = batch_plan.plans,
             .dispatch_arguments = std::move(arguments),
             .dispatch_admitted = true,
             .dry_run = false,

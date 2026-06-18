@@ -3,6 +3,7 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -45,12 +46,16 @@ bool has_field_value(
 }
 
 bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
-    for (std::size_t index = 0U; (index + 1U) < arguments.size(); index += 2U) {
+    for (std::size_t index = 0U; (index + 1U) < arguments.size(); ++index) {
         if (arguments[index] == key && arguments[index + 1U] == value) {
             return true;
         }
     }
     return false;
+}
+
+bool has_argument(const std::vector<std::string>& arguments, const std::string& value) {
+    return std::find(arguments.begin(), arguments.end(), value) != arguments.end();
 }
 
 const copperfin::studio::StudioToolboxObjectCreatePlanCatalogEntry* find_create_plan_entry(
@@ -788,6 +793,159 @@ void test_toolbox_creation_dispatch_rejects_invalid_plans_without_stale_argument
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_batch_dispatch_plans_host_arguments_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_dispatch_plan_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto batch_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "batch-dispatch-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Batch Dispatch Text"}
+                }
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = "cmdBatchDispatch",
+                .unique_id = "batch-dispatch-command-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Batch Dispatch Command"}
+                }
+            }
+        }
+    });
+    expect(batch_plan.ok,
+        "#1251: toolbox batch create dispatch fixture should produce a valid batch plan");
+
+    const auto dispatch = copperfin::studio::plan_visual_object_batch_create_dispatch({
+        .batch_plan = batch_plan.plan,
+        .admit_create_operation = true
+    });
+
+    expect(dispatch.ok &&
+            dispatch.plan.path == table_path.string() &&
+            dispatch.plan.toolbox_context_provided &&
+            dispatch.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            dispatch.plan.item_count == 2U &&
+            dispatch.plan.plans.size() == 2U &&
+            dispatch.plan.plans[0].target_record_index == before_count &&
+            dispatch.plan.plans[0].object_name == "txt2" &&
+            dispatch.plan.plans[1].target_record_index == before_count + 1U &&
+            dispatch.plan.plans[1].object_name == "cmdBatchDispatch" &&
+            dispatch.plan.dispatch_admitted &&
+            !dispatch.plan.dry_run &&
+            !dispatch.plan.executed &&
+            dispatch.plan.mutates_asset,
+        "#1251: toolbox batch create dispatch planning should preserve batch metadata and mutation intent");
+    expect(has_argument(dispatch.plan.dispatch_arguments, "--toolbox-create-batch") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--path", table_path.string()) &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--toolbox-context", "form") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--toolbox-item", "textbox") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--object-name", "txt2") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--unique-id", "batch-dispatch-textbox-guid") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--field-value", "CAPTION=Batch Dispatch Text") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--toolbox-item", "commandbutton") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--object-name", "cmdBatchDispatch") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--unique-id", "batch-dispatch-command-guid") &&
+            has_argument_pair(dispatch.plan.dispatch_arguments, "--field-value", "CAPTION=Batch Dispatch Command"),
+        "#1251: toolbox batch create dispatch planning should materialize deterministic per-item host arguments");
+    expect(object_count(table_path) == before_count,
+        "#1251: toolbox batch create dispatch planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_batch_dispatch_rejects_invalid_plans_without_stale_arguments() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_dispatch_plan_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto batch_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "batch-dispatch-reject-guid",
+                .parent_name = "frmMain",
+                .field_values = {}
+            }
+        }
+    });
+    expect(batch_plan.ok,
+        "#1251: toolbox batch create dispatch rejection fixture should produce a valid batch plan");
+
+    auto dispatch = copperfin::studio::plan_visual_object_batch_create_dispatch({
+        .batch_plan = batch_plan.plan,
+        .admit_create_operation = false
+    });
+    expect(!dispatch.ok &&
+            dispatch.error ==
+                "A toolbox batch create dispatch request requires an admitted non-dry-run create operation." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1251: toolbox batch create dispatch planning should reject non-admitted create operations");
+
+    dispatch = copperfin::studio::plan_visual_object_batch_create_dispatch({
+        .batch_plan = {},
+        .admit_create_operation = true
+    });
+    expect(!dispatch.ok &&
+            dispatch.error == "A toolbox batch create dispatch request requires an asset path." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1251: toolbox batch create dispatch planning should reject missing asset paths");
+
+    auto empty_batch_plan = batch_plan.plan;
+    empty_batch_plan.plans.clear();
+    empty_batch_plan.item_count = 0U;
+    dispatch = copperfin::studio::plan_visual_object_batch_create_dispatch({
+        .batch_plan = empty_batch_plan,
+        .admit_create_operation = true
+    });
+    expect(!dispatch.ok &&
+            dispatch.error == "A toolbox batch create dispatch request requires planned toolbox creates." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1251: toolbox batch create dispatch planning should reject empty batch plans");
+
+    auto incomplete_plan = batch_plan.plan;
+    incomplete_plan.plans[0].field_values.clear();
+    dispatch = copperfin::studio::plan_visual_object_batch_create_dispatch({
+        .batch_plan = incomplete_plan,
+        .admit_create_operation = true
+    });
+    expect(!dispatch.ok &&
+            dispatch.error == "A toolbox batch create dispatch request requires descriptor field values." &&
+            dispatch.plan.dispatch_arguments.empty(),
+        "#1251: toolbox batch create dispatch planning should reject incomplete per-item field values");
+
+    expect(object_count(table_path) == before_count,
+        "#1251: rejected toolbox batch create dispatch plans should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_maps_descriptors_and_defaults() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -989,6 +1147,8 @@ int main() {
     test_toolbox_creation_batch_create_rejects_invalid_batches_without_partial_mutation();
     test_toolbox_creation_dispatch_plans_host_arguments_without_mutation();
     test_toolbox_creation_dispatch_rejects_invalid_plans_without_stale_arguments();
+    test_toolbox_creation_batch_dispatch_plans_host_arguments_without_mutation();
+    test_toolbox_creation_batch_dispatch_rejects_invalid_plans_without_stale_arguments();
     test_toolbox_creation_maps_descriptors_and_defaults();
     test_toolbox_creation_respects_explicit_object_name();
     test_toolbox_creation_rejects_unknown_toolbox_without_mutation();

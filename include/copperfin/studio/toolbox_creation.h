@@ -99,6 +99,30 @@ struct StudioToolboxObjectCreateDispatchResult {
     StudioToolboxObjectCreateDispatchPlan plan;
 };
 
+struct StudioToolboxObjectCreateBatchDispatchRequest {
+    StudioToolboxObjectCreateBatchPlan batch_plan;
+    bool admit_create_operation = false;
+};
+
+struct StudioToolboxObjectCreateBatchDispatchPlan {
+    std::string path;
+    bool toolbox_context_provided = false;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::size_t item_count = 0;
+    std::vector<StudioToolboxObjectCreatePlan> plans;
+    std::vector<std::string> dispatch_arguments;
+    bool dispatch_admitted = false;
+    bool dry_run = true;
+    bool executed = false;
+    bool mutates_asset = false;
+};
+
+struct StudioToolboxObjectCreateBatchDispatchResult {
+    bool ok = false;
+    std::string error;
+    StudioToolboxObjectCreateBatchDispatchPlan plan;
+};
+
 struct StudioToolboxObjectCreatePlanCatalogRequest {
     StudioToolboxContext toolbox_context = StudioToolboxContext::form;
     std::string path;
@@ -129,6 +153,8 @@ struct StudioToolboxObjectCreatePlanCatalogResult {
     const StudioToolboxObjectCreateBatchPlanRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
     const StudioToolboxObjectCreateDispatchRequest& request);
+[[nodiscard]] StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch(
+    const StudioToolboxObjectCreateBatchDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolbox_context(
     const StudioToolboxObjectCreatePlanCatalogRequest& request);
 [[nodiscard]] vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
