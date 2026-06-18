@@ -209,6 +209,10 @@ void test_parse_launch_arguments() {
         "#1120: launch contract should keep grid-line-color-object off by default");
     expect(!result.request.grid_line_color_available,
         "#1120: launch contract should keep grid-line-color unavailable by default");
+    expect(!result.request.header_height_object,
+        "#1121: launch contract should keep header-height-object off by default");
+    expect(!result.request.header_height_available,
+        "#1121: launch contract should keep header-height unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3958,6 +3962,101 @@ void test_parse_launch_arguments_rejects_grid_line_color_object_ambiguity() {
     });
     expect(!stray_grid_line_color_result.ok,
         "#1120: launch contract should reject stray grid-line-color arguments");
+}
+
+void test_parse_launch_arguments_for_header_height_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--header-height-object",
+        "--header-height", "9",
+        "--header-height-target-object-name", "cmdSave",
+        "--header-height-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1121: launch contract should parse header-height-object requests");
+    expect(result.request.header_height_object,
+        "#1121: launch contract should detect --header-height-object");
+    expect(result.request.header_height_available && result.request.header_height == 9,
+        "#1121: header-height-object requests should carry header-height value");
+    expect(result.request.header_height_objects.size() == 2U,
+        "#1121: header-height-object requests should collect header-height target selectors");
+    if (result.request.header_height_objects.size() == 2U) {
+        expect(result.request.header_height_objects[0].object_name == "cmdSave" &&
+                result.request.header_height_objects[0].unique_id.empty(),
+            "#1121: header-height-object requests should parse target object-name selectors");
+        expect(result.request.header_height_objects[1].object_name.empty() &&
+                result.request.header_height_objects[1].unique_id == "two-guid",
+            "#1121: header-height-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_header_height_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--header-height-object",
+        "--header-height-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1121: launch contract should reject header-height-object requests without header-height value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--header-height-object",
+        "--header-height", "manual",
+        "--header-height-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1121: launch contract should reject non-integer header-height values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--header-height-object",
+        "--header-height", "-1",
+        "--header-height-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1121: launch contract should reject negative header-height values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--header-height-object",
+        "--header-height", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1121: launch contract should reject header-height-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_header_height_object_ambiguity() {
+    const auto header_height_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--header-height-object",
+        "--locked-object",
+        "--header-height", "2",
+        "--header-height-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!header_height_locked_result.ok,
+        "#1121: launch contract should reject simultaneous header-height-object and locked-object requests");
+
+    const auto header_height_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--header-height-object",
+        "--clear-property",
+        "--property-name", "HeaderHeight",
+        "--header-height", "2",
+        "--header-height-target-unique-id", "one-guid"
+    });
+    expect(!header_height_property_result.ok,
+        "#1121: launch contract should reject header-height-object combined with property commands");
+
+    const auto stray_header_height_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--header-height", "2"
+    });
+    expect(!stray_header_height_result.ok,
+        "#1121: launch contract should reject stray header-height arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10026,6 +10125,9 @@ int main() {
     test_parse_launch_arguments_for_grid_line_color_object();
     test_parse_launch_arguments_rejects_grid_line_color_object_invalid_inputs();
     test_parse_launch_arguments_rejects_grid_line_color_object_ambiguity();
+    test_parse_launch_arguments_for_header_height_object();
+    test_parse_launch_arguments_rejects_header_height_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_header_height_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

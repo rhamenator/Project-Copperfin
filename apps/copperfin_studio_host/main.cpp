@@ -56,6 +56,7 @@ void print_usage() {
     std::cout << "Buffer-mode-override object: --buffer-mode-override-object --buffer-mode-override <n> [--buffer-mode-override-target-object-name <name>] [--buffer-mode-override-target-unique-id <id>]\n";
     std::cout << "Data-session object: --data-session-object --data-session <n> [--data-session-target-object-name <name>] [--data-session-target-unique-id <id>]\n";
     std::cout << "Grid-line-color object: --grid-line-color-object --grid-line-color <n> [--grid-line-color-target-object-name <name>] [--grid-line-color-target-unique-id <id>]\n";
+    std::cout << "Header-height object: --header-height-object --header-height <n> [--header-height-target-object-name <name>] [--header-height-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2401,6 +2402,30 @@ int main(int argc, char** argv) {
         if (!grid_line_color_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << grid_line_color_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.header_height_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> header_height_objects;
+        header_height_objects.reserve(parse_result.request.header_height_objects.size());
+        for (const auto& header_height_object : parse_result.request.header_height_objects) {
+            header_height_objects.push_back({
+                .record_index = header_height_object.record_index,
+                .object_name = header_height_object.object_name,
+                .unique_id = header_height_object.unique_id
+            });
+        }
+
+        const auto header_height_result = copperfin::vfp::set_visual_object_header_height({
+            .path = parse_result.request.path,
+            .objects = header_height_objects,
+            .header_height = parse_result.request.header_height
+        });
+
+        if (!header_height_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << header_height_result.error << "\n";
             return 4;
         }
     }
