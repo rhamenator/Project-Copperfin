@@ -423,6 +423,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--hide-selection-object") {
+            result.request.hide_selection_object = true;
+            continue;
+        }
+
         if (argument == "--allow-cell-selection-object") {
             result.request.allow_cell_selection_object = true;
             continue;
@@ -1352,6 +1357,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.allow_cell_selection = *allow_cell_selection;
             result.request.allow_cell_selection_available = true;
+            continue;
+        }
+
+        if (argument == "--hide-selection") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --hide-selection."};
+            }
+            const auto hide_selection = parse_bool_value(args[++index]);
+            if (!hide_selection.has_value()) {
+                return {.ok = false, .error = "The --hide-selection value must be true or false."};
+            }
+            result.request.hide_selection = *hide_selection;
+            result.request.hide_selection_available = true;
             continue;
         }
 
@@ -3256,6 +3274,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--hide-selection-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --hide-selection-target-object-name."};
+            }
+            result.request.hide_selection_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--hide-selection-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --hide-selection-target-unique-id."};
+            }
+            result.request.hide_selection_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--delete-mark-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --delete-mark-target-object-name."};
@@ -4428,6 +4470,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.allow_cell_selection_objects.empty())) {
         return {.ok = false, .error = "Allow-cell-selection arguments can only be used with --allow-cell-selection-object."};
     }
+    if (result.request.hide_selection_object && !result.request.hide_selection_available) {
+        return {.ok = false, .error = "An object hide-selection assignment requires --hide-selection."};
+    }
+    if (result.request.hide_selection_object && result.request.hide_selection_objects.empty()) {
+        return {.ok = false, .error = "An object hide-selection assignment requires at least one target selector."};
+    }
+    if (!result.request.hide_selection_object &&
+        (result.request.hide_selection_available ||
+         !result.request.hide_selection_objects.empty())) {
+        return {.ok = false, .error = "Hide-selection arguments can only be used with --hide-selection-object."};
+    }
     if (result.request.delete_mark_object && !result.request.delete_mark_available) {
         return {.ok = false, .error = "An object delete-mark assignment requires --delete-mark."};
     }
@@ -4630,6 +4683,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.sparse_object ? 1 : 0) +
         (result.request.lock_screen_object ? 1 : 0) +
         (result.request.allow_cell_selection_object ? 1 : 0) +
+        (result.request.hide_selection_object ? 1 : 0) +
         (result.request.delete_mark_object ? 1 : 0) +
         (result.request.record_mark_object ? 1 : 0) +
         (result.request.split_bar_object ? 1 : 0) +

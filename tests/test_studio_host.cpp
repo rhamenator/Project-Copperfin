@@ -303,6 +303,10 @@ void test_parse_launch_arguments() {
         "#1085: launch contract should keep lock-screen-object off by default");
     expect(!result.request.lock_screen_available,
         "#1085: launch contract should keep lock screen unavailable by default");
+    expect(!result.request.hide_selection_object,
+        "#1109: launch contract should keep hide-selection-object off by default");
+    expect(!result.request.hide_selection_available,
+        "#1109: launch contract should keep hide selection unavailable by default");
     expect(!result.request.allow_cell_selection_object,
         "#1086: launch contract should keep allow-cell-selection-object off by default");
     expect(!result.request.allow_cell_selection_available,
@@ -6558,6 +6562,92 @@ void test_parse_launch_arguments_rejects_allow_cell_selection_object_ambiguity()
         "#1086: launch contract should reject stray allow-cell-selection arguments");
 }
 
+void test_parse_launch_arguments_for_hide_selection_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--hide-selection-object",
+        "--hide-selection", "false",
+        "--hide-selection-target-object-name", "frmCustomer",
+        "--hide-selection-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1109: launch contract should parse hide-selection-object requests");
+    expect(result.request.hide_selection_object,
+        "#1109: launch contract should detect --hide-selection-object");
+    expect(result.request.hide_selection_available && !result.request.hide_selection,
+        "#1109: hide-selection-object requests should carry hide selection state");
+    expect(result.request.hide_selection_objects.size() == 2U,
+        "#1109: hide-selection-object requests should collect hide-selection target selectors");
+    if (result.request.hide_selection_objects.size() == 2U) {
+        expect(result.request.hide_selection_objects[0].object_name == "frmCustomer" &&
+                result.request.hide_selection_objects[0].unique_id.empty(),
+            "#1109: hide-selection-object requests should parse target object-name selectors");
+        expect(result.request.hide_selection_objects[1].object_name.empty() &&
+                result.request.hide_selection_objects[1].unique_id == "two-guid",
+            "#1109: hide-selection-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_hide_selection_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--hide-selection-object",
+        "--hide-selection-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1109: launch contract should reject hide-selection-object requests without hide selection state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--hide-selection-object",
+        "--hide-selection", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1109: launch contract should reject hide-selection-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--hide-selection-object",
+        "--hide-selection", "sometimes",
+        "--hide-selection-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1109: launch contract should reject invalid hide-selection boolean values");
+}
+
+void test_parse_launch_arguments_rejects_hide_selection_object_ambiguity() {
+    const auto hide_selection_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--hide-selection-object",
+        "--auto-size-object",
+        "--hide-selection", "false",
+        "--hide-selection-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!hide_selection_auto_size_result.ok,
+        "#1109: launch contract should reject simultaneous hide-selection-object and auto-size-object requests");
+
+    const auto hide_selection_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--hide-selection-object",
+        "--clear-property",
+        "--property-name", "HideSelection",
+        "--hide-selection", "false",
+        "--hide-selection-target-unique-id", "one-guid"
+    });
+    expect(!hide_selection_property_result.ok,
+        "#1109: launch contract should reject hide-selection-object combined with property commands");
+
+    const auto stray_hide_selection_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--hide-selection", "false"
+    });
+    expect(!stray_hide_selection_result.ok,
+        "#1109: launch contract should reject stray hide-selection arguments");
+}
+
 void test_parse_launch_arguments_for_delete_mark_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -8937,6 +9027,9 @@ int main() {
     test_parse_launch_arguments_for_lock_screen_object();
     test_parse_launch_arguments_rejects_lock_screen_object_invalid_inputs();
     test_parse_launch_arguments_rejects_lock_screen_object_ambiguity();
+    test_parse_launch_arguments_for_hide_selection_object();
+    test_parse_launch_arguments_rejects_hide_selection_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_hide_selection_object_ambiguity();
     test_parse_launch_arguments_for_allow_cell_selection_object();
     test_parse_launch_arguments_rejects_allow_cell_selection_object_invalid_inputs();
     test_parse_launch_arguments_rejects_allow_cell_selection_object_ambiguity();

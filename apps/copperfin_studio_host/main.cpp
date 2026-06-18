@@ -44,6 +44,7 @@ void print_usage() {
     std::cout << "OLE drop-mode object: --ole-drop-mode-object --ole-drop-mode <n> [--ole-drop-mode-target-object-name <name>] [--ole-drop-mode-target-unique-id <id>]\n";
     std::cout << "OLE drop-effects object: --ole-drop-effects-object --ole-drop-effects <n> [--ole-drop-effects-target-object-name <name>] [--ole-drop-effects-target-unique-id <id>]\n";
     std::cout << "OLE drop text-insertion object: --ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]\n";
+    std::cout << "Hide-selection object: --hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -3133,6 +3134,30 @@ int main(int argc, char** argv) {
         if (!allow_cell_selection_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << allow_cell_selection_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.hide_selection_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> hide_selection_objects;
+        hide_selection_objects.reserve(parse_result.request.hide_selection_objects.size());
+        for (const auto& hide_selection_object : parse_result.request.hide_selection_objects) {
+            hide_selection_objects.push_back({
+                .record_index = hide_selection_object.record_index,
+                .object_name = hide_selection_object.object_name,
+                .unique_id = hide_selection_object.unique_id
+            });
+        }
+
+        const auto hide_selection_result = copperfin::vfp::set_visual_object_hide_selection({
+            .path = parse_result.request.path,
+            .objects = hide_selection_objects,
+            .hide_selection = parse_result.request.hide_selection
+        });
+
+        if (!hide_selection_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << hide_selection_result.error << "\n";
             return 4;
         }
     }

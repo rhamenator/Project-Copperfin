@@ -186,6 +186,7 @@ struct StudioOpenRequest {
     bool clip_controls_object = false;
     bool sparse_object = false;
     bool lock_screen_object = false;
+    bool hide_selection_object = false;
     bool allow_cell_selection_object = false;
     bool delete_mark_object = false;
     bool record_mark_object = false;
@@ -276,6 +277,7 @@ struct StudioOpenRequest {
     bool clip_controls_available = false;
     bool sparse_available = false;
     bool lock_screen_available = false;
+    bool hide_selection_available = false;
     bool allow_cell_selection_available = false;
     bool delete_mark_available = false;
     bool record_mark_available = false;
@@ -299,6 +301,7 @@ struct StudioOpenRequest {
     bool clip_controls = false;
     bool sparse = false;
     bool lock_screen = false;
+    bool hide_selection = false;
     bool allow_cell_selection = false;
     bool delete_mark = false;
     bool record_mark = false;
@@ -368,6 +371,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> clip_controls_objects{};
     std::vector<StudioObjectSelector> sparse_objects{};
     std::vector<StudioObjectSelector> lock_screen_objects{};
+    std::vector<StudioObjectSelector> hide_selection_objects{};
     std::vector<StudioObjectSelector> allow_cell_selection_objects{};
     std::vector<StudioObjectSelector> delete_mark_objects{};
     std::vector<StudioObjectSelector> record_mark_objects{};

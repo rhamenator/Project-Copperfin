@@ -1,3 +1,4 @@
+1109	OPEN	E2/#23 slice: Expose host hide-selection-object command		2026-06-18T02:03:18Z
 1108	OPEN	E2/#23 slice: Expose host ole-drop-text-insertion-object command		2026-06-18T01:57:21Z
 1107	OPEN	E2/#23 slice: Expose host ole-drop-effects-object command		2026-06-18T01:51:10Z
 1106	OPEN	E2/#23 slice: Expose host ole-drop-mode-object command		2026-06-18T01:43:49Z
