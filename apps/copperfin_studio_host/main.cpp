@@ -3335,6 +3335,30 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (parse_result.request.multi_select_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> multi_select_objects;
+        multi_select_objects.reserve(parse_result.request.multi_select_objects.size());
+        for (const auto& multi_select_object : parse_result.request.multi_select_objects) {
+            multi_select_objects.push_back({
+                .record_index = multi_select_object.record_index,
+                .object_name = multi_select_object.object_name,
+                .unique_id = multi_select_object.unique_id
+            });
+        }
+
+        const auto multi_select_result = copperfin::vfp::set_visual_object_multi_select({
+            .path = parse_result.request.path,
+            .objects = multi_select_objects,
+            .multi_select = parse_result.request.multi_select
+        });
+
+        if (!multi_select_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << multi_select_result.error << "\n";
+            return 4;
+        }
+    }
+
     if (parse_result.request.row_source_type_object) {
         std::vector<copperfin::vfp::VisualObjectAlignmentTarget> row_source_type_objects;
         row_source_type_objects.reserve(parse_result.request.row_source_type_objects.size());

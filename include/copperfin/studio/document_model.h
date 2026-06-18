@@ -87,6 +87,7 @@ struct StudioOpenRequest {
     bool column_lines = false;
     bool integral_height = false;
     bool incremental_search = false;
+    bool multi_select = false;
     std::string record_source{};
     std::string form_set_class{};
     std::string default_file_path{};
@@ -229,6 +230,7 @@ struct StudioOpenRequest {
     bool column_lines_object = false;
     bool integral_height_object = false;
     bool incremental_search_object = false;
+    bool multi_select_object = false;
     bool row_source_type_object = false;
     bool bound_column_object = false;
     bool column_count_object = false;
@@ -447,6 +449,7 @@ struct StudioOpenRequest {
     bool column_lines_available = false;
     bool integral_height_available = false;
     bool incremental_search_available = false;
+    bool multi_select_available = false;
     bool row_source_type_available = false;
     bool bound_column_available = false;
     bool column_count_available = false;
@@ -612,6 +615,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> column_lines_objects{};
     std::vector<StudioObjectSelector> integral_height_objects{};
     std::vector<StudioObjectSelector> incremental_search_objects{};
+    std::vector<StudioObjectSelector> multi_select_objects{};
     std::vector<StudioObjectSelector> row_source_type_objects{};
     std::vector<StudioObjectSelector> bound_column_objects{};
     std::vector<StudioObjectSelector> column_count_objects{};

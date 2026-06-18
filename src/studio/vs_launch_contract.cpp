@@ -962,6 +962,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--multi-select-object") {
+            result.request.multi_select_object = true;
+            continue;
+        }
+
         if (argument == "--row-source-type-object") {
             result.request.row_source_type_object = true;
             continue;
@@ -2166,6 +2171,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.incremental_search = *incremental_search;
             result.request.incremental_search_available = true;
+            continue;
+        }
+
+        if (argument == "--multi-select") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --multi-select."};
+            }
+            const auto multi_select = parse_bool_value(args[++index]);
+            if (!multi_select.has_value()) {
+                return {.ok = false, .error = "The --multi-select value must be true or false."};
+            }
+            result.request.multi_select = *multi_select;
+            result.request.multi_select_available = true;
             continue;
         }
 
@@ -5389,6 +5407,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--multi-select-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --multi-select-target-object-name."};
+            }
+            result.request.multi_select_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--multi-select-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --multi-select-target-unique-id."};
+            }
+            result.request.multi_select_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--row-source-type-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --row-source-type-target-object-name."};
@@ -8548,6 +8590,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.incremental_search_objects.empty())) {
         return {.ok = false, .error = "Incremental-search arguments can only be used with --incremental-search-object."};
     }
+    if (result.request.multi_select_object && !result.request.multi_select_available) {
+        return {.ok = false, .error = "An object multi-select assignment requires --multi-select."};
+    }
+    if (result.request.multi_select_object && result.request.multi_select_objects.empty()) {
+        return {.ok = false, .error = "An object multi-select assignment requires at least one target selector."};
+    }
+    if (!result.request.multi_select_object &&
+        (result.request.multi_select_available ||
+         !result.request.multi_select_objects.empty())) {
+        return {.ok = false, .error = "Multi-select arguments can only be used with --multi-select-object."};
+    }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {
         return {.ok = false, .error = "An object row-source-type assignment requires --row-source-type."};
     }
@@ -9726,6 +9779,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.column_lines_object ? 1 : 0) +
         (result.request.integral_height_object ? 1 : 0) +
         (result.request.incremental_search_object ? 1 : 0) +
+        (result.request.multi_select_object ? 1 : 0) +
         (result.request.row_source_type_object ? 1 : 0) +
         (result.request.bound_column_object ? 1 : 0) +
         (result.request.column_count_object ? 1 : 0) +

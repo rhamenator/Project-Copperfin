@@ -321,6 +321,8 @@ void test_parse_launch_arguments() {
     expect(!result.request.integral_height_available, "#1198: launch contract should keep integral height unavailable by default");
     expect(!result.request.incremental_search_object, "#1199: launch contract should keep incremental-search-object off by default");
     expect(!result.request.incremental_search_available, "#1199: launch contract should keep incremental search unavailable by default");
+    expect(!result.request.multi_select_object, "#1200: launch contract should keep multi-select-object off by default");
+    expect(!result.request.multi_select_available, "#1200: launch contract should keep multi select unavailable by default");
     expect(!result.request.row_source_type_object, "#1049: launch contract should keep row-source-type-object off by default");
     expect(!result.request.row_source_type_available, "#1049: launch contract should keep row source type unavailable by default");
     expect(!result.request.bound_column_object, "#1050: launch contract should keep bound-column-object off by default");
@@ -7384,6 +7386,92 @@ void test_parse_launch_arguments_rejects_incremental_search_object_ambiguity() {
     });
     expect(!stray_incremental_search_result.ok,
         "#1199: launch contract should reject stray incremental-search arguments");
+}
+
+
+void test_parse_launch_arguments_for_multi_select_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--multi-select-object",
+        "--multi-select", "true",
+        "--multi-select-target-object-name", "cboCustomer",
+        "--multi-select-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1200: launch contract should parse multi-select-object requests");
+    expect(result.request.multi_select_object, "#1200: launch contract should detect --multi-select-object");
+    expect(result.request.multi_select_available && result.request.multi_select,
+        "#1200: multi-select-object requests should carry multi select state");
+    expect(result.request.multi_select_objects.size() == 2U,
+        "#1200: multi-select-object requests should collect multi-select target selectors");
+    if (result.request.multi_select_objects.size() == 2U) {
+        expect(result.request.multi_select_objects[0].object_name == "cboCustomer" &&
+                result.request.multi_select_objects[0].unique_id.empty(),
+            "#1200: multi-select-object requests should parse target object-name selectors");
+        expect(result.request.multi_select_objects[1].object_name.empty() &&
+                result.request.multi_select_objects[1].unique_id == "two-guid",
+            "#1200: multi-select-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_multi_select_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--multi-select-object",
+        "--multi-select-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1200: launch contract should reject multi-select-object requests without multi select state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--multi-select-object",
+        "--multi-select", "true"
+    });
+    expect(!missing_targets_result.ok,
+        "#1200: launch contract should reject multi-select-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--multi-select-object",
+        "--multi-select", "sometimes",
+        "--multi-select-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1200: launch contract should reject invalid multi-select logical values");
+}
+
+void test_parse_launch_arguments_rejects_multi_select_object_ambiguity() {
+    const auto multi_select_row_source_type_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--multi-select-object",
+        "--row-source-type-object",
+        "--multi-select", "true",
+        "--multi-select-target-unique-id", "one-guid",
+        "--row-source-type", "2",
+        "--row-source-type-target-unique-id", "one-guid"
+    });
+    expect(!multi_select_row_source_type_result.ok,
+        "#1200: launch contract should reject simultaneous multi-select-object and row-source-type-object requests");
+
+    const auto multi_select_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--multi-select-object",
+        "--clear-property",
+        "--property-name", "MultiSelect",
+        "--multi-select", "true",
+        "--multi-select-target-unique-id", "one-guid"
+    });
+    expect(!multi_select_property_result.ok,
+        "#1200: launch contract should reject multi-select-object combined with property commands");
+
+    const auto stray_multi_select_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--multi-select", "true"
+    });
+    expect(!stray_multi_select_result.ok,
+        "#1200: launch contract should reject stray multi-select arguments");
 }
 
 void test_parse_launch_arguments_for_row_source_type_object() {
@@ -17411,6 +17499,9 @@ int main() {
     test_parse_launch_arguments_for_incremental_search_object();
     test_parse_launch_arguments_rejects_incremental_search_object_invalid_inputs();
     test_parse_launch_arguments_rejects_incremental_search_object_ambiguity();
+    test_parse_launch_arguments_for_multi_select_object();
+    test_parse_launch_arguments_rejects_multi_select_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_multi_select_object_ambiguity();
     test_parse_launch_arguments_for_row_source_type_object();
     test_parse_launch_arguments_rejects_row_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_source_type_object_ambiguity();
