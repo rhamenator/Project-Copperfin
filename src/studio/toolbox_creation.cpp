@@ -562,6 +562,77 @@ StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolb
     };
 }
 
+StudioToolboxObjectCreateDispatchCatalogResult plan_visual_object_create_dispatch_catalog(
+    const StudioToolboxObjectCreateDispatchCatalogRequest& request) {
+    const auto create_catalog = plan_visual_object_catalog_from_toolbox_context({
+        .toolbox_context = request.toolbox_context,
+        .path = request.path,
+        .parent_name = request.parent_name,
+        .field_values = request.field_values
+    });
+    if (!create_catalog.ok) {
+        return {
+            .ok = false,
+            .error = create_catalog.error,
+            .toolbox_context = request.toolbox_context,
+            .item_count = 0U,
+            .dispatch_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioToolboxObjectCreateDispatchCatalogEntry> entries;
+    entries.reserve(create_catalog.entries.size());
+    std::size_t dispatch_count = 0U;
+    std::size_t error_count = 0U;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    for (const auto& entry : create_catalog.entries) {
+        StudioToolboxObjectCreateDispatchResult dispatch{};
+        if (entry.create_plan.ok) {
+            dispatch = plan_visual_object_create_dispatch({
+                .create_plan = entry.create_plan.plan,
+                .admit_create_operation = request.admit_create_operation
+            });
+        } else {
+            dispatch = {
+                .ok = false,
+                .error = entry.create_plan.error,
+                .plan = {}
+            };
+        }
+
+        if (dispatch.ok) {
+            ++dispatch_count;
+            dry_run = dry_run && dispatch.plan.dry_run;
+            mutates_asset = mutates_asset || dispatch.plan.mutates_asset;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .toolbox_item = entry.toolbox_item,
+            .create_plan = entry.create_plan,
+            .dispatch = std::move(dispatch)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .toolbox_context = request.toolbox_context,
+        .item_count = create_catalog.item_count,
+        .dispatch_count = dispatch_count,
+        .error_count = error_count,
+        .dry_run = dispatch_count == 0U ? true : dry_run,
+        .mutates_asset = mutates_asset,
+        .entries = std::move(entries)
+    };
+}
+
 vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request) {
     const auto plan_result = plan_visual_object_from_toolbox_item(request);
