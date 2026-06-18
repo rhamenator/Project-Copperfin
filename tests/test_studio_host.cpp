@@ -263,6 +263,10 @@ void test_parse_launch_arguments() {
         "#1086: launch contract should keep allow-cell-selection-object off by default");
     expect(!result.request.allow_cell_selection_available,
         "#1086: launch contract should keep allow cell selection unavailable by default");
+    expect(!result.request.delete_mark_object,
+        "#1087: launch contract should keep delete-mark-object off by default");
+    expect(!result.request.delete_mark_available,
+        "#1087: launch contract should keep delete mark unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5536,6 +5540,92 @@ void test_parse_launch_arguments_rejects_allow_cell_selection_object_ambiguity()
         "#1086: launch contract should reject stray allow-cell-selection arguments");
 }
 
+void test_parse_launch_arguments_for_delete_mark_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--delete-mark-object",
+        "--delete-mark", "false",
+        "--delete-mark-target-object-name", "frmCustomer",
+        "--delete-mark-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1087: launch contract should parse delete-mark-object requests");
+    expect(result.request.delete_mark_object,
+        "#1087: launch contract should detect --delete-mark-object");
+    expect(result.request.delete_mark_available && !result.request.delete_mark,
+        "#1087: delete-mark-object requests should carry delete mark state");
+    expect(result.request.delete_mark_objects.size() == 2U,
+        "#1087: delete-mark-object requests should collect delete_mark target selectors");
+    if (result.request.delete_mark_objects.size() == 2U) {
+        expect(result.request.delete_mark_objects[0].object_name == "frmCustomer" &&
+                result.request.delete_mark_objects[0].unique_id.empty(),
+            "#1087: delete-mark-object requests should parse target object-name selectors");
+        expect(result.request.delete_mark_objects[1].object_name.empty() &&
+                result.request.delete_mark_objects[1].unique_id == "two-guid",
+            "#1087: delete-mark-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_delete_mark_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--delete-mark-object",
+        "--delete-mark-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1087: launch contract should reject delete-mark-object requests without delete mark state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--delete-mark-object",
+        "--delete-mark", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1087: launch contract should reject delete-mark-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--delete-mark-object",
+        "--delete-mark", "sometimes",
+        "--delete-mark-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1087: launch contract should reject invalid delete-mark boolean values");
+}
+
+void test_parse_launch_arguments_rejects_delete_mark_object_ambiguity() {
+    const auto delete_mark_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--delete-mark-object",
+        "--auto-size-object",
+        "--delete-mark", "false",
+        "--delete-mark-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!delete_mark_auto_size_result.ok,
+        "#1087: launch contract should reject simultaneous delete-mark-object and auto-size-object requests");
+
+    const auto delete_mark_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--delete-mark-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--delete-mark", "false",
+        "--delete-mark-target-unique-id", "one-guid"
+    });
+    expect(!delete_mark_property_result.ok,
+        "#1087: launch contract should reject delete-mark-object combined with property commands");
+
+    const auto stray_delete_mark_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--delete-mark", "false"
+    });
+    expect(!stray_delete_mark_result.ok,
+        "#1087: launch contract should reject stray delete-mark arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -6939,6 +7029,9 @@ int main() {
     test_parse_launch_arguments_for_allow_cell_selection_object();
     test_parse_launch_arguments_rejects_allow_cell_selection_object_invalid_inputs();
     test_parse_launch_arguments_rejects_allow_cell_selection_object_ambiguity();
+    test_parse_launch_arguments_for_delete_mark_object();
+    test_parse_launch_arguments_rejects_delete_mark_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_delete_mark_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

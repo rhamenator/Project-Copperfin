@@ -176,6 +176,7 @@ struct StudioOpenRequest {
     bool sparse_object = false;
     bool lock_screen_object = false;
     bool allow_cell_selection_object = false;
+    bool delete_mark_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -233,6 +234,7 @@ struct StudioOpenRequest {
     bool sparse_available = false;
     bool lock_screen_available = false;
     bool allow_cell_selection_available = false;
+    bool delete_mark_available = false;
     bool closable = false;
     bool control_box = false;
     bool allow_output = false;
@@ -245,6 +247,7 @@ struct StudioOpenRequest {
     bool sparse = false;
     bool lock_screen = false;
     bool allow_cell_selection = false;
+    bool delete_mark = false;
     StudioUndoMode undo_mode = StudioUndoMode::unspecified;
     std::string undo_label{};
     std::vector<StudioFieldValueAssignment> field_values{};
@@ -303,6 +306,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> sparse_objects{};
     std::vector<StudioObjectSelector> lock_screen_objects{};
     std::vector<StudioObjectSelector> allow_cell_selection_objects{};
+    std::vector<StudioObjectSelector> delete_mark_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

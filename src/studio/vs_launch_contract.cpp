@@ -428,6 +428,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--delete-mark-object") {
+            result.request.delete_mark_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1108,6 +1113,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.allow_cell_selection = *allow_cell_selection;
             result.request.allow_cell_selection_available = true;
+            continue;
+        }
+
+        if (argument == "--delete-mark") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --delete-mark."};
+            }
+            const auto delete_mark = parse_bool_value(args[++index]);
+            if (!delete_mark.has_value()) {
+                return {.ok = false, .error = "The --delete-mark value must be true or false."};
+            }
+            result.request.delete_mark = *delete_mark;
+            result.request.delete_mark_available = true;
             continue;
         }
 
@@ -2605,6 +2623,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--delete-mark-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --delete-mark-target-object-name."};
+            }
+            result.request.delete_mark_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--delete-mark-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --delete-mark-target-unique-id."};
+            }
+            result.request.delete_mark_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3392,6 +3434,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.allow_cell_selection_objects.empty())) {
         return {.ok = false, .error = "Allow-cell-selection arguments can only be used with --allow-cell-selection-object."};
     }
+    if (result.request.delete_mark_object && !result.request.delete_mark_available) {
+        return {.ok = false, .error = "An object delete-mark assignment requires --delete-mark."};
+    }
+    if (result.request.delete_mark_object && result.request.delete_mark_objects.empty()) {
+        return {.ok = false, .error = "An object delete-mark assignment requires at least one target selector."};
+    }
+    if (!result.request.delete_mark_object &&
+        (result.request.delete_mark_available ||
+         !result.request.delete_mark_objects.empty())) {
+        return {.ok = false, .error = "Delete-mark arguments can only be used with --delete-mark-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3462,6 +3515,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.sparse_object ? 1 : 0) +
         (result.request.lock_screen_object ? 1 : 0) +
         (result.request.allow_cell_selection_object ? 1 : 0) +
+        (result.request.delete_mark_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};
