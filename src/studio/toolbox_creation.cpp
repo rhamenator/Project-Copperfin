@@ -34,6 +34,14 @@ namespace {
     };
 }
 
+[[nodiscard]] StudioToolboxObjectCreateBatchPlanResult failed_batch_plan_result(std::string error) {
+    return {
+        .ok = false,
+        .error = std::move(error),
+        .plan = {}
+    };
+}
+
 [[nodiscard]] std::string trimmed_copy(std::string_view value) {
     std::size_t first = 0U;
     while (first < value.size() && std::isspace(static_cast<unsigned char>(value[first])) != 0) {
@@ -88,6 +96,35 @@ namespace {
     return table_has_identity(table, "OBJNAME", candidate) || table_has_identity(table, "NAME", candidate);
 }
 
+[[nodiscard]] bool reserved_identity_has(
+    const std::vector<std::string>& reserved_identities,
+    std::string_view candidate) {
+    const std::string normalized_candidate = normalized_identity(candidate);
+    if (normalized_candidate.empty()) {
+        return false;
+    }
+    return std::find_if(
+        reserved_identities.begin(),
+        reserved_identities.end(),
+        [&](const std::string& reserved_identity) {
+            return normalized_identity(reserved_identity) == normalized_candidate;
+        }) != reserved_identities.end();
+}
+
+[[nodiscard]] bool table_or_reservations_have_object_name(
+    const vfp::DbfTable& table,
+    const std::vector<std::string>& reserved_object_names,
+    std::string_view candidate) {
+    return table_has_object_name(table, candidate) || reserved_identity_has(reserved_object_names, candidate);
+}
+
+[[nodiscard]] bool table_or_reservations_have_unique_id(
+    const vfp::DbfTable& table,
+    const std::vector<std::string>& reserved_unique_ids,
+    std::string_view candidate) {
+    return table_has_identity(table, "UNIQUEID", candidate) || reserved_identity_has(reserved_unique_ids, candidate);
+}
+
 [[nodiscard]] std::optional<StudioToolboxItemDescriptor> find_toolbox_item(std::string_view toolbox_item_id) {
     const auto& items = studio_toolbox_palette();
     const std::string normalized_item_id = normalized_identity(toolbox_item_id);
@@ -102,11 +139,12 @@ namespace {
 
 [[nodiscard]] std::string generate_default_object_name(
     const StudioToolboxItemDescriptor& item,
-    const vfp::DbfTable& table) {
+    const vfp::DbfTable& table,
+    const std::vector<std::string>& reserved_object_names = {}) {
     const std::string prefix = trimmed_copy(item.default_name_prefix);
     for (std::size_t ordinal = 1U; ordinal < std::numeric_limits<std::size_t>::max(); ++ordinal) {
         const std::string candidate = prefix + std::to_string(ordinal);
-        if (!table_has_object_name(table, candidate)) {
+        if (!table_or_reservations_have_object_name(table, reserved_object_names, candidate)) {
             return candidate;
         }
     }
@@ -117,6 +155,66 @@ namespace {
     const StudioToolboxItemDescriptor& item,
     StudioToolboxContext context) {
     return std::find(item.contexts.begin(), item.contexts.end(), context) != item.contexts.end();
+}
+
+[[nodiscard]] StudioToolboxObjectCreatePlanResult build_plan_from_toolbox_item(
+    const StudioToolboxObjectCreateRequest& request,
+    const StudioToolboxItemDescriptor& item,
+    const vfp::DbfTable& table,
+    std::size_t target_record_index,
+    const std::vector<std::string>& reserved_object_names,
+    const std::vector<std::string>& reserved_unique_ids) {
+    std::string object_name = trimmed_copy(request.object_name);
+    if (object_name.empty()) {
+        object_name = generate_default_object_name(item, table, reserved_object_names);
+    }
+    if (object_name.empty()) {
+        return failed_plan_result("A unique object name could not be generated for the requested toolbox item.");
+    }
+    if (table_or_reservations_have_object_name(table, reserved_object_names, object_name)) {
+        return failed_plan_result("The requested toolbox object identity already exists in the asset.");
+    }
+
+    const std::string unique_id = trimmed_copy(request.unique_id);
+    if (!unique_id.empty() && table_or_reservations_have_unique_id(table, reserved_unique_ids, unique_id)) {
+        return failed_plan_result("The requested toolbox object identity already exists in the asset.");
+    }
+
+    std::vector<vfp::VisualObjectPropertyChange> field_values{
+        {.property_name = "OBJNAME", .property_value = object_name},
+        {.property_name = "NAME", .property_value = object_name},
+        {.property_name = "CLASS", .property_value = std::string(item.vfp_class)},
+        {.property_name = "BASECLASS", .property_value = std::string(item.base_class)}
+    };
+
+    if (!unique_id.empty()) {
+        field_values.push_back({.property_name = "UNIQUEID", .property_value = unique_id});
+    }
+
+    const std::string parent_name = trimmed_copy(request.parent_name);
+    if (!parent_name.empty()) {
+        field_values.push_back({.property_name = "PARENT", .property_value = parent_name});
+    }
+
+    field_values.insert(field_values.end(), request.field_values.begin(), request.field_values.end());
+
+    return {
+        .ok = true,
+        .error = {},
+        .plan = {
+            .path = request.path,
+            .toolbox_item = item,
+            .toolbox_context_provided = request.toolbox_context_provided,
+            .toolbox_context = request.toolbox_context,
+            .target_record_index = target_record_index,
+            .object_name = object_name,
+            .unique_id = unique_id,
+            .parent_name = parent_name,
+            .field_values = std::move(field_values),
+            .dry_run = true,
+            .mutates_asset = false
+        }
+    };
 }
 
 }  // namespace
@@ -140,43 +238,82 @@ StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
         return failed_plan_result(table_result.error);
     }
 
-    std::string object_name = trimmed_copy(request.object_name);
-    if (object_name.empty()) {
-        object_name = generate_default_object_name(*item, table_result.table);
+    return build_plan_from_toolbox_item(
+        request,
+        *item,
+        table_result.table,
+        table_result.table.records.size(),
+        {},
+        {});
+}
+
+StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
+    const StudioToolboxObjectCreateBatchPlanRequest& request) {
+    if (request.path.empty()) {
+        return failed_batch_plan_result("No asset path was provided.");
     }
-    if (object_name.empty()) {
-        return failed_plan_result("A unique object name could not be generated for the requested toolbox item.");
+    if (request.items.empty()) {
+        return failed_batch_plan_result("No toolbox object creates were provided.");
     }
 
-    std::vector<vfp::VisualObjectPropertyChange> field_values{
-        {.property_name = "OBJNAME", .property_value = object_name},
-        {.property_name = "NAME", .property_value = object_name},
-        {.property_name = "CLASS", .property_value = std::string(item->vfp_class)},
-        {.property_name = "BASECLASS", .property_value = std::string(item->base_class)}
-    };
-
-    if (!trimmed_copy(request.unique_id).empty()) {
-        field_values.push_back({.property_name = "UNIQUEID", .property_value = request.unique_id});
-    }
-    if (!trimmed_copy(request.parent_name).empty()) {
-        field_values.push_back({.property_name = "PARENT", .property_value = request.parent_name});
+    const auto table_result = vfp::parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
+    if (!table_result.ok) {
+        return failed_batch_plan_result(table_result.error);
     }
 
-    field_values.insert(field_values.end(), request.field_values.begin(), request.field_values.end());
+    std::vector<std::string> reserved_object_names;
+    std::vector<std::string> reserved_unique_ids;
+    std::vector<StudioToolboxObjectCreatePlan> plans;
+    plans.reserve(request.items.size());
+
+    const auto& table = table_result.table;
+    const std::size_t first_target_record_index = table.records.size();
+    for (const auto& item_request : request.items) {
+        const auto item = find_toolbox_item(item_request.toolbox_item_id);
+        if (!item.has_value()) {
+            return failed_batch_plan_result("The requested toolbox item was not found.");
+        }
+        if (request.toolbox_context_provided && !toolbox_item_supports_context(*item, request.toolbox_context)) {
+            return failed_batch_plan_result(
+                "The requested toolbox item is not available in the requested designer context.");
+        }
+
+        const auto plan_result = build_plan_from_toolbox_item(
+            {
+                .path = request.path,
+                .toolbox_item_id = item_request.toolbox_item_id,
+                .object_name = item_request.object_name,
+                .unique_id = item_request.unique_id,
+                .parent_name = item_request.parent_name,
+                .toolbox_context_provided = request.toolbox_context_provided,
+                .toolbox_context = request.toolbox_context,
+                .field_values = item_request.field_values
+            },
+            *item,
+            table,
+            first_target_record_index + plans.size(),
+            reserved_object_names,
+            reserved_unique_ids);
+        if (!plan_result.ok) {
+            return failed_batch_plan_result(plan_result.error);
+        }
+
+        reserved_object_names.push_back(plan_result.plan.object_name);
+        if (!plan_result.plan.unique_id.empty()) {
+            reserved_unique_ids.push_back(plan_result.plan.unique_id);
+        }
+        plans.push_back(plan_result.plan);
+    }
 
     return {
         .ok = true,
         .error = {},
         .plan = {
             .path = request.path,
-            .toolbox_item = *item,
             .toolbox_context_provided = request.toolbox_context_provided,
             .toolbox_context = request.toolbox_context,
-            .target_record_index = table_result.table.records.size(),
-            .object_name = object_name,
-            .unique_id = trimmed_copy(request.unique_id),
-            .parent_name = trimmed_copy(request.parent_name),
-            .field_values = std::move(field_values),
+            .item_count = plans.size(),
+            .plans = std::move(plans),
             .dry_run = true,
             .mutates_asset = false
         }

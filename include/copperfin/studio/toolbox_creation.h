@@ -40,6 +40,37 @@ struct StudioToolboxObjectCreatePlanResult {
     StudioToolboxObjectCreatePlan plan;
 };
 
+struct StudioToolboxObjectCreateBatchItem {
+    std::string toolbox_item_id;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_name;
+    std::vector<vfp::VisualObjectPropertyChange> field_values;
+};
+
+struct StudioToolboxObjectCreateBatchPlan {
+    std::string path;
+    bool toolbox_context_provided = false;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::size_t item_count = 0;
+    std::vector<StudioToolboxObjectCreatePlan> plans;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
+struct StudioToolboxObjectCreateBatchPlanRequest {
+    std::string path;
+    bool toolbox_context_provided = false;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::vector<StudioToolboxObjectCreateBatchItem> items;
+};
+
+struct StudioToolboxObjectCreateBatchPlanResult {
+    bool ok = false;
+    std::string error;
+    StudioToolboxObjectCreateBatchPlan plan;
+};
+
 struct StudioToolboxObjectCreatePlanCatalogRequest {
     StudioToolboxContext toolbox_context = StudioToolboxContext::form;
     std::string path;
@@ -66,6 +97,8 @@ struct StudioToolboxObjectCreatePlanCatalogResult {
 
 [[nodiscard]] StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request);
+[[nodiscard]] StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
+    const StudioToolboxObjectCreateBatchPlanRequest& request);
 [[nodiscard]] StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolbox_context(
     const StudioToolboxObjectCreatePlanCatalogRequest& request);
 [[nodiscard]] vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(

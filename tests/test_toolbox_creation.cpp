@@ -261,6 +261,190 @@ void test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutati
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_batch_planner_reserves_names_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_plan_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto batch_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "first-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "First"}
+                }
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = "cmdRun",
+                .unique_id = "run-command-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Run"}
+                }
+            },
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "second-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Second"}
+                }
+            }
+        }
+    });
+
+    expect(batch_plan.ok &&
+            batch_plan.plan.path == table_path.string() &&
+            batch_plan.plan.toolbox_context_provided &&
+            batch_plan.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            batch_plan.plan.item_count == 3U &&
+            batch_plan.plan.plans.size() == 3U &&
+            batch_plan.plan.dry_run &&
+            !batch_plan.plan.mutates_asset,
+        "#1245: toolbox batch creation planning should preserve batch metadata without mutation");
+    if (batch_plan.ok && batch_plan.plan.plans.size() == 3U) {
+        expect(batch_plan.plan.plans[0].target_record_index == before_count &&
+                batch_plan.plan.plans[0].object_name == "txt2" &&
+                batch_plan.plan.plans[0].unique_id == "first-textbox-guid" &&
+                batch_plan.plan.plans[0].parent_name == "frmMain" &&
+                std::string(batch_plan.plan.plans[0].toolbox_item.id) == "textbox" &&
+                has_field_value(batch_plan.plan.plans[0].field_values, "CLASS", "TextBox") &&
+                has_field_value(batch_plan.plan.plans[0].field_values, "CAPTION", "First"),
+            "#1245: first toolbox batch plan should preserve descriptor metadata and generated names");
+        expect(batch_plan.plan.plans[1].target_record_index == before_count + 1U &&
+                batch_plan.plan.plans[1].object_name == "cmdRun" &&
+                batch_plan.plan.plans[1].unique_id == "run-command-guid" &&
+                std::string(batch_plan.plan.plans[1].toolbox_item.id) == "commandbutton" &&
+                has_field_value(batch_plan.plan.plans[1].field_values, "CLASS", "CommandButton") &&
+                has_field_value(batch_plan.plan.plans[1].field_values, "CAPTION", "Run"),
+            "#1245: explicit toolbox batch plan names should preserve append-order metadata");
+        expect(batch_plan.plan.plans[2].target_record_index == before_count + 2U &&
+                batch_plan.plan.plans[2].object_name == "txt3" &&
+                batch_plan.plan.plans[2].unique_id == "second-textbox-guid" &&
+                std::string(batch_plan.plan.plans[2].toolbox_item.id) == "textbox" &&
+                has_field_value(batch_plan.plan.plans[2].field_values, "CLASS", "TextBox") &&
+                has_field_value(batch_plan.plan.plans[2].field_values, "CAPTION", "Second"),
+            "#1245: toolbox batch planning should reserve generated names across earlier planned items");
+    }
+    expect(object_count(table_path) == before_count,
+        "#1245: toolbox batch creation planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_batch_planner_rejects_invalid_batches_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_plan_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    auto rejected_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = {},
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = {},
+                .field_values = {}
+            }
+        }
+    });
+    expect(!rejected_plan.ok && rejected_plan.error == "No asset path was provided.",
+        "#1245: toolbox batch planning should reject missing asset paths");
+
+    rejected_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .items = {}
+    });
+    expect(!rejected_plan.ok && rejected_plan.error == "No toolbox object creates were provided.",
+        "#1245: toolbox batch planning should reject empty item lists");
+
+    rejected_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = "dupName",
+                .unique_id = "dup-guid-1",
+                .parent_name = "frmMain",
+                .field_values = {}
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = "dupName",
+                .unique_id = "dup-guid-2",
+                .parent_name = "frmMain",
+                .field_values = {}
+            }
+        }
+    });
+    expect(!rejected_plan.ok &&
+            rejected_plan.error == "The requested toolbox object identity already exists in the asset.",
+        "#1245: toolbox batch planning should reject duplicate explicit object names in the same batch");
+
+    rejected_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = "txtCustomer",
+                .unique_id = "existing-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {}
+            }
+        }
+    });
+    expect(!rejected_plan.ok &&
+            rejected_plan.error == "The requested toolbox object identity already exists in the asset.",
+        "#1245: toolbox batch planning should reject unique-id collisions with existing objects");
+
+    rejected_plan = copperfin::studio::plan_visual_objects_from_toolbox_items({
+        .path = table_path.string(),
+        .toolbox_context_provided = true,
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "report-textbox-guid",
+                .parent_name = "DetailBand",
+                .field_values = {}
+            }
+        }
+    });
+    expect(!rejected_plan.ok &&
+            rejected_plan.error ==
+                "The requested toolbox item is not available in the requested designer context.",
+        "#1245: toolbox batch planning should reject context-incompatible toolbox items");
+
+    expect(object_count(table_path) == before_count,
+        "#1245: rejected toolbox batch plans should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_maps_descriptors_and_defaults() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -456,6 +640,8 @@ int main() {
     test_toolbox_creation_planner_maps_descriptors_without_mutation();
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
     test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation();
+    test_toolbox_creation_batch_planner_reserves_names_without_mutation();
+    test_toolbox_creation_batch_planner_rejects_invalid_batches_without_mutation();
     test_toolbox_creation_maps_descriptors_and_defaults();
     test_toolbox_creation_respects_explicit_object_name();
     test_toolbox_creation_rejects_unknown_toolbox_without_mutation();
