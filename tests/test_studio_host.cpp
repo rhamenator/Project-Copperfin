@@ -471,6 +471,10 @@ void test_parse_launch_arguments() {
         "#1164: launch contract should keep border-color-object off by default");
     expect(!result.request.border_color_available,
         "#1164: launch contract should keep border color unavailable by default");
+    expect(!result.request.special_effect_object,
+        "#1166: launch contract should keep special-effect-object off by default");
+    expect(!result.request.special_effect_available,
+        "#1166: launch contract should keep special effect unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -10833,6 +10837,101 @@ void test_parse_launch_arguments_rejects_border_color_object_ambiguity() {
         "#1164: launch contract should reject stray border-color arguments");
 }
 
+void test_parse_launch_arguments_for_special_effect_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--special-effect-object",
+        "--special-effect", "2",
+        "--special-effect-target-object-name", "frmCustomer",
+        "--special-effect-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1166: launch contract should parse special-effect-object requests");
+    expect(result.request.special_effect_object,
+        "#1166: launch contract should detect --special-effect-object");
+    expect(result.request.special_effect_available && result.request.special_effect == 2,
+        "#1166: special-effect-object requests should carry special-effect value");
+    expect(result.request.special_effect_objects.size() == 2U,
+        "#1166: special-effect-object requests should collect special-effect target selectors");
+    if (result.request.special_effect_objects.size() == 2U) {
+        expect(result.request.special_effect_objects[0].object_name == "frmCustomer" &&
+                result.request.special_effect_objects[0].unique_id.empty(),
+            "#1166: special-effect-object requests should parse target object-name selectors");
+        expect(result.request.special_effect_objects[1].object_name.empty() &&
+                result.request.special_effect_objects[1].unique_id == "two-guid",
+            "#1166: special-effect-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_special_effect_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--special-effect-object",
+        "--special-effect-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1166: launch contract should reject special-effect-object requests without special-effect value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--special-effect-object",
+        "--special-effect", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1166: launch contract should reject special-effect-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--special-effect-object",
+        "--special-effect", "raised",
+        "--special-effect-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1166: launch contract should reject non-integer special-effect values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--special-effect-object",
+        "--special-effect", "-1",
+        "--special-effect-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1166: launch contract should reject negative special-effect values");
+}
+
+void test_parse_launch_arguments_rejects_special_effect_object_ambiguity() {
+    const auto special_effect_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--special-effect-object",
+        "--allow-output-object",
+        "--special-effect", "2",
+        "--special-effect-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!special_effect_allow_output_result.ok,
+        "#1166: launch contract should reject simultaneous special-effect-object and allow-output-object requests");
+
+    const auto special_effect_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--special-effect-object",
+        "--clear-property",
+        "--property-name", "SpecialEffect",
+        "--special-effect", "2",
+        "--special-effect-target-unique-id", "one-guid"
+    });
+    expect(!special_effect_property_result.ok,
+        "#1166: launch contract should reject special-effect-object combined with property commands");
+
+    const auto stray_special_effect_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--special-effect", "2"
+    });
+    expect(!stray_special_effect_result.ok,
+        "#1166: launch contract should reject stray special-effect arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -14492,6 +14591,9 @@ int main() {
     test_parse_launch_arguments_for_border_color_object();
     test_parse_launch_arguments_rejects_border_color_object_invalid_inputs();
     test_parse_launch_arguments_rejects_border_color_object_ambiguity();
+    test_parse_launch_arguments_for_special_effect_object();
+    test_parse_launch_arguments_rejects_special_effect_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_special_effect_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

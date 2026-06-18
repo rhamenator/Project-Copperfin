@@ -63,6 +63,7 @@ void print_usage() {
     std::cout << "Border-style object: --border-style-object --border-style <n> [--border-style-target-object-name <name>] [--border-style-target-unique-id <id>]\n";
     std::cout << "Border-width object: --border-width-object --border-width <n> [--border-width-target-object-name <name>] [--border-width-target-unique-id <id>]\n";
     std::cout << "Border-color object: --border-color-object --border-color <n> [--border-color-target-object-name <name>] [--border-color-target-unique-id <id>]\n";
+    std::cout << "Special-effect object: --special-effect-object --special-effect <n> [--special-effect-target-object-name <name>] [--special-effect-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4246,6 +4247,30 @@ int main(int argc, char** argv) {
         if (!border_color_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << border_color_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.special_effect_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> special_effect_objects;
+        special_effect_objects.reserve(parse_result.request.special_effect_objects.size());
+        for (const auto& special_effect_object : parse_result.request.special_effect_objects) {
+            special_effect_objects.push_back({
+                .record_index = special_effect_object.record_index,
+                .object_name = special_effect_object.object_name,
+                .unique_id = special_effect_object.unique_id
+            });
+        }
+
+        const auto special_effect_result = copperfin::vfp::set_visual_object_special_effect({
+            .path = parse_result.request.path,
+            .objects = special_effect_objects,
+            .special_effect = parse_result.request.special_effect
+        });
+
+        if (!special_effect_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << special_effect_result.error << "\n";
             return 4;
         }
     }

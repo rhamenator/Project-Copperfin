@@ -131,6 +131,7 @@ struct StudioOpenRequest {
     int border_style = 0;
     int border_width = 0;
     int border_color = 0;
+    int special_effect = 0;
     int max_width = 0;
     int min_width = 0;
     int max_left = 0;
@@ -240,6 +241,7 @@ struct StudioOpenRequest {
     bool border_style_object = false;
     bool border_width_object = false;
     bool border_color_object = false;
+    bool special_effect_object = false;
     bool max_width_object = false;
     bool max_left_object = false;
     bool max_top_object = false;
@@ -424,6 +426,7 @@ struct StudioOpenRequest {
     bool border_style_available = false;
     bool border_width_available = false;
     bool border_color_available = false;
+    bool special_effect_available = false;
     bool max_width_available = false;
     bool max_left_available = false;
     bool max_top_available = false;
@@ -549,6 +552,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> border_style_objects{};
     std::vector<StudioObjectSelector> border_width_objects{};
     std::vector<StudioObjectSelector> border_color_objects{};
+    std::vector<StudioObjectSelector> special_effect_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
     std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> max_top_objects{};
