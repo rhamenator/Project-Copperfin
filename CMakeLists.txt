@@ -77,6 +77,7 @@ add_library(cf_design_model
     src/studio/builder_registry.cpp
     src/studio/context_editor_actions.cpp
     src/studio/designer_context.cpp
+    src/studio/designer_launch_surfaces.cpp
     src/studio/document_model.cpp
     src/studio/project_workspace.cpp
     src/studio/product_subsystems.cpp

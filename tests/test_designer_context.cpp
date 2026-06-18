@@ -1,4 +1,5 @@
 #include "copperfin/studio/designer_context.h"
+#include "copperfin/studio/designer_launch_surfaces.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -23,6 +24,48 @@ bool has_id(const std::vector<Descriptor>& descriptors, std::string_view id) {
         }
     }
     return false;
+}
+
+bool has_action_launch_plan(
+    const std::vector<copperfin::studio::StudioEditorActionLaunchPlanResult>& plans,
+    std::string_view id) {
+    for (const auto& plan : plans) {
+        if (plan.ok && plan.plan.action.id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_builder_launch_plan(
+    const std::vector<copperfin::studio::StudioSelectionBuilderLaunchPlanResult>& plans,
+    std::string_view id) {
+    for (const auto& plan : plans) {
+        if (plan.ok && plan.plan.builder.id == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool all_action_launch_plans_ok(
+    const std::vector<copperfin::studio::StudioEditorActionLaunchPlanResult>& plans) {
+    for (const auto& plan : plans) {
+        if (!plan.ok) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool all_builder_launch_plans_ok(
+    const std::vector<copperfin::studio::StudioSelectionBuilderLaunchPlanResult>& plans) {
+    for (const auto& plan : plans) {
+        if (!plan.ok) {
+            return false;
+        }
+    }
+    return true;
 }
 
 }  // namespace
@@ -287,6 +330,130 @@ int main() {
     });
     expect(!unknown_builder_plan.ok,
            "#1205: selection-context builder launch plans should reject unknown builders");
+
+    const auto visual_launch_surfaces = copperfin::studio::plan_studio_designer_launch_surfaces({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .symbol = "Click",
+        .line = 12U,
+        .column = 4U
+    });
+    expect(visual_launch_surfaces.ok,
+           "#1211: visual-object launch-surface planning should succeed without executing launch surfaces");
+    expect(visual_launch_surfaces.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_launch_surfaces.plan.asset_path == "forms/customer.scx" &&
+               visual_launch_surfaces.plan.record_index == 1U &&
+               visual_launch_surfaces.plan.object_name == "frmCustomer" &&
+               visual_launch_surfaces.plan.unique_id == "form-guid" &&
+               visual_launch_surfaces.plan.symbol == "Click" &&
+               visual_launch_surfaces.plan.line == 12U &&
+               visual_launch_surfaces.plan.column == 4U,
+           "#1211: combined launch-surface plans should preserve selected object and editor metadata");
+    expect(visual_launch_surfaces.plan.editor_action_launch_plan_count ==
+                   visual_launch_surfaces.plan.editor_action_launch_plans.size() &&
+               visual_launch_surfaces.plan.builder_launch_plan_count ==
+                   visual_launch_surfaces.plan.builder_launch_plans.size(),
+           "#1211: combined launch-surface plans should report action and builder launch-plan counts");
+    expect(all_action_launch_plans_ok(visual_launch_surfaces.plan.editor_action_launch_plans) &&
+               has_action_launch_plan(visual_launch_surfaces.plan.editor_action_launch_plans, "show-property-grid") &&
+               has_action_launch_plan(visual_launch_surfaces.plan.editor_action_launch_plans, "edit-visual-method") &&
+               has_action_launch_plan(visual_launch_surfaces.plan.editor_action_launch_plans, "show-toolbox"),
+           "#1211: visual-object launch surfaces should include valid editor action launch plans");
+    expect(all_builder_launch_plans_ok(visual_launch_surfaces.plan.builder_launch_plans) &&
+               has_builder_launch_plan(visual_launch_surfaces.plan.builder_launch_plans, "form-builder") &&
+               has_builder_launch_plan(visual_launch_surfaces.plan.builder_launch_plans, "control-builder") &&
+               has_builder_launch_plan(visual_launch_surfaces.plan.builder_launch_plans, "grid-builder"),
+           "#1211: visual-object launch surfaces should include form and control builder launch plans");
+    expect(visual_launch_surfaces.plan.toolbox_available &&
+               visual_launch_surfaces.plan.toolbox_palette_launch_plan.ok &&
+               visual_launch_surfaces.plan.toolbox_item_count ==
+                   visual_launch_surfaces.plan.toolbox_palette_launch_plan.plan.items.size() &&
+               has_id(visual_launch_surfaces.plan.toolbox_palette_launch_plan.plan.items, "textbox") &&
+               has_id(visual_launch_surfaces.plan.toolbox_palette_launch_plan.plan.items, "pageframe"),
+           "#1211: visual-object launch surfaces should include form toolbox palette launch data");
+
+    const auto container_launch_surfaces = copperfin::studio::plan_studio_designer_launch_surfaces({
+        .selection_context = StudioEditorSelectionContext::container_object,
+        .asset_path = "forms/customer.scx",
+        .record_index = 3U,
+        .object_name = "pgAddress",
+        .unique_id = "page-guid",
+        .symbol = {},
+        .line = 0U,
+        .column = 0U
+    });
+    expect(container_launch_surfaces.ok &&
+               has_builder_launch_plan(container_launch_surfaces.plan.builder_launch_plans, "control-builder") &&
+               !has_builder_launch_plan(container_launch_surfaces.plan.builder_launch_plans, "form-builder") &&
+               container_launch_surfaces.plan.toolbox_available &&
+               container_launch_surfaces.plan.toolbox_palette_launch_plan.plan.toolbox_context ==
+                   copperfin::studio::StudioToolboxContext::container &&
+               has_id(container_launch_surfaces.plan.toolbox_palette_launch_plan.plan.items, "checkbox") &&
+               has_id(container_launch_surfaces.plan.toolbox_palette_launch_plan.plan.items, "grid"),
+           "#1211: container launch surfaces should preserve container builder and toolbox filtering");
+
+    const auto report_launch_surfaces = copperfin::studio::plan_studio_designer_launch_surfaces({
+        .selection_context = StudioEditorSelectionContext::report_expression,
+        .asset_path = "reports/invoice.frx",
+        .record_index = 7U,
+        .object_name = "exprTotal",
+        .unique_id = "expr-guid",
+        .symbol = {},
+        .line = 0U,
+        .column = 0U
+    });
+    expect(report_launch_surfaces.ok &&
+               has_action_launch_plan(report_launch_surfaces.plan.editor_action_launch_plans, "edit-report-expression") &&
+               has_builder_launch_plan(report_launch_surfaces.plan.builder_launch_plans, "report-builder") &&
+               report_launch_surfaces.plan.toolbox_available &&
+               report_launch_surfaces.plan.toolbox_palette_launch_plan.plan.toolbox_context ==
+                   copperfin::studio::StudioToolboxContext::report &&
+               has_id(report_launch_surfaces.plan.toolbox_palette_launch_plan.plan.items, "label") &&
+               !has_id(report_launch_surfaces.plan.toolbox_palette_launch_plan.plan.items, "textbox"),
+           "#1211: report launch surfaces should preserve expression editor, report builder, and report toolbox filtering");
+
+    const auto method_launch_surfaces = copperfin::studio::plan_studio_designer_launch_surfaces({
+        .selection_context = StudioEditorSelectionContext::visual_method,
+        .asset_path = "forms/customer.scx",
+        .record_index = 2U,
+        .object_name = "cmdSave",
+        .unique_id = "button-guid",
+        .symbol = "Valid",
+        .line = 40U,
+        .column = 9U
+    });
+    expect(method_launch_surfaces.ok &&
+               method_launch_surfaces.plan.editor_action_launch_plan_count == 1U &&
+               has_action_launch_plan(method_launch_surfaces.plan.editor_action_launch_plans, "edit-visual-method") &&
+               method_launch_surfaces.plan.editor_action_launch_plans.front().plan.symbol == "Valid" &&
+               method_launch_surfaces.plan.editor_action_launch_plans.front().plan.line == 40U &&
+               method_launch_surfaces.plan.editor_action_launch_plans.front().plan.column == 9U &&
+               has_builder_launch_plan(method_launch_surfaces.plan.builder_launch_plans, "control-builder") &&
+               !has_builder_launch_plan(method_launch_surfaces.plan.builder_launch_plans, "form-builder"),
+           "#1211: visual-method launch surfaces should preserve code editor metadata and control builder filtering");
+
+    const auto menu_launch_surfaces = copperfin::studio::plan_studio_designer_launch_surfaces({
+        .selection_context = StudioEditorSelectionContext::menu_item,
+        .asset_path = "menus/main.mnx",
+        .record_index = 5U,
+        .object_name = "FileExit",
+        .unique_id = "menu-guid",
+        .symbol = {},
+        .line = 0U,
+        .column = 0U
+    });
+    expect(menu_launch_surfaces.ok &&
+               has_action_launch_plan(menu_launch_surfaces.plan.editor_action_launch_plans, "show-property-grid") &&
+               has_builder_launch_plan(menu_launch_surfaces.plan.builder_launch_plans, "menu-designer") &&
+               !menu_launch_surfaces.plan.toolbox_available &&
+               menu_launch_surfaces.plan.toolbox_item_count == 0U &&
+               !menu_launch_surfaces.plan.toolbox_palette_launch_plan.ok &&
+               menu_launch_surfaces.plan.toolbox_error ==
+                   "The selected Studio context does not expose a toolbox palette.",
+           "#1211: menu launch surfaces should preserve supported actions/builders and explicit toolbox rejection");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
