@@ -63,6 +63,7 @@ void print_usage() {
     std::cout << "Grid-line-width object: --grid-line-width-object --grid-line-width <n> [--grid-line-width-target-object-name <name>] [--grid-line-width-target-unique-id <id>]\n";
     std::cout << "Grid-lines object: --grid-lines-object --grid-lines <n> [--grid-lines-target-object-name <name>] [--grid-lines-target-unique-id <id>]\n";
     std::cout << "Highlight-row-line-width object: --highlight-row-line-width-object --highlight-row-line-width <n> [--highlight-row-line-width-target-object-name <name>] [--highlight-row-line-width-target-unique-id <id>]\n";
+    std::cout << "Partition object: --partition-object --partition <n> [--partition-target-object-name <name>] [--partition-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2576,6 +2577,30 @@ int main(int argc, char** argv) {
         if (!highlight_row_line_width_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << highlight_row_line_width_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.partition_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> partition_objects;
+        partition_objects.reserve(parse_result.request.partition_objects.size());
+        for (const auto& partition_object : parse_result.request.partition_objects) {
+            partition_objects.push_back({
+                .record_index = partition_object.record_index,
+                .object_name = partition_object.object_name,
+                .unique_id = partition_object.unique_id
+            });
+        }
+
+        const auto partition_result = copperfin::vfp::set_visual_object_partition({
+            .path = parse_result.request.path,
+            .objects = partition_objects,
+            .partition = parse_result.request.partition
+        });
+
+        if (!partition_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << partition_result.error << "\n";
             return 4;
         }
     }

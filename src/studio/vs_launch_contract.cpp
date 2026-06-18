@@ -633,6 +633,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--partition-object") {
+            result.request.partition_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1552,6 +1557,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.highlight_row_line_width = highlight_row_line_width;
             result.request.highlight_row_line_width_available = true;
+            continue;
+        }
+
+        if (argument == "--partition") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --partition."};
+            }
+            int partition = 0;
+            if (!parse_int_value(args[++index], partition)) {
+                return {.ok = false, .error = "The --partition value must be an integer."};
+            }
+            if (partition < 0) {
+                return {.ok = false, .error = "The --partition value must be non-negative."};
+            }
+            result.request.partition = partition;
+            result.request.partition_available = true;
             continue;
         }
 
@@ -3069,6 +3090,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --highlight-row-line-width-target-unique-id."};
             }
             result.request.highlight_row_line_width_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--partition-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --partition-target-object-name."};
+            }
+            result.request.partition_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--partition-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --partition-target-unique-id."};
+            }
+            result.request.partition_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4956,6 +5001,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.highlight_row_line_width_objects.empty())) {
         return {.ok = false, .error = "Highlight-row-line-width arguments can only be used with --highlight-row-line-width-object."};
     }
+    if (result.request.partition_object && !result.request.partition_available) {
+        return {.ok = false, .error = "An object partition assignment requires --partition."};
+    }
+    if (result.request.partition_object && result.request.partition_objects.empty()) {
+        return {.ok = false, .error = "An object partition assignment requires at least one target selector."};
+    }
+    if (!result.request.partition_object &&
+        (result.request.partition_available ||
+         !result.request.partition_objects.empty())) {
+        return {.ok = false, .error = "Partition arguments can only be used with --partition-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5699,6 +5755,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.grid_line_width_object ? 1 : 0) +
         (result.request.grid_lines_object ? 1 : 0) +
         (result.request.highlight_row_line_width_object ? 1 : 0) +
+        (result.request.partition_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +

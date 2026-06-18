@@ -237,6 +237,10 @@ void test_parse_launch_arguments() {
         "#1127: launch contract should keep highlight-row-line-width-object off by default");
     expect(!result.request.highlight_row_line_width_available,
         "#1127: launch contract should keep highlight-row-line-width unavailable by default");
+    expect(!result.request.partition_object,
+        "#1128: launch contract should keep partition-object off by default");
+    expect(!result.request.partition_available,
+        "#1128: launch contract should keep partition unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4651,6 +4655,101 @@ void test_parse_launch_arguments_rejects_highlight_row_line_width_object_ambigui
     });
     expect(!stray_highlight_row_line_width_result.ok,
         "#1127: launch contract should reject stray highlight-row-line-width arguments");
+}
+
+void test_parse_launch_arguments_for_partition_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--partition-object",
+        "--partition", "9",
+        "--partition-target-object-name", "cmdSave",
+        "--partition-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1128: launch contract should parse partition-object requests");
+    expect(result.request.partition_object,
+        "#1128: launch contract should detect --partition-object");
+    expect(result.request.partition_available && result.request.partition == 9,
+        "#1128: partition-object requests should carry partition value");
+    expect(result.request.partition_objects.size() == 2U,
+        "#1128: partition-object requests should collect partition target selectors");
+    if (result.request.partition_objects.size() == 2U) {
+        expect(result.request.partition_objects[0].object_name == "cmdSave" &&
+                result.request.partition_objects[0].unique_id.empty(),
+            "#1128: partition-object requests should parse target object-name selectors");
+        expect(result.request.partition_objects[1].object_name.empty() &&
+                result.request.partition_objects[1].unique_id == "two-guid",
+            "#1128: partition-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_partition_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--partition-object",
+        "--partition-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1128: launch contract should reject partition-object requests without partition value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--partition-object",
+        "--partition", "manual",
+        "--partition-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1128: launch contract should reject non-integer partition values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--partition-object",
+        "--partition", "-1",
+        "--partition-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1128: launch contract should reject negative partition values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--partition-object",
+        "--partition", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1128: launch contract should reject partition-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_partition_object_ambiguity() {
+    const auto partition_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--partition-object",
+        "--locked-object",
+        "--partition", "2",
+        "--partition-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!partition_locked_result.ok,
+        "#1128: launch contract should reject simultaneous partition-object and locked-object requests");
+
+    const auto partition_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--partition-object",
+        "--clear-property",
+        "--property-name", "Partition",
+        "--partition", "2",
+        "--partition-target-unique-id", "one-guid"
+    });
+    expect(!partition_property_result.ok,
+        "#1128: launch contract should reject partition-object combined with property commands");
+
+    const auto stray_partition_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--partition", "2"
+    });
+    expect(!stray_partition_result.ok,
+        "#1128: launch contract should reject stray partition arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10740,6 +10839,9 @@ int main() {
     test_parse_launch_arguments_for_highlight_row_line_width_object();
     test_parse_launch_arguments_rejects_highlight_row_line_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_highlight_row_line_width_object_ambiguity();
+    test_parse_launch_arguments_for_partition_object();
+    test_parse_launch_arguments_rejects_partition_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_partition_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();
