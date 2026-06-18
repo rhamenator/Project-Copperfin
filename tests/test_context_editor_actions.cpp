@@ -1,4 +1,5 @@
 #include "copperfin/studio/context_editor_actions.h"
+#include "copperfin/studio/editor_action_invocation_admission.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -210,6 +211,60 @@ int main() {
                method_plan.plan.line == 42U &&
                method_plan.plan.column == 7U,
            "#1207: visual-object editor action launch plans should accept method editor actions");
+
+    const auto admitted_method_invocation = copperfin::studio::plan_studio_editor_action_invocation_admission({
+        .launch_plan = method_plan.plan,
+        .admit_editor_invocation = true
+    });
+    expect(admitted_method_invocation.ok,
+           "#1217: editor action invocation admission should accept validated launch plans");
+    expect(std::string(admitted_method_invocation.plan.action.id) == "edit-visual-method" &&
+               admitted_method_invocation.plan.action.kind == StudioEditorActionKind::source_editor &&
+               admitted_method_invocation.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               admitted_method_invocation.plan.command_token == "studio.method_editor.open" &&
+               admitted_method_invocation.plan.target_surface == "method-editor" &&
+               admitted_method_invocation.plan.asset_path == "forms/customer.scx" &&
+               admitted_method_invocation.plan.record_index == 1U &&
+               admitted_method_invocation.plan.object_name == "cmdSave" &&
+               admitted_method_invocation.plan.unique_id == "button-guid" &&
+               admitted_method_invocation.plan.symbol == "cmdSave.Click" &&
+               admitted_method_invocation.plan.line == 42U &&
+               admitted_method_invocation.plan.column == 7U,
+           "#1217: editor action invocation admission should preserve launch metadata");
+    expect(admitted_method_invocation.plan.editor_invocation_admitted &&
+               !admitted_method_invocation.plan.dry_run &&
+               !admitted_method_invocation.plan.mutates_asset,
+           "#1217: admitted editor action invocation plans should allow editor invocation while remaining non-mutating");
+
+    const auto dry_run_property_invocation = copperfin::studio::plan_studio_editor_action_invocation_admission({
+        .launch_plan = property_plan.plan,
+        .admit_editor_invocation = false
+    });
+    expect(dry_run_property_invocation.ok &&
+               std::string(dry_run_property_invocation.plan.action.id) == "show-property-grid" &&
+               dry_run_property_invocation.plan.action.kind == StudioEditorActionKind::property_grid &&
+               !dry_run_property_invocation.plan.editor_invocation_admitted &&
+               dry_run_property_invocation.plan.dry_run &&
+               !dry_run_property_invocation.plan.mutates_asset,
+           "#1217: non-admitted editor action invocation plans should remain deterministic dry runs");
+
+    auto missing_command_plan = method_plan.plan;
+    missing_command_plan.command_token = {};
+    const auto missing_command_invocation = copperfin::studio::plan_studio_editor_action_invocation_admission({
+        .launch_plan = missing_command_plan,
+        .admit_editor_invocation = true
+    });
+    expect(!missing_command_invocation.ok,
+           "#1217: editor action invocation admission should reject launch plans without command tokens");
+
+    auto missing_action_plan_for_invocation = method_plan.plan;
+    missing_action_plan_for_invocation.action = {};
+    const auto missing_action_invocation = copperfin::studio::plan_studio_editor_action_invocation_admission({
+        .launch_plan = missing_action_plan_for_invocation,
+        .admit_editor_invocation = true
+    });
+    expect(!missing_action_invocation.ok,
+           "#1217: editor action invocation admission should reject launch plans without action ids");
 
     const auto expression_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::report_expression,
