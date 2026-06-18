@@ -1,3 +1,4 @@
+1123	OPEN	E2/#23 slice: Expose host lock-columns-object command		2026-06-18T03:26:32Z
 1122	OPEN	E2/#23 slice: Expose host row-height-object command		2026-06-18T03:21:14Z
 1121	OPEN	E2/#23 slice: Expose host header-height-object command		2026-06-18T03:16:09Z
 1120	OPEN	E2/#23 slice: Expose host grid-line-color-object command		2026-06-18T03:10:29Z

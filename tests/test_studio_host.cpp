@@ -217,6 +217,10 @@ void test_parse_launch_arguments() {
         "#1122: launch contract should keep row-height-object off by default");
     expect(!result.request.row_height_available,
         "#1122: launch contract should keep row-height unavailable by default");
+    expect(!result.request.lock_columns_object,
+        "#1123: launch contract should keep lock-columns-object off by default");
+    expect(!result.request.lock_columns_available,
+        "#1123: launch contract should keep lock-columns unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4156,6 +4160,101 @@ void test_parse_launch_arguments_rejects_row_height_object_ambiguity() {
     });
     expect(!stray_row_height_result.ok,
         "#1122: launch contract should reject stray row-height arguments");
+}
+
+void test_parse_launch_arguments_for_lock_columns_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--lock-columns-object",
+        "--lock-columns", "9",
+        "--lock-columns-target-object-name", "cmdSave",
+        "--lock-columns-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1123: launch contract should parse lock-columns-object requests");
+    expect(result.request.lock_columns_object,
+        "#1123: launch contract should detect --lock-columns-object");
+    expect(result.request.lock_columns_available && result.request.lock_columns == 9,
+        "#1123: lock-columns-object requests should carry lock-columns value");
+    expect(result.request.lock_columns_objects.size() == 2U,
+        "#1123: lock-columns-object requests should collect lock-columns target selectors");
+    if (result.request.lock_columns_objects.size() == 2U) {
+        expect(result.request.lock_columns_objects[0].object_name == "cmdSave" &&
+                result.request.lock_columns_objects[0].unique_id.empty(),
+            "#1123: lock-columns-object requests should parse target object-name selectors");
+        expect(result.request.lock_columns_objects[1].object_name.empty() &&
+                result.request.lock_columns_objects[1].unique_id == "two-guid",
+            "#1123: lock-columns-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_lock_columns_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-object",
+        "--lock-columns-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1123: launch contract should reject lock-columns-object requests without lock-columns value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-object",
+        "--lock-columns", "manual",
+        "--lock-columns-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1123: launch contract should reject non-integer lock-columns values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-object",
+        "--lock-columns", "-1",
+        "--lock-columns-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1123: launch contract should reject negative lock-columns values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-object",
+        "--lock-columns", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1123: launch contract should reject lock-columns-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_lock_columns_object_ambiguity() {
+    const auto lock_columns_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-object",
+        "--locked-object",
+        "--lock-columns", "2",
+        "--lock-columns-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!lock_columns_locked_result.ok,
+        "#1123: launch contract should reject simultaneous lock-columns-object and locked-object requests");
+
+    const auto lock_columns_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns-object",
+        "--clear-property",
+        "--property-name", "LockColumns",
+        "--lock-columns", "2",
+        "--lock-columns-target-unique-id", "one-guid"
+    });
+    expect(!lock_columns_property_result.ok,
+        "#1123: launch contract should reject lock-columns-object combined with property commands");
+
+    const auto stray_lock_columns_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--lock-columns", "2"
+    });
+    expect(!stray_lock_columns_result.ok,
+        "#1123: launch contract should reject stray lock-columns arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10230,6 +10329,9 @@ int main() {
     test_parse_launch_arguments_for_row_height_object();
     test_parse_launch_arguments_rejects_row_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_row_height_object_ambiguity();
+    test_parse_launch_arguments_for_lock_columns_object();
+    test_parse_launch_arguments_rejects_lock_columns_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_lock_columns_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

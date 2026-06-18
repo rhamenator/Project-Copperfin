@@ -58,6 +58,7 @@ void print_usage() {
     std::cout << "Grid-line-color object: --grid-line-color-object --grid-line-color <n> [--grid-line-color-target-object-name <name>] [--grid-line-color-target-unique-id <id>]\n";
     std::cout << "Header-height object: --header-height-object --header-height <n> [--header-height-target-object-name <name>] [--header-height-target-unique-id <id>]\n";
     std::cout << "Row-height object: --row-height-object --row-height <n> [--row-height-target-object-name <name>] [--row-height-target-unique-id <id>]\n";
+    std::cout << "Lock-columns object: --lock-columns-object --lock-columns <n> [--lock-columns-target-object-name <name>] [--lock-columns-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2451,6 +2452,30 @@ int main(int argc, char** argv) {
         if (!row_height_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << row_height_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.lock_columns_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> lock_columns_objects;
+        lock_columns_objects.reserve(parse_result.request.lock_columns_objects.size());
+        for (const auto& lock_columns_object : parse_result.request.lock_columns_objects) {
+            lock_columns_objects.push_back({
+                .record_index = lock_columns_object.record_index,
+                .object_name = lock_columns_object.object_name,
+                .unique_id = lock_columns_object.unique_id
+            });
+        }
+
+        const auto lock_columns_result = copperfin::vfp::set_visual_object_lock_columns({
+            .path = parse_result.request.path,
+            .objects = lock_columns_objects,
+            .lock_columns = parse_result.request.lock_columns
+        });
+
+        if (!lock_columns_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << lock_columns_result.error << "\n";
             return 4;
         }
     }

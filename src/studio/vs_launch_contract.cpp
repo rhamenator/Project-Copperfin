@@ -608,6 +608,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--lock-columns-object") {
+            result.request.lock_columns_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1447,6 +1452,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.row_height = row_height;
             result.request.row_height_available = true;
+            continue;
+        }
+
+        if (argument == "--lock-columns") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-columns."};
+            }
+            int lock_columns = 0;
+            if (!parse_int_value(args[++index], lock_columns)) {
+                return {.ok = false, .error = "The --lock-columns value must be an integer."};
+            }
+            if (lock_columns < 0) {
+                return {.ok = false, .error = "The --lock-columns value must be non-negative."};
+            }
+            result.request.lock_columns = lock_columns;
+            result.request.lock_columns_available = true;
             continue;
         }
 
@@ -2844,6 +2865,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --row-height-target-unique-id."};
             }
             result.request.row_height_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--lock-columns-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-columns-target-object-name."};
+            }
+            result.request.lock_columns_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--lock-columns-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --lock-columns-target-unique-id."};
+            }
+            result.request.lock_columns_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4676,6 +4721,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.row_height_objects.empty())) {
         return {.ok = false, .error = "Row-height arguments can only be used with --row-height-object."};
     }
+    if (result.request.lock_columns_object && !result.request.lock_columns_available) {
+        return {.ok = false, .error = "An object lock-columns assignment requires --lock-columns."};
+    }
+    if (result.request.lock_columns_object && result.request.lock_columns_objects.empty()) {
+        return {.ok = false, .error = "An object lock-columns assignment requires at least one target selector."};
+    }
+    if (!result.request.lock_columns_object &&
+        (result.request.lock_columns_available ||
+         !result.request.lock_columns_objects.empty())) {
+        return {.ok = false, .error = "Lock-columns arguments can only be used with --lock-columns-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5414,6 +5470,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.grid_line_color_object ? 1 : 0) +
         (result.request.header_height_object ? 1 : 0) +
         (result.request.row_height_object ? 1 : 0) +
+        (result.request.lock_columns_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
