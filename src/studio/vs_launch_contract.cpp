@@ -1247,6 +1247,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--dynamic-font-underline-object") {
+            result.request.dynamic_font_underline_object = true;
+            continue;
+        }
+
         if (argument == "--font-name-object") {
             result.request.font_name_object = true;
             continue;
@@ -3189,6 +3194,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.dynamic_font_italic = args[++index];
             result.request.dynamic_font_italic_available = true;
+            continue;
+        }
+
+        if (argument == "--dynamic-font-underline") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --dynamic-font-underline."};
+            }
+            result.request.dynamic_font_underline = args[++index];
+            result.request.dynamic_font_underline_available = true;
             continue;
         }
 
@@ -6657,6 +6671,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--dynamic-font-underline-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --dynamic-font-underline-target-object-name."};
+            }
+            result.request.dynamic_font_underline_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--dynamic-font-underline-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --dynamic-font-underline-target-unique-id."};
+            }
+            result.request.dynamic_font_underline_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--font-name-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --font-name-target-object-name."};
@@ -8919,6 +8957,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.dynamic_font_italic_objects.empty())) {
         return {.ok = false, .error = "Dynamic-font-italic arguments can only be used with --dynamic-font-italic-object."};
     }
+    if (result.request.dynamic_font_underline_object && !result.request.dynamic_font_underline_available) {
+        return {.ok = false, .error = "An object dynamic-font-underline assignment requires --dynamic-font-underline."};
+    }
+    if (result.request.dynamic_font_underline_object && result.request.dynamic_font_underline_objects.empty()) {
+        return {.ok = false, .error = "An object dynamic-font-underline assignment requires at least one target selector."};
+    }
+    if (!result.request.dynamic_font_underline_object &&
+        (result.request.dynamic_font_underline_available ||
+         !result.request.dynamic_font_underline_objects.empty())) {
+        return {.ok = false, .error = "Dynamic-font-underline arguments can only be used with --dynamic-font-underline-object."};
+    }
     if (result.request.font_name_object && !result.request.font_name_available) {
         return {.ok = false, .error = "An object font-name assignment requires --font-name."};
     }
@@ -9414,6 +9463,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.dynamic_font_size_object ? 1 : 0) +
         (result.request.dynamic_font_bold_object ? 1 : 0) +
         (result.request.dynamic_font_italic_object ? 1 : 0) +
+        (result.request.dynamic_font_underline_object ? 1 : 0) +
         (result.request.font_name_object ? 1 : 0) +
         (result.request.font_size_object ? 1 : 0) +
         (result.request.font_bold_object ? 1 : 0) +

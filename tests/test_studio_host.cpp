@@ -543,6 +543,10 @@ void test_parse_launch_arguments() {
         "#1191: launch contract should keep dynamic-font-italic-object off by default");
     expect(!result.request.dynamic_font_italic_available,
         "#1191: launch contract should keep dynamic font italic unavailable by default");
+    expect(!result.request.dynamic_font_underline_object,
+        "#1192: launch contract should keep dynamic-font-underline-object off by default");
+    expect(!result.request.dynamic_font_underline_available,
+        "#1192: launch contract should keep dynamic font underline unavailable by default");
     expect(!result.request.font_name_object,
         "#1178: launch contract should keep font-name-object off by default");
     expect(!result.request.font_name_available,
@@ -12511,6 +12515,84 @@ void test_parse_launch_arguments_rejects_dynamic_font_italic_object_ambiguity() 
         "#1191: launch contract should reject stray dynamic-font-italic arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_font_underline_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-font-underline-object",
+        "--dynamic-font-underline", "IIF(.T., .T., .F.)",
+        "--dynamic-font-underline-target-object-name", "txtName",
+        "--dynamic-font-underline-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1192: launch contract should parse dynamic-font-underline-object requests");
+    expect(result.request.dynamic_font_underline_object,
+        "#1192: launch contract should detect --dynamic-font-underline-object");
+    expect(result.request.dynamic_font_underline_available &&
+            result.request.dynamic_font_underline == "IIF(.T., .T., .F.)",
+        "#1192: dynamic-font-underline-object requests should carry raw expression text");
+    expect(result.request.dynamic_font_underline_objects.size() == 2U,
+        "#1192: dynamic-font-underline-object requests should collect dynamic-font-underline target selectors");
+    if (result.request.dynamic_font_underline_objects.size() == 2U) {
+        expect(result.request.dynamic_font_underline_objects[0].object_name == "txtName" &&
+                result.request.dynamic_font_underline_objects[0].unique_id.empty(),
+            "#1192: dynamic-font-underline-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_font_underline_objects[1].object_name.empty() &&
+                result.request.dynamic_font_underline_objects[1].unique_id == "two-guid",
+            "#1192: dynamic-font-underline-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_underline_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-underline-object",
+        "--dynamic-font-underline-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1192: launch contract should reject dynamic-font-underline-object requests without dynamic font underline");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-underline-object",
+        "--dynamic-font-underline", "IIF(.T., .T., .F.)"
+    });
+    expect(!missing_targets_result.ok,
+        "#1192: launch contract should reject dynamic-font-underline-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_underline_object_ambiguity() {
+    const auto dynamic_font_underline_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-underline-object",
+        "--allow-output-object",
+        "--dynamic-font-underline", "IIF(.T., .T., .F.)",
+        "--dynamic-font-underline-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_underline_allow_output_result.ok,
+        "#1192: launch contract should reject simultaneous dynamic-font-underline-object and allow-output-object requests");
+
+    const auto dynamic_font_underline_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-underline-object",
+        "--clear-property",
+        "--property-name", "DynamicFontUnderline",
+        "--dynamic-font-underline", "IIF(.T., .T., .F.)",
+        "--dynamic-font-underline-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_underline_property_result.ok,
+        "#1192: launch contract should reject dynamic-font-underline-object combined with property commands");
+
+    const auto stray_dynamic_font_underline_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-underline", "IIF(.T., .T., .F.)"
+    });
+    expect(!stray_dynamic_font_underline_result.ok,
+        "#1192: launch contract should reject stray dynamic-font-underline arguments");
+}
+
 void test_parse_launch_arguments_for_font_name_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16912,6 +16994,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_font_italic_object();
     test_parse_launch_arguments_rejects_dynamic_font_italic_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_font_italic_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_font_underline_object();
+    test_parse_launch_arguments_rejects_dynamic_font_underline_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_font_underline_object_ambiguity();
     test_parse_launch_arguments_for_font_name_object();
     test_parse_launch_arguments_rejects_font_name_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_name_object_ambiguity();
