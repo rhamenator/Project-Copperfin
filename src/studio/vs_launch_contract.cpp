@@ -468,6 +468,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--add-line-feeds-object") {
+            result.request.add_line_feeds_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1252,6 +1257,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.resizable = *resizable;
             result.request.resizable_available = true;
+            continue;
+        }
+
+        if (argument == "--add-line-feeds") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --add-line-feeds."};
+            }
+            const auto add_line_feeds = parse_bool_value(args[++index]);
+            if (!add_line_feeds.has_value()) {
+                return {.ok = false, .error = "The --add-line-feeds value must be true or false."};
+            }
+            result.request.add_line_feeds = *add_line_feeds;
+            result.request.add_line_feeds_available = true;
             continue;
         }
 
@@ -2941,6 +2959,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--add-line-feeds-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --add-line-feeds-target-object-name."};
+            }
+            result.request.add_line_feeds_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--add-line-feeds-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --add-line-feeds-target-unique-id."};
+            }
+            result.request.add_line_feeds_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3816,6 +3858,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.resizable_objects.empty())) {
         return {.ok = false, .error = "Resizable arguments can only be used with --resizable-object."};
     }
+    if (result.request.add_line_feeds_object && !result.request.add_line_feeds_available) {
+        return {.ok = false, .error = "An object add-line-feeds assignment requires --add-line-feeds."};
+    }
+    if (result.request.add_line_feeds_object && result.request.add_line_feeds_objects.empty()) {
+        return {.ok = false, .error = "An object add-line-feeds assignment requires at least one target selector."};
+    }
+    if (!result.request.add_line_feeds_object &&
+        (result.request.add_line_feeds_available ||
+         !result.request.add_line_feeds_objects.empty())) {
+        return {.ok = false, .error = "Add-line-feeds arguments can only be used with --add-line-feeds-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3894,6 +3947,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.allow_header_sizing_object ? 1 : 0) +
         (result.request.allow_row_sizing_object ? 1 : 0) +
         (result.request.resizable_object ? 1 : 0) +
+        (result.request.add_line_feeds_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

@@ -1456,6 +1456,24 @@ void write_synthetic_form_table_for_object_resizable(const std::filesystem::path
     expect(create_result.ok, "#1094: synthetic SCX table for object resizable should be created");
 }
 
+void write_synthetic_form_table_for_object_add_line_feeds(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "ADDLINEFEEDS", .type = 'L', .length = 1U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", ".T."},
+        {"frmOrder", "frmOrder", "two-guid", ".T."},
+        {"cntDetails", "cntDetails", "three-guid", ".F."},
+        {"frmOther", "frmOther", "other-guid", ".T."}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1095: synthetic SCX table for object add line feeds should be created");
+}
+
 void write_synthetic_form_table_for_object_ungroup(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -11369,6 +11387,129 @@ void test_studio_host_json_assigns_resizable_by_stable_selectors(const std::stri
     }
 }
 
+void test_studio_host_json_assigns_add_line_feeds_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_add_line_feeds_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path add_line_feeds_path = temp_root / "add_line_feeds.scx";
+    write_synthetic_form_table_for_object_add_line_feeds(add_line_feeds_path);
+    const auto add_line_feeds_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", add_line_feeds_path.string(),
+            "--add-line-feeds-object",
+            "--add-line-feeds", "false",
+            "--add-line-feeds-target-object-name", "frmCustomer",
+            "--add-line-feeds-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(add_line_feeds_process.exit_code == 0,
+        "#1095: host object add-line-feeds assignment should exit successfully");
+    expect(visual_object_property(add_line_feeds_path, "one-guid", "ADDLINEFEEDS") == "false" &&
+            visual_object_property(add_line_feeds_path, "two-guid", "ADDLINEFEEDS") == "false" &&
+            visual_object_property(add_line_feeds_path, "three-guid", "ADDLINEFEEDS") == "false" &&
+            visual_object_property(add_line_feeds_path, "other-guid", "ADDLINEFEEDS") == "true",
+        "#1095: host object add-line-feeds assignment should assign selected logical state and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_add_line_feeds(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--add-line-feeds-object",
+            "--add-line-feeds", "false",
+            "--add-line-feeds-target-unique-id", "one-guid",
+            "--add-line-feeds-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1095: missing-target host object add-line-feeds assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "ADDLINEFEEDS") == "true" &&
+            visual_object_property(missing_target_path, "two-guid", "ADDLINEFEEDS") == "true",
+        "#1095: missing-target host object add-line-feeds assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_add_line_feeds(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--add-line-feeds-object",
+            "--add-line-feeds", "false",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1095: add-line-feeds-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "ADDLINEFEEDS") == "true",
+        "#1095: add-line-feeds-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_add_line_feeds(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--add-line-feeds-object",
+            "--add-line-feeds-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1095: add-line-feeds-object without add-line-feeds value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "ADDLINEFEEDS") == "true",
+        "#1095: add-line-feeds-object without add-line-feeds value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_add_line_feeds(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--add-line-feeds-object",
+            "--add-line-feeds", "false",
+            "--add-line-feeds-target-unique-id", "one-guid",
+            "--add-line-feeds-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1095: duplicate-target host object add-line-feeds assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "ADDLINEFEEDS") == "true",
+        "#1095: duplicate-target host object add-line-feeds assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_add_line_feeds(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--add-line-feeds-object",
+            "--auto-size-object",
+            "--add-line-feeds", "false",
+            "--add-line-feeds-target-unique-id", "one-guid",
+            "--auto-size", "false",
+            "--auto-size-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1095: add-line-feeds-object plus auto-size-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "ADDLINEFEEDS") == "true",
+        "#1095: add-line-feeds-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_ungroups_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -11570,6 +11711,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_allow_header_sizing_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_allow_row_sizing_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_resizable_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_add_line_feeds_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
     return failures == 0 ? 0 : 1;
 }

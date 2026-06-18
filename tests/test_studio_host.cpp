@@ -295,6 +295,10 @@ void test_parse_launch_arguments() {
         "#1094: launch contract should keep resizable-object off by default");
     expect(!result.request.resizable_available,
         "#1094: launch contract should keep resizable unavailable by default");
+    expect(!result.request.add_line_feeds_object,
+        "#1095: launch contract should keep add-line-feeds-object off by default");
+    expect(!result.request.add_line_feeds_available,
+        "#1095: launch contract should keep add line feeds unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -6256,6 +6260,92 @@ void test_parse_launch_arguments_rejects_resizable_object_ambiguity() {
         "#1094: launch contract should reject stray resizable arguments");
 }
 
+void test_parse_launch_arguments_for_add_line_feeds_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--add-line-feeds-object",
+        "--add-line-feeds", "false",
+        "--add-line-feeds-target-object-name", "frmCustomer",
+        "--add-line-feeds-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1095: launch contract should parse add-line-feeds-object requests");
+    expect(result.request.add_line_feeds_object,
+        "#1095: launch contract should detect --add-line-feeds-object");
+    expect(result.request.add_line_feeds_available && !result.request.add_line_feeds,
+        "#1095: add-line-feeds-object requests should carry add line feeds state");
+    expect(result.request.add_line_feeds_objects.size() == 2U,
+        "#1095: add-line-feeds-object requests should collect add_line_feeds target selectors");
+    if (result.request.add_line_feeds_objects.size() == 2U) {
+        expect(result.request.add_line_feeds_objects[0].object_name == "frmCustomer" &&
+                result.request.add_line_feeds_objects[0].unique_id.empty(),
+            "#1095: add-line-feeds-object requests should parse target object-name selectors");
+        expect(result.request.add_line_feeds_objects[1].object_name.empty() &&
+                result.request.add_line_feeds_objects[1].unique_id == "two-guid",
+            "#1095: add-line-feeds-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_add_line_feeds_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--add-line-feeds-object",
+        "--add-line-feeds-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1095: launch contract should reject add-line-feeds-object requests without add line feeds state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--add-line-feeds-object",
+        "--add-line-feeds", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1095: launch contract should reject add-line-feeds-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--add-line-feeds-object",
+        "--add-line-feeds", "sometimes",
+        "--add-line-feeds-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1095: launch contract should reject invalid add-line-feeds boolean values");
+}
+
+void test_parse_launch_arguments_rejects_add_line_feeds_object_ambiguity() {
+    const auto add_line_feeds_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--add-line-feeds-object",
+        "--auto-size-object",
+        "--add-line-feeds", "false",
+        "--add-line-feeds-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!add_line_feeds_auto_size_result.ok,
+        "#1095: launch contract should reject simultaneous add-line-feeds-object and auto-size-object requests");
+
+    const auto add_line_feeds_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--add-line-feeds-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--add-line-feeds", "false",
+        "--add-line-feeds-target-unique-id", "one-guid"
+    });
+    expect(!add_line_feeds_property_result.ok,
+        "#1095: launch contract should reject add-line-feeds-object combined with property commands");
+
+    const auto stray_add_line_feeds_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--add-line-feeds", "false"
+    });
+    expect(!stray_add_line_feeds_result.ok,
+        "#1095: launch contract should reject stray add-line-feeds arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7683,6 +7773,9 @@ int main() {
     test_parse_launch_arguments_for_resizable_object();
     test_parse_launch_arguments_rejects_resizable_object_invalid_inputs();
     test_parse_launch_arguments_rejects_resizable_object_ambiguity();
+    test_parse_launch_arguments_for_add_line_feeds_object();
+    test_parse_launch_arguments_rejects_add_line_feeds_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_add_line_feeds_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();

@@ -1,3 +1,4 @@
+1095	OPEN	E2/#23 slice: Expose host add-line-feeds-object command		2026-06-18T00:36:07Z
 1094	OPEN	E2/#23 slice: Expose host resizable-object command		2026-06-18T00:31:13Z
 1093	OPEN	E2/#23 slice: Expose host allow-row-sizing-object command		2026-06-18T00:26:16Z
 1092	OPEN	E2/#23 slice: Expose host allow-header-sizing-object command		2026-06-18T00:18:44Z
