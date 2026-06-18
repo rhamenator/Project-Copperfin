@@ -177,6 +177,10 @@ void test_parse_launch_arguments() {
         "#1112: launch contract should keep draw-mode-object off by default");
     expect(!result.request.draw_mode_available,
         "#1112: launch contract should keep draw-mode unavailable by default");
+    expect(!result.request.draw_style_object,
+        "#1113: launch contract should keep draw-style-object off by default");
+    expect(!result.request.draw_style_available,
+        "#1113: launch contract should keep draw-style unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3166,6 +3170,101 @@ void test_parse_launch_arguments_rejects_draw_mode_object_ambiguity() {
     });
     expect(!stray_draw_mode_result.ok,
         "#1112: launch contract should reject stray draw-mode arguments");
+}
+
+void test_parse_launch_arguments_for_draw_style_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--draw-style-object",
+        "--draw-style", "6",
+        "--draw-style-target-object-name", "cmdSave",
+        "--draw-style-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1113: launch contract should parse draw-style-object requests");
+    expect(result.request.draw_style_object,
+        "#1113: launch contract should detect --draw-style-object");
+    expect(result.request.draw_style_available && result.request.draw_style == 6,
+        "#1113: draw-style-object requests should carry draw-style value");
+    expect(result.request.draw_style_objects.size() == 2U,
+        "#1113: draw-style-object requests should collect draw-style target selectors");
+    if (result.request.draw_style_objects.size() == 2U) {
+        expect(result.request.draw_style_objects[0].object_name == "cmdSave" &&
+                result.request.draw_style_objects[0].unique_id.empty(),
+            "#1113: draw-style-object requests should parse target object-name selectors");
+        expect(result.request.draw_style_objects[1].object_name.empty() &&
+                result.request.draw_style_objects[1].unique_id == "two-guid",
+            "#1113: draw-style-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_draw_style_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-style-object",
+        "--draw-style-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1113: launch contract should reject draw-style-object requests without draw-style value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-style-object",
+        "--draw-style", "manual",
+        "--draw-style-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1113: launch contract should reject non-integer draw-style values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-style-object",
+        "--draw-style", "-1",
+        "--draw-style-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1113: launch contract should reject negative draw-style values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-style-object",
+        "--draw-style", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1113: launch contract should reject draw-style-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_draw_style_object_ambiguity() {
+    const auto draw_style_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-style-object",
+        "--locked-object",
+        "--draw-style", "2",
+        "--draw-style-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!draw_style_locked_result.ok,
+        "#1113: launch contract should reject simultaneous draw-style-object and locked-object requests");
+
+    const auto draw_style_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-style-object",
+        "--clear-property",
+        "--property-name", "DrawStyle",
+        "--draw-style", "2",
+        "--draw-style-target-unique-id", "one-guid"
+    });
+    expect(!draw_style_property_result.ok,
+        "#1113: launch contract should reject draw-style-object combined with property commands");
+
+    const auto stray_draw_style_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-style", "2"
+    });
+    expect(!stray_draw_style_result.ok,
+        "#1113: launch contract should reject stray draw-style arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9210,6 +9309,9 @@ int main() {
     test_parse_launch_arguments_for_draw_mode_object();
     test_parse_launch_arguments_rejects_draw_mode_object_invalid_inputs();
     test_parse_launch_arguments_rejects_draw_mode_object_ambiguity();
+    test_parse_launch_arguments_for_draw_style_object();
+    test_parse_launch_arguments_rejects_draw_style_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_draw_style_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

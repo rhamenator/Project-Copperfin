@@ -48,6 +48,7 @@ void print_usage() {
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
     std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
+    std::cout << "Draw-style object: --draw-style-object --draw-style <n> [--draw-style-target-object-name <name>] [--draw-style-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2201,6 +2202,30 @@ int main(int argc, char** argv) {
         if (!draw_mode_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << draw_mode_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.draw_style_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> draw_style_objects;
+        draw_style_objects.reserve(parse_result.request.draw_style_objects.size());
+        for (const auto& draw_style_object : parse_result.request.draw_style_objects) {
+            draw_style_objects.push_back({
+                .record_index = draw_style_object.record_index,
+                .object_name = draw_style_object.object_name,
+                .unique_id = draw_style_object.unique_id
+            });
+        }
+
+        const auto draw_style_result = copperfin::vfp::set_visual_object_draw_style({
+            .path = parse_result.request.path,
+            .objects = draw_style_objects,
+            .draw_style = parse_result.request.draw_style
+        });
+
+        if (!draw_style_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << draw_style_result.error << "\n";
             return 4;
         }
     }

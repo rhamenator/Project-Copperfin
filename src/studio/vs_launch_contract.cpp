@@ -558,6 +558,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--draw-style-object") {
+            result.request.draw_style_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1237,6 +1242,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.draw_mode = draw_mode;
             result.request.draw_mode_available = true;
+            continue;
+        }
+
+        if (argument == "--draw-style") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-style."};
+            }
+            int draw_style = 0;
+            if (!parse_int_value(args[++index], draw_style)) {
+                return {.ok = false, .error = "The --draw-style value must be an integer."};
+            }
+            if (draw_style < 0) {
+                return {.ok = false, .error = "The --draw-style value must be non-negative."};
+            }
+            result.request.draw_style = draw_style;
+            result.request.draw_style_available = true;
             continue;
         }
 
@@ -2394,6 +2415,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --draw-mode-target-unique-id."};
             }
             result.request.draw_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--draw-style-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-style-target-object-name."};
+            }
+            result.request.draw_style_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--draw-style-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-style-target-unique-id."};
+            }
+            result.request.draw_style_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4116,6 +4161,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.draw_mode_objects.empty())) {
         return {.ok = false, .error = "Draw-mode arguments can only be used with --draw-mode-object."};
     }
+    if (result.request.draw_style_object && !result.request.draw_style_available) {
+        return {.ok = false, .error = "An object draw-style assignment requires --draw-style."};
+    }
+    if (result.request.draw_style_object && result.request.draw_style_objects.empty()) {
+        return {.ok = false, .error = "An object draw-style assignment requires at least one target selector."};
+    }
+    if (!result.request.draw_style_object &&
+        (result.request.draw_style_available ||
+         !result.request.draw_style_objects.empty())) {
+        return {.ok = false, .error = "Draw-style arguments can only be used with --draw-style-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4844,6 +4900,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.button_count_object ? 1 : 0) +
         (result.request.curvature_object ? 1 : 0) +
         (result.request.draw_mode_object ? 1 : 0) +
+        (result.request.draw_style_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
