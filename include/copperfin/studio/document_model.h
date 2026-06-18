@@ -97,6 +97,7 @@ struct StudioOpenRequest {
     std::string dynamic_current_control{};
     std::string dynamic_font_name{};
     std::string dynamic_font_size{};
+    std::string dynamic_font_bold{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     double grid_width = 0.0;
@@ -274,6 +275,7 @@ struct StudioOpenRequest {
     bool dynamic_current_control_object = false;
     bool dynamic_font_name_object = false;
     bool dynamic_font_size_object = false;
+    bool dynamic_font_bold_object = false;
     bool font_name_object = false;
     bool font_size_object = false;
     bool font_bold_object = false;
@@ -482,6 +484,7 @@ struct StudioOpenRequest {
     bool dynamic_current_control_available = false;
     bool dynamic_font_name_available = false;
     bool dynamic_font_size_available = false;
+    bool dynamic_font_bold_available = false;
     bool font_name_available = false;
     bool font_size_available = false;
     bool font_bold_available = false;
@@ -637,6 +640,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> dynamic_current_control_objects{};
     std::vector<StudioObjectSelector> dynamic_font_name_objects{};
     std::vector<StudioObjectSelector> dynamic_font_size_objects{};
+    std::vector<StudioObjectSelector> dynamic_font_bold_objects{};
     std::vector<StudioObjectSelector> font_name_objects{};
     std::vector<StudioObjectSelector> font_size_objects{};
     std::vector<StudioObjectSelector> font_bold_objects{};

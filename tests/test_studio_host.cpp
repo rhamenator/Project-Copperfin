@@ -535,6 +535,10 @@ void test_parse_launch_arguments() {
         "#1189: launch contract should keep dynamic-font-size-object off by default");
     expect(!result.request.dynamic_font_size_available,
         "#1189: launch contract should keep dynamic font size unavailable by default");
+    expect(!result.request.dynamic_font_bold_object,
+        "#1190: launch contract should keep dynamic-font-bold-object off by default");
+    expect(!result.request.dynamic_font_bold_available,
+        "#1190: launch contract should keep dynamic font bold unavailable by default");
     expect(!result.request.font_name_object,
         "#1178: launch contract should keep font-name-object off by default");
     expect(!result.request.font_name_available,
@@ -12347,6 +12351,84 @@ void test_parse_launch_arguments_rejects_dynamic_font_size_object_ambiguity() {
         "#1189: launch contract should reject stray dynamic-font-size arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_font_bold_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-font-bold-object",
+        "--dynamic-font-bold", "IIF(.T., .T., .F.)",
+        "--dynamic-font-bold-target-object-name", "txtName",
+        "--dynamic-font-bold-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1190: launch contract should parse dynamic-font-bold-object requests");
+    expect(result.request.dynamic_font_bold_object,
+        "#1190: launch contract should detect --dynamic-font-bold-object");
+    expect(result.request.dynamic_font_bold_available &&
+            result.request.dynamic_font_bold == "IIF(.T., .T., .F.)",
+        "#1190: dynamic-font-bold-object requests should carry raw expression text");
+    expect(result.request.dynamic_font_bold_objects.size() == 2U,
+        "#1190: dynamic-font-bold-object requests should collect dynamic-font-bold target selectors");
+    if (result.request.dynamic_font_bold_objects.size() == 2U) {
+        expect(result.request.dynamic_font_bold_objects[0].object_name == "txtName" &&
+                result.request.dynamic_font_bold_objects[0].unique_id.empty(),
+            "#1190: dynamic-font-bold-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_font_bold_objects[1].object_name.empty() &&
+                result.request.dynamic_font_bold_objects[1].unique_id == "two-guid",
+            "#1190: dynamic-font-bold-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_bold_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-bold-object",
+        "--dynamic-font-bold-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1190: launch contract should reject dynamic-font-bold-object requests without dynamic font bold");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-bold-object",
+        "--dynamic-font-bold", "IIF(.T., .T., .F.)"
+    });
+    expect(!missing_targets_result.ok,
+        "#1190: launch contract should reject dynamic-font-bold-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_font_bold_object_ambiguity() {
+    const auto dynamic_font_bold_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-bold-object",
+        "--allow-output-object",
+        "--dynamic-font-bold", "IIF(.T., .T., .F.)",
+        "--dynamic-font-bold-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_bold_allow_output_result.ok,
+        "#1190: launch contract should reject simultaneous dynamic-font-bold-object and allow-output-object requests");
+
+    const auto dynamic_font_bold_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-bold-object",
+        "--clear-property",
+        "--property-name", "DynamicFontBold",
+        "--dynamic-font-bold", "IIF(.T., .T., .F.)",
+        "--dynamic-font-bold-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_font_bold_property_result.ok,
+        "#1190: launch contract should reject dynamic-font-bold-object combined with property commands");
+
+    const auto stray_dynamic_font_bold_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-font-bold", "IIF(.T., .T., .F.)"
+    });
+    expect(!stray_dynamic_font_bold_result.ok,
+        "#1190: launch contract should reject stray dynamic-font-bold arguments");
+}
+
 void test_parse_launch_arguments_for_font_name_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -16742,6 +16824,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_font_size_object();
     test_parse_launch_arguments_rejects_dynamic_font_size_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_font_size_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_font_bold_object();
+    test_parse_launch_arguments_rejects_dynamic_font_bold_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_font_bold_object_ambiguity();
     test_parse_launch_arguments_for_font_name_object();
     test_parse_launch_arguments_rejects_font_name_object_invalid_inputs();
     test_parse_launch_arguments_rejects_font_name_object_ambiguity();
