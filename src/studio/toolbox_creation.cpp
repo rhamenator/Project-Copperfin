@@ -633,6 +633,56 @@ StudioToolboxObjectCreateDispatchCatalogResult plan_visual_object_create_dispatc
     };
 }
 
+StudioToolboxObjectCreateBatchPlanCatalogResult plan_visual_object_batch_catalog_from_toolbox_context(
+    const StudioToolboxObjectCreateBatchPlanCatalogRequest& request) {
+    const auto items = studio_toolbox_items_for_context(request.toolbox_context);
+    if (items.empty()) {
+        return {
+            .ok = false,
+            .error = "A toolbox batch create catalog request requires validated toolbox item metadata.",
+            .toolbox_context = request.toolbox_context,
+            .item_count = 0U,
+            .plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .batch_plan = {}
+        };
+    }
+
+    std::vector<StudioToolboxObjectCreateBatchItem> batch_items;
+    batch_items.reserve(items.size());
+    for (const auto& item : items) {
+        batch_items.push_back({
+            .toolbox_item_id = std::string(item.id),
+            .object_name = {},
+            .unique_id = {},
+            .parent_name = request.parent_name,
+            .field_values = request.field_values
+        });
+    }
+
+    auto batch_plan = plan_visual_objects_from_toolbox_items({
+        .path = request.path,
+        .toolbox_context_provided = true,
+        .toolbox_context = request.toolbox_context,
+        .items = std::move(batch_items)
+    });
+
+    const bool plan_ok = batch_plan.ok;
+    return {
+        .ok = true,
+        .error = {},
+        .toolbox_context = request.toolbox_context,
+        .item_count = items.size(),
+        .plan_count = plan_ok ? 1U : 0U,
+        .error_count = plan_ok ? 0U : 1U,
+        .dry_run = plan_ok ? batch_plan.plan.dry_run : true,
+        .mutates_asset = plan_ok ? batch_plan.plan.mutates_asset : false,
+        .batch_plan = std::move(batch_plan)
+    };
+}
+
 StudioToolboxObjectCreateBatchDispatchCatalogResult plan_visual_object_batch_create_dispatch_catalog(
     const StudioToolboxObjectCreateBatchDispatchCatalogRequest& request) {
     const auto items = studio_toolbox_items_for_context(request.toolbox_context);

@@ -417,6 +417,112 @@ void test_toolbox_creation_dispatch_catalog_reports_non_admitted_errors_without_
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_plan_catalog_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto form_catalog = copperfin::studio::plan_visual_object_batch_catalog_from_toolbox_context({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .path = table_path.string(),
+        .parent_name = "frmMain",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Batch Catalog"}
+        }
+    });
+    const auto* textbox_plan = find_create_batch_plan(form_catalog.batch_plan.plan.plans, "textbox");
+    const auto* command_plan = find_create_batch_plan(form_catalog.batch_plan.plan.plans, "commandbutton");
+
+    expect(form_catalog.ok &&
+            form_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            form_catalog.item_count == form_catalog.batch_plan.plan.item_count &&
+            form_catalog.plan_count == 1U &&
+            form_catalog.error_count == 0U &&
+            form_catalog.batch_plan.ok &&
+            form_catalog.dry_run &&
+            !form_catalog.mutates_asset,
+        "#1257: form toolbox batch create catalogs should summarize one context batch");
+    expect(textbox_plan != nullptr &&
+            textbox_plan->target_record_index > before_count &&
+            textbox_plan->object_name == "txt2" &&
+            textbox_plan->parent_name == "frmMain" &&
+            has_field_value(textbox_plan->field_values, "CLASS", "TextBox") &&
+            has_field_value(textbox_plan->field_values, "CAPTION", "Batch Catalog"),
+        "#1257: form toolbox batch create catalogs should preserve textbox generated plans");
+    expect(command_plan != nullptr &&
+            command_plan->target_record_index > textbox_plan->target_record_index &&
+            command_plan->object_name == "cmd1" &&
+            has_field_value(command_plan->field_values, "CLASS", "CommandButton"),
+        "#1257: form toolbox batch create catalogs should reserve generated names across the batch");
+    expect(object_count(table_path) == before_count,
+        "#1257: form toolbox batch create catalogs should not mutate the visual asset");
+
+    const auto report_catalog = copperfin::studio::plan_visual_object_batch_catalog_from_toolbox_context({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::report,
+        .path = table_path.string(),
+        .parent_name = "DetailBand",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Report Batch Catalog"}
+        }
+    });
+    const auto* report_label_plan = find_create_batch_plan(report_catalog.batch_plan.plan.plans, "label");
+
+    expect(report_catalog.ok &&
+            report_catalog.batch_plan.ok &&
+            report_catalog.plan_count == 1U &&
+            report_catalog.error_count == 0U &&
+            report_label_plan != nullptr &&
+            report_label_plan->object_name == "lbl1" &&
+            report_label_plan->parent_name == "DetailBand" &&
+            has_field_value(report_label_plan->field_values, "CLASS", "Label"),
+        "#1257: report toolbox batch create catalogs should include report-compatible plans");
+    expect(find_create_batch_plan(report_catalog.batch_plan.plan.plans, "textbox") == nullptr,
+        "#1257: report toolbox batch create catalogs should exclude form-only textbox plans");
+    expect(object_count(table_path) == before_count,
+        "#1257: report toolbox batch create catalogs should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_batch_plan_catalog_reports_planning_errors_without_stale_plans() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_batch_plan_catalog_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto catalog = copperfin::studio::plan_visual_object_batch_catalog_from_toolbox_context({
+        .toolbox_context = copperfin::studio::StudioToolboxContext::form,
+        .path = (temp_dir / "missing.scx").string(),
+        .parent_name = "frmMain",
+        .field_values = {}
+    });
+
+    expect(catalog.ok &&
+            !catalog.batch_plan.ok &&
+            !catalog.batch_plan.error.empty() &&
+            catalog.plan_count == 0U &&
+            catalog.error_count == 1U &&
+            catalog.dry_run &&
+            !catalog.mutates_asset &&
+            catalog.batch_plan.plan.plans.empty(),
+        "#1257: toolbox batch create catalogs should report planning errors without stale plans");
+    expect(object_count(table_path) == before_count,
+        "#1257: rejected toolbox batch create catalogs should not mutate unrelated visual assets");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1403,6 +1509,8 @@ int main() {
     test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation();
     test_toolbox_creation_dispatch_catalog_plans_context_dispatches_without_mutation();
     test_toolbox_creation_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
+    test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_mutation();
+    test_toolbox_creation_batch_plan_catalog_reports_planning_errors_without_stale_plans();
     test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_mutation();
     test_toolbox_creation_batch_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
     test_toolbox_creation_batch_planner_reserves_names_without_mutation();
