@@ -1,3 +1,4 @@
+1106	OPEN	E2/#23 slice: Expose host ole-drop-mode-object command		2026-06-18T01:43:49Z
 1105	OPEN	E2/#23 slice: Expose host ole-drag-mode-object command		2026-06-18T01:36:25Z
 1104	OPEN	E2/#23 slice: Expose host drag-mode-object command		2026-06-18T01:29:42Z
 1103	OPEN	E2/#23 slice: Expose host drag-icon-object command		2026-06-18T01:23:39Z
