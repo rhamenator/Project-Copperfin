@@ -1,3 +1,4 @@
+1173	OPEN	E2/#23 slice: Expose host picture-position-object command		2026-06-18T10:51:58Z
 1172	OPEN	E2/#23 slice: Expose host picture-margin-object command		2026-06-18T10:41:01Z
 1171	OPEN	E2/#23 slice: Expose host mouse-pointer-object command		2026-06-18T10:30:20Z
 1170	OPEN	E2/#23 slice: Expose host title-bar-object command		2026-06-18T10:19:04Z

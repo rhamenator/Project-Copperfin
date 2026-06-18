@@ -1191,6 +1191,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--picture-position-object") {
+            result.request.picture_position_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2973,6 +2978,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.picture_margin = picture_margin;
             result.request.picture_margin_available = true;
+            continue;
+        }
+
+        if (argument == "--picture-position") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --picture-position."};
+            }
+            int picture_position = 0;
+            if (!parse_int_value(args[++index], picture_position)) {
+                return {.ok = false, .error = "The --picture-position value must be an integer."};
+            }
+            if (picture_position < 0) {
+                return {.ok = false, .error = "The --picture-position value must not be negative."};
+            }
+            result.request.picture_position = picture_position;
+            result.request.picture_position_available = true;
             continue;
         }
 
@@ -6074,6 +6095,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--picture-position-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --picture-position-target-object-name."};
+            }
+            result.request.picture_position_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--picture-position-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --picture-position-target-unique-id."};
+            }
+            result.request.picture_position_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -8023,6 +8068,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.picture_margin_objects.empty())) {
         return {.ok = false, .error = "Picture-margin arguments can only be used with --picture-margin-object."};
     }
+    if (result.request.picture_position_object && !result.request.picture_position_available) {
+        return {.ok = false, .error = "An object picture-position assignment requires --picture-position."};
+    }
+    if (result.request.picture_position_object && result.request.picture_position_objects.empty()) {
+        return {.ok = false, .error = "An object picture-position assignment requires at least one target selector."};
+    }
+    if (!result.request.picture_position_object &&
+        (result.request.picture_position_available ||
+         !result.request.picture_position_objects.empty())) {
+        return {.ok = false, .error = "Picture-position arguments can only be used with --picture-position-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8419,6 +8475,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.title_bar_object ? 1 : 0) +
         (result.request.mouse_pointer_object ? 1 : 0) +
         (result.request.picture_margin_object ? 1 : 0) +
+        (result.request.picture_position_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +

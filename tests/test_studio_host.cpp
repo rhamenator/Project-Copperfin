@@ -499,6 +499,10 @@ void test_parse_launch_arguments() {
         "#1172: launch contract should keep picture-margin-object off by default");
     expect(!result.request.picture_margin_available,
         "#1172: launch contract should keep picture margin unavailable by default");
+    expect(!result.request.picture_position_object,
+        "#1173: launch contract should keep picture-position-object off by default");
+    expect(!result.request.picture_position_available,
+        "#1173: launch contract should keep picture position unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11526,6 +11530,101 @@ void test_parse_launch_arguments_rejects_picture_margin_object_ambiguity() {
         "#1172: launch contract should reject stray picture-margin arguments");
 }
 
+void test_parse_launch_arguments_for_picture_position_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--picture-position-object",
+        "--picture-position", "2",
+        "--picture-position-target-object-name", "frmCustomer",
+        "--picture-position-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1173: launch contract should parse picture-position-object requests");
+    expect(result.request.picture_position_object,
+        "#1173: launch contract should detect --picture-position-object");
+    expect(result.request.picture_position_available && result.request.picture_position == 2,
+        "#1173: picture-position-object requests should carry picture-position value");
+    expect(result.request.picture_position_objects.size() == 2U,
+        "#1173: picture-position-object requests should collect picture-position target selectors");
+    if (result.request.picture_position_objects.size() == 2U) {
+        expect(result.request.picture_position_objects[0].object_name == "frmCustomer" &&
+                result.request.picture_position_objects[0].unique_id.empty(),
+            "#1173: picture-position-object requests should parse target object-name selectors");
+        expect(result.request.picture_position_objects[1].object_name.empty() &&
+                result.request.picture_position_objects[1].unique_id == "two-guid",
+            "#1173: picture-position-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_picture_position_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-position-object",
+        "--picture-position-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1173: launch contract should reject picture-position-object requests without picture-position value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-position-object",
+        "--picture-position", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1173: launch contract should reject picture-position-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-position-object",
+        "--picture-position", "center",
+        "--picture-position-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1173: launch contract should reject non-integer picture-position values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-position-object",
+        "--picture-position", "-1",
+        "--picture-position-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1173: launch contract should reject negative picture-position values");
+}
+
+void test_parse_launch_arguments_rejects_picture_position_object_ambiguity() {
+    const auto picture_position_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-position-object",
+        "--allow-output-object",
+        "--picture-position", "2",
+        "--picture-position-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!picture_position_allow_output_result.ok,
+        "#1173: launch contract should reject simultaneous picture-position-object and allow-output-object requests");
+
+    const auto picture_position_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-position-object",
+        "--clear-property",
+        "--property-name", "PicturePosition",
+        "--picture-position", "2",
+        "--picture-position-target-unique-id", "one-guid"
+    });
+    expect(!picture_position_property_result.ok,
+        "#1173: launch contract should reject picture-position-object combined with property commands");
+
+    const auto stray_picture_position_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-position", "2"
+    });
+    expect(!stray_picture_position_result.ok,
+        "#1173: launch contract should reject stray picture-position arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15206,6 +15305,9 @@ int main() {
     test_parse_launch_arguments_for_picture_margin_object();
     test_parse_launch_arguments_rejects_picture_margin_object_invalid_inputs();
     test_parse_launch_arguments_rejects_picture_margin_object_ambiguity();
+    test_parse_launch_arguments_for_picture_position_object();
+    test_parse_launch_arguments_rejects_picture_position_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_picture_position_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();

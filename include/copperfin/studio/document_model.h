@@ -138,6 +138,7 @@ struct StudioOpenRequest {
     int title_bar = 0;
     int mouse_pointer = 0;
     int picture_margin = 0;
+    int picture_position = 0;
     int max_width = 0;
     int min_width = 0;
     int max_left = 0;
@@ -254,6 +255,7 @@ struct StudioOpenRequest {
     bool title_bar_object = false;
     bool mouse_pointer_object = false;
     bool picture_margin_object = false;
+    bool picture_position_object = false;
     bool max_width_object = false;
     bool max_left_object = false;
     bool max_top_object = false;
@@ -445,6 +447,7 @@ struct StudioOpenRequest {
     bool title_bar_available = false;
     bool mouse_pointer_available = false;
     bool picture_margin_available = false;
+    bool picture_position_available = false;
     bool max_width_available = false;
     bool max_left_available = false;
     bool max_top_available = false;
@@ -577,6 +580,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> title_bar_objects{};
     std::vector<StudioObjectSelector> mouse_pointer_objects{};
     std::vector<StudioObjectSelector> picture_margin_objects{};
+    std::vector<StudioObjectSelector> picture_position_objects{};
     std::vector<StudioObjectSelector> max_width_objects{};
     std::vector<StudioObjectSelector> max_left_objects{};
     std::vector<StudioObjectSelector> max_top_objects{};
