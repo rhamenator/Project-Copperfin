@@ -66,6 +66,7 @@ void print_usage() {
     std::cout << "Special-effect object: --special-effect-object --special-effect <n> [--special-effect-target-object-name <name>] [--special-effect-target-unique-id <id>]\n";
     std::cout << "Scroll-bars object: --scroll-bars-object --scroll-bars <n> [--scroll-bars-target-object-name <name>] [--scroll-bars-target-unique-id <id>]\n";
     std::cout << "Window-state object: --window-state-object --window-state <n> [--window-state-target-object-name <name>] [--window-state-target-unique-id <id>]\n";
+    std::cout << "Show-window object: --show-window-object --show-window <n> [--show-window-target-object-name <name>] [--show-window-target-unique-id <id>]\n";
     std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
     std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
     std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
@@ -4321,6 +4322,30 @@ int main(int argc, char** argv) {
         if (!window_state_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << window_state_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.show_window_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> show_window_objects;
+        show_window_objects.reserve(parse_result.request.show_window_objects.size());
+        for (const auto& show_window_object : parse_result.request.show_window_objects) {
+            show_window_objects.push_back({
+                .record_index = show_window_object.record_index,
+                .object_name = show_window_object.object_name,
+                .unique_id = show_window_object.unique_id
+            });
+        }
+
+        const auto show_window_result = copperfin::vfp::set_visual_object_show_window({
+            .path = parse_result.request.path,
+            .objects = show_window_objects,
+            .show_window = parse_result.request.show_window
+        });
+
+        if (!show_window_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << show_window_result.error << "\n";
             return 4;
         }
     }

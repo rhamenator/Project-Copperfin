@@ -1171,6 +1171,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--show-window-object") {
+            result.request.show_window_object = true;
+            continue;
+        }
+
         if (argument == "--max-width-object") {
             result.request.max_width_object = true;
             continue;
@@ -2889,6 +2894,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.window_state = window_state;
             result.request.window_state_available = true;
+            continue;
+        }
+
+        if (argument == "--show-window") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --show-window."};
+            }
+            int show_window = 0;
+            if (!parse_int_value(args[++index], show_window)) {
+                return {.ok = false, .error = "The --show-window value must be an integer."};
+            }
+            if (show_window < 0) {
+                return {.ok = false, .error = "The --show-window value must not be negative."};
+            }
+            result.request.show_window = show_window;
+            result.request.show_window_available = true;
             continue;
         }
 
@@ -5894,6 +5915,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--show-window-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --show-window-target-object-name."};
+            }
+            result.request.show_window_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--show-window-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --show-window-target-unique-id."};
+            }
+            result.request.show_window_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--max-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --max-width-target-object-name."};
@@ -7799,6 +7844,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.window_state_objects.empty())) {
         return {.ok = false, .error = "Window-state arguments can only be used with --window-state-object."};
     }
+    if (result.request.show_window_object && !result.request.show_window_available) {
+        return {.ok = false, .error = "An object show-window assignment requires --show-window."};
+    }
+    if (result.request.show_window_object && result.request.show_window_objects.empty()) {
+        return {.ok = false, .error = "An object show-window assignment requires at least one target selector."};
+    }
+    if (!result.request.show_window_object &&
+        (result.request.show_window_available ||
+         !result.request.show_window_objects.empty())) {
+        return {.ok = false, .error = "Show-window arguments can only be used with --show-window-object."};
+    }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
     }
@@ -8191,6 +8247,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.special_effect_object ? 1 : 0) +
         (result.request.scroll_bars_object ? 1 : 0) +
         (result.request.window_state_object ? 1 : 0) +
+        (result.request.show_window_object ? 1 : 0) +
         (result.request.max_width_object ? 1 : 0) +
         (result.request.max_left_object ? 1 : 0) +
         (result.request.max_top_object ? 1 : 0) +
