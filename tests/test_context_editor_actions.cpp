@@ -37,6 +37,17 @@ bool has_argument_pair(const std::vector<std::string>& arguments, const std::str
     return false;
 }
 
+const copperfin::studio::StudioEditorActionDispatchCatalogEntry* find_dispatch_catalog_entry(
+    const std::vector<copperfin::studio::StudioEditorActionDispatchCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.action.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -369,6 +380,124 @@ int main() {
     expect(!missing_dispatch_action.ok &&
                missing_dispatch_action.error == "An editor action dispatch request requires a validated action id.",
            "#1225: editor action dispatch should reject admitted plans without action ids");
+
+    const auto admitted_visual_dispatch_catalog =
+        copperfin::studio::plan_studio_editor_action_dispatch_catalog({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = true
+        });
+    expect(admitted_visual_dispatch_catalog.ok &&
+               admitted_visual_dispatch_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+               admitted_visual_dispatch_catalog.action_count == visual_actions.size() &&
+               admitted_visual_dispatch_catalog.dispatch_count == visual_actions.size() &&
+               admitted_visual_dispatch_catalog.error_count == 0U &&
+               !admitted_visual_dispatch_catalog.dry_run &&
+               !admitted_visual_dispatch_catalog.mutates_asset,
+           "#1227: admitted editor action dispatch catalogs should dispatch every context action without mutation");
+    const auto* visual_method_dispatch = find_dispatch_catalog_entry(
+        admitted_visual_dispatch_catalog.entries, "edit-visual-method");
+    expect(visual_method_dispatch != nullptr &&
+               visual_method_dispatch->launch_plan.ok &&
+               visual_method_dispatch->invocation_admission.ok &&
+               visual_method_dispatch->dispatch.ok &&
+               std::string(visual_method_dispatch->dispatch.plan.action.id) == "edit-visual-method" &&
+               visual_method_dispatch->dispatch.plan.action.kind == StudioEditorActionKind::source_editor &&
+               visual_method_dispatch->dispatch.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_method_dispatch->dispatch.plan.asset_path == "forms/customer.scx" &&
+               visual_method_dispatch->dispatch.plan.record_index == 1U &&
+               visual_method_dispatch->dispatch.plan.object_name == "cmdSave" &&
+               visual_method_dispatch->dispatch.plan.unique_id == "button-guid" &&
+               visual_method_dispatch->dispatch.plan.symbol == "cmdSave.Click" &&
+               visual_method_dispatch->dispatch.plan.line == 42U &&
+               visual_method_dispatch->dispatch.plan.column == 7U &&
+               has_argument_pair(
+                   visual_method_dispatch->dispatch.plan.dispatch_arguments,
+                   "--selection-context",
+                   "visual_object") &&
+               has_argument_pair(
+                   visual_method_dispatch->dispatch.plan.dispatch_arguments,
+                   "--action-id",
+                   "edit-visual-method"),
+           "#1227: editor action dispatch catalog entries should preserve action and target metadata");
+    const auto* visual_property_dispatch = find_dispatch_catalog_entry(
+        admitted_visual_dispatch_catalog.entries, "show-property-grid");
+    expect(visual_property_dispatch != nullptr &&
+               visual_property_dispatch->dispatch.ok &&
+               visual_property_dispatch->dispatch.plan.command_token == "studio.property_grid.show" &&
+               visual_property_dispatch->dispatch.plan.dispatch_admitted &&
+               !visual_property_dispatch->dispatch.plan.executed,
+           "#1227: editor action dispatch catalogs should include property-grid dispatch contracts");
+
+    const auto dry_run_visual_dispatch_catalog =
+        copperfin::studio::plan_studio_editor_action_dispatch_catalog({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = false
+        });
+    expect(dry_run_visual_dispatch_catalog.ok &&
+               dry_run_visual_dispatch_catalog.action_count == visual_actions.size() &&
+               dry_run_visual_dispatch_catalog.dispatch_count == 0U &&
+               dry_run_visual_dispatch_catalog.error_count == visual_actions.size() &&
+               dry_run_visual_dispatch_catalog.dry_run &&
+               !dry_run_visual_dispatch_catalog.mutates_asset,
+           "#1227: dry-run editor action dispatch catalogs should report per-action dispatch rejections");
+    const auto* dry_run_property_dispatch = find_dispatch_catalog_entry(
+        dry_run_visual_dispatch_catalog.entries, "show-property-grid");
+    expect(dry_run_property_dispatch != nullptr &&
+               dry_run_property_dispatch->launch_plan.ok &&
+               dry_run_property_dispatch->invocation_admission.ok &&
+               !dry_run_property_dispatch->invocation_admission.plan.editor_invocation_admitted &&
+               !dry_run_property_dispatch->dispatch.ok &&
+               dry_run_property_dispatch->dispatch.error ==
+                   "An editor action dispatch request requires an admitted non-dry-run invocation.",
+           "#1227: dry-run editor action dispatch catalog entries should preserve admission failures");
+
+    const auto report_dispatch_catalog =
+        copperfin::studio::plan_studio_editor_action_dispatch_catalog({
+            .selection_context = StudioEditorSelectionContext::report_expression,
+            .asset_path = "reports/orders.frx",
+            .record_index = 2U,
+            .object_name = "Expr1",
+            .unique_id = "expr-guid",
+            .symbol = "Expr1.Expression",
+            .line = 3U,
+            .column = 11U,
+            .admit_editor_invocations = true
+        });
+    const auto report_dispatch_actions = copperfin::studio::studio_editor_actions_for_context(
+        StudioEditorSelectionContext::report_expression);
+    const auto* report_expression_dispatch = find_dispatch_catalog_entry(
+        report_dispatch_catalog.entries, "edit-report-expression");
+    expect(report_dispatch_catalog.ok &&
+               report_dispatch_catalog.action_count == report_dispatch_actions.size() &&
+               report_dispatch_catalog.dispatch_count == report_dispatch_actions.size() &&
+               report_dispatch_catalog.error_count == 0U &&
+               report_expression_dispatch != nullptr &&
+               report_expression_dispatch->dispatch.ok &&
+               report_expression_dispatch->dispatch.plan.action.kind == StudioEditorActionKind::expression_editor &&
+               report_expression_dispatch->dispatch.plan.command_token == "studio.expression_editor.open" &&
+               report_expression_dispatch->dispatch.plan.target_surface == "expression-editor" &&
+               report_expression_dispatch->dispatch.plan.asset_path == "reports/orders.frx" &&
+               report_expression_dispatch->dispatch.plan.record_index == 2U &&
+               report_expression_dispatch->dispatch.plan.symbol == "Expr1.Expression" &&
+               has_argument_pair(
+                   report_expression_dispatch->dispatch.plan.dispatch_arguments,
+                   "--selection-context",
+                   "report_expression"),
+           "#1227: report-expression dispatch catalogs should include expression-editor dispatch metadata");
 
     const auto data_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::data_environment,
