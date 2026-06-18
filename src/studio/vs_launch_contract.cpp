@@ -438,6 +438,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--split-bar-object") {
+            result.request.split_bar_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1144,6 +1149,19 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.record_mark = *record_mark;
             result.request.record_mark_available = true;
+            continue;
+        }
+
+        if (argument == "--split-bar") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --split-bar."};
+            }
+            const auto split_bar = parse_bool_value(args[++index]);
+            if (!split_bar.has_value()) {
+                return {.ok = false, .error = "The --split-bar value must be true or false."};
+            }
+            result.request.split_bar = *split_bar;
+            result.request.split_bar_available = true;
             continue;
         }
 
@@ -2689,6 +2707,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--split-bar-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --split-bar-target-object-name."};
+            }
+            result.request.split_bar_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--split-bar-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --split-bar-target-unique-id."};
+            }
+            result.request.split_bar_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --object-name."};
@@ -3498,6 +3540,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.record_mark_objects.empty())) {
         return {.ok = false, .error = "Record-mark arguments can only be used with --record-mark-object."};
     }
+    if (result.request.split_bar_object && !result.request.split_bar_available) {
+        return {.ok = false, .error = "An object split-bar assignment requires --split-bar."};
+    }
+    if (result.request.split_bar_object && result.request.split_bar_objects.empty()) {
+        return {.ok = false, .error = "An object split-bar assignment requires at least one target selector."};
+    }
+    if (!result.request.split_bar_object &&
+        (result.request.split_bar_available ||
+         !result.request.split_bar_objects.empty())) {
+        return {.ok = false, .error = "Split-bar arguments can only be used with --split-bar-object."};
+    }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
         return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
@@ -3570,6 +3623,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.allow_cell_selection_object ? 1 : 0) +
         (result.request.delete_mark_object ? 1 : 0) +
         (result.request.record_mark_object ? 1 : 0) +
+        (result.request.split_bar_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
         return {.ok = false, .error = "Only one property command can be used at a time."};

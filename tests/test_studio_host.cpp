@@ -271,6 +271,10 @@ void test_parse_launch_arguments() {
         "#1088: launch contract should keep record-mark-object off by default");
     expect(!result.request.record_mark_available,
         "#1088: launch contract should keep record mark unavailable by default");
+    expect(!result.request.split_bar_object,
+        "#1089: launch contract should keep split-bar-object off by default");
+    expect(!result.request.split_bar_available,
+        "#1089: launch contract should keep split bar unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5716,6 +5720,92 @@ void test_parse_launch_arguments_rejects_record_mark_object_ambiguity() {
         "#1088: launch contract should reject stray record-mark arguments");
 }
 
+void test_parse_launch_arguments_for_split_bar_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--split-bar-object",
+        "--split-bar", "false",
+        "--split-bar-target-object-name", "frmCustomer",
+        "--split-bar-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1089: launch contract should parse split-bar-object requests");
+    expect(result.request.split_bar_object,
+        "#1089: launch contract should detect --split-bar-object");
+    expect(result.request.split_bar_available && !result.request.split_bar,
+        "#1089: split-bar-object requests should carry split bar state");
+    expect(result.request.split_bar_objects.size() == 2U,
+        "#1089: split-bar-object requests should collect split_bar target selectors");
+    if (result.request.split_bar_objects.size() == 2U) {
+        expect(result.request.split_bar_objects[0].object_name == "frmCustomer" &&
+                result.request.split_bar_objects[0].unique_id.empty(),
+            "#1089: split-bar-object requests should parse target object-name selectors");
+        expect(result.request.split_bar_objects[1].object_name.empty() &&
+                result.request.split_bar_objects[1].unique_id == "two-guid",
+            "#1089: split-bar-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_split_bar_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--split-bar-object",
+        "--split-bar-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1089: launch contract should reject split-bar-object requests without split bar state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--split-bar-object",
+        "--split-bar", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1089: launch contract should reject split-bar-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--split-bar-object",
+        "--split-bar", "sometimes",
+        "--split-bar-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1089: launch contract should reject invalid split-bar boolean values");
+}
+
+void test_parse_launch_arguments_rejects_split_bar_object_ambiguity() {
+    const auto split_bar_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--split-bar-object",
+        "--auto-size-object",
+        "--split-bar", "false",
+        "--split-bar-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!split_bar_auto_size_result.ok,
+        "#1089: launch contract should reject simultaneous split-bar-object and auto-size-object requests");
+
+    const auto split_bar_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--split-bar-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--split-bar", "false",
+        "--split-bar-target-unique-id", "one-guid"
+    });
+    expect(!split_bar_property_result.ok,
+        "#1089: launch contract should reject split-bar-object combined with property commands");
+
+    const auto stray_split_bar_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--split-bar", "false"
+    });
+    expect(!stray_split_bar_result.ok,
+        "#1089: launch contract should reject stray split-bar arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7125,6 +7215,9 @@ int main() {
     test_parse_launch_arguments_for_record_mark_object();
     test_parse_launch_arguments_rejects_record_mark_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_mark_object_ambiguity();
+    test_parse_launch_arguments_for_split_bar_object();
+    test_parse_launch_arguments_rejects_split_bar_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_split_bar_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
