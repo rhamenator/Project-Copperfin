@@ -1,3 +1,4 @@
+1088	OPEN	E2/#23 slice: Expose host record-mark-object command		2026-06-18T00:02:58Z
 1087	OPEN	E2/#23 slice: Expose host delete-mark-object command		2026-06-17T23:57:56Z
 1086	OPEN	E2/#23 slice: Expose host allow-cell-selection-object command		2026-06-17T23:54:28Z
 1085	OPEN	E2/#23 slice: Expose host lock-screen-object command		2026-06-17T23:50:53Z
