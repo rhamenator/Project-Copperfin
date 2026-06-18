@@ -1,3 +1,4 @@
+1135	OPEN	E2/#23 slice: Expose host list-item-id-object command		2026-06-18T04:41:11Z
 1134	OPEN	E2/#23 slice: Expose host fill-color-object command		2026-06-18T04:34:57Z
 1133	OPEN	E2/#23 slice: Expose host child-order-object command		2026-06-18T04:29:03Z
 1132	OPEN	E2/#23 slice: Expose host highlight-style-object command		2026-06-18T04:23:13Z

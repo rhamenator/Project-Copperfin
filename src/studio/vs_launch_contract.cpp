@@ -668,6 +668,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--list-item-id-object") {
+            result.request.list_item_id_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1692,6 +1697,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.fill_color = fill_color;
             result.request.fill_color_available = true;
+            continue;
+        }
+
+        if (argument == "--list-item-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --list-item-id."};
+            }
+            int list_item_id = 0;
+            if (!parse_int_value(args[++index], list_item_id)) {
+                return {.ok = false, .error = "The --list-item-id value must be an integer."};
+            }
+            if (list_item_id < 0) {
+                return {.ok = false, .error = "The --list-item-id value must be non-negative."};
+            }
+            result.request.list_item_id = list_item_id;
+            result.request.list_item_id_available = true;
             continue;
         }
 
@@ -3353,6 +3374,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --fill-color-target-unique-id."};
             }
             result.request.fill_color_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--list-item-id-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --list-item-id-target-object-name."};
+            }
+            result.request.list_item_id_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--list-item-id-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --list-item-id-target-unique-id."};
+            }
+            result.request.list_item_id_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -5330,6 +5375,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.fill_color_objects.empty())) {
         return {.ok = false, .error = "FillColor arguments can only be used with --fill-color-object."};
     }
+    if (result.request.list_item_id_object && !result.request.list_item_id_available) {
+        return {.ok = false, .error = "An object list-item-id assignment requires --list-item-id."};
+    }
+    if (result.request.list_item_id_object && result.request.list_item_id_objects.empty()) {
+        return {.ok = false, .error = "An object list-item-id assignment requires at least one target selector."};
+    }
+    if (!result.request.list_item_id_object &&
+        (result.request.list_item_id_available ||
+         !result.request.list_item_id_objects.empty())) {
+        return {.ok = false, .error = "ListItemId arguments can only be used with --list-item-id-object."};
+    }
     if (result.request.record_source_object && !result.request.record_source_available) {
         return {.ok = false, .error = "An object record source assignment requires --record-source."};
     }
@@ -6090,6 +6146,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.highlight_style_object ? 1 : 0) +
         (result.request.child_order_object ? 1 : 0) +
         (result.request.fill_color_object ? 1 : 0) +
+        (result.request.list_item_id_object ? 1 : 0) +
         (result.request.record_source_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +

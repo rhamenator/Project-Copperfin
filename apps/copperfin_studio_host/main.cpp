@@ -69,6 +69,7 @@ void print_usage() {
     std::cout << "Highlight-style object: --highlight-style-object --highlight-style <n> [--highlight-style-target-object-name <name>] [--highlight-style-target-unique-id <id>]\n";
     std::cout << "Child-order object: --child-order-object --child-order <n> [--child-order-target-object-name <name>] [--child-order-target-unique-id <id>]\n";
     std::cout << "Fill-color object: --fill-color-object --fill-color <n> [--fill-color-target-object-name <name>] [--fill-color-target-unique-id <id>]\n";
+    std::cout << "List-item-id object: --list-item-id-object --list-item-id <n> [--list-item-id-target-object-name <name>] [--list-item-id-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -2727,6 +2728,30 @@ int main(int argc, char** argv) {
         if (!fill_color_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << fill_color_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.list_item_id_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> list_item_id_objects;
+        list_item_id_objects.reserve(parse_result.request.list_item_id_objects.size());
+        for (const auto& list_item_id_object : parse_result.request.list_item_id_objects) {
+            list_item_id_objects.push_back({
+                .record_index = list_item_id_object.record_index,
+                .object_name = list_item_id_object.object_name,
+                .unique_id = list_item_id_object.unique_id
+            });
+        }
+
+        const auto list_item_id_result = copperfin::vfp::set_visual_object_list_item_id({
+            .path = parse_result.request.path,
+            .objects = list_item_id_objects,
+            .list_item_id = parse_result.request.list_item_id
+        });
+
+        if (!list_item_id_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << list_item_id_result.error << "\n";
             return 4;
         }
     }

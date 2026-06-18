@@ -261,6 +261,10 @@ void test_parse_launch_arguments() {
         "#1134: launch contract should keep fill-color-object off by default");
     expect(!result.request.fill_color_available,
         "#1134: launch contract should keep fill-color unavailable by default");
+    expect(!result.request.list_item_id_object,
+        "#1135: launch contract should keep list-item-id-object off by default");
+    expect(!result.request.list_item_id_available,
+        "#1135: launch contract should keep list-item-id unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
@@ -5247,6 +5251,101 @@ void test_parse_launch_arguments_rejects_fill_color_object_ambiguity() {
     });
     expect(!stray_fill_color_result.ok,
         "#1134: launch contract should reject stray fill-color arguments");
+}
+
+void test_parse_launch_arguments_for_list_item_id_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--list-item-id-object",
+        "--list-item-id", "9",
+        "--list-item-id-target-object-name", "cmdSave",
+        "--list-item-id-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1135: launch contract should parse list-item-id-object requests");
+    expect(result.request.list_item_id_object,
+        "#1135: launch contract should detect --list-item-id-object");
+    expect(result.request.list_item_id_available && result.request.list_item_id == 9,
+        "#1135: list-item-id-object requests should carry list-item-id value");
+    expect(result.request.list_item_id_objects.size() == 2U,
+        "#1135: list-item-id-object requests should collect list_item_id target selectors");
+    if (result.request.list_item_id_objects.size() == 2U) {
+        expect(result.request.list_item_id_objects[0].object_name == "cmdSave" &&
+                result.request.list_item_id_objects[0].unique_id.empty(),
+            "#1135: list-item-id-object requests should parse target object-name selectors");
+        expect(result.request.list_item_id_objects[1].object_name.empty() &&
+                result.request.list_item_id_objects[1].unique_id == "two-guid",
+            "#1135: list-item-id-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_list_item_id_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-item-id-object",
+        "--list-item-id-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1135: launch contract should reject list-item-id-object requests without list-item-id value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-item-id-object",
+        "--list-item-id", "manual",
+        "--list-item-id-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1135: launch contract should reject non-integer list-item-id values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-item-id-object",
+        "--list-item-id", "-1",
+        "--list-item-id-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1135: launch contract should reject negative list-item-id values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-item-id-object",
+        "--list-item-id", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1135: launch contract should reject list-item-id-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_list_item_id_object_ambiguity() {
+    const auto list_item_id_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-item-id-object",
+        "--locked-object",
+        "--list-item-id", "2",
+        "--list-item-id-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!list_item_id_locked_result.ok,
+        "#1135: launch contract should reject simultaneous list-item-id-object and locked-object requests");
+
+    const auto list_item_id_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-item-id-object",
+        "--clear-property",
+        "--property-name", "ListItemId",
+        "--list-item-id", "2",
+        "--list-item-id-target-unique-id", "one-guid"
+    });
+    expect(!list_item_id_property_result.ok,
+        "#1135: launch contract should reject list-item-id-object combined with property commands");
+
+    const auto stray_list_item_id_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--list-item-id", "2"
+    });
+    expect(!stray_list_item_id_result.ok,
+        "#1135: launch contract should reject stray list-item-id arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -11430,6 +11529,9 @@ int main() {
     test_parse_launch_arguments_for_fill_color_object();
     test_parse_launch_arguments_rejects_fill_color_object_invalid_inputs();
     test_parse_launch_arguments_rejects_fill_color_object_ambiguity();
+    test_parse_launch_arguments_for_list_item_id_object();
+    test_parse_launch_arguments_rejects_list_item_id_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_list_item_id_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();

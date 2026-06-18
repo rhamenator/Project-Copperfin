@@ -1186,6 +1186,24 @@ void write_synthetic_form_table_for_object_fill_color(const std::filesystem::pat
     expect(create_result.ok, "#1134: synthetic SCX table for object fill-color should be created");
 }
 
+void write_synthetic_form_table_for_object_list_item_id(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "LISTITEMID", .type = 'N', .length = 3U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "0"},
+        {"cmdCancel", "cmdCancel", "two-guid", "1"},
+        {"lblStatus", "lblStatus", "three-guid", "2"},
+        {"cmdOther", "cmdOther", "other-guid", "0"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1135: synthetic SCX table for object list-item-id should be created");
+}
+
 void write_synthetic_form_table_for_object_record_source(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -10407,6 +10425,146 @@ void test_studio_host_json_assigns_fill_color_by_stable_selectors(const std::str
     }
 }
 
+void test_studio_host_json_assigns_list_item_id_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_list_item_id_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path list_item_id_path = temp_root / "list_item_id.scx";
+    write_synthetic_form_table_for_object_list_item_id(list_item_id_path);
+    const auto list_item_id_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", list_item_id_path.string(),
+            "--list-item-id-object",
+            "--list-item-id", "9",
+            "--list-item-id-target-object-name", "cmdSave",
+            "--list-item-id-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(list_item_id_process.exit_code == 0,
+        "#1135: host object list-item-id assignment should exit successfully");
+    expect(visual_object_property(list_item_id_path, "one-guid", "LISTITEMID") == "9" &&
+            visual_object_property(list_item_id_path, "two-guid", "LISTITEMID") == "9" &&
+            visual_object_property(list_item_id_path, "three-guid", "LISTITEMID") == "2" &&
+            visual_object_property(list_item_id_path, "other-guid", "LISTITEMID") == "0",
+        "#1135: host object list-item-id assignment should assign selected values and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_list_item_id(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--list-item-id-object",
+            "--list-item-id", "2",
+            "--list-item-id-target-unique-id", "one-guid",
+            "--list-item-id-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1135: missing-target host object list-item-id assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "LISTITEMID") == "0" &&
+            visual_object_property(missing_target_path, "two-guid", "LISTITEMID") == "1",
+        "#1135: missing-target host object list-item-id assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_list_item_id(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--list-item-id-object",
+            "--list-item-id", "2",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1135: list-item-id-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "LISTITEMID") == "0",
+        "#1135: list-item-id-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_list_item_id(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--list-item-id-object",
+            "--list-item-id-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1135: list-item-id-object without list-item-id value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "LISTITEMID") == "0",
+        "#1135: list-item-id-object without list-item-id value should not mutate the asset");
+
+    const fs::path negative_value_path = temp_root / "negative_value.scx";
+    write_synthetic_form_table_for_object_list_item_id(negative_value_path);
+    const auto negative_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_value_path.string(),
+            "--list-item-id-object",
+            "--list-item-id", "-1",
+            "--list-item-id-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_value_process.exit_code == 2,
+        "#1135: negative list-item-id values should fail during launch parsing");
+    expect(visual_object_property(negative_value_path, "one-guid", "LISTITEMID") == "0",
+        "#1135: negative list-item-id values should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_list_item_id(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--list-item-id-object",
+            "--list-item-id", "2",
+            "--list-item-id-target-unique-id", "one-guid",
+            "--list-item-id-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1135: duplicate-target host object list-item-id assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "LISTITEMID") == "0",
+        "#1135: duplicate-target host object list-item-id assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_list_item_id(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--list-item-id-object",
+            "--locked-object",
+            "--list-item-id", "2",
+            "--list-item-id-target-unique-id", "one-guid",
+            "--locked", "true",
+            "--locked-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1135: list-item-id-object plus locked-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "LISTITEMID") == "0",
+        "#1135: list-item-id-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_record_source_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -17716,6 +17874,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_highlight_style_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_child_order_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_fill_color_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_list_item_id_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_record_source_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
