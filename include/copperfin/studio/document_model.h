@@ -102,6 +102,7 @@ struct StudioOpenRequest {
     std::string dynamic_font_underline{};
     std::string dynamic_font_strikethru{};
     std::string dynamic_font_outline{};
+    std::string dynamic_font_shadow{};
     std::string anchor_object_name{};
     std::string anchor_unique_id{};
     double grid_width = 0.0;
@@ -284,6 +285,7 @@ struct StudioOpenRequest {
     bool dynamic_font_underline_object = false;
     bool dynamic_font_strikethru_object = false;
     bool dynamic_font_outline_object = false;
+    bool dynamic_font_shadow_object = false;
     bool font_name_object = false;
     bool font_size_object = false;
     bool font_bold_object = false;
@@ -497,6 +499,7 @@ struct StudioOpenRequest {
     bool dynamic_font_underline_available = false;
     bool dynamic_font_strikethru_available = false;
     bool dynamic_font_outline_available = false;
+    bool dynamic_font_shadow_available = false;
     bool font_name_available = false;
     bool font_size_available = false;
     bool font_bold_available = false;
@@ -657,6 +660,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> dynamic_font_underline_objects{};
     std::vector<StudioObjectSelector> dynamic_font_strikethru_objects{};
     std::vector<StudioObjectSelector> dynamic_font_outline_objects{};
+    std::vector<StudioObjectSelector> dynamic_font_shadow_objects{};
     std::vector<StudioObjectSelector> font_name_objects{};
     std::vector<StudioObjectSelector> font_size_objects{};
     std::vector<StudioObjectSelector> font_bold_objects{};
