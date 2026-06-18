@@ -5865,6 +5865,167 @@ void test_studio_host_json_exposes_toolbox_dispatch(const std::string& studio_ho
     }
 }
 
+void test_studio_host_json_exposes_toolbox_dispatch_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_toolbox_dispatch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto form_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(form_process.exit_code == 0,
+        "#1236: toolbox dispatch catalog JSON should accept admitted form contexts");
+    expect_contains(form_process.stdout_text, "\"toolboxDispatchCatalog\": {",
+        "#1236: toolbox dispatch catalog JSON should expose a catalog object");
+    expect_contains(form_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1236: toolbox dispatch catalog JSON should expose toolbox contexts");
+    expect_contains(form_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
+        "#1236: toolbox dispatch catalog JSON should expose command tokens");
+    expect_contains(form_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1236: toolbox dispatch catalog JSON should carry asset paths");
+    expect_contains(form_process.stdout_text, "\"recordIndex\": 1",
+        "#1236: toolbox dispatch catalog JSON should carry record indexes");
+    expect_contains(form_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1236: toolbox dispatch catalog JSON should carry object-name selectors");
+    expect_contains(form_process.stdout_text, "\"uniqueId\": \"form-guid\"",
+        "#1236: toolbox dispatch catalog JSON should carry unique-id selectors");
+    expect_contains(form_process.stdout_text, "\"id\": \"textbox\"",
+        "#1236: form toolbox dispatch catalog JSON should include form-safe TextBox items");
+    expect_contains(form_process.stdout_text, "\"dispatchCount\": 1",
+        "#1236: admitted toolbox dispatch catalog JSON should expose dispatch counts");
+    expect_contains(form_process.stdout_text, "\"errorCount\": 0",
+        "#1236: admitted toolbox dispatch catalog JSON should expose zero error counts");
+    expect_contains(form_process.stdout_text, "\"dryRun\": false",
+        "#1236: admitted toolbox dispatch catalog JSON should not be dry-run");
+    expect_contains(form_process.stdout_text, "\"mutatesAsset\": false",
+        "#1236: toolbox dispatch catalog JSON should remain non-mutating");
+    expect_contains(form_process.stdout_text, "\"invocationAdmissionOk\": true",
+        "#1236: toolbox dispatch catalog JSON should expose admission results");
+    expect_contains(form_process.stdout_text, "\"paletteInvocationAdmitted\": true",
+        "#1236: toolbox dispatch catalog JSON should expose palette admission state");
+    expect_contains(form_process.stdout_text, "\"dispatchOk\": true",
+        "#1236: toolbox dispatch catalog JSON should expose dispatch status");
+    expect_contains(form_process.stdout_text, "\"dispatchArguments\": [",
+        "#1236: toolbox dispatch catalog JSON should expose dispatch arguments");
+    expect_contains(form_process.stdout_text, "\"--toolbox-context\"",
+        "#1236: toolbox dispatch catalog JSON should expose toolbox-context arguments");
+
+    const auto report_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-catalog",
+            "--toolbox-context", "report",
+            "--path", "reports/orders.frx",
+            "--record", "3",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(report_process.exit_code == 0,
+        "#1236: toolbox dispatch catalog JSON should accept admitted report contexts");
+    expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1236: report toolbox dispatch catalog JSON should expose report contexts");
+    expect_contains(report_process.stdout_text, "\"id\": \"label\"",
+        "#1236: report toolbox dispatch catalog JSON should include report-safe Label items");
+    expect_not_contains(report_process.stdout_text, "\"id\": \"textbox\"",
+        "#1236: report toolbox dispatch catalog JSON should exclude form-only TextBox items");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1236: dry-run toolbox dispatch catalog JSON should report aggregate errors without parse failure");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchCount\": 0",
+        "#1236: dry-run toolbox dispatch catalog JSON should expose zero dispatch counts");
+    expect_contains(dry_run_process.stdout_text, "\"errorCount\": 1",
+        "#1236: dry-run toolbox dispatch catalog JSON should expose dispatch error counts");
+    expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
+        "#1236: dry-run toolbox dispatch catalog JSON should preserve dry-run state");
+    expect_contains(dry_run_process.stdout_text, "\"paletteInvocationAdmitted\": false",
+        "#1236: dry-run toolbox dispatch catalog JSON should expose unadmitted palette state");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchOk\": false",
+        "#1236: dry-run toolbox dispatch catalog JSON should expose dispatch rejection");
+    expect_contains(dry_run_process.stdout_text,
+        "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1236: dry-run toolbox dispatch catalog JSON should report dispatch errors");
+
+    const auto invalid_boolean_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--admit-palette-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_boolean_process.exit_code == 2,
+        "#1236: toolbox dispatch catalog JSON should reject invalid admission booleans");
+    expect_contains(invalid_boolean_process.stdout_text,
+        "The --admit-palette-invocation value must be true or false.",
+        "#1236: invalid toolbox dispatch catalog boolean JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-catalog",
+            "--toolbox-context", "form",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1236: toolbox dispatch catalog JSON should reject invalid record indexes");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1236: invalid toolbox dispatch catalog record JSON should report parser errors");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-catalog",
+            "--toolbox-context", "menu",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1236: toolbox dispatch catalog JSON should reject unknown toolbox contexts");
+    expect_contains(unknown_context_process.stdout_text, "Unknown toolbox context token: menu",
+        "#1236: unknown toolbox dispatch catalog context JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1236: toolbox dispatch catalog JSON should reject missing toolbox contexts");
+    expect_contains(missing_context_process.stdout_text, "No toolbox context was provided.",
+        "#1236: missing toolbox dispatch catalog context JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -30175,6 +30336,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_dispatch(argv[1]);
+    test_studio_host_json_exposes_toolbox_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission(argv[1]);
     test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);
