@@ -74,6 +74,7 @@ struct StudioOpenRequest {
     std::string disabled_picture{};
     std::string ole_drag_picture{};
     std::string mouse_icon{};
+    std::string drag_icon{};
     std::string tooltip_text{};
     std::string status_bar_text{};
     std::string control_source{};
@@ -197,6 +198,7 @@ struct StudioOpenRequest {
     bool disabled_picture_object = false;
     bool ole_drag_picture_object = false;
     bool mouse_icon_object = false;
+    bool drag_icon_object = false;
     bool ungroup_object = false;
     bool tab_stop = false;
     bool visible = false;
@@ -217,6 +219,7 @@ struct StudioOpenRequest {
     bool disabled_picture_available = false;
     bool ole_drag_picture_available = false;
     bool mouse_icon_available = false;
+    bool drag_icon_available = false;
     bool tooltip_text_available = false;
     bool status_bar_text_available = false;
     bool control_source_available = false;
@@ -367,6 +370,7 @@ struct StudioOpenRequest {
     std::vector<StudioObjectSelector> disabled_picture_objects{};
     std::vector<StudioObjectSelector> ole_drag_picture_objects{};
     std::vector<StudioObjectSelector> mouse_icon_objects{};
+    std::vector<StudioObjectSelector> drag_icon_objects{};
     std::vector<StudioEditorSelectionContext> designer_selection_contexts{};
 };
 

@@ -508,6 +508,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--drag-icon-object") {
+            result.request.drag_icon_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -909,6 +914,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.mouse_icon = args[++index];
             result.request.mouse_icon_available = true;
+            continue;
+        }
+
+        if (argument == "--drag-icon") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --drag-icon."};
+            }
+            result.request.drag_icon = args[++index];
+            result.request.drag_icon_available = true;
             continue;
         }
 
@@ -1978,6 +1992,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --mouse-icon-target-unique-id."};
             }
             result.request.mouse_icon_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--drag-icon-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --drag-icon-target-object-name."};
+            }
+            result.request.drag_icon_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--drag-icon-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --drag-icon-target-unique-id."};
+            }
+            result.request.drag_icon_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -3577,6 +3615,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.mouse_icon_objects.empty())) {
         return {.ok = false, .error = "Mouse-icon arguments can only be used with --mouse-icon-object."};
     }
+    if (result.request.drag_icon_object && !result.request.drag_icon_available) {
+        return {.ok = false, .error = "An object drag-icon assignment requires --drag-icon."};
+    }
+    if (result.request.drag_icon_object && result.request.drag_icon_objects.empty()) {
+        return {.ok = false, .error = "An object drag-icon assignment requires at least one target selector."};
+    }
+    if (!result.request.drag_icon_object &&
+        (result.request.drag_icon_available ||
+         !result.request.drag_icon_objects.empty())) {
+        return {.ok = false, .error = "Drag-icon arguments can only be used with --drag-icon-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4253,6 +4302,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.disabled_picture_object ? 1 : 0) +
         (result.request.ole_drag_picture_object ? 1 : 0) +
         (result.request.mouse_icon_object ? 1 : 0) +
+        (result.request.drag_icon_object ? 1 : 0) +
         (result.request.tooltip_text_object ? 1 : 0) +
         (result.request.status_bar_text_object ? 1 : 0) +
         (result.request.control_source_object ? 1 : 0) +

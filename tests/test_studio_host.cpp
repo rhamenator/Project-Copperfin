@@ -141,6 +141,10 @@ void test_parse_launch_arguments() {
         "#1102: launch contract should keep mouse-icon-object off by default");
     expect(!result.request.mouse_icon_available,
         "#1102: launch contract should keep mouse-icon unavailable by default");
+    expect(!result.request.drag_icon_object,
+        "#1103: launch contract should keep drag-icon-object off by default");
+    expect(!result.request.drag_icon_available,
+        "#1103: launch contract should keep drag-icon unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -2290,6 +2294,82 @@ void test_parse_launch_arguments_rejects_mouse_icon_object_ambiguity() {
     });
     expect(!stray_mouse_icon_result.ok,
         "#1102: launch contract should reject stray mouse-icon arguments");
+}
+
+void test_parse_launch_arguments_for_drag_icon_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--drag-icon-object",
+        "--drag-icon", "forms\\customer_drag.cur",
+        "--drag-icon-target-object-name", "cmdSave",
+        "--drag-icon-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1103: launch contract should parse drag-icon-object requests");
+    expect(result.request.drag_icon_object, "#1103: launch contract should detect --drag-icon-object");
+    expect(result.request.drag_icon_available && result.request.drag_icon == "forms\\customer_drag.cur",
+        "#1103: drag-icon-object requests should carry drag-icon text");
+    expect(result.request.drag_icon_objects.size() == 2U,
+        "#1103: drag-icon-object requests should collect drag-icon target selectors");
+    if (result.request.drag_icon_objects.size() == 2U) {
+        expect(result.request.drag_icon_objects[0].object_name == "cmdSave" &&
+                result.request.drag_icon_objects[0].unique_id.empty(),
+            "#1103: drag-icon-object requests should parse target object-name selectors");
+        expect(result.request.drag_icon_objects[1].object_name.empty() &&
+                result.request.drag_icon_objects[1].unique_id == "two-guid",
+            "#1103: drag-icon-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_drag_icon_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-icon-object",
+        "--drag-icon-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1103: launch contract should reject drag-icon-object requests without drag-icon text");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-icon-object",
+        "--drag-icon", "forms\\customer_drag.cur"
+    });
+    expect(!missing_targets_result.ok,
+        "#1103: launch contract should reject drag-icon-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_drag_icon_object_ambiguity() {
+    const auto drag_icon_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-icon-object",
+        "--locked-object",
+        "--drag-icon", "forms\\customer_drag.cur",
+        "--drag-icon-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!drag_icon_locked_result.ok,
+        "#1103: launch contract should reject simultaneous drag-icon-object and locked-object requests");
+
+    const auto drag_icon_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-icon-object",
+        "--clear-property",
+        "--property-name", "DragIcon",
+        "--drag-icon", "forms\\customer_drag.cur",
+        "--drag-icon-target-unique-id", "one-guid"
+    });
+    expect(!drag_icon_property_result.ok,
+        "#1103: launch contract should reject drag-icon-object combined with property commands");
+
+    const auto stray_drag_icon_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--drag-icon", "forms\\customer_drag.cur"
+    });
+    expect(!stray_drag_icon_result.ok,
+        "#1103: launch contract should reject stray drag-icon arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -8221,6 +8301,9 @@ int main() {
     test_parse_launch_arguments_for_mouse_icon_object();
     test_parse_launch_arguments_rejects_mouse_icon_object_invalid_inputs();
     test_parse_launch_arguments_rejects_mouse_icon_object_ambiguity();
+    test_parse_launch_arguments_for_drag_icon_object();
+    test_parse_launch_arguments_rejects_drag_icon_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_drag_icon_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

@@ -646,6 +646,24 @@ void write_synthetic_form_table_for_object_mouse_icon(const std::filesystem::pat
     expect(create_result.ok, "#1102: synthetic SCX table for object mouse-icon should be created");
 }
 
+void write_synthetic_form_table_for_object_drag_icon(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "DRAGICON", .type = 'C', .length = 64U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "forms\\save_drag.cur"},
+        {"cmdCancel", "cmdCancel", "two-guid", "forms\\cancel_drag.cur"},
+        {"lblStatus", "lblStatus", "three-guid", "forms\\status_drag.cur"},
+        {"cmdOther", "cmdOther", "other-guid", "forms\\other_drag.cur"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1103: synthetic SCX table for object drag-icon should be created");
+}
+
 void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -5640,6 +5658,129 @@ void test_studio_host_json_assigns_mouse_icon_by_stable_selectors(const std::str
         "#1102: mouse-icon-object plus locked-object requests should fail during launch parsing");
     expect(visual_object_property(ambiguous_path, "one-guid", "MOUSEICON") == "forms\\save_mouse.cur",
         "#1102: mouse-icon-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_assigns_drag_icon_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_drag_icon_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path drag_icon_path = temp_root / "drag_icon.scx";
+    write_synthetic_form_table_for_object_drag_icon(drag_icon_path);
+    const auto drag_icon_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", drag_icon_path.string(),
+            "--drag-icon-object",
+            "--drag-icon", "forms\\customer drag hero.cur",
+            "--drag-icon-target-object-name", "cmdSave",
+            "--drag-icon-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(drag_icon_process.exit_code == 0,
+        "#1103: host object drag-icon assignment should exit successfully");
+    expect(visual_object_property(drag_icon_path, "one-guid", "DRAGICON") == "forms\\customer drag hero.cur" &&
+            visual_object_property(drag_icon_path, "two-guid", "DRAGICON") == "forms\\customer drag hero.cur" &&
+            visual_object_property(drag_icon_path, "three-guid", "DRAGICON") == "forms\\status_drag.cur" &&
+            visual_object_property(drag_icon_path, "other-guid", "DRAGICON") == "forms\\other_drag.cur",
+        "#1103: host object drag-icon assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_drag_icon(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--drag-icon-object",
+            "--drag-icon", "forms\\customer drag hero.cur",
+            "--drag-icon-target-unique-id", "one-guid",
+            "--drag-icon-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1103: missing-target host object drag-icon assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "DRAGICON") == "forms\\save_drag.cur" &&
+            visual_object_property(missing_target_path, "two-guid", "DRAGICON") == "forms\\cancel_drag.cur",
+        "#1103: missing-target host object drag-icon assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_drag_icon(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--drag-icon-object",
+            "--drag-icon", "forms\\customer drag hero.cur",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1103: drag-icon-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "DRAGICON") == "forms\\save_drag.cur",
+        "#1103: drag-icon-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_drag_icon(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--drag-icon-object",
+            "--drag-icon-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1103: drag-icon-object without drag-icon value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "DRAGICON") == "forms\\save_drag.cur",
+        "#1103: drag-icon-object without drag-icon value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_drag_icon(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--drag-icon-object",
+            "--drag-icon", "forms\\customer drag hero.cur",
+            "--drag-icon-target-unique-id", "one-guid",
+            "--drag-icon-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1103: duplicate-target host object drag-icon assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "DRAGICON") == "forms\\save_drag.cur",
+        "#1103: duplicate-target host object drag-icon assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_drag_icon(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--drag-icon-object",
+            "--locked-object",
+            "--drag-icon", "forms\\customer drag hero.cur",
+            "--drag-icon-target-unique-id", "one-guid",
+            "--locked", "true",
+            "--locked-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1103: drag-icon-object plus locked-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "DRAGICON") == "forms\\save_drag.cur",
+        "#1103: drag-icon-object ambiguity should not mutate the asset");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -12679,6 +12820,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_disabled_picture_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_ole_drag_picture_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_mouse_icon_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_drag_icon_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);
