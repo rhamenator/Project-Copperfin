@@ -4483,6 +4483,187 @@ void test_studio_host_json_exposes_builder_invocation_admission(const std::strin
     }
 }
 
+void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_builder_dispatch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "grid-builder",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(admitted_process.exit_code == 0,
+        "#1230: builder dispatch JSON should accept admitted context-valid builders");
+    expect_contains(admitted_process.stdout_text, "\"builderDispatch\": {",
+        "#1230: builder dispatch JSON should expose a result object");
+    expect_contains(admitted_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1230: builder dispatch JSON should expose builder ids");
+    expect_contains(admitted_process.stdout_text, "\"kind\": \"builder\"",
+        "#1230: builder dispatch JSON should expose builder kind metadata");
+    expect_contains(admitted_process.stdout_text, "\"selectionContext\": null",
+        "#1230: builder-context dispatch JSON should expose null Studio selection contexts");
+    expect_contains(admitted_process.stdout_text, "\"context\": \"control\"",
+        "#1230: builder dispatch JSON should expose resolved builder contexts");
+    expect_contains(admitted_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1230: builder dispatch JSON should expose stable command tokens");
+    expect_contains(admitted_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1230: builder dispatch JSON should expose entry points");
+    expect_contains(admitted_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1230: builder dispatch JSON should preserve asset paths");
+    expect_contains(admitted_process.stdout_text, "\"recordIndex\": 4",
+        "#1230: builder dispatch JSON should preserve record indexes");
+    expect_contains(admitted_process.stdout_text, "\"objectName\": \"grdOrders\"",
+        "#1230: builder dispatch JSON should preserve object names");
+    expect_contains(admitted_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
+        "#1230: builder dispatch JSON should preserve unique ids");
+    expect_contains(admitted_process.stdout_text, "\"dispatchArguments\": [",
+        "#1230: builder dispatch JSON should expose dispatch arguments");
+    expect_contains(admitted_process.stdout_text, "\"--builder-id\"",
+        "#1230: builder dispatch JSON should expose builder-id arguments");
+    expect_contains(admitted_process.stdout_text, "\"grid-builder\"",
+        "#1230: builder dispatch JSON should expose builder-id values");
+    expect_contains(admitted_process.stdout_text, "\"--builder-context\"",
+        "#1230: builder dispatch JSON should expose context arguments");
+    expect_contains(admitted_process.stdout_text, "\"control\"",
+        "#1230: builder dispatch JSON should expose context values");
+    expect_contains(admitted_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1230: admitted builder dispatch JSON should expose dispatch-admitted state");
+    expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
+        "#1230: admitted builder dispatch JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text, "\"executed\": false",
+        "#1230: builder dispatch JSON should not execute builder processes");
+    expect_contains(admitted_process.stdout_text, "\"mutatesAsset\": false",
+        "#1230: builder dispatch JSON should remain non-mutating");
+
+    const auto selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "label-wizard",
+            "--selection-context", "label_expression",
+            "--path", "labels/mailing.lbx",
+            "--record", "2",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(selection_process.exit_code == 0,
+        "#1230: builder dispatch JSON should accept selection-context builders");
+    expect_contains(selection_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#1230: selection-context builder dispatch JSON should expose Studio selection contexts");
+    expect_contains(selection_process.stdout_text, "\"builderId\": \"label-wizard\"",
+        "#1230: selection-context builder dispatch JSON should expose wizard ids");
+    expect_contains(selection_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1230: selection-context builder dispatch JSON should preserve wizard kind metadata");
+    expect_contains(selection_process.stdout_text, "\"context\": \"label\"",
+        "#1230: selection-context builder dispatch JSON should expose resolved builder contexts");
+    expect_contains(selection_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1230: selection-context builder dispatch JSON should expose admitted dispatch state");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "grid-builder",
+            "--builder-context", "control",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 4,
+        "#1230: builder dispatch JSON should reject dry-run dispatch requests");
+    expect_contains(dry_run_process.stdout_text, "\"builderDispatch\": null",
+        "#1230: dry-run builder dispatch JSON should not expose a result object");
+    expect_contains(dry_run_process.stdout_text,
+        "A builder dispatch request requires an admitted non-dry-run invocation.",
+        "#1230: dry-run builder dispatch JSON should report dispatch admission errors");
+
+    const auto wrong_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "form-builder",
+            "--selection-context", "container_object",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(wrong_context_process.exit_code == 4,
+        "#1230: builder dispatch JSON should reject wrong-context builders");
+    expect_contains(wrong_context_process.stdout_text, "\"builderDispatch\": null",
+        "#1230: wrong-context builder dispatch JSON should not expose a result object");
+    expect_contains(wrong_context_process.stdout_text,
+        "The requested builder is not available for the selected Studio context.",
+        "#1230: wrong-context builder dispatch JSON should report launch validation errors");
+
+    const auto invalid_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_bool_process.exit_code == 2,
+        "#1230: builder dispatch JSON should reject invalid UI-admission booleans");
+    expect_contains(invalid_bool_process.stdout_text, "The --admit-ui-launch value must be true or false.",
+        "#1230: invalid builder dispatch UI-admission JSON should report parser errors");
+
+    const auto ambiguous_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "grid-builder",
+            "--builder-context", "control",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_context_process.exit_code == 2,
+        "#1230: builder dispatch JSON should reject simultaneous builder and selection contexts");
+    expect_contains(ambiguous_context_process.stdout_text,
+        "Builder dispatch requests cannot provide both --builder-context and --selection-context.",
+        "#1230: ambiguous builder dispatch JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "grid-builder",
+            "--builder-context", "control",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1230: builder dispatch JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1230: invalid builder dispatch record JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch", "grid-builder",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1230: builder dispatch JSON should reject missing contexts");
+    expect_contains(missing_context_process.stdout_text, "No builder or selection context was provided.",
+        "#1230: missing-context builder dispatch JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_editor_action_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -29681,6 +29862,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
+    test_studio_host_json_exposes_builder_dispatch(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_editor_action_invocation_admission(argv[1]);
     test_studio_host_json_exposes_editor_action_dispatch(argv[1]);
