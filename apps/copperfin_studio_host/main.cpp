@@ -47,6 +47,7 @@ void print_usage() {
     std::cout << "Hide-selection object: --hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]\n";
     std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
     std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
+    std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
     std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
@@ -2176,6 +2177,30 @@ int main(int argc, char** argv) {
         if (!curvature_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << curvature_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.draw_mode_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> draw_mode_objects;
+        draw_mode_objects.reserve(parse_result.request.draw_mode_objects.size());
+        for (const auto& draw_mode_object : parse_result.request.draw_mode_objects) {
+            draw_mode_objects.push_back({
+                .record_index = draw_mode_object.record_index,
+                .object_name = draw_mode_object.object_name,
+                .unique_id = draw_mode_object.unique_id
+            });
+        }
+
+        const auto draw_mode_result = copperfin::vfp::set_visual_object_draw_mode({
+            .path = parse_result.request.path,
+            .objects = draw_mode_objects,
+            .draw_mode = parse_result.request.draw_mode
+        });
+
+        if (!draw_mode_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << draw_mode_result.error << "\n";
             return 4;
         }
     }

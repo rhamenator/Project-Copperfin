@@ -173,6 +173,10 @@ void test_parse_launch_arguments() {
         "#1111: launch contract should keep curvature-object off by default");
     expect(!result.request.curvature_available,
         "#1111: launch contract should keep curvature unavailable by default");
+    expect(!result.request.draw_mode_object,
+        "#1112: launch contract should keep draw-mode-object off by default");
+    expect(!result.request.draw_mode_available,
+        "#1112: launch contract should keep draw-mode unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -3067,6 +3071,101 @@ void test_parse_launch_arguments_rejects_curvature_object_ambiguity() {
     });
     expect(!stray_curvature_result.ok,
         "#1111: launch contract should reject stray curvature arguments");
+}
+
+void test_parse_launch_arguments_for_draw_mode_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--draw-mode-object",
+        "--draw-mode", "5",
+        "--draw-mode-target-object-name", "cmdSave",
+        "--draw-mode-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1112: launch contract should parse draw-mode-object requests");
+    expect(result.request.draw_mode_object,
+        "#1112: launch contract should detect --draw-mode-object");
+    expect(result.request.draw_mode_available && result.request.draw_mode == 5,
+        "#1112: draw-mode-object requests should carry draw-mode value");
+    expect(result.request.draw_mode_objects.size() == 2U,
+        "#1112: draw-mode-object requests should collect draw-mode target selectors");
+    if (result.request.draw_mode_objects.size() == 2U) {
+        expect(result.request.draw_mode_objects[0].object_name == "cmdSave" &&
+                result.request.draw_mode_objects[0].unique_id.empty(),
+            "#1112: draw-mode-object requests should parse target object-name selectors");
+        expect(result.request.draw_mode_objects[1].object_name.empty() &&
+                result.request.draw_mode_objects[1].unique_id == "two-guid",
+            "#1112: draw-mode-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_draw_mode_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-mode-object",
+        "--draw-mode-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1112: launch contract should reject draw-mode-object requests without draw-mode value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-mode-object",
+        "--draw-mode", "manual",
+        "--draw-mode-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1112: launch contract should reject non-integer draw-mode values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-mode-object",
+        "--draw-mode", "-1",
+        "--draw-mode-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1112: launch contract should reject negative draw-mode values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-mode-object",
+        "--draw-mode", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1112: launch contract should reject draw-mode-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_draw_mode_object_ambiguity() {
+    const auto draw_mode_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-mode-object",
+        "--locked-object",
+        "--draw-mode", "2",
+        "--draw-mode-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!draw_mode_locked_result.ok,
+        "#1112: launch contract should reject simultaneous draw-mode-object and locked-object requests");
+
+    const auto draw_mode_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-mode-object",
+        "--clear-property",
+        "--property-name", "DrawMode",
+        "--draw-mode", "2",
+        "--draw-mode-target-unique-id", "one-guid"
+    });
+    expect(!draw_mode_property_result.ok,
+        "#1112: launch contract should reject draw-mode-object combined with property commands");
+
+    const auto stray_draw_mode_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--draw-mode", "2"
+    });
+    expect(!stray_draw_mode_result.ok,
+        "#1112: launch contract should reject stray draw-mode arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -9108,6 +9207,9 @@ int main() {
     test_parse_launch_arguments_for_curvature_object();
     test_parse_launch_arguments_rejects_curvature_object_invalid_inputs();
     test_parse_launch_arguments_rejects_curvature_object_ambiguity();
+    test_parse_launch_arguments_for_draw_mode_object();
+    test_parse_launch_arguments_rejects_draw_mode_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_draw_mode_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

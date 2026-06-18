@@ -553,6 +553,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--draw-mode-object") {
+            result.request.draw_mode_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1216,6 +1221,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.curvature = curvature;
             result.request.curvature_available = true;
+            continue;
+        }
+
+        if (argument == "--draw-mode") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-mode."};
+            }
+            int draw_mode = 0;
+            if (!parse_int_value(args[++index], draw_mode)) {
+                return {.ok = false, .error = "The --draw-mode value must be an integer."};
+            }
+            if (draw_mode < 0) {
+                return {.ok = false, .error = "The --draw-mode value must be non-negative."};
+            }
+            result.request.draw_mode = draw_mode;
+            result.request.draw_mode_available = true;
             continue;
         }
 
@@ -2349,6 +2370,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --curvature-target-unique-id."};
             }
             result.request.curvature_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--draw-mode-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-mode-target-object-name."};
+            }
+            result.request.draw_mode_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--draw-mode-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --draw-mode-target-unique-id."};
+            }
+            result.request.draw_mode_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -4060,6 +4105,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.curvature_objects.empty())) {
         return {.ok = false, .error = "Curvature arguments can only be used with --curvature-object."};
     }
+    if (result.request.draw_mode_object && !result.request.draw_mode_available) {
+        return {.ok = false, .error = "An object draw-mode assignment requires --draw-mode."};
+    }
+    if (result.request.draw_mode_object && result.request.draw_mode_objects.empty()) {
+        return {.ok = false, .error = "An object draw-mode assignment requires at least one target selector."};
+    }
+    if (!result.request.draw_mode_object &&
+        (result.request.draw_mode_available ||
+         !result.request.draw_mode_objects.empty())) {
+        return {.ok = false, .error = "Draw-mode arguments can only be used with --draw-mode-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -4787,6 +4843,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.control_box_object ? 1 : 0) +
         (result.request.button_count_object ? 1 : 0) +
         (result.request.curvature_object ? 1 : 0) +
+        (result.request.draw_mode_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
