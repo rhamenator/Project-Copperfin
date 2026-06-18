@@ -495,6 +495,10 @@ void test_parse_launch_arguments() {
         "#1171: launch contract should keep mouse-pointer-object off by default");
     expect(!result.request.mouse_pointer_available,
         "#1171: launch contract should keep mouse pointer unavailable by default");
+    expect(!result.request.picture_margin_object,
+        "#1172: launch contract should keep picture-margin-object off by default");
+    expect(!result.request.picture_margin_available,
+        "#1172: launch contract should keep picture margin unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11427,6 +11431,101 @@ void test_parse_launch_arguments_rejects_mouse_pointer_object_ambiguity() {
         "#1171: launch contract should reject stray mouse-pointer arguments");
 }
 
+void test_parse_launch_arguments_for_picture_margin_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--picture-margin-object",
+        "--picture-margin", "2",
+        "--picture-margin-target-object-name", "frmCustomer",
+        "--picture-margin-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1172: launch contract should parse picture-margin-object requests");
+    expect(result.request.picture_margin_object,
+        "#1172: launch contract should detect --picture-margin-object");
+    expect(result.request.picture_margin_available && result.request.picture_margin == 2,
+        "#1172: picture-margin-object requests should carry picture-margin value");
+    expect(result.request.picture_margin_objects.size() == 2U,
+        "#1172: picture-margin-object requests should collect picture-margin target selectors");
+    if (result.request.picture_margin_objects.size() == 2U) {
+        expect(result.request.picture_margin_objects[0].object_name == "frmCustomer" &&
+                result.request.picture_margin_objects[0].unique_id.empty(),
+            "#1172: picture-margin-object requests should parse target object-name selectors");
+        expect(result.request.picture_margin_objects[1].object_name.empty() &&
+                result.request.picture_margin_objects[1].unique_id == "two-guid",
+            "#1172: picture-margin-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_picture_margin_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-margin-object",
+        "--picture-margin-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1172: launch contract should reject picture-margin-object requests without picture-margin value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-margin-object",
+        "--picture-margin", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1172: launch contract should reject picture-margin-object requests without target selectors");
+
+    const auto non_integer_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-margin-object",
+        "--picture-margin", "wide",
+        "--picture-margin-target-unique-id", "one-guid"
+    });
+    expect(!non_integer_result.ok,
+        "#1172: launch contract should reject non-integer picture-margin values");
+
+    const auto negative_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-margin-object",
+        "--picture-margin", "-1",
+        "--picture-margin-target-unique-id", "one-guid"
+    });
+    expect(!negative_result.ok,
+        "#1172: launch contract should reject negative picture-margin values");
+}
+
+void test_parse_launch_arguments_rejects_picture_margin_object_ambiguity() {
+    const auto picture_margin_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-margin-object",
+        "--allow-output-object",
+        "--picture-margin", "2",
+        "--picture-margin-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!picture_margin_allow_output_result.ok,
+        "#1172: launch contract should reject simultaneous picture-margin-object and allow-output-object requests");
+
+    const auto picture_margin_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-margin-object",
+        "--clear-property",
+        "--property-name", "PictureMargin",
+        "--picture-margin", "2",
+        "--picture-margin-target-unique-id", "one-guid"
+    });
+    expect(!picture_margin_property_result.ok,
+        "#1172: launch contract should reject picture-margin-object combined with property commands");
+
+    const auto stray_picture_margin_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--picture-margin", "2"
+    });
+    expect(!stray_picture_margin_result.ok,
+        "#1172: launch contract should reject stray picture-margin arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15104,6 +15203,9 @@ int main() {
     test_parse_launch_arguments_for_mouse_pointer_object();
     test_parse_launch_arguments_rejects_mouse_pointer_object_invalid_inputs();
     test_parse_launch_arguments_rejects_mouse_pointer_object_ambiguity();
+    test_parse_launch_arguments_for_picture_margin_object();
+    test_parse_launch_arguments_rejects_picture_margin_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_picture_margin_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
