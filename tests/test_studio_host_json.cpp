@@ -1114,6 +1114,24 @@ void write_synthetic_form_table_for_object_record_source_type(const std::filesys
     expect(create_result.ok, "#1129: synthetic SCX table for object record-source-type should be created");
 }
 
+void write_synthetic_form_table_for_object_record_source(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "RECORDSOURCE", .type = 'C', .length = 64U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"cmdSave", "cmdSave", "one-guid", "Save"},
+        {"cmdCancel", "cmdCancel", "two-guid", "Cancel"},
+        {"lblStatus", "lblStatus", "three-guid", "Ready"},
+        {"cmdOther", "cmdOther", "other-guid", "Other"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1130: synthetic SCX table for object record source should be created");
+}
+
 void write_synthetic_form_table_for_object_tooltip_text(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -9757,6 +9775,129 @@ void test_studio_host_json_assigns_record_source_type_by_stable_selectors(const 
     }
 }
 
+void test_studio_host_json_assigns_record_source_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_record_source_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path record_source_path = temp_root / "record_source.scx";
+    write_synthetic_form_table_for_object_record_source(record_source_path);
+    const auto record_source_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", record_source_path.string(),
+            "--record-source-object",
+            "--record-source", "customers",
+            "--record-source-target-object-name", "cmdSave",
+            "--record-source-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(record_source_process.exit_code == 0,
+        "#1130: host object record source assignment should exit successfully");
+    expect(visual_object_property(record_source_path, "one-guid", "RECORDSOURCE") == "customers" &&
+            visual_object_property(record_source_path, "two-guid", "RECORDSOURCE") == "customers" &&
+            visual_object_property(record_source_path, "three-guid", "RECORDSOURCE") == "Ready" &&
+            visual_object_property(record_source_path, "other-guid", "RECORDSOURCE") == "Other",
+        "#1130: host object record source assignment should assign selected text and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_record_source(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--record-source-object",
+            "--record-source", "customers",
+            "--record-source-target-unique-id", "one-guid",
+            "--record-source-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1130: missing-target host object record source assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "RECORDSOURCE") == "Save" &&
+            visual_object_property(missing_target_path, "two-guid", "RECORDSOURCE") == "Cancel",
+        "#1130: missing-target host object record source assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_record_source(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--record-source-object",
+            "--record-source", "customers",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1130: record-source-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "RECORDSOURCE") == "Save",
+        "#1130: record-source-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_record_source(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--record-source-object",
+            "--record-source-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1130: record-source-object without record source value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "RECORDSOURCE") == "Save",
+        "#1130: record-source-object without record source value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_record_source(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--record-source-object",
+            "--record-source", "customers",
+            "--record-source-target-unique-id", "one-guid",
+            "--record-source-target-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1130: duplicate-target host object record source assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "RECORDSOURCE") == "Save",
+        "#1130: duplicate-target host object record source assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_record_source(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--record-source-object",
+            "--caption-object",
+            "--record-source", "customers",
+            "--record-source-target-unique-id", "one-guid",
+            "--caption", "Save Customer",
+            "--caption-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1130: record-source-object plus caption-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "RECORDSOURCE") == "Save",
+        "#1130: record-source-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_tooltip_text_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -16939,6 +17080,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_highlight_row_line_width_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_partition_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_record_source_type_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_record_source_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_tooltip_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_status_bar_text_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_control_source_by_stable_selectors(argv[1]);

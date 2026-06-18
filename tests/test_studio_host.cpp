@@ -245,6 +245,8 @@ void test_parse_launch_arguments() {
         "#1129: launch contract should keep record-source-type-object off by default");
     expect(!result.request.record_source_type_available,
         "#1129: launch contract should keep record-source-type unavailable by default");
+    expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
+    expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
     expect(!result.request.tooltip_text_available, "#1043: launch contract should keep tooltip text unavailable by default");
     expect(!result.request.status_bar_text_object, "#1044: launch contract should keep status-bar-text-object off by default");
@@ -4849,6 +4851,82 @@ void test_parse_launch_arguments_rejects_record_source_type_object_ambiguity() {
     });
     expect(!stray_record_source_type_result.ok,
         "#1129: launch contract should reject stray record-source-type arguments");
+}
+
+void test_parse_launch_arguments_for_record_source_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--record-source-object",
+        "--record-source", "customers",
+        "--record-source-target-object-name", "cmdSave",
+        "--record-source-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1130: launch contract should parse record-source-object requests");
+    expect(result.request.record_source_object, "#1130: launch contract should detect --record-source-object");
+    expect(result.request.record_source_available && result.request.record_source == "customers",
+        "#1130: record-source-object requests should carry record source");
+    expect(result.request.record_source_objects.size() == 2U,
+        "#1130: record-source-object requests should collect record source target selectors");
+    if (result.request.record_source_objects.size() == 2U) {
+        expect(result.request.record_source_objects[0].object_name == "cmdSave" &&
+                result.request.record_source_objects[0].unique_id.empty(),
+            "#1130: record-source-object requests should parse target object-name selectors");
+        expect(result.request.record_source_objects[1].object_name.empty() &&
+                result.request.record_source_objects[1].unique_id == "two-guid",
+            "#1130: record-source-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_record_source_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--record-source-object",
+        "--record-source-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1130: launch contract should reject record-source-object requests without record source");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--record-source-object",
+        "--record-source", "Save"
+    });
+    expect(!missing_targets_result.ok,
+        "#1130: launch contract should reject record-source-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_record_source_object_ambiguity() {
+    const auto record_source_caption_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--record-source-object",
+        "--caption-object",
+        "--record-source", "Save",
+        "--record-source-target-unique-id", "one-guid",
+        "--caption", "Save",
+        "--caption-target-unique-id", "one-guid"
+    });
+    expect(!record_source_caption_result.ok,
+        "#1130: launch contract should reject simultaneous record-source-object and caption-object requests");
+
+    const auto record_source_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--record-source-object",
+        "--clear-property",
+        "--property-name", "ToolTipText",
+        "--record-source", "Save",
+        "--record-source-target-unique-id", "one-guid"
+    });
+    expect(!record_source_property_result.ok,
+        "#1130: launch contract should reject record-source-object combined with property commands");
+
+    const auto stray_record_source_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--record-source", "Save"
+    });
+    expect(!stray_record_source_result.ok,
+        "#1130: launch contract should reject stray record source arguments");
 }
 
 void test_parse_launch_arguments_for_tooltip_text_object() {
@@ -10944,6 +11022,9 @@ int main() {
     test_parse_launch_arguments_for_record_source_type_object();
     test_parse_launch_arguments_rejects_record_source_type_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_type_object_ambiguity();
+    test_parse_launch_arguments_for_record_source_object();
+    test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_record_source_object_ambiguity();
     test_parse_launch_arguments_for_tooltip_text_object();
     test_parse_launch_arguments_rejects_tooltip_text_object_invalid_inputs();
     test_parse_launch_arguments_rejects_tooltip_text_object_ambiguity();

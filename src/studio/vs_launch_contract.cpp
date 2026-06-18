@@ -218,6 +218,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--record-source-object") {
+            result.request.record_source_object = true;
+            continue;
+        }
+
         if (argument == "--tooltip-text-object") {
             result.request.tooltip_text_object = true;
             continue;
@@ -1053,6 +1058,15 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.drag_icon = args[++index];
             result.request.drag_icon_available = true;
+            continue;
+        }
+
+        if (argument == "--record-source") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --record-source."};
+            }
+            result.request.record_source = args[++index];
+            result.request.record_source_available = true;
             continue;
         }
 
@@ -3166,6 +3180,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--record-source-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --record-source-target-object-name."};
+            }
+            result.request.record_source_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--record-source-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --record-source-target-unique-id."};
+            }
+            result.request.record_source_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
         if (argument == "--tooltip-text-target-object-name") {
             if ((index + 1U) >= args.size()) {
                 return {.ok = false, .error = "Missing value after --tooltip-text-target-object-name."};
@@ -5068,6 +5106,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.record_source_type_objects.empty())) {
         return {.ok = false, .error = "RecordSourceType arguments can only be used with --record-source-type-object."};
     }
+    if (result.request.record_source_object && !result.request.record_source_available) {
+        return {.ok = false, .error = "An object record source assignment requires --record-source."};
+    }
+    if (result.request.record_source_object && result.request.record_source_objects.empty()) {
+        return {.ok = false, .error = "An object record source assignment requires at least one target selector."};
+    }
+    if (!result.request.record_source_object &&
+        (result.request.record_source_available ||
+         !result.request.record_source_objects.empty())) {
+        return {.ok = false, .error = "Record source arguments can only be used with --record-source-object."};
+    }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
     }
@@ -5813,6 +5862,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.highlight_row_line_width_object ? 1 : 0) +
         (result.request.partition_object ? 1 : 0) +
         (result.request.record_source_type_object ? 1 : 0) +
+        (result.request.record_source_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +
         (result.request.auto_size_object ? 1 : 0) +
