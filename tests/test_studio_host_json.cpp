@@ -2122,6 +2122,24 @@ void write_synthetic_form_table_for_object_max_height(const std::filesystem::pat
     expect(create_result.ok, "#1151: synthetic SCX table for object max height should be created");
 }
 
+void write_synthetic_form_table_for_object_max_width(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "MAXWIDTH", .type = 'N', .length = 10U, .decimal_count = 0U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"frmCustomer", "frmCustomer", "one-guid", "100"},
+        {"frmOrder", "frmOrder", "two-guid", "200"},
+        {"cntDetails", "cntDetails", "three-guid", "300"},
+        {"frmOther", "frmOther", "other-guid", "400"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1152: synthetic SCX table for object max width should be created");
+}
+
 void write_synthetic_form_table_for_object_auto_size(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -17323,6 +17341,146 @@ void test_studio_host_json_assigns_max_height_by_stable_selectors(const std::str
     }
 }
 
+void test_studio_host_json_assigns_max_width_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_max_width_object_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path max_width_path = temp_root / "max_width.scx";
+    write_synthetic_form_table_for_object_max_width(max_width_path);
+    const auto max_width_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", max_width_path.string(),
+            "--max-width-object",
+            "--max-width", "640",
+            "--max-width-target-object-name", "frmCustomer",
+            "--max-width-target-unique-id", "two-guid",
+            "--json"
+        },
+        temp_root);
+    expect(max_width_process.exit_code == 0,
+        "#1152: host object max-width assignment should exit successfully");
+    expect(visual_object_property(max_width_path, "one-guid", "MAXWIDTH") == "640" &&
+            visual_object_property(max_width_path, "two-guid", "MAXWIDTH") == "640" &&
+            visual_object_property(max_width_path, "three-guid", "MAXWIDTH") == "300" &&
+            visual_object_property(max_width_path, "other-guid", "MAXWIDTH") == "400",
+        "#1152: host object max-width assignment should assign selected numeric value and preserve unrelated objects");
+
+    const fs::path missing_target_path = temp_root / "missing_target.scx";
+    write_synthetic_form_table_for_object_max_width(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_target_path.string(),
+            "--max-width-object",
+            "--max-width", "640",
+            "--max-width-target-unique-id", "one-guid",
+            "--max-width-target-unique-id", "missing-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1152: missing-target host object max-width assignment should return command failure");
+    expect(visual_object_property(missing_target_path, "one-guid", "MAXWIDTH") == "100" &&
+            visual_object_property(missing_target_path, "two-guid", "MAXWIDTH") == "200",
+        "#1152: missing-target host object max-width assignment should not mutate the asset");
+
+    const fs::path missing_selector_path = temp_root / "missing_selector.scx";
+    write_synthetic_form_table_for_object_max_width(missing_selector_path);
+    const auto missing_selector_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_selector_path.string(),
+            "--max-width-object",
+            "--max-width", "640",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selector_process.exit_code == 2,
+        "#1152: max-width-object without target selectors should fail during launch parsing");
+    expect(visual_object_property(missing_selector_path, "one-guid", "MAXWIDTH") == "100",
+        "#1152: max-width-object without target selectors should not mutate the asset");
+
+    const fs::path missing_value_path = temp_root / "missing_value.scx";
+    write_synthetic_form_table_for_object_max_width(missing_value_path);
+    const auto missing_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", missing_value_path.string(),
+            "--max-width-object",
+            "--max-width-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_value_process.exit_code == 2,
+        "#1152: max-width-object without max-width value should fail during launch parsing");
+    expect(visual_object_property(missing_value_path, "one-guid", "MAXWIDTH") == "100",
+        "#1152: max-width-object without max-width value should not mutate the asset");
+
+    const fs::path negative_value_path = temp_root / "negative_value.scx";
+    write_synthetic_form_table_for_object_max_width(negative_value_path);
+    const auto negative_value_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", negative_value_path.string(),
+            "--max-width-object",
+            "--max-width", "-1",
+            "--max-width-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(negative_value_process.exit_code == 2,
+        "#1152: max-width-object with negative value should fail during launch parsing");
+    expect(visual_object_property(negative_value_path, "one-guid", "MAXWIDTH") == "100",
+        "#1152: max-width-object with negative value should not mutate the asset");
+
+    const fs::path duplicate_path = temp_root / "duplicate.scx";
+    write_synthetic_form_table_for_object_max_width(duplicate_path);
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", duplicate_path.string(),
+            "--max-width-object",
+            "--max-width", "640",
+            "--max-width-target-unique-id", "one-guid",
+            "--max-width-target-object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_process.exit_code == 4,
+        "#1152: duplicate-target host object max-width assignment should return command failure");
+    expect(visual_object_property(duplicate_path, "one-guid", "MAXWIDTH") == "100",
+        "#1152: duplicate-target host object max-width assignment should not mutate the asset");
+
+    const fs::path ambiguous_path = temp_root / "ambiguous.scx";
+    write_synthetic_form_table_for_object_max_width(ambiguous_path);
+    const auto ambiguous_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", ambiguous_path.string(),
+            "--max-width-object",
+            "--allow-output-object",
+            "--max-width", "640",
+            "--max-width-target-unique-id", "one-guid",
+            "--allow-output", "false",
+            "--allow-output-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_process.exit_code == 2,
+        "#1152: max-width-object plus allow-output-object requests should fail during launch parsing");
+    expect(visual_object_property(ambiguous_path, "one-guid", "MAXWIDTH") == "100",
+        "#1152: max-width-object ambiguity should not mutate the asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_assigns_auto_center_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -20266,6 +20424,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_mac_desktop_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_button_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_max_height_by_stable_selectors(argv[1]);
+    test_studio_host_json_assigns_max_width_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_center_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_size_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_auto_release_by_stable_selectors(argv[1]);

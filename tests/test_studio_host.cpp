@@ -431,6 +431,10 @@ void test_parse_launch_arguments() {
         "#1151: launch contract should keep max-height-object off by default");
     expect(!result.request.max_height_available,
         "#1151: launch contract should keep max height unavailable by default");
+    expect(!result.request.max_width_object,
+        "#1152: launch contract should keep max-width-object off by default");
+    expect(!result.request.max_width_available,
+        "#1152: launch contract should keep max width unavailable by default");
     expect(!result.request.auto_center_object,
         "#1078: launch contract should keep auto-center-object off by default");
     expect(!result.request.auto_center_available,
@@ -9791,6 +9795,101 @@ void test_parse_launch_arguments_rejects_max_height_object_ambiguity() {
         "#1151: launch contract should reject stray max-height arguments");
 }
 
+void test_parse_launch_arguments_for_max_width_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--max-width-object",
+        "--max-width", "640",
+        "--max-width-target-object-name", "frmCustomer",
+        "--max-width-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1152: launch contract should parse max-width-object requests");
+    expect(result.request.max_width_object,
+        "#1152: launch contract should detect --max-width-object");
+    expect(result.request.max_width_available && result.request.max_width == 640,
+        "#1152: max-width-object requests should carry max width value");
+    expect(result.request.max_width_objects.size() == 2U,
+        "#1152: max-width-object requests should collect max-width target selectors");
+    if (result.request.max_width_objects.size() == 2U) {
+        expect(result.request.max_width_objects[0].object_name == "frmCustomer" &&
+                result.request.max_width_objects[0].unique_id.empty(),
+            "#1152: max-width-object requests should parse target object-name selectors");
+        expect(result.request.max_width_objects[1].object_name.empty() &&
+                result.request.max_width_objects[1].unique_id == "two-guid",
+            "#1152: max-width-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_max_width_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-width-object",
+        "--max-width-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1152: launch contract should reject max-width-object requests without max width value");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-width-object",
+        "--max-width", "640"
+    });
+    expect(!missing_targets_result.ok,
+        "#1152: launch contract should reject max-width-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-width-object",
+        "--max-width", "wide",
+        "--max-width-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1152: launch contract should reject non-integer max-width values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-width-object",
+        "--max-width", "-1",
+        "--max-width-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1152: launch contract should reject negative max-width values");
+}
+
+void test_parse_launch_arguments_rejects_max_width_object_ambiguity() {
+    const auto max_width_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-width-object",
+        "--allow-output-object",
+        "--max-width", "640",
+        "--max-width-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!max_width_allow_output_result.ok,
+        "#1152: launch contract should reject simultaneous max-width-object and allow-output-object requests");
+
+    const auto max_width_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-width-object",
+        "--clear-property",
+        "--property-name", "MaxWidth",
+        "--max-width", "640",
+        "--max-width-target-unique-id", "one-guid"
+    });
+    expect(!max_width_property_result.ok,
+        "#1152: launch contract should reject max-width-object combined with property commands");
+
+    const auto stray_max_width_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--max-width", "640"
+    });
+    expect(!stray_max_width_result.ok,
+        "#1152: launch contract should reject stray max-width arguments");
+}
+
 void test_parse_launch_arguments_for_auto_center_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -13132,6 +13231,9 @@ int main() {
     test_parse_launch_arguments_for_max_height_object();
     test_parse_launch_arguments_rejects_max_height_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_height_object_ambiguity();
+    test_parse_launch_arguments_for_max_width_object();
+    test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_max_width_object_ambiguity();
     test_parse_launch_arguments_for_auto_center_object();
     test_parse_launch_arguments_rejects_auto_center_object_invalid_inputs();
     test_parse_launch_arguments_rejects_auto_center_object_ambiguity();
