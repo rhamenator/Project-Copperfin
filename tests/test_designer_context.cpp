@@ -68,6 +68,17 @@ bool all_builder_launch_plans_ok(
     return true;
 }
 
+const copperfin::studio::StudioDesignerLaunchSurfaceCatalogEntry* find_catalog_entry(
+    const std::vector<copperfin::studio::StudioDesignerLaunchSurfaceCatalogEntry>& entries,
+    copperfin::studio::StudioEditorSelectionContext context) {
+    for (const auto& entry : entries) {
+        if (entry.selection_context == context) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -454,6 +465,85 @@ int main() {
                menu_launch_surfaces.plan.toolbox_error ==
                    "The selected Studio context does not expose a toolbox palette.",
            "#1211: menu launch surfaces should preserve supported actions/builders and explicit toolbox rejection");
+
+    const auto launch_surface_catalog = copperfin::studio::plan_studio_designer_launch_surface_catalog({
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .symbol = "Click",
+        .line = 12U,
+        .column = 4U
+    });
+    expect(launch_surface_catalog.ok && launch_surface_catalog.context_count == 9U &&
+               launch_surface_catalog.context_count == launch_surface_catalog.contexts.size(),
+           "#1213: launch-surface catalog should include every supported Studio selection context");
+
+    const auto* visual_catalog = find_catalog_entry(
+        launch_surface_catalog.contexts,
+        StudioEditorSelectionContext::visual_object);
+    expect(visual_catalog != nullptr && visual_catalog->launch_surface_plan.ok &&
+               visual_catalog->editor_action_launch_plan_count >= 3U &&
+               visual_catalog->builder_launch_plan_count == 3U &&
+               visual_catalog->toolbox_available &&
+               visual_catalog->toolbox_item_count ==
+                   visual_catalog->launch_surface_plan.plan.toolbox_palette_launch_plan.plan.items.size() &&
+               visual_catalog->launch_surface_plan.plan.asset_path == "forms/customer.scx" &&
+               visual_catalog->launch_surface_plan.plan.object_name == "frmCustomer" &&
+               visual_catalog->launch_surface_plan.plan.symbol == "Click",
+           "#1213: visual-object catalog entries should summarize and preserve nested launch-surface metadata");
+
+    const auto* container_catalog = find_catalog_entry(
+        launch_surface_catalog.contexts,
+        StudioEditorSelectionContext::container_object);
+    expect(container_catalog != nullptr && container_catalog->launch_surface_plan.ok &&
+               container_catalog->builder_launch_plan_count == 2U &&
+               container_catalog->toolbox_available &&
+               container_catalog->launch_surface_plan.plan.toolbox_palette_launch_plan.plan.toolbox_context ==
+                   copperfin::studio::StudioToolboxContext::container,
+           "#1213: container catalog entries should summarize container builder and toolbox availability");
+
+    const auto* report_catalog = find_catalog_entry(
+        launch_surface_catalog.contexts,
+        StudioEditorSelectionContext::report_expression);
+    expect(report_catalog != nullptr && report_catalog->launch_surface_plan.ok &&
+               report_catalog->editor_action_launch_plan_count >= 2U &&
+               report_catalog->builder_launch_plan_count == 1U &&
+               report_catalog->toolbox_available &&
+               report_catalog->launch_surface_plan.plan.toolbox_palette_launch_plan.plan.toolbox_context ==
+                   copperfin::studio::StudioToolboxContext::report,
+           "#1213: report catalog entries should summarize report action, builder, and toolbox availability");
+
+    const auto* menu_catalog = find_catalog_entry(
+        launch_surface_catalog.contexts,
+        StudioEditorSelectionContext::menu_item);
+    expect(menu_catalog != nullptr && menu_catalog->launch_surface_plan.ok &&
+               menu_catalog->builder_launch_plan_count == 1U &&
+               !menu_catalog->toolbox_available &&
+               menu_catalog->toolbox_item_count == 0U &&
+               menu_catalog->toolbox_error ==
+                   "The selected Studio context does not expose a toolbox palette.",
+           "#1213: menu catalog entries should preserve unsupported-toolbox reasons");
+
+    const auto* project_catalog = find_catalog_entry(
+        launch_surface_catalog.contexts,
+        StudioEditorSelectionContext::project_item);
+    expect(project_catalog != nullptr && project_catalog->launch_surface_plan.ok &&
+               project_catalog->editor_action_launch_plan_count == 3U &&
+               project_catalog->builder_launch_plan_count == 1U &&
+               !project_catalog->toolbox_available &&
+               project_catalog->toolbox_item_count == 0U,
+           "#1213: project catalog entries should summarize project actions/builders without toolbox availability");
+
+    const auto* data_catalog = find_catalog_entry(
+        launch_surface_catalog.contexts,
+        StudioEditorSelectionContext::data_environment);
+    expect(data_catalog != nullptr && data_catalog->launch_surface_plan.ok &&
+               data_catalog->editor_action_launch_plan_count == 2U &&
+               data_catalog->builder_launch_plan_count == 1U &&
+               !data_catalog->toolbox_available &&
+               data_catalog->toolbox_item_count == 0U,
+           "#1213: data-environment catalog entries should summarize data-environment actions/builders without toolbox availability");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

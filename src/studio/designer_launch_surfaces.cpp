@@ -5,6 +5,24 @@
 
 namespace copperfin::studio {
 
+namespace {
+
+std::vector<StudioEditorSelectionContext> all_launch_surface_selection_contexts() {
+    return {
+        StudioEditorSelectionContext::visual_object,
+        StudioEditorSelectionContext::visual_method,
+        StudioEditorSelectionContext::container_object,
+        StudioEditorSelectionContext::class_designer,
+        StudioEditorSelectionContext::report_expression,
+        StudioEditorSelectionContext::label_expression,
+        StudioEditorSelectionContext::menu_item,
+        StudioEditorSelectionContext::project_item,
+        StudioEditorSelectionContext::data_environment
+    };
+}
+
+}  // namespace
+
 StudioDesignerLaunchSurfacePlanResult plan_studio_designer_launch_surfaces(
     const StudioDesignerLaunchSurfaceRequest& request) {
     const auto designer_context = studio_designer_context_for_selection({
@@ -72,6 +90,44 @@ StudioDesignerLaunchSurfacePlanResult plan_studio_designer_launch_surfaces(
             .builder_launch_plans = std::move(builder_launch_plans),
             .toolbox_palette_launch_plan = std::move(toolbox_palette_launch_plan)
         }
+    };
+}
+
+StudioDesignerLaunchSurfaceCatalogResult plan_studio_designer_launch_surface_catalog(
+    const StudioDesignerLaunchSurfaceCatalogRequest& request) {
+    std::vector<StudioDesignerLaunchSurfaceCatalogEntry> entries;
+    const auto contexts = all_launch_surface_selection_contexts();
+    entries.reserve(contexts.size());
+
+    for (const auto context : contexts) {
+        auto launch_surface_plan = plan_studio_designer_launch_surfaces({
+            .selection_context = context,
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .symbol = request.symbol,
+            .line = request.line,
+            .column = request.column
+        });
+        const auto& plan = launch_surface_plan.plan;
+        entries.push_back({
+            .selection_context = context,
+            .editor_action_launch_plan_count = plan.editor_action_launch_plan_count,
+            .builder_launch_plan_count = plan.builder_launch_plan_count,
+            .toolbox_available = plan.toolbox_available,
+            .toolbox_item_count = plan.toolbox_item_count,
+            .toolbox_error = plan.toolbox_error,
+            .launch_surface_plan = std::move(launch_surface_plan)
+        });
+    }
+
+    const auto context_count = entries.size();
+    return {
+        .ok = true,
+        .error = {},
+        .context_count = context_count,
+        .contexts = std::move(entries)
     };
 }
 
