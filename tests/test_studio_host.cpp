@@ -275,6 +275,10 @@ void test_parse_launch_arguments() {
         "#1089: launch contract should keep split-bar-object off by default");
     expect(!result.request.split_bar_available,
         "#1089: launch contract should keep split bar unavailable by default");
+    expect(!result.request.highlight_row_object,
+        "#1090: launch contract should keep highlight-row-object off by default");
+    expect(!result.request.highlight_row_available,
+        "#1090: launch contract should keep highlight row unavailable by default");
     expect(!result.request.ungroup_object, "#1029: launch contract should keep ungroup-object off by default");
     expect(result.request.record_index == 3U, "launch contract should parse the record index");
     expect(result.request.selection_record_available, "launch contract should mark explicit record selection");
@@ -5806,6 +5810,92 @@ void test_parse_launch_arguments_rejects_split_bar_object_ambiguity() {
         "#1089: launch contract should reject stray split-bar arguments");
 }
 
+void test_parse_launch_arguments_for_highlight_row_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--highlight-row-object",
+        "--highlight-row", "false",
+        "--highlight-row-target-object-name", "frmCustomer",
+        "--highlight-row-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1090: launch contract should parse highlight-row-object requests");
+    expect(result.request.highlight_row_object,
+        "#1090: launch contract should detect --highlight-row-object");
+    expect(result.request.highlight_row_available && !result.request.highlight_row,
+        "#1090: highlight-row-object requests should carry highlight row state");
+    expect(result.request.highlight_row_objects.size() == 2U,
+        "#1090: highlight-row-object requests should collect highlight_row target selectors");
+    if (result.request.highlight_row_objects.size() == 2U) {
+        expect(result.request.highlight_row_objects[0].object_name == "frmCustomer" &&
+                result.request.highlight_row_objects[0].unique_id.empty(),
+            "#1090: highlight-row-object requests should parse target object-name selectors");
+        expect(result.request.highlight_row_objects[1].object_name.empty() &&
+                result.request.highlight_row_objects[1].unique_id == "two-guid",
+            "#1090: highlight-row-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_highlight_row_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-object",
+        "--highlight-row-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1090: launch contract should reject highlight-row-object requests without highlight row state");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-object",
+        "--highlight-row", "false"
+    });
+    expect(!missing_targets_result.ok,
+        "#1090: launch contract should reject highlight-row-object requests without target selectors");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-object",
+        "--highlight-row", "sometimes",
+        "--highlight-row-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1090: launch contract should reject invalid highlight-row boolean values");
+}
+
+void test_parse_launch_arguments_rejects_highlight_row_object_ambiguity() {
+    const auto highlight_row_auto_size_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-object",
+        "--auto-size-object",
+        "--highlight-row", "false",
+        "--highlight-row-target-unique-id", "one-guid",
+        "--auto-size", "false",
+        "--auto-size-target-unique-id", "one-guid"
+    });
+    expect(!highlight_row_auto_size_result.ok,
+        "#1090: launch contract should reject simultaneous highlight-row-object and auto-size-object requests");
+
+    const auto highlight_row_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row-object",
+        "--clear-property",
+        "--property-name", "Dockable",
+        "--highlight-row", "false",
+        "--highlight-row-target-unique-id", "one-guid"
+    });
+    expect(!highlight_row_property_result.ok,
+        "#1090: launch contract should reject highlight-row-object combined with property commands");
+
+    const auto stray_highlight_row_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--highlight-row", "false"
+    });
+    expect(!stray_highlight_row_result.ok,
+        "#1090: launch contract should reject stray highlight-row arguments");
+}
+
 void test_parse_launch_arguments_rejects_unknown_switch() {
     const auto result = copperfin::studio::parse_launch_arguments({"--mystery"});
     expect(!result.ok, "launch contract should reject unknown switches");
@@ -7218,6 +7308,9 @@ int main() {
     test_parse_launch_arguments_for_split_bar_object();
     test_parse_launch_arguments_rejects_split_bar_object_invalid_inputs();
     test_parse_launch_arguments_rejects_split_bar_object_ambiguity();
+    test_parse_launch_arguments_for_highlight_row_object();
+    test_parse_launch_arguments_rejects_highlight_row_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_highlight_row_object_ambiguity();
     test_parse_launch_arguments_rejects_unknown_switch();
     test_parse_launch_arguments_rejects_unknown_undo_mode();
     test_parse_launch_arguments_rejects_unknown_selection_context();
