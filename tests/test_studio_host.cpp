@@ -515,6 +515,10 @@ void test_parse_launch_arguments() {
         "#1176: launch contract should keep dynamic-input-mask-object off by default");
     expect(!result.request.dynamic_input_mask_available,
         "#1176: launch contract should keep dynamic input mask unavailable by default");
+    expect(!result.request.dynamic_line_height_object,
+        "#1177: launch contract should keep dynamic-line-height-object off by default");
+    expect(!result.request.dynamic_line_height_available,
+        "#1177: launch contract should keep dynamic line height unavailable by default");
     expect(!result.request.max_width_object,
         "#1152: launch contract should keep max-width-object off by default");
     expect(!result.request.max_width_available,
@@ -11905,6 +11909,84 @@ void test_parse_launch_arguments_rejects_dynamic_input_mask_object_ambiguity() {
         "#1176: launch contract should reject stray dynamic-input-mask arguments");
 }
 
+void test_parse_launch_arguments_for_dynamic_line_height_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--dynamic-line-height-object",
+        "--dynamic-line-height", "IIF(.T., 18, 12)",
+        "--dynamic-line-height-target-object-name", "txtNotes",
+        "--dynamic-line-height-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1177: launch contract should parse dynamic-line-height-object requests");
+    expect(result.request.dynamic_line_height_object,
+        "#1177: launch contract should detect --dynamic-line-height-object");
+    expect(result.request.dynamic_line_height_available &&
+            result.request.dynamic_line_height == "IIF(.T., 18, 12)",
+        "#1177: dynamic-line-height-object requests should carry raw expression text");
+    expect(result.request.dynamic_line_height_objects.size() == 2U,
+        "#1177: dynamic-line-height-object requests should collect dynamic-line-height target selectors");
+    if (result.request.dynamic_line_height_objects.size() == 2U) {
+        expect(result.request.dynamic_line_height_objects[0].object_name == "txtNotes" &&
+                result.request.dynamic_line_height_objects[0].unique_id.empty(),
+            "#1177: dynamic-line-height-object requests should parse target object-name selectors");
+        expect(result.request.dynamic_line_height_objects[1].object_name.empty() &&
+                result.request.dynamic_line_height_objects[1].unique_id == "two-guid",
+            "#1177: dynamic-line-height-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_dynamic_line_height_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-line-height-object",
+        "--dynamic-line-height-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1177: launch contract should reject dynamic-line-height-object requests without dynamic line height");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-line-height-object",
+        "--dynamic-line-height", "IIF(.T., 18, 12)"
+    });
+    expect(!missing_targets_result.ok,
+        "#1177: launch contract should reject dynamic-line-height-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_dynamic_line_height_object_ambiguity() {
+    const auto dynamic_line_height_allow_output_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-line-height-object",
+        "--allow-output-object",
+        "--dynamic-line-height", "IIF(.T., 18, 12)",
+        "--dynamic-line-height-target-unique-id", "one-guid",
+        "--allow-output", "false",
+        "--allow-output-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_line_height_allow_output_result.ok,
+        "#1177: launch contract should reject simultaneous dynamic-line-height-object and allow-output-object requests");
+
+    const auto dynamic_line_height_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-line-height-object",
+        "--clear-property",
+        "--property-name", "DynamicLineHeight",
+        "--dynamic-line-height", "IIF(.T., 18, 12)",
+        "--dynamic-line-height-target-unique-id", "one-guid"
+    });
+    expect(!dynamic_line_height_property_result.ok,
+        "#1177: launch contract should reject dynamic-line-height-object combined with property commands");
+
+    const auto stray_dynamic_line_height_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--dynamic-line-height", "IIF(.T., 18, 12)"
+    });
+    expect(!stray_dynamic_line_height_result.ok,
+        "#1177: launch contract should reject stray dynamic-line-height arguments");
+}
+
 void test_parse_launch_arguments_for_max_width_object() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -15597,6 +15679,9 @@ int main() {
     test_parse_launch_arguments_for_dynamic_input_mask_object();
     test_parse_launch_arguments_rejects_dynamic_input_mask_object_invalid_inputs();
     test_parse_launch_arguments_rejects_dynamic_input_mask_object_ambiguity();
+    test_parse_launch_arguments_for_dynamic_line_height_object();
+    test_parse_launch_arguments_rejects_dynamic_line_height_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_dynamic_line_height_object_ambiguity();
     test_parse_launch_arguments_for_max_width_object();
     test_parse_launch_arguments_rejects_max_width_object_invalid_inputs();
     test_parse_launch_arguments_rejects_max_width_object_ambiguity();
