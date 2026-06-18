@@ -663,6 +663,11 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             continue;
         }
 
+        if (argument == "--fill-color-object") {
+            result.request.fill_color_object = true;
+            continue;
+        }
+
         if (argument == "--ungroup-object") {
             result.request.ungroup_object = true;
             continue;
@@ -1671,6 +1676,22 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
             }
             result.request.child_order = child_order;
             result.request.child_order_available = true;
+            continue;
+        }
+
+        if (argument == "--fill-color") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --fill-color."};
+            }
+            int fill_color = 0;
+            if (!parse_int_value(args[++index], fill_color)) {
+                return {.ok = false, .error = "The --fill-color value must be an integer."};
+            }
+            if (fill_color < 0) {
+                return {.ok = false, .error = "The --fill-color value must be non-negative."};
+            }
+            result.request.fill_color = fill_color;
+            result.request.fill_color_available = true;
             continue;
         }
 
@@ -3308,6 +3329,30 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
                 return {.ok = false, .error = "Missing value after --child-order-target-unique-id."};
             }
             result.request.child_order_objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = args[++index]
+            });
+            continue;
+        }
+
+        if (argument == "--fill-color-target-object-name") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --fill-color-target-object-name."};
+            }
+            result.request.fill_color_objects.push_back({
+                .record_index = 0U,
+                .object_name = args[++index],
+                .unique_id = {}
+            });
+            continue;
+        }
+
+        if (argument == "--fill-color-target-unique-id") {
+            if ((index + 1U) >= args.size()) {
+                return {.ok = false, .error = "Missing value after --fill-color-target-unique-id."};
+            }
+            result.request.fill_color_objects.push_back({
                 .record_index = 0U,
                 .object_name = {},
                 .unique_id = args[++index]
@@ -5274,6 +5319,17 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.child_order_objects.empty())) {
         return {.ok = false, .error = "ChildOrder arguments can only be used with --child-order-object."};
     }
+    if (result.request.fill_color_object && !result.request.fill_color_available) {
+        return {.ok = false, .error = "An object fill-color assignment requires --fill-color."};
+    }
+    if (result.request.fill_color_object && result.request.fill_color_objects.empty()) {
+        return {.ok = false, .error = "An object fill-color assignment requires at least one target selector."};
+    }
+    if (!result.request.fill_color_object &&
+        (result.request.fill_color_available ||
+         !result.request.fill_color_objects.empty())) {
+        return {.ok = false, .error = "FillColor arguments can only be used with --fill-color-object."};
+    }
     if (result.request.record_source_object && !result.request.record_source_available) {
         return {.ok = false, .error = "An object record source assignment requires --record-source."};
     }
@@ -6033,6 +6089,7 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
         (result.request.column_order_object ? 1 : 0) +
         (result.request.highlight_style_object ? 1 : 0) +
         (result.request.child_order_object ? 1 : 0) +
+        (result.request.fill_color_object ? 1 : 0) +
         (result.request.record_source_object ? 1 : 0) +
         (result.request.allow_output_object ? 1 : 0) +
         (result.request.auto_center_object ? 1 : 0) +

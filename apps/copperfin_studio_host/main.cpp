@@ -68,6 +68,7 @@ void print_usage() {
     std::cout << "Column-order object: --column-order-object --column-order <n> [--column-order-target-object-name <name>] [--column-order-target-unique-id <id>]\n";
     std::cout << "Highlight-style object: --highlight-style-object --highlight-style <n> [--highlight-style-target-object-name <name>] [--highlight-style-target-unique-id <id>]\n";
     std::cout << "Child-order object: --child-order-object --child-order <n> [--child-order-target-object-name <name>] [--child-order-target-unique-id <id>]\n";
+    std::cout << "Fill-color object: --fill-color-object --fill-color <n> [--fill-color-target-object-name <name>] [--fill-color-target-unique-id <id>]\n";
     std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
     std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
     std::cout << "   or: copperfin_studio_host <asset>\n";
@@ -2702,6 +2703,30 @@ int main(int argc, char** argv) {
         if (!child_order_result.ok) {
             std::cout << "status: error\n";
             std::cout << "error: " << child_order_result.error << "\n";
+            return 4;
+        }
+    }
+
+    if (parse_result.request.fill_color_object) {
+        std::vector<copperfin::vfp::VisualObjectAlignmentTarget> fill_color_objects;
+        fill_color_objects.reserve(parse_result.request.fill_color_objects.size());
+        for (const auto& fill_color_object : parse_result.request.fill_color_objects) {
+            fill_color_objects.push_back({
+                .record_index = fill_color_object.record_index,
+                .object_name = fill_color_object.object_name,
+                .unique_id = fill_color_object.unique_id
+            });
+        }
+
+        const auto fill_color_result = copperfin::vfp::set_visual_object_fill_color({
+            .path = parse_result.request.path,
+            .objects = fill_color_objects,
+            .fill_color = parse_result.request.fill_color
+        });
+
+        if (!fill_color_result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << fill_color_result.error << "\n";
             return 4;
         }
     }

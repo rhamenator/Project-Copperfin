@@ -257,6 +257,10 @@ void test_parse_launch_arguments() {
         "#1133: launch contract should keep child-order-object off by default");
     expect(!result.request.child_order_available,
         "#1133: launch contract should keep child-order unavailable by default");
+    expect(!result.request.fill_color_object,
+        "#1134: launch contract should keep fill-color-object off by default");
+    expect(!result.request.fill_color_available,
+        "#1134: launch contract should keep fill-color unavailable by default");
     expect(!result.request.record_source_object, "#1130: launch contract should keep record-source-object off by default");
     expect(!result.request.record_source_available, "#1130: launch contract should keep record source unavailable by default");
     expect(!result.request.tooltip_text_object, "#1043: launch contract should keep tooltip-text-object off by default");
@@ -5148,6 +5152,101 @@ void test_parse_launch_arguments_rejects_child_order_object_ambiguity() {
     });
     expect(!stray_child_order_result.ok,
         "#1133: launch contract should reject stray child-order arguments");
+}
+
+void test_parse_launch_arguments_for_fill_color_object() {
+    const auto result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--json",
+        "--fill-color-object",
+        "--fill-color", "9",
+        "--fill-color-target-object-name", "cmdSave",
+        "--fill-color-target-unique-id", "two-guid"
+    });
+
+    expect(result.ok, "#1134: launch contract should parse fill-color-object requests");
+    expect(result.request.fill_color_object,
+        "#1134: launch contract should detect --fill-color-object");
+    expect(result.request.fill_color_available && result.request.fill_color == 9,
+        "#1134: fill-color-object requests should carry fill-color value");
+    expect(result.request.fill_color_objects.size() == 2U,
+        "#1134: fill-color-object requests should collect fill_color target selectors");
+    if (result.request.fill_color_objects.size() == 2U) {
+        expect(result.request.fill_color_objects[0].object_name == "cmdSave" &&
+                result.request.fill_color_objects[0].unique_id.empty(),
+            "#1134: fill-color-object requests should parse target object-name selectors");
+        expect(result.request.fill_color_objects[1].object_name.empty() &&
+                result.request.fill_color_objects[1].unique_id == "two-guid",
+            "#1134: fill-color-object requests should parse target unique-id selectors");
+    }
+}
+
+void test_parse_launch_arguments_rejects_fill_color_object_invalid_inputs() {
+    const auto missing_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-color-object",
+        "--fill-color-target-unique-id", "one-guid"
+    });
+    expect(!missing_value_result.ok,
+        "#1134: launch contract should reject fill-color-object requests without fill-color value");
+
+    const auto invalid_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-color-object",
+        "--fill-color", "manual",
+        "--fill-color-target-unique-id", "one-guid"
+    });
+    expect(!invalid_value_result.ok,
+        "#1134: launch contract should reject non-integer fill-color values");
+
+    const auto negative_value_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-color-object",
+        "--fill-color", "-1",
+        "--fill-color-target-unique-id", "one-guid"
+    });
+    expect(!negative_value_result.ok,
+        "#1134: launch contract should reject negative fill-color values before mutation");
+
+    const auto missing_targets_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-color-object",
+        "--fill-color", "2"
+    });
+    expect(!missing_targets_result.ok,
+        "#1134: launch contract should reject fill-color-object requests without target selectors");
+}
+
+void test_parse_launch_arguments_rejects_fill_color_object_ambiguity() {
+    const auto fill_color_locked_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-color-object",
+        "--locked-object",
+        "--fill-color", "2",
+        "--fill-color-target-unique-id", "one-guid",
+        "--locked", "true",
+        "--locked-target-unique-id", "one-guid"
+    });
+    expect(!fill_color_locked_result.ok,
+        "#1134: launch contract should reject simultaneous fill-color-object and locked-object requests");
+
+    const auto fill_color_property_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-color-object",
+        "--clear-property",
+        "--property-name", "FillColor",
+        "--fill-color", "2",
+        "--fill-color-target-unique-id", "one-guid"
+    });
+    expect(!fill_color_property_result.ok,
+        "#1134: launch contract should reject fill-color-object combined with property commands");
+
+    const auto stray_fill_color_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--fill-color", "2"
+    });
+    expect(!stray_fill_color_result.ok,
+        "#1134: launch contract should reject stray fill-color arguments");
 }
 
 void test_parse_launch_arguments_for_record_source_object() {
@@ -11328,6 +11427,9 @@ int main() {
     test_parse_launch_arguments_for_child_order_object();
     test_parse_launch_arguments_rejects_child_order_object_invalid_inputs();
     test_parse_launch_arguments_rejects_child_order_object_ambiguity();
+    test_parse_launch_arguments_for_fill_color_object();
+    test_parse_launch_arguments_rejects_fill_color_object_invalid_inputs();
+    test_parse_launch_arguments_rejects_fill_color_object_ambiguity();
     test_parse_launch_arguments_for_record_source_object();
     test_parse_launch_arguments_rejects_record_source_object_invalid_inputs();
     test_parse_launch_arguments_rejects_record_source_object_ambiguity();
