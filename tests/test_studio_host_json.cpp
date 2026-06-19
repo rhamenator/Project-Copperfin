@@ -14241,6 +14241,12 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(const st
         "#1252: toolbox-create-batch-dispatch-plan JSON should include later toolbox item arguments");
     expect_contains(dispatch_process.stdout_text, "\"--field-value\", \"CAPTION=Dispatch Command\"",
         "#1252: toolbox-create-batch-dispatch-plan JSON should include later field-value arguments");
+    expect_contains(dispatch_process.stdout_text, "\"dispatchReadyItemIds\": [\"textbox\", \"commandbutton\"]",
+        "#1387: toolbox-create-batch-dispatch-plan JSON should summarize dispatch-ready item ids");
+    expect_contains(dispatch_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1387: toolbox-create-batch-dispatch-plan JSON should summarize empty blocked item ids");
+    expect_contains(dispatch_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1387: successful toolbox-create-batch-dispatch-plan JSON should summarize empty dispatch errors");
     expect_contains(dispatch_process.stdout_text, "\"dispatchAdmitted\": true",
         "#1252: toolbox-create-batch-dispatch-plan JSON should expose dispatch admission state");
     expect_contains(dispatch_process.stdout_text, "\"dryRun\": false",
@@ -14269,6 +14275,13 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(const st
     expect_contains(non_admitted_process.stdout_text,
         "A toolbox batch create dispatch request requires an admitted non-dry-run create operation.",
         "#1252: non-admitted toolbox-create-batch-dispatch-plan JSON should report dispatch errors");
+    expect_contains(non_admitted_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1387: non-admitted toolbox-create-batch-dispatch-plan JSON should summarize empty ready item ids");
+    expect_contains(non_admitted_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1387: non-admitted toolbox-create-batch-dispatch-plan JSON should summarize aggregate blocked state");
+    expect_contains(non_admitted_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A toolbox batch create dispatch request requires an admitted non-dry-run create operation.\"",
+        "#1387: non-admitted toolbox-create-batch-dispatch-plan JSON should summarize dispatch errors");
     expect_not_contains(non_admitted_process.stdout_text, "\"dispatchArguments\": [",
         "#1252: failed toolbox-create-batch-dispatch-plan JSON should not expose stale dispatch arguments");
     expect(visual_object_count(form_path) == before_count,
@@ -14290,6 +14303,11 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(const st
     expect_contains(invalid_plan_process.stdout_text,
         "The requested toolbox item is not available in the requested designer context.",
         "#1252: invalid toolbox-create-batch-dispatch-plan batch plans should report planning errors");
+    expect_contains(invalid_plan_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1387: invalid toolbox-create-batch-dispatch-plan JSON should summarize empty ready item ids");
+    expect_contains(invalid_plan_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"The requested toolbox item is not available in the requested designer context.\"",
+        "#1387: invalid toolbox-create-batch-dispatch-plan JSON should summarize planning errors");
     expect_not_contains(invalid_plan_process.stdout_text, "\"dispatchArguments\": [",
         "#1252: invalid toolbox-create-batch-dispatch-plan batch plans should not expose stale arguments");
 
@@ -14422,6 +14440,13 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         "#1307: selection-toolbox-create-batch-dispatch-plan JSON should include unique id args");
     expect_contains(dispatch_process.stdout_text, "\"--field-value\", \"CAPTION=Run Selection Dispatch\"",
         "#1307: selection-toolbox-create-batch-dispatch-plan JSON should include field-value args");
+    expect_contains(dispatch_process.stdout_text,
+        "\"dispatchReadyItemIds\": [\"textbox\", \"commandbutton\", \"textbox\"]",
+        "#1387: selection-toolbox-create-batch-dispatch-plan JSON should summarize dispatch-ready item ids");
+    expect_contains(dispatch_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1387: selection-toolbox-create-batch-dispatch-plan JSON should summarize empty blocked item ids");
+    expect_contains(dispatch_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1387: successful selection-toolbox-create-batch-dispatch-plan JSON should summarize empty dispatch errors");
     expect_contains(dispatch_process.stdout_text, "\"dispatchAdmitted\": true",
         "#1307: selection-toolbox-create-batch-dispatch-plan JSON should expose admission state");
     expect_contains(dispatch_process.stdout_text, "\"dryRun\": false",
@@ -14453,6 +14478,13 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
     expect_contains(non_admitted_process.stdout_text,
         "A toolbox batch create dispatch request requires an admitted non-dry-run create operation.",
         "#1307: non-admitted selection-toolbox-create-batch-dispatch-plan JSON should report dispatch errors");
+    expect_contains(non_admitted_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1387: non-admitted selection-toolbox-create-batch-dispatch-plan JSON should summarize empty ready item ids");
+    expect_contains(non_admitted_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1387: non-admitted selection-toolbox-create-batch-dispatch-plan JSON should summarize aggregate blocked state");
+    expect_contains(non_admitted_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A toolbox batch create dispatch request requires an admitted non-dry-run create operation.\"",
+        "#1387: non-admitted selection-toolbox-create-batch-dispatch-plan JSON should summarize dispatch errors");
     expect_contains(non_admitted_process.stdout_text, "\"dispatch\": null",
         "#1307: non-admitted selection-toolbox-create-batch-dispatch-plan JSON should omit stale dispatch plans");
     expect_not_contains(non_admitted_process.stdout_text, "\"dispatchArguments\": [",
@@ -14486,6 +14518,10 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should expose generated label names");
     expect_contains(report_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should dispatch resolved report contexts");
+    expect_contains(report_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"]",
+        "#1387: report selection-toolbox-create-batch-dispatch-plan JSON should summarize dispatch-ready report item ids");
+    expect_contains(report_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1387: report selection-toolbox-create-batch-dispatch-plan JSON should summarize empty dispatch errors");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should exclude form-only textboxes");
 
@@ -14509,6 +14545,11 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
     expect_contains(unavailable_process.stdout_text,
         "The requested toolbox item is not available in the requested designer context.",
         "#1307: unavailable selection-toolbox-create-batch-dispatch-plan JSON should report planner errors");
+    expect_contains(unavailable_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1387: unavailable selection-toolbox-create-batch-dispatch-plan JSON should summarize empty ready item ids");
+    expect_contains(unavailable_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"The requested toolbox item is not available in the requested designer context.\"",
+        "#1387: unavailable selection-toolbox-create-batch-dispatch-plan JSON should summarize planner errors");
     expect_not_contains(unavailable_process.stdout_text, "\"dispatchArguments\": [",
         "#1307: unavailable selection-toolbox-create-batch-dispatch-plan JSON should omit stale dispatch args");
 
