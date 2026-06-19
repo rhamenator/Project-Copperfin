@@ -285,6 +285,16 @@ void write_synthetic_form_table_for_visual_object_list(const std::filesystem::pa
             "CommandButton",
             "Caption = \"Fallback\"\r\n",
             ""
+        },
+        {
+            "lblNested",
+            "nestedLabel",
+            "nested-guid",
+            "cmdSave",
+            "label",
+            "Label",
+            "Caption = \"Nested\"\r\n",
+            ""
         }
     };
 
@@ -8211,7 +8221,7 @@ void test_studio_host_json_exposes_visual_object_list(const std::string& studio_
         "#1418: visual object list JSON should exit successfully for readable assets");
     expect_contains(list_process.stdout_text, "\"visualObjectList\": {",
         "#1418: visual object list JSON should expose a list object");
-    expect_contains(list_process.stdout_text, "\"objectCount\": 3",
+    expect_contains(list_process.stdout_text, "\"objectCount\": 4",
         "#1418: visual object list JSON should expose object counts");
     expect_contains(list_process.stdout_text, "\"dryRun\": true",
         "#1418: visual object list JSON should remain dry-run");
@@ -8387,13 +8397,13 @@ void test_studio_host_json_exposes_visual_object_children(const std::string& stu
         {
             "--visual-object-children",
             "--path", form_path.string(),
-            "--object-name", "cmdSave",
+            "--unique-id", "fallback-guid",
             "--json"
         },
         temp_root);
     expect(leaf_process.exit_code == 0,
         "#1419: visual object children JSON should succeed for childless selected objects");
-    expect_contains(leaf_process.stdout_text, "\"parentRecordIndex\": 1",
+    expect_contains(leaf_process.stdout_text, "\"parentRecordIndex\": 2",
         "#1419: childless visual object children JSON should expose selected parent record");
     expect_contains(leaf_process.stdout_text, "\"childCount\": 0",
         "#1419: childless visual object children JSON should report zero children");
@@ -8448,6 +8458,129 @@ void test_studio_host_json_exposes_visual_object_children(const std::string& stu
     const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
     expect_contains(usage_process.stdout_text, "--visual-object-children --path <asset>",
         "#1419: usage text should expose visual object children commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_visual_object_descendants(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_descendants_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "descendants.scx";
+    write_synthetic_form_table_for_visual_object_list(form_path);
+
+    const auto descendants_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-descendants",
+            "--path", form_path.string(),
+            "--unique-id", "page-guid",
+            "--json"
+        },
+        temp_root);
+    expect(descendants_process.exit_code == 0,
+        "#1420: visual object descendants JSON should exit successfully for selected parents");
+    expect_contains(descendants_process.stdout_text, "\"visualObjectDescendants\": {",
+        "#1420: visual object descendants JSON should expose a descendants object");
+    expect_contains(descendants_process.stdout_text, "\"parentRecordIndex\": 0",
+        "#1420: visual object descendants JSON should expose parent record indexes");
+    expect_contains(descendants_process.stdout_text, "\"parentName\": \"Page1\"",
+        "#1420: visual object descendants JSON should expose parent names");
+    expect_contains(descendants_process.stdout_text, "\"descendantCount\": 3",
+        "#1420: visual object descendants JSON should expose descendant counts");
+    expect_contains(descendants_process.stdout_text, "\"dryRun\": true",
+        "#1420: visual object descendants JSON should remain dry-run");
+    expect_contains(descendants_process.stdout_text, "\"mutatesAsset\": false",
+        "#1420: visual object descendants JSON should remain non-mutating");
+    expect_contains(descendants_process.stdout_text, "\"depth\": 1",
+        "#1420: visual object descendants JSON should expose immediate child depths");
+    expect_contains(descendants_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1420: visual object descendants JSON should include immediate children");
+    expect_contains(descendants_process.stdout_text, "\"objectName\": \"fallbackButton\"",
+        "#1420: visual object descendants JSON should include deleted fallback children");
+    expect_contains(descendants_process.stdout_text, "\"deleted\": true",
+        "#1420: visual object descendants JSON should preserve deleted descendant state");
+    expect_contains(descendants_process.stdout_text, "\"depth\": 2",
+        "#1420: visual object descendants JSON should expose nested descendant depths");
+    expect_contains(descendants_process.stdout_text, "\"objectName\": \"lblNested\"",
+        "#1420: visual object descendants JSON should include nested descendants");
+    expect_contains(descendants_process.stdout_text, "\"ancestorRecordIndexes\": [0, 1]",
+        "#1420: nested visual object descendants JSON should expose ancestor chains");
+    expect_contains(descendants_process.stdout_text, "\"objectPath\": \"Page1.cmdSave.lblNested\"",
+        "#1420: nested visual object descendants JSON should expose hierarchical paths");
+
+    const auto empty_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-descendants",
+            "--path", form_path.string(),
+            "--unique-id", "fallback-guid",
+            "--json"
+        },
+        temp_root);
+    expect(empty_process.exit_code == 0,
+        "#1420: visual object descendants JSON should succeed for objects without descendants");
+    expect_contains(empty_process.stdout_text, "\"parentRecordIndex\": 2",
+        "#1420: empty visual object descendants JSON should expose selected parent record");
+    expect_contains(empty_process.stdout_text, "\"descendantCount\": 0",
+        "#1420: empty visual object descendants JSON should report zero descendants");
+    expect_contains(empty_process.stdout_text, "\"descendants\": [\n    ]",
+        "#1420: empty visual object descendants JSON should expose an empty descendants array");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-descendants",
+            "--unique-id", "page-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1420: visual object descendants JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectDescendants\": null",
+        "#1420: missing-path visual object descendants JSON should not expose a descendants object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1420: missing-path visual object descendants JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-descendants",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1420: visual object descendants JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1420: invalid-record visual object descendants JSON should report parser errors");
+
+    const auto missing_parent_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-descendants",
+            "--path", form_path.string(),
+            "--object-name", "missingParent",
+            "--json"
+        },
+        temp_root);
+    expect(missing_parent_process.exit_code == 4,
+        "#1420: visual object descendants JSON should reject unresolved parents");
+    expect_contains(missing_parent_process.stdout_text, "\"visualObjectDescendants\": null",
+        "#1420: unresolved visual object descendants JSON should not expose a descendants object");
+    expect_contains(missing_parent_process.stdout_text, "No visual object with the requested name was found.",
+        "#1420: unresolved visual object descendants JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-descendants --path <asset>",
+        "#1420: usage text should expose visual object descendants commands");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -40557,6 +40690,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_property_list(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);
+    test_studio_host_json_exposes_visual_object_descendants(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
