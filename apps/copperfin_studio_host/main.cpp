@@ -45,6 +45,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-object-descendants --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-ancestors --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-duplicate-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-object-duplicate-subtree --path <asset> (--record <n>|--object-name <name>|--unique-id <id>) --replacement-source-unique-id <id> --new-object-name <name> --new-name <name> --new-unique-id <id> ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-rename-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-reorder-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) --placement <front|back|before|after> [--target-object-name <name>] [--target-unique-id <id>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-reparent-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] ... [--json]\n";
@@ -1018,6 +1019,16 @@ struct VisualObjectDuplicateBatchParseResult {
     bool path_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectDuplicateBatchRequest request;
+};
+
+struct VisualObjectDuplicateSubtreeParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    bool root_selector_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectSubtreeDuplicateRequest request;
 };
 
 struct VisualObjectRenameBatchParseResult {
@@ -5713,6 +5724,96 @@ VisualObjectDuplicateBatchParseResult parse_visual_object_duplicate_batch_argume
     }
     if (result.ok && result.request.objects.empty()) {
         fail("No visual object duplicates were provided.");
+    }
+    return result;
+}
+
+VisualObjectDuplicateSubtreeParseResult parse_visual_object_duplicate_subtree_arguments(
+    const std::vector<std::string>& args) {
+    VisualObjectDuplicateSubtreeParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-object-duplicate-subtree") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    auto current_replacement = [&]() -> copperfin::vfp::VisualObjectSubtreeDuplicateReplacement* {
+        if (result.request.replacements.empty()) {
+            fail("Subtree duplicate replacement options require a preceding replacement source unique id.");
+            return nullptr;
+        }
+        return &result.request.replacements.back();
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-object-duplicate-subtree") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+            result.root_selector_provided = true;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+            result.root_selector_provided = !result.request.object_name.empty();
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+            result.root_selector_provided = !result.request.unique_id.empty();
+        } else if (argument == "--replacement-source-unique-id") {
+            result.request.replacements.push_back({
+                .source_unique_id = require_value(argument),
+                .new_object_name = {},
+                .new_name = {},
+                .new_unique_id = {}
+            });
+        } else if (argument == "--new-object-name") {
+            if (auto* replacement = current_replacement()) {
+                replacement->new_object_name = require_value(argument);
+            }
+        } else if (argument == "--new-name") {
+            if (auto* replacement = current_replacement()) {
+                replacement->new_name = require_value(argument);
+            }
+        } else if (argument == "--new-unique-id") {
+            if (auto* replacement = current_replacement()) {
+                replacement->new_unique_id = require_value(argument);
+            }
+        } else {
+            fail("Unknown visual-object-duplicate-subtree option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && !result.root_selector_provided) {
+        fail("No root object selector was provided.");
+    }
+    if (result.ok && result.request.replacements.empty()) {
+        fail("No subtree replacement identities were provided.");
     }
     return result;
 }
@@ -14638,6 +14739,47 @@ void print_json_visual_method_update_result(
     std::cout << "}\n";
 }
 
+void print_json_visual_object_subtree_duplicate_result(
+    const copperfin::vfp::VisualObjectSubtreeDuplicateResult& result,
+    const copperfin::vfp::VisualAssetUndoStatus& undo_status) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"visualObjectDuplicateSubtree\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"rootRecordIndex\": " << result.root_record_index << ",\n";
+    std::cout << "    \"copiedCount\": " << result.copied_count << ",\n";
+    std::cout << "    \"affectedObjectCount\": " << result.copied_count << ",\n";
+    std::cout << "    \"rootObjectName\": ";
+    print_json_string(result.root_object_name);
+    std::cout << ",\n";
+    std::cout << "    \"rootUniqueId\": ";
+    print_json_string(result.root_unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"rootParentName\": ";
+    print_json_string(result.root_parent_name);
+    std::cout << ",\n";
+    std::cout << "    \"dryRun\": false,\n";
+    std::cout << "    \"mutatesAsset\": true,\n";
+    std::cout << "    \"undoAvailable\": " << (undo_status.available ? "true" : "false") << ",\n";
+    std::cout << "    \"undoLabel\": ";
+    print_json_string(undo_status.label);
+    std::cout << "\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_json_visual_property_filter_result(
     const copperfin::vfp::VisualObjectPropertyListFilterResult& result) {
     std::cout << "{\n";
@@ -22104,6 +22246,48 @@ int main(int argc, char** argv) {
             print_json_visual_method_update_result(result, undo_status, "visualObjectDuplicateBatch");
         } else {
             print_text_visual_method_update_result(result, undo_status);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_object_duplicate_subtree_parse = parse_visual_object_duplicate_subtree_arguments(args);
+    if (visual_object_duplicate_subtree_parse.requested) {
+        if (!visual_object_duplicate_subtree_parse.ok) {
+            const auto result = copperfin::vfp::VisualObjectSubtreeDuplicateResult{
+                .ok = false,
+                .error = visual_object_duplicate_subtree_parse.error,
+                .root_record_index = 0U,
+                .copied_count = 0U,
+                .root_object_name = {},
+                .root_unique_id = {},
+                .root_parent_name = {}
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_object_duplicate_subtree_parse.output_json) {
+                print_json_visual_object_subtree_duplicate_result(result, undo_status);
+            } else {
+                std::cout << "status: error\n";
+                std::cout << "error: " << result.error << "\n";
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::duplicate_visual_object_subtree(
+            visual_object_duplicate_subtree_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_object_duplicate_subtree_parse.request.path);
+        if (visual_object_duplicate_subtree_parse.output_json) {
+            print_json_visual_object_subtree_duplicate_result(result, undo_status);
+        } else if (!result.ok) {
+            std::cout << "status: error\n";
+            std::cout << "error: " << result.error << "\n";
+        } else {
+            std::cout << "status: ok\n";
+            std::cout << "copied-count: " << result.copied_count << "\n";
+            std::cout << "root-record-index: " << result.root_record_index << "\n";
+            std::cout << "root-object-name: " << result.root_object_name << "\n";
+            std::cout << "root-unique-id: " << result.root_unique_id << "\n";
         }
         return result.ok ? 0 : 4;
     }
