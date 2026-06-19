@@ -468,11 +468,11 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
     });
 }
 
-void increment_object_kind_count(std::vector<StudioReportObjectKindCount>& counts, const std::string& kind) {
+void increment_kind_count(std::vector<StudioReportKindCount>& counts, const std::string& kind) {
     const auto existing = std::find_if(
         counts.begin(),
         counts.end(),
-        [&](const StudioReportObjectKindCount& count) {
+        [&](const StudioReportKindCount& count) {
             return count.kind == kind;
         });
     if (existing != counts.end()) {
@@ -482,7 +482,7 @@ void increment_object_kind_count(std::vector<StudioReportObjectKindCount>& count
     counts.push_back({.kind = kind, .count = 1U});
 }
 
-void sort_object_kind_counts(std::vector<StudioReportObjectKindCount>& counts) {
+void sort_kind_counts(std::vector<StudioReportKindCount>& counts) {
     std::sort(counts.begin(), counts.end(), [](const auto& left, const auto& right) {
         return left.kind < right.kind;
     });
@@ -491,20 +491,32 @@ void sort_object_kind_counts(std::vector<StudioReportObjectKindCount>& counts) {
 void finalize_object_kind_counts(StudioReportLayoutSnapshot& snapshot) {
     for (const auto& section : snapshot.sections) {
         for (const auto& object : section.objects) {
-            increment_object_kind_count(snapshot.object_kind_counts, object.object_kind);
+            increment_kind_count(snapshot.object_kind_counts, object.object_kind);
         }
     }
     for (const auto& object : snapshot.unplaced_objects) {
-        increment_object_kind_count(snapshot.object_kind_counts, object.object_kind);
-        increment_object_kind_count(snapshot.unplaced_object_kind_counts, object.object_kind);
+        increment_kind_count(snapshot.object_kind_counts, object.object_kind);
+        increment_kind_count(snapshot.unplaced_object_kind_counts, object.object_kind);
     }
     for (const auto& object : snapshot.deleted_objects) {
-        increment_object_kind_count(snapshot.deleted_object_kind_counts, object.object_kind);
+        increment_kind_count(snapshot.deleted_object_kind_counts, object.object_kind);
     }
 
-    sort_object_kind_counts(snapshot.object_kind_counts);
-    sort_object_kind_counts(snapshot.unplaced_object_kind_counts);
-    sort_object_kind_counts(snapshot.deleted_object_kind_counts);
+    sort_kind_counts(snapshot.object_kind_counts);
+    sort_kind_counts(snapshot.unplaced_object_kind_counts);
+    sort_kind_counts(snapshot.deleted_object_kind_counts);
+}
+
+void finalize_section_kind_counts(StudioReportLayoutSnapshot& snapshot) {
+    for (const auto& section : snapshot.sections) {
+        increment_kind_count(snapshot.section_kind_counts, section.band_kind);
+    }
+    for (const auto& section : snapshot.deleted_sections) {
+        increment_kind_count(snapshot.deleted_section_kind_counts, section.band_kind);
+    }
+
+    sort_kind_counts(snapshot.section_kind_counts);
+    sort_kind_counts(snapshot.deleted_section_kind_counts);
 }
 
 StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
@@ -653,6 +665,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
     finalize_preview_bounds(snapshot);
     finalize_page_setup_summary(snapshot);
     finalize_object_kind_counts(snapshot);
+    finalize_section_kind_counts(snapshot);
 
     return snapshot;
 }

@@ -3816,6 +3816,12 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1519: report layout JSON should expose deleted object-kind count summaries");
     expect_contains(process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
                     "#1519: report layout JSON should count deleted label objects");
+    expect_contains(process.stdout_text, "\"sectionKindCount\": 2",
+                    "#1520: report layout JSON should summarize live section band-kind buckets");
+    expect_contains(process.stdout_text, "\"sectionKindCounts\": [\n        {\"kind\": \"detail\", \"count\": 1},\n        {\"kind\": \"page_header\", \"count\": 1}\n      ]",
+                    "#1520: report layout JSON should count live detail and page-header sections");
+    expect_contains(process.stdout_text, "\"deletedSectionKindCount\": 0",
+                    "#1520: report layout JSON should not fabricate deleted section band-kind buckets");
     expect_contains(process.stdout_text, "\"settingCount\": 6",
                     "#1452: report layout JSON should summarize live setting counts");
     expect_contains(process.stdout_text, "\"deletedObjectCount\": 1",
@@ -4045,6 +4051,12 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1519: label layout JSON should summarize deleted object-kind count buckets");
     expect_contains(summary_process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
                     "#1519: label layout JSON should count deleted label objects");
+    expect_contains(summary_process.stdout_text, "\"sectionKindCount\": 2",
+                    "#1520: label layout JSON should summarize live section band-kind buckets");
+    expect_contains(summary_process.stdout_text, "\"sectionKindCounts\": [\n        {\"kind\": \"detail\", \"count\": 1},\n        {\"kind\": \"page_header\", \"count\": 1}\n      ]",
+                    "#1520: label layout JSON should count live detail and page-header sections");
+    expect_contains(summary_process.stdout_text, "\"deletedSectionKindCount\": 0",
+                    "#1520: label layout JSON should not fabricate deleted section band-kind buckets");
     expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
                     "#1517: label layout JSON should expose page setup summary availability");
     expect_contains(summary_process.stdout_text, "\"orientationCode\": 0",
@@ -4411,6 +4423,12 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
                     "#1478: deleted selected report section JSON should not expose live sections");
     expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
                     "#1478: deleted selected report section JSON should expose deleted section counts");
+    expect_contains(deleted_section_process.stdout_text, "\"sectionKindCount\": 0",
+                    "#1520: deleted selected report section JSON should not fabricate live section band-kind buckets");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionKindCount\": 1",
+                    "#1520: deleted selected report section JSON should summarize deleted section band-kind buckets");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionKindCounts\": [\n        {\"kind\": \"detail\", \"count\": 1}\n      ]",
+                    "#1520: deleted selected report section JSON should count deleted detail sections");
     expect_contains_in_order(
         deleted_section_process.stdout_text,
         {
