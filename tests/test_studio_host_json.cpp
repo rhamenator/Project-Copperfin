@@ -13021,6 +13021,13 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(
         "#1258: toolbox-create-batch-plan-catalog JSON should expose dry-run state");
     expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
         "#1258: toolbox-create-batch-plan-catalog JSON should remain non-mutating");
+    expect_contains(catalog_process.stdout_text,
+        "\"planReadyItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1378: toolbox-create-batch-plan-catalog JSON should summarize plan-ready form items");
+    expect_contains(catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1378: toolbox-create-batch-plan-catalog JSON should summarize empty blocked item ids");
+    expect_contains(catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1378: toolbox-create-batch-plan-catalog JSON should summarize empty blocked plan errors");
     expect(visual_object_count(form_path) == before_count,
         "#1258: toolbox-create-batch-plan-catalog host command should not mutate the visual asset");
 
@@ -13040,6 +13047,12 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(
         "#1258: report toolbox-create-batch-plan-catalog JSON should expose report contexts");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1258: report toolbox-create-batch-plan-catalog JSON should include label plans");
+    expect_contains(report_catalog_process.stdout_text, "\"planReadyItemIds\": [\"label\"",
+        "#1378: report toolbox-create-batch-plan-catalog JSON should summarize plan-ready report items");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1378: report toolbox-create-batch-plan-catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1378: report toolbox-create-batch-plan-catalog JSON should summarize empty blocked plan errors");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1258: report toolbox-create-batch-plan-catalog JSON should exclude form-only textbox plans");
 
