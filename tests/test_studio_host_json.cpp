@@ -5337,6 +5337,65 @@ void test_studio_host_json_renames_report_layout_object_identity_by_stable_selec
     }
 }
 
+void test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_layout_rename_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_reorder_json(label_path);
+    const std::size_t before_count = visual_object_count(label_path);
+
+    const auto rename_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--rename-object",
+            "--unique-id", "right-field-guid",
+            "--new-unique-id", "renamed-right-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (rename_process.exit_code != 0) {
+        std::cerr << "studio host label object rename stdout:\n" << rename_process.stdout_text << "\n";
+        std::cerr << "studio host label object rename stderr:\n" << rename_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(rename_process.exit_code == 0,
+           "#1491: label layout object rename should exit successfully");
+    expect(visual_object_count(label_path) == before_count,
+           "#1491: label layout object rename should preserve LBX object count");
+    expect(!visual_object_exists(label_path, "right-field-guid"),
+           "#1491: label layout object rename should remove the old unique id");
+    expect(visual_object_exists(label_path, "renamed-right-guid"),
+           "#1491: label layout object rename should persist replacement unique ids");
+    expect(visual_object_order(label_path) == "left-field-guid,middle-field-guid,renamed-right-guid",
+           "#1491: label layout object rename should preserve physical LBX object order");
+    expect_contains(rename_process.stdout_text, "\"isLabel\": true",
+                    "#1491: renamed label layout JSON should retain label identity");
+    expect_contains_in_order(
+        rename_process.stdout_text,
+        {
+            "\"recordIndex\": 4",
+            "\"containingSectionId\": \"detail_1\"",
+            "\"sectionObjectIndex\": 2",
+            "\"sectionObjectCount\": 3",
+            "\"expression\": \"right.value\""
+        },
+        "#1491: label layout JSON should keep the renamed object in refreshed section membership");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_report_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -49278,6 +49337,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
+    test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
