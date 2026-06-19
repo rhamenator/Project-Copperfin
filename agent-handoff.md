@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1272`, routing builder/wizard dispatch catalog planning through the shared invocation-admission catalog seam. `#1271` is the immediately preceding host JSON admission-catalog slice. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1273`, adding selection-context builder/wizard invocation-admission catalog planning. `#1272` is the immediately preceding dispatch-catalog seam refactor. Both remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 

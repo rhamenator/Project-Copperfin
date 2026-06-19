@@ -1,3 +1,4 @@
+1273	OPEN	E2/#23 slice: Add selection-context builder invocation admission catalog planning		2026-06-19T00:19:21Z
 1272	OPEN	E2/#23 slice: Route builder dispatch catalogs through admission catalog planning		2026-06-19T00:16:06Z
 1271	OPEN	E2/#23 slice: Expose builder invocation admission catalog through host JSON		2026-06-19T00:10:47Z
 1270	OPEN	E2/#23 slice: Add builder invocation admission catalog planning		2026-06-19T00:07:34Z
