@@ -4691,6 +4691,64 @@ void test_studio_host_json_restores_report_sections_by_record_selection(const st
     }
 }
 
+void test_studio_host_json_deletes_report_settings_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_settings_delete_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto delete_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--delete-object",
+            "--record", "0",
+            "--json"
+        },
+        temp_root);
+
+    if (delete_process.exit_code != 0) {
+        std::cerr << "studio host report settings delete stdout:\n" << delete_process.stdout_text << "\n";
+        std::cerr << "studio host report settings delete stderr:\n" << delete_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(delete_process.exit_code == 0,
+           "#1475: report settings delete should exit successfully");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#1475: report settings delete should mark the FRX settings record deleted");
+    expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
+                    "#1475: deleted report settings JSON should remove settings from live counts");
+    expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 3",
+                    "#1475: deleted report settings JSON should expose deleted setting counts");
+    expect_contains_in_order(
+        delete_process.stdout_text,
+        {
+            "\"deletedSettings\": [",
+            "\"name\": \"ORIENTATION\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"TOPMARGIN\"",
+            "\"recordIndex\": 0"
+        },
+        "#1475: report layout JSON should move root settings into deleted-setting metadata");
+    expect_contains(delete_process.stdout_text, "\"sectionCount\": 2",
+                    "#1475: deleting report settings should preserve live section metadata");
+    expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1475: deleting report settings should preserve deleted object metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -48349,6 +48407,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
+    test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
