@@ -9011,6 +9011,258 @@ void test_studio_host_json_renames_visual_methods(const std::string& studio_host
     }
 }
 
+void test_studio_host_json_copies_visual_methods(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_method_copy_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "method-copy.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\nFUNCTION CanSave\r\nRETURN .T.\r\nENDFUNC"
+        },
+        {
+            "cmdCancel",
+            "cancelButton",
+            "cancel-guid",
+            "PROCEDURE Cancel\r\nTHISFORM.Cancel()\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1427: synthetic SCX table for visual method copy should be created");
+
+    const auto copy_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "save-guid",
+            "--method-name", "Click",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "CopiedClick",
+            "--json"
+        },
+        temp_root);
+    expect(copy_process.exit_code == 0,
+        "#1427: visual method copy JSON should exit successfully for existing methods");
+    expect_contains(copy_process.stdout_text, "\"visualMethodCopy\": {",
+        "#1427: visual method copy JSON should expose a copy object");
+    expect_contains(copy_process.stdout_text, "\"affectedObjectCount\": 1",
+        "#1427: visual method copy JSON should expose affected object counts");
+    expect_contains(copy_process.stdout_text, "\"dryRun\": false",
+        "#1427: visual method copy JSON should expose committed execution state");
+    expect_contains(copy_process.stdout_text, "\"mutatesAsset\": true",
+        "#1427: visual method copy JSON should expose mutation state");
+    expect_contains(copy_process.stdout_text, "\"undoAvailable\": true",
+        "#1427: visual method copy JSON should expose undo availability");
+    auto copied_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "cancel-guid",
+        .method_name = "CopiedClick"
+    });
+    expect(copied_method.ok && copied_method.exists &&
+            copied_method.method.kind == "procedure" &&
+            copied_method.method.source_text == "THISFORM.Save()",
+        "#1427: visual method copy host command should copy source method bodies to target objects");
+    auto source_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "Click"
+    });
+    expect(source_method.ok && source_method.exists &&
+            source_method.method.source_text == "THISFORM.Save()",
+        "#1427: visual method copy host command should preserve source methods");
+
+    const auto default_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "save-guid",
+            "--method-name", "CanSave",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(default_name_process.exit_code == 0,
+        "#1427: visual method copy JSON should allow target method names to default from the source");
+    auto default_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "cancel-guid",
+        .method_name = "CanSave"
+    });
+    expect(default_method.ok && default_method.exists &&
+            default_method.method.kind == "function" &&
+            default_method.method.source_text == "RETURN .T.",
+        "#1427: visual method copy host command should default target method names from source names");
+
+    const auto collision_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "save-guid",
+            "--method-name", "Click",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "Cancel",
+            "--json"
+        },
+        temp_root);
+    expect(collision_process.exit_code == 4,
+        "#1427: visual method copy JSON should reject target method collisions by default");
+    expect_contains(collision_process.stdout_text, "\"visualMethodCopy\": null",
+        "#1427: target-collision visual method copy JSON should not expose a copy object");
+    expect_contains(collision_process.stdout_text, "The target object already has a method with the requested name.",
+        "#1427: target-collision visual method copy JSON should report editor errors");
+    auto cancel_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "cancel-guid",
+        .method_name = "Cancel"
+    });
+    expect(cancel_method.ok && cancel_method.exists &&
+            cancel_method.method.source_text == "THISFORM.Cancel()",
+        "#1427: failed visual method copy commands should not mutate target methods");
+
+    const auto replace_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "save-guid",
+            "--method-name", "Click",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "Cancel",
+            "--replace-existing", "true",
+            "--json"
+        },
+        temp_root);
+    expect(replace_process.exit_code == 0,
+        "#1427: visual method copy JSON should allow explicit target replacement");
+    cancel_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "cancel-guid",
+        .method_name = "Cancel"
+    });
+    expect(cancel_method.ok && cancel_method.exists &&
+            cancel_method.method.source_text == "THISFORM.Save()",
+        "#1427: visual method copy host command should replace existing targets when requested");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--source-unique-id", "save-guid",
+            "--method-name", "Click",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1427: visual method copy JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualMethodCopy\": null",
+        "#1427: missing-path visual method copy JSON should not expose a copy object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1427: missing-path visual method copy JSON should report parser errors");
+
+    const auto missing_method_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_method_name_process.exit_code == 2,
+        "#1427: visual method copy JSON should reject missing method names");
+    expect_contains(missing_method_name_process.stdout_text, "No method name was provided.",
+        "#1427: missing method-name visual method copy JSON should report parser errors");
+
+    const auto invalid_source_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-record", "-1",
+            "--method-name", "Click",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_source_record_process.exit_code == 2,
+        "#1427: visual method copy JSON should reject invalid source record values");
+    expect_contains(invalid_source_record_process.stdout_text,
+        "The --source-record value must be a non-negative integer.",
+        "#1427: invalid-source-record visual method copy JSON should report parser errors");
+
+    const auto invalid_replace_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "save-guid",
+            "--method-name", "Click",
+            "--target-unique-id", "cancel-guid",
+            "--replace-existing", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_replace_process.exit_code == 2,
+        "#1427: visual method copy JSON should reject invalid replace-existing values");
+    expect_contains(invalid_replace_process.stdout_text,
+        "The --replace-existing value must be true or false.",
+        "#1427: invalid replace-existing visual method copy JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", form_path.string(),
+            "--source-object-name", "missingObject",
+            "--method-name", "Click",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1427: visual method copy JSON should reject unresolved source objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualMethodCopy\": null",
+        "#1427: unresolved visual method copy JSON should not expose a copy object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1427: unresolved visual method copy JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-method-copy --path <asset>",
+        "#1427: usage text should expose visual method copy commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_object_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -41627,6 +41879,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_visual_methods(argv[1]);
     test_studio_host_json_deletes_visual_methods(argv[1]);
     test_studio_host_json_renames_visual_methods(argv[1]);
+    test_studio_host_json_copies_visual_methods(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);
     test_studio_host_json_exposes_visual_object_descendants(argv[1]);

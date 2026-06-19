@@ -49,6 +49,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-method-update --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --method-kind <procedure|function> --method-source <text> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-delete --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-rename --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --new-method-name <name> [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-method-copy --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-filter --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--property-filter-text <text>] [--json]\n";
@@ -922,6 +923,16 @@ struct VisualMethodRenameParseResult {
     bool new_method_name_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectMethodRenameRequest request;
+};
+
+struct VisualMethodCopyParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    bool method_name_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectMethodCopyRequest request;
 };
 
 struct ToolboxInvocationAdmissionParseResult {
@@ -4665,6 +4676,87 @@ VisualMethodRenameParseResult parse_visual_method_rename_arguments(const std::ve
     }
     if (result.ok && !result.new_method_name_provided) {
         fail("No target method name was provided.");
+    }
+    return result;
+}
+
+VisualMethodCopyParseResult parse_visual_method_copy_arguments(const std::vector<std::string>& args) {
+    VisualMethodCopyParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-method-copy") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-method-copy") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--source-record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --source-record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.source_record_index = record_index;
+        } else if (argument == "--source-object-name") {
+            result.request.source_object_name = require_value(argument);
+        } else if (argument == "--source-unique-id") {
+            result.request.source_unique_id = require_value(argument);
+        } else if (argument == "--method-name") {
+            result.request.source_method_name = require_value(argument);
+            result.method_name_provided = !result.request.source_method_name.empty();
+        } else if (argument == "--target-record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --target-record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.target_record_index = record_index;
+        } else if (argument == "--target-object-name") {
+            result.request.target_object_name = require_value(argument);
+        } else if (argument == "--target-unique-id") {
+            result.request.target_unique_id = require_value(argument);
+        } else if (argument == "--target-method-name") {
+            result.request.target_method_name = require_value(argument);
+        } else if (argument == "--replace-existing") {
+            const std::string token = require_value(argument);
+            bool replace_existing = false;
+            if (!parse_bool_token(token, replace_existing)) {
+                fail("The --replace-existing value must be true or false.");
+                continue;
+            }
+            result.request.replace_existing = replace_existing;
+        } else {
+            fail("Unknown visual-method-copy option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && !result.method_name_provided) {
+        fail("No method name was provided.");
     }
     return result;
 }
@@ -19287,6 +19379,36 @@ int main(int argc, char** argv) {
             print_json_editor_action_dispatch_execution_catalog_result(result);
         } else {
             print_text_editor_action_dispatch_execution_catalog_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_method_copy_parse = parse_visual_method_copy_arguments(args);
+    if (visual_method_copy_parse.requested) {
+        if (!visual_method_copy_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_method_copy_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_method_copy_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status, "visualMethodCopy");
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::copy_visual_object_method(
+            visual_method_copy_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_method_copy_parse.request.path);
+        if (visual_method_copy_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status, "visualMethodCopy");
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
         }
         return result.ok ? 0 : 4;
     }
