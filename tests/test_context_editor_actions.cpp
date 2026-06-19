@@ -59,6 +59,18 @@ const copperfin::studio::StudioEditorActionLaunchCatalogEntry* find_launch_catal
     return nullptr;
 }
 
+const copperfin::studio::StudioEditorActionInvocationAdmissionCatalogEntry*
+find_invocation_admission_catalog_entry(
+    const std::vector<copperfin::studio::StudioEditorActionInvocationAdmissionCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.action.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -370,6 +382,146 @@ int main() {
                dry_run_property_invocation.plan.dry_run &&
                !dry_run_property_invocation.plan.mutates_asset,
            "#1217: non-admitted editor action invocation plans should remain deterministic dry runs");
+
+    const auto admitted_visual_invocation_catalog =
+        copperfin::studio::plan_studio_editor_action_invocation_admission_catalog({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = true
+        });
+    const auto* visual_method_invocation = find_invocation_admission_catalog_entry(
+        admitted_visual_invocation_catalog.entries, "edit-visual-method");
+    const auto* visual_property_invocation = find_invocation_admission_catalog_entry(
+        admitted_visual_invocation_catalog.entries, "show-property-grid");
+    expect(admitted_visual_invocation_catalog.ok &&
+               admitted_visual_invocation_catalog.selection_context ==
+                   StudioEditorSelectionContext::visual_object &&
+               admitted_visual_invocation_catalog.action_count == visual_actions.size() &&
+               admitted_visual_invocation_catalog.admission_count == visual_actions.size() &&
+               admitted_visual_invocation_catalog.error_count == 0U &&
+               !admitted_visual_invocation_catalog.dry_run &&
+               !admitted_visual_invocation_catalog.mutates_asset,
+           "#1281: admitted editor action invocation catalogs should admit every context action");
+    expect(visual_method_invocation != nullptr &&
+               visual_method_invocation->launch_plan.ok &&
+               visual_method_invocation->invocation_admission.ok &&
+               std::string(visual_method_invocation->invocation_admission.plan.action.id) ==
+                   "edit-visual-method" &&
+               visual_method_invocation->invocation_admission.plan.action.kind ==
+                   StudioEditorActionKind::source_editor &&
+               visual_method_invocation->invocation_admission.plan.selection_context ==
+                   StudioEditorSelectionContext::visual_object &&
+               visual_method_invocation->invocation_admission.plan.command_token ==
+                   "studio.method_editor.open" &&
+               visual_method_invocation->invocation_admission.plan.target_surface ==
+                   "method-editor" &&
+               visual_method_invocation->invocation_admission.plan.asset_path == "forms/customer.scx" &&
+               visual_method_invocation->invocation_admission.plan.record_index == 1U &&
+               visual_method_invocation->invocation_admission.plan.object_name == "cmdSave" &&
+               visual_method_invocation->invocation_admission.plan.unique_id == "button-guid" &&
+               visual_method_invocation->invocation_admission.plan.symbol == "cmdSave.Click" &&
+               visual_method_invocation->invocation_admission.plan.line == 42U &&
+               visual_method_invocation->invocation_admission.plan.column == 7U &&
+               visual_method_invocation->invocation_admission.plan.editor_invocation_admitted &&
+               !visual_method_invocation->invocation_admission.plan.dry_run &&
+               !visual_method_invocation->invocation_admission.plan.mutates_asset,
+           "#1281: editor action invocation catalogs should preserve admitted method metadata");
+    expect(visual_property_invocation != nullptr &&
+               visual_property_invocation->invocation_admission.ok &&
+               visual_property_invocation->invocation_admission.plan.action.kind ==
+                   StudioEditorActionKind::property_grid &&
+               visual_property_invocation->invocation_admission.plan.command_token ==
+                   "studio.property_grid.show" &&
+               visual_property_invocation->invocation_admission.plan.editor_invocation_admitted,
+           "#1281: editor action invocation catalogs should include property-grid admissions");
+
+    const auto dry_run_visual_invocation_catalog =
+        copperfin::studio::plan_studio_editor_action_invocation_admission_catalog({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = false
+        });
+    const auto* dry_run_method_invocation = find_invocation_admission_catalog_entry(
+        dry_run_visual_invocation_catalog.entries, "edit-visual-method");
+    expect(dry_run_visual_invocation_catalog.ok &&
+               dry_run_visual_invocation_catalog.action_count == visual_actions.size() &&
+               dry_run_visual_invocation_catalog.admission_count == visual_actions.size() &&
+               dry_run_visual_invocation_catalog.error_count == 0U &&
+               dry_run_visual_invocation_catalog.dry_run &&
+               !dry_run_visual_invocation_catalog.mutates_asset,
+           "#1281: dry-run editor action invocation catalogs should keep valid admissions non-executing");
+    expect(dry_run_method_invocation != nullptr &&
+               dry_run_method_invocation->invocation_admission.ok &&
+               !dry_run_method_invocation->invocation_admission.plan.editor_invocation_admitted &&
+               dry_run_method_invocation->invocation_admission.plan.dry_run &&
+               !dry_run_method_invocation->invocation_admission.plan.mutates_asset,
+           "#1281: dry-run editor action invocation catalog entries should preserve admission state");
+
+    const auto report_invocation_catalog =
+        copperfin::studio::plan_studio_editor_action_invocation_admission_catalog({
+            .selection_context = StudioEditorSelectionContext::report_expression,
+            .asset_path = "reports/orders.frx",
+            .record_index = 2U,
+            .object_name = "Expr1",
+            .unique_id = "expr-guid",
+            .symbol = "Expr1.Expression",
+            .line = 3U,
+            .column = 11U,
+            .admit_editor_invocations = true
+        });
+    const auto* report_expression_invocation = find_invocation_admission_catalog_entry(
+        report_invocation_catalog.entries, "edit-report-expression");
+    expect(report_invocation_catalog.ok &&
+               report_invocation_catalog.action_count == report_actions.size() &&
+               report_invocation_catalog.admission_count == report_actions.size() &&
+               report_invocation_catalog.error_count == 0U &&
+               report_expression_invocation != nullptr &&
+               report_expression_invocation->invocation_admission.ok &&
+               report_expression_invocation->invocation_admission.plan.action.kind ==
+                   StudioEditorActionKind::expression_editor &&
+               report_expression_invocation->invocation_admission.plan.command_token ==
+                   "studio.expression_editor.open" &&
+               report_expression_invocation->invocation_admission.plan.target_surface ==
+                   "expression-editor" &&
+               report_expression_invocation->invocation_admission.plan.asset_path ==
+                   "reports/orders.frx" &&
+               report_expression_invocation->invocation_admission.plan.record_index == 2U &&
+               report_expression_invocation->invocation_admission.plan.symbol == "Expr1.Expression",
+           "#1281: report-expression invocation admission catalogs should preserve expression metadata");
+
+    const auto empty_invocation_catalog =
+        copperfin::studio::plan_studio_editor_action_invocation_admission_catalog({
+            .selection_context = static_cast<StudioEditorSelectionContext>(999),
+            .asset_path = "forms/customer.scx",
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .symbol = {},
+            .line = 0U,
+            .column = 0U,
+            .admit_editor_invocations = true
+        });
+    expect(!empty_invocation_catalog.ok &&
+               empty_invocation_catalog.error ==
+                   "An editor action invocation admission catalog request requires at least one context action." &&
+               empty_invocation_catalog.action_count == 0U &&
+               empty_invocation_catalog.admission_count == 0U &&
+               empty_invocation_catalog.error_count == 0U &&
+               empty_invocation_catalog.dry_run &&
+               !empty_invocation_catalog.mutates_asset,
+           "#1281: editor action invocation admission catalogs should reject empty action contexts");
 
     const auto method_dispatch = copperfin::studio::plan_studio_editor_action_dispatch({
         .admission_plan = admitted_method_invocation.plan

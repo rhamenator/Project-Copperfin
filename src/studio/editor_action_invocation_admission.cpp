@@ -1,5 +1,8 @@
 #include "copperfin/studio/editor_action_invocation_admission.h"
 
+#include <string>
+#include <utility>
+
 namespace copperfin::studio {
 
 StudioEditorActionInvocationAdmissionResult plan_studio_editor_action_invocation_admission(
@@ -38,6 +41,86 @@ StudioEditorActionInvocationAdmissionResult plan_studio_editor_action_invocation
             .dry_run = !request.admit_editor_invocation,
             .mutates_asset = false
         }
+    };
+}
+
+StudioEditorActionInvocationAdmissionCatalogResult
+plan_studio_editor_action_invocation_admission_catalog(
+    const StudioEditorActionInvocationAdmissionCatalogRequest& request) {
+    const auto actions = studio_editor_actions_for_context(request.selection_context);
+    if (actions.empty()) {
+        return {
+            .ok = false,
+            .error = "An editor action invocation admission catalog request requires at least one context action.",
+            .selection_context = request.selection_context,
+            .action_count = 0U,
+            .admission_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioEditorActionInvocationAdmissionCatalogEntry> entries;
+    entries.reserve(actions.size());
+    std::size_t admission_count = 0U;
+    std::size_t error_count = 0U;
+    bool dry_run = true;
+    bool mutates_asset = false;
+
+    for (const auto& action : actions) {
+        auto launch_plan = plan_studio_editor_action_launch({
+            .selection_context = request.selection_context,
+            .action_id = std::string(action.id),
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .symbol = request.symbol,
+            .line = request.line,
+            .column = request.column
+        });
+
+        StudioEditorActionInvocationAdmissionResult invocation_admission{};
+        if (launch_plan.ok) {
+            invocation_admission = plan_studio_editor_action_invocation_admission({
+                .launch_plan = launch_plan.plan,
+                .admit_editor_invocation = request.admit_editor_invocations
+            });
+        } else {
+            invocation_admission = {
+                .ok = false,
+                .error = launch_plan.error,
+                .plan = {}
+            };
+        }
+
+        if (invocation_admission.ok) {
+            ++admission_count;
+            dry_run = dry_run && invocation_admission.plan.dry_run;
+            mutates_asset = mutates_asset || invocation_admission.plan.mutates_asset;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .action = action,
+            .launch_plan = std::move(launch_plan),
+            .invocation_admission = std::move(invocation_admission)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .action_count = entries.size(),
+        .admission_count = admission_count,
+        .error_count = error_count,
+        .dry_run = admission_count == 0U ? true : dry_run,
+        .mutates_asset = mutates_asset,
+        .entries = std::move(entries)
     };
 }
 
