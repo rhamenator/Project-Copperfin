@@ -24260,6 +24260,211 @@ void test_studio_host_json_reorders_objects_by_stable_selectors(const std::strin
     }
 }
 
+void test_studio_host_json_reorders_visual_object_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_reorder_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path reorder_path = temp_root / "reorder_batch.scx";
+    write_synthetic_form_table_for_object_reorder(reorder_path);
+    const auto reorder_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", reorder_path.string(),
+            "--selected-unique-id", "c-guid",
+            "--placement", "front",
+            "--selected-object-name", "cmdA",
+            "--placement", "after",
+            "--target-unique-id", "d-guid",
+            "--json"
+        },
+        temp_root);
+    expect(reorder_batch_process.exit_code == 0,
+        "#1450: visual object reorder-batch JSON should exit successfully for valid batches");
+    expect_contains(reorder_batch_process.stdout_text, "\"visualObjectReorderBatch\": {",
+        "#1450: visual object reorder-batch JSON should expose a batch reorder object");
+    expect_contains(reorder_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+        "#1450: visual object reorder-batch JSON should expose affected object counts");
+    expect_contains(reorder_batch_process.stdout_text, "\"dryRun\": false",
+        "#1450: visual object reorder-batch JSON should expose committed execution state");
+    expect_contains(reorder_batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1450: visual object reorder-batch JSON should expose mutation state");
+    expect_contains(reorder_batch_process.stdout_text, "\"undoAvailable\": false",
+        "#1450: visual object reorder-batch JSON should expose undo availability state");
+    expect(visual_object_order(reorder_path) == "c-guid,b-guid,d-guid,a-guid",
+        "#1450: visual object reorder-batch host command should apply all requested reorders");
+
+    const fs::path rollback_path = temp_root / "reorder_batch_rollback.scx";
+    write_synthetic_form_table_for_object_reorder(rollback_path);
+    const auto rollback_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", rollback_path.string(),
+            "--selected-unique-id", "c-guid",
+            "--placement", "front",
+            "--selected-object-name", "cmdB",
+            "--placement", "before",
+            "--target-object-name", "missingObject",
+            "--json"
+        },
+        temp_root);
+    expect(rollback_process.exit_code == 4,
+        "#1450: visual object reorder-batch JSON should reject later target failures");
+    expect_contains(rollback_process.stdout_text, "\"visualObjectReorderBatch\": null",
+        "#1450: failed visual object reorder-batch JSON should not expose a batch reorder object");
+    expect_contains(rollback_process.stdout_text, "No visual object with the requested name was found.",
+        "#1450: missing-target visual object reorder-batch JSON should report editor errors");
+    expect(visual_object_order(rollback_path) == "a-guid,b-guid,c-guid,d-guid",
+        "#1450: failed visual object reorder-batch commands should not write earlier in-memory reorders");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--selected-unique-id", "c-guid",
+            "--placement", "front",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1450: visual object reorder-batch JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectReorderBatch\": null",
+        "#1450: missing-path visual object reorder-batch JSON should not expose a batch reorder object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1450: missing-path visual object reorder-batch JSON should report parser errors");
+
+    const auto no_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", reorder_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(no_items_process.exit_code == 2,
+        "#1450: visual object reorder-batch JSON should reject empty batches");
+    expect_contains(no_items_process.stdout_text, "No visual object reorders were provided.",
+        "#1450: empty visual object reorder-batch JSON should report parser errors");
+
+    const auto option_before_item_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", reorder_path.string(),
+            "--placement", "front",
+            "--selected-unique-id", "c-guid",
+            "--json"
+        },
+        temp_root);
+    expect(option_before_item_process.exit_code == 2,
+        "#1450: visual object reorder-batch JSON should reject item options before selected objects");
+    expect_contains(option_before_item_process.stdout_text,
+        "Visual object reorder batch item options require a preceding selected-object selector.",
+        "#1450: option-before-item visual object reorder-batch JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", reorder_path.string(),
+            "--selected-record", "-1",
+            "--placement", "front",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1450: visual object reorder-batch JSON should reject invalid selected-record values");
+    expect_contains(invalid_record_process.stdout_text, "The --selected-record value must be a non-negative integer.",
+        "#1450: invalid-record visual object reorder-batch JSON should report parser errors");
+
+    const auto missing_placement_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", reorder_path.string(),
+            "--selected-unique-id", "c-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_placement_process.exit_code == 2,
+        "#1450: visual object reorder-batch JSON should reject items without placements");
+    expect_contains(missing_placement_process.stdout_text, "No visual object placement was provided.",
+        "#1450: missing-placement visual object reorder-batch JSON should report parser errors");
+
+    const fs::path missing_target_path = temp_root / "reorder_batch_missing_target.scx";
+    write_synthetic_form_table_for_object_reorder(missing_target_path);
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", missing_target_path.string(),
+            "--selected-unique-id", "c-guid",
+            "--placement", "before",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 4,
+        "#1450: visual object reorder-batch JSON should reject relative placements without targets");
+    expect_contains(missing_target_process.stdout_text, "\"visualObjectReorderBatch\": null",
+        "#1450: missing-target-selector visual object reorder-batch JSON should not expose a batch reorder object");
+    expect_contains(missing_target_process.stdout_text, "No target object selector was provided.",
+        "#1450: missing-target-selector visual object reorder-batch JSON should report editor errors");
+    expect(visual_object_order(missing_target_path) == "a-guid,b-guid,c-guid,d-guid",
+        "#1450: missing-target-selector visual object reorder-batch commands should not mutate order");
+
+    const fs::path self_relative_path = temp_root / "reorder_batch_self_relative.scx";
+    write_synthetic_form_table_for_object_reorder(self_relative_path);
+    const auto self_relative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", self_relative_path.string(),
+            "--selected-unique-id", "c-guid",
+            "--placement", "before",
+            "--target-unique-id", "c-guid",
+            "--json"
+        },
+        temp_root);
+    expect(self_relative_process.exit_code == 4,
+        "#1450: visual object reorder-batch JSON should reject self-relative placements");
+    expect_contains(self_relative_process.stdout_text, "A visual object cannot be reordered relative to itself.",
+        "#1450: self-relative visual object reorder-batch JSON should report editor errors");
+    expect(visual_object_order(self_relative_path) == "a-guid,b-guid,c-guid,d-guid",
+        "#1450: self-relative visual object reorder-batch commands should not mutate order");
+
+    const fs::path unsupported_path = temp_root / "reorder_batch_unsupported.scx";
+    write_synthetic_form_table_for_object_reorder(unsupported_path);
+    const auto unsupported_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reorder-batch",
+            "--path", unsupported_path.string(),
+            "--selected-unique-id", "c-guid",
+            "--placement", "sideways",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_process.exit_code == 4,
+        "#1450: visual object reorder-batch JSON should reject unsupported placements");
+    expect_contains(unsupported_process.stdout_text, "Unsupported visual object placement.",
+        "#1450: unsupported-placement visual object reorder-batch JSON should report editor errors");
+    expect(visual_object_order(unsupported_path) == "a-guid,b-guid,c-guid,d-guid",
+        "#1450: unsupported-placement visual object reorder-batch commands should not mutate order");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-reorder-batch --path <asset>",
+        "#1450: usage text should expose visual object reorder-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_groups_objects_by_stable_child_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -46826,6 +47031,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_visual_object_batches(argv[1]);
     test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_reorders_visual_object_batches(argv[1]);
     test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
     test_studio_host_json_aligns_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_resizes_objects_by_stable_selectors(argv[1]);

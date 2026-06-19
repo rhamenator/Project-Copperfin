@@ -46,6 +46,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-object-ancestors --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-duplicate-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-rename-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-object-reorder-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) --placement <front|back|before|after> [--target-object-name <name>] [--target-unique-id <id>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-reparent-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-update-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) --property-name <name> --property-value <value> ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
@@ -1026,6 +1027,15 @@ struct VisualObjectRenameBatchParseResult {
     bool path_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectRenameBatchRequest request;
+};
+
+struct VisualObjectReorderBatchParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectReorderBatchRequest request;
 };
 
 struct VisualObjectUpdateBatchParseResult {
@@ -5813,6 +5823,112 @@ VisualObjectRenameBatchParseResult parse_visual_object_rename_batch_arguments(
     }
     if (result.ok && result.request.objects.empty()) {
         fail("No visual object renames were provided.");
+    }
+    return result;
+}
+
+VisualObjectReorderBatchParseResult parse_visual_object_reorder_batch_arguments(
+    const std::vector<std::string>& args) {
+    VisualObjectReorderBatchParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-object-reorder-batch") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    auto current_object = [&]() -> copperfin::vfp::VisualObjectReorderBatchItem* {
+        if (result.request.objects.empty()) {
+            fail("Visual object reorder batch item options require a preceding selected-object selector.");
+            return nullptr;
+        }
+        return &result.request.objects.back();
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-object-reorder-batch") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--selected-record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --selected-record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.objects.push_back({
+                .record_index = record_index,
+                .object_name = {},
+                .unique_id = {},
+                .placement = {},
+                .target_object_name = {},
+                .target_unique_id = {}
+            });
+        } else if (argument == "--selected-object-name") {
+            result.request.objects.push_back({
+                .record_index = 0U,
+                .object_name = require_value(argument),
+                .unique_id = {},
+                .placement = {},
+                .target_object_name = {},
+                .target_unique_id = {}
+            });
+        } else if (argument == "--selected-unique-id") {
+            result.request.objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = require_value(argument),
+                .placement = {},
+                .target_object_name = {},
+                .target_unique_id = {}
+            });
+        } else if (argument == "--placement") {
+            if (auto* object = current_object()) {
+                object->placement = require_value(argument);
+            }
+        } else if (argument == "--target-object-name") {
+            if (auto* object = current_object()) {
+                object->target_object_name = require_value(argument);
+            }
+        } else if (argument == "--target-unique-id") {
+            if (auto* object = current_object()) {
+                object->target_unique_id = require_value(argument);
+            }
+        } else {
+            fail("Unknown visual-object-reorder-batch option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && result.request.objects.empty()) {
+        fail("No visual object reorders were provided.");
+    }
+    if (result.ok) {
+        for (const auto& object : result.request.objects) {
+            if (object.placement.empty()) {
+                fail("No visual object placement was provided.");
+                break;
+            }
+        }
     }
     return result;
 }
@@ -22016,6 +22132,36 @@ int main(int argc, char** argv) {
             visual_object_rename_batch_parse.request.path);
         if (visual_object_rename_batch_parse.output_json) {
             print_json_visual_method_update_result(result, undo_status, "visualObjectRenameBatch");
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_object_reorder_batch_parse = parse_visual_object_reorder_batch_arguments(args);
+    if (visual_object_reorder_batch_parse.requested) {
+        if (!visual_object_reorder_batch_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_object_reorder_batch_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_object_reorder_batch_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status, "visualObjectReorderBatch");
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::reorder_visual_objects(
+            visual_object_reorder_batch_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_object_reorder_batch_parse.request.path);
+        if (visual_object_reorder_batch_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status, "visualObjectReorderBatch");
         } else {
             print_text_visual_method_update_result(result, undo_status);
         }
