@@ -20317,6 +20317,13 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto selected_report_settings = document.selection_record_available
         ? find_selected_report_settings(report_layout, document.selection_record_index)
         : std::vector<copperfin::studio::StudioNamedValue>{};
+    const std::string selected_report_selection_kind = !selected_report_settings.empty()
+        ? "settings"
+        : selected_report_section != nullptr
+            ? "section"
+            : selected_report_object != nullptr
+                ? "object"
+                : "none";
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -20475,6 +20482,11 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         print_json_report_named_values(selected_report_settings, "    ");
         std::cout << ",\n";
     }
+    std::cout << "    \"selectedReportSelectionAvailable\": "
+              << (selected_report_selection_kind == "none" ? "false" : "true") << ",\n";
+    std::cout << "    \"selectedReportSelectionKind\": ";
+    print_json_string(selected_report_selection_kind);
+    std::cout << ",\n";
     std::cout << "    \"projectWorkspace\": ";
     if (!project_workspace.available) {
         std::cout << "null,\n";

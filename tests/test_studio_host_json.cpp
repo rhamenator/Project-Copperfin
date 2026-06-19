@@ -3736,6 +3736,10 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
            "#1453: selected report section JSON smoke should exit successfully");
     expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                     "#1453: report section selections should advertise selected-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1457: report section selections should advertise report-selection availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1457: report section selections should expose section selection kind");
     expect_contains(section_process.stdout_text, "\"selectedReportSection\": {",
                     "#1453: report section selections should expose selected-section JSON");
     expect_contains(section_process.stdout_text, "\"id\": \"page_header_1\"",
@@ -3801,6 +3805,10 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
            "#1454: selected report object JSON smoke should exit successfully");
     expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                     "#1454: report object selections should advertise selected-object availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1457: report object selections should advertise report-selection availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1457: report object selections should expose object selection kind");
     expect_contains(object_process.stdout_text, "\"selectedReportObject\": {",
                     "#1454: report object selections should expose selected-object JSON");
     expect_contains(object_process.stdout_text, "\"recordIndex\": 3",
@@ -3880,6 +3888,10 @@ void test_studio_host_json_exposes_selected_report_settings(const std::string& s
            "#1456: selected report settings JSON smoke should exit successfully");
     expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
                     "#1456: report root selections should advertise selected-settings availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1457: report settings selections should advertise report-selection availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    "#1457: report settings selections should expose settings selection kind");
     expect_contains(settings_process.stdout_text, "\"selectedReportSettings\": [",
                     "#1456: report root selections should expose selected-settings JSON");
     expect_contains(settings_process.stdout_text, "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"0\"",
@@ -3937,6 +3949,10 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect(process.exit_code == 0, "#961: Studio host JSON smoke should exit successfully");
     expect_contains(process.stdout_text, "\"designerContexts\": [",
                     "#961: document JSON should expose designer context array");
+    expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                    "#1457: non-report JSON should not advertise report-selection availability");
+    expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                    "#1457: non-report JSON should expose the none report-selection kind");
     expect_contains(process.stdout_text, "\"selectionContext\": \"visual_object\"",
                     "#961: form JSON should expose the visual-object context token");
     expect_contains(process.stdout_text, "\"editorActionCount\": 5",
