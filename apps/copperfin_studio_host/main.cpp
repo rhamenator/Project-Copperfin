@@ -7626,6 +7626,17 @@ void print_json_selection_toolbox_create_batch_dispatch_catalog_result(
         return;
     }
 
+    std::vector<std::string> dispatch_ready_item_ids;
+    std::vector<std::string> dispatch_blocked_item_ids;
+    std::vector<std::string> dispatch_blocked_errors;
+    if (result.dispatch.ok) {
+        for (const auto& plan : result.dispatch.plan.plans) {
+            dispatch_ready_item_ids.push_back(std::string(plan.toolbox_item.id));
+        }
+    } else if (!result.dispatch.error.empty()) {
+        dispatch_blocked_errors.push_back(result.dispatch.error);
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -7644,6 +7655,15 @@ void print_json_selection_toolbox_create_batch_dispatch_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"dispatchReadyItemIds\": ";
+    print_json_string_array(dispatch_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedItemIds\": ";
+    print_json_string_array(dispatch_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"batchPlanOk\": " << (result.batch_plan.ok ? "true" : "false") << ",\n";
     std::cout << "    \"batchPlanError\": ";
     print_json_string(result.batch_plan.error);
