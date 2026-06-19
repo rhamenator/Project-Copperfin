@@ -46,6 +46,17 @@ const copperfin::studio::StudioBuilderDispatchCatalogEntry* find_dispatch_catalo
     return nullptr;
 }
 
+const copperfin::studio::StudioBuilderDispatchExecutionCatalogEntry* find_execution_catalog_entry(
+    const std::vector<copperfin::studio::StudioBuilderDispatchExecutionCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.builder.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 const copperfin::studio::StudioBuilderLaunchCatalogEntry* find_launch_catalog_entry(
     const std::vector<copperfin::studio::StudioBuilderLaunchCatalogEntry>& entries,
     std::string_view id) {
@@ -634,6 +645,115 @@ int main() {
                dry_run_grid_dispatch->dispatch.error ==
                    "A builder dispatch request requires an admitted non-dry-run invocation.",
            "#1272: dry-run builder dispatch catalog entries should preserve shared admission failures");
+
+    const auto admitted_control_execution_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_execution_catalog({
+            .context = StudioBuilderContext::control,
+            .asset_path = "forms/customer.scx",
+            .record_index = 4U,
+            .object_name = "grdOrders",
+            .unique_id = "grid-guid",
+            .admit_ui_launches = true,
+            .admit_execution = true
+        });
+    expect(admitted_control_execution_catalog.ok &&
+               admitted_control_execution_catalog.context == StudioBuilderContext::control &&
+               admitted_control_execution_catalog.builder_count == control_builders.size() &&
+               admitted_control_execution_catalog.execution_ready_count == control_builders.size() &&
+               admitted_control_execution_catalog.error_count == 0U &&
+               !admitted_control_execution_catalog.dry_run &&
+               !admitted_control_execution_catalog.mutates_asset,
+           "#1326: admitted builder dispatch execution catalogs should mark every dispatch ready without launch");
+    const auto* catalog_grid_execution = find_execution_catalog_entry(
+        admitted_control_execution_catalog.entries, "grid-builder");
+    expect(catalog_grid_execution != nullptr &&
+               catalog_grid_execution->launch_plan.ok &&
+               catalog_grid_execution->invocation_admission.ok &&
+               catalog_grid_execution->dispatch.ok &&
+               catalog_grid_execution->execution_admitted &&
+               catalog_grid_execution->execution_ready &&
+               catalog_grid_execution->execution_error.empty() &&
+               std::string(catalog_grid_execution->builder.id) == "grid-builder" &&
+               std::string(catalog_grid_execution->dispatch.plan.builder.id) == "grid-builder" &&
+               catalog_grid_execution->dispatch.plan.context == StudioBuilderContext::control &&
+               catalog_grid_execution->dispatch.plan.dispatch_admitted &&
+               !catalog_grid_execution->dispatch.plan.dry_run &&
+               !catalog_grid_execution->dispatch.plan.executed &&
+               has_argument_pair(
+                   catalog_grid_execution->dispatch.plan.dispatch_arguments,
+                   "--entry-point",
+                   "cf_builders.grid_builder"),
+           "#1326: builder dispatch execution catalog entries should preserve dispatch metadata");
+
+    const auto unadmitted_control_execution_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_execution_catalog({
+            .context = StudioBuilderContext::control,
+            .asset_path = "forms/customer.scx",
+            .record_index = 4U,
+            .object_name = "grdOrders",
+            .unique_id = "grid-guid",
+            .admit_ui_launches = true,
+            .admit_execution = false
+        });
+    const auto* unadmitted_grid_execution = find_execution_catalog_entry(
+        unadmitted_control_execution_catalog.entries, "grid-builder");
+    expect(unadmitted_control_execution_catalog.ok &&
+               unadmitted_control_execution_catalog.builder_count == control_builders.size() &&
+               unadmitted_control_execution_catalog.execution_ready_count == 0U &&
+               unadmitted_control_execution_catalog.error_count == control_builders.size() &&
+               unadmitted_control_execution_catalog.dry_run &&
+               unadmitted_grid_execution != nullptr &&
+               unadmitted_grid_execution->dispatch.ok &&
+               !unadmitted_grid_execution->execution_admitted &&
+               !unadmitted_grid_execution->execution_ready &&
+               unadmitted_grid_execution->execution_error ==
+                   "A builder dispatch execution catalog entry requires explicit execution admission.",
+           "#1326: builder dispatch execution catalogs should require explicit execution admission");
+
+    const auto dry_run_control_execution_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_execution_catalog({
+            .context = StudioBuilderContext::control,
+            .asset_path = "forms/customer.scx",
+            .record_index = 4U,
+            .object_name = "grdOrders",
+            .unique_id = "grid-guid",
+            .admit_ui_launches = false,
+            .admit_execution = true
+        });
+    const auto* dry_run_grid_execution = find_execution_catalog_entry(
+        dry_run_control_execution_catalog.entries, "grid-builder");
+    expect(dry_run_control_execution_catalog.ok &&
+               dry_run_control_execution_catalog.builder_count == control_builders.size() &&
+               dry_run_control_execution_catalog.execution_ready_count == 0U &&
+               dry_run_control_execution_catalog.error_count == control_builders.size() &&
+               dry_run_control_execution_catalog.dry_run &&
+               dry_run_grid_execution != nullptr &&
+               !dry_run_grid_execution->dispatch.ok &&
+               dry_run_grid_execution->execution_admitted &&
+               !dry_run_grid_execution->execution_ready &&
+               dry_run_grid_execution->execution_error ==
+                   "A builder dispatch request requires an admitted non-dry-run invocation.",
+           "#1326: builder dispatch execution catalogs should preserve dispatch readiness failures");
+
+    const auto missing_execution_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_execution_catalog({
+            .context = static_cast<StudioBuilderContext>(999),
+            .asset_path = "forms/customer.scx",
+            .record_index = 4U,
+            .object_name = "grdOrders",
+            .unique_id = "grid-guid",
+            .admit_ui_launches = true,
+            .admit_execution = true
+        });
+    expect(!missing_execution_catalog.ok &&
+               missing_execution_catalog.error ==
+                   "A builder dispatch execution catalog request requires at least one context builder." &&
+               missing_execution_catalog.builder_count == 0U &&
+               missing_execution_catalog.execution_ready_count == 0U &&
+               missing_execution_catalog.error_count == 0U &&
+               missing_execution_catalog.dry_run &&
+               !missing_execution_catalog.mutates_asset,
+           "#1326: builder dispatch execution catalogs should reject empty contexts without mutation");
 
     const auto label_dispatch_catalog = copperfin::studio::plan_studio_builder_dispatch_catalog({
         .context = StudioBuilderContext::label,

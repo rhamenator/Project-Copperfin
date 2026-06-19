@@ -12,6 +12,38 @@ void append_argument(std::vector<std::string>& arguments, std::string key, std::
     arguments.push_back(std::move(value));
 }
 
+std::string builder_dispatch_execution_readiness_error(
+    const StudioBuilderDispatchResult& dispatch,
+    bool admit_execution) {
+    if (!dispatch.ok) {
+        return dispatch.error;
+    }
+    if (!admit_execution) {
+        return "A builder dispatch execution catalog entry requires explicit execution admission.";
+    }
+    const auto& dispatch_plan = dispatch.plan;
+    if (dispatch_plan.builder.id.empty()) {
+        return "A builder dispatch execution catalog entry requires a validated builder id.";
+    }
+    if (dispatch_plan.command_token.empty()) {
+        return "A builder dispatch execution catalog entry requires a command token.";
+    }
+    if (dispatch_plan.entry_point.empty()) {
+        return "A builder dispatch execution catalog entry requires a launch entry point.";
+    }
+    if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
+        return "A builder dispatch execution catalog entry requires an admitted non-dry-run dispatch.";
+    }
+    if (dispatch_plan.executed) {
+        return "A builder dispatch execution catalog entry requires a non-executed dispatch.";
+    }
+    if (dispatch_plan.dispatch_arguments.empty()) {
+        return "A builder dispatch execution catalog entry requires dispatch arguments.";
+    }
+
+    return {};
+}
+
 }  // namespace
 
 StudioBuilderDispatchResult plan_studio_builder_dispatch(
@@ -234,6 +266,74 @@ StudioBuilderDispatchExecutionResult execute_studio_builder_dispatch(
         .executed = true,
         .dry_run = false,
         .mutates_asset = mutates_asset
+    };
+}
+
+StudioBuilderDispatchExecutionCatalogResult plan_studio_builder_dispatch_execution_catalog(
+    const StudioBuilderDispatchExecutionCatalogRequest& request) {
+    auto dispatch_catalog = plan_studio_builder_dispatch_catalog({
+        .context = request.context,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .admit_ui_launches = request.admit_ui_launches
+    });
+    if (!dispatch_catalog.ok) {
+        return {
+            .ok = false,
+            .error = "A builder dispatch execution catalog request requires at least one context builder.",
+            .context = request.context,
+            .builder_count = 0U,
+            .execution_ready_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioBuilderDispatchExecutionCatalogEntry> entries;
+    entries.reserve(dispatch_catalog.entries.size());
+    std::size_t execution_ready_count = 0U;
+    std::size_t error_count = 0U;
+    bool dry_run = true;
+    bool mutates_asset = false;
+
+    for (auto& dispatch_entry : dispatch_catalog.entries) {
+        auto execution_error = builder_dispatch_execution_readiness_error(
+            dispatch_entry.dispatch, request.admit_execution);
+        const bool execution_ready = execution_error.empty();
+
+        if (execution_ready) {
+            ++execution_ready_count;
+            dry_run = dry_run && dispatch_entry.dispatch.plan.dry_run;
+            mutates_asset = mutates_asset || dispatch_entry.dispatch.plan.mutates_asset;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .builder = dispatch_entry.builder,
+            .launch_plan = std::move(dispatch_entry.launch_plan),
+            .invocation_admission = std::move(dispatch_entry.invocation_admission),
+            .dispatch = std::move(dispatch_entry.dispatch),
+            .execution_admitted = request.admit_execution,
+            .execution_ready = execution_ready,
+            .execution_error = std::move(execution_error)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .context = request.context,
+        .builder_count = dispatch_catalog.builder_count,
+        .execution_ready_count = execution_ready_count,
+        .error_count = error_count,
+        .dry_run = execution_ready_count == 0U ? true : dry_run,
+        .mutates_asset = mutates_asset,
+        .entries = std::move(entries)
     };
 }
 
