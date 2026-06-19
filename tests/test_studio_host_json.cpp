@@ -3794,6 +3794,28 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1517: report layout JSON should expose horizontal grid spacing");
     expect_contains(process.stdout_text, "\"liveObjectCount\": 3",
                     "#1516: report layout JSON should summarize live placed and unplaced object counts");
+    expect_contains(process.stdout_text, "\"objectKindCount\": 3",
+                    "#1519: report layout JSON should summarize live object-kind count buckets");
+    expect_contains(process.stdout_text, "\"objectKindCounts\": [",
+                    "#1519: report layout JSON should expose live object-kind count summaries");
+    expect_contains(process.stdout_text, "{\"kind\": \"field\", \"count\": 1}",
+                    "#1519: report layout JSON should count live field objects");
+    expect_contains(process.stdout_text, "{\"kind\": \"label\", \"count\": 1}",
+                    "#1519: report layout JSON should count live label objects");
+    expect_contains(process.stdout_text, "{\"kind\": \"line\", \"count\": 1}",
+                    "#1519: report layout JSON should count live unplaced line objects");
+    expect_contains(process.stdout_text, "\"unplacedObjectKindCount\": 1",
+                    "#1519: report layout JSON should summarize unplaced object-kind count buckets");
+    expect_contains(process.stdout_text, "\"unplacedObjectKindCounts\": [",
+                    "#1519: report layout JSON should expose unplaced object-kind count summaries");
+    expect_contains(process.stdout_text, "\"unplacedObjectKindCounts\": [\n        {\"kind\": \"line\", \"count\": 1}\n      ]",
+                    "#1519: report layout JSON should count unplaced line objects");
+    expect_contains(process.stdout_text, "\"deletedObjectKindCount\": 1",
+                    "#1519: report layout JSON should summarize deleted object-kind count buckets");
+    expect_contains(process.stdout_text, "\"deletedObjectKindCounts\": [",
+                    "#1519: report layout JSON should expose deleted object-kind count summaries");
+    expect_contains(process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
+                    "#1519: report layout JSON should count deleted label objects");
     expect_contains(process.stdout_text, "\"settingCount\": 6",
                     "#1452: report layout JSON should summarize live setting counts");
     expect_contains(process.stdout_text, "\"deletedObjectCount\": 1",
@@ -4005,6 +4027,24 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1516: label layout JSON should expose shared bottom preview bounds");
     expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 3",
                     "#1516: label layout JSON should summarize live placed and unplaced object counts");
+    expect_contains(summary_process.stdout_text, "\"objectKindCount\": 3",
+                    "#1519: label layout JSON should summarize live object-kind count buckets");
+    expect_contains(summary_process.stdout_text, "\"objectKindCounts\": [",
+                    "#1519: label layout JSON should expose live object-kind count summaries");
+    expect_contains(summary_process.stdout_text, "{\"kind\": \"field\", \"count\": 1}",
+                    "#1519: label layout JSON should count live field objects");
+    expect_contains(summary_process.stdout_text, "{\"kind\": \"label\", \"count\": 1}",
+                    "#1519: label layout JSON should count live label objects");
+    expect_contains(summary_process.stdout_text, "{\"kind\": \"line\", \"count\": 1}",
+                    "#1519: label layout JSON should count live unplaced line objects");
+    expect_contains(summary_process.stdout_text, "\"unplacedObjectKindCount\": 1",
+                    "#1519: label layout JSON should summarize unplaced object-kind count buckets");
+    expect_contains(summary_process.stdout_text, "\"unplacedObjectKindCounts\": [\n        {\"kind\": \"line\", \"count\": 1}\n      ]",
+                    "#1519: label layout JSON should count unplaced line objects");
+    expect_contains(summary_process.stdout_text, "\"deletedObjectKindCount\": 1",
+                    "#1519: label layout JSON should summarize deleted object-kind count buckets");
+    expect_contains(summary_process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
+                    "#1519: label layout JSON should count deleted label objects");
     expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
                     "#1517: label layout JSON should expose page setup summary availability");
     expect_contains(summary_process.stdout_text, "\"orientationCode\": 0",

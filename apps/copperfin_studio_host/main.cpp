@@ -19742,6 +19742,23 @@ void print_json_report_named_values(
     std::cout << indent << "]";
 }
 
+void print_json_report_object_kind_counts(
+    const std::vector<copperfin::studio::StudioReportObjectKindCount>& counts,
+    const std::string& indent) {
+    std::cout << "[\n";
+    for (std::size_t index = 0; index < counts.size(); ++index) {
+        const auto& count = counts[index];
+        std::cout << indent << "  {\"kind\": ";
+        print_json_string(count.kind);
+        std::cout << ", \"count\": " << count.count << "}";
+        if ((index + 1U) != counts.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << indent << "]";
+}
+
 void print_json_editor_contexts(const std::vector<copperfin::studio::StudioEditorSelectionContext>& contexts) {
     std::cout << "[";
     for (std::size_t index = 0; index < contexts.size(); ++index) {
@@ -20487,12 +20504,24 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
                   << (report_layout.column_spacing_available ? "true" : "false") << ",\n";
         std::cout << "      \"columnSpacing\": " << report_layout.column_spacing << ",\n";
         std::cout << "      \"liveObjectCount\": " << report_layout.live_object_count << ",\n";
+        std::cout << "      \"objectKindCount\": " << report_layout.object_kind_counts.size() << ",\n";
+        std::cout << "      \"unplacedObjectKindCount\": " << report_layout.unplaced_object_kind_counts.size() << ",\n";
+        std::cout << "      \"deletedObjectKindCount\": " << report_layout.deleted_object_kind_counts.size() << ",\n";
         std::cout << "      \"settingCount\": " << report_layout.settings.size() << ",\n";
         std::cout << "      \"deletedSettingCount\": " << report_layout.deleted_settings.size() << ",\n";
         std::cout << "      \"sectionCount\": " << report_layout.sections.size() << ",\n";
         std::cout << "      \"deletedSectionCount\": " << report_layout.deleted_sections.size() << ",\n";
         std::cout << "      \"unplacedObjectCount\": " << report_layout.unplaced_objects.size() << ",\n";
         std::cout << "      \"deletedObjectCount\": " << report_layout.deleted_objects.size() << ",\n";
+        std::cout << "      \"objectKindCounts\": ";
+        print_json_report_object_kind_counts(report_layout.object_kind_counts, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"unplacedObjectKindCounts\": ";
+        print_json_report_object_kind_counts(report_layout.unplaced_object_kind_counts, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"deletedObjectKindCounts\": ";
+        print_json_report_object_kind_counts(report_layout.deleted_object_kind_counts, "      ");
+        std::cout << ",\n";
         std::cout << "      \"settings\": ";
         print_json_report_named_values(report_layout.settings, "      ");
         std::cout << ",\n";

@@ -90,6 +90,11 @@ struct StudioReportSectionSnapshot {
     std::vector<StudioLayoutObjectSnapshot> objects{};
 };
 
+struct StudioReportObjectKindCount {
+    std::string kind{};
+    std::size_t count = 0;
+};
+
 struct StudioReportLayoutSnapshot {
     bool available = false;
     bool is_label = false;
@@ -124,6 +129,9 @@ struct StudioReportLayoutSnapshot {
     bool column_spacing_available = false;
     int column_spacing = 0;
     std::size_t live_object_count = 0;
+    std::vector<StudioReportObjectKindCount> object_kind_counts{};
+    std::vector<StudioReportObjectKindCount> unplaced_object_kind_counts{};
+    std::vector<StudioReportObjectKindCount> deleted_object_kind_counts{};
     std::vector<StudioNamedValue> settings{};
     std::vector<StudioNamedValue> deleted_settings{};
     std::vector<StudioReportSectionSnapshot> sections{};

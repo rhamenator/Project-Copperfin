@@ -468,6 +468,45 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
     });
 }
 
+void increment_object_kind_count(std::vector<StudioReportObjectKindCount>& counts, const std::string& kind) {
+    const auto existing = std::find_if(
+        counts.begin(),
+        counts.end(),
+        [&](const StudioReportObjectKindCount& count) {
+            return count.kind == kind;
+        });
+    if (existing != counts.end()) {
+        ++existing->count;
+        return;
+    }
+    counts.push_back({.kind = kind, .count = 1U});
+}
+
+void sort_object_kind_counts(std::vector<StudioReportObjectKindCount>& counts) {
+    std::sort(counts.begin(), counts.end(), [](const auto& left, const auto& right) {
+        return left.kind < right.kind;
+    });
+}
+
+void finalize_object_kind_counts(StudioReportLayoutSnapshot& snapshot) {
+    for (const auto& section : snapshot.sections) {
+        for (const auto& object : section.objects) {
+            increment_object_kind_count(snapshot.object_kind_counts, object.object_kind);
+        }
+    }
+    for (const auto& object : snapshot.unplaced_objects) {
+        increment_object_kind_count(snapshot.object_kind_counts, object.object_kind);
+        increment_object_kind_count(snapshot.unplaced_object_kind_counts, object.object_kind);
+    }
+    for (const auto& object : snapshot.deleted_objects) {
+        increment_object_kind_count(snapshot.deleted_object_kind_counts, object.object_kind);
+    }
+
+    sort_object_kind_counts(snapshot.object_kind_counts);
+    sort_object_kind_counts(snapshot.unplaced_object_kind_counts);
+    sort_object_kind_counts(snapshot.deleted_object_kind_counts);
+}
+
 StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
@@ -613,6 +652,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
 
     finalize_preview_bounds(snapshot);
     finalize_page_setup_summary(snapshot);
+    finalize_object_kind_counts(snapshot);
 
     return snapshot;
 }
