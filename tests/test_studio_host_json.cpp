@@ -9108,6 +9108,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1343: admitted designer execution JSON should expose zero builder errors");
     expect_contains(visual_process.stdout_text, "\"toolboxErrorCount\": 0",
         "#1343: admitted designer execution JSON should expose zero toolbox errors");
+    expect_contains(visual_process.stdout_text, "\"failedEditorActionIds\": []",
+        "#1345: admitted designer execution JSON should expose no failed editor actions");
+    expect_contains(visual_process.stdout_text, "\"failedBuilderIds\": []",
+        "#1345: admitted designer execution JSON should expose no failed builders");
+    expect_contains(visual_process.stdout_text, "\"toolboxFailed\": false",
+        "#1345: admitted designer execution JSON should expose successful toolbox summary state");
     expect_contains(visual_process.stdout_text, "\"editorActionLaunchCommand\": \"/bin/true\"",
         "#1325: designer execution JSON should expose editor launch commands");
     expect_contains(visual_process.stdout_text, "\"builderLaunchCommand\": \"/bin/true\"",
@@ -9251,6 +9257,13 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1343: failed builder execution JSON should expose builder error counts");
     expect_contains(failed_builder_process.stdout_text, "\"toolboxErrorCount\": 0",
         "#1343: failed builder execution JSON should preserve zero toolbox errors");
+    expect_contains(failed_builder_process.stdout_text,
+        "\"failedBuilderIds\": [\"form-builder\", \"control-builder\", \"grid-builder\"]",
+        "#1345: failed builder execution JSON should summarize failed builder ids");
+    expect_contains(failed_builder_process.stdout_text, "\"failedEditorActionIds\": []",
+        "#1345: failed builder execution JSON should preserve no failed editor actions");
+    expect_contains(failed_builder_process.stdout_text, "\"toolboxFailed\": false",
+        "#1345: failed builder execution JSON should preserve successful toolbox summary state");
     expect_contains(failed_builder_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
         "#1340: failed designer execution JSON should preserve planned builder command token");
     expect_contains(failed_builder_process.stdout_text,
@@ -9294,6 +9307,13 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1343: failed editor action execution JSON should preserve zero builder errors");
     expect_contains(failed_editor_process.stdout_text, "\"toolboxErrorCount\": 0",
         "#1343: failed editor action execution JSON should preserve zero toolbox errors");
+    expect_contains(failed_editor_process.stdout_text,
+        "\"failedEditorActionIds\": [\"show-property-grid\", \"edit-visual-method\"",
+        "#1345: failed editor action execution JSON should summarize failed editor action ids");
+    expect_contains(failed_editor_process.stdout_text, "\"failedBuilderIds\": []",
+        "#1345: failed editor action execution JSON should preserve no failed builders");
+    expect_contains(failed_editor_process.stdout_text, "\"toolboxFailed\": false",
+        "#1345: failed editor action execution JSON should preserve successful toolbox summary state");
     expect_contains(failed_editor_process.stdout_text, "\"commandToken\": \"studio.property_grid.show\"",
         "#1341: failed editor action execution JSON should preserve planned editor action command token");
     expect_contains(failed_editor_process.stdout_text,
@@ -9341,6 +9361,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1343: failed toolbox execution JSON should preserve zero builder errors");
     expect_contains(failed_toolbox_process.stdout_text, "\"toolboxErrorCount\": 1",
         "#1343: failed toolbox execution JSON should expose toolbox error counts");
+    expect_contains(failed_toolbox_process.stdout_text, "\"failedEditorActionIds\": []",
+        "#1345: failed toolbox execution JSON should preserve no failed editor actions");
+    expect_contains(failed_toolbox_process.stdout_text, "\"failedBuilderIds\": []",
+        "#1345: failed toolbox execution JSON should preserve no failed builders");
+    expect_contains(failed_toolbox_process.stdout_text, "\"toolboxFailed\": true",
+        "#1345: failed toolbox execution JSON should summarize failed toolbox state");
     expect_contains(failed_toolbox_process.stdout_text, "\"toolboxContext\": \"form\"",
         "#1341: failed toolbox execution JSON should preserve planned toolbox context");
     expect_contains(failed_toolbox_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",

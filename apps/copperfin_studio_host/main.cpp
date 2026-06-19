@@ -10930,22 +10930,36 @@ void print_json_designer_execution_result(
     const std::size_t toolbox_execution_count = child_dispatch_plan.toolbox_dispatch.ok ? 1U : 0U;
     std::size_t editor_action_executed_count = 0U;
     std::size_t editor_action_error_count = 0U;
-    for (const auto& execution : result.editor_action_executions) {
+    std::vector<std::string> failed_editor_action_ids;
+    for (std::size_t index = 0U; index < result.editor_action_executions.size(); ++index) {
+        const auto& execution = result.editor_action_executions[index];
         if (execution.executed) {
             ++editor_action_executed_count;
         }
         if (!execution.ok) {
             ++editor_action_error_count;
+            if (index < child_dispatch_plan.editor_action_dispatches.size() &&
+                child_dispatch_plan.editor_action_dispatches[index].ok) {
+                failed_editor_action_ids.push_back(
+                    std::string(child_dispatch_plan.editor_action_dispatches[index].plan.action.id));
+            }
         }
     }
     std::size_t builder_executed_count = 0U;
     std::size_t builder_error_count = 0U;
-    for (const auto& execution : result.builder_executions) {
+    std::vector<std::string> failed_builder_ids;
+    for (std::size_t index = 0U; index < result.builder_executions.size(); ++index) {
+        const auto& execution = result.builder_executions[index];
         if (execution.executed) {
             ++builder_executed_count;
         }
         if (!execution.ok) {
             ++builder_error_count;
+            if (index < child_dispatch_plan.builder_dispatches.size() &&
+                child_dispatch_plan.builder_dispatches[index].ok) {
+                failed_builder_ids.push_back(
+                    std::string(child_dispatch_plan.builder_dispatches[index].plan.builder.id));
+            }
         }
     }
     const std::size_t toolbox_executed_count =
@@ -10971,6 +10985,13 @@ void print_json_designer_execution_result(
     std::cout << "    \"editorActionErrorCount\": " << editor_action_error_count << ",\n";
     std::cout << "    \"builderErrorCount\": " << builder_error_count << ",\n";
     std::cout << "    \"toolboxErrorCount\": " << toolbox_error_count << ",\n";
+    std::cout << "    \"failedEditorActionIds\": ";
+    print_json_string_array(failed_editor_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"failedBuilderIds\": ";
+    print_json_string_array(failed_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"toolboxFailed\": " << (toolbox_error_count != 0U ? "true" : "false") << ",\n";
     std::cout << "    \"editorActionLaunchCommand\": ";
     print_json_string(editor_action_launch_command);
     std::cout << ",\n";
