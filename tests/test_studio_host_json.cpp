@@ -4346,6 +4346,145 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
     }
 }
 
+void test_studio_host_json_exposes_builder_launch_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_builder_launch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto control_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-catalog",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--json"
+        },
+        temp_root);
+    expect(control_process.exit_code == 0,
+        "#1269: builder launch catalog JSON should accept control contexts");
+    expect_contains(control_process.stdout_text, "\"builderLaunchCatalog\": {",
+        "#1269: builder launch catalog JSON should expose a catalog object");
+    expect_contains(control_process.stdout_text, "\"context\": \"control\"",
+        "#1269: builder launch catalog JSON should expose builder contexts");
+    expect_contains(control_process.stdout_text, "\"builderCount\": 2",
+        "#1269: control builder launch catalog JSON should expose builder counts");
+    expect_contains(control_process.stdout_text, "\"launchPlanCount\": 2",
+        "#1269: control builder launch catalog JSON should expose launch-plan counts");
+    expect_contains(control_process.stdout_text, "\"errorCount\": 0",
+        "#1269: control builder launch catalog JSON should expose error counts");
+    expect_contains(control_process.stdout_text, "\"dryRun\": true",
+        "#1269: builder launch catalog JSON should remain a dry-run surface");
+    expect_contains(control_process.stdout_text, "\"mutatesAsset\": false",
+        "#1269: builder launch catalog JSON should remain non-mutating");
+    expect_contains(control_process.stdout_text, "\"entries\": [",
+        "#1269: builder launch catalog JSON should expose per-builder entries");
+    expect_contains(control_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1269: builder launch catalog JSON should include grid builders");
+    expect_contains(control_process.stdout_text, "\"kind\": \"builder\"",
+        "#1269: builder launch catalog JSON should expose builder kind metadata");
+    expect_contains(control_process.stdout_text, "\"launchOk\": true",
+        "#1269: builder launch catalog JSON should expose launch validation state");
+    expect_contains(control_process.stdout_text, "\"vfp9Equivalent\": \"builder.app grid builder\"",
+        "#1269: builder launch catalog JSON should preserve VFP 9 equivalent metadata");
+    expect_contains(control_process.stdout_text, "\"copperfinComponent\": \"cf_form_surface\"",
+        "#1269: builder launch catalog JSON should preserve Copperfin component metadata");
+    expect_contains(control_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1269: builder launch catalog JSON should expose entry points");
+    expect_contains(control_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1269: builder launch catalog JSON should preserve asset paths");
+    expect_contains(control_process.stdout_text, "\"recordIndex\": 4",
+        "#1269: builder launch catalog JSON should preserve record indexes");
+    expect_contains(control_process.stdout_text, "\"objectName\": \"grdOrders\"",
+        "#1269: builder launch catalog JSON should preserve object names");
+    expect_contains(control_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
+        "#1269: builder launch catalog JSON should preserve unique ids");
+
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-catalog",
+            "--builder-context", "label",
+            "--path", "labels/mailing.lbx",
+            "--json"
+        },
+        temp_root);
+    expect(label_process.exit_code == 0,
+        "#1269: builder launch catalog JSON should accept label contexts");
+    expect_contains(label_process.stdout_text, "\"builderId\": \"label-wizard\"",
+        "#1269: label builder launch catalog JSON should expose label wizards");
+    expect_contains(label_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1269: label builder launch catalog JSON should preserve wizard kind metadata");
+    expect_contains(label_process.stdout_text, "\"entryPoint\": \"cf_wizards.label_wizard\"",
+        "#1269: label builder launch catalog JSON should expose wizard entry points");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-catalog",
+            "--builder-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1269: builder launch catalog JSON should reject unknown context tokens");
+    expect_contains(unknown_context_process.stdout_text, "\"builderLaunchCatalog\": null",
+        "#1269: invalid builder launch catalog JSON should not expose catalog objects");
+    expect_contains(unknown_context_process.stdout_text, "Unknown builder context token: unknown",
+        "#1269: invalid builder launch catalog JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1269: builder launch catalog JSON should reject missing contexts");
+    expect_contains(missing_context_process.stdout_text, "No builder context was provided.",
+        "#1269: missing builder launch catalog context JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-catalog",
+            "--builder-context", "control",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1269: builder launch catalog JSON should reject invalid record indexes");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1269: invalid builder launch catalog record JSON should report parser errors");
+
+    const auto unknown_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-catalog",
+            "--builder-context", "control",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_option_process.exit_code == 2,
+        "#1269: builder launch catalog JSON should reject invocation-only options");
+    expect_contains(unknown_option_process.stdout_text,
+        "Unknown builder-launch-catalog option: --admit-ui-launch",
+        "#1269: unknown builder launch catalog options should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_invocation_admission(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -32567,6 +32706,7 @@ int main(int argc, char** argv) {
 
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
+    test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
     test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);

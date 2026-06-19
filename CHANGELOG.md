@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-06-18
+
+- E2/#1269 Studio host builder/wizard launch catalog JSON shipped: `copperfin_studio_host --builder-launch-catalog --builder-context <token>` now exposes non-executing per-context builder launch catalogs with aggregate counts, dry-run/non-mutating state, and per-builder launch metadata while rejecting invalid context, record, and invocation-only options before planning.
+
 ## 2026-06-17
 
 - E2/#1075 host allow-output-object command shipped: `copperfin_studio_host --allow-output-object` now assigns ALLOWOUTPUT logical state through stable target selectors and `--allow-output true|false`, rejects invalid boolean values and ambiguous allow-output-object/delete/restore/duplicate/rename-object/reparent-object/reorder-object/group-object/align-object/resize-object/distribute-object/snap-object/nudge-object/tab-order-object/tab-stop-object/visibility-object/enabled-object/read-only-object/locked-object/caption-object/tooltip-text-object/status-bar-text-object/control-source-object/current-control-object/input-mask-object/format-object/row-source-object/row-source-type-object/bound-column-object/column-count-object/style-object/list-index-object/left-column-object/display-value-object/selected-back-color-object/selected-fore-color-object/selected-item-back-color-object/selected-item-fore-color-object/disabled-item-back-color-object/disabled-item-fore-color-object/item-back-color-object/item-fore-color-object/highlight-back-color-object/highlight-fore-color-object/back-color-object/fore-color-object/disabled-back-color-object/disabled-fore-color-object/dynamic-back-color-object/dynamic-fore-color-object/closable-object/control-box-object/ungroup-object/property command combinations before mutation, and preserves no-mutation behavior for missing targets, missing selectors, missing values, duplicate targets, or incomplete requests.

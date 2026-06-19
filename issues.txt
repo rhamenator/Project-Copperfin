@@ -1,3 +1,4 @@
+1269	OPEN	E2/#23 slice: Expose builder launch catalog planning through host JSON		2026-06-18T23:58:24Z
 1268	OPEN	E2/#23 slice: Add builder launch catalog planning		2026-06-18T23:41:43Z
 1267	OPEN	E2/#23 slice: Expose toolbox object batch creation dispatch planning from palette dispatch through host JSON		2026-06-18T23:35:17Z
 1266	OPEN	E2/#23 slice: Add toolbox object batch creation dispatch planning from palette dispatch		2026-06-18T23:31:15Z
