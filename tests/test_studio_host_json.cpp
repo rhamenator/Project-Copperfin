@@ -5106,6 +5106,66 @@ void test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(co
     }
 }
 
+void test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_layout_reorder_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_reorder_json(label_path);
+
+    const auto reorder_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--record", "3",
+            "--reorder-object",
+            "--unique-id", "right-field-guid",
+            "--placement", "before",
+            "--target-unique-id", "left-field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (reorder_process.exit_code != 0) {
+        std::cerr << "studio host label object reorder stdout:\n" << reorder_process.stdout_text << "\n";
+        std::cerr << "studio host label object reorder stderr:\n" << reorder_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(reorder_process.exit_code == 0,
+           "#1489: label layout object reorder should exit successfully");
+    expect(visual_object_order(label_path) == "right-field-guid,left-field-guid,middle-field-guid",
+           "#1489: label layout object reorder should update physical LBX record order");
+    expect_contains(reorder_process.stdout_text, "\"isLabel\": true",
+                    "#1489: reordered label layout JSON should retain label identity");
+    expect_contains_in_order(
+        reorder_process.stdout_text,
+        {
+            "\"sectionObjectIndex\": 0",
+            "\"expression\": \"right.value\"",
+            "\"sectionObjectIndex\": 1",
+            "\"expression\": \"left.value\"",
+            "\"sectionObjectIndex\": 2",
+            "\"expression\": \"middle.value\""
+        },
+        "#1489: label layout JSON should serialize tied-geometry section objects in reordered record order");
+    expect_contains(reorder_process.stdout_text, "\"sectionObjectCount\": 3",
+                    "#1489: reordered label object JSON should expose containing section object counts");
+    expect_contains(reorder_process.stdout_text, "\"containingSectionId\": \"detail_1\"",
+                    "#1489: reordered label object JSON should preserve containing section metadata");
+    expect_contains(reorder_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1489: reordered label object JSON should keep selected containing-section availability");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -49156,6 +49216,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
