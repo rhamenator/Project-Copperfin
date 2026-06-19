@@ -1,3 +1,4 @@
+1403	OPEN	E2/#23 slice: Expose toolbox palette launch-plan summaries in host JSON		2026-06-19T11:01:58Z
 1402	OPEN	E2/#23 slice: Expose designer execution summaries in host JSON		2026-06-19T10:58:28Z
 1401	OPEN	E2/#23 slice: Expose designer dispatch summaries in host JSON		2026-06-19T10:54:36Z
 1400	OPEN	E2/#23 slice: Expose designer invocation-admission summaries in host JSON		2026-06-19T10:51:31Z

@@ -7322,6 +7322,12 @@ void test_studio_host_json_exposes_toolbox_palette_launch_plans(const std::strin
         "#1210: toolbox palette launch-plan JSON should carry unique-id selectors");
     expect_contains(visual_process.stdout_text, "\"itemCount\": ",
         "#1210: toolbox palette launch-plan JSON should expose item counts");
+    expect_contains(visual_process.stdout_text, "\"launchReadySelectionContexts\": [\"visual_object\"]",
+        "#1403: toolbox palette launch-plan JSON should summarize launch-ready selected contexts");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedSelectionContexts\": []",
+        "#1403: toolbox palette launch-plan JSON should expose empty blocked selected contexts");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1403: toolbox palette launch-plan JSON should expose empty blocked launch errors");
     expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
         "#1210: visual-object toolbox palette launch-plan JSON should include form-safe TextBox items");
     expect_contains(visual_process.stdout_text, "\"id\": \"pageframe\"",
