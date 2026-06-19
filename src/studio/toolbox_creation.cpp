@@ -1522,6 +1522,53 @@ StudioSelectionToolboxObjectCreateBatchResult create_visual_objects_from_toolbox
     };
 }
 
+StudioToolboxObjectCreateBatchFromDispatchResult create_visual_objects_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateBatchFromPaletteDispatchRequest& request) {
+    auto plan_result = plan_visual_objects_from_toolbox_dispatch(request);
+    if (!plan_result.ok) {
+        return {
+            .ok = false,
+            .error = plan_result.error,
+            .batch_plan = plan_result,
+            .create_result = failed_batch_create_result(plan_result.error),
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    std::vector<vfp::VisualObjectCreateBatchItem> objects;
+    objects.reserve(plan_result.plan.plans.size());
+    for (const auto& plan : plan_result.plan.plans) {
+        objects.push_back({
+            .field_values = plan.field_values
+        });
+    }
+
+    auto create_result = vfp::create_visual_objects({
+        .path = plan_result.plan.path,
+        .objects = std::move(objects)
+    });
+    if (!create_result.ok) {
+        return {
+            .ok = false,
+            .error = create_result.error,
+            .batch_plan = plan_result,
+            .create_result = create_result,
+            .dry_run = false,
+            .mutates_asset = false
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .batch_plan = plan_result,
+        .create_result = create_result,
+        .dry_run = false,
+        .mutates_asset = true
+    };
+}
+
 vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request) {
     const auto plan_result = plan_visual_objects_from_toolbox_items(request);
