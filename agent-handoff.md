@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1277`, adding selection-context builder/wizard launch catalog planning through `plan_studio_builder_launch_catalog_for_selection`. `#1276` is the immediately preceding host JSON dispatch-catalog slice. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1278`, exposing selection-context builder/wizard launch catalog planning through `copperfin_studio_host --selection-builder-launch-catalog` JSON. `#1277` is the immediately preceding core planner slice. Both remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 

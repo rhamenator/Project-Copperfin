@@ -4485,6 +4485,144 @@ void test_studio_host_json_exposes_builder_launch_catalog(const std::string& stu
     }
 }
 
+void test_studio_host_json_exposes_selection_builder_launch_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selection_builder_launch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-launch-catalog",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1278: selection builder launch catalog JSON should accept visual-object contexts");
+    expect_contains(visual_process.stdout_text, "\"selectionBuilderLaunchCatalog\": {",
+        "#1278: selection builder launch catalog JSON should expose catalog objects");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1278: selection builder launch catalog JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"builderCount\": 3",
+        "#1278: visual-object selection builder launch catalogs should expose mixed builder counts");
+    expect_contains(visual_process.stdout_text, "\"launchPlanCount\": 3",
+        "#1278: visual-object selection builder launch catalogs should expose launch-plan counts");
+    expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
+        "#1278: visual-object selection builder launch catalogs should expose error counts");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": true",
+        "#1278: selection builder launch catalogs should remain dry-run");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1278: selection builder launch catalogs should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"builderId\": \"form-builder\"",
+        "#1278: visual-object selection builder launch catalogs should include form builders");
+    expect_contains(visual_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1278: visual-object selection builder launch catalogs should include control builders");
+    expect_contains(visual_process.stdout_text, "\"context\": \"form\"",
+        "#1278: selection builder launch catalogs should expose resolved form contexts");
+    expect_contains(visual_process.stdout_text, "\"context\": \"control\"",
+        "#1278: selection builder launch catalogs should expose resolved control contexts");
+    expect_contains(visual_process.stdout_text, "\"entryPoint\": \"cf_builders.form_builder\"",
+        "#1278: selection builder launch catalogs should expose form builder entry points");
+    expect_contains(visual_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1278: selection builder launch catalogs should preserve asset paths");
+    expect_contains(visual_process.stdout_text, "\"recordIndex\": 1",
+        "#1278: selection builder launch catalogs should preserve record indexes");
+    expect_contains(visual_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1278: selection builder launch catalogs should preserve object names");
+    expect_contains(visual_process.stdout_text, "\"uniqueId\": \"form-guid\"",
+        "#1278: selection builder launch catalogs should preserve unique ids");
+
+    const auto menu_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-launch-catalog",
+            "--selection-context", "menu_item",
+            "--path", "menus/main.mnx",
+            "--object-name", "mnuMain",
+            "--unique-id", "menu-guid",
+            "--json"
+        },
+        temp_root);
+    expect(menu_process.exit_code == 0,
+        "#1278: selection builder launch catalog JSON should accept menu contexts");
+    expect_contains(menu_process.stdout_text, "\"builderId\": \"menu-designer\"",
+        "#1278: menu selection builder launch catalogs should expose menu designers");
+    expect_contains(menu_process.stdout_text, "\"context\": \"menu\"",
+        "#1278: menu selection builder launch catalogs should expose menu builder contexts");
+    expect_contains(menu_process.stdout_text, "\"entryPoint\": \"cf_builders.menu_designer\"",
+        "#1278: menu selection builder launch catalogs should expose menu entry points");
+
+    const auto unknown_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-launch-catalog",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_selection_process.exit_code == 2,
+        "#1278: selection builder launch catalog JSON should reject unknown selections");
+    expect_contains(unknown_selection_process.stdout_text,
+        "\"selectionBuilderLaunchCatalog\": null",
+        "#1278: invalid selection builder launch catalog JSON should not expose catalog objects");
+    expect_contains(unknown_selection_process.stdout_text, "Unknown selection context token: unknown",
+        "#1278: invalid selection builder launch catalog contexts should report parser errors");
+
+    const auto missing_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-launch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selection_process.exit_code == 2,
+        "#1278: selection builder launch catalog JSON should reject missing selections");
+    expect_contains(missing_selection_process.stdout_text, "No selection context was provided.",
+        "#1278: missing selection builder launch catalog contexts should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-launch-catalog",
+            "--selection-context", "visual_object",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1278: selection builder launch catalog JSON should reject invalid records");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1278: invalid selection builder launch catalog records should report parser errors");
+
+    const auto unknown_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-launch-catalog",
+            "--selection-context", "visual_object",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_option_process.exit_code == 2,
+        "#1278: selection builder launch catalog JSON should reject invocation-only options");
+    expect_contains(unknown_option_process.stdout_text,
+        "Unknown selection-builder-launch-catalog option: --admit-ui-launch",
+        "#1278: unknown selection builder launch catalog options should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_invocation_admission(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -33151,6 +33289,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
+    test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_invocation_admission_catalog(argv[1]);
