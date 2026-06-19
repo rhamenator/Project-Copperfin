@@ -11007,8 +11007,14 @@ void print_json_designer_execution_result(
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
         std::cout << ",\n";
+        std::cout << "        \"executionAdmitted\": "
+                  << (execution.execution_admitted ? "true" : "false") << ",\n";
+        std::cout << "        \"launched\": "
+                  << (execution.observation.launched ? "true" : "false") << ",\n";
         std::cout << "        \"observedExitCode\": " << execution.observation.exit_code << ",\n";
-        std::cout << "        \"executed\": " << (execution.executed ? "true" : "false") << "\n";
+        std::cout << "        \"executed\": " << (execution.executed ? "true" : "false") << ",\n";
+        std::cout << "        \"dryRun\": " << (execution.dry_run ? "true" : "false") << ",\n";
+        std::cout << "        \"mutatesAsset\": " << (execution.mutates_asset ? "true" : "false") << "\n";
         std::cout << "      }";
         if ((index + 1U) != result.editor_action_executions.size()) {
             std::cout << ",";
@@ -11062,8 +11068,14 @@ void print_json_designer_execution_result(
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
         std::cout << ",\n";
+        std::cout << "        \"executionAdmitted\": "
+                  << (execution.execution_admitted ? "true" : "false") << ",\n";
+        std::cout << "        \"launched\": "
+                  << (execution.observation.launched ? "true" : "false") << ",\n";
         std::cout << "        \"observedExitCode\": " << execution.observation.exit_code << ",\n";
-        std::cout << "        \"executed\": " << (execution.executed ? "true" : "false") << "\n";
+        std::cout << "        \"executed\": " << (execution.executed ? "true" : "false") << ",\n";
+        std::cout << "        \"dryRun\": " << (execution.dry_run ? "true" : "false") << ",\n";
+        std::cout << "        \"mutatesAsset\": " << (execution.mutates_asset ? "true" : "false") << "\n";
         std::cout << "      }";
         if ((index + 1U) != result.builder_executions.size()) {
             std::cout << ",";
@@ -11120,8 +11132,14 @@ void print_json_designer_execution_result(
         print_json_string("");
     }
     std::cout << ",\n";
+    std::cout << "      \"executionAdmitted\": "
+              << (result.toolbox_execution.execution_admitted ? "true" : "false") << ",\n";
+    std::cout << "      \"launched\": "
+              << (result.toolbox_execution.observation.launched ? "true" : "false") << ",\n";
     std::cout << "      \"observedExitCode\": " << result.toolbox_execution.observation.exit_code << ",\n";
-    std::cout << "      \"executed\": " << (result.toolbox_execution.executed ? "true" : "false") << "\n";
+    std::cout << "      \"executed\": " << (result.toolbox_execution.executed ? "true" : "false") << ",\n";
+    std::cout << "      \"dryRun\": " << (result.toolbox_execution.dry_run ? "true" : "false") << ",\n";
+    std::cout << "      \"mutatesAsset\": " << (result.toolbox_execution.mutates_asset ? "true" : "false") << "\n";
     std::cout << "    }\n";
     std::cout << "  },\n";
     std::cout << "  \"error\": ";

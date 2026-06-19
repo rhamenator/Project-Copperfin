@@ -9104,6 +9104,10 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1337: designer execution JSON should expose editor child command tokens");
     expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.method_editor.open\"",
         "#1338: designer execution JSON should expose editor child dispatch arguments");
+    expect_contains(visual_process.stdout_text, "\"executionAdmitted\": true",
+        "#1339: designer execution JSON should expose child execution admission state");
+    expect_contains(visual_process.stdout_text, "\"launched\": true",
+        "#1339: designer execution JSON should expose child launch state");
     expect_contains(visual_process.stdout_text,
         "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.method_editor.open'",
         "#1335: designer execution JSON should expose editor child executed commands");
@@ -9127,6 +9131,10 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(visual_process.stdout_text,
         "\"dispatchArguments\": [\"--command-token\", \"studio.toolbox.palette.invoke\"",
         "#1338: designer execution JSON should expose toolbox child dispatch arguments");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": false",
+        "#1339: designer execution JSON should expose child dry-run state");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1339: designer execution JSON should expose child mutation state");
     expect_contains(visual_process.stdout_text,
         "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.toolbox.palette.invoke'",
         "#1335: designer execution JSON should expose toolbox child executed commands");
