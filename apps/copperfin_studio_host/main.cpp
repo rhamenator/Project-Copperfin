@@ -46,6 +46,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-object-ancestors --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-method-update --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --method-kind <procedure|function> --method-source <text> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-filter --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--property-filter-text <text>] [--json]\n";
@@ -886,6 +887,18 @@ struct VisualMethodQueryParseResult {
     bool method_name_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectMethodQueryRequest request;
+};
+
+struct VisualMethodUpdateParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    bool method_name_provided = false;
+    bool method_kind_provided = false;
+    bool method_source_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectMethodEditRequest request;
 };
 
 struct ToolboxInvocationAdmissionParseResult {
@@ -4434,6 +4447,77 @@ VisualMethodQueryParseResult parse_visual_method_query_arguments(const std::vect
     }
     if (result.ok && !result.method_name_provided) {
         fail("No method name was provided.");
+    }
+    return result;
+}
+
+VisualMethodUpdateParseResult parse_visual_method_update_arguments(const std::vector<std::string>& args) {
+    VisualMethodUpdateParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-method-update") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-method-update") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--method-name") {
+            result.request.method_name = require_value(argument);
+            result.method_name_provided = !result.request.method_name.empty();
+        } else if (argument == "--method-kind") {
+            result.request.method_kind = require_value(argument);
+            result.method_kind_provided = !result.request.method_kind.empty();
+        } else if (argument == "--method-source") {
+            result.request.source_text = require_value(argument);
+            result.method_source_provided = !result.request.source_text.empty();
+        } else {
+            fail("Unknown visual-method-update option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && !result.method_name_provided) {
+        fail("No method name was provided.");
+    }
+    if (result.ok && !result.method_kind_provided) {
+        fail("No method kind was provided.");
+    }
+    if (result.ok && !result.method_source_provided) {
+        fail("No method source was provided.");
     }
     return result;
 }
@@ -11981,6 +12065,36 @@ void print_json_visual_method_query_result(
     std::cout << "}\n";
 }
 
+void print_json_visual_method_update_result(
+    const copperfin::vfp::VisualAssetEditResult& result,
+    const copperfin::vfp::VisualAssetUndoStatus& undo_status) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"visualMethodUpdate\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"affectedObjectCount\": " << result.affected_object_count << ",\n";
+    std::cout << "    \"dryRun\": false,\n";
+    std::cout << "    \"mutatesAsset\": true,\n";
+    std::cout << "    \"undoAvailable\": " << (undo_status.available ? "true" : "false") << ",\n";
+    std::cout << "    \"undoLabel\": ";
+    print_json_string(undo_status.label);
+    std::cout << "\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_json_visual_property_filter_result(
     const copperfin::vfp::VisualObjectPropertyListFilterResult& result) {
     std::cout << "{\n";
@@ -16298,6 +16412,23 @@ void print_text_visual_method_query_result(
     }
 }
 
+void print_text_visual_method_update_result(
+    const copperfin::vfp::VisualAssetEditResult& result,
+    const copperfin::vfp::VisualAssetUndoStatus& undo_status) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    if (!result.ok) {
+        return;
+    }
+    std::cout << "affected_object_count: " << result.affected_object_count << "\n";
+    std::cout << "dry_run: false\n";
+    std::cout << "mutates_asset: true\n";
+    std::cout << "undo_available: " << (undo_status.available ? "true" : "false") << "\n";
+    std::cout << "undo_label: " << undo_status.label << "\n";
+}
+
 void print_text_toolbox_invocation_admission_result(
     const copperfin::studio::StudioToolboxInvocationAdmissionResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
@@ -19006,6 +19137,36 @@ int main(int argc, char** argv) {
             print_json_editor_action_dispatch_execution_catalog_result(result);
         } else {
             print_text_editor_action_dispatch_execution_catalog_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_method_update_parse = parse_visual_method_update_arguments(args);
+    if (visual_method_update_parse.requested) {
+        if (!visual_method_update_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_method_update_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_method_update_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status);
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::update_visual_object_method(
+            visual_method_update_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_method_update_parse.request.path);
+        if (visual_method_update_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status);
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
         }
         return result.ok ? 0 : 4;
     }
