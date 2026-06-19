@@ -7471,6 +7471,12 @@ void test_studio_host_json_exposes_toolbox_invocation_admission(const std::strin
         "#1220: toolbox invocation-admission JSON should carry unique-id selectors");
     expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
         "#1220: visual-object toolbox invocation-admission JSON should include form-safe TextBox items");
+    expect_contains(visual_process.stdout_text, "\"admissionReadyItemIds\": [\"label\", \"textbox\"",
+        "#1388: toolbox invocation-admission JSON should summarize admission-ready items");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedItemIds\": []",
+        "#1388: admitted toolbox invocation-admission JSON should summarize empty blocked item ids");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1388: admitted toolbox invocation-admission JSON should summarize empty admission errors");
     expect_contains(visual_process.stdout_text, "\"paletteInvocationAdmitted\": true",
         "#1220: admitted toolbox invocation-admission JSON should expose admitted state");
     expect_contains(visual_process.stdout_text, "\"dryRun\": false",
@@ -7495,6 +7501,12 @@ void test_studio_host_json_exposes_toolbox_invocation_admission(const std::strin
         "#1220: report toolbox invocation-admission JSON should include report-safe Label items");
     expect_not_contains(report_process.stdout_text, "\"id\": \"textbox\"",
         "#1220: report toolbox invocation-admission JSON should exclude form-only TextBox items");
+    expect_contains(report_process.stdout_text, "\"admissionReadyItemIds\": [\"label\"",
+        "#1388: dry-run toolbox invocation-admission JSON should preserve admission-ready items");
+    expect_contains(report_process.stdout_text, "\"admissionBlockedItemIds\": []",
+        "#1388: dry-run toolbox invocation-admission JSON should summarize empty blocked item ids");
+    expect_contains(report_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1388: dry-run toolbox invocation-admission JSON should summarize empty admission errors");
     expect_contains(report_process.stdout_text, "\"paletteInvocationAdmitted\": false",
         "#1220: default toolbox invocation-admission JSON should not admit invocation");
     expect_contains(report_process.stdout_text, "\"dryRun\": true",
