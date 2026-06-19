@@ -3870,6 +3870,45 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
     expect_contains(section_process.stdout_text, "\"objectKind\": \"label\"",
                     "#1453: selected report section JSON should include selected section objects");
 
+    const fs::path deleted_section_path = temp_root / "deleted_section.frx";
+    write_synthetic_report_table_for_deleted_section_json(deleted_section_path);
+    const auto deleted_section_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_section_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (deleted_section_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted report section stdout:\n"
+                  << deleted_section_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted report section stderr:\n"
+                  << deleted_section_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_section_process.exit_code == 0,
+           "#1478: selected deleted report section JSON should exit successfully");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1478: deleted report section selections should advertise selected-section availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1478: deleted report section selections should advertise report-selection availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1478: deleted report section selections should expose section selection kind");
+    expect_contains(deleted_section_process.stdout_text, "\"sectionCount\": 0",
+                    "#1478: deleted selected report section JSON should not expose live sections");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
+                    "#1478: deleted selected report section JSON should expose deleted section counts");
+    expect_contains_in_order(
+        deleted_section_process.stdout_text,
+        {
+            "\"selectedReportSection\": {",
+            "\"bandKind\": \"detail\"",
+            "\"recordIndex\": 1",
+            "\"deleted\": true",
+            "\"sectionIndex\": null",
+            "\"sectionCount\": 0"
+        },
+        "#1478: deleted report section selections should expose deleted selected-section metadata");
+
     const auto object_process = run_process_capture(
         studio_host_path,
         {"--path", report_path.string(), "--record", "3", "--json"},
