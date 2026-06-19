@@ -12785,6 +12785,13 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch_cata
         "#1295: admitted selection toolbox create-dispatch catalog JSON should expose non-dry-run state");
     expect_contains(visual_catalog_process.stdout_text, "\"mutatesAsset\": true",
         "#1295: admitted selection toolbox create-dispatch catalog JSON should expose mutation intent");
+    expect_contains(visual_catalog_process.stdout_text,
+        "\"dispatchReadyItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1377: selection toolbox create-dispatch catalog JSON should summarize dispatch-ready visual items");
+    expect_contains(visual_catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1377: admitted selection toolbox create-dispatch catalog JSON should summarize empty blocked item ids");
+    expect_contains(visual_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1377: admitted selection toolbox create-dispatch catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(visual_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1295: visual selection toolbox create-dispatch catalog JSON should include textbox entries");
     expect_contains(visual_catalog_process.stdout_text, "\"objectName\": \"txt2\"",
@@ -12812,6 +12819,14 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch_cata
         "#1295: non-admitted selection toolbox create-dispatch catalog JSON should return catalogs");
     expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchCount\": 0",
         "#1295: non-admitted selection toolbox create-dispatch catalog JSON should expose zero dispatches");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1377: non-admitted selection toolbox create-dispatch catalog JSON should summarize empty ready item ids");
+    expect_contains(dry_run_catalog_process.stdout_text,
+        "\"dispatchBlockedItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1377: non-admitted selection toolbox create-dispatch catalog JSON should summarize blocked visual item ids");
+    expect_contains(dry_run_catalog_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A toolbox create dispatch request requires an admitted non-dry-run create operation.\"",
+        "#1377: non-admitted selection toolbox create-dispatch catalog JSON should summarize blocked dispatch errors");
     expect_contains(dry_run_catalog_process.stdout_text,
         "A toolbox create dispatch request requires an admitted non-dry-run create operation.",
         "#1295: non-admitted selection toolbox create-dispatch catalog JSON should expose dispatch errors");
@@ -12839,6 +12854,12 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch_cata
         "#1295: report selection toolbox create-dispatch catalog JSON should resolve report contexts");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1295: report selection toolbox create-dispatch catalog JSON should include label dispatches");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
+        "#1377: report selection toolbox create-dispatch catalog JSON should summarize dispatch-ready report items");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1377: report selection toolbox create-dispatch catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1377: report selection toolbox create-dispatch catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1295: report selection toolbox create-dispatch catalog JSON should preserve report contexts");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",

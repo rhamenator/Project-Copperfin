@@ -1,3 +1,4 @@
+1377	OPEN	E2/#23 slice: Expose selection toolbox create dispatch catalog status summaries in host JSON		2026-06-19T09:19:50Z
 1376	OPEN	E2/#23 slice: Expose toolbox create dispatch catalog status summaries in host JSON		2026-06-19T09:15:49Z
 1375	OPEN	E2/#23 slice: Expose selection toolbox create plan catalog status summaries in host JSON		2026-06-19T09:13:12Z
 1374	OPEN	E2/#23 slice: Expose toolbox create plan catalog status summaries in host JSON		2026-06-19T09:09:28Z
