@@ -329,6 +329,8 @@ int main() {
            "#1013: menu context result should preserve the requested selection context");
     expect(has_id(menu_context.editor_actions, "show-property-grid"),
            "#1013: menu context should include property-grid action");
+    expect(has_id(menu_context.editor_actions, "edit-menu-command"),
+           "#1413: menu context should include menu command editor action");
     expect(has_id(menu_context.editor_actions, "open-builder"),
            "#1013: menu context should include builder action");
     expect(has_id(menu_context.builders, "menu-designer"),
@@ -871,6 +873,7 @@ int main() {
     });
     expect(menu_launch_surfaces.ok &&
                has_action_launch_plan(menu_launch_surfaces.plan.editor_action_launch_plans, "show-property-grid") &&
+               has_action_launch_plan(menu_launch_surfaces.plan.editor_action_launch_plans, "edit-menu-command") &&
                has_builder_launch_plan(menu_launch_surfaces.plan.builder_launch_plans, "menu-designer") &&
                !menu_launch_surfaces.plan.toolbox_available &&
                menu_launch_surfaces.plan.toolbox_item_count == 0U &&
@@ -930,6 +933,8 @@ int main() {
                !menu_invocation_admission.plan.mutates_asset &&
                has_editor_invocation_admission(
                    menu_invocation_admission.plan.editor_action_invocations, "show-property-grid", false) &&
+               has_editor_invocation_admission(
+                   menu_invocation_admission.plan.editor_action_invocations, "edit-menu-command", false) &&
                has_builder_invocation_admission(
                    menu_invocation_admission.plan.builder_invocations, "menu-designer", false),
            "#1221: aggregate designer invocation admission should preserve unsupported-toolbox contexts as dry-runs");
@@ -1307,6 +1312,10 @@ int main() {
                    menu_invocation_entry->invocation_admission.plan.editor_action_invocations,
                    "show-property-grid",
                    true) &&
+               has_editor_invocation_admission(
+                   menu_invocation_entry->invocation_admission.plan.editor_action_invocations,
+                   "edit-menu-command",
+                   true) &&
                has_builder_invocation_admission(
                    menu_invocation_entry->invocation_admission.plan.builder_invocations,
                    "menu-designer",
@@ -1406,7 +1415,9 @@ int main() {
                menu_dispatch_entry->dispatch.plan.toolbox_dispatch.error ==
                    "The selected Studio context does not expose a toolbox palette." &&
                has_editor_dispatch(
-                   menu_dispatch_entry->dispatch.plan.editor_action_dispatches, "show-property-grid", true),
+                   menu_dispatch_entry->dispatch.plan.editor_action_dispatches, "show-property-grid", true) &&
+               has_editor_dispatch(
+                   menu_dispatch_entry->dispatch.plan.editor_action_dispatches, "edit-menu-command", true),
            "#1239: designer dispatch catalog should summarize menu dispatches and unsupported toolbox errors");
     expect(menu_invocation_entry != nullptr &&
                menu_dispatch_entry != nullptr &&
@@ -1583,6 +1594,7 @@ int main() {
         launch_surface_catalog.contexts,
         StudioEditorSelectionContext::menu_item);
     expect(menu_catalog != nullptr && menu_catalog->launch_surface_plan.ok &&
+               menu_catalog->editor_action_launch_plan_count == 3U &&
                menu_catalog->builder_launch_plan_count == 1U &&
                !menu_catalog->toolbox_available &&
                menu_catalog->toolbox_item_count == 0U &&

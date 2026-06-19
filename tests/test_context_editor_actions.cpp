@@ -89,7 +89,7 @@ int main() {
     using copperfin::studio::StudioEditorSelectionContext;
 
     const auto& actions = copperfin::studio::studio_editor_action_registry();
-    expect(actions.size() >= 7U, "#958: editor action registry should expose core context-aware actions");
+    expect(actions.size() >= 8U, "#1413: editor action registry should expose core context-aware actions");
     expect(std::string(copperfin::studio::studio_editor_selection_context_name(
                StudioEditorSelectionContext::visual_object)) == "visual_object",
            "#958: visual-object context token should be stable");
@@ -208,6 +208,8 @@ int main() {
         StudioEditorSelectionContext::menu_item);
     expect(has_action(menu_actions, "show-property-grid"),
            "#1013: menu-item context should expose property grid");
+    expect(has_action(menu_actions, "edit-menu-command"),
+           "#1413: menu-item context should expose menu command editor");
     expect(has_action(menu_actions, "open-builder"),
            "#1013: menu-item context should expose builders");
     expect(!has_action(menu_actions, "show-toolbox"),
@@ -1127,6 +1129,26 @@ int main() {
                data_property_plan.plan.command_token == "studio.property_grid.show" &&
                data_property_plan.plan.target_surface == "property-grid",
            "#1410: data-environment editor action launch plans should accept property-grid actions");
+
+    const auto menu_command_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::menu_item,
+        .action_id = "edit-menu-command",
+        .asset_path = "menus/main.mnx",
+        .record_index = 5U,
+        .object_name = "FileExit",
+        .unique_id = "menu-guid",
+        .symbol = "FileExit.Command",
+        .line = 4U,
+        .column = 2U
+    });
+    expect(menu_command_plan.ok &&
+               menu_command_plan.plan.action.kind == StudioEditorActionKind::source_editor &&
+               menu_command_plan.plan.command_token == "studio.menu_command_editor.open" &&
+               menu_command_plan.plan.target_surface == "menu-command-editor" &&
+               menu_command_plan.plan.asset_path == "menus/main.mnx" &&
+               menu_command_plan.plan.record_index == 5U &&
+               menu_command_plan.plan.symbol == "FileExit.Command",
+           "#1413: menu-item editor action launch plans should accept menu command editor actions");
 
     const auto project_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::project_item,

@@ -9229,6 +9229,8 @@ void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& s
         "#1212: menu launch-surface JSON should preserve unsupported toolbox reasons");
     expect_contains(menu_process.stdout_text, "\"actionId\": \"show-property-grid\"",
         "#1212: menu launch-surface JSON should still include supported editor actions");
+    expect_contains(menu_process.stdout_text, "\"actionId\": \"edit-menu-command\"",
+        "#1413: menu launch-surface JSON should include menu command editor actions");
     expect_contains(menu_process.stdout_text, "\"builderId\": \"menu-designer\"",
         "#1212: menu launch-surface JSON should still include supported builders");
 
@@ -9386,6 +9388,8 @@ void test_studio_host_json_exposes_designer_invocation_admission(const std::stri
         "#1222: menu designer invocation-admission JSON should preserve unsupported toolbox reasons");
     expect_contains(menu_process.stdout_text, "\"actionId\": \"show-property-grid\"",
         "#1222: menu designer invocation-admission JSON should still include editor actions");
+    expect_contains(menu_process.stdout_text, "\"actionId\": \"edit-menu-command\"",
+        "#1413: menu designer invocation-admission JSON should include menu command editor actions");
     expect_contains(menu_process.stdout_text, "\"builderId\": \"menu-designer\"",
         "#1222: menu designer invocation-admission JSON should still include builders");
     expect_contains(menu_process.stdout_text, "\"editorInvocationAdmitted\": false",
@@ -9551,7 +9555,7 @@ void test_studio_host_json_exposes_designer_dispatch(const std::string& studio_h
         "#1238: menu designer dispatch JSON should expose selected Studio contexts");
     expect_contains(menu_process.stdout_text, "\"dispatchCount\": 0",
         "#1238: default designer dispatch JSON should expose zero aggregate dispatches");
-    expect_contains(menu_process.stdout_text, "\"errorCount\": 4",
+    expect_contains(menu_process.stdout_text, "\"errorCount\": 5",
         "#1238: default menu designer dispatch JSON should expose per-surface dispatch errors");
     expect_contains(menu_process.stdout_text, "\"dispatchOkSelectionContexts\": []",
         "#1401: default menu dispatch JSON should expose empty clean selected contexts");
@@ -10521,6 +10525,8 @@ void test_studio_host_json_exposes_designer_launch_surface_catalog(const std::st
         "#1214: designer launch-surface catalog JSON should preserve editor symbols in nested plans");
     expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"show-property-grid\"",
         "#1214: designer launch-surface catalog JSON should expose nested editor action ids");
+    expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"show-property-grid\", \"edit-menu-command\", \"open-builder\"]",
+        "#1413: designer launch-surface catalog JSON should expose menu command editor action ids");
     expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"form-builder\"",
         "#1214: designer launch-surface catalog JSON should expose nested builder ids");
     expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"menu-designer\"]",
@@ -10617,6 +10623,8 @@ void test_studio_host_json_exposes_designer_invocation_admission_catalog(const s
         "#1224: designer invocation-admission catalog JSON should include data-environment contexts");
     expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"show-property-grid\"",
         "#1224: designer invocation-admission catalog JSON should expose nested editor action ids");
+    expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"show-property-grid\", \"edit-menu-command\", \"open-builder\"]",
+        "#1413: designer invocation-admission catalog JSON should expose menu command editor action ids");
     expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"form-builder\"",
         "#1224: designer invocation-admission catalog JSON should expose visual builder ids");
     expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"menu-designer\"]",

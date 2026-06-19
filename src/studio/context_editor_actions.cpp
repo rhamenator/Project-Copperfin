@@ -102,6 +102,15 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             .description = "Open FRX/LBX expression text with report/label source provenance."
         },
         {
+            .id = "edit-menu-command",
+            .label = "Edit Menu Command",
+            .kind = Kind::source_editor,
+            .contexts = {Context::menu_item},
+            .command_token = "studio.menu_command_editor.open",
+            .target_surface = "menu-command-editor",
+            .description = "Open menu command, shortcut, and detail metadata for MNX/MNT menu items."
+        },
+        {
             .id = "open-builder",
             .label = "Builder",
             .kind = Kind::builder,
