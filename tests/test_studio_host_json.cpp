@@ -8643,6 +8643,166 @@ void test_studio_host_json_exposes_designer_dispatch(const std::string& studio_h
     }
 }
 
+void test_studio_host_json_exposes_designer_execution(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_designer_execution_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--symbol", "Click",
+            "--line", "12",
+            "--column", "4",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "true",
+            "--editor-action-launch-command", "/bin/true",
+            "--builder-launch-command", "/bin/true",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1325: designer execution JSON should accept admitted visual-object contexts");
+    expect_contains(visual_process.stdout_text, "\"designerExecution\": {",
+        "#1325: designer execution JSON should expose an execution object");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1325: designer execution JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1325: designer execution JSON should preserve asset paths");
+    expect_contains(visual_process.stdout_text, "\"executionAdmitted\": true",
+        "#1325: designer execution JSON should expose execution admission");
+    expect_contains(visual_process.stdout_text, "\"executed\": true",
+        "#1325: designer execution JSON should mark aggregate execution complete");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": false",
+        "#1325: admitted designer execution JSON should not be dry-run");
+    expect_contains(visual_process.stdout_text, "\"executionCount\": ",
+        "#1325: designer execution JSON should expose execution counts");
+    expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
+        "#1325: admitted designer execution JSON should expose zero execution errors");
+    expect_contains(visual_process.stdout_text, "\"editorActionLaunchCommand\": \"/bin/true\"",
+        "#1325: designer execution JSON should expose editor launch commands");
+    expect_contains(visual_process.stdout_text, "\"builderLaunchCommand\": \"/bin/true\"",
+        "#1325: designer execution JSON should expose builder launch commands");
+    expect_contains(visual_process.stdout_text, "\"toolboxLaunchCommand\": \"/bin/true\"",
+        "#1325: designer execution JSON should expose toolbox launch commands");
+    expect_contains(visual_process.stdout_text, "\"editorActionExecutions\": [",
+        "#1325: designer execution JSON should expose editor execution results");
+    expect_contains(visual_process.stdout_text, "\"builderExecutions\": [",
+        "#1325: designer execution JSON should expose builder execution results");
+    expect_contains(visual_process.stdout_text, "\"toolboxExecution\": {",
+        "#1325: designer execution JSON should expose toolbox execution results");
+
+    const auto missing_builder_command_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-builder-invocations", "true",
+            "--admit-designer-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_builder_command_process.exit_code == 2,
+        "#1325: designer execution JSON should reject missing required child launch commands");
+    expect_contains(missing_builder_command_process.stdout_text,
+        "No designer builder launch command was provided.",
+        "#1325: missing designer builder launch command JSON should report parser errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-designer-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 4,
+        "#1325: designer execution JSON should reject aggregate dry-run dispatches");
+    expect_contains(dry_run_process.stdout_text, "\"designerExecution\": null",
+        "#1325: dry-run designer execution JSON should not expose a result object");
+    expect_contains(dry_run_process.stdout_text,
+        "A designer dispatch execution request requires at least one admitted dispatch.",
+        "#1325: dry-run designer execution JSON should report aggregate dispatch preflight errors");
+
+    const auto unadmitted_execution_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "false",
+            "--editor-action-launch-command", "/bin/true",
+            "--builder-launch-command", "/bin/true",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_execution_process.exit_code == 4,
+        "#1325: designer execution JSON should require explicit aggregate execution admission");
+    expect_contains(unadmitted_execution_process.stdout_text,
+        "A designer dispatch execution request requires explicit execution admission.",
+        "#1325: unadmitted designer execution JSON should report aggregate execution admission errors");
+    expect_contains(unadmitted_execution_process.stdout_text, "\"executed\": false",
+        "#1325: unadmitted designer execution JSON should not mark execution complete");
+
+    const auto failed_builder_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "true",
+            "--editor-action-launch-command", "/bin/true",
+            "--builder-launch-command", "/bin/false",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(failed_builder_process.exit_code == 4,
+        "#1325: designer execution JSON should fail when child executions fail");
+    expect_contains(failed_builder_process.stdout_text,
+        "Designer builder launch command returned a non-zero exit code.",
+        "#1325: failed designer child execution JSON should expose child errors");
+    expect_contains(failed_builder_process.stdout_text, "\"errorCount\": ",
+        "#1325: failed designer execution JSON should expose execution error counts");
+    expect_contains(failed_builder_process.stdout_text, "\"executed\": false",
+        "#1325: failed designer execution JSON should not mark aggregate execution complete");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1325: designer execution JSON should reject unknown selection contexts");
+    expect_contains(unknown_context_process.stdout_text, "Unknown selection context token: unknown",
+        "#1325: unknown designer execution context JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_dispatch_catalog(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -37649,6 +37809,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission(argv[1]);
     test_studio_host_json_exposes_designer_dispatch(argv[1]);
+    test_studio_host_json_exposes_designer_execution(argv[1]);
     test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_designer_dispatch_catalog(argv[1]);

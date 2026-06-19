@@ -1,3 +1,4 @@
+1325	OPEN	E2/#23 slice: Expose aggregate designer dispatch execution through host JSON		2026-06-19T05:17:47Z
 1324	OPEN	E2/#23 slice: Add aggregate designer dispatch execution seam		2026-06-19T05:13:30Z
 1323	OPEN	E2/#23 slice: Expose toolbox dispatch execution through host JSON		2026-06-19T05:06:23Z
 1322	OPEN	E2/#23 slice: Add toolbox dispatch execution seam		2026-06-19T05:02:36Z
