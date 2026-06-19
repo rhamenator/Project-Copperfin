@@ -9726,6 +9726,13 @@ void test_studio_host_json_exposes_designer_dispatch_execution_catalog(const std
         "#1333: designer dispatch execution catalog JSON should expose readiness counts");
     expect_contains(catalog_process.stdout_text, "\"errorCount\": ",
         "#1333: designer dispatch execution catalog JSON should expose error counts");
+    expect_contains(catalog_process.stdout_text, "\"readySelectionContexts\": [\"visual_object\"",
+        "#1356: designer dispatch execution catalog JSON should summarize ready contexts");
+    expect_contains(catalog_process.stdout_text, "\"blockedSelectionContexts\": [\"menu_item\"",
+        "#1356: designer dispatch execution catalog JSON should summarize blocked contexts");
+    expect_contains(catalog_process.stdout_text,
+        "\"blockedExecutionErrors\": [\"A designer dispatch execution catalog entry requires an error-free dispatch plan.\"",
+        "#1356: designer dispatch execution catalog JSON should summarize blocked context errors");
     expect_contains(catalog_process.stdout_text, "\"dryRun\": false",
         "#1333: admitted designer dispatch execution catalog JSON should expose non-dry-run state");
     expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
@@ -9784,6 +9791,13 @@ void test_studio_host_json_exposes_designer_dispatch_execution_catalog(const std
         "#1333: designer dispatch execution catalog JSON should report unadmitted execution as catalog errors");
     expect_contains(unadmitted_process.stdout_text, "\"executionReadyCount\": 0",
         "#1333: unadmitted designer dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(unadmitted_process.stdout_text, "\"readySelectionContexts\": []",
+        "#1356: unadmitted designer dispatch execution catalog JSON should summarize no ready contexts");
+    expect_contains(unadmitted_process.stdout_text, "\"blockedSelectionContexts\": [\"visual_object\"",
+        "#1356: unadmitted designer dispatch execution catalog JSON should summarize blocked contexts");
+    expect_contains(unadmitted_process.stdout_text,
+        "\"blockedExecutionErrors\": [\"A designer dispatch execution catalog entry requires explicit execution admission.\"",
+        "#1356: unadmitted designer dispatch execution catalog JSON should summarize blocked errors");
     expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
         "#1333: unadmitted designer dispatch execution catalog JSON should expose admission false");
     expect_contains(unadmitted_process.stdout_text,
