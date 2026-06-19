@@ -8891,6 +8891,18 @@ void print_json_selection_builder_launch_catalog_result(
         return;
     }
 
+    std::vector<std::string> launch_ready_builder_ids;
+    std::vector<std::string> launch_blocked_builder_ids;
+    std::vector<std::string> launch_blocked_errors;
+    for (const auto& entry : result.entries) {
+        if (entry.launch_plan.ok) {
+            launch_ready_builder_ids.push_back(std::string(entry.builder.id));
+        } else {
+            launch_blocked_builder_ids.push_back(std::string(entry.builder.id));
+            launch_blocked_errors.push_back(entry.launch_plan.error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -8902,6 +8914,15 @@ void print_json_selection_builder_launch_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"launchReadyBuilderIds\": ";
+    print_json_string_array(launch_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedBuilderIds\": ";
+    print_json_string_array(launch_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedErrors\": ";
+    print_json_string_array(launch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"entries\": [\n";
     for (std::size_t index = 0U; index < result.entries.size(); ++index) {
         print_json_selection_builder_launch_catalog_entry(result.entries[index], "      ");
@@ -9175,6 +9196,18 @@ void print_json_selection_builder_invocation_admission_catalog_result(
         return;
     }
 
+    std::vector<std::string> admission_ready_builder_ids;
+    std::vector<std::string> admission_blocked_builder_ids;
+    std::vector<std::string> admission_blocked_errors;
+    for (const auto& entry : result.entries) {
+        if (entry.invocation_admission.ok) {
+            admission_ready_builder_ids.push_back(std::string(entry.builder.id));
+        } else {
+            admission_blocked_builder_ids.push_back(std::string(entry.builder.id));
+            admission_blocked_errors.push_back(entry.invocation_admission.error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9186,6 +9219,15 @@ void print_json_selection_builder_invocation_admission_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"admissionReadyBuilderIds\": ";
+    print_json_string_array(admission_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedBuilderIds\": ";
+    print_json_string_array(admission_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedErrors\": ";
+    print_json_string_array(admission_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"entries\": [\n";
     for (std::size_t index = 0U; index < result.entries.size(); ++index) {
         print_json_selection_builder_invocation_admission_catalog_entry(result.entries[index], "      ");
@@ -9708,6 +9750,18 @@ void print_json_selection_builder_dispatch_catalog_result(
         return;
     }
 
+    std::vector<std::string> dispatch_ready_builder_ids;
+    std::vector<std::string> dispatch_blocked_builder_ids;
+    std::vector<std::string> dispatch_blocked_errors;
+    for (const auto& entry : result.entries) {
+        if (entry.dispatch.ok) {
+            dispatch_ready_builder_ids.push_back(std::string(entry.builder.id));
+        } else {
+            dispatch_blocked_builder_ids.push_back(std::string(entry.builder.id));
+            dispatch_blocked_errors.push_back(entry.dispatch.error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9719,6 +9773,15 @@ void print_json_selection_builder_dispatch_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"dispatchReadyBuilderIds\": ";
+    print_json_string_array(dispatch_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedBuilderIds\": ";
+    print_json_string_array(dispatch_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"entries\": [\n";
     for (std::size_t index = 0U; index < result.entries.size(); ++index) {
         print_json_selection_builder_dispatch_catalog_entry(result.entries[index], "      ");

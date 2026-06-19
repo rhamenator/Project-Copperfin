@@ -4540,6 +4540,13 @@ void test_studio_host_json_exposes_selection_builder_launch_catalog(const std::s
         "#1278: selection builder launch catalogs should remain dry-run");
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1278: selection builder launch catalogs should remain non-mutating");
+    expect_contains(visual_process.stdout_text,
+        "\"launchReadyBuilderIds\": [\"form-builder\", \"control-builder\", \"grid-builder\"]",
+        "#1406: selection builder launch catalogs should summarize launch-ready builders");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedBuilderIds\": []",
+        "#1406: selection builder launch catalogs should summarize empty blocked builder ids");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1406: selection builder launch catalogs should summarize empty blocked launch errors");
     expect_contains(visual_process.stdout_text, "\"builderId\": \"form-builder\"",
         "#1278: visual-object selection builder launch catalogs should include form builders");
     expect_contains(visual_process.stdout_text, "\"builderId\": \"grid-builder\"",
@@ -4980,6 +4987,13 @@ void test_studio_host_json_exposes_selection_builder_invocation_admission_catalo
         "#1274: admitted selection builder admission catalogs should not be dry-run");
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1274: selection builder admission catalogs should remain non-mutating");
+    expect_contains(visual_process.stdout_text,
+        "\"admissionReadyBuilderIds\": [\"form-builder\", \"control-builder\", \"grid-builder\"]",
+        "#1406: selection builder admission catalogs should summarize admitted builders");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedBuilderIds\": []",
+        "#1406: selection builder admission catalogs should summarize empty blocked builder ids");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1406: selection builder admission catalogs should summarize empty blocked admission errors");
     expect_contains(visual_process.stdout_text, "\"builderId\": \"form-builder\"",
         "#1274: visual-object selection builder admission catalogs should include form builders");
     expect_contains(visual_process.stdout_text, "\"builderId\": \"grid-builder\"",
@@ -5126,6 +5140,13 @@ void test_studio_host_json_exposes_selection_builder_dispatch_catalog(
         "#1276: admitted selection builder dispatch catalogs should not be dry-run");
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1276: selection builder dispatch catalogs should remain non-mutating");
+    expect_contains(visual_process.stdout_text,
+        "\"dispatchReadyBuilderIds\": [\"form-builder\", \"control-builder\", \"grid-builder\"]",
+        "#1406: selection builder dispatch catalogs should summarize dispatch-ready builders");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedBuilderIds\": []",
+        "#1406: selection builder dispatch catalogs should summarize empty blocked builder ids");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1406: selection builder dispatch catalogs should summarize empty blocked dispatch errors");
     expect_contains(visual_process.stdout_text, "\"builderId\": \"form-builder\"",
         "#1276: visual-object selection builder dispatch catalogs should include form builders");
     expect_contains(visual_process.stdout_text, "\"builderId\": \"grid-builder\"",
@@ -5169,6 +5190,14 @@ void test_studio_host_json_exposes_selection_builder_dispatch_catalog(
         "#1276: dry-run selection builder dispatch catalogs should not admit dispatches");
     expect_contains(dry_run_process.stdout_text, "\"errorCount\": 3",
         "#1276: dry-run selection builder dispatch catalogs should expose dispatch errors");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchReadyBuilderIds\": []",
+        "#1406: dry-run selection builder dispatch catalogs should summarize empty dispatch-ready builders");
+    expect_contains(dry_run_process.stdout_text,
+        "\"dispatchBlockedBuilderIds\": [\"form-builder\", \"control-builder\", \"grid-builder\"]",
+        "#1406: dry-run selection builder dispatch catalogs should summarize blocked builders");
+    expect_contains(dry_run_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A builder dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1406: dry-run selection builder dispatch catalogs should summarize blocked dispatch errors");
     expect_contains(dry_run_process.stdout_text,
         "A builder dispatch request requires an admitted non-dry-run invocation.",
         "#1276: dry-run selection builder dispatch catalogs should expose admission errors");
