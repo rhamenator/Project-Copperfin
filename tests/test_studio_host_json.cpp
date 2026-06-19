@@ -6395,6 +6395,12 @@ void test_studio_host_json_exposes_editor_action_invocation_admission_catalog(
         "#1282: admitted visual-object invocation-admission catalog JSON should not be dry-run");
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1282: editor action invocation-admission catalog JSON should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"admissionReadyActionIds\": [\"show-property-grid\"",
+        "#1365: editor action invocation-admission catalog JSON should summarize admission-ready actions");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedActionIds\": []",
+        "#1365: editor action invocation-admission catalog JSON should summarize empty blocked action ids");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1365: editor action invocation-admission catalog JSON should summarize empty blocked admission errors");
     expect_contains(visual_process.stdout_text, "\"entries\": [",
         "#1282: editor action invocation-admission catalog JSON should expose per-action entries");
     expect_contains(visual_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
@@ -6451,6 +6457,8 @@ void test_studio_host_json_exposes_editor_action_invocation_admission_catalog(
         "#1282: report-expression invocation-admission catalog JSON should default to dry-run admission");
     expect_contains(report_process.stdout_text, "\"dryRun\": true",
         "#1282: report-expression invocation-admission catalog JSON should expose dry-run state");
+    expect_contains(report_process.stdout_text, "\"admissionReadyActionIds\": [\"show-property-grid\"",
+        "#1365: dry-run editor action invocation-admission catalog JSON should preserve admission-ready actions");
 
     const auto unknown_context_process = run_process_capture(
         studio_host_path,
