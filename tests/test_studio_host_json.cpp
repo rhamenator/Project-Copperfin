@@ -5287,6 +5287,12 @@ void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_ho
         "#1230: builder dispatch JSON should preserve object names");
     expect_contains(admitted_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
         "#1230: builder dispatch JSON should preserve unique ids");
+    expect_contains(admitted_process.stdout_text, "\"dispatchReadyBuilderIds\": [\"grid-builder\"]",
+        "#1393: builder dispatch JSON should summarize dispatch-ready builder ids");
+    expect_contains(admitted_process.stdout_text, "\"dispatchBlockedBuilderIds\": []",
+        "#1393: builder dispatch JSON should summarize empty blocked builder ids");
+    expect_contains(admitted_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1393: builder dispatch JSON should summarize empty dispatch errors");
     expect_contains(admitted_process.stdout_text, "\"dispatchArguments\": [",
         "#1230: builder dispatch JSON should expose dispatch arguments");
     expect_contains(admitted_process.stdout_text, "\"--builder-id\"",
@@ -5327,6 +5333,12 @@ void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_ho
         "#1230: selection-context builder dispatch JSON should preserve wizard kind metadata");
     expect_contains(selection_process.stdout_text, "\"context\": \"label\"",
         "#1230: selection-context builder dispatch JSON should expose resolved builder contexts");
+    expect_contains(selection_process.stdout_text, "\"dispatchReadyBuilderIds\": [\"label-wizard\"]",
+        "#1393: selection-context builder dispatch JSON should summarize dispatch-ready builder ids");
+    expect_contains(selection_process.stdout_text, "\"dispatchBlockedBuilderIds\": []",
+        "#1393: selection-context builder dispatch JSON should summarize empty blocked builder ids");
+    expect_contains(selection_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1393: selection-context builder dispatch JSON should summarize empty dispatch errors");
     expect_contains(selection_process.stdout_text, "\"dispatchAdmitted\": true",
         "#1230: selection-context builder dispatch JSON should expose admitted dispatch state");
 

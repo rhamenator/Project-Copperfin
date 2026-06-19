@@ -9150,6 +9150,10 @@ void print_json_builder_dispatch_result(
 
     const auto& plan = result.plan;
     const auto& builder = plan.builder;
+    const std::vector<std::string> dispatch_ready_builder_ids{std::string(builder.id)};
+    const std::vector<std::string> dispatch_blocked_builder_ids;
+    const std::vector<std::string> dispatch_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9187,6 +9191,15 @@ void print_json_builder_dispatch_result(
     std::cout << ",\n";
     std::cout << "    \"uniqueId\": ";
     print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchReadyBuilderIds\": ";
+    print_json_string_array(dispatch_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedBuilderIds\": ";
+    print_json_string_array(dispatch_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
     std::cout << ",\n";
     std::cout << "    \"dispatchArguments\": [";
     for (std::size_t index = 0U; index < plan.dispatch_arguments.size(); ++index) {
