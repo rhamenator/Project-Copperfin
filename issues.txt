@@ -1,3 +1,4 @@
+1297	OPEN	E2/#23 slice: Expose selection-context toolbox object batch create-plan catalog through host JSON		2026-06-19T02:11:07Z
 1296	OPEN	E2/#23 slice: Add selection-context toolbox object batch create-plan catalog planning		2026-06-19T02:08:24Z
 1295	OPEN	E2/#23 slice: Expose selection-context toolbox object create dispatch catalog through host JSON		2026-06-19T02:03:07Z
 1294	OPEN	E2/#23 slice: Add selection-context toolbox object create dispatch catalog planning		2026-06-19T02:00:06Z

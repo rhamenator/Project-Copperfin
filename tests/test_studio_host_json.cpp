@@ -10009,6 +10009,173 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(
     }
 }
 
+void test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selection_toolbox_create_batch_plan_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto visual_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--selection-context", "visual_object",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Selection Batch Plan",
+            "--json"
+        },
+        temp_root);
+    expect(visual_catalog_process.exit_code == 0,
+        "#1297: selection toolbox batch create-plan catalog JSON command should exit successfully");
+    expect_contains(visual_catalog_process.stdout_text, "\"selectionToolboxCreateBatchPlanCatalog\": {",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose catalog objects");
+    expect_contains(visual_catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose selected Studio contexts");
+    expect_contains(visual_catalog_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1297: visual selection toolbox batch create-plan catalog JSON should resolve form contexts");
+    expect_contains(visual_catalog_process.stdout_text, "\"launchPlanOk\": true",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose launch state");
+    expect_contains(visual_catalog_process.stdout_text, "\"planCount\": 1",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose one batch plan");
+    expect_contains(visual_catalog_process.stdout_text, "\"errorCount\": 0",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose zero errors");
+    expect_contains(visual_catalog_process.stdout_text, "\"batchPlanOk\": true",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose batch plan state");
+    expect_contains(visual_catalog_process.stdout_text, "\"batchPlan\": {",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose nested batch plans");
+    expect_contains(visual_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1297: visual selection toolbox batch create-plan catalog JSON should include textbox plans");
+    expect_contains(visual_catalog_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
+        "#1297: visual selection toolbox batch create-plan catalog JSON should include command button plans");
+    expect_contains(visual_catalog_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1297: visual selection toolbox batch create-plan catalog JSON should expose generated textbox names");
+    expect_contains(visual_catalog_process.stdout_text, "\"objectName\": \"cmd1\"",
+        "#1297: visual selection toolbox batch create-plan catalog JSON should expose generated command names");
+    expect_contains(visual_catalog_process.stdout_text, "\"propertyValue\": \"Selection Batch Plan\"",
+        "#1297: selection toolbox batch create-plan catalog JSON should preserve shared field values");
+    expect_contains(visual_catalog_process.stdout_text, "\"dryRun\": true",
+        "#1297: selection toolbox batch create-plan catalog JSON should expose dry-run state");
+    expect_contains(visual_catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#1297: selection toolbox batch create-plan catalog JSON should remain non-mutating");
+    expect(visual_object_count(form_path) == before_count,
+        "#1297: visual selection toolbox batch create-plan catalog host command should not mutate assets");
+
+    const auto report_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--selection-context", "report_expression",
+            "--parent-name", "DetailBand",
+            "--json"
+        },
+        temp_root);
+    expect(report_catalog_process.exit_code == 0,
+        "#1297: report selection toolbox batch create-plan catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+        "#1297: report selection toolbox batch create-plan catalog JSON should expose report selections");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1297: report selection toolbox batch create-plan catalog JSON should resolve report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#1297: report selection toolbox batch create-plan catalog JSON should include label plans");
+    expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1297: report selection toolbox batch create-plan catalog JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#1297: report selection toolbox batch create-plan catalog host command should not mutate assets");
+
+    const auto unsupported_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--selection-context", "menu_item",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_catalog_process.exit_code == 4,
+        "#1297: selection toolbox batch create-plan catalog JSON should reject unsupported selections");
+    expect_contains(unsupported_catalog_process.stdout_text, "\"selectionToolboxCreateBatchPlanCatalog\": null",
+        "#1297: unsupported selection toolbox batch create-plan catalog JSON should omit catalog objects");
+    expect_contains(unsupported_catalog_process.stdout_text,
+        "A selection-context toolbox object batch creation catalog request requires a toolbox palette.",
+        "#1297: unsupported selection toolbox batch create-plan catalog JSON should report planner errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1297: unsupported selection toolbox batch create-plan catalog host command should not mutate assets");
+
+    const auto missing_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selection_process.exit_code == 2,
+        "#1297: selection toolbox batch create-plan catalog JSON should reject missing selections");
+    expect_contains(missing_selection_process.stdout_text, "No selection context was provided.",
+        "#1297: missing selection toolbox batch create-plan catalog JSON should report parser errors");
+
+    const auto unknown_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_selection_process.exit_code == 2,
+        "#1297: selection toolbox batch create-plan catalog JSON should reject unknown selections");
+    expect_contains(unknown_selection_process.stdout_text, "Unknown selection context token: unknown",
+        "#1297: unknown selection toolbox batch create-plan catalog JSON should report parser errors");
+
+    const auto invalid_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--selection-context", "visual_object",
+            "--field-value", "BROKEN",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_field_process.exit_code == 2,
+        "#1297: selection toolbox batch create-plan catalog JSON should reject malformed field values");
+    expect_contains(invalid_field_process.stdout_text, "Toolbox field values must use name=value syntax.",
+        "#1297: malformed selection toolbox batch create-plan catalog field values should report parser errors");
+
+    const auto unknown_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--selection-context", "visual_object",
+            "--toolbox-context", "form",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_option_process.exit_code == 2,
+        "#1297: selection toolbox batch create-plan catalog JSON should reject unknown options");
+    expect_contains(unknown_option_process.stdout_text,
+        "Unknown selection-toolbox-create-batch-plan-catalog option: --toolbox-context",
+        "#1297: unknown selection toolbox batch create-plan catalog options should report parser errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1297: rejected selection toolbox batch create-plan catalog host commands should not mutate assets");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -34481,6 +34648,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_selection_toolbox_object_creation_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(argv[1]);
+    test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batches(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(argv[1]);
