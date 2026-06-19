@@ -10156,6 +10156,10 @@ void print_json_editor_action_execution_result(
 
     const auto& plan = result.dispatch_plan;
     const auto& action = plan.action;
+    const std::vector<std::string> execution_ready_action_ids{std::string(action.id)};
+    const std::vector<std::string> execution_blocked_action_ids;
+    const std::vector<std::string> execution_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -10189,6 +10193,15 @@ void print_json_editor_action_execution_result(
     std::cout << ",\n";
     std::cout << "    \"line\": " << plan.line << ",\n";
     std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"executionReadyActionIds\": ";
+    print_json_string_array(execution_ready_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedActionIds\": ";
+    print_json_string_array(execution_blocked_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedErrors\": ";
+    print_json_string_array(execution_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"launchCommand\": ";
     print_json_string(launch_command);
     std::cout << ",\n";

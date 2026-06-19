@@ -6824,6 +6824,12 @@ void test_studio_host_json_exposes_editor_action_execution(const std::string& st
         "#1321: editor action execution JSON should carry line metadata");
     expect_contains(method_process.stdout_text, "\"column\": 7",
         "#1321: editor action execution JSON should carry column metadata");
+    expect_contains(method_process.stdout_text, "\"executionReadyActionIds\": [\"edit-visual-method\"]",
+        "#1398: editor action execution JSON should summarize execution-ready action ids");
+    expect_contains(method_process.stdout_text, "\"executionBlockedActionIds\": []",
+        "#1398: editor action execution JSON should summarize empty blocked action ids");
+    expect_contains(method_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1398: editor action execution JSON should summarize empty execution errors");
     expect_contains(method_process.stdout_text, "\"launchCommand\": \"/bin/true\"",
         "#1321: editor action execution JSON should expose launch commands");
     expect_contains(method_process.stdout_text, "\"executedCommand\": \"'/bin/true'",
@@ -6863,6 +6869,12 @@ void test_studio_host_json_exposes_editor_action_execution(const std::string& st
         "#1321: expression editor execution JSON should expose expression editor target surfaces");
     expect_contains(expression_process.stdout_text, "\"selectionContext\": \"report_expression\"",
         "#1321: expression editor execution JSON should expose selection contexts");
+    expect_contains(expression_process.stdout_text, "\"executionReadyActionIds\": [\"edit-report-expression\"]",
+        "#1398: expression editor execution JSON should summarize execution-ready action ids");
+    expect_contains(expression_process.stdout_text, "\"executionBlockedActionIds\": []",
+        "#1398: expression editor execution JSON should summarize empty blocked action ids");
+    expect_contains(expression_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1398: expression editor execution JSON should summarize empty execution errors");
     expect_contains(expression_process.stdout_text, "\"executed\": true",
         "#1321: expression editor execution JSON should mark execution complete");
 
