@@ -1,3 +1,4 @@
+1346	OPEN	E2/#23 slice: Expose aggregate designer execution failed-child error summaries in host JSON		2026-06-19T07:21:39Z
 1345	OPEN	E2/#23 slice: Expose aggregate designer execution failed-child summaries in host JSON		2026-06-19T07:17:47Z
 1344	OPEN	E2/#23 slice: Expose aggregate designer execution child success counts in host JSON		2026-06-19T07:14:28Z
 1343	OPEN	E2/#23 slice: Expose aggregate designer execution child error counts in host JSON		2026-06-19T07:11:23Z
