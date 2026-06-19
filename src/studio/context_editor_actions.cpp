@@ -210,4 +210,64 @@ StudioEditorActionLaunchPlanResult plan_studio_editor_action_launch(
     };
 }
 
+StudioEditorActionLaunchCatalogResult plan_studio_editor_action_launch_catalog(
+    const StudioEditorActionLaunchCatalogRequest& request) {
+    const auto actions = studio_editor_actions_for_context(request.selection_context);
+    if (actions.empty()) {
+        return {
+            .ok = false,
+            .error = "An editor action launch catalog request requires at least one action.",
+            .selection_context = request.selection_context,
+            .action_count = 0U,
+            .launch_plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioEditorActionLaunchCatalogEntry> entries;
+    entries.reserve(actions.size());
+    std::size_t launch_plan_count = 0U;
+    std::size_t error_count = 0U;
+
+    for (const auto& action : actions) {
+        auto launch_plan = plan_studio_editor_action_launch({
+            .selection_context = request.selection_context,
+            .action_id = std::string(action.id),
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .symbol = request.symbol,
+            .line = request.line,
+            .column = request.column
+        });
+
+        if (launch_plan.ok) {
+            ++launch_plan_count;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .action = action,
+            .launch_plan = std::move(launch_plan)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .action_count = actions.size(),
+        .launch_plan_count = launch_plan_count,
+        .error_count = error_count,
+        .dry_run = true,
+        .mutates_asset = false,
+        .entries = std::move(entries)
+    };
+}
+
 }  // namespace copperfin::studio

@@ -48,6 +48,17 @@ const copperfin::studio::StudioEditorActionDispatchCatalogEntry* find_dispatch_c
     return nullptr;
 }
 
+const copperfin::studio::StudioEditorActionLaunchCatalogEntry* find_launch_catalog_entry(
+    const std::vector<copperfin::studio::StudioEditorActionLaunchCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.action.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -232,6 +243,97 @@ int main() {
                method_plan.plan.line == 42U &&
                method_plan.plan.column == 7U,
            "#1207: visual-object editor action launch plans should accept method editor actions");
+
+    const auto visual_launch_catalog = copperfin::studio::plan_studio_editor_action_launch_catalog({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "cmdSave",
+        .unique_id = "button-guid",
+        .symbol = "cmdSave.Click",
+        .line = 42U,
+        .column = 7U
+    });
+    const auto* property_launch_entry = find_launch_catalog_entry(
+        visual_launch_catalog.entries, "show-property-grid");
+    const auto* method_launch_entry = find_launch_catalog_entry(
+        visual_launch_catalog.entries, "edit-visual-method");
+    expect(visual_launch_catalog.ok &&
+               visual_launch_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_launch_catalog.action_count == visual_actions.size() &&
+               visual_launch_catalog.launch_plan_count == visual_actions.size() &&
+               visual_launch_catalog.error_count == 0U &&
+               visual_launch_catalog.dry_run &&
+               !visual_launch_catalog.mutates_asset,
+           "#1279: visual editor action launch catalogs should plan every visual action");
+    expect(property_launch_entry != nullptr &&
+               property_launch_entry->launch_plan.ok &&
+               property_launch_entry->launch_plan.plan.selection_context ==
+                   StudioEditorSelectionContext::visual_object &&
+               property_launch_entry->launch_plan.plan.action.kind ==
+                   StudioEditorActionKind::property_grid &&
+               property_launch_entry->launch_plan.plan.command_token == "studio.property_grid.show" &&
+               property_launch_entry->launch_plan.plan.target_surface == "property-grid" &&
+               property_launch_entry->launch_plan.plan.asset_path == "forms/customer.scx" &&
+               property_launch_entry->launch_plan.plan.record_index == 1U &&
+               property_launch_entry->launch_plan.plan.object_name == "cmdSave" &&
+               property_launch_entry->launch_plan.plan.unique_id == "button-guid" &&
+               property_launch_entry->launch_plan.plan.symbol == "cmdSave.Click" &&
+               property_launch_entry->launch_plan.plan.line == 42U &&
+               property_launch_entry->launch_plan.plan.column == 7U,
+           "#1279: editor action launch catalogs should preserve property-grid launch metadata");
+    expect(method_launch_entry != nullptr &&
+               method_launch_entry->launch_plan.ok &&
+               method_launch_entry->launch_plan.plan.action.kind ==
+                   StudioEditorActionKind::source_editor &&
+               method_launch_entry->launch_plan.plan.command_token == "studio.method_editor.open" &&
+               method_launch_entry->launch_plan.plan.target_surface == "method-editor",
+           "#1279: visual editor action launch catalogs should include method editor actions");
+
+    const auto report_launch_catalog = copperfin::studio::plan_studio_editor_action_launch_catalog({
+        .selection_context = StudioEditorSelectionContext::report_expression,
+        .asset_path = "reports/orders.frx",
+        .record_index = 3U,
+        .object_name = "Field1",
+        .unique_id = "field-guid",
+        .symbol = "Expr",
+        .line = 5U,
+        .column = 2U
+    });
+    const auto* report_expression_entry = find_launch_catalog_entry(
+        report_launch_catalog.entries, "edit-report-expression");
+    expect(report_launch_catalog.ok &&
+               report_launch_catalog.action_count == report_actions.size() &&
+               report_expression_entry != nullptr &&
+               report_expression_entry->launch_plan.ok &&
+               report_expression_entry->launch_plan.plan.action.kind ==
+                   StudioEditorActionKind::expression_editor &&
+               report_expression_entry->launch_plan.plan.command_token ==
+                   "studio.expression_editor.open" &&
+               report_expression_entry->launch_plan.plan.target_surface ==
+                   "expression-editor" &&
+               report_expression_entry->launch_plan.plan.asset_path == "reports/orders.frx",
+           "#1279: report editor action launch catalogs should preserve expression editor metadata");
+
+    const auto empty_launch_catalog = copperfin::studio::plan_studio_editor_action_launch_catalog({
+        .selection_context = static_cast<StudioEditorSelectionContext>(999),
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .symbol = {},
+        .line = 0U,
+        .column = 0U
+    });
+    expect(!empty_launch_catalog.ok &&
+               empty_launch_catalog.error ==
+                   "An editor action launch catalog request requires at least one action." &&
+               empty_launch_catalog.action_count == 0U &&
+               empty_launch_catalog.launch_plan_count == 0U &&
+               empty_launch_catalog.error_count == 0U &&
+               empty_launch_catalog.dry_run &&
+               !empty_launch_catalog.mutates_asset,
+           "#1279: editor action launch catalogs should reject empty action contexts without mutation");
 
     const auto admitted_method_invocation = copperfin::studio::plan_studio_editor_action_invocation_admission({
         .launch_plan = method_plan.plan,

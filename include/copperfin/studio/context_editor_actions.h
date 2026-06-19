@@ -70,6 +70,34 @@ struct StudioEditorActionLaunchPlanResult {
     StudioEditorActionLaunchPlan plan;
 };
 
+struct StudioEditorActionLaunchCatalogRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string symbol;
+    std::size_t line = 0;
+    std::size_t column = 0;
+};
+
+struct StudioEditorActionLaunchCatalogEntry {
+    StudioEditorActionDescriptor action;
+    StudioEditorActionLaunchPlanResult launch_plan;
+};
+
+struct StudioEditorActionLaunchCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::size_t action_count = 0;
+    std::size_t launch_plan_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioEditorActionLaunchCatalogEntry> entries;
+};
+
 [[nodiscard]] const char* studio_editor_selection_context_name(StudioEditorSelectionContext context);
 [[nodiscard]] const char* studio_editor_action_kind_name(StudioEditorActionKind kind);
 [[nodiscard]] const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry();
@@ -77,5 +105,7 @@ struct StudioEditorActionLaunchPlanResult {
     StudioEditorSelectionContext context);
 [[nodiscard]] StudioEditorActionLaunchPlanResult plan_studio_editor_action_launch(
     const StudioEditorActionLaunchRequest& request);
+[[nodiscard]] StudioEditorActionLaunchCatalogResult plan_studio_editor_action_launch_catalog(
+    const StudioEditorActionLaunchCatalogRequest& request);
 
 }  // namespace copperfin::studio
