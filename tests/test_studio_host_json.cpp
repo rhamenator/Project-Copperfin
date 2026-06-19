@@ -3895,6 +3895,14 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1481: selected label objects should reuse report object selection kind");
     expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                     "#1481: selected label objects should expose selected report-object JSON");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1506: selected label objects should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1506: selected label objects should serialize null selected sections");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1506: selected label objects should not advertise selected-settings availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1506: selected label objects should serialize null selected settings");
     expect_contains(object_process.stdout_text, "\"objectKind\": \"field\"",
                     "#1481: selected label objects should preserve report object kinds");
     expect_contains(object_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
