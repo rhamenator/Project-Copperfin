@@ -9130,6 +9130,28 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: designer execution JSON should expose editor execution results");
     expect_contains(visual_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
         "#1337: designer execution JSON should expose editor child action identities");
+    const auto editor_child_begin = visual_process.stdout_text.find("\"actionId\": \"edit-visual-method\"");
+    expect(editor_child_begin != std::string::npos,
+        "#1349: designer execution JSON should expose an editor child entry for target metadata checks");
+    if (editor_child_begin != std::string::npos) {
+        const auto editor_child_json = visual_process.stdout_text.substr(editor_child_begin, 900);
+        expect_contains(editor_child_json, "\"targetSurface\": \"method-editor\"",
+            "#1349: aggregate editor child JSON should expose target surfaces");
+        expect_contains(editor_child_json, "\"assetPath\": \"forms/customer.scx\"",
+            "#1349: aggregate editor child JSON should expose asset paths");
+        expect_contains(editor_child_json, "\"recordIndex\": 1",
+            "#1349: aggregate editor child JSON should expose record indexes");
+        expect_contains(editor_child_json, "\"objectName\": \"frmCustomer\"",
+            "#1349: aggregate editor child JSON should expose object names");
+        expect_contains(editor_child_json, "\"uniqueId\": \"form-guid\"",
+            "#1349: aggregate editor child JSON should expose unique ids");
+        expect_contains(editor_child_json, "\"symbol\": \"Click\"",
+            "#1349: aggregate editor child JSON should expose symbols");
+        expect_contains(editor_child_json, "\"line\": 12",
+            "#1349: aggregate editor child JSON should expose source lines");
+        expect_contains(editor_child_json, "\"column\": 4",
+            "#1349: aggregate editor child JSON should expose source columns");
+    }
     expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
         "#1337: designer execution JSON should expose editor child command tokens");
     expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.method_editor.open\"",
@@ -9147,6 +9169,22 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: designer execution JSON should expose builder execution results");
     expect_contains(visual_process.stdout_text, "\"builderId\": \"form-builder\"",
         "#1337: designer execution JSON should expose builder child identities");
+    const auto builder_child_begin = visual_process.stdout_text.find("\"builderId\": \"form-builder\"");
+    expect(builder_child_begin != std::string::npos,
+        "#1349: designer execution JSON should expose a builder child entry for target metadata checks");
+    if (builder_child_begin != std::string::npos) {
+        const auto builder_child_json = visual_process.stdout_text.substr(builder_child_begin, 700);
+        expect_contains(builder_child_json, "\"entryPoint\": \"cf_builders.form_builder\"",
+            "#1349: aggregate builder child JSON should expose entry points");
+        expect_contains(builder_child_json, "\"assetPath\": \"forms/customer.scx\"",
+            "#1349: aggregate builder child JSON should expose asset paths");
+        expect_contains(builder_child_json, "\"recordIndex\": 1",
+            "#1349: aggregate builder child JSON should expose record indexes");
+        expect_contains(builder_child_json, "\"objectName\": \"frmCustomer\"",
+            "#1349: aggregate builder child JSON should expose object names");
+        expect_contains(builder_child_json, "\"uniqueId\": \"form-guid\"",
+            "#1349: aggregate builder child JSON should expose unique ids");
+    }
     expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
         "#1337: designer execution JSON should expose builder child command tokens");
     expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.builder.invoke\"",
@@ -9156,6 +9194,20 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1335: designer execution JSON should expose builder child executed commands");
     expect_contains(visual_process.stdout_text, "\"toolboxExecution\": {",
         "#1325: designer execution JSON should expose toolbox execution results");
+    const auto toolbox_child_begin = visual_process.stdout_text.find("\"toolboxExecution\": {");
+    expect(toolbox_child_begin != std::string::npos,
+        "#1349: designer execution JSON should expose a toolbox child entry for target metadata checks");
+    if (toolbox_child_begin != std::string::npos) {
+        const auto toolbox_child_json = visual_process.stdout_text.substr(toolbox_child_begin, 800);
+        expect_contains(toolbox_child_json, "\"assetPath\": \"forms/customer.scx\"",
+            "#1349: aggregate toolbox child JSON should expose asset paths");
+        expect_contains(toolbox_child_json, "\"recordIndex\": 1",
+            "#1349: aggregate toolbox child JSON should expose record indexes");
+        expect_contains(toolbox_child_json, "\"objectName\": \"frmCustomer\"",
+            "#1349: aggregate toolbox child JSON should expose object names");
+        expect_contains(toolbox_child_json, "\"uniqueId\": \"form-guid\"",
+            "#1349: aggregate toolbox child JSON should expose unique ids");
+    }
     expect_contains(visual_process.stdout_text, "\"toolboxContext\": \"form\"",
         "#1337: designer execution JSON should expose toolbox child contexts");
     expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",

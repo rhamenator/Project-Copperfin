@@ -11093,6 +11093,24 @@ void print_json_designer_execution_result(
             print_json_string("");
         }
         std::cout << ",\n";
+        std::cout << "        \"targetSurface\": ";
+        print_json_string(plan != nullptr ? plan->target_surface : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"assetPath\": ";
+        print_json_string(plan != nullptr ? plan->asset_path : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"recordIndex\": " << (plan != nullptr ? plan->record_index : 0U) << ",\n";
+        std::cout << "        \"objectName\": ";
+        print_json_string(plan != nullptr ? plan->object_name : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"uniqueId\": ";
+        print_json_string(plan != nullptr ? plan->unique_id : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"symbol\": ";
+        print_json_string(plan != nullptr ? plan->symbol : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"line\": " << (plan != nullptr ? plan->line : 0U) << ",\n";
+        std::cout << "        \"column\": " << (plan != nullptr ? plan->column : 0U) << ",\n";
         std::cout << "        \"dispatchArguments\": ";
         if (plan != nullptr) {
             print_json_string_array(plan->dispatch_arguments);
@@ -11157,6 +11175,19 @@ void print_json_designer_execution_result(
             print_json_string("");
         }
         std::cout << ",\n";
+        std::cout << "        \"entryPoint\": ";
+        print_json_string(plan != nullptr ? plan->entry_point : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"assetPath\": ";
+        print_json_string(plan != nullptr ? plan->asset_path : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"recordIndex\": " << (plan != nullptr ? plan->record_index : 0U) << ",\n";
+        std::cout << "        \"objectName\": ";
+        print_json_string(plan != nullptr ? plan->object_name : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"uniqueId\": ";
+        print_json_string(plan != nullptr ? plan->unique_id : std::string{});
+        std::cout << ",\n";
         std::cout << "        \"dispatchArguments\": ";
         if (plan != nullptr) {
             print_json_string_array(plan->dispatch_arguments);
@@ -11209,6 +11240,32 @@ void print_json_designer_execution_result(
     std::cout << "      \"commandToken\": ";
     if (child_dispatch_plan.toolbox_dispatch.ok) {
         print_json_string(child_dispatch_plan.toolbox_dispatch.plan.command_token);
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << "      \"assetPath\": ";
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(child_dispatch_plan.toolbox_dispatch.plan.asset_path);
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << "      \"recordIndex\": "
+              << (child_dispatch_plan.toolbox_dispatch.ok
+                      ? child_dispatch_plan.toolbox_dispatch.plan.record_index
+                      : 0U)
+              << ",\n";
+    std::cout << "      \"objectName\": ";
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(child_dispatch_plan.toolbox_dispatch.plan.object_name);
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << "      \"uniqueId\": ";
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(child_dispatch_plan.toolbox_dispatch.plan.unique_id);
     } else {
         print_json_string("");
     }
