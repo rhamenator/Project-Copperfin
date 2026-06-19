@@ -12434,6 +12434,13 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
         "#1293: selection toolbox create-plan catalog JSON should expose dry-run state");
     expect_contains(visual_catalog_process.stdout_text, "\"mutatesAsset\": false",
         "#1293: selection toolbox create-plan catalog JSON should remain non-mutating");
+    expect_contains(visual_catalog_process.stdout_text,
+        "\"planReadyItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1375: selection toolbox create-plan catalog JSON should summarize plan-ready visual items");
+    expect_contains(visual_catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1375: selection toolbox create-plan catalog JSON should summarize empty blocked item ids");
+    expect_contains(visual_catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1375: selection toolbox create-plan catalog JSON should summarize empty blocked plan errors");
     expect(visual_object_count(form_path) == before_count,
         "#1293: visual selection toolbox create-plan catalog host command should not mutate assets");
 
@@ -12455,6 +12462,12 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
         "#1293: report selection toolbox create-plan catalog JSON should resolve report contexts");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1293: report selection toolbox create-plan catalog JSON should include label plans");
+    expect_contains(report_catalog_process.stdout_text, "\"planReadyItemIds\": [\"label\"",
+        "#1375: report selection toolbox create-plan catalog JSON should summarize plan-ready report items");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1375: report selection toolbox create-plan catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1375: report selection toolbox create-plan catalog JSON should summarize empty blocked plan errors");
     expect_contains(report_catalog_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1293: report selection toolbox create-plan catalog JSON should expose generated labels");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
