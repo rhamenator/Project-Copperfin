@@ -3,6 +3,7 @@
 #include "copperfin/studio/builder_invocation_admission.h"
 
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -62,9 +63,39 @@ struct StudioBuilderDispatchCatalogResult {
     std::vector<StudioBuilderDispatchCatalogEntry> entries;
 };
 
+struct StudioBuilderDispatchExecutionObservation {
+    bool launched = false;
+    int exit_code = 0;
+    std::string output;
+    std::string error;
+    bool mutates_asset = false;
+};
+
+using StudioBuilderDispatchExecutor =
+    std::function<StudioBuilderDispatchExecutionObservation(const StudioBuilderDispatchPlan&)>;
+
+struct StudioBuilderDispatchExecutionRequest {
+    StudioBuilderDispatchPlan dispatch_plan;
+    bool admit_execution = false;
+    StudioBuilderDispatchExecutor executor;
+};
+
+struct StudioBuilderDispatchExecutionResult {
+    bool ok = false;
+    std::string error;
+    StudioBuilderDispatchPlan dispatch_plan;
+    StudioBuilderDispatchExecutionObservation observation;
+    bool execution_admitted = false;
+    bool executed = false;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 [[nodiscard]] StudioBuilderDispatchResult plan_studio_builder_dispatch(
     const StudioBuilderDispatchRequest& request);
 [[nodiscard]] StudioBuilderDispatchCatalogResult plan_studio_builder_dispatch_catalog(
     const StudioBuilderDispatchCatalogRequest& request);
+[[nodiscard]] StudioBuilderDispatchExecutionResult execute_studio_builder_dispatch(
+    const StudioBuilderDispatchExecutionRequest& request);
 
 }  // namespace copperfin::studio

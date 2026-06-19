@@ -384,6 +384,147 @@ int main() {
                has_argument_pair(control_dispatch.plan.dispatch_arguments, "--unique-id", "grid-guid"),
            "#1229: builder dispatch should materialize a deterministic argument contract");
 
+    bool builder_executor_called = false;
+    const auto executed_control_dispatch = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = control_dispatch.plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan& plan) {
+            builder_executor_called = true;
+            expect(std::string(plan.builder.id) == "grid-builder" &&
+                       plan.context == StudioBuilderContext::control &&
+                       plan.command_token == "studio.builder.invoke" &&
+                       plan.entry_point == "cf_builders.grid_builder" &&
+                       has_argument_pair(plan.dispatch_arguments, "--builder-id", "grid-builder") &&
+                       has_argument_pair(plan.dispatch_arguments, "--entry-point", "cf_builders.grid_builder"),
+                   "#1318: builder dispatch execution should invoke executors with validated dispatch metadata");
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = "grid builder launched",
+                .error = {},
+                .mutates_asset = true
+            };
+        }
+    });
+    expect(builder_executor_called &&
+               executed_control_dispatch.ok &&
+               executed_control_dispatch.execution_admitted &&
+               executed_control_dispatch.executed &&
+               !executed_control_dispatch.dry_run &&
+               executed_control_dispatch.mutates_asset &&
+               executed_control_dispatch.observation.launched &&
+               executed_control_dispatch.observation.exit_code == 0 &&
+               executed_control_dispatch.observation.output == "grid builder launched" &&
+               std::string(executed_control_dispatch.dispatch_plan.builder.id) == "grid-builder" &&
+               executed_control_dispatch.dispatch_plan.executed &&
+               executed_control_dispatch.dispatch_plan.dispatch_admitted &&
+               !executed_control_dispatch.dispatch_plan.dry_run &&
+               executed_control_dispatch.dispatch_plan.command_token == "studio.builder.invoke",
+           "#1318: builder dispatch execution should preserve dispatch metadata and executed state");
+
+    builder_executor_called = false;
+    const auto unadmitted_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = control_dispatch.plan,
+        .admit_execution = false,
+        .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            builder_executor_called = true;
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true
+            };
+        }
+    });
+    expect(!builder_executor_called &&
+               !unadmitted_execution.ok &&
+               unadmitted_execution.error ==
+                   "A builder dispatch execution request requires explicit execution admission." &&
+               !unadmitted_execution.executed &&
+               unadmitted_execution.dry_run,
+           "#1318: builder dispatch execution should reject unadmitted execution without invoking executors");
+
+    const auto missing_executor_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = control_dispatch.plan,
+        .admit_execution = true,
+        .executor = {}
+    });
+    expect(!missing_executor_execution.ok &&
+               missing_executor_execution.error == "A builder dispatch execution request requires an executor.",
+           "#1318: builder dispatch execution should reject missing executors");
+
+    auto stale_dispatch_plan = control_dispatch.plan;
+    stale_dispatch_plan.executed = true;
+    builder_executor_called = false;
+    const auto stale_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = stale_dispatch_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            builder_executor_called = true;
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!builder_executor_called &&
+               !stale_execution.ok &&
+               stale_execution.error ==
+                   "A builder dispatch execution request requires a non-executed dispatch.",
+           "#1318: builder dispatch execution should reject stale executed dispatches");
+
+    auto missing_arguments_plan = control_dispatch.plan;
+    missing_arguments_plan.dispatch_arguments.clear();
+    builder_executor_called = false;
+    const auto missing_arguments_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = missing_arguments_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            builder_executor_called = true;
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!builder_executor_called &&
+               !missing_arguments_execution.ok &&
+               missing_arguments_execution.error ==
+                   "A builder dispatch execution request requires dispatch arguments.",
+           "#1318: builder dispatch execution should reject missing dispatch arguments before launch");
+
+    const auto launch_failure_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = control_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = false,
+                .exit_code = 0,
+                .output = {},
+                .error = "launcher unavailable",
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!launch_failure_execution.ok &&
+               launch_failure_execution.error == "launcher unavailable" &&
+               !launch_failure_execution.executed &&
+               launch_failure_execution.dry_run &&
+               launch_failure_execution.observation.error == "launcher unavailable",
+           "#1318: builder dispatch execution should surface launch failures without stale execution metadata");
+
+    const auto non_zero_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = control_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 9,
+                .output = {},
+                .error = "builder failed",
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!non_zero_execution.ok &&
+               non_zero_execution.error == "builder failed" &&
+               non_zero_execution.observation.launched &&
+               non_zero_execution.observation.exit_code == 9 &&
+               !non_zero_execution.executed &&
+               non_zero_execution.dry_run,
+           "#1318: builder dispatch execution should reject non-zero executor exit codes");
+
     const auto dry_run_builder_dispatch = copperfin::studio::plan_studio_builder_dispatch({
         .admission_plan = dry_run_label_invocation.plan
     });

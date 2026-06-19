@@ -151,4 +151,90 @@ StudioBuilderDispatchCatalogResult plan_studio_builder_dispatch_catalog(
     };
 }
 
+StudioBuilderDispatchExecutionResult execute_studio_builder_dispatch(
+    const StudioBuilderDispatchExecutionRequest& request) {
+    auto failed = [&](std::string error) {
+        return StudioBuilderDispatchExecutionResult{
+            .ok = false,
+            .error = std::move(error),
+            .dispatch_plan = {},
+            .observation = {},
+            .execution_admitted = request.admit_execution,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    };
+
+    const auto& dispatch_plan = request.dispatch_plan;
+    if (!request.admit_execution) {
+        return failed("A builder dispatch execution request requires explicit execution admission.");
+    }
+    if (!request.executor) {
+        return failed("A builder dispatch execution request requires an executor.");
+    }
+    if (dispatch_plan.builder.id.empty()) {
+        return failed("A builder dispatch execution request requires a validated builder id.");
+    }
+    if (dispatch_plan.command_token.empty()) {
+        return failed("A builder dispatch execution request requires a command token.");
+    }
+    if (dispatch_plan.entry_point.empty()) {
+        return failed("A builder dispatch execution request requires a launch entry point.");
+    }
+    if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
+        return failed("A builder dispatch execution request requires an admitted non-dry-run dispatch.");
+    }
+    if (dispatch_plan.executed) {
+        return failed("A builder dispatch execution request requires a non-executed dispatch.");
+    }
+    if (dispatch_plan.dispatch_arguments.empty()) {
+        return failed("A builder dispatch execution request requires dispatch arguments.");
+    }
+
+    auto observation = request.executor(dispatch_plan);
+    if (!observation.launched) {
+        return {
+            .ok = false,
+            .error = observation.error.empty()
+                ? "A builder dispatch executor did not launch the builder."
+                : observation.error,
+            .dispatch_plan = {},
+            .observation = std::move(observation),
+            .execution_admitted = true,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+    if (observation.exit_code != 0) {
+        return {
+            .ok = false,
+            .error = observation.error.empty()
+                ? "A builder dispatch executor returned a non-zero exit code."
+                : observation.error,
+            .dispatch_plan = {},
+            .observation = std::move(observation),
+            .execution_admitted = true,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto executed_plan = dispatch_plan;
+    executed_plan.executed = true;
+    const bool mutates_asset = observation.mutates_asset;
+    return {
+        .ok = true,
+        .error = {},
+        .dispatch_plan = std::move(executed_plan),
+        .observation = std::move(observation),
+        .execution_admitted = true,
+        .executed = true,
+        .dry_run = false,
+        .mutates_asset = mutates_asset
+    };
+}
+
 }  // namespace copperfin::studio
