@@ -1,3 +1,4 @@
+1407	OPEN	E2/#23 slice: Add selected builder dispatch-execution catalog JSON		2026-06-19T11:22:22Z
 1406	OPEN	E2/#23 slice: Expose selection builder catalog status summaries in host JSON		2026-06-19T11:17:03Z
 1405	OPEN	E2/#23 slice: Expose toolbox create-plan summaries in host JSON		2026-06-19T11:10:35Z
 1404	OPEN	E2/#23 slice: Expose toolbox create-batch plan summaries in host JSON		2026-06-19T11:05:08Z

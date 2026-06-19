@@ -5271,6 +5271,105 @@ void test_studio_host_json_exposes_selection_builder_dispatch_catalog(
     }
 }
 
+void test_studio_host_json_exposes_selection_builder_dispatch_execution_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selection_builder_dispatch_execution_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1407: selection builder dispatch execution catalog JSON should accept admitted visual-object contexts");
+    expect_contains(visual_process.stdout_text, "\"selectionBuilderDispatchExecutionCatalog\": {",
+        "#1407: selection builder dispatch execution catalog JSON should expose catalog objects");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1407: selection builder dispatch execution catalogs should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"builderCount\": 3",
+        "#1407: selection builder dispatch execution catalogs should expose builder counts");
+    expect_contains(visual_process.stdout_text, "\"executionReadyCount\": 3",
+        "#1407: admitted selection builder dispatch execution catalogs should expose ready counts");
+    expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
+        "#1407: admitted selection builder dispatch execution catalogs should expose empty error counts");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": false",
+        "#1407: admitted selection builder dispatch execution catalogs should not be dry-run");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1407: selection builder dispatch execution catalogs should remain non-mutating");
+    expect_contains(visual_process.stdout_text,
+        "\"executionReadyBuilderIds\": [\"form-builder\", \"control-builder\", \"grid-builder\"]",
+        "#1407: selection builder dispatch execution catalogs should summarize execution-ready builders");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedBuilderIds\": []",
+        "#1407: selection builder dispatch execution catalogs should summarize empty blocked builder ids");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1407: selection builder dispatch execution catalogs should summarize empty blocked execution errors");
+    expect_contains(visual_process.stdout_text, "\"executionAdmitted\": true",
+        "#1407: selection builder dispatch execution catalog entries should expose execution admission");
+    expect_contains(visual_process.stdout_text, "\"executionReady\": true",
+        "#1407: selection builder dispatch execution catalog entries should expose execution readiness");
+    expect_contains(visual_process.stdout_text, "\"dispatchOk\": true",
+        "#1407: selection builder dispatch execution catalog entries should preserve dispatch state");
+    expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [",
+        "#1407: selection builder dispatch execution catalog entries should preserve dispatch arguments");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1407: selection builder dispatch execution catalog JSON should accept dry-run visual catalogs");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1407: dry-run selection builder dispatch execution catalogs should not mark builders ready");
+    expect_contains(dry_run_process.stdout_text, "\"errorCount\": 3",
+        "#1407: dry-run selection builder dispatch execution catalogs should expose readiness errors");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyBuilderIds\": []",
+        "#1407: dry-run selection builder dispatch execution catalogs should summarize empty ready builders");
+    expect_contains(dry_run_process.stdout_text,
+        "\"executionBlockedBuilderIds\": [\"form-builder\", \"control-builder\", \"grid-builder\"]",
+        "#1407: dry-run selection builder dispatch execution catalogs should summarize blocked builders");
+    expect_contains(dry_run_process.stdout_text,
+        "\"executionBlockedErrors\": [\"A builder dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1407: dry-run selection builder dispatch execution catalogs should summarize blocked errors");
+
+    const auto missing_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-execution-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selection_process.exit_code == 2,
+        "#1407: selection builder dispatch execution catalog JSON should reject missing selections");
+    expect_contains(missing_selection_process.stdout_text,
+        "\"selectionBuilderDispatchExecutionCatalog\": null",
+        "#1407: missing selection builder dispatch execution catalog JSON should not expose catalog objects");
+    expect_contains(missing_selection_process.stdout_text, "No selection context was provided.",
+        "#1407: missing selection builder dispatch execution catalog contexts should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -39537,6 +39636,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_dispatch_catalog(argv[1]);
+    test_studio_host_json_exposes_selection_builder_dispatch_execution_catalog(argv[1]);
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
     test_studio_host_json_exposes_builder_execution(argv[1]);
     test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);
