@@ -224,6 +224,15 @@ int main() {
     expect(has_action(project_actions, "open-builder"), "#958: project-item context should expose builders");
     expect(!has_action(project_actions, "show-toolbox"), "#958: project-item context should exclude toolbox");
 
+    const auto data_actions = copperfin::studio::studio_editor_actions_for_context(
+        StudioEditorSelectionContext::data_environment);
+    expect(has_action(data_actions, "show-property-grid"),
+           "#1410: data-environment context should expose property grid");
+    expect(has_action(data_actions, "edit-data-environment"),
+           "#958: data-environment context should expose data-environment editor");
+    expect(has_action(data_actions, "open-builder"), "#958: data-environment context should expose builders");
+    expect(!has_action(data_actions, "show-toolbox"), "#958: data-environment context should exclude toolbox");
+
     const auto property_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
         .action_id = "show-property-grid",
@@ -616,7 +625,9 @@ int main() {
         .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
             editor_action_executor_called = true;
             return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
-                .launched = true
+                .launched = true,
+                .output = {},
+                .error = {}
             };
         }
     });
@@ -646,7 +657,11 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
             editor_action_executor_called = true;
-            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .output = {},
+                .error = {}
+            };
         }
     });
     expect(!editor_action_executor_called &&
@@ -663,7 +678,11 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
             editor_action_executor_called = true;
-            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .output = {},
+                .error = {}
+            };
         }
     });
     expect(!editor_action_executor_called &&
@@ -680,7 +699,11 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
             editor_action_executor_called = true;
-            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .output = {},
+                .error = {}
+            };
         }
     });
     expect(!editor_action_executor_called &&
@@ -1087,6 +1110,23 @@ int main() {
                data_plan.plan.command_token == "studio.data_environment.open" &&
                data_plan.plan.target_surface == "data-environment",
            "#1207: data-environment editor action launch plans should accept data-environment actions");
+
+    const auto data_property_plan = copperfin::studio::plan_studio_editor_action_launch({
+        .selection_context = StudioEditorSelectionContext::data_environment,
+        .action_id = "show-property-grid",
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = "Dataenvironment",
+        .unique_id = "de-guid",
+        .symbol = "Dataenvironment",
+        .line = 0U,
+        .column = 0U
+    });
+    expect(data_property_plan.ok &&
+               data_property_plan.plan.action.kind == StudioEditorActionKind::property_grid &&
+               data_property_plan.plan.command_token == "studio.property_grid.show" &&
+               data_property_plan.plan.target_surface == "property-grid",
+           "#1410: data-environment editor action launch plans should accept property-grid actions");
 
     const auto project_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::project_item,

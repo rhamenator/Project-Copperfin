@@ -366,6 +366,8 @@ int main() {
     const auto data_context = copperfin::studio::studio_designer_context_for_selection({
         .selection_context = StudioEditorSelectionContext::data_environment
     });
+    expect(has_id(data_context.editor_actions, "show-property-grid"),
+           "#1410: data-environment context should include property-grid action");
     expect(has_id(data_context.editor_actions, "edit-data-environment"),
            "#959: data-environment context should include data-environment editor action");
     expect(has_id(data_context.builders, "data-environment-builder"),
@@ -1318,9 +1320,13 @@ int main() {
                !data_invocation_entry->toolbox_available &&
                has_editor_invocation_admission(
                    data_invocation_entry->invocation_admission.plan.editor_action_invocations,
+                   "show-property-grid",
+                   true) &&
+               has_editor_invocation_admission(
+                   data_invocation_entry->invocation_admission.plan.editor_action_invocations,
                    "edit-data-environment",
                    true),
-           "#1223: designer invocation admission catalog should include data-environment editor admissions");
+           "#1410: designer invocation admission catalog should include data-environment property/editor admissions");
 
     const auto dispatch_catalog = copperfin::studio::plan_studio_designer_dispatch_catalog({
         .asset_path = "forms/customer.scx",
@@ -1598,11 +1604,11 @@ int main() {
         launch_surface_catalog.contexts,
         StudioEditorSelectionContext::data_environment);
     expect(data_catalog != nullptr && data_catalog->launch_surface_plan.ok &&
-               data_catalog->editor_action_launch_plan_count == 2U &&
+               data_catalog->editor_action_launch_plan_count == 3U &&
                data_catalog->builder_launch_plan_count == 1U &&
                !data_catalog->toolbox_available &&
                data_catalog->toolbox_item_count == 0U,
-           "#1213: data-environment catalog entries should summarize data-environment actions/builders without toolbox availability");
+           "#1410: data-environment catalog entries should summarize property-grid and data-environment actions without toolbox availability");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -28,11 +28,11 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1409`, advertising the selected-context builder/toolbox dispatch-execution catalog commands in `copperfin_studio_host` usage text and focused host JSON coverage. `#1408` is the immediately preceding selected-context toolbox dispatch-execution catalog host JSON slice. These issues remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1410`, exposing the shared property-grid editor action for data-environment selection contexts. `#1409` is the immediately preceding Studio host usage/discoverability slice. These issues remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1409`, advertising selected-context builder/toolbox dispatch-execution catalog commands in Studio host usage output. `#1408` remains the latest prior selected-context toolbox dispatch-execution catalog host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, and unmatched-selection JSON coverage.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1410`, exposing property-grid editor action availability for data-environment selection contexts. `#1409` remains the latest prior Studio host usage/discoverability slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, and unmatched-selection JSON coverage.
 
 Next: continue `#23` by opening or picking the next prompt-sized designer interaction, builder/wizard invocation, toolbox-flow, or context-aware editor child before coding. The visual-object host-wrapper scanner reported zero missing wrappers after `#1202`, so do not open more wrapper slices unless a new editor API is added or the scanner regresses. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 

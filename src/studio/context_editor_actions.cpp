@@ -71,7 +71,8 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
                 Context::report_expression,
                 Context::label_expression,
                 Context::menu_item,
-                Context::project_item
+                Context::project_item,
+                Context::data_environment
             },
             .command_token = "studio.property_grid.show",
             .target_surface = "property-grid",
