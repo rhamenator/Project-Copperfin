@@ -9246,6 +9246,10 @@ void print_json_builder_execution_result(
     }
 
     const auto& plan = result.dispatch_plan;
+    const std::vector<std::string> execution_ready_builder_ids{std::string(plan.builder.id)};
+    const std::vector<std::string> execution_blocked_builder_ids;
+    const std::vector<std::string> execution_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9280,6 +9284,15 @@ void print_json_builder_execution_result(
     std::cout << ",\n";
     std::cout << "    \"uniqueId\": ";
     print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"executionReadyBuilderIds\": ";
+    print_json_string_array(execution_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedBuilderIds\": ";
+    print_json_string_array(execution_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedErrors\": ";
+    print_json_string_array(execution_blocked_errors);
     std::cout << ",\n";
     std::cout << "    \"launchCommand\": ";
     print_json_string(launch_command);

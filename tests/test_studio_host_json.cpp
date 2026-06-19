@@ -5472,6 +5472,12 @@ void test_studio_host_json_exposes_builder_execution(const std::string& studio_h
         "#1319: builder execution JSON should expose stable command tokens");
     expect_contains(admitted_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
         "#1319: builder execution JSON should expose entry points");
+    expect_contains(admitted_process.stdout_text, "\"executionReadyBuilderIds\": [\"grid-builder\"]",
+        "#1394: builder execution JSON should summarize execution-ready builder ids");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedBuilderIds\": []",
+        "#1394: builder execution JSON should summarize empty blocked builder ids");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1394: builder execution JSON should summarize empty execution errors");
     expect_contains(admitted_process.stdout_text, "\"launchCommand\": \"/bin/true\"",
         "#1319: builder execution JSON should expose launch commands");
     expect_contains(admitted_process.stdout_text, "\"executedCommand\": \"'/bin/true'",
@@ -5510,6 +5516,12 @@ void test_studio_host_json_exposes_builder_execution(const std::string& studio_h
         "#1319: selection-context builder execution JSON should expose wizard ids");
     expect_contains(selection_process.stdout_text, "\"kind\": \"wizard\"",
         "#1319: selection-context builder execution JSON should preserve wizard kind metadata");
+    expect_contains(selection_process.stdout_text, "\"executionReadyBuilderIds\": [\"label-wizard\"]",
+        "#1394: selection-context builder execution JSON should summarize execution-ready builder ids");
+    expect_contains(selection_process.stdout_text, "\"executionBlockedBuilderIds\": []",
+        "#1394: selection-context builder execution JSON should summarize empty blocked builder ids");
+    expect_contains(selection_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1394: selection-context builder execution JSON should summarize empty execution errors");
     expect_contains(selection_process.stdout_text, "\"executed\": true",
         "#1319: selection-context builder execution JSON should mark execution complete");
 
