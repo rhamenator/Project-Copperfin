@@ -4615,6 +4615,74 @@ void test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(const
     }
 }
 
+void test_studio_host_json_snaps_label_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_layout_snap_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_json(label_path);
+
+    const auto snap_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--record", "3",
+            "--snap-object",
+            "--snap-mode", "both",
+            "--grid-width", "700",
+            "--grid-height", "750",
+            "--snap-target-unique-id", "field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (snap_process.exit_code != 0) {
+        std::cerr << "studio host label object snap stdout:\n" << snap_process.stdout_text << "\n";
+        std::cerr << "studio host label object snap stderr:\n" << snap_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(snap_process.exit_code == 0,
+           "#1485: label layout object snap should exit successfully");
+    expect(visual_object_property(label_path, "field-guid", "HPOS") == "1400" &&
+               visual_object_property(label_path, "field-guid", "VPOS") == "2250",
+           "#1485: label layout object snap should mutate LBX HPOS and VPOS fields");
+    expect(visual_object_property(label_path, "field-guid", "WIDTH") == "4000" &&
+               visual_object_property(label_path, "field-guid", "HEIGHT") == "450",
+           "#1485: label layout object snap should preserve LBX WIDTH and HEIGHT fields");
+    expect_contains(snap_process.stdout_text, "\"isLabel\": true",
+                    "#1485: snapped label layout JSON should retain label identity");
+    expect_contains(snap_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1485: snapped label object JSON should retain selected-object availability");
+    expect_contains(snap_process.stdout_text, "\"left\": 1400",
+                    "#1485: snapped label object JSON should expose updated left coordinates");
+    expect_contains(snap_process.stdout_text, "\"top\": 2250",
+                    "#1485: snapped label object JSON should expose updated top coordinates");
+    expect_contains(snap_process.stdout_text, "\"width\": 4000",
+                    "#1485: snapped label object JSON should preserve width");
+    expect_contains(snap_process.stdout_text, "\"height\": 450",
+                    "#1485: snapped label object JSON should preserve height");
+    expect_contains(snap_process.stdout_text, "\"right\": 5400",
+                    "#1485: snapped label object JSON should recompute right-edge coordinates");
+    expect_contains(snap_process.stdout_text, "\"bottom\": 2700",
+                    "#1485: snapped label object JSON should recompute bottom-edge coordinates");
+    expect_contains(snap_process.stdout_text, "\"sectionRelativeTop\": 250",
+                    "#1485: snapped label object JSON should recompute section-relative top coordinates");
+    expect_contains(snap_process.stdout_text, "\"sectionRelativeBottom\": 700",
+                    "#1485: snapped label object JSON should recompute section-relative bottom coordinates");
+    expect_contains(snap_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1485: snapped label object JSON should preserve containing section metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -48891,6 +48959,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_resizes_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_snaps_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(argv[1]);
