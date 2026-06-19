@@ -4855,6 +4855,46 @@ void test_studio_host_json_exposes_selected_report_settings(const std::string& s
     expect_contains(settings_process.stdout_text, "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"10\"",
                     "#1456: selected report settings should expose direct setting provenance");
 
+    const fs::path deleted_settings_path = temp_root / "deleted_settings.frx";
+    write_synthetic_report_table_for_deleted_settings_json(deleted_settings_path);
+    const auto deleted_settings_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_settings_path.string(), "--record", "0", "--json"},
+        temp_root);
+
+    if (deleted_settings_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted report settings stdout:\n"
+                  << deleted_settings_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted report settings stderr:\n"
+                  << deleted_settings_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_settings_process.exit_code == 0,
+           "#1477: selected deleted report settings JSON should exit successfully");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    "#1477: deleted report settings selections should advertise selected-settings availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1477: deleted report settings selections should advertise report-selection availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    "#1477: deleted report settings selections should expose settings selection kind");
+    expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
+                    "#1477: deleted selected report settings JSON should not expose live settings");
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 3",
+                    "#1477: deleted selected report settings JSON should expose deleted setting counts");
+    expect_contains_in_order(
+        deleted_settings_process.stdout_text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"TOPMARGIN\"",
+            "\"recordIndex\": 0"
+        },
+        "#1477: deleted report settings selections should expose selected deleted-setting provenance");
+
     const auto object_process = run_process_capture(
         studio_host_path,
         {"--path", report_path.string(), "--record", "3", "--json"},
