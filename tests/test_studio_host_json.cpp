@@ -5610,6 +5610,12 @@ void test_studio_host_json_exposes_builder_dispatch_catalog(const std::string& s
         "#1232: admitted builder dispatch catalog JSON should not be dry-run");
     expect_contains(control_process.stdout_text, "\"mutatesAsset\": false",
         "#1232: builder dispatch catalog JSON should remain non-mutating");
+    expect_contains(control_process.stdout_text, "\"dispatchReadyBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1362: builder dispatch catalog JSON should summarize dispatch-ready builders");
+    expect_contains(control_process.stdout_text, "\"dispatchBlockedBuilderIds\": []",
+        "#1362: admitted builder dispatch catalog JSON should summarize empty blocked builder ids");
+    expect_contains(control_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1362: admitted builder dispatch catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(control_process.stdout_text, "\"entries\": [",
         "#1232: builder dispatch catalog JSON should expose per-builder entries");
     expect_contains(control_process.stdout_text, "\"builderId\": \"grid-builder\"",
@@ -5651,6 +5657,14 @@ void test_studio_host_json_exposes_builder_dispatch_catalog(const std::string& s
         "#1232: dry-run builder dispatch catalog JSON should expose per-builder error counts");
     expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
         "#1232: dry-run builder dispatch catalog JSON should expose aggregate dry-run state");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchReadyBuilderIds\": []",
+        "#1362: dry-run builder dispatch catalog JSON should summarize empty dispatch-ready builders");
+    expect_contains(dry_run_process.stdout_text,
+        "\"dispatchBlockedBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1362: dry-run builder dispatch catalog JSON should summarize blocked builders");
+    expect_contains(dry_run_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A builder dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1362: dry-run builder dispatch catalog JSON should summarize blocked dispatch errors");
     expect_contains(dry_run_process.stdout_text,
         "A builder dispatch request requires an admitted non-dry-run invocation.",
         "#1232: dry-run builder dispatch catalog JSON should expose dispatch errors");

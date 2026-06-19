@@ -1,3 +1,4 @@
+1362	OPEN	E2/#23 slice: Expose builder dispatch catalog status summaries in host JSON		2026-06-19T08:23:15Z
 1361	OPEN	E2/#23 slice: Expose builder invocation admission catalog status summaries in host JSON		2026-06-19T08:19:42Z
 1360	OPEN	E2/#23 slice: Expose builder launch catalog status summaries in host JSON		2026-06-19T08:15:17Z
 1359	OPEN	E2/#23 slice: Expose designer launch surface catalog context status summaries in host JSON		2026-06-19T08:11:43Z
