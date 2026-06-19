@@ -6745,6 +6745,10 @@ void print_json_toolbox_create_plan_result(
     }
 
     const auto& plan = result.plan;
+    const std::vector<std::string> plan_ready_item_ids{std::string(plan.toolbox_item.id)};
+    const std::vector<std::string> plan_blocked_item_ids;
+    const std::vector<std::string> plan_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -6764,6 +6768,15 @@ void print_json_toolbox_create_plan_result(
               << (plan.toolbox_context_provided ? "true" : "false") << ",\n";
     std::cout << "    \"toolboxContext\": ";
     print_json_string(copperfin::studio::studio_toolbox_context_name(plan.toolbox_context));
+    std::cout << ",\n";
+    std::cout << "    \"planReadyItemIds\": ";
+    print_json_string_array(plan_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedItemIds\": ";
+    print_json_string_array(plan_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedErrors\": ";
+    print_json_string_array(plan_blocked_errors);
     std::cout << ",\n";
     std::cout << "    \"targetRecordIndex\": " << plan.target_record_index << ",\n";
     std::cout << "    \"objectName\": ";
@@ -6839,6 +6852,10 @@ void print_json_selection_toolbox_create_plan_result(
     }
 
     const auto& plan = result.create_plan.plan;
+    const std::vector<std::string> plan_ready_item_ids{std::string(plan.toolbox_item.id)};
+    const std::vector<std::string> plan_blocked_item_ids;
+    const std::vector<std::string> plan_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "      \"toolboxItemId\": ";
     print_json_string_view(plan.toolbox_item.id);
@@ -6856,6 +6873,15 @@ void print_json_selection_toolbox_create_plan_result(
               << (plan.toolbox_context_provided ? "true" : "false") << ",\n";
     std::cout << "      \"toolboxContext\": ";
     print_json_string(copperfin::studio::studio_toolbox_context_name(plan.toolbox_context));
+    std::cout << ",\n";
+    std::cout << "      \"planReadyItemIds\": ";
+    print_json_string_array(plan_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "      \"planBlockedItemIds\": ";
+    print_json_string_array(plan_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "      \"planBlockedErrors\": ";
+    print_json_string_array(plan_blocked_errors);
     std::cout << ",\n";
     std::cout << "      \"targetRecordIndex\": " << plan.target_record_index << ",\n";
     std::cout << "      \"objectName\": ";

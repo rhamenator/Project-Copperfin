@@ -10479,6 +10479,12 @@ void test_studio_host_json_plans_toolbox_object_creation(const std::string& stud
         "#1242: toolbox-create-plan JSON should expose requested toolbox context state");
     expect_contains(plan_process.stdout_text, "\"toolboxContext\": \"form\"",
         "#1242: toolbox-create-plan JSON should expose requested toolbox contexts");
+    expect_contains(plan_process.stdout_text, "\"planReadyItemIds\": [\"textbox\"]",
+        "#1405: toolbox-create-plan JSON should summarize plan-ready item ids");
+    expect_contains(plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1405: toolbox-create-plan JSON should expose empty blocked item ids");
+    expect_contains(plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1405: toolbox-create-plan JSON should expose empty blocked plan errors");
     expect_contains(plan_process.stdout_text, "\"targetRecordIndex\": 2",
         "#1242: toolbox-create-plan JSON should expose target record indexes");
     expect_contains(plan_process.stdout_text, "\"objectName\": \"txt2\"",
@@ -10589,6 +10595,12 @@ void test_studio_host_json_plans_selection_toolbox_object_creation(const std::st
         "#1301: selection-toolbox-create-plan JSON should expose descriptor class names");
     expect_contains(plan_process.stdout_text, "\"toolboxContextProvided\": true",
         "#1301: selection-toolbox-create-plan JSON should expose context-filtered planning");
+    expect_contains(plan_process.stdout_text, "\"planReadyItemIds\": [\"textbox\"]",
+        "#1405: selection-toolbox-create-plan JSON should summarize plan-ready item ids");
+    expect_contains(plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1405: selection-toolbox-create-plan JSON should expose empty blocked item ids");
+    expect_contains(plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1405: selection-toolbox-create-plan JSON should expose empty blocked plan errors");
     expect_contains(plan_process.stdout_text, "\"targetRecordIndex\": 2",
         "#1301: selection-toolbox-create-plan JSON should expose target record indexes");
     expect_contains(plan_process.stdout_text, "\"objectName\": \"txt2\"",
