@@ -4315,6 +4315,14 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1479: deleted report object selections should advertise report-selection availability");
     expect_contains(deleted_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                     "#1479: deleted report object selections should expose object selection kind");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1510: selected deleted report objects should not advertise selected-section availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1510: selected deleted report objects should serialize null selected sections");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1510: selected deleted report objects should not advertise selected-settings availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1510: selected deleted report objects should serialize null selected settings");
     expect_contains(deleted_object_process.stdout_text, "\"deletedObjectCount\": 1",
                     "#1479: deleted selected report object JSON should expose deleted object counts");
     expect_contains_in_order(
