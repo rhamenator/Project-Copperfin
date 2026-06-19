@@ -8254,6 +8254,139 @@ void test_studio_host_json_exposes_toolbox_dispatch_catalog(const std::string& s
     }
 }
 
+void test_studio_host_json_exposes_toolbox_dispatch_execution_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_dispatch_execution_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-execution-catalog",
+            "--toolbox-context", "form",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(admitted_process.exit_code == 0,
+        "#1331: toolbox dispatch execution catalog JSON should accept admitted form catalogs");
+    expect_contains(admitted_process.stdout_text, "\"toolboxDispatchExecutionCatalog\": {",
+        "#1331: toolbox dispatch execution catalog JSON should expose a catalog object");
+    expect_contains(admitted_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1331: toolbox dispatch execution catalog JSON should expose toolbox contexts");
+    expect_contains(admitted_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
+        "#1331: toolbox dispatch execution catalog JSON should expose command tokens");
+    expect_contains(admitted_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1331: toolbox dispatch execution catalog JSON should carry asset paths");
+    expect_contains(admitted_process.stdout_text, "\"recordIndex\": 1",
+        "#1331: toolbox dispatch execution catalog JSON should carry record indexes");
+    expect_contains(admitted_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1331: toolbox dispatch execution catalog JSON should carry object-name selectors");
+    expect_contains(admitted_process.stdout_text, "\"uniqueId\": \"form-guid\"",
+        "#1331: toolbox dispatch execution catalog JSON should carry unique-id selectors");
+    expect_contains(admitted_process.stdout_text, "\"itemCount\": ",
+        "#1331: toolbox dispatch execution catalog JSON should expose item counts");
+    expect_contains(admitted_process.stdout_text, "\"executionReadyCount\": ",
+        "#1331: toolbox dispatch execution catalog JSON should expose readiness counts");
+    expect_contains(admitted_process.stdout_text, "\"errorCount\": 0",
+        "#1331: admitted toolbox dispatch execution catalog JSON should expose zero errors");
+    expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
+        "#1331: admitted toolbox dispatch execution catalog JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text, "\"id\": \"textbox\"",
+        "#1331: toolbox dispatch execution catalog JSON should include per-item metadata");
+    expect_contains(admitted_process.stdout_text, "\"entries\": [",
+        "#1331: toolbox dispatch execution catalog JSON should expose per-item readiness entries");
+    expect_contains(admitted_process.stdout_text, "\"executionAdmitted\": true",
+        "#1331: toolbox dispatch execution catalog JSON should expose execution admission state");
+    expect_contains(admitted_process.stdout_text, "\"executionReady\": true",
+        "#1331: toolbox dispatch execution catalog JSON should expose execution readiness");
+    expect_contains(admitted_process.stdout_text, "\"executionError\": \"\"",
+        "#1331: admitted toolbox dispatch execution catalog JSON should expose empty execution errors");
+    expect_contains(admitted_process.stdout_text, "\"paletteInvocationAdmitted\": true",
+        "#1331: toolbox dispatch execution catalog JSON should expose palette admission state");
+    expect_contains(admitted_process.stdout_text, "\"dispatchOk\": true",
+        "#1331: toolbox dispatch execution catalog JSON should expose dispatch readiness");
+    expect_contains(admitted_process.stdout_text, "\"dispatchArguments\": [",
+        "#1331: toolbox dispatch execution catalog JSON should expose dispatch arguments");
+
+    const auto unadmitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-execution-catalog",
+            "--toolbox-context", "form",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "false",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_process.exit_code == 0,
+        "#1331: toolbox dispatch execution catalog JSON should report unadmitted execution as item errors");
+    expect_contains(unadmitted_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1331: unadmitted toolbox dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
+        "#1331: unadmitted toolbox dispatch execution catalog JSON should expose admission false");
+    expect_contains(unadmitted_process.stdout_text,
+        "A toolbox dispatch execution catalog entry requires explicit execution admission.",
+        "#1331: unadmitted toolbox dispatch execution catalog JSON should expose execution errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-execution-catalog",
+            "--toolbox-context", "form",
+            "--admit-toolbox-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1331: toolbox dispatch execution catalog JSON should report dry-run dispatch failures");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1331: dry-run toolbox dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(dry_run_process.stdout_text,
+        "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1331: dry-run toolbox dispatch execution catalog JSON should expose dispatch errors");
+
+    const auto invalid_execution_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-execution-catalog",
+            "--toolbox-context", "form",
+            "--admit-toolbox-execution", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_execution_bool_process.exit_code == 2,
+        "#1331: toolbox dispatch execution catalog JSON should reject invalid execution booleans");
+    expect_contains(invalid_execution_bool_process.stdout_text,
+        "The --admit-toolbox-execution value must be true or false.",
+        "#1331: invalid toolbox execution catalog admission JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch-execution-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1331: toolbox dispatch execution catalog JSON should reject missing toolbox contexts");
+    expect_contains(missing_context_process.stdout_text, "No toolbox context was provided.",
+        "#1331: missing toolbox dispatch execution catalog context JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selection_toolbox_dispatch_catalog(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -38073,6 +38206,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_dispatch(argv[1]);
     test_studio_host_json_exposes_toolbox_execution(argv[1]);
     test_studio_host_json_exposes_toolbox_dispatch_catalog(argv[1]);
+    test_studio_host_json_exposes_toolbox_dispatch_execution_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission(argv[1]);
