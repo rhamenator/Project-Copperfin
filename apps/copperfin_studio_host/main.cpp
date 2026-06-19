@@ -20189,6 +20189,7 @@ void print_json_report_layout_object(
     print_json_report_field_index_or_null(object.width_field_index);
     std::cout << ",\n";
     std::cout << indent << "  \"widthMemoBlockNumber\": " << object.width_memo_block_number << ",\n";
+    std::cout << indent << "  \"right\": " << object.right << ",\n";
     std::cout << indent << "  \"height\": " << object.height << ",\n";
     std::cout << indent << "  \"heightFieldIndex\": ";
     print_json_report_field_index_or_null(object.height_field_index);

@@ -226,6 +226,8 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].objects[0].width_field_index == 5U, "#665: layout objects should preserve WIDTH field provenance");
     expect(layout.sections[1].objects[0].width_memo_block_number == 305U,
         "#723: layout objects should preserve WIDTH memo block provenance");
+    expect(layout.sections[1].objects[0].right == 5200,
+        "#1462: report layout objects should carry right-edge coordinates");
     expect(layout.sections[1].objects[0].height_field_index == 6U, "#665: layout objects should preserve HEIGHT field provenance");
     expect(layout.sections[1].objects[0].height_memo_block_number == 306U,
         "#723: layout objects should preserve HEIGHT memo block provenance");
@@ -292,6 +294,8 @@ void test_build_report_layout_groups_band_objects() {
             "#716: synthesized report layout object titles should expose memo block zero");
         expect(layout.unplaced_objects[0].bottom == 8100,
             "#1461: unplaced report objects should still carry absolute bottom-edge coordinates");
+        expect(layout.unplaced_objects[0].right == 150,
+            "#1462: unplaced report objects should still carry right-edge coordinates");
     }
     expect(layout.deleted_objects.size() == 1U, "#689: deleted report layout objects should be preserved separately");
     if (!layout.deleted_objects.empty()) {
@@ -327,6 +331,8 @@ void test_build_report_layout_groups_band_objects() {
             "#723: deleted report layout objects should retain HEIGHT memo block provenance");
         expect(layout.deleted_objects[0].bottom == 2900,
             "#1461: deleted report objects should still carry absolute bottom-edge coordinates");
+        expect(layout.deleted_objects[0].right == 2200,
+            "#1462: deleted report objects should still carry right-edge coordinates");
     }
     expect(layout.deleted_sections.size() == 1U, "#690: deleted report sections should be preserved separately");
     if (!layout.deleted_sections.empty()) {

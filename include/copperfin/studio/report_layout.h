@@ -55,6 +55,7 @@ struct StudioLayoutObjectSnapshot {
     int width = 0;
     std::size_t width_field_index = StudioReportMissingFieldIndex;
     std::uint32_t width_memo_block_number = 0;
+    int right = 0;
     int height = 0;
     std::size_t height_field_index = StudioReportMissingFieldIndex;
     std::uint32_t height_memo_block_number = 0;

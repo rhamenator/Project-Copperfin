@@ -231,6 +231,7 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.width = std::max(0, parse_scaled_int_or_default(record, "WIDTH"));
     object.width_field_index = field_index_or_missing(record, "WIDTH");
     object.width_memo_block_number = memo_block_number_or_zero(record, "WIDTH");
+    object.right = object.left + object.width;
     object.height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     object.height_field_index = field_index_or_missing(record, "HEIGHT");
     object.height_memo_block_number = memo_block_number_or_zero(record, "HEIGHT");

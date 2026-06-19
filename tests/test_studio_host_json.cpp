@@ -3713,6 +3713,8 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report layout JSON should expose expression memo provenance");
     expect_contains(process.stdout_text, "\"leftFieldIndex\": 3",
                     "#1452: report layout JSON should expose object left field provenance");
+    expect_contains(process.stdout_text, "\"right\": 5200",
+                    "#1462: report layout JSON should expose object right-edge coordinates");
     expect_contains(process.stdout_text, "\"bottom\": 3050",
                     "#1461: report layout JSON should expose object bottom-edge coordinates");
     expect_contains(process.stdout_text, "\"highlightCount\": 1",
@@ -3863,6 +3865,8 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1454: selected report object JSON should expose report object expressions");
     expect_contains(object_process.stdout_text, "\"expressionFieldIndex\": 2",
                     "#1454: selected report object JSON should expose expression field provenance");
+    expect_contains(object_process.stdout_text, "\"right\": 5200",
+                    "#1462: selected report object JSON should expose object right-edge coordinates");
     expect_contains(object_process.stdout_text, "\"bottom\": 3050",
                     "#1461: selected report object JSON should expose object bottom-edge coordinates");
     expect_contains(object_process.stdout_text, "\"highlightCount\": 1",
