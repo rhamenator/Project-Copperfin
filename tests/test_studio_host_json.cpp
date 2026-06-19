@@ -9353,10 +9353,27 @@ void test_studio_host_json_exposes_designer_dispatch_execution_catalog(const std
         "#1333: admitted ready designer dispatch execution catalog JSON should expose empty execution errors");
     expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"edit-visual-method\"",
         "#1333: designer dispatch execution catalog JSON should preserve editor action dispatch ids");
+    expect_contains(catalog_process.stdout_text, "\"editorActionDispatches\": [",
+        "#1334: designer dispatch execution catalog JSON should expose nested editor dispatch entries");
+    expect_contains(catalog_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
+        "#1334: designer dispatch execution catalog JSON should expose editor dispatch command tokens");
+    expect_contains(catalog_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.method_editor.open\"",
+        "#1334: designer dispatch execution catalog JSON should expose editor dispatch arguments");
     expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"form-builder\"",
         "#1333: designer dispatch execution catalog JSON should preserve builder dispatch ids");
+    expect_contains(catalog_process.stdout_text, "\"builderDispatches\": [",
+        "#1334: designer dispatch execution catalog JSON should expose nested builder dispatch entries");
+    expect_contains(catalog_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1334: designer dispatch execution catalog JSON should expose builder dispatch command tokens");
+    expect_contains(catalog_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.builder.invoke\"",
+        "#1334: designer dispatch execution catalog JSON should expose builder dispatch arguments");
     expect_contains(catalog_process.stdout_text, "\"toolboxDispatchOk\": true",
         "#1333: designer dispatch execution catalog JSON should expose toolbox dispatch status");
+    expect_contains(catalog_process.stdout_text, "\"toolboxCommandToken\": \"studio.toolbox.palette.invoke\"",
+        "#1334: designer dispatch execution catalog JSON should expose toolbox dispatch command tokens");
+    expect_contains(catalog_process.stdout_text,
+        "\"toolboxDispatchArguments\": [\"--command-token\", \"studio.toolbox.palette.invoke\"",
+        "#1334: designer dispatch execution catalog JSON should expose toolbox dispatch arguments");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"menu_item\"",
         "#1333: designer dispatch execution catalog JSON should include menu contexts");
     expect_contains(catalog_process.stdout_text,

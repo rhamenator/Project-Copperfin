@@ -252,6 +252,17 @@ void print_json_string_view(std::string_view value) {
     print_json_string(std::string(value));
 }
 
+void print_json_string_array(const std::vector<std::string>& values) {
+    std::cout << "[";
+    for (std::size_t index = 0U; index < values.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ", ";
+        }
+        print_json_string(values[index]);
+    }
+    std::cout << "]";
+}
+
 std::string shell_quote(const std::string& value) {
     if (value.empty()) {
         return "''";
@@ -10999,6 +11010,14 @@ void print_json_designer_execution_result(
     std::cout << "}\n";
 }
 
+void print_json_designer_execution_catalog_editor_dispatch(
+    const copperfin::studio::StudioEditorActionDispatchResult& dispatch,
+    const std::string& indent);
+
+void print_json_designer_execution_catalog_builder_dispatch(
+    const copperfin::studio::StudioBuilderDispatchResult& dispatch,
+    const std::string& indent);
+
 void print_json_designer_dispatch_catalog_context(
     const copperfin::studio::StudioDesignerDispatchCatalogEntry& entry,
     const std::string& indent) {
@@ -11055,6 +11074,76 @@ void print_json_designer_dispatch_catalog_context(
         print_json_string("");
     }
     std::cout << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_designer_execution_catalog_editor_dispatch(
+    const copperfin::studio::StudioEditorActionDispatchResult& dispatch,
+    const std::string& indent) {
+    std::cout << indent << "{\n";
+    std::cout << indent << "  \"dispatchOk\": " << (dispatch.ok ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"error\": ";
+    print_json_string(dispatch.error);
+    if (!dispatch.ok) {
+        std::cout << "\n";
+        std::cout << indent << "}";
+        return;
+    }
+
+    const auto& plan = dispatch.plan;
+    std::cout << ",\n";
+    std::cout << indent << "  \"actionId\": ";
+    print_json_string_view(plan.action.id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"commandToken\": ";
+    print_json_string(plan.command_token);
+    std::cout << ",\n";
+    std::cout << indent << "  \"targetSurface\": ";
+    print_json_string(plan.target_surface);
+    std::cout << ",\n";
+    std::cout << indent << "  \"dispatchArguments\": ";
+    print_json_string_array(plan.dispatch_arguments);
+    std::cout << ",\n";
+    std::cout << indent << "  \"dispatchAdmitted\": " << (plan.dispatch_admitted ? "true" : "false")
+              << ",\n";
+    std::cout << indent << "  \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"executed\": " << (plan.executed ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"mutatesAsset\": " << (plan.mutates_asset ? "true" : "false") << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_designer_execution_catalog_builder_dispatch(
+    const copperfin::studio::StudioBuilderDispatchResult& dispatch,
+    const std::string& indent) {
+    std::cout << indent << "{\n";
+    std::cout << indent << "  \"dispatchOk\": " << (dispatch.ok ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"error\": ";
+    print_json_string(dispatch.error);
+    if (!dispatch.ok) {
+        std::cout << "\n";
+        std::cout << indent << "}";
+        return;
+    }
+
+    const auto& plan = dispatch.plan;
+    std::cout << ",\n";
+    std::cout << indent << "  \"builderId\": ";
+    print_json_string_view(plan.builder.id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"commandToken\": ";
+    print_json_string(plan.command_token);
+    std::cout << ",\n";
+    std::cout << indent << "  \"entryPoint\": ";
+    print_json_string(plan.entry_point);
+    std::cout << ",\n";
+    std::cout << indent << "  \"dispatchArguments\": ";
+    print_json_string_array(plan.dispatch_arguments);
+    std::cout << ",\n";
+    std::cout << indent << "  \"dispatchAdmitted\": " << (plan.dispatch_admitted ? "true" : "false")
+              << ",\n";
+    std::cout << indent << "  \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"executed\": " << (plan.executed ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"mutatesAsset\": " << (plan.mutates_asset ? "true" : "false") << "\n";
     std::cout << indent << "}";
 }
 
@@ -11129,6 +11218,18 @@ void print_json_designer_dispatch_execution_catalog_context(
         }
     }
     std::cout << "],\n";
+    std::cout << indent << "  \"editorActionDispatches\": [\n";
+    if (entry.dispatch.ok) {
+        const auto& dispatches = entry.dispatch.plan.editor_action_dispatches;
+        for (std::size_t index = 0U; index < dispatches.size(); ++index) {
+            print_json_designer_execution_catalog_editor_dispatch(dispatches[index], indent + "    ");
+            if ((index + 1U) != dispatches.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+    }
+    std::cout << indent << "  ],\n";
     std::cout << indent << "  \"builderIds\": [";
     if (entry.dispatch.ok) {
         const auto& dispatches = entry.dispatch.plan.builder_dispatches;
@@ -11145,6 +11246,32 @@ void print_json_designer_dispatch_execution_catalog_context(
         }
     }
     std::cout << "],\n";
+    std::cout << indent << "  \"builderDispatches\": [\n";
+    if (entry.dispatch.ok) {
+        const auto& dispatches = entry.dispatch.plan.builder_dispatches;
+        for (std::size_t index = 0U; index < dispatches.size(); ++index) {
+            print_json_designer_execution_catalog_builder_dispatch(dispatches[index], indent + "    ");
+            if ((index + 1U) != dispatches.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+    }
+    std::cout << indent << "  ],\n";
+    std::cout << indent << "  \"toolboxCommandToken\": ";
+    if (entry.dispatch.ok && entry.dispatch.plan.toolbox_dispatch.ok) {
+        print_json_string(entry.dispatch.plan.toolbox_dispatch.plan.command_token);
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << indent << "  \"toolboxDispatchArguments\": ";
+    if (entry.dispatch.ok && entry.dispatch.plan.toolbox_dispatch.ok) {
+        print_json_string_array(entry.dispatch.plan.toolbox_dispatch.plan.dispatch_arguments);
+    } else {
+        std::cout << "[]";
+    }
+    std::cout << ",\n";
     std::cout << indent << "  \"toolboxDispatchOk\": "
               << (entry.dispatch.ok && entry.dispatch.plan.toolbox_dispatch.ok ? "true" : "false") << ",\n";
     std::cout << indent << "  \"toolboxError\": ";
