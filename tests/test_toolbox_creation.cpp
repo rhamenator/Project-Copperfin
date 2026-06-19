@@ -1587,6 +1587,110 @@ void test_toolbox_creation_batch_plan_catalog_reports_planning_errors_without_st
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_selection_batch_plan_catalog_plans_context_batches_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_selection_batch_plan_catalog_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto visual_catalog =
+        copperfin::studio::plan_visual_object_batch_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+            .path = table_path.string(),
+            .parent_name = "frmMain",
+            .field_values = {
+                {.property_name = "CAPTION", .property_value = "Selection Batch Catalog"}
+            }
+        });
+    const auto* visual_textbox_plan = find_create_batch_plan(visual_catalog.batch_plan.plan.plans, "textbox");
+    const auto* visual_command_plan = find_create_batch_plan(visual_catalog.batch_plan.plan.plans, "commandbutton");
+
+    expect(visual_catalog.ok &&
+            visual_catalog.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            visual_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_catalog.launch_plan.ok &&
+            visual_catalog.launch_plan.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_catalog.item_count == visual_catalog.batch_plan.plan.item_count &&
+            visual_catalog.plan_count == 1U &&
+            visual_catalog.error_count == 0U &&
+            visual_catalog.batch_plan.ok &&
+            visual_catalog.dry_run &&
+            !visual_catalog.mutates_asset,
+        "#1296: visual selection toolbox batch create catalogs should summarize form batches");
+    expect(visual_textbox_plan != nullptr &&
+            visual_textbox_plan->target_record_index > before_count &&
+            visual_textbox_plan->object_name == "txt2" &&
+            visual_textbox_plan->parent_name == "frmMain" &&
+            has_field_value(visual_textbox_plan->field_values, "CLASS", "TextBox") &&
+            has_field_value(visual_textbox_plan->field_values, "CAPTION", "Selection Batch Catalog"),
+        "#1296: visual selection toolbox batch create catalogs should preserve textbox plans");
+    expect(visual_command_plan != nullptr &&
+            visual_command_plan->target_record_index > visual_textbox_plan->target_record_index &&
+            visual_command_plan->object_name == "cmd1" &&
+            has_field_value(visual_command_plan->field_values, "CLASS", "CommandButton"),
+        "#1296: visual selection toolbox batch create catalogs should reserve generated names");
+    expect(object_count(table_path) == before_count,
+        "#1296: visual selection toolbox batch create catalogs should not mutate assets");
+
+    const auto report_catalog =
+        copperfin::studio::plan_visual_object_batch_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+            .path = table_path.string(),
+            .parent_name = "DetailBand",
+            .field_values = {
+                {.property_name = "CAPTION", .property_value = "Report Selection Batch"}
+            }
+        });
+    const auto* report_label_plan = find_create_batch_plan(report_catalog.batch_plan.plan.plans, "label");
+
+    expect(report_catalog.ok &&
+            report_catalog.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            report_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            report_catalog.launch_plan.ok &&
+            report_catalog.plan_count == 1U &&
+            report_catalog.error_count == 0U &&
+            report_catalog.batch_plan.ok &&
+            report_label_plan != nullptr &&
+            report_label_plan->object_name == "lbl1" &&
+            report_label_plan->parent_name == "DetailBand" &&
+            has_field_value(report_label_plan->field_values, "CLASS", "Label") &&
+            has_field_value(report_label_plan->field_values, "CAPTION", "Report Selection Batch") &&
+            find_create_batch_plan(report_catalog.batch_plan.plan.plans, "textbox") == nullptr,
+        "#1296: report selection toolbox batch create catalogs should resolve report-safe batches");
+    expect(object_count(table_path) == before_count,
+        "#1296: report selection toolbox batch create catalogs should not mutate assets");
+
+    const auto unsupported_catalog =
+        copperfin::studio::plan_visual_object_batch_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::menu_item,
+            .path = table_path.string(),
+            .parent_name = "File",
+            .field_values = {}
+        });
+    expect(!unsupported_catalog.ok &&
+            unsupported_catalog.error ==
+                "A selection-context toolbox object batch creation catalog request requires a toolbox palette." &&
+            unsupported_catalog.selection_context == copperfin::studio::StudioEditorSelectionContext::menu_item &&
+            !unsupported_catalog.launch_plan.ok &&
+            unsupported_catalog.launch_plan.error == "The selected Studio context does not expose a toolbox palette." &&
+            unsupported_catalog.item_count == 0U &&
+            unsupported_catalog.plan_count == 0U &&
+            unsupported_catalog.error_count == 0U &&
+            unsupported_catalog.dry_run &&
+            !unsupported_catalog.mutates_asset &&
+            unsupported_catalog.batch_plan.plan.plans.empty(),
+        "#1296: unsupported selection toolbox batch create catalogs should reject without mutation");
+    expect(object_count(table_path) == before_count,
+        "#1296: selection toolbox batch create catalogs should not mutate assets");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2585,6 +2689,7 @@ int main() {
     test_toolbox_creation_selection_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
     test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_mutation();
     test_toolbox_creation_batch_plan_catalog_reports_planning_errors_without_stale_plans();
+    test_toolbox_creation_selection_batch_plan_catalog_plans_context_batches_without_mutation();
     test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_mutation();
     test_toolbox_creation_batch_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
     test_toolbox_creation_batch_planner_reserves_names_without_mutation();
