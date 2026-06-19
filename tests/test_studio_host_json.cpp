@@ -3702,6 +3702,12 @@ void write_synthetic_report_table_for_deleted_section_json(const std::filesystem
     expect(delete_result.ok, "#1474: synthetic FRX table should mark report section deleted");
 }
 
+void write_synthetic_report_table_for_deleted_settings_json(const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_layout_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#1476: synthetic FRX table should mark report settings deleted");
+}
+
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -4743,6 +4749,66 @@ void test_studio_host_json_deletes_report_settings_by_record_selection(const std
                     "#1475: deleting report settings should preserve live section metadata");
     expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
                     "#1475: deleting report settings should preserve deleted object metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_restores_report_settings_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_settings_restore_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_deleted_settings_json(report_path);
+    expect(dbf_record_deleted(report_path, 0U),
+           "#1476: report settings restore fixture should start with deleted settings");
+
+    const auto restore_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--restore-object",
+            "--record", "0",
+            "--json"
+        },
+        temp_root);
+
+    if (restore_process.exit_code != 0) {
+        std::cerr << "studio host report settings restore stdout:\n" << restore_process.stdout_text << "\n";
+        std::cerr << "studio host report settings restore stderr:\n" << restore_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(restore_process.exit_code == 0,
+           "#1476: report settings restore should exit successfully");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#1476: report settings restore should clear the FRX settings record delete flag");
+    expect_contains(restore_process.stdout_text, "\"settingCount\": 3",
+                    "#1476: restored report settings JSON should restore live setting counts");
+    expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
+                    "#1476: restored report settings JSON should clear deleted setting counts");
+    expect_contains_in_order(
+        restore_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"TOPMARGIN\"",
+            "\"recordIndex\": 0"
+        },
+        "#1476: report layout JSON should move root settings back into live-setting metadata");
+    expect_contains(restore_process.stdout_text, "\"sectionCount\": 2",
+                    "#1476: restoring report settings should preserve live section metadata");
+    expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1476: restoring report settings should preserve deleted object metadata");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -48408,6 +48474,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
+    test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
