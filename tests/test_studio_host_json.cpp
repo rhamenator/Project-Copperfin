@@ -7896,6 +7896,137 @@ void test_studio_host_json_exposes_visual_property_filter(const std::string& stu
     }
 }
 
+void test_studio_host_json_exposes_visual_property_query(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_property_query_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path direct_path = temp_root / "direct.scx";
+    write_synthetic_form_table_for_toolbox_creation(direct_path);
+
+    const auto direct_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-query",
+            "--path", direct_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(direct_process.exit_code == 0,
+        "#1416: visual property query JSON should exit successfully for direct fields");
+    expect_contains(direct_process.stdout_text, "\"visualPropertyQuery\": {",
+        "#1416: visual property query JSON should expose a query object");
+    expect_contains(direct_process.stdout_text, "\"exists\": true",
+        "#1416: visual property query JSON should report existing direct fields");
+    expect_contains(direct_process.stdout_text, "\"directField\": true",
+        "#1416: visual property query JSON should identify direct DBF fields");
+    expect_contains(direct_process.stdout_text, "\"recordIndex\": 1",
+        "#1416: visual property query JSON should expose resolved record indexes");
+    expect_contains(direct_process.stdout_text, "\"recordDeleted\": false",
+        "#1416: visual property query JSON should expose selected-record deleted state");
+    expect_contains(direct_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#1416: visual property query JSON should expose resolved direct property names");
+    expect_contains(direct_process.stdout_text, "\"value\": \"Existing\"",
+        "#1416: visual property query JSON should expose direct property values");
+
+    const fs::path memo_path = write_synthetic_form_table_for_property_rename(temp_root, "memo_query.scx");
+    const auto memo_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-query",
+            "--path", memo_path.string(),
+            "--object-name", "txt1",
+            "--property-name", "ControlSource",
+            "--json"
+        },
+        temp_root);
+    expect(memo_process.exit_code == 0,
+        "#1416: visual property query JSON should exit successfully for memo-backed properties");
+    expect_contains(memo_process.stdout_text, "\"exists\": true",
+        "#1416: visual property query JSON should report existing memo-backed properties");
+    expect_contains(memo_process.stdout_text, "\"directField\": false",
+        "#1416: visual property query JSON should identify memo-backed properties");
+    expect_contains(memo_process.stdout_text, "\"propertyName\": \"ControlSource\"",
+        "#1416: visual property query JSON should expose resolved memo property names");
+    expect_contains(memo_process.stdout_text, "\"value\": \"\\\"customer.name\\\"\"",
+        "#1416: visual property query JSON should expose memo-backed property values");
+
+    const auto missing_property_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-query",
+            "--path", direct_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "MissingProperty",
+            "--json"
+        },
+        temp_root);
+    expect(missing_property_process.exit_code == 0,
+        "#1416: visual property query JSON should succeed for missing properties on resolved objects");
+    expect_contains(missing_property_process.stdout_text, "\"exists\": false",
+        "#1416: visual property query JSON should report missing property existence");
+    expect_contains(missing_property_process.stdout_text, "\"propertyName\": \"MissingProperty\"",
+        "#1416: visual property query JSON should preserve requested missing property names");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-query",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1416: visual property query JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualPropertyQuery\": null",
+        "#1416: missing-path visual property query JSON should not expose a query object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1416: missing-path visual property query JSON should report parser errors");
+
+    const auto missing_property_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-query",
+            "--path", direct_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(missing_property_name_process.exit_code == 2,
+        "#1416: visual property query JSON should reject missing property names");
+    expect_contains(missing_property_name_process.stdout_text, "No property name was provided.",
+        "#1416: missing property-name visual property query JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-query",
+            "--path", direct_path.string(),
+            "--object-name", "missingObject",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1416: visual property query JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualPropertyQuery\": null",
+        "#1416: unresolved visual property query JSON should not expose a query object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1416: unresolved visual property query JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-property-query --path <asset>",
+        "#1416: usage text should expose visual property query commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_invocation_admission(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -39995,6 +40126,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_palette_launch_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_query_filters(argv[1]);
     test_studio_host_json_exposes_visual_property_filter(argv[1]);
+    test_studio_host_json_exposes_visual_property_query(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
