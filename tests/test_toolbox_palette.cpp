@@ -554,6 +554,125 @@ int main() {
             dry_run_dispatch_catalog.invocation_admission.plan.item_count == dry_run_dispatch_catalog.item_count,
         "#1287: dry-run toolbox dispatch catalogs should retain admission catalog dry-run state");
 
+    const auto visual_selection_dispatch_catalog =
+        copperfin::studio::plan_studio_toolbox_dispatch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid",
+            .admit_palette_invocation = true
+        });
+    expect(visual_selection_dispatch_catalog.ok &&
+            visual_selection_dispatch_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+            visual_selection_dispatch_catalog.toolbox_context == StudioToolboxContext::form &&
+            visual_selection_dispatch_catalog.command_token == "studio.toolbox.palette.invoke" &&
+            visual_selection_dispatch_catalog.asset_path == "forms/customer.scx" &&
+            visual_selection_dispatch_catalog.record_index == 1U &&
+            visual_selection_dispatch_catalog.object_name == "frmCustomer" &&
+            visual_selection_dispatch_catalog.unique_id == "form-guid" &&
+            visual_selection_dispatch_catalog.item_count == form_items.size() &&
+            visual_selection_dispatch_catalog.items.size() == form_items.size() &&
+            visual_selection_dispatch_catalog.launch_plan.ok &&
+            visual_selection_dispatch_catalog.invocation_admission.ok &&
+            visual_selection_dispatch_catalog.dispatch.ok &&
+            visual_selection_dispatch_catalog.dispatch_count == 1U &&
+            visual_selection_dispatch_catalog.error_count == 0U &&
+            !visual_selection_dispatch_catalog.dry_run &&
+            !visual_selection_dispatch_catalog.mutates_asset &&
+            !visual_selection_dispatch_catalog.dispatch.plan.executed &&
+            has_toolbox_item(visual_selection_dispatch_catalog.items, "textbox") &&
+            has_argument_pair(
+                visual_selection_dispatch_catalog.dispatch.plan.dispatch_arguments,
+                "--selection-context",
+                "visual_object") &&
+            has_argument_pair(
+                visual_selection_dispatch_catalog.dispatch.plan.dispatch_arguments,
+                "--toolbox-context",
+                "form"),
+        "#1290: visual selection toolbox dispatch catalogs should resolve form dispatch metadata");
+
+    const auto report_selection_dispatch_catalog =
+        copperfin::studio::plan_studio_toolbox_dispatch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::report_expression,
+            .asset_path = "reports/orders.frx",
+            .record_index = 3U,
+            .object_name = "Field1",
+            .unique_id = "field-guid",
+            .admit_palette_invocation = true
+        });
+    expect(report_selection_dispatch_catalog.ok &&
+            report_selection_dispatch_catalog.selection_context == StudioEditorSelectionContext::report_expression &&
+            report_selection_dispatch_catalog.toolbox_context == StudioToolboxContext::report &&
+            report_selection_dispatch_catalog.item_count == report_items.size() &&
+            report_selection_dispatch_catalog.dispatch_count == 1U &&
+            report_selection_dispatch_catalog.error_count == 0U &&
+            !report_selection_dispatch_catalog.dry_run &&
+            report_selection_dispatch_catalog.launch_plan.ok &&
+            report_selection_dispatch_catalog.invocation_admission.ok &&
+            report_selection_dispatch_catalog.dispatch.ok &&
+            has_toolbox_item(report_selection_dispatch_catalog.items, "label") &&
+            !has_toolbox_item(report_selection_dispatch_catalog.items, "textbox") &&
+            has_argument_pair(
+                report_selection_dispatch_catalog.dispatch.plan.dispatch_arguments,
+                "--selection-context",
+                "report_expression") &&
+            has_argument_pair(
+                report_selection_dispatch_catalog.dispatch.plan.dispatch_arguments,
+                "--toolbox-context",
+                "report"),
+        "#1290: report selection toolbox dispatch catalogs should preserve report-safe dispatch metadata");
+
+    const auto dry_run_selection_dispatch_catalog =
+        copperfin::studio::plan_studio_toolbox_dispatch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid",
+            .admit_palette_invocation = false
+        });
+    expect(dry_run_selection_dispatch_catalog.ok &&
+            dry_run_selection_dispatch_catalog.toolbox_context == StudioToolboxContext::form &&
+            dry_run_selection_dispatch_catalog.item_count == form_items.size() &&
+            dry_run_selection_dispatch_catalog.launch_plan.ok &&
+            dry_run_selection_dispatch_catalog.invocation_admission.ok &&
+            !dry_run_selection_dispatch_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            dry_run_selection_dispatch_catalog.dispatch_count == 0U &&
+            dry_run_selection_dispatch_catalog.error_count == 1U &&
+            dry_run_selection_dispatch_catalog.dry_run &&
+            !dry_run_selection_dispatch_catalog.mutates_asset &&
+            !dry_run_selection_dispatch_catalog.dispatch.ok &&
+            dry_run_selection_dispatch_catalog.dispatch.error ==
+                "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1290: dry-run selection toolbox dispatch catalogs should reject dispatch without mutation");
+
+    const auto unsupported_selection_dispatch_catalog =
+        copperfin::studio::plan_studio_toolbox_dispatch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::menu_item,
+            .asset_path = "menus/main.mnx",
+            .record_index = 2U,
+            .object_name = "File",
+            .unique_id = "menu-guid",
+            .admit_palette_invocation = true
+        });
+    expect(!unsupported_selection_dispatch_catalog.ok &&
+            unsupported_selection_dispatch_catalog.error ==
+                "A selection-context toolbox dispatch catalog request requires a toolbox palette." &&
+            unsupported_selection_dispatch_catalog.selection_context == StudioEditorSelectionContext::menu_item &&
+            unsupported_selection_dispatch_catalog.item_count == 0U &&
+            unsupported_selection_dispatch_catalog.items.empty() &&
+            !unsupported_selection_dispatch_catalog.launch_plan.ok &&
+            unsupported_selection_dispatch_catalog.launch_plan.error ==
+                "The selected Studio context does not expose a toolbox palette." &&
+            !unsupported_selection_dispatch_catalog.invocation_admission.ok &&
+            !unsupported_selection_dispatch_catalog.dispatch.ok &&
+            unsupported_selection_dispatch_catalog.dispatch_count == 0U &&
+            unsupported_selection_dispatch_catalog.error_count == 0U &&
+            unsupported_selection_dispatch_catalog.dry_run &&
+            !unsupported_selection_dispatch_catalog.mutates_asset,
+        "#1290: unsupported selection toolbox dispatch catalogs should reject without mutation");
+
     const auto missing_items_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
         .launch_plan = {},
         .admit_palette_invocation = true

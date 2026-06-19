@@ -2,6 +2,7 @@
 
 ## 2026-06-18
 
+- E2/#1290 selection-context toolbox palette dispatch catalog planning shipped: `plan_studio_toolbox_dispatch_catalog_for_selection` now resolves selected Studio contexts through the shared selection toolbox admission catalog before non-executing dispatch planning, preserving launch/admission/dispatch metadata and unsupported-selection rejection without mutation.
 - E2/#1289 Studio host selection-context toolbox palette invocation admission catalog JSON shipped: `copperfin_studio_host --selection-toolbox-invocation-admission-catalog --selection-context <token>` now exposes non-executing selected-context toolbox admission catalogs with resolved toolbox metadata, launch/admission status, parser validation, and deterministic unsupported-selection rejection.
 - E2/#1288 selection-context toolbox palette invocation admission catalog planning shipped: `plan_studio_toolbox_invocation_admission_catalog_for_selection` now resolves selected Studio contexts to toolbox palettes before non-executing admission planning, preserving launch/admission metadata and rejecting unsupported selections without mutation.
 - E2/#1287 toolbox palette dispatch catalog planning now routes through `plan_studio_toolbox_invocation_admission_catalog`, keeping item filtering and palette-admission metadata single-sourced before dispatch planning while preserving non-executing public dispatch catalog behavior.
