@@ -3983,6 +3983,14 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1499: unplaced label object selections should advertise report-selection availability");
     expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                     "#1499: unplaced label object selections should expose object selection kind");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1508: selected unplaced label objects should not advertise selected-section availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1508: selected unplaced label objects should serialize null selected sections");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1508: selected unplaced label objects should not advertise selected-settings availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1508: selected unplaced label objects should serialize null selected settings");
     expect_contains(unplaced_object_process.stdout_text, "\"unplacedObjectCount\": 1",
                     "#1499: unplaced selected label object JSON should expose unplaced object counts");
     expect_contains_in_order(
