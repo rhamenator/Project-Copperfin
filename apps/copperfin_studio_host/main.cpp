@@ -67,6 +67,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-property-move --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --property-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-move-batch --path <asset> --property-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-rename --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> --new-property-name <name> [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-property-rename-batch --path <asset> --property-name <name> --new-property-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --builder-launch-plan <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --builder-launch-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --selection-builder-launch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
@@ -908,6 +909,15 @@ struct VisualPropertyRenameParseResult {
     bool new_property_name_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectPropertyRenameRequest request;
+};
+
+struct VisualPropertyRenameBatchParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectPropertyRenameBatchRequest request;
 };
 
 struct VisualPropertyListParseResult {
@@ -4856,6 +4866,89 @@ VisualPropertyRenameParseResult parse_visual_property_rename_arguments(const std
     }
     if (result.ok && !result.new_property_name_provided) {
         fail("No target property name was provided.");
+    }
+    return result;
+}
+
+VisualPropertyRenameBatchParseResult parse_visual_property_rename_batch_arguments(
+    const std::vector<std::string>& args) {
+    VisualPropertyRenameBatchParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-property-rename-batch") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    auto current_property = [&]() -> copperfin::vfp::VisualObjectPropertyRenameBatchItem* {
+        if (result.request.properties.empty()) {
+            fail("Visual property rename batch item options require a preceding --property-name.");
+            return nullptr;
+        }
+        return &result.request.properties.back();
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-property-rename-batch") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--property-name") {
+            result.request.properties.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = {},
+                .property_name = require_value(argument),
+                .new_property_name = {}
+            });
+        } else if (argument == "--new-property-name") {
+            if (auto* property = current_property()) {
+                property->new_property_name = require_value(argument);
+            }
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            if (auto* property = current_property()) {
+                property->record_index = record_index;
+            }
+        } else if (argument == "--object-name") {
+            if (auto* property = current_property()) {
+                property->object_name = require_value(argument);
+            }
+        } else if (argument == "--unique-id") {
+            if (auto* property = current_property()) {
+                property->unique_id = require_value(argument);
+            }
+        } else {
+            fail("Unknown visual-property-rename-batch option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && result.request.properties.empty()) {
+        fail("No property renames were provided.");
     }
     return result;
 }
@@ -21527,6 +21620,36 @@ int main(int argc, char** argv) {
             visual_property_rename_parse.request.path);
         if (visual_property_rename_parse.output_json) {
             print_json_visual_method_update_result(result, undo_status, "visualPropertyRename");
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_property_rename_batch_parse = parse_visual_property_rename_batch_arguments(args);
+    if (visual_property_rename_batch_parse.requested) {
+        if (!visual_property_rename_batch_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_property_rename_batch_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_property_rename_batch_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status, "visualPropertyRenameBatch");
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::rename_visual_object_properties(
+            visual_property_rename_batch_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_property_rename_batch_parse.request.path);
+        if (visual_property_rename_batch_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status, "visualPropertyRenameBatch");
         } else {
             print_text_visual_method_update_result(result, undo_status);
         }
