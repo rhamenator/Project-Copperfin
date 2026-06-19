@@ -6685,6 +6685,52 @@ void test_studio_host_json_exposes_selected_label_settings(const std::string& st
     expect_contains(settings_process.stdout_text, "\"deletedObjectCount\": 1",
                     "#1496: selected label settings JSON should preserve deleted layout object metadata");
 
+    const fs::path deleted_settings_path = temp_root / "deleted_settings.lbx";
+    write_synthetic_report_table_for_deleted_settings_json(deleted_settings_path);
+    const auto deleted_settings_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_settings_path.string(), "--record", "0", "--json"},
+        temp_root);
+
+    if (deleted_settings_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted label settings stdout:\n"
+                  << deleted_settings_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted label settings stderr:\n"
+                  << deleted_settings_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_settings_process.exit_code == 0,
+           "#1497: selected deleted label settings JSON should exit successfully");
+    expect_contains(deleted_settings_process.stdout_text, "\"isLabel\": true",
+                    "#1497: selected deleted label settings JSON should retain label identity");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    "#1497: deleted label settings selections should advertise selected-settings availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1497: deleted label settings selections should advertise report-selection availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    "#1497: deleted label settings selections should expose settings selection kind");
+    expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
+                    "#1497: deleted selected label settings JSON should not expose live settings");
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 3",
+                    "#1497: deleted selected label settings JSON should expose deleted setting counts");
+    expect_contains_in_order(
+        deleted_settings_process.stdout_text,
+        {
+            "\"selectedReportSettings\": [",
+            "\"name\": \"ORIENTATION\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"TOPMARGIN\"",
+            "\"recordIndex\": 0"
+        },
+        "#1497: deleted label settings selections should expose selected deleted-setting provenance");
+    expect_contains(deleted_settings_process.stdout_text, "\"sectionCount\": 2",
+                    "#1497: deleted selected label settings JSON should preserve live section metadata");
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1497: deleted selected label settings JSON should preserve deleted object metadata");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
