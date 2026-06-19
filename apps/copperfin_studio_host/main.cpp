@@ -9315,6 +9315,18 @@ void print_json_editor_action_launch_catalog_result(
         return;
     }
 
+    std::vector<std::string> launch_ready_action_ids;
+    std::vector<std::string> launch_blocked_action_ids;
+    std::vector<std::string> launch_blocked_errors;
+    for (const auto& entry : result.entries) {
+        if (entry.launch_plan.ok) {
+            launch_ready_action_ids.push_back(std::string(entry.action.id));
+        } else {
+            launch_blocked_action_ids.push_back(std::string(entry.action.id));
+            launch_blocked_errors.push_back(entry.launch_plan.error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9326,6 +9338,15 @@ void print_json_editor_action_launch_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"launchReadyActionIds\": ";
+    print_json_string_array(launch_ready_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedActionIds\": ";
+    print_json_string_array(launch_blocked_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedErrors\": ";
+    print_json_string_array(launch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"entries\": [\n";
     for (std::size_t index = 0U; index < result.entries.size(); ++index) {
         print_json_editor_action_launch_catalog_entry(result.entries[index], "      ");

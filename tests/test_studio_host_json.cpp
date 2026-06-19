@@ -6101,6 +6101,12 @@ void test_studio_host_json_exposes_editor_action_launch_catalog(const std::strin
         "#1280: editor action launch catalog JSON should stay dry-run");
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1280: editor action launch catalog JSON should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"launchReadyActionIds\": [\"show-property-grid\"",
+        "#1364: editor action launch catalog JSON should summarize launch-ready actions");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedActionIds\": []",
+        "#1364: editor action launch catalog JSON should summarize empty blocked action ids");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1364: editor action launch catalog JSON should summarize empty blocked launch errors");
     expect_contains(visual_process.stdout_text, "\"entries\": [",
         "#1280: editor action launch catalog JSON should expose per-action entries");
     expect_contains(visual_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
