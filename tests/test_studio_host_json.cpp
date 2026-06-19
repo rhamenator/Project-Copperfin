@@ -3830,6 +3830,44 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
     const fs::path label_path = temp_root / "mailing.lbx";
     write_synthetic_report_table_for_layout_json(label_path);
 
+    const auto summary_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--json"},
+        temp_root);
+
+    if (summary_process.exit_code != 0) {
+        std::cerr << "studio host label layout summary stdout:\n"
+                  << summary_process.stdout_text << "\n";
+        std::cerr << "studio host label layout summary stderr:\n"
+                  << summary_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(summary_process.exit_code == 0,
+           "#1501: unselected label layout summary JSON should exit successfully");
+    expect_contains(summary_process.stdout_text, "\"reportLayout\": {",
+                    "#1501: unselected label documents should expose report-layout JSON");
+    expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                    "#1501: unselected label layout JSON should retain label identity");
+    expect_contains(summary_process.stdout_text, "\"documentTitle\": \"mailing.lbx\"",
+                    "#1501: unselected label layout JSON should preserve label document titles");
+    expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
+                    "#1501: unselected label layout JSON should summarize live settings");
+    expect_contains(summary_process.stdout_text, "\"sectionCount\": 2",
+                    "#1501: unselected label layout JSON should summarize live sections");
+    expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1501: unselected label layout JSON should summarize deleted objects");
+    expect_contains(summary_process.stdout_text, "\"unplacedObjectCount\": 1",
+                    "#1501: unselected label layout JSON should summarize unplaced objects");
+    expect_contains(summary_process.stdout_text, "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"0\"",
+                    "#1501: unselected label layout JSON should expose memo-line setting provenance");
+    expect_contains(summary_process.stdout_text, "\"title\": \"Record 5\"",
+                    "#1501: unselected label layout JSON should preserve synthesized unplaced-object titles");
+    expect_contains(summary_process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                    "#1501: unselected label layout JSON should not fabricate report-selection availability");
+    expect_contains(summary_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                    "#1501: unselected label layout JSON should expose the none report-selection kind");
+
     const auto object_process = run_process_capture(
         studio_host_path,
         {"--path", label_path.string(), "--record", "3", "--json"},
