@@ -11078,6 +11078,18 @@ void print_json_designer_dispatch_catalog_context(
         }
     }
     std::cout << "],\n";
+    std::cout << indent << "  \"editorActionDispatches\": [\n";
+    if (entry.dispatch.ok) {
+        const auto& dispatches = entry.dispatch.plan.editor_action_dispatches;
+        for (std::size_t index = 0U; index < dispatches.size(); ++index) {
+            print_json_designer_execution_catalog_editor_dispatch(dispatches[index], indent + "    ");
+            if ((index + 1U) != dispatches.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+    }
+    std::cout << indent << "  ],\n";
     std::cout << indent << "  \"builderIds\": [";
     if (entry.dispatch.ok) {
         const auto& dispatches = entry.dispatch.plan.builder_dispatches;
@@ -11094,6 +11106,32 @@ void print_json_designer_dispatch_catalog_context(
         }
     }
     std::cout << "],\n";
+    std::cout << indent << "  \"builderDispatches\": [\n";
+    if (entry.dispatch.ok) {
+        const auto& dispatches = entry.dispatch.plan.builder_dispatches;
+        for (std::size_t index = 0U; index < dispatches.size(); ++index) {
+            print_json_designer_execution_catalog_builder_dispatch(dispatches[index], indent + "    ");
+            if ((index + 1U) != dispatches.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+    }
+    std::cout << indent << "  ],\n";
+    std::cout << indent << "  \"toolboxCommandToken\": ";
+    if (entry.dispatch.ok && entry.dispatch.plan.toolbox_dispatch.ok) {
+        print_json_string(entry.dispatch.plan.toolbox_dispatch.plan.command_token);
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << indent << "  \"toolboxDispatchArguments\": ";
+    if (entry.dispatch.ok && entry.dispatch.plan.toolbox_dispatch.ok) {
+        print_json_string_array(entry.dispatch.plan.toolbox_dispatch.plan.dispatch_arguments);
+    } else {
+        std::cout << "[]";
+    }
+    std::cout << ",\n";
     std::cout << indent << "  \"toolboxDispatchOk\": "
               << (entry.dispatch.ok && entry.dispatch.plan.toolbox_dispatch.ok ? "true" : "false") << ",\n";
     std::cout << indent << "  \"toolboxError\": ";
