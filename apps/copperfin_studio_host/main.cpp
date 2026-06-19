@@ -84,6 +84,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-batch-dispatch-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch --toolbox-item <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create <id> --selection-context <token> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
     std::cout << "Display-value object: --display-value-object --display-value <value> [--display-value-target-object-name <name>] [--display-value-target-unique-id <id>]\n";
     std::cout << "Selected-back-color object: --selected-back-color-object --selected-back-color <n> [--selected-back-color-target-object-name <name>] [--selected-back-color-target-unique-id <id>]\n";
     std::cout << "Selected-fore-color object: --selected-fore-color-object --selected-fore-color <n> [--selected-fore-color-target-object-name <name>] [--selected-fore-color-target-unique-id <id>]\n";
@@ -255,6 +256,15 @@ struct ToolboxCreatePlanParseResult {
 };
 
 struct SelectionToolboxCreatePlanParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool selection_context_provided = false;
+    std::string error;
+    copperfin::studio::StudioSelectionToolboxObjectCreatePlanRequest request;
+};
+
+struct SelectionToolboxCreateParseResult {
     bool requested = false;
     bool ok = true;
     bool output_json = false;
@@ -4867,6 +4877,81 @@ parse_selection_toolbox_create_batch_dispatch_catalog_arguments(const std::vecto
     return result;
 }
 
+
+SelectionToolboxCreateParseResult parse_selection_toolbox_create_arguments(const std::vector<std::string>& args) {
+    SelectionToolboxCreateParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--selection-toolbox-create") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size()) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+        } else if (argument == "--selection-toolbox-create") {
+            result.request.toolbox_item_id = require_value(argument);
+        } else if (argument == "--selection-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioEditorSelectionContext parsed_context{};
+            if (!parse_editor_selection_context_token(token, parsed_context)) {
+                fail("Unknown selection context token: " + token);
+                continue;
+            }
+            result.selection_context_provided = true;
+            result.request.selection_context = parsed_context;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--parent-name") {
+            result.request.parent_name = require_value(argument);
+        } else if (argument == "--field-value") {
+            const std::string assignment = require_value(argument);
+            const auto separator = assignment.find('=');
+            if (separator == std::string::npos || separator == 0U) {
+                fail("Toolbox field values must use name=value syntax.");
+                continue;
+            }
+            result.request.field_values.push_back({
+                .property_name = assignment.substr(0U, separator),
+                .property_value = assignment.substr(separator + 1U)
+            });
+        } else {
+            fail("Unknown selection-toolbox-create option: " + argument);
+        }
+    }
+
+    if (result.ok && result.request.path.empty()) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && result.request.toolbox_item_id.empty()) {
+        fail("No toolbox item id was provided.");
+    }
+    if (result.ok && !result.selection_context_provided) {
+        fail("No selection context was provided.");
+    }
+    return result;
+}
+
 ToolboxCreateParseResult parse_toolbox_create_arguments(const std::vector<std::string>& args) {
     ToolboxCreateParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -4956,6 +5041,103 @@ void print_json_toolbox_create_result(const copperfin::vfp::VisualObjectCreateRe
     std::cout << "    \"parentName\": ";
     print_json_string(result.parent_name);
     std::cout << "\n";
+    std::cout << "  }\n";
+    std::cout << "}\n";
+}
+
+
+void print_json_selection_toolbox_create_result(
+    const copperfin::studio::StudioSelectionToolboxObjectCreateResult& result) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"selectionToolboxCreate\": {\n";
+    std::cout << "    \"ok\": " << (result.ok ? "true" : "false") << ",\n";
+    std::cout << "    \"error\": ";
+    print_json_string(result.error);
+    std::cout << ",\n";
+    std::cout << "    \"selectionContext\": ";
+    print_json_string(copperfin::studio::studio_editor_selection_context_name(result.selection_context));
+    std::cout << ",\n";
+    std::cout << "    \"toolboxContext\": ";
+    print_json_string(copperfin::studio::studio_toolbox_context_name(result.toolbox_context));
+    std::cout << ",\n";
+    std::cout << "    \"launchPlanOk\": " << (result.launch_plan.ok ? "true" : "false") << ",\n";
+    std::cout << "    \"launchPlanError\": ";
+    print_json_string(result.launch_plan.error);
+    std::cout << ",\n";
+    std::cout << "    \"createPlanOk\": " << (result.create_plan.ok ? "true" : "false") << ",\n";
+    std::cout << "    \"createPlanError\": ";
+    print_json_string(result.create_plan.error);
+    std::cout << ",\n";
+    std::cout << "    \"createPlan\": ";
+    if (!result.create_plan.ok) {
+        std::cout << "null,\n";
+    } else {
+        const auto& plan = result.create_plan.create_plan.plan;
+        std::cout << "{\n";
+        std::cout << "      \"toolboxItemId\": ";
+        print_json_string_view(plan.toolbox_item.id);
+        std::cout << ",\n";
+        std::cout << "      \"title\": ";
+        print_json_string_view(plan.toolbox_item.title);
+        std::cout << ",\n";
+        std::cout << "      \"className\": ";
+        print_json_string_view(plan.toolbox_item.vfp_class);
+        std::cout << ",\n";
+        std::cout << "      \"baseClassName\": ";
+        print_json_string_view(plan.toolbox_item.base_class);
+        std::cout << ",\n";
+        std::cout << "      \"toolboxContextProvided\": "
+                  << (plan.toolbox_context_provided ? "true" : "false") << ",\n";
+        std::cout << "      \"toolboxContext\": ";
+        print_json_string(copperfin::studio::studio_toolbox_context_name(plan.toolbox_context));
+        std::cout << ",\n";
+        std::cout << "      \"targetRecordIndex\": " << plan.target_record_index << ",\n";
+        std::cout << "      \"objectName\": ";
+        print_json_string(plan.object_name);
+        std::cout << ",\n";
+        std::cout << "      \"uniqueId\": ";
+        print_json_string(plan.unique_id);
+        std::cout << ",\n";
+        std::cout << "      \"parentName\": ";
+        print_json_string(plan.parent_name);
+        std::cout << ",\n";
+        std::cout << "      \"fieldValues\": [\n";
+        for (std::size_t index = 0U; index < plan.field_values.size(); ++index) {
+            const auto& field_value = plan.field_values[index];
+            std::cout << "        {\"propertyName\": ";
+            print_json_string(field_value.property_name);
+            std::cout << ", \"propertyValue\": ";
+            print_json_string(field_value.property_value);
+            std::cout << "}";
+            if ((index + 1U) != plan.field_values.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+        std::cout << "      ],\n";
+        std::cout << "      \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
+        std::cout << "      \"mutatesAsset\": " << (plan.mutates_asset ? "true" : "false") << "\n";
+        std::cout << "    },\n";
+    }
+    std::cout << "    \"createResult\": {\n";
+    std::cout << "      \"ok\": " << (result.create_result.ok ? "true" : "false") << ",\n";
+    std::cout << "      \"error\": ";
+    print_json_string(result.create_result.error);
+    std::cout << ",\n";
+    std::cout << "      \"recordIndex\": " << result.create_result.record_index << ",\n";
+    std::cout << "      \"objectName\": ";
+    print_json_string(result.create_result.object_name);
+    std::cout << ",\n";
+    std::cout << "      \"uniqueId\": ";
+    print_json_string(result.create_result.unique_id);
+    std::cout << ",\n";
+    std::cout << "      \"parentName\": ";
+    print_json_string(result.create_result.parent_name);
+    std::cout << "\n";
+    std::cout << "    },\n";
+    std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
+    std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << "\n";
     std::cout << "  }\n";
     std::cout << "}\n";
 }
@@ -8917,6 +9099,45 @@ void print_text_selection_toolbox_create_plan_result(
             std::cout << "field_value: " << field_value.property_name << "=" << field_value.property_value << "\n";
         }
     }
+    std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
+    std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
+}
+
+
+void print_text_selection_toolbox_create_result(
+    const copperfin::studio::StudioSelectionToolboxObjectCreateResult& result) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    std::cout << "selection_context: "
+              << copperfin::studio::studio_editor_selection_context_name(result.selection_context) << "\n";
+    std::cout << "toolbox_context: " << copperfin::studio::studio_toolbox_context_name(result.toolbox_context)
+              << "\n";
+    std::cout << "launch_plan_ok: " << (result.launch_plan.ok ? "true" : "false") << "\n";
+    if (!result.launch_plan.error.empty()) {
+        std::cout << "launch_plan_error: " << result.launch_plan.error << "\n";
+    }
+    std::cout << "create_plan_ok: " << (result.create_plan.ok ? "true" : "false") << "\n";
+    if (!result.create_plan.error.empty()) {
+        std::cout << "create_plan_error: " << result.create_plan.error << "\n";
+    }
+    if (result.create_plan.ok) {
+        const auto& plan = result.create_plan.create_plan.plan;
+        std::cout << "toolbox_item_id: " << plan.toolbox_item.id << "\n";
+        std::cout << "target_record_index: " << plan.target_record_index << "\n";
+        std::cout << "planned_object_name: " << plan.object_name << "\n";
+        std::cout << "planned_unique_id: " << plan.unique_id << "\n";
+        std::cout << "planned_parent_name: " << plan.parent_name << "\n";
+    }
+    std::cout << "create_result_ok: " << (result.create_result.ok ? "true" : "false") << "\n";
+    if (!result.create_result.error.empty()) {
+        std::cout << "create_result_error: " << result.create_result.error << "\n";
+    }
+    std::cout << "record_index: " << result.create_result.record_index << "\n";
+    std::cout << "object_name: " << result.create_result.object_name << "\n";
+    std::cout << "unique_id: " << result.create_result.unique_id << "\n";
+    std::cout << "parent_name: " << result.create_result.parent_name << "\n";
     std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
     std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
 }
@@ -13330,6 +13551,40 @@ int main(int argc, char** argv) {
             print_text_toolbox_create_plan_result(plan_result);
         }
         return plan_result.ok ? 0 : 4;
+    }
+
+
+    const auto selection_toolbox_create_parse = parse_selection_toolbox_create_arguments(args);
+    if (selection_toolbox_create_parse.requested) {
+        if (!selection_toolbox_create_parse.ok) {
+            const auto result = copperfin::studio::StudioSelectionToolboxObjectCreateResult{
+                .ok = false,
+                .error = selection_toolbox_create_parse.error,
+                .selection_context = {},
+                .toolbox_context = {},
+                .launch_plan = {},
+                .create_plan = {},
+                .create_result = {},
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (selection_toolbox_create_parse.output_json) {
+                print_json_selection_toolbox_create_result(result);
+            } else {
+                print_text_selection_toolbox_create_result(result);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto create_result = copperfin::studio::create_visual_object_from_toolbox_selection(
+            selection_toolbox_create_parse.request);
+        if (selection_toolbox_create_parse.output_json) {
+            print_json_selection_toolbox_create_result(create_result);
+        } else {
+            print_text_selection_toolbox_create_result(create_result);
+        }
+        return create_result.ok ? 0 : 4;
     }
 
     const auto toolbox_create_parse = parse_toolbox_create_arguments(args);
