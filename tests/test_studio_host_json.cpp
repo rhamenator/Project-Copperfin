@@ -8423,6 +8423,12 @@ void test_studio_host_json_exposes_toolbox_dispatch_execution_catalog(const std:
         "#1331: admitted toolbox dispatch execution catalog JSON should expose zero errors");
     expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
         "#1331: admitted toolbox dispatch execution catalog JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text, "\"executionReadyItemIds\": [\"label\", \"textbox\"",
+        "#1371: admitted toolbox dispatch execution catalog JSON should summarize ready item ids");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedItemIds\": []",
+        "#1371: admitted toolbox dispatch execution catalog JSON should summarize empty blocked item ids");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1371: admitted toolbox dispatch execution catalog JSON should summarize empty blocked errors");
     expect_contains(admitted_process.stdout_text, "\"id\": \"textbox\"",
         "#1331: toolbox dispatch execution catalog JSON should include per-item metadata");
     expect_contains(admitted_process.stdout_text, "\"entries\": [",
@@ -8454,6 +8460,13 @@ void test_studio_host_json_exposes_toolbox_dispatch_execution_catalog(const std:
         "#1331: toolbox dispatch execution catalog JSON should report unadmitted execution as item errors");
     expect_contains(unadmitted_process.stdout_text, "\"executionReadyCount\": 0",
         "#1331: unadmitted toolbox dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(unadmitted_process.stdout_text, "\"executionReadyItemIds\": []",
+        "#1371: unadmitted toolbox dispatch execution catalog JSON should summarize empty ready item ids");
+    expect_contains(unadmitted_process.stdout_text, "\"executionBlockedItemIds\": [\"label\", \"textbox\"",
+        "#1371: unadmitted toolbox dispatch execution catalog JSON should summarize blocked item ids");
+    expect_contains(unadmitted_process.stdout_text,
+        "\"executionBlockedErrors\": [\"A toolbox dispatch execution catalog entry requires explicit execution admission.\"",
+        "#1371: unadmitted toolbox dispatch execution catalog JSON should summarize blocked errors");
     expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
         "#1331: unadmitted toolbox dispatch execution catalog JSON should expose admission false");
     expect_contains(unadmitted_process.stdout_text,
@@ -8473,6 +8486,13 @@ void test_studio_host_json_exposes_toolbox_dispatch_execution_catalog(const std:
         "#1331: toolbox dispatch execution catalog JSON should report dry-run dispatch failures");
     expect_contains(dry_run_process.stdout_text, "\"executionReadyCount\": 0",
         "#1331: dry-run toolbox dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyItemIds\": []",
+        "#1371: dry-run toolbox dispatch execution catalog JSON should summarize empty ready item ids");
+    expect_contains(dry_run_process.stdout_text, "\"executionBlockedItemIds\": [\"label\", \"textbox\"",
+        "#1371: dry-run toolbox dispatch execution catalog JSON should summarize blocked item ids");
+    expect_contains(dry_run_process.stdout_text,
+        "\"executionBlockedErrors\": [\"A toolbox dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1371: dry-run toolbox dispatch execution catalog JSON should summarize dispatch-blocked errors");
     expect_contains(dry_run_process.stdout_text,
         "A toolbox dispatch request requires an admitted non-dry-run invocation.",
         "#1331: dry-run toolbox dispatch execution catalog JSON should expose dispatch errors");
