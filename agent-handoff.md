@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1331`, exposing non-mutating toolbox dispatch execution catalog readiness through `copperfin_studio_host --toolbox-dispatch-execution-catalog` JSON with explicit palette-invocation and toolbox-execution admission flags. `#1330` is the immediately preceding toolbox dispatch execution catalog planning seam. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1331`, exposing non-mutating toolbox dispatch execution catalog readiness through `copperfin_studio_host --toolbox-dispatch-execution-catalog` JSON with explicit palette-invocation and toolbox-execution admission flags. Follow-up validation repair restored toolbox-create host JSON parser missing-value diagnostics and widened only the synthetic toolbox-create fixture `UNIQUEID` field used by long-ID tests, so `test_studio_host_json` is green again. `#1330` is the immediately preceding toolbox dispatch execution catalog planning seam. These issues remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 

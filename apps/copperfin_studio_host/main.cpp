@@ -3919,7 +3919,7 @@ ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(const std::vect
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -3991,7 +3991,7 @@ ToolboxCreateFromDispatchPlanParseResult parse_toolbox_create_from_dispatch_plan
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4086,7 +4086,7 @@ ToolboxCreateFromDispatchParseResult parse_toolbox_create_from_dispatch_argument
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4182,7 +4182,7 @@ ToolboxCreateDispatchFromDispatchPlanParseResult parse_toolbox_create_dispatch_f
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4294,7 +4294,7 @@ ToolboxCreateBatchFromDispatchPlanParseResult parse_toolbox_create_batch_from_di
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4418,7 +4418,7 @@ ToolboxCreateBatchFromDispatchParseResult parse_toolbox_create_batch_from_dispat
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4542,7 +4542,7 @@ parse_toolbox_create_batch_dispatch_from_dispatch_plan_arguments(const std::vect
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4665,7 +4665,7 @@ SelectionToolboxCreatePlanParseResult parse_selection_toolbox_create_plan_argume
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4740,7 +4740,7 @@ SelectionToolboxCreateDispatchPlanParseResult parse_selection_toolbox_create_dis
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4823,7 +4823,7 @@ ToolboxCreateDispatchPlanParseResult parse_toolbox_create_dispatch_plan_argument
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -4910,7 +4910,7 @@ ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(cons
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5010,7 +5010,7 @@ SelectionToolboxCreateBatchPlanParseResult parse_selection_toolbox_create_batch_
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5112,7 +5112,7 @@ SelectionToolboxCreateBatchParseResult parse_selection_toolbox_create_batch_argu
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5216,7 +5216,7 @@ SelectionToolboxCreateBatchDispatchPlanParseResult parse_selection_toolbox_creat
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5326,7 +5326,7 @@ ToolboxCreateBatchDispatchPlanParseResult parse_toolbox_create_batch_dispatch_pl
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5433,7 +5433,7 @@ ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(const std::ve
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5525,7 +5525,7 @@ ToolboxCreatePlanCatalogParseResult parse_toolbox_create_plan_catalog_arguments(
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5591,7 +5591,7 @@ SelectionToolboxCreatePlanCatalogParseResult parse_selection_toolbox_create_plan
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5657,7 +5657,7 @@ ToolboxCreateBatchPlanCatalogParseResult parse_toolbox_create_batch_plan_catalog
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5724,7 +5724,7 @@ SelectionToolboxCreateBatchPlanCatalogParseResult parse_selection_toolbox_create
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5790,7 +5790,7 @@ ToolboxCreateDispatchCatalogParseResult parse_toolbox_create_dispatch_catalog_ar
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5865,7 +5865,7 @@ SelectionToolboxCreateDispatchCatalogParseResult parse_selection_toolbox_create_
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -5939,7 +5939,7 @@ ToolboxCreateBatchDispatchCatalogParseResult parse_toolbox_create_batch_dispatch
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -6014,7 +6014,7 @@ parse_selection_toolbox_create_batch_dispatch_catalog_arguments(const std::vecto
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -6088,7 +6088,7 @@ SelectionToolboxCreateParseResult parse_selection_toolbox_create_arguments(const
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }
@@ -6162,7 +6162,7 @@ ToolboxCreateParseResult parse_toolbox_create_arguments(const std::vector<std::s
     for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
-            if ((index + 1U) >= args.size()) {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
                 fail("Missing value for " + option + ".");
                 return {};
             }

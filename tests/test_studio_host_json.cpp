@@ -205,7 +205,7 @@ void write_synthetic_form_table_for_toolbox_creation(const std::filesystem::path
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
         {.name = "PARENT", .type = 'C', .length = 24U},
         {.name = "CLASS", .type = 'C', .length = 24U},
         {.name = "BASECLASS", .type = 'C', .length = 24U},
