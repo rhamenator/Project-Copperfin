@@ -439,6 +439,9 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
         StudioLayoutObjectSnapshot object = build_layout_object(record);
         const std::size_t section_index = find_section_index(snapshot.sections, object.top, object.height);
         if (section_index < snapshot.sections.size()) {
+            object.containing_section_id = snapshot.sections[section_index].id;
+            object.containing_section_record_index = snapshot.sections[section_index].record_index;
+            object.section_relative_top = object.top - snapshot.sections[section_index].top;
             snapshot.sections[section_index].objects.push_back(std::move(object));
         } else {
             snapshot.unplaced_objects.push_back(std::move(object));

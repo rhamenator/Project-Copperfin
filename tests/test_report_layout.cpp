@@ -183,6 +183,12 @@ void test_build_report_layout_groups_band_objects() {
     }
     expect(layout.sections[1].objects.size() == 1U, "detail section should capture its field object");
     expect(layout.sections[1].objects[0].object_kind == "field", "detail object should retain its type");
+    expect(layout.sections[1].objects[0].containing_section_id == "detail_2",
+        "#1458: section-contained report objects should carry containing section ids");
+    expect(layout.sections[1].objects[0].containing_section_record_index == 2U,
+        "#1458: section-contained report objects should carry containing section record indexes");
+    expect(layout.sections[1].objects[0].section_relative_top == 600,
+        "#1458: section-contained report objects should carry top coordinates relative to their band");
     expect(layout.sections[1].objects[0].object_kind_field_index == 0U, "#682: report object kind provenance should retain OBJTYPE field ordinal");
     expect(layout.sections[1].objects[0].object_kind_memo_block_number == 301U,
         "#723: report object kind should inherit OBJTYPE memo block provenance");
@@ -255,6 +261,12 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.unplaced_objects.size() == 1U, "#675: object without matching section should remain unplaced");
     if (!layout.unplaced_objects.empty()) {
         expect(layout.unplaced_objects[0].title == "Record 5", "#675: untitled report layout object should keep synthetic title fallback");
+        expect(layout.unplaced_objects[0].containing_section_id.empty(),
+            "#1458: unplaced report objects should not fabricate containing section ids");
+        expect(layout.unplaced_objects[0].containing_section_record_index == copperfin::studio::StudioReportMissingRecordIndex,
+            "#1458: unplaced report objects should expose missing containing section record indexes");
+        expect(layout.unplaced_objects[0].section_relative_top == 0,
+            "#1458: unplaced report objects should use zero relative section top");
         expect(layout.unplaced_objects[0].title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
             "#675: synthesized report layout object title should use the missing-field sentinel");
         expect(layout.unplaced_objects[0].title_memo_block_number == 0U,
@@ -263,6 +275,10 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.deleted_objects.size() == 1U, "#689: deleted report layout objects should be preserved separately");
     if (!layout.deleted_objects.empty()) {
         expect(layout.deleted_objects[0].deleted, "#689: deleted report layout object snapshots should retain deleted state");
+        expect(layout.deleted_objects[0].containing_section_id.empty(),
+            "#1458: deleted report objects should not fabricate containing section ids");
+        expect(layout.deleted_objects[0].containing_section_record_index == copperfin::studio::StudioReportMissingRecordIndex,
+            "#1458: deleted report objects should expose missing containing section record indexes");
         expect(layout.deleted_objects[0].title == "\"Deleted label\"", "#689: deleted report layout objects should retain title metadata");
         expect(layout.deleted_objects[0].title_field_index == 1U,
             "#689: deleted report layout objects should retain title provenance");

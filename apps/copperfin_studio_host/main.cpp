@@ -19709,6 +19709,14 @@ void print_json_report_line_index_or_null(std::size_t line_index) {
     }
 }
 
+void print_json_report_record_index_or_null(std::size_t record_index) {
+    if (record_index == copperfin::studio::StudioReportMissingRecordIndex) {
+        std::cout << "null";
+    } else {
+        std::cout << record_index;
+    }
+}
+
 void print_json_report_named_values(
     const std::vector<copperfin::studio::StudioNamedValue>& values,
     const std::string& indent) {
@@ -20123,6 +20131,13 @@ void print_json_report_layout_object(
     std::cout << "{\n";
     std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
     std::cout << indent << "  \"deleted\": " << (object.deleted ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"containingSectionId\": ";
+    print_json_string(object.containing_section_id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"containingSectionRecordIndex\": ";
+    print_json_report_record_index_or_null(object.containing_section_record_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"sectionRelativeTop\": " << object.section_relative_top << ",\n";
     std::cout << indent << "  \"objectTypeCode\": " << object.objtype_code << ",\n";
     std::cout << indent << "  \"objectTypeFieldIndex\": ";
     print_json_report_field_index_or_null(object.objtype_field_index);

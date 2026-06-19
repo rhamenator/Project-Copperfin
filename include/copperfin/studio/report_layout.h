@@ -11,6 +11,7 @@ namespace copperfin::studio {
 
 inline constexpr std::size_t StudioReportMissingFieldIndex = static_cast<std::size_t>(-1);
 inline constexpr std::size_t StudioReportMissingLineIndex = static_cast<std::size_t>(-1);
+inline constexpr std::size_t StudioReportMissingRecordIndex = static_cast<std::size_t>(-1);
 
 struct StudioNamedValue {
     std::string name{};
@@ -26,6 +27,9 @@ struct StudioLayoutObjectSnapshot {
     bool deleted = false;
     int objtype_code = 0;
     int objcode_code = 0;
+    std::string containing_section_id{};
+    std::size_t containing_section_record_index = StudioReportMissingRecordIndex;
+    int section_relative_top = 0;
     std::string object_kind{};
     std::size_t object_kind_field_index = StudioReportMissingFieldIndex;
     std::uint32_t object_kind_memo_block_number = 0;
