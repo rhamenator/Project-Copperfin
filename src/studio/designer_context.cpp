@@ -121,6 +121,67 @@ StudioSelectionBuilderLaunchPlanResult plan_studio_builder_launch_for_selection(
     };
 }
 
+StudioSelectionBuilderLaunchCatalogResult
+plan_studio_builder_launch_catalog_for_selection(
+    const StudioSelectionBuilderLaunchCatalogRequest& request) {
+    const auto designer_context = studio_designer_context_for_selection({
+        .selection_context = request.selection_context
+    });
+    if (designer_context.builders.empty()) {
+        return {
+            .ok = false,
+            .error = "A selection-context builder launch catalog request requires at least one builder.",
+            .selection_context = request.selection_context,
+            .builder_count = 0U,
+            .launch_plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioSelectionBuilderLaunchCatalogEntry> entries;
+    entries.reserve(designer_context.builders.size());
+    std::size_t launch_plan_count = 0U;
+    std::size_t error_count = 0U;
+
+    for (const auto& builder : designer_context.builders) {
+        auto launch_plan = plan_studio_builder_launch_for_selection({
+            .selection_context = request.selection_context,
+            .builder_id = std::string(builder.id),
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id
+        });
+
+        if (launch_plan.ok) {
+            ++launch_plan_count;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .builder = builder,
+            .selection_context = request.selection_context,
+            .launch_plan = std::move(launch_plan)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .builder_count = designer_context.builders.size(),
+        .launch_plan_count = launch_plan_count,
+        .error_count = error_count,
+        .dry_run = true,
+        .mutates_asset = false,
+        .entries = std::move(entries)
+    };
+}
+
 StudioSelectionBuilderInvocationAdmissionCatalogResult
 plan_studio_builder_invocation_admission_catalog_for_selection(
     const StudioSelectionBuilderInvocationAdmissionCatalogRequest& request) {

@@ -43,6 +43,32 @@ struct StudioSelectionBuilderLaunchPlanResult {
     StudioBuilderLaunchPlan plan;
 };
 
+struct StudioSelectionBuilderLaunchCatalogRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct StudioSelectionBuilderLaunchCatalogEntry {
+    StudioBuilderDescriptor builder;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioSelectionBuilderLaunchPlanResult launch_plan;
+};
+
+struct StudioSelectionBuilderLaunchCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::size_t builder_count = 0;
+    std::size_t launch_plan_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioSelectionBuilderLaunchCatalogEntry> entries;
+};
+
 struct StudioSelectionBuilderInvocationAdmissionCatalogRequest {
     StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
     std::string asset_path;
@@ -104,6 +130,9 @@ struct StudioSelectionBuilderDispatchCatalogResult {
     const StudioDesignerContextRequest& request);
 [[nodiscard]] StudioSelectionBuilderLaunchPlanResult plan_studio_builder_launch_for_selection(
     const StudioSelectionBuilderLaunchRequest& request);
+[[nodiscard]] StudioSelectionBuilderLaunchCatalogResult
+plan_studio_builder_launch_catalog_for_selection(
+    const StudioSelectionBuilderLaunchCatalogRequest& request);
 [[nodiscard]] StudioSelectionBuilderInvocationAdmissionCatalogResult
 plan_studio_builder_invocation_admission_catalog_for_selection(
     const StudioSelectionBuilderInvocationAdmissionCatalogRequest& request);

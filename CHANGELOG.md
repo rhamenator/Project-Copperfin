@@ -2,6 +2,7 @@
 
 ## 2026-06-18
 
+- E2/#1277 selection-context builder/wizard launch catalog planning shipped: `plan_studio_builder_launch_catalog_for_selection` now builds non-executing builder launch catalogs for one Studio selection context while preserving mixed visual form/control builders and context-specific menu/data-environment builder metadata.
 - E2/#1276 Studio host selection-context builder/wizard dispatch catalog JSON shipped: `copperfin_studio_host --selection-builder-dispatch-catalog --selection-context <token>` now exposes non-executing selected-context builder dispatch catalogs with mixed visual form/control builders, menu builders, dispatch arguments, dry-run rejection state, and parser validation.
 - E2/#1275 selection-context builder/wizard dispatch catalog planning shipped: `plan_studio_builder_dispatch_catalog_for_selection` now builds non-executing builder dispatch catalogs for one Studio selection context while preserving mixed visual form/control builders, menu builders, admission state, dispatch metadata, and dry-run rejection behavior.
 - E2/#1274 Studio host selection-context builder/wizard invocation admission catalog JSON shipped: `copperfin_studio_host --selection-builder-invocation-admission-catalog --selection-context <token>` now exposes non-executing selected-context builder admission catalogs with mixed visual form/control builders, menu builders, dry-run/admission state, and parser validation.

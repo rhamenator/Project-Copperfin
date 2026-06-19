@@ -70,6 +70,18 @@ bool all_builder_launch_plans_ok(
     return true;
 }
 
+const copperfin::studio::StudioSelectionBuilderLaunchCatalogEntry*
+find_selection_builder_launch_entry(
+    const std::vector<copperfin::studio::StudioSelectionBuilderLaunchCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.builder.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 bool has_editor_invocation_admission(
     const std::vector<copperfin::studio::StudioEditorActionInvocationAdmissionResult>& admissions,
     std::string_view id,
@@ -445,6 +457,78 @@ int main() {
     });
     expect(!unknown_builder_plan.ok,
            "#1205: selection-context builder launch plans should reject unknown builders");
+
+    const auto visual_builder_launch_catalog =
+        copperfin::studio::plan_studio_builder_launch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid"
+        });
+    const auto* visual_form_launch = find_selection_builder_launch_entry(
+        visual_builder_launch_catalog.entries, "form-builder");
+    const auto* visual_grid_launch = find_selection_builder_launch_entry(
+        visual_builder_launch_catalog.entries, "grid-builder");
+    expect(visual_builder_launch_catalog.ok &&
+               visual_builder_launch_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_builder_launch_catalog.builder_count == visual_context.builder_count &&
+               visual_builder_launch_catalog.launch_plan_count == visual_context.builder_count &&
+               visual_builder_launch_catalog.error_count == 0U &&
+               visual_builder_launch_catalog.dry_run &&
+               !visual_builder_launch_catalog.mutates_asset,
+           "#1277: visual selection builder launch catalogs should plan every visual builder");
+    expect(visual_form_launch != nullptr &&
+               visual_form_launch->selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_form_launch->launch_plan.ok &&
+               visual_form_launch->launch_plan.plan.context == copperfin::studio::StudioBuilderContext::form &&
+               visual_form_launch->launch_plan.plan.entry_point == "cf_builders.form_builder" &&
+               visual_form_launch->launch_plan.plan.asset_path == "forms/customer.scx" &&
+               visual_form_launch->launch_plan.plan.record_index == 1U &&
+               visual_form_launch->launch_plan.plan.object_name == "frmCustomer" &&
+               visual_form_launch->launch_plan.plan.unique_id == "form-guid",
+           "#1277: visual selection launch catalogs should preserve form builder metadata");
+    expect(visual_grid_launch != nullptr &&
+               visual_grid_launch->launch_plan.ok &&
+               visual_grid_launch->launch_plan.plan.context == copperfin::studio::StudioBuilderContext::control,
+           "#1277: visual selection launch catalogs should include control builders beside form builders");
+
+    const auto menu_builder_launch_catalog =
+        copperfin::studio::plan_studio_builder_launch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::menu_item,
+            .asset_path = "menus/main.mnx",
+            .record_index = 0U,
+            .object_name = "mnuMain",
+            .unique_id = "menu-guid"
+        });
+    const auto* menu_builder_launch = find_selection_builder_launch_entry(
+        menu_builder_launch_catalog.entries, "menu-designer");
+    expect(menu_builder_launch_catalog.ok &&
+               menu_builder_launch_catalog.builder_count == menu_context.builder_count &&
+               menu_builder_launch != nullptr &&
+               menu_builder_launch->launch_plan.ok &&
+               menu_builder_launch->launch_plan.plan.context == copperfin::studio::StudioBuilderContext::menu &&
+               menu_builder_launch->launch_plan.plan.entry_point == "cf_builders.menu_designer" &&
+               menu_builder_launch->launch_plan.plan.asset_path == "menus/main.mnx",
+           "#1277: menu selection builder launch catalogs should preserve menu designer metadata");
+
+    const auto empty_selection_launch_catalog =
+        copperfin::studio::plan_studio_builder_launch_catalog_for_selection({
+            .selection_context = static_cast<StudioEditorSelectionContext>(999),
+            .asset_path = "forms/customer.scx",
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {}
+        });
+    expect(!empty_selection_launch_catalog.ok &&
+               empty_selection_launch_catalog.error ==
+                   "A selection-context builder launch catalog request requires at least one builder." &&
+               empty_selection_launch_catalog.builder_count == 0U &&
+               empty_selection_launch_catalog.launch_plan_count == 0U &&
+               empty_selection_launch_catalog.error_count == 0U &&
+               empty_selection_launch_catalog.dry_run &&
+               !empty_selection_launch_catalog.mutates_asset,
+           "#1277: selection builder launch catalogs should reject empty builder contexts without mutation");
 
     const auto visual_builder_admission_catalog =
         copperfin::studio::plan_studio_builder_invocation_admission_catalog_for_selection({
