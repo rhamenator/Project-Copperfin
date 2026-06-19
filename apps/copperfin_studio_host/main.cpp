@@ -11097,6 +11097,13 @@ void print_json_designer_execution_result(
             print_json_string("");
         }
         std::cout << ",\n";
+        std::cout << "        \"description\": ";
+        if (plan != nullptr) {
+            print_json_string_view(plan->action.description);
+        } else {
+            print_json_string("");
+        }
+        std::cout << ",\n";
         std::cout << "        \"commandToken\": ";
         print_json_string(plan != nullptr ? plan->command_token : std::string{});
         std::cout << ",\n";
@@ -11189,6 +11196,27 @@ void print_json_designer_execution_result(
         std::cout << "        \"kind\": ";
         if (plan != nullptr) {
             print_json_string(copperfin::studio::studio_builder_kind_name(plan->builder.kind));
+        } else {
+            print_json_string("");
+        }
+        std::cout << ",\n";
+        std::cout << "        \"vfp9Equivalent\": ";
+        if (plan != nullptr) {
+            print_json_string_view(plan->builder.vfp9_equivalent);
+        } else {
+            print_json_string("");
+        }
+        std::cout << ",\n";
+        std::cout << "        \"copperfinComponent\": ";
+        if (plan != nullptr) {
+            print_json_string_view(plan->builder.copperfin_component);
+        } else {
+            print_json_string("");
+        }
+        std::cout << ",\n";
+        std::cout << "        \"description\": ";
+        if (plan != nullptr) {
+            print_json_string_view(plan->builder.description);
         } else {
             print_json_string("");
         }

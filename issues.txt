@@ -1,3 +1,4 @@
+1352	OPEN	E2/#23 slice: Expose aggregate designer child descriptor detail metadata in host JSON		2026-06-19T07:45:36Z
 1351	OPEN	E2/#23 slice: Expose aggregate designer child descriptor metadata in host JSON		2026-06-19T07:42:38Z
 1350	OPEN	E2/#23 slice: Expose aggregate designer toolbox child item descriptors in host JSON		2026-06-19T07:38:05Z
 1349	OPEN	E2/#23 slice: Expose aggregate designer child target metadata in host JSON		2026-06-19T07:34:24Z

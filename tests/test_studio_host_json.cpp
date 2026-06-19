@@ -9139,6 +9139,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
             "#1351: aggregate editor child JSON should expose action labels");
         expect_contains(editor_child_json, "\"kind\": \"source_editor\"",
             "#1351: aggregate editor child JSON should expose action kinds");
+        expect_contains(editor_child_json,
+            "\"description\": \"Open the selected visual object's PROCEDURE/FUNCTION source in a method editor.\"",
+            "#1352: aggregate editor child JSON should expose action descriptions");
         expect_contains(editor_child_json, "\"targetSurface\": \"method-editor\"",
             "#1349: aggregate editor child JSON should expose target surfaces");
         expect_contains(editor_child_json, "\"assetPath\": \"forms/customer.scx\"",
@@ -9182,6 +9185,13 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
             "#1351: aggregate builder child JSON should expose builder titles");
         expect_contains(builder_child_json, "\"kind\": \"builder\"",
             "#1351: aggregate builder child JSON should expose builder kinds");
+        expect_contains(builder_child_json, "\"vfp9Equivalent\": \"builder.app form builder\"",
+            "#1352: aggregate builder child JSON should expose VFP equivalent metadata");
+        expect_contains(builder_child_json, "\"copperfinComponent\": \"cf_form_surface\"",
+            "#1352: aggregate builder child JSON should expose Copperfin component metadata");
+        expect_contains(builder_child_json,
+            "\"description\": \"Configure form-level data, layout, and generated method defaults.\"",
+            "#1352: aggregate builder child JSON should expose builder descriptions");
         expect_contains(builder_child_json, "\"entryPoint\": \"cf_builders.form_builder\"",
             "#1349: aggregate builder child JSON should expose entry points");
         expect_contains(builder_child_json, "\"assetPath\": \"forms/customer.scx\"",
