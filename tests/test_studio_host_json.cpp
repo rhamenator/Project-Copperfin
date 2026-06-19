@@ -148,6 +148,29 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
     expect(create_result.ok, "#967: synthetic SCX table with selectable objects should be created");
 }
 
+void test_studio_host_usage_exposes_selected_execution_catalogs(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_execution_catalog_usage_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto process = run_process_capture(studio_host_path, {}, temp_root);
+
+    expect(process.exit_code == 2, "#1409: no-argument studio host invocation should return usage failure");
+    expect_contains(process.stdout_text,
+        "--selection-builder-dispatch-execution-catalog",
+        "#1409: studio host usage should advertise selected builder execution catalog");
+    expect_contains(process.stdout_text,
+        "--selection-toolbox-dispatch-execution-catalog",
+        "#1409: studio host usage should advertise selected toolbox execution catalog");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -39726,6 +39749,7 @@ int main(int argc, char** argv) {
         return 2;
     }
 
+    test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
