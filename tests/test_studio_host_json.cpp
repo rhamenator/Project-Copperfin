@@ -3886,6 +3886,51 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
     expect_contains(section_process.stdout_text, "\"objectCount\": 1",
                     "#1481: selected label sections should expose section object counts");
 
+    const fs::path deleted_section_path = temp_root / "deleted_section.lbx";
+    write_synthetic_report_table_for_deleted_section_json(deleted_section_path);
+    const auto deleted_section_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_section_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (deleted_section_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted label section stdout:\n"
+                  << deleted_section_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted label section stderr:\n"
+                  << deleted_section_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_section_process.exit_code == 0,
+           "#1498: selected deleted label section JSON should exit successfully");
+    expect_contains(deleted_section_process.stdout_text, "\"isLabel\": true",
+                    "#1498: selected deleted label section JSON should retain label identity");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1498: deleted label section selections should advertise selected-section availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1498: deleted label section selections should advertise report-selection availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1498: deleted label section selections should expose section selection kind");
+    expect_contains(deleted_section_process.stdout_text, "\"sectionCount\": 0",
+                    "#1498: deleted selected label section JSON should not expose live sections");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
+                    "#1498: deleted selected label section JSON should expose deleted section counts");
+    expect_contains_in_order(
+        deleted_section_process.stdout_text,
+        {
+            "\"selectedReportSection\": {",
+            "\"bandKind\": \"detail\"",
+            "\"recordIndex\": 1",
+            "\"deleted\": true",
+            "\"sectionIndex\": null",
+            "\"sectionCount\": 0"
+        },
+        "#1498: deleted label section selections should expose selected deleted-section metadata");
+    expect_contains(deleted_section_process.stdout_text, "\"unplacedObjectCount\": 3",
+                    "#1498: deleted selected label section JSON should preserve former section objects as unplaced");
+    expect_contains(deleted_section_process.stdout_text, "\"containingSectionId\": \"\"",
+                    "#1498: deleted selected label section objects should not fabricate containing-section ids");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
