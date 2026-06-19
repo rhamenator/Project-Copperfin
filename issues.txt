@@ -1,3 +1,4 @@
+1386	OPEN	E2/#23 slice: Expose toolbox create-dispatch plan summaries in host JSON		2026-06-19T09:52:26Z
 1385	OPEN	E2/#23 slice: Expose toolbox batch create-from-dispatch result summaries in host JSON		2026-06-19T09:49:07Z
 1384	OPEN	E2/#23 slice: Expose toolbox create-from-dispatch result summaries in host JSON		2026-06-19T09:45:47Z
 1383	OPEN	E2/#23 slice: Expose toolbox batch create result summaries in host JSON		2026-06-19T09:42:21Z

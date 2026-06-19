@@ -6893,11 +6893,29 @@ void print_json_selection_toolbox_create_plan_result(
 
 void print_json_toolbox_create_dispatch_plan_result(
     const copperfin::studio::StudioToolboxObjectCreateDispatchResult& result) {
+    std::vector<std::string> dispatch_ready_item_ids;
+    std::vector<std::string> dispatch_blocked_item_ids;
+    std::vector<std::string> dispatch_blocked_errors;
+    if (result.ok) {
+        dispatch_ready_item_ids.push_back(std::string(result.plan.toolbox_item.id));
+    } else if (!result.error.empty()) {
+        dispatch_blocked_errors.push_back(result.error);
+    }
+
     std::cout << "{\n";
     std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
     std::cout << "  \"toolboxCreateDispatchPlan\": ";
     if (!result.ok) {
         std::cout << "null,\n";
+        std::cout << "  \"dispatchReadyItemIds\": ";
+        print_json_string_array(dispatch_ready_item_ids);
+        std::cout << ",\n";
+        std::cout << "  \"dispatchBlockedItemIds\": ";
+        print_json_string_array(dispatch_blocked_item_ids);
+        std::cout << ",\n";
+        std::cout << "  \"dispatchBlockedErrors\": ";
+        print_json_string_array(dispatch_blocked_errors);
+        std::cout << ",\n";
         std::cout << "  \"error\": ";
         print_json_string(result.error);
         std::cout << "\n";
@@ -6958,6 +6976,15 @@ void print_json_toolbox_create_dispatch_plan_result(
         }
     }
     std::cout << "],\n";
+    std::cout << "    \"dispatchReadyItemIds\": ";
+    print_json_string_array(dispatch_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedItemIds\": ";
+    print_json_string_array(dispatch_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"dispatchAdmitted\": " << (plan.dispatch_admitted ? "true" : "false") << ",\n";
     std::cout << "    \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"executed\": " << (plan.executed ? "true" : "false") << ",\n";
@@ -6969,6 +6996,20 @@ void print_json_toolbox_create_dispatch_plan_result(
 
 void print_json_selection_toolbox_create_dispatch_plan_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateDispatchResult& result) {
+    std::vector<std::string> dispatch_ready_item_ids;
+    std::vector<std::string> dispatch_blocked_item_ids;
+    std::vector<std::string> dispatch_blocked_errors;
+    if (result.dispatch.ok) {
+        dispatch_ready_item_ids.push_back(std::string(result.dispatch.plan.toolbox_item.id));
+    } else {
+        const std::string& error = !result.dispatch.error.empty() ? result.dispatch.error :
+            (!result.create_plan.error.empty() ? result.create_plan.error :
+                (!result.launch_plan.error.empty() ? result.launch_plan.error : result.error));
+        if (!error.empty()) {
+            dispatch_blocked_errors.push_back(error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
     std::cout << "  \"selectionToolboxCreateDispatchPlan\": {\n";
@@ -7111,6 +7152,15 @@ void print_json_selection_toolbox_create_dispatch_plan_result(
     }
     std::cout << "    \"dispatchCount\": " << result.dispatch_count << ",\n";
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
+    std::cout << "    \"dispatchReadyItemIds\": ";
+    print_json_string_array(dispatch_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedItemIds\": ";
+    print_json_string_array(dispatch_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << "\n";
     std::cout << "  },\n";
