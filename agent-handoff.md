@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1282`, exposing selection-context editor-action invocation admission catalog planning through `copperfin_studio_host --editor-action-invocation-admission-catalog` JSON. `#1281` is the immediately preceding core planner slice. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1283`, routing editor-action dispatch catalog planning through `plan_studio_editor_action_invocation_admission_catalog`. `#1282` is the immediately preceding Studio host invocation-admission catalog JSON slice. Both remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 

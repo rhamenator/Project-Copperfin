@@ -455,6 +455,8 @@ int main() {
         });
     const auto* dry_run_method_invocation = find_invocation_admission_catalog_entry(
         dry_run_visual_invocation_catalog.entries, "edit-visual-method");
+    const auto* dry_run_property_invocation_entry = find_invocation_admission_catalog_entry(
+        dry_run_visual_invocation_catalog.entries, "show-property-grid");
     expect(dry_run_visual_invocation_catalog.ok &&
                dry_run_visual_invocation_catalog.action_count == visual_actions.size() &&
                dry_run_visual_invocation_catalog.admission_count == visual_actions.size() &&
@@ -680,6 +682,20 @@ int main() {
                    "--action-id",
                    "edit-visual-method"),
            "#1227: editor action dispatch catalog entries should preserve action and target metadata");
+    expect(visual_method_invocation != nullptr &&
+               visual_method_dispatch != nullptr &&
+               visual_method_dispatch->invocation_admission.ok &&
+               std::string(visual_method_dispatch->invocation_admission.plan.action.id) ==
+                   std::string(visual_method_invocation->invocation_admission.plan.action.id) &&
+               visual_method_dispatch->invocation_admission.plan.command_token ==
+                   visual_method_invocation->invocation_admission.plan.command_token &&
+               visual_method_dispatch->invocation_admission.plan.target_surface ==
+                   visual_method_invocation->invocation_admission.plan.target_surface &&
+               visual_method_dispatch->invocation_admission.plan.editor_invocation_admitted ==
+                   visual_method_invocation->invocation_admission.plan.editor_invocation_admitted &&
+               visual_method_dispatch->invocation_admission.plan.dry_run ==
+                   visual_method_invocation->invocation_admission.plan.dry_run,
+           "#1283: editor action dispatch catalogs should preserve shared admission catalog metadata");
     const auto* visual_property_dispatch = find_dispatch_catalog_entry(
         admitted_visual_dispatch_catalog.entries, "show-property-grid");
     expect(visual_property_dispatch != nullptr &&
@@ -718,6 +734,18 @@ int main() {
                dry_run_property_dispatch->dispatch.error ==
                    "An editor action dispatch request requires an admitted non-dry-run invocation.",
            "#1227: dry-run editor action dispatch catalog entries should preserve admission failures");
+    expect(dry_run_property_invocation_entry != nullptr &&
+               dry_run_property_dispatch != nullptr &&
+               dry_run_property_dispatch->invocation_admission.ok &&
+               std::string(dry_run_property_dispatch->invocation_admission.plan.action.id) ==
+                   std::string(dry_run_property_invocation_entry->invocation_admission.plan.action.id) &&
+               dry_run_property_dispatch->invocation_admission.plan.command_token ==
+                   dry_run_property_invocation_entry->invocation_admission.plan.command_token &&
+               dry_run_property_dispatch->invocation_admission.plan.editor_invocation_admitted ==
+                   dry_run_property_invocation_entry->invocation_admission.plan.editor_invocation_admitted &&
+               dry_run_property_dispatch->invocation_admission.plan.dry_run ==
+                   dry_run_property_invocation_entry->invocation_admission.plan.dry_run,
+           "#1283: dry-run editor action dispatch catalogs should retain admission catalog dry-run state");
 
     const auto report_dispatch_catalog =
         copperfin::studio::plan_studio_editor_action_dispatch_catalog({

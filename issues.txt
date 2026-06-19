@@ -1,3 +1,4 @@
+1283	OPEN	E2/#23 slice: Route editor action dispatch catalogs through invocation admission catalog planning		2026-06-19T01:13:34Z
 1282	OPEN	E2/#23 slice: Expose selection-context editor action invocation admission catalog through host JSON		2026-06-19T01:07:32Z
 1281	OPEN	E2/#23 slice: Add selection-context editor action invocation admission catalog planning		2026-06-19T01:04:05Z
 1280	OPEN	E2/#23 slice: Expose selection-context editor action launch catalog through host JSON		2026-06-19T00:56:31Z
