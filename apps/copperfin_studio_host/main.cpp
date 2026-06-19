@@ -8577,6 +8577,10 @@ void print_json_builder_launch_plan_result(
 
     const auto& plan = result.plan;
     const auto& builder = plan.builder;
+    const std::vector<std::string> launch_ready_builder_ids{std::string(builder.id)};
+    const std::vector<std::string> launch_blocked_builder_ids;
+    const std::vector<std::string> launch_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -8617,6 +8621,15 @@ void print_json_builder_launch_plan_result(
     std::cout << ",\n";
     std::cout << "    \"uniqueId\": ";
     print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"launchReadyBuilderIds\": ";
+    print_json_string_array(launch_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedBuilderIds\": ";
+    print_json_string_array(launch_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedErrors\": ";
+    print_json_string_array(launch_blocked_errors);
     std::cout << ",\n";
     std::cout << "    \"description\": ";
     print_json_string_view(builder.description);

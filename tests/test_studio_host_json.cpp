@@ -4154,6 +4154,12 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
         "#1204: builder launch-plan JSON should carry object-name selectors");
     expect_contains(valid_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
         "#1204: builder launch-plan JSON should carry unique-id selectors");
+    expect_contains(valid_process.stdout_text, "\"launchReadyBuilderIds\": [\"grid-builder\"]",
+        "#1391: builder launch-plan JSON should summarize launch-ready builder ids");
+    expect_contains(valid_process.stdout_text, "\"launchBlockedBuilderIds\": []",
+        "#1391: builder launch-plan JSON should summarize empty blocked builder ids");
+    expect_contains(valid_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1391: builder launch-plan JSON should summarize empty launch errors");
 
     const auto wizard_process = run_process_capture(
         studio_host_path,
@@ -4191,6 +4197,12 @@ void test_studio_host_json_exposes_builder_launch_plans(const std::string& studi
         "#1206: selection-context builder launch-plan JSON should expose resolved form builders");
     expect_contains(selection_visual_process.stdout_text, "\"context\": \"form\"",
         "#1206: selection-context builder launch-plan JSON should expose resolved builder contexts");
+    expect_contains(selection_visual_process.stdout_text, "\"launchReadyBuilderIds\": [\"form-builder\"]",
+        "#1391: selection-context builder launch-plan JSON should summarize launch-ready builder ids");
+    expect_contains(selection_visual_process.stdout_text, "\"launchBlockedBuilderIds\": []",
+        "#1391: selection-context builder launch-plan JSON should summarize empty blocked builder ids");
+    expect_contains(selection_visual_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1391: selection-context builder launch-plan JSON should summarize empty launch errors");
 
     const auto selection_grid_process = run_process_capture(
         studio_host_path,
