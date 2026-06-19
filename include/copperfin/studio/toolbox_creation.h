@@ -302,6 +302,29 @@ struct StudioToolboxObjectCreateBatchDispatchCatalogResult {
     bool mutates_asset = false;
 };
 
+struct StudioSelectionToolboxObjectCreateBatchDispatchCatalogRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string path;
+    std::string parent_name;
+    std::vector<vfp::VisualObjectPropertyChange> field_values;
+    bool admit_create_operation = false;
+};
+
+struct StudioSelectionToolboxObjectCreateBatchDispatchCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    StudioToolboxPaletteLaunchPlanResult launch_plan;
+    std::size_t item_count = 0;
+    StudioToolboxObjectCreateBatchPlanResult batch_plan;
+    StudioToolboxObjectCreateBatchDispatchResult dispatch;
+    std::size_t dispatch_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 [[nodiscard]] StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request);
 [[nodiscard]] StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
@@ -335,6 +358,9 @@ plan_visual_object_batch_catalog_from_toolbox_selection(
     const StudioSelectionToolboxObjectCreateBatchPlanCatalogRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchDispatchCatalogResult plan_visual_object_batch_create_dispatch_catalog(
     const StudioToolboxObjectCreateBatchDispatchCatalogRequest& request);
+[[nodiscard]] StudioSelectionToolboxObjectCreateBatchDispatchCatalogResult
+plan_visual_object_batch_create_dispatch_catalog_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateBatchDispatchCatalogRequest& request);
 [[nodiscard]] vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request);
 [[nodiscard]] vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
