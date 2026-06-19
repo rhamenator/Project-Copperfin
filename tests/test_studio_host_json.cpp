@@ -4622,6 +4622,149 @@ void test_studio_host_json_exposes_builder_invocation_admission(const std::strin
     }
 }
 
+void test_studio_host_json_exposes_builder_invocation_admission_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_builder_invocation_admission_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission-catalog",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(admitted_process.exit_code == 0,
+        "#1271: builder invocation admission catalog JSON should accept admitted control catalogs");
+    expect_contains(admitted_process.stdout_text, "\"builderInvocationAdmissionCatalog\": {",
+        "#1271: builder invocation admission catalog JSON should expose catalog objects");
+    expect_contains(admitted_process.stdout_text, "\"context\": \"control\"",
+        "#1271: builder invocation admission catalog JSON should expose contexts");
+    expect_contains(admitted_process.stdout_text, "\"builderCount\": 2",
+        "#1271: builder invocation admission catalog JSON should expose builder counts");
+    expect_contains(admitted_process.stdout_text, "\"admissionCount\": 2",
+        "#1271: builder invocation admission catalog JSON should expose admission counts");
+    expect_contains(admitted_process.stdout_text, "\"errorCount\": 0",
+        "#1271: admitted builder invocation admission catalog JSON should expose error counts");
+    expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
+        "#1271: admitted builder invocation admission catalog JSON should report non-dry-run state");
+    expect_contains(admitted_process.stdout_text, "\"mutatesAsset\": false",
+        "#1271: builder invocation admission catalog JSON should remain non-mutating");
+    expect_contains(admitted_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1271: builder invocation admission catalog JSON should include grid builders");
+    expect_contains(admitted_process.stdout_text, "\"admissionOk\": true",
+        "#1271: builder invocation admission catalog JSON should expose admission status");
+    expect_contains(admitted_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1271: builder invocation admission catalog JSON should expose command tokens");
+    expect_contains(admitted_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1271: builder invocation admission catalog JSON should expose entry points");
+    expect_contains(admitted_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1271: builder invocation admission catalog JSON should preserve asset paths");
+    expect_contains(admitted_process.stdout_text, "\"recordIndex\": 4",
+        "#1271: builder invocation admission catalog JSON should preserve record indexes");
+    expect_contains(admitted_process.stdout_text, "\"objectName\": \"grdOrders\"",
+        "#1271: builder invocation admission catalog JSON should preserve object names");
+    expect_contains(admitted_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
+        "#1271: builder invocation admission catalog JSON should preserve unique ids");
+    expect_contains(admitted_process.stdout_text, "\"uiLaunchAdmitted\": true",
+        "#1271: builder invocation admission catalog JSON should expose UI admission state");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission-catalog",
+            "--builder-context", "control",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1271: builder invocation admission catalog JSON should accept dry-run catalogs");
+    expect_contains(dry_run_process.stdout_text, "\"admissionCount\": 2",
+        "#1271: dry-run builder invocation admission catalog JSON should still admit entries");
+    expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
+        "#1271: dry-run builder invocation admission catalog JSON should expose aggregate dry-run state");
+    expect_contains(dry_run_process.stdout_text, "\"uiLaunchAdmitted\": false",
+        "#1271: dry-run builder invocation admission catalog entries should expose omitted admission");
+
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission-catalog",
+            "--builder-context", "label",
+            "--path", "labels/mailing.lbx",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(label_process.exit_code == 0,
+        "#1271: builder invocation admission catalog JSON should accept label contexts");
+    expect_contains(label_process.stdout_text, "\"builderId\": \"label-wizard\"",
+        "#1271: label builder invocation admission catalog JSON should expose label wizards");
+    expect_contains(label_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1271: label builder invocation admission catalog JSON should preserve wizard kind metadata");
+    expect_contains(label_process.stdout_text, "\"entryPoint\": \"cf_wizards.label_wizard\"",
+        "#1271: label builder invocation admission catalog JSON should expose wizard entry points");
+
+    const auto invalid_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission-catalog",
+            "--builder-context", "control",
+            "--admit-ui-launch", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_bool_process.exit_code == 2,
+        "#1271: builder invocation admission catalog JSON should reject invalid booleans");
+    expect_contains(invalid_bool_process.stdout_text,
+        "The --admit-ui-launch value must be true or false.",
+        "#1271: invalid builder invocation admission catalog booleans should report parser errors");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission-catalog",
+            "--builder-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1271: builder invocation admission catalog JSON should reject unknown contexts");
+    expect_contains(unknown_context_process.stdout_text, "\"builderInvocationAdmissionCatalog\": null",
+        "#1271: invalid builder invocation admission catalog JSON should not expose catalog objects");
+    expect_contains(unknown_context_process.stdout_text, "Unknown builder context token: unknown",
+        "#1271: invalid builder invocation admission catalog contexts should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission-catalog",
+            "--builder-context", "control",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1271: builder invocation admission catalog JSON should reject invalid records");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1271: invalid builder invocation admission catalog records should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -32708,6 +32851,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
+    test_studio_host_json_exposes_builder_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
     test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);

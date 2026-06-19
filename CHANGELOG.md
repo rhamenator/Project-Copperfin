@@ -2,6 +2,7 @@
 
 ## 2026-06-18
 
+- E2/#1271 Studio host builder/wizard invocation admission catalog JSON shipped: `copperfin_studio_host --builder-invocation-admission-catalog --builder-context <token>` now exposes non-executing per-context builder admission catalogs with aggregate counts, UI-admission state, dry-run/non-mutating state, and per-builder launch/admission metadata while rejecting invalid context, record, and boolean options before planning.
 - E2/#1270 builder/wizard invocation admission catalog planning shipped: `plan_studio_builder_invocation_admission_catalog` now composes per-context builder launch planning with invocation admission, preserving per-builder metadata and reporting aggregate admission counts, dry-run state, and non-mutating status without spawning UI or mutating assets.
 - E2/#1269 Studio host builder/wizard launch catalog JSON shipped: `copperfin_studio_host --builder-launch-catalog --builder-context <token>` now exposes non-executing per-context builder launch catalogs with aggregate counts, dry-run/non-mutating state, and per-builder launch metadata while rejecting invalid context, record, and invocation-only options before planning.
 
