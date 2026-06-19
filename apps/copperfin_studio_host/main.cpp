@@ -9036,6 +9036,18 @@ void print_json_builder_dispatch_execution_catalog_result(
         return;
     }
 
+    std::vector<std::string> execution_ready_builder_ids;
+    std::vector<std::string> execution_blocked_builder_ids;
+    std::vector<std::string> execution_blocked_errors;
+    for (const auto& entry : result.entries) {
+        if (entry.execution_ready) {
+            execution_ready_builder_ids.push_back(std::string(entry.builder.id));
+        } else {
+            execution_blocked_builder_ids.push_back(std::string(entry.builder.id));
+            execution_blocked_errors.push_back(entry.execution_error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9047,6 +9059,15 @@ void print_json_builder_dispatch_execution_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"executionReadyBuilderIds\": ";
+    print_json_string_array(execution_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedBuilderIds\": ";
+    print_json_string_array(execution_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedErrors\": ";
+    print_json_string_array(execution_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"entries\": [\n";
     for (std::size_t index = 0U; index < result.entries.size(); ++index) {
         print_json_builder_dispatch_execution_catalog_entry(result.entries[index], "      ");

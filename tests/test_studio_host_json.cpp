@@ -5772,6 +5772,13 @@ void test_studio_host_json_exposes_builder_dispatch_execution_catalog(const std:
         "#1327: admitted builder dispatch execution catalog JSON should expose zero errors");
     expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
         "#1327: admitted builder dispatch execution catalog JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text,
+        "\"executionReadyBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1363: admitted builder dispatch execution catalog JSON should summarize execution-ready builders");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedBuilderIds\": []",
+        "#1363: admitted builder dispatch execution catalog JSON should summarize empty blocked builder ids");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1363: admitted builder dispatch execution catalog JSON should summarize empty blocked execution errors");
     expect_contains(admitted_process.stdout_text, "\"builderId\": \"grid-builder\"",
         "#1327: builder dispatch execution catalog JSON should expose builder ids");
     expect_contains(admitted_process.stdout_text, "\"launchOk\": true",
@@ -5811,6 +5818,14 @@ void test_studio_host_json_exposes_builder_dispatch_execution_catalog(const std:
         "#1327: unadmitted builder dispatch execution catalog JSON should expose per-builder errors");
     expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
         "#1327: unadmitted builder dispatch execution catalog JSON should expose admission false");
+    expect_contains(unadmitted_process.stdout_text, "\"executionReadyBuilderIds\": []",
+        "#1363: unadmitted builder dispatch execution catalog JSON should summarize empty ready builder ids");
+    expect_contains(unadmitted_process.stdout_text,
+        "\"executionBlockedBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1363: unadmitted builder dispatch execution catalog JSON should summarize blocked builder ids");
+    expect_contains(unadmitted_process.stdout_text,
+        "\"executionBlockedErrors\": [\"A builder dispatch execution catalog entry requires explicit execution admission.\"",
+        "#1363: unadmitted builder dispatch execution catalog JSON should summarize blocked execution errors");
     expect_contains(unadmitted_process.stdout_text,
         "A builder dispatch execution catalog entry requires explicit execution admission.",
         "#1327: unadmitted builder dispatch execution catalog JSON should expose execution errors");
@@ -5830,6 +5845,12 @@ void test_studio_host_json_exposes_builder_dispatch_execution_catalog(const std:
         "#1327: dry-run builder dispatch execution catalog JSON should expose zero readiness");
     expect_contains(dry_run_process.stdout_text, "\"errorCount\": 2",
         "#1327: dry-run builder dispatch execution catalog JSON should expose per-builder errors");
+    expect_contains(dry_run_process.stdout_text,
+        "\"executionBlockedBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1363: dry-run builder dispatch execution catalog JSON should summarize dispatch-blocked builder ids");
+    expect_contains(dry_run_process.stdout_text,
+        "\"executionBlockedErrors\": [\"A builder dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1363: dry-run builder dispatch execution catalog JSON should summarize dispatch-blocked errors");
     expect_contains(dry_run_process.stdout_text,
         "A builder dispatch request requires an admitted non-dry-run invocation.",
         "#1327: dry-run builder dispatch execution catalog JSON should expose dispatch errors");
