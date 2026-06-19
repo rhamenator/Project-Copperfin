@@ -8321,6 +8321,139 @@ void test_studio_host_json_exposes_visual_object_list(const std::string& studio_
     }
 }
 
+void test_studio_host_json_exposes_visual_object_children(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_children_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "children.scx";
+    write_synthetic_form_table_for_visual_object_list(form_path);
+
+    const auto children_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-children",
+            "--path", form_path.string(),
+            "--unique-id", "page-guid",
+            "--json"
+        },
+        temp_root);
+    expect(children_process.exit_code == 0,
+        "#1419: visual object children JSON should exit successfully for selected parents");
+    expect_contains(children_process.stdout_text, "\"visualObjectChildren\": {",
+        "#1419: visual object children JSON should expose a children object");
+    expect_contains(children_process.stdout_text, "\"parentRecordIndex\": 0",
+        "#1419: visual object children JSON should expose parent record indexes");
+    expect_contains(children_process.stdout_text, "\"parentName\": \"Page1\"",
+        "#1419: visual object children JSON should expose parent names");
+    expect_contains(children_process.stdout_text, "\"childCount\": 2",
+        "#1419: visual object children JSON should expose child counts");
+    expect_contains(children_process.stdout_text, "\"dryRun\": true",
+        "#1419: visual object children JSON should remain dry-run");
+    expect_contains(children_process.stdout_text, "\"mutatesAsset\": false",
+        "#1419: visual object children JSON should remain non-mutating");
+    expect_contains(children_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1419: visual object children JSON should include live immediate children");
+    expect_contains(children_process.stdout_text, "\"recordIndex\": 1",
+        "#1419: visual object children JSON should expose child record indexes");
+    expect_contains(children_process.stdout_text, "\"parentRecordIndex\": 0",
+        "#1419: child snapshots should expose resolved parent record links");
+    expect_contains(children_process.stdout_text, "\"ancestorRecordIndexes\": [0]",
+        "#1419: child snapshots should expose ancestor records");
+    expect_contains(children_process.stdout_text, "\"objectPath\": \"Page1.cmdSave\"",
+        "#1419: child snapshots should expose hierarchical paths");
+    expect_contains(children_process.stdout_text, "\"caption\": \"\\\"Save\\\"\"",
+        "#1419: child snapshots should expose parsed captions");
+
+    const auto fallback_begin = children_process.stdout_text.find("\"objectName\": \"fallbackButton\"");
+    expect(fallback_begin != std::string::npos,
+        "#1419: visual object children JSON should include fallback NAME children");
+    if (fallback_begin != std::string::npos) {
+        const auto fallback_entry_begin = children_process.stdout_text.rfind("{", fallback_begin);
+        const auto fallback_json = fallback_entry_begin == std::string::npos
+            ? children_process.stdout_text.substr(fallback_begin)
+            : children_process.stdout_text.substr(fallback_entry_begin);
+        expect_contains(fallback_json, "\"deleted\": true",
+            "#1419: visual object children JSON should preserve deleted child rows");
+        expect_contains(fallback_json, "\"uniqueId\": \"fallback-guid\"",
+            "#1419: visual object children JSON should expose deleted child unique ids");
+    }
+
+    const auto leaf_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-children",
+            "--path", form_path.string(),
+            "--object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+    expect(leaf_process.exit_code == 0,
+        "#1419: visual object children JSON should succeed for childless selected objects");
+    expect_contains(leaf_process.stdout_text, "\"parentRecordIndex\": 1",
+        "#1419: childless visual object children JSON should expose selected parent record");
+    expect_contains(leaf_process.stdout_text, "\"childCount\": 0",
+        "#1419: childless visual object children JSON should report zero children");
+    expect_contains(leaf_process.stdout_text, "\"children\": [\n    ]",
+        "#1419: childless visual object children JSON should expose an empty children array");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-children",
+            "--unique-id", "page-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1419: visual object children JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectChildren\": null",
+        "#1419: missing-path visual object children JSON should not expose a children object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1419: missing-path visual object children JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-children",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1419: visual object children JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1419: invalid-record visual object children JSON should report parser errors");
+
+    const auto missing_parent_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-children",
+            "--path", form_path.string(),
+            "--object-name", "missingParent",
+            "--json"
+        },
+        temp_root);
+    expect(missing_parent_process.exit_code == 4,
+        "#1419: visual object children JSON should reject unresolved parents");
+    expect_contains(missing_parent_process.stdout_text, "\"visualObjectChildren\": null",
+        "#1419: unresolved visual object children JSON should not expose a children object");
+    expect_contains(missing_parent_process.stdout_text, "No visual object with the requested name was found.",
+        "#1419: unresolved visual object children JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-children --path <asset>",
+        "#1419: usage text should expose visual object children commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_invocation_admission(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -40423,6 +40556,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_property_query(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
+    test_studio_host_json_exposes_visual_object_children(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
