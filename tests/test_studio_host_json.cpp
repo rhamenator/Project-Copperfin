@@ -12600,6 +12600,13 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
         "#1254: admitted toolbox-create-dispatch-catalog JSON should expose non-dry-run dispatch state");
     expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": true",
         "#1254: admitted toolbox-create-dispatch-catalog JSON should expose mutation intent");
+    expect_contains(catalog_process.stdout_text,
+        "\"dispatchReadyItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1376: toolbox-create-dispatch-catalog JSON should summarize dispatch-ready form items");
+    expect_contains(catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1376: admitted toolbox-create-dispatch-catalog JSON should summarize empty blocked item ids");
+    expect_contains(catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1376: admitted toolbox-create-dispatch-catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1254: toolbox-create-dispatch-catalog JSON should include textbox entries");
     expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
@@ -12639,6 +12646,14 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
         "#1254: non-admitted toolbox-create-dispatch-catalog JSON should return a catalog");
     expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchCount\": 0",
         "#1254: non-admitted toolbox-create-dispatch-catalog JSON should expose zero dispatches");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1376: non-admitted toolbox-create-dispatch-catalog JSON should summarize empty ready item ids");
+    expect_contains(dry_run_catalog_process.stdout_text,
+        "\"dispatchBlockedItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1376: non-admitted toolbox-create-dispatch-catalog JSON should summarize blocked form item ids");
+    expect_contains(dry_run_catalog_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A toolbox create dispatch request requires an admitted non-dry-run create operation.\"",
+        "#1376: non-admitted toolbox-create-dispatch-catalog JSON should summarize blocked dispatch errors");
     expect_contains(dry_run_catalog_process.stdout_text,
         "A toolbox create dispatch request requires an admitted non-dry-run create operation.",
         "#1254: non-admitted toolbox-create-dispatch-catalog JSON should expose per-item errors");
@@ -12664,6 +12679,12 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
         "#1254: report toolbox-create-dispatch-catalog JSON should expose report contexts");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1254: report toolbox-create-dispatch-catalog JSON should include label dispatches");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
+        "#1376: report toolbox-create-dispatch-catalog JSON should summarize dispatch-ready report items");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1376: report toolbox-create-dispatch-catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1376: report toolbox-create-dispatch-catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1254: report toolbox-create-dispatch-catalog JSON should preserve report dispatch context");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
