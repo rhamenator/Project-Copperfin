@@ -148,6 +148,10 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.settings.size() >= 2U, "report layout should parse root settings");
     expect(layout.sections[0].band_kind == "page_header", "first section should decode the page header band");
     expect(layout.sections[1].band_kind == "detail", "second section should decode the detail band");
+    expect(layout.sections[0].section_index == 0U, "#1460: report sections should carry zero-based order");
+    expect(layout.sections[0].section_count == 2U, "#1460: report sections should carry live section counts");
+    expect(layout.sections[1].section_index == 1U, "#1460: later report sections should carry sorted order");
+    expect(layout.sections[1].section_count == 2U, "#1460: later report sections should carry live section counts");
     expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
     expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
         "#729: synthesized report section ids should use missing DBF field provenance");
@@ -314,6 +318,10 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.deleted_sections.size() == 1U, "#690: deleted report sections should be preserved separately");
     if (!layout.deleted_sections.empty()) {
         expect(layout.deleted_sections[0].deleted, "#690: deleted report section snapshots should retain deleted state");
+        expect(layout.deleted_sections[0].section_index == copperfin::studio::StudioReportMissingRecordIndex,
+            "#1460: deleted report sections should expose missing section order");
+        expect(layout.deleted_sections[0].section_count == 0U,
+            "#1460: deleted report sections should expose zero live section counts");
         expect(layout.deleted_sections[0].band_kind == "summary", "#690: deleted report sections should retain band metadata");
         expect(layout.deleted_sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
             "#729: deleted synthesized section ids should use missing DBF field provenance");

@@ -20242,6 +20242,10 @@ void print_json_report_layout_section(
     std::cout << indent << "  \"bandKindMemoBlockNumber\": " << section.band_kind_memo_block_number << ",\n";
     std::cout << indent << "  \"recordIndex\": " << section.record_index << ",\n";
     std::cout << indent << "  \"deleted\": " << (section.deleted ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"sectionIndex\": ";
+    print_json_report_record_index_or_null(section.section_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"sectionCount\": " << section.section_count << ",\n";
     std::cout << indent << "  \"objectCode\": " << section.objcode_code << ",\n";
     std::cout << indent << "  \"objectCodeFieldIndex\": ";
     print_json_report_field_index_or_null(section.objcode_field_index);

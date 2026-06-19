@@ -3677,6 +3677,10 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report layout JSON should expose synthesized section id provenance as null");
     expect_contains(process.stdout_text, "\"objectCode\": 1",
                     "#1452: report layout JSON should expose section raw object codes");
+    expect_contains(process.stdout_text, "\"sectionIndex\": 0",
+                    "#1460: report layout JSON should expose section order");
+    expect_contains(process.stdout_text, "\"sectionCount\": 2",
+                    "#1460: report layout JSON should expose live section counts");
     expect_contains(process.stdout_text, "\"objectCodeFieldIndex\": 1",
                     "#1452: report layout JSON should expose section object-code field provenance");
     expect_contains(process.stdout_text, "\"topFieldIndex\": 4",
@@ -3762,6 +3766,10 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
                     "#1453: selected report section JSON should expose the selected band kind");
     expect_contains(section_process.stdout_text, "\"recordIndex\": 1",
                     "#1453: selected report section JSON should expose the selected section record index");
+    expect_contains(section_process.stdout_text, "\"sectionIndex\": 0",
+                    "#1460: selected report section JSON should expose section order");
+    expect_contains(section_process.stdout_text, "\"sectionCount\": 2",
+                    "#1460: selected report section JSON should expose live section counts");
     expect_contains(section_process.stdout_text, "\"objectCode\": 1",
                     "#1453: selected report section JSON should preserve raw section object codes");
     expect_contains(section_process.stdout_text, "\"objectCount\": 1",

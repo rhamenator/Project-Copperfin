@@ -425,6 +425,10 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
         }
         return left.record_index < right.record_index;
     });
+    for (std::size_t section_index = 0; section_index < snapshot.sections.size(); ++section_index) {
+        snapshot.sections[section_index].section_index = section_index;
+        snapshot.sections[section_index].section_count = snapshot.sections.size();
+    }
 
     for (const auto& record : document.table_preview.records) {
         if (record.deleted) {
