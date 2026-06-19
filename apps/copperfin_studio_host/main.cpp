@@ -20097,6 +20097,26 @@ const copperfin::studio::StudioReportSectionSnapshot* find_selected_report_objec
     return nullptr;
 }
 
+std::vector<copperfin::studio::StudioNamedValue> find_selected_report_settings(
+    const copperfin::studio::StudioReportLayoutSnapshot& report_layout,
+    std::size_t record_index) {
+    std::vector<copperfin::studio::StudioNamedValue> settings;
+    if (!report_layout.available) {
+        return settings;
+    }
+    for (const auto& setting : report_layout.settings) {
+        if (setting.record_index == record_index) {
+            settings.push_back(setting);
+        }
+    }
+    for (const auto& setting : report_layout.deleted_settings) {
+        if (setting.record_index == record_index) {
+            settings.push_back(setting);
+        }
+    }
+    return settings;
+}
+
 void print_json_report_layout_object(
     const copperfin::studio::StudioLayoutObjectSnapshot& object,
     const std::string& indent) {
@@ -20294,6 +20314,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto* selected_report_object_section = document.selection_record_available
         ? find_selected_report_object_section(report_layout, document.selection_record_index)
         : nullptr;
+    const auto selected_report_settings = document.selection_record_available
+        ? find_selected_report_settings(report_layout, document.selection_record_index)
+        : std::vector<copperfin::studio::StudioNamedValue>{};
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -20441,6 +20464,15 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "null,\n";
     } else {
         print_json_report_layout_section(*selected_report_object_section, "    ");
+        std::cout << ",\n";
+    }
+    std::cout << "    \"selectedReportSettingsAvailable\": "
+              << (selected_report_settings.empty() ? "false" : "true") << ",\n";
+    std::cout << "    \"selectedReportSettings\": ";
+    if (selected_report_settings.empty()) {
+        std::cout << "null,\n";
+    } else {
+        print_json_report_named_values(selected_report_settings, "    ");
         std::cout << ",\n";
     }
     std::cout << "    \"projectWorkspace\": ";

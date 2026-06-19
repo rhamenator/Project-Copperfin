@@ -3853,6 +3853,65 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
     }
 }
 
+void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_report_settings_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto settings_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "0", "--json"},
+        temp_root);
+
+    if (settings_process.exit_code != 0) {
+        std::cerr << "studio host selected report settings stdout:\n" << settings_process.stdout_text << "\n";
+        std::cerr << "studio host selected report settings stderr:\n" << settings_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(settings_process.exit_code == 0,
+           "#1456: selected report settings JSON smoke should exit successfully");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    "#1456: report root selections should advertise selected-settings availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSettings\": [",
+                    "#1456: report root selections should expose selected-settings JSON");
+    expect_contains(settings_process.stdout_text, "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"0\"",
+                    "#1456: selected report settings should expose memo-line setting provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                    "#1456: selected report settings should expose later memo-line setting provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"10\"",
+                    "#1456: selected report settings should expose direct setting provenance");
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "3", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host selected report object stdout:\n" << object_process.stdout_text << "\n";
+        std::cerr << "studio host selected report object stderr:\n" << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0,
+           "#1456: selected report object JSON smoke should exit successfully");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1456: non-settings report selections should not advertise selected-settings availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1456: non-settings report selections should serialize null selected settings");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -47432,6 +47491,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_selected_report_sections(argv[1]);
     test_studio_host_json_exposes_selected_report_objects(argv[1]);
+    test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);
