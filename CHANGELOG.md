@@ -2,6 +2,7 @@
 
 ## 2026-06-18
 
+- E2/#1293 Studio host selection-context toolbox object create-plan catalog JSON shipped: `copperfin_studio_host --selection-toolbox-create-plan-catalog --selection-context <token>` now exposes non-mutating selected-context toolbox create-plan catalogs with resolved toolbox metadata, launch-plan status, per-item create plans, parser validation, and deterministic unsupported-selection rejection.
 - E2/#1292 selection-context toolbox object create-plan catalog planning shipped: `plan_visual_object_catalog_from_toolbox_selection` now resolves selected Studio contexts through toolbox palette launch planning before non-mutating create-plan catalog planning, preserving launch/create metadata and unsupported-selection rejection.
 - E2/#1291 Studio host selection-context toolbox palette dispatch catalog JSON shipped: `copperfin_studio_host --selection-toolbox-dispatch-catalog --selection-context <token>` now exposes non-executing selected-context toolbox dispatch catalogs with resolved toolbox metadata, launch/admission/dispatch status, dispatch arguments, parser validation, and deterministic unsupported-selection rejection.
 - E2/#1290 selection-context toolbox palette dispatch catalog planning shipped: `plan_studio_toolbox_dispatch_catalog_for_selection` now resolves selected Studio contexts through the shared selection toolbox admission catalog before non-executing dispatch planning, preserving launch/admission/dispatch metadata and unsupported-selection rejection without mutation.
