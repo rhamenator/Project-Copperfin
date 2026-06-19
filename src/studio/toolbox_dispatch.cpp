@@ -80,11 +80,19 @@ StudioToolboxDispatchResult plan_studio_toolbox_dispatch(
 
 StudioToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog(
     const StudioToolboxDispatchCatalogRequest& request) {
-    const auto items = studio_toolbox_items_for_context(request.toolbox_context);
-    if (items.empty()) {
+    auto invocation_catalog = plan_studio_toolbox_invocation_admission_catalog({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .toolbox_context = request.toolbox_context,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .admit_palette_invocation = request.admit_palette_invocation
+    });
+    if (!invocation_catalog.ok) {
         return {
             .ok = false,
-            .error = "A toolbox dispatch catalog request requires validated toolbox item metadata.",
+            .error = invocation_catalog.error,
             .toolbox_context = request.toolbox_context,
             .command_token = {},
             .asset_path = request.asset_path,
@@ -102,29 +110,15 @@ StudioToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog(
         };
     }
 
-    const auto launch_plan = StudioToolboxPaletteLaunchPlan{
-        .selection_context = StudioEditorSelectionContext::visual_object,
-        .toolbox_context = request.toolbox_context,
-        .asset_path = request.asset_path,
-        .record_index = request.record_index,
-        .object_name = request.object_name,
-        .unique_id = request.unique_id,
-        .item_count = items.size(),
-        .items = items
-    };
-    auto invocation_admission = plan_studio_toolbox_invocation_admission({
-        .launch_plan = launch_plan,
-        .admit_palette_invocation = request.admit_palette_invocation
-    });
     StudioToolboxDispatchResult dispatch{};
-    if (invocation_admission.ok) {
+    if (invocation_catalog.invocation_admission.ok) {
         dispatch = plan_studio_toolbox_dispatch({
-            .admission_plan = invocation_admission.plan
+            .admission_plan = invocation_catalog.invocation_admission.plan
         });
     } else {
         dispatch = {
             .ok = false,
-            .error = invocation_admission.error,
+            .error = invocation_catalog.invocation_admission.error,
             .plan = {}
         };
     }
@@ -138,14 +132,14 @@ StudioToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog(
         .ok = true,
         .error = {},
         .toolbox_context = request.toolbox_context,
-        .command_token = invocation_admission.ok ? invocation_admission.plan.command_token : std::string{},
+        .command_token = invocation_catalog.command_token,
         .asset_path = request.asset_path,
         .record_index = request.record_index,
         .object_name = request.object_name,
         .unique_id = request.unique_id,
-        .item_count = items.size(),
-        .items = items,
-        .invocation_admission = std::move(invocation_admission),
+        .item_count = invocation_catalog.item_count,
+        .items = std::move(invocation_catalog.items),
+        .invocation_admission = std::move(invocation_catalog.invocation_admission),
         .dispatch = std::move(dispatch),
         .dispatch_count = dispatch_count,
         .error_count = error_count,

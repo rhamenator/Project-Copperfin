@@ -410,6 +410,19 @@ int main() {
                 "--toolbox-context",
                 "form"),
         "#1235: admitted toolbox dispatch catalogs should preserve form item metadata and dispatch once");
+    expect(form_dispatch_catalog.ok &&
+            form_invocation_catalog.ok &&
+            form_dispatch_catalog.command_token == form_invocation_catalog.command_token &&
+            form_dispatch_catalog.item_count == form_invocation_catalog.item_count &&
+            form_dispatch_catalog.items.size() == form_invocation_catalog.items.size() &&
+            form_dispatch_catalog.invocation_admission.ok &&
+            form_dispatch_catalog.invocation_admission.plan.palette_invocation_admitted ==
+                form_invocation_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            form_dispatch_catalog.invocation_admission.plan.dry_run ==
+                form_invocation_catalog.invocation_admission.plan.dry_run &&
+            form_dispatch_catalog.invocation_admission.plan.asset_path ==
+                form_invocation_catalog.invocation_admission.plan.asset_path,
+        "#1287: toolbox dispatch catalogs should preserve shared invocation admission catalog metadata");
 
     const auto report_dispatch_catalog = copperfin::studio::plan_studio_toolbox_dispatch_catalog({
         .toolbox_context = StudioToolboxContext::report,
@@ -455,6 +468,12 @@ int main() {
             dry_run_dispatch_catalog.dispatch.error ==
                 "A toolbox dispatch request requires an admitted non-dry-run invocation.",
         "#1235: dry-run toolbox dispatch catalogs should report dispatch rejections without mutation");
+    expect(dry_run_dispatch_catalog.ok &&
+            dry_run_dispatch_catalog.invocation_admission.ok &&
+            !dry_run_dispatch_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            dry_run_dispatch_catalog.invocation_admission.plan.dry_run &&
+            dry_run_dispatch_catalog.invocation_admission.plan.item_count == dry_run_dispatch_catalog.item_count,
+        "#1287: dry-run toolbox dispatch catalogs should retain admission catalog dry-run state");
 
     const auto missing_items_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
         .launch_plan = {},
