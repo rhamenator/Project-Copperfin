@@ -5587,6 +5587,72 @@ void test_studio_host_json_restores_report_sections_by_record_selection(const st
     }
 }
 
+void test_studio_host_json_restores_label_sections_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_section_restore_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_deleted_section_json(label_path);
+    expect(dbf_record_deleted(label_path, 1U),
+           "#1493: label section restore fixture should start with a deleted section");
+
+    const auto restore_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--restore-object",
+            "--record", "1",
+            "--json"
+        },
+        temp_root);
+
+    if (restore_process.exit_code != 0) {
+        std::cerr << "studio host label section restore stdout:\n" << restore_process.stdout_text << "\n";
+        std::cerr << "studio host label section restore stderr:\n" << restore_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(restore_process.exit_code == 0,
+           "#1493: label section restore should exit successfully");
+    expect(!dbf_record_deleted(label_path, 1U),
+           "#1493: label section restore should clear the LBX section record delete flag");
+    expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                    "#1493: restored label section JSON should retain label identity");
+    expect_contains(restore_process.stdout_text, "\"sectionCount\": 1",
+                    "#1493: restored label section JSON should restore live section counts");
+    expect_contains(restore_process.stdout_text, "\"deletedSectionCount\": 0",
+                    "#1493: restored label section JSON should clear deleted section counts");
+    expect_contains_in_order(
+        restore_process.stdout_text,
+        {
+            "\"sections\": [",
+            "\"recordIndex\": 1",
+            "\"deleted\": false",
+            "\"sectionIndex\": 0",
+            "\"sectionCount\": 1",
+            "\"bandKind\": \"detail\"",
+            "\"objectCount\": 3"
+        },
+        "#1493: label layout JSON should move the section back into live-section metadata");
+    expect_contains(restore_process.stdout_text, "\"unplacedObjectCount\": 0",
+                    "#1493: restoring the label section should move formerly unplaced objects back into section membership");
+    expect_contains(restore_process.stdout_text, "\"containingSectionId\": \"detail_1\"",
+                    "#1493: restored label section objects should expose containing-section ids again");
+    expect_contains(restore_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1493: restored label section selections should advertise selected-section availability");
+    expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1493: restored label section selections should expose section selection kind");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_report_settings_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -49415,6 +49481,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
+    test_studio_host_json_restores_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
