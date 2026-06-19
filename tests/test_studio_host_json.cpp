@@ -7766,6 +7766,136 @@ void test_studio_host_json_exposes_toolbox_palette_query_filters(const std::stri
     }
 }
 
+void test_studio_host_json_exposes_visual_property_filter(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_property_filter_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path direct_path = temp_root / "direct.scx";
+    write_synthetic_form_table_for_toolbox_creation(direct_path);
+
+    const auto direct_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-filter",
+            "--path", direct_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-filter-text", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(direct_process.exit_code == 0,
+        "#1415: visual property filter JSON should exit successfully for matching direct fields");
+    expect_contains(direct_process.stdout_text, "\"visualPropertyFilter\": {",
+        "#1415: visual property filter JSON should expose a filter object");
+    expect_contains(direct_process.stdout_text, "\"recordIndex\": 1",
+        "#1415: visual property filter JSON should expose resolved record indexes");
+    expect_contains(direct_process.stdout_text, "\"recordDeleted\": false",
+        "#1415: visual property filter JSON should expose selected-record deleted state");
+    expect_contains(direct_process.stdout_text, "\"searchText\": \"CAPTION\"",
+        "#1415: visual property filter JSON should expose search text");
+    expect_contains(direct_process.stdout_text, "\"propertyCount\": 1",
+        "#1415: visual property filter JSON should expose filtered property counts");
+    expect_contains(direct_process.stdout_text, "\"dryRun\": true",
+        "#1415: visual property filter JSON should remain dry-run");
+    expect_contains(direct_process.stdout_text, "\"mutatesAsset\": false",
+        "#1415: visual property filter JSON should remain non-mutating");
+    expect_contains(direct_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#1415: visual property filter JSON should include matching property names");
+    expect_contains(direct_process.stdout_text, "\"value\": \"Existing\"",
+        "#1415: visual property filter JSON should include matching property values");
+    expect_contains(direct_process.stdout_text, "\"directField\": true",
+        "#1415: visual property filter JSON should identify direct DBF fields");
+    expect_contains(direct_process.stdout_text, "\"fieldType\": \"C\"",
+        "#1415: visual property filter JSON should expose direct DBF field types");
+    expect_contains(direct_process.stdout_text, "\"sourceLineIndex\": null",
+        "#1415: visual property filter JSON should null direct-field source lines");
+
+    const fs::path memo_path = write_synthetic_form_table_for_property_rename(temp_root, "memo.scx");
+    const auto memo_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-filter",
+            "--path", memo_path.string(),
+            "--object-name", "txt1",
+            "--property-filter-text", "customer.name",
+            "--json"
+        },
+        temp_root);
+    expect(memo_process.exit_code == 0,
+        "#1415: visual property filter JSON should exit successfully for matching memo properties");
+    expect_contains(memo_process.stdout_text, "\"propertyName\": \"ControlSource\"",
+        "#1415: visual property filter JSON should include memo-backed property names");
+    expect_contains(memo_process.stdout_text, "\"value\": \"\\\"customer.name\\\"\"",
+        "#1415: visual property filter JSON should include memo-backed property values");
+    expect_contains(memo_process.stdout_text, "\"directField\": false",
+        "#1415: visual property filter JSON should identify memo-backed properties");
+    expect_contains(memo_process.stdout_text, "\"fieldType\": null",
+        "#1415: visual property filter JSON should null memo-backed field types");
+    expect_contains(memo_process.stdout_text, "\"sourceLineIndex\": 0",
+        "#1415: visual property filter JSON should expose memo-backed source lines");
+
+    const auto empty_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-filter",
+            "--path", direct_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-filter-text", "does-not-match",
+            "--json"
+        },
+        temp_root);
+    expect(empty_process.exit_code == 0,
+        "#1415: visual property filter JSON should succeed for empty result sets");
+    expect_contains(empty_process.stdout_text, "\"propertyCount\": 0",
+        "#1415: visual property filter JSON should report zero matches");
+    expect_contains(empty_process.stdout_text, "\"properties\": [\n    ]",
+        "#1415: visual property filter JSON should expose an empty property array");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-filter",
+            "--unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1415: visual property filter JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualPropertyFilter\": null",
+        "#1415: missing-path visual property filter JSON should not expose a filter object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1415: missing-path visual property filter JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-filter",
+            "--path", direct_path.string(),
+            "--object-name", "missingObject",
+            "--property-filter-text", "Caption",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1415: visual property filter JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualPropertyFilter\": null",
+        "#1415: unresolved visual property filter JSON should not expose a filter object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1415: unresolved visual property filter JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-property-filter --path <asset>",
+        "#1415: usage text should expose visual property filter commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_invocation_admission(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -39864,6 +39994,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_query_filters(argv[1]);
+    test_studio_host_json_exposes_visual_property_filter(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
