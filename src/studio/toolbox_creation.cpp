@@ -290,6 +290,63 @@ StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
         {});
 }
 
+StudioSelectionToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreatePlanRequest& request) {
+    auto launch_plan = plan_studio_toolbox_palette_launch({
+        .selection_context = request.selection_context,
+        .asset_path = request.path,
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    if (!launch_plan.ok) {
+        return {
+            .ok = false,
+            .error = "A selection-context toolbox object creation plan request requires a toolbox palette.",
+            .selection_context = request.selection_context,
+            .toolbox_context = StudioToolboxContext::form,
+            .launch_plan = std::move(launch_plan),
+            .create_plan = {},
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto create_plan = plan_visual_object_from_toolbox_item({
+        .path = request.path,
+        .toolbox_item_id = request.toolbox_item_id,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .parent_name = request.parent_name,
+        .toolbox_context_provided = true,
+        .toolbox_context = launch_plan.plan.toolbox_context,
+        .field_values = request.field_values
+    });
+    if (!create_plan.ok) {
+        return {
+            .ok = false,
+            .error = create_plan.error,
+            .selection_context = request.selection_context,
+            .toolbox_context = launch_plan.plan.toolbox_context,
+            .launch_plan = std::move(launch_plan),
+            .create_plan = std::move(create_plan),
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .toolbox_context = create_plan.plan.toolbox_context,
+        .launch_plan = std::move(launch_plan),
+        .create_plan = std::move(create_plan),
+        .dry_run = true,
+        .mutates_asset = false
+    };
+}
+
 StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
     const StudioToolboxObjectCreateFromPaletteDispatchRequest& request) {
     const auto& dispatch_plan = request.dispatch_plan;

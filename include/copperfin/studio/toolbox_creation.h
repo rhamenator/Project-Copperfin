@@ -50,6 +50,27 @@ struct StudioToolboxObjectCreatePlanResult {
     StudioToolboxObjectCreatePlan plan;
 };
 
+struct StudioSelectionToolboxObjectCreatePlanRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string path;
+    std::string toolbox_item_id;
+    std::string object_name;
+    std::string unique_id;
+    std::string parent_name;
+    std::vector<vfp::VisualObjectPropertyChange> field_values;
+};
+
+struct StudioSelectionToolboxObjectCreatePlanResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    StudioToolboxPaletteLaunchPlanResult launch_plan;
+    StudioToolboxObjectCreatePlanResult create_plan;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 struct StudioToolboxObjectCreateBatchItem {
     std::string toolbox_item_id;
     std::string object_name;
@@ -327,6 +348,8 @@ struct StudioSelectionToolboxObjectCreateBatchDispatchCatalogResult {
 
 [[nodiscard]] StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request);
+[[nodiscard]] StudioSelectionToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreatePlanRequest& request);
 [[nodiscard]] StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
     const StudioToolboxObjectCreateFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
