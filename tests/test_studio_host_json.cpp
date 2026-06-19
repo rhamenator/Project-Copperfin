@@ -4364,6 +4364,14 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1480: unplaced report object selections should advertise report-selection availability");
     expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                     "#1480: unplaced report object selections should expose object selection kind");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1511: selected unplaced report objects should not advertise selected-section availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1511: selected unplaced report objects should serialize null selected sections");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1511: selected unplaced report objects should not advertise selected-settings availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1511: selected unplaced report objects should serialize null selected settings");
     expect_contains(unplaced_object_process.stdout_text, "\"unplacedObjectCount\": 1",
                     "#1480: unplaced selected report object JSON should expose unplaced object counts");
     expect_contains_in_order(
