@@ -23365,6 +23365,167 @@ void test_studio_host_json_duplicates_objects_by_stable_selectors(const std::str
     }
 }
 
+void test_studio_host_json_duplicates_visual_object_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_duplicate_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "duplicate_batch.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const auto duplicate_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-batch",
+            "--path", form_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--new-object-name", "txtBatchCopy",
+            "--new-name", "txtBatchCopy",
+            "--new-unique-id", "batch-copy-guid",
+            "--selected-object-name", "frmCustomer",
+            "--new-object-name", "frmBatchCopy",
+            "--new-name", "frmBatchCopy",
+            "--new-unique-id", "form-batch-copy-guid",
+            "--json"
+        },
+        temp_root);
+    expect(duplicate_batch_process.exit_code == 0,
+        "#1448: visual object duplicate-batch JSON should exit successfully for valid batches");
+    expect_contains(duplicate_batch_process.stdout_text, "\"visualObjectDuplicateBatch\": {",
+        "#1448: visual object duplicate-batch JSON should expose a batch duplicate object");
+    expect_contains(duplicate_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+        "#1448: visual object duplicate-batch JSON should expose affected object counts");
+    expect_contains(duplicate_batch_process.stdout_text, "\"dryRun\": false",
+        "#1448: visual object duplicate-batch JSON should expose committed execution state");
+    expect_contains(duplicate_batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1448: visual object duplicate-batch JSON should expose mutation state");
+    expect_contains(duplicate_batch_process.stdout_text, "\"undoAvailable\": false",
+        "#1448: visual object duplicate-batch JSON should expose undo availability state");
+    expect(visual_object_count(form_path) == 4U &&
+            visual_object_exists(form_path, "batch-copy-guid") &&
+            visual_object_exists(form_path, "form-batch-copy-guid"),
+        "#1448: visual object duplicate-batch host command should append all requested duplicates");
+
+    const fs::path rollback_path = temp_root / "duplicate_batch_rollback.scx";
+    write_synthetic_form_table_for_toolbox_creation(rollback_path);
+    const auto rollback_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-batch",
+            "--path", rollback_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--new-object-name", "txtRollbackCopy",
+            "--new-name", "txtRollbackCopy",
+            "--new-unique-id", "rollback-copy-guid",
+            "--selected-object-name", "frmCustomer",
+            "--new-object-name", "frmCollisionCopy",
+            "--new-name", "frmCollisionCopy",
+            "--new-unique-id", "rollback-copy-guid",
+            "--json"
+        },
+        temp_root);
+    expect(rollback_process.exit_code == 4,
+        "#1448: visual object duplicate-batch JSON should reject later identity collisions");
+    expect_contains(rollback_process.stdout_text, "\"visualObjectDuplicateBatch\": null",
+        "#1448: failed visual object duplicate-batch JSON should not expose a batch duplicate object");
+    expect_contains(rollback_process.stdout_text, "The requested replacement identity already exists in the asset.",
+        "#1448: collision visual object duplicate-batch JSON should report editor errors");
+    expect(visual_object_count(rollback_path) == 2U &&
+            !visual_object_exists(rollback_path, "rollback-copy-guid"),
+        "#1448: failed visual object duplicate-batch commands should roll back earlier duplicates");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-batch",
+            "--selected-unique-id", "existing-textbox-guid",
+            "--new-object-name", "missingPathCopy",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1448: visual object duplicate-batch JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectDuplicateBatch\": null",
+        "#1448: missing-path visual object duplicate-batch JSON should not expose a batch duplicate object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1448: missing-path visual object duplicate-batch JSON should report parser errors");
+
+    const auto no_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-batch",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(no_items_process.exit_code == 2,
+        "#1448: visual object duplicate-batch JSON should reject empty batches");
+    expect_contains(no_items_process.stdout_text, "No visual object duplicates were provided.",
+        "#1448: empty visual object duplicate-batch JSON should report parser errors");
+
+    const auto option_before_item_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-batch",
+            "--path", form_path.string(),
+            "--new-object-name", "NoSelectedObject",
+            "--selected-unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(option_before_item_process.exit_code == 2,
+        "#1448: visual object duplicate-batch JSON should reject item options before selected objects");
+    expect_contains(option_before_item_process.stdout_text,
+        "Visual object duplicate batch item options require a preceding selected-object selector.",
+        "#1448: option-before-item visual object duplicate-batch JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-batch",
+            "--path", form_path.string(),
+            "--selected-record", "-1",
+            "--new-object-name", "BadRecordCopy",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1448: visual object duplicate-batch JSON should reject invalid selected-record values");
+    expect_contains(invalid_record_process.stdout_text, "The --selected-record value must be a non-negative integer.",
+        "#1448: invalid-record visual object duplicate-batch JSON should report parser errors");
+
+    const fs::path missing_object_path = temp_root / "duplicate_batch_missing_object.scx";
+    write_synthetic_form_table_for_toolbox_creation(missing_object_path);
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-batch",
+            "--path", missing_object_path.string(),
+            "--selected-object-name", "missingObject",
+            "--new-object-name", "missingObjectCopy",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1448: visual object duplicate-batch JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualObjectDuplicateBatch\": null",
+        "#1448: unresolved visual object duplicate-batch JSON should not expose a batch duplicate object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1448: unresolved visual object duplicate-batch JSON should report editor errors");
+    expect(visual_object_count(missing_object_path) == 2U,
+        "#1448: unresolved visual object duplicate-batch commands should not mutate the asset");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-duplicate-batch --path <asset>",
+        "#1448: usage text should expose visual object duplicate-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_renames_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -46472,6 +46633,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_duplicates_visual_object_batches(argv[1]);
     test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_visual_object_batches(argv[1]);
