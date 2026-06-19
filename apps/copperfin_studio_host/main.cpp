@@ -31,6 +31,10 @@
 #include <utility>
 #include <vector>
 
+#if !defined(_WIN32)
+#include <sys/wait.h>
+#endif
+
 namespace {
 
 void print_usage() {
@@ -286,6 +290,23 @@ std::string build_shell_command(const std::string& launch_command, const std::ve
         command += shell_quote(argument);
     }
     return command;
+}
+
+int normalize_system_exit_code(int system_status) {
+    if (system_status == -1) {
+        return -1;
+    }
+#if defined(_WIN32)
+    return system_status;
+#else
+    if (WIFEXITED(system_status)) {
+        return WEXITSTATUS(system_status);
+    }
+    if (WIFSIGNALED(system_status)) {
+        return 128 + WTERMSIG(system_status);
+    }
+    return system_status;
+#endif
 }
 
 struct ToolboxCreateParseResult {
@@ -15166,7 +15187,7 @@ int main(int argc, char** argv) {
             .dispatch_plan = dispatch_result.plan,
             .admit_execution = builder_execute_parse.admit_execution,
             .executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
-                const int exit_code = std::system(executed_command.c_str());
+                const int exit_code = normalize_system_exit_code(std::system(executed_command.c_str()));
                 return copperfin::studio::StudioBuilderDispatchExecutionObservation{
                     .launched = true,
                     .exit_code = exit_code,
@@ -15610,7 +15631,7 @@ int main(int argc, char** argv) {
             .dispatch_plan = dispatch_result.plan,
             .admit_execution = editor_action_execute_parse.admit_execution,
             .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
-                const int exit_code = std::system(executed_command.c_str());
+                const int exit_code = normalize_system_exit_code(std::system(executed_command.c_str()));
                 return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
                     .launched = true,
                     .exit_code = exit_code,
@@ -16047,7 +16068,7 @@ int main(int argc, char** argv) {
             .dispatch_plan = dispatch_result.plan,
             .admit_execution = toolbox_execute_parse.admit_execution,
             .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
-                const int exit_code = std::system(executed_command.c_str());
+                const int exit_code = normalize_system_exit_code(std::system(executed_command.c_str()));
                 return copperfin::studio::StudioToolboxDispatchExecutionObservation{
                     .launched = true,
                     .exit_code = exit_code,
@@ -16413,7 +16434,7 @@ int main(int argc, char** argv) {
                 const std::string command = build_shell_command(
                     designer_execute_parse.editor_action_launch_command,
                     plan.dispatch_arguments);
-                const int exit_code = std::system(command.c_str());
+                const int exit_code = normalize_system_exit_code(std::system(command.c_str()));
                 return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
                     .launched = true,
                     .exit_code = exit_code,
@@ -16428,7 +16449,7 @@ int main(int argc, char** argv) {
                 const std::string command = build_shell_command(
                     designer_execute_parse.builder_launch_command,
                     plan.dispatch_arguments);
-                const int exit_code = std::system(command.c_str());
+                const int exit_code = normalize_system_exit_code(std::system(command.c_str()));
                 return copperfin::studio::StudioBuilderDispatchExecutionObservation{
                     .launched = true,
                     .exit_code = exit_code,
@@ -16443,7 +16464,7 @@ int main(int argc, char** argv) {
                 const std::string command = build_shell_command(
                     designer_execute_parse.toolbox_launch_command,
                     plan.dispatch_arguments);
-                const int exit_code = std::system(command.c_str());
+                const int exit_code = normalize_system_exit_code(std::system(command.c_str()));
                 return copperfin::studio::StudioToolboxDispatchExecutionObservation{
                     .launched = true,
                     .exit_code = exit_code,

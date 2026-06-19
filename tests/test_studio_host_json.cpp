@@ -5532,8 +5532,8 @@ void test_studio_host_json_exposes_builder_execution(const std::string& studio_h
     expect_contains(failed_command_process.stdout_text,
         "Builder launch command returned a non-zero exit code.",
         "#1319: failed builder execution JSON should report process errors");
-    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": ",
-        "#1319: failed builder execution JSON should expose observed exit status");
+    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": 1",
+        "#1347: failed builder execution JSON should report normalized child exit codes");
     expect_contains(failed_command_process.stdout_text, "\"executed\": false",
         "#1319: failed builder execution JSON should not mark execution complete");
 
@@ -6788,8 +6788,8 @@ void test_studio_host_json_exposes_editor_action_execution(const std::string& st
     expect_contains(failed_command_process.stdout_text,
         "Editor action launch command returned a non-zero exit code.",
         "#1321: failed editor action execution JSON should report process errors");
-    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": ",
-        "#1321: failed editor action execution JSON should expose observed exit status");
+    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": 1",
+        "#1347: failed editor action execution JSON should report normalized child exit codes");
     expect_contains(failed_command_process.stdout_text, "\"executed\": false",
         "#1321: failed editor action execution JSON should not mark execution complete");
 
@@ -8064,8 +8064,8 @@ void test_studio_host_json_exposes_toolbox_execution(const std::string& studio_h
     expect_contains(failed_command_process.stdout_text,
         "Toolbox launch command returned a non-zero exit code.",
         "#1323: failed toolbox execution JSON should report process errors");
-    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": ",
-        "#1323: failed toolbox execution JSON should expose observed exit status");
+    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": 1",
+        "#1347: failed toolbox execution JSON should report normalized child exit codes");
     expect_contains(failed_command_process.stdout_text, "\"executed\": false",
         "#1323: failed toolbox execution JSON should not mark execution complete");
 
@@ -9269,6 +9269,8 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(failed_builder_process.stdout_text,
         "\"failedBuilderErrors\": [\"Designer builder launch command returned a non-zero exit code.\"",
         "#1346: failed builder execution JSON should summarize failed builder errors");
+    expect_contains(failed_builder_process.stdout_text, "\"observedExitCode\": 1",
+        "#1347: failed aggregate builder execution JSON should report normalized child exit codes");
     expect_contains(failed_builder_process.stdout_text, "\"failedEditorActionIds\": []",
         "#1345: failed builder execution JSON should preserve no failed editor actions");
     expect_contains(failed_builder_process.stdout_text, "\"failedEditorActionErrors\": []",
@@ -9326,6 +9328,8 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(failed_editor_process.stdout_text,
         "\"failedEditorActionErrors\": [\"Designer editor action launch command returned a non-zero exit code.\"",
         "#1346: failed editor action execution JSON should summarize failed editor action errors");
+    expect_contains(failed_editor_process.stdout_text, "\"observedExitCode\": 1",
+        "#1347: failed aggregate editor action execution JSON should report normalized child exit codes");
     expect_contains(failed_editor_process.stdout_text, "\"failedBuilderIds\": []",
         "#1345: failed editor action execution JSON should preserve no failed builders");
     expect_contains(failed_editor_process.stdout_text, "\"failedBuilderErrors\": []",
@@ -9394,6 +9398,8 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(failed_toolbox_process.stdout_text,
         "\"toolboxError\": \"Designer toolbox launch command returned a non-zero exit code.\"",
         "#1346: failed toolbox execution JSON should summarize failed toolbox errors");
+    expect_contains(failed_toolbox_process.stdout_text, "\"observedExitCode\": 1",
+        "#1347: failed aggregate toolbox execution JSON should report normalized child exit codes");
     expect_contains(failed_toolbox_process.stdout_text, "\"toolboxContext\": \"form\"",
         "#1341: failed toolbox execution JSON should preserve planned toolbox context");
     expect_contains(failed_toolbox_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
