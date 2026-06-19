@@ -60,6 +60,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-property-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-filter --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--property-filter-text <text>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-property-clear --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --builder-launch-plan <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --builder-launch-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --selection-builder-launch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
@@ -833,6 +834,16 @@ struct VisualPropertyQueryParseResult {
     bool property_name_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectPropertyQueryRequest request;
+};
+
+struct VisualPropertyClearParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    bool property_name_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectPropertyClearRequest request;
 };
 
 struct VisualPropertyListParseResult {
@@ -4181,6 +4192,65 @@ VisualPropertyQueryParseResult parse_visual_property_query_arguments(const std::
             result.property_name_provided = !result.request.property_name.empty();
         } else {
             fail("Unknown visual-property-query option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && !result.property_name_provided) {
+        fail("No property name was provided.");
+    }
+    return result;
+}
+
+VisualPropertyClearParseResult parse_visual_property_clear_arguments(const std::vector<std::string>& args) {
+    VisualPropertyClearParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-property-clear") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-property-clear") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--property-name") {
+            result.request.property_name = require_value(argument);
+            result.property_name_provided = !result.request.property_name.empty();
+        } else {
+            fail("Unknown visual-property-clear option: " + argument);
         }
     }
 
@@ -20652,6 +20722,36 @@ int main(int argc, char** argv) {
             print_json_visual_property_query_result(result);
         } else {
             print_text_visual_property_query_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_property_clear_parse = parse_visual_property_clear_arguments(args);
+    if (visual_property_clear_parse.requested) {
+        if (!visual_property_clear_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_property_clear_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_property_clear_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status, "visualPropertyClear");
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::clear_visual_object_property(
+            visual_property_clear_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_property_clear_parse.request.path);
+        if (visual_property_clear_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status, "visualPropertyClear");
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
         }
         return result.ok ? 0 : 4;
     }

@@ -8093,6 +8093,147 @@ void test_studio_host_json_exposes_visual_property_query(const std::string& stud
     }
 }
 
+void test_studio_host_json_clears_visual_properties(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_property_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path direct_path = temp_root / "direct_clear.scx";
+    write_synthetic_form_table_for_toolbox_creation(direct_path);
+
+    const auto direct_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-clear",
+            "--path", direct_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(direct_process.exit_code == 0,
+        "#1435: visual property clear JSON should exit successfully for direct fields");
+    expect_contains(direct_process.stdout_text, "\"visualPropertyClear\": {",
+        "#1435: visual property clear JSON should expose a clear object");
+    expect_contains(direct_process.stdout_text, "\"affectedObjectCount\": 1",
+        "#1435: visual property clear JSON should expose affected object counts");
+    expect_contains(direct_process.stdout_text, "\"dryRun\": false",
+        "#1435: visual property clear JSON should expose committed execution state");
+    expect_contains(direct_process.stdout_text, "\"mutatesAsset\": true",
+        "#1435: visual property clear JSON should expose mutation state");
+    expect_contains(direct_process.stdout_text, "\"undoAvailable\": true",
+        "#1435: visual property clear JSON should expose undo availability");
+    expect(visual_object_property(direct_path, "existing-textbox-guid", "CAPTION").empty(),
+        "#1435: visual property clear host command should blank direct fields");
+
+    const fs::path memo_path = write_synthetic_form_table_for_property_rename(temp_root, "memo_clear.scx");
+    const auto memo_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-clear",
+            "--path", memo_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--json"
+        },
+        temp_root);
+    expect(memo_process.exit_code == 0,
+        "#1435: visual property clear JSON should exit successfully for memo-backed properties");
+    expect(visual_object_property(memo_path, "existing-textbox-guid", "ControlSource").empty() &&
+            visual_object_property(memo_path, "existing-textbox-guid", "Left") == "12",
+        "#1435: visual property clear host command should remove memo-backed assignments and preserve unrelated properties");
+
+    const auto missing_property_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-clear",
+            "--path", memo_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "MissingProperty",
+            "--json"
+        },
+        temp_root);
+    expect(missing_property_process.exit_code == 0,
+        "#1435: visual property clear JSON should preserve existing idempotent missing-property clears");
+    expect_contains(missing_property_process.stdout_text, "\"visualPropertyClear\": {",
+        "#1435: missing-property visual property clear JSON should expose a successful clear object");
+    expect(visual_object_property(memo_path, "existing-textbox-guid", "Left") == "12",
+        "#1435: missing-property visual property clear commands should not mutate unrelated properties");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-clear",
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1435: visual property clear JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualPropertyClear\": null",
+        "#1435: missing-path visual property clear JSON should not expose a clear object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1435: missing-path visual property clear JSON should report parser errors");
+
+    const auto missing_property_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-clear",
+            "--path", direct_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_property_name_process.exit_code == 2,
+        "#1435: visual property clear JSON should reject missing property names");
+    expect_contains(missing_property_name_process.stdout_text, "No property name was provided.",
+        "#1435: missing property-name visual property clear JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-clear",
+            "--path", direct_path.string(),
+            "--record", "-1",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1435: visual property clear JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1435: invalid-record visual property clear JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-clear",
+            "--path", direct_path.string(),
+            "--object-name", "missingObject",
+            "--property-name", "CAPTION",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1435: visual property clear JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualPropertyClear\": null",
+        "#1435: unresolved visual property clear JSON should not expose a clear object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1435: unresolved visual property clear JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-property-clear --path <asset>",
+        "#1435: usage text should expose visual property clear commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_property_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -43551,6 +43692,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_palette_query_filters(argv[1]);
     test_studio_host_json_exposes_visual_property_filter(argv[1]);
     test_studio_host_json_exposes_visual_property_query(argv[1]);
+    test_studio_host_json_clears_visual_properties(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
     test_studio_host_json_exposes_visual_method_list(argv[1]);
     test_studio_host_json_exposes_visual_method_query(argv[1]);
