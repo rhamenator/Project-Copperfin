@@ -4911,6 +4911,161 @@ void test_studio_host_json_exposes_selection_builder_invocation_admission_catalo
     }
 }
 
+void test_studio_host_json_exposes_selection_builder_dispatch_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selection_builder_dispatch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1276: selection builder dispatch catalog JSON should accept visual-object contexts");
+    expect_contains(visual_process.stdout_text, "\"selectionBuilderDispatchCatalog\": {",
+        "#1276: selection builder dispatch catalog JSON should expose catalog objects");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1276: selection builder dispatch catalog JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"builderCount\": 3",
+        "#1276: visual-object selection builder dispatch catalogs should expose mixed builder counts");
+    expect_contains(visual_process.stdout_text, "\"dispatchCount\": 3",
+        "#1276: visual-object selection builder dispatch catalogs should expose dispatch counts");
+    expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
+        "#1276: visual-object selection builder dispatch catalogs should expose error counts");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": false",
+        "#1276: admitted selection builder dispatch catalogs should not be dry-run");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1276: selection builder dispatch catalogs should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"builderId\": \"form-builder\"",
+        "#1276: visual-object selection builder dispatch catalogs should include form builders");
+    expect_contains(visual_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1276: visual-object selection builder dispatch catalogs should include control builders");
+    expect_contains(visual_process.stdout_text, "\"dispatchOk\": true",
+        "#1276: admitted selection builder dispatch catalogs should expose dispatch success");
+    expect_contains(visual_process.stdout_text, "\"context\": \"form\"",
+        "#1276: selection builder dispatch catalogs should expose resolved form contexts");
+    expect_contains(visual_process.stdout_text, "\"context\": \"control\"",
+        "#1276: selection builder dispatch catalogs should expose resolved control contexts");
+    expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1276: selection builder dispatch catalogs should expose command tokens");
+    expect_contains(visual_process.stdout_text, "\"entryPoint\": \"cf_builders.form_builder\"",
+        "#1276: selection builder dispatch catalogs should expose form builder entry points");
+    expect_contains(visual_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1276: selection builder dispatch catalogs should preserve asset paths");
+    expect_contains(visual_process.stdout_text, "\"recordIndex\": 1",
+        "#1276: selection builder dispatch catalogs should preserve record indexes");
+    expect_contains(visual_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1276: selection builder dispatch catalogs should preserve object names");
+    expect_contains(visual_process.stdout_text, "\"uniqueId\": \"form-guid\"",
+        "#1276: selection builder dispatch catalogs should preserve unique ids");
+    expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [",
+        "#1276: selection builder dispatch catalogs should expose dispatch arguments");
+    expect_contains(visual_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1276: selection builder dispatch catalogs should expose admitted dispatch state");
+    expect_contains(visual_process.stdout_text, "\"executed\": false",
+        "#1276: selection builder dispatch catalogs should remain non-executing");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1276: selection builder dispatch catalog JSON should accept dry-run visual catalogs");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchCount\": 0",
+        "#1276: dry-run selection builder dispatch catalogs should not admit dispatches");
+    expect_contains(dry_run_process.stdout_text, "\"errorCount\": 3",
+        "#1276: dry-run selection builder dispatch catalogs should expose dispatch errors");
+    expect_contains(dry_run_process.stdout_text,
+        "A builder dispatch request requires an admitted non-dry-run invocation.",
+        "#1276: dry-run selection builder dispatch catalogs should expose admission errors");
+
+    const auto menu_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-catalog",
+            "--selection-context", "menu_item",
+            "--path", "menus/main.mnx",
+            "--object-name", "mnuMain",
+            "--unique-id", "menu-guid",
+            "--admit-ui-launch", "true",
+            "--json"
+        },
+        temp_root);
+    expect(menu_process.exit_code == 0,
+        "#1276: selection builder dispatch catalog JSON should accept menu contexts");
+    expect_contains(menu_process.stdout_text, "\"builderId\": \"menu-designer\"",
+        "#1276: menu selection builder dispatch catalogs should expose menu designers");
+    expect_contains(menu_process.stdout_text, "\"context\": \"menu\"",
+        "#1276: menu selection builder dispatch catalogs should expose menu builder contexts");
+    expect_contains(menu_process.stdout_text, "\"entryPoint\": \"cf_builders.menu_designer\"",
+        "#1276: menu selection builder dispatch catalogs should expose menu entry points");
+
+    const auto unknown_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-catalog",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_selection_process.exit_code == 2,
+        "#1276: selection builder dispatch catalog JSON should reject unknown selections");
+    expect_contains(unknown_selection_process.stdout_text,
+        "\"selectionBuilderDispatchCatalog\": null",
+        "#1276: invalid selection builder dispatch catalog JSON should not expose catalog objects");
+    expect_contains(unknown_selection_process.stdout_text, "Unknown selection context token: unknown",
+        "#1276: invalid selection builder dispatch catalog contexts should report parser errors");
+
+    const auto missing_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selection_process.exit_code == 2,
+        "#1276: selection builder dispatch catalog JSON should reject missing selections");
+    expect_contains(missing_selection_process.stdout_text, "No selection context was provided.",
+        "#1276: missing selection builder dispatch catalog contexts should report parser errors");
+
+    const auto invalid_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-builder-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--admit-ui-launch", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_bool_process.exit_code == 2,
+        "#1276: selection builder dispatch catalog JSON should reject invalid booleans");
+    expect_contains(invalid_bool_process.stdout_text,
+        "The --admit-ui-launch value must be true or false.",
+        "#1276: invalid selection builder dispatch catalog booleans should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -32999,6 +33154,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_invocation_admission(argv[1]);
     test_studio_host_json_exposes_builder_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_invocation_admission_catalog(argv[1]);
+    test_studio_host_json_exposes_selection_builder_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
     test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
