@@ -28,13 +28,13 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1446`, exposing selected-object visual property update batches through Studio host JSON. `#1445` is the immediately preceding visual object reparent-batch host JSON slice. These issues remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1447`, exposing multi-object visual update batches through Studio host JSON. `#1446` is the immediately preceding selected-object visual property update-batch host JSON slice. These issues remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1446`, exposing selected-object visual property update batches through Studio host JSON. `#1445` remains the latest prior visual object reparent-batch host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, and unmatched-selection JSON coverage.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1447`, exposing multi-object visual update batches through Studio host JSON. `#1446` remains the latest prior selected-object visual property update-batch host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, and unmatched-selection JSON coverage.
 
-Next: continue `#23` by opening or picking the next prompt-sized designer interaction, builder/wizard invocation, toolbox-flow, or context-aware editor child before coding. A fresh visual-object host-wrapper scanner found missed editor APIs after `#1202`; `#1445` covers reparent batches, `#1446` covers selected-object property update batches, and the remaining known miss is `update_visual_object_batch`. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
+Next: continue `#23` by opening or picking the next prompt-sized designer interaction, builder/wizard invocation, toolbox-flow, or context-aware editor child before coding. A fresh visual-object host-wrapper scanner found missed editor APIs after `#1202`; `#1445` covers reparent batches, `#1446` covers selected-object property update batches, and `#1447` covers multi-object update batches. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
 Language-service queue update:
 

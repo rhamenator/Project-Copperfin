@@ -14,9 +14,9 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest implemented E2 slice: `#1446`, which exposes selected-object visual property update batches through Studio host JSON. `#1445` is the immediately preceding visual object reparent-batch host JSON slice. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
+- Latest implemented E2 slice: `#1447`, which exposes multi-object visual update batches through Studio host JSON. `#1446` is the immediately preceding selected-object visual property update-batch host JSON slice. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
 - Current continuation shape: continue prompt-sized E2/#23 children in designer interactions, builder/wizard invocation, toolbox flows, and context-aware editors, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
-- Next work: continue prompt-sized `#23` children in designer interactions, builder/wizard invocation, toolbox flows, or context-aware editors. A fresh visual-object host-wrapper scanner found missed editor APIs after `#1202`; `#1445` covers reparent batches, `#1446` covers selected-object property update batches, and the remaining known miss is `update_visual_object_batch`. Do not open more wrapper slices after those unless new APIs are added or the scanner regresses.
+- Next work: continue prompt-sized `#23` children in designer interactions, builder/wizard invocation, toolbox flows, or context-aware editors. A fresh visual-object host-wrapper scanner found missed editor APIs after `#1202`; `#1445` covers reparent batches, `#1446` covers selected-object property update batches, and `#1447` covers multi-object update batches. Do not open more wrapper slices after those unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
 - If any older handoff, prompt, transfer note, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, `#94`, or `#154`-`#203` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
 - Do not continue work by counting forward through any historical numbered issue list in this file; use the live GitHub issue tree and the "Current Active Queue" table instead.
@@ -357,6 +357,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
+| `#23` | `#1447` implemented; closure pending approval | Studio host JSON now exposes multi-object property update-batch mutations with nested rollback and undo metadata |
 | `#23` | `#1446` implemented; closure pending approval | Studio host JSON now exposes selected-object property update-batch mutations with rollback and undo metadata |
 | `#23` | `#1445` implemented; closure pending approval | Studio host JSON now exposes visual-object reparent-batch mutations with rollback, undo metadata, and cycle rejection |
 | `#23` | `#1444` implemented; closure pending approval | Studio host JSON now exposes selected-object property reorder-batch mutations with rollback and undo metadata |

@@ -22396,6 +22396,207 @@ void test_studio_host_json_updates_visual_property_batches(const std::string& st
     }
 }
 
+void test_studio_host_json_updates_visual_object_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_update_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "object_update_batch.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+
+    const auto update_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", form_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--property-value", "TextBatch",
+            "--property-name", "ToolTipText",
+            "--property-value", "Hover text",
+            "--selected-object-name", "frmCustomer",
+            "--property-name", "CAPTION",
+            "--property-value", "FormBatch",
+            "--json"
+        },
+        temp_root);
+    expect(update_batch_process.exit_code == 0,
+        "#1447: visual object update-batch JSON should exit successfully for valid batches");
+    expect_contains(update_batch_process.stdout_text, "\"visualObjectUpdateBatch\": {",
+        "#1447: visual object update-batch JSON should expose a batch update object");
+    expect_contains(update_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+        "#1447: visual object update-batch JSON should expose affected object counts");
+    expect_contains(update_batch_process.stdout_text, "\"dryRun\": false",
+        "#1447: visual object update-batch JSON should expose committed execution state");
+    expect_contains(update_batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1447: visual object update-batch JSON should expose mutation state");
+    expect_contains(update_batch_process.stdout_text, "\"undoAvailable\": true",
+        "#1447: visual object update-batch JSON should expose undo availability");
+    expect(visual_object_property(form_path, "existing-textbox-guid", "CAPTION") == "TextBatch" &&
+            visual_object_property(form_path, "existing-textbox-guid", "ToolTipText") == "Hover text" &&
+            visual_object_property(form_path, "form-guid", "CAPTION") == "FormBatch",
+        "#1447: visual object update-batch host command should update multiple selected objects");
+
+    const fs::path later_object_path = temp_root / "object_update_batch_later_object.scx";
+    write_synthetic_form_table_for_toolbox_creation(later_object_path);
+    const auto later_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", later_object_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--property-value", "ShouldRollback",
+            "--selected-object-name", "missingObject",
+            "--property-name", "CAPTION",
+            "--property-value", "Noop",
+            "--json"
+        },
+        temp_root);
+    expect(later_object_process.exit_code == 4,
+        "#1447: visual object update-batch JSON should reject unresolved later objects");
+    expect_contains(later_object_process.stdout_text, "\"visualObjectUpdateBatch\": null",
+        "#1447: failed visual object update-batch JSON should not expose a batch update object");
+    expect_contains(later_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1447: unresolved later object visual object update-batch JSON should report editor errors");
+    expect(visual_object_property(later_object_path, "existing-textbox-guid", "CAPTION") == "Existing" &&
+            visual_object_property(later_object_path, "form-guid", "CAPTION") == "Customer",
+        "#1447: failed visual object update-batch commands should roll back earlier object changes");
+
+    const fs::path later_property_path = temp_root / "object_update_batch_later_property.scx";
+    write_synthetic_form_table_for_toolbox_creation(later_property_path);
+    const auto later_property_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", later_property_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--property-value", "ShouldRollback",
+            "--selected-unique-id", "form-guid",
+            "--property-name", "CAPTION",
+            "--property-value", "FormRollback",
+            "--property-name", "",
+            "--property-value", "Noop",
+            "--json"
+        },
+        temp_root);
+    expect(later_property_process.exit_code == 4,
+        "#1447: visual object update-batch JSON should reject missing later property names");
+    expect_contains(later_property_process.stdout_text, "No property name was provided.",
+        "#1447: missing later property visual object update-batch JSON should report editor errors");
+    expect(visual_object_property(later_property_path, "existing-textbox-guid", "CAPTION") == "Existing" &&
+            visual_object_property(later_property_path, "form-guid", "CAPTION") == "Customer",
+        "#1447: failed visual object update-batch commands should roll back later property changes");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--selected-unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--property-value", "MissingPath",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1447: visual object update-batch JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectUpdateBatch\": null",
+        "#1447: missing-path visual object update-batch JSON should not expose a batch update object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1447: missing-path visual object update-batch JSON should report parser errors");
+
+    const auto no_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(no_items_process.exit_code == 2,
+        "#1447: visual object update-batch JSON should reject empty object batches");
+    expect_contains(no_items_process.stdout_text, "No visual object edits were provided.",
+        "#1447: empty visual object update-batch JSON should report parser errors");
+
+    const auto property_before_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", form_path.string(),
+            "--property-name", "CAPTION",
+            "--property-value", "NoObject",
+            "--json"
+        },
+        temp_root);
+    expect(property_before_object_process.exit_code == 2,
+        "#1447: visual object update-batch JSON should reject properties before selected objects");
+    expect_contains(property_before_object_process.stdout_text,
+        "Visual object update batch property options require a preceding selected-object selector.",
+        "#1447: property-before-object visual object update-batch JSON should report parser errors");
+
+    const auto value_before_property_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", form_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--property-value", "NoProperty",
+            "--json"
+        },
+        temp_root);
+    expect(value_before_property_process.exit_code == 2,
+        "#1447: visual object update-batch JSON should reject property values before property names");
+    expect_contains(value_before_property_process.stdout_text,
+        "Visual object update batch property values require a preceding --property-name.",
+        "#1447: value-before-property visual object update-batch JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", form_path.string(),
+            "--selected-record", "-1",
+            "--property-name", "CAPTION",
+            "--property-value", "BadRecord",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1447: visual object update-batch JSON should reject invalid selected-record values");
+    expect_contains(invalid_record_process.stdout_text, "The --selected-record value must be a non-negative integer.",
+        "#1447: invalid-record visual object update-batch JSON should report parser errors");
+
+    const fs::path empty_object_path = temp_root / "object_update_batch_empty_object.scx";
+    write_synthetic_form_table_for_toolbox_creation(empty_object_path);
+    const auto empty_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-update-batch",
+            "--path", empty_object_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(empty_object_process.exit_code == 4,
+        "#1447: visual object update-batch JSON should reject per-object empty property lists");
+    expect_contains(empty_object_process.stdout_text, "No property changes were provided.",
+        "#1447: empty-object visual object update-batch JSON should report editor errors");
+    expect(visual_object_property(empty_object_path, "existing-textbox-guid", "CAPTION") == "Existing",
+        "#1447: empty-object visual object update-batch commands should not mutate properties");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-update-batch --path <asset>",
+        "#1447: usage text should expose visual object update-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_properties_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -46263,6 +46464,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_creates_toolbox_objects(argv[1]);
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_visual_property_batches(argv[1]);
+    test_studio_host_json_updates_visual_object_batches(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_applies_deleted_states_by_stable_selectors(argv[1]);
