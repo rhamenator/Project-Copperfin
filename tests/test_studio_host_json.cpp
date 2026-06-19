@@ -3818,6 +3818,79 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
     }
 }
 
+void test_studio_host_json_exposes_label_layout_parity(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_layout_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_json(label_path);
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "3", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host label layout object stdout:\n" << object_process.stdout_text << "\n";
+        std::cerr << "studio host label layout object stderr:\n" << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0,
+           "#1481: label layout JSON should exit successfully for selected label objects");
+    expect_contains(object_process.stdout_text, "\"reportLayout\": {",
+                    "#1481: label documents should expose report-layout JSON");
+    expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                    "#1481: label layout JSON should identify label assets");
+    expect_contains(object_process.stdout_text, "\"documentTitle\": \"mailing.lbx\"",
+                    "#1481: label layout JSON should preserve label document titles");
+    expect_contains(object_process.stdout_text, "\"settingCount\": 3",
+                    "#1481: label layout JSON should expose live settings");
+    expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                    "#1481: label layout JSON should expose live sections");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1481: selected label objects should reuse report object selection kind");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1481: selected label objects should expose selected report-object JSON");
+    expect_contains(object_process.stdout_text, "\"objectKind\": \"field\"",
+                    "#1481: selected label objects should preserve report object kinds");
+    expect_contains(object_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1481: selected label objects should expose containing section ids");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1481: selected label objects should expose containing section availability");
+
+    const auto section_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "2", "--json"},
+        temp_root);
+
+    if (section_process.exit_code != 0) {
+        std::cerr << "studio host label layout section stdout:\n" << section_process.stdout_text << "\n";
+        std::cerr << "studio host label layout section stderr:\n" << section_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(section_process.exit_code == 0,
+           "#1481: label layout JSON should exit successfully for selected label sections");
+    expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1481: selected label sections should reuse report section selection kind");
+    expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1481: selected label sections should expose selected section JSON");
+    expect_contains(section_process.stdout_text, "\"bandKind\": \"detail\"",
+                    "#1481: selected label sections should expose band metadata");
+    expect_contains(section_process.stdout_text, "\"objectCount\": 1",
+                    "#1481: selected label sections should expose section object counts");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_sections(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -48620,6 +48693,7 @@ int main(int argc, char** argv) {
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
+    test_studio_host_json_exposes_label_layout_parity(argv[1]);
     test_studio_host_json_exposes_selected_report_sections(argv[1]);
     test_studio_host_json_exposes_selected_report_objects(argv[1]);
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);
