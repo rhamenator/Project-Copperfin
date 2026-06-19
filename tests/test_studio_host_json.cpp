@@ -4987,6 +4987,70 @@ void test_studio_host_json_distributes_report_layout_objects_by_stable_selectors
     }
 }
 
+void test_studio_host_json_distributes_label_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_layout_distribute_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_distribution_json(label_path);
+
+    const auto distribute_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--record", "3",
+            "--distribute-object",
+            "--distribution-mode", "horizontal",
+            "--distribute-target-unique-id", "left-field-guid",
+            "--distribute-target-unique-id", "middle-field-guid",
+            "--distribute-target-unique-id", "right-field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (distribute_process.exit_code != 0) {
+        std::cerr << "studio host label object distribute stdout:\n" << distribute_process.stdout_text << "\n";
+        std::cerr << "studio host label object distribute stderr:\n" << distribute_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(distribute_process.exit_code == 0,
+           "#1488: label layout object distribution should exit successfully");
+    expect(visual_object_property(label_path, "left-field-guid", "HPOS") == "100" &&
+               visual_object_property(label_path, "middle-field-guid", "HPOS") == "400" &&
+               visual_object_property(label_path, "right-field-guid", "HPOS") == "700",
+           "#1488: label layout object distribution should evenly position the middle LBX object");
+    expect(visual_object_property(label_path, "middle-field-guid", "VPOS") == "2600" &&
+               visual_object_property(label_path, "middle-field-guid", "WIDTH") == "50" &&
+               visual_object_property(label_path, "middle-field-guid", "HEIGHT") == "200",
+           "#1488: label layout object horizontal distribution should preserve LBX vertical geometry and size");
+    expect_contains(distribute_process.stdout_text, "\"isLabel\": true",
+                    "#1488: distributed label layout JSON should retain label identity");
+    expect_contains(distribute_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1488: distributed label object JSON should retain selected-object availability");
+    expect_contains(distribute_process.stdout_text, "\"left\": 400",
+                    "#1488: distributed label object JSON should expose updated left coordinates");
+    expect_contains(distribute_process.stdout_text, "\"right\": 450",
+                    "#1488: distributed label object JSON should recompute right-edge coordinates");
+    expect_contains(distribute_process.stdout_text, "\"sectionObjectIndex\": 1",
+                    "#1488: distributed label object JSON should preserve sorted section object order");
+    expect_contains(distribute_process.stdout_text, "\"sectionObjectCount\": 3",
+                    "#1488: distributed label object JSON should expose containing section object counts");
+    expect_contains(distribute_process.stdout_text, "\"containingSectionId\": \"detail_1\"",
+                    "#1488: distributed label object JSON should preserve containing section metadata");
+    expect_contains(distribute_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1488: distributed label object JSON should keep selected containing-section availability");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -49090,6 +49154,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_distributes_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
