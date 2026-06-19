@@ -9230,6 +9230,68 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "\"executedCommand\": \"'/bin/false' '--command-token' 'studio.builder.invoke'",
         "#1340: failed designer execution JSON should preserve the failed builder command");
 
+    const auto failed_editor_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "true",
+            "--editor-action-launch-command", "/bin/false",
+            "--builder-launch-command", "/bin/true",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(failed_editor_process.exit_code == 4,
+        "#1341: designer execution JSON should fail when editor action executions fail");
+    expect_contains(failed_editor_process.stdout_text,
+        "Designer editor action launch command returned a non-zero exit code.",
+        "#1341: failed editor action execution JSON should expose child errors");
+    expect_contains(failed_editor_process.stdout_text, "\"actionId\": \"show-property-grid\"",
+        "#1341: failed editor action execution JSON should preserve planned editor action identity");
+    expect_contains(failed_editor_process.stdout_text, "\"commandToken\": \"studio.property_grid.show\"",
+        "#1341: failed editor action execution JSON should preserve planned editor action command token");
+    expect_contains(failed_editor_process.stdout_text,
+        "\"dispatchArguments\": [\"--command-token\", \"studio.property_grid.show\"",
+        "#1341: failed editor action execution JSON should preserve planned editor action dispatch arguments");
+    expect_contains(failed_editor_process.stdout_text,
+        "\"executedCommand\": \"'/bin/false' '--command-token' 'studio.property_grid.show'",
+        "#1341: failed editor action execution JSON should preserve the failed editor action command");
+
+    const auto failed_toolbox_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "true",
+            "--editor-action-launch-command", "/bin/true",
+            "--builder-launch-command", "/bin/true",
+            "--toolbox-launch-command", "/bin/false",
+            "--json"
+        },
+        temp_root);
+    expect(failed_toolbox_process.exit_code == 4,
+        "#1341: designer execution JSON should fail when toolbox execution fails");
+    expect_contains(failed_toolbox_process.stdout_text,
+        "Designer toolbox launch command returned a non-zero exit code.",
+        "#1341: failed toolbox execution JSON should expose child errors");
+    expect_contains(failed_toolbox_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1341: failed toolbox execution JSON should preserve planned toolbox context");
+    expect_contains(failed_toolbox_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
+        "#1341: failed toolbox execution JSON should preserve planned toolbox command token");
+    expect_contains(failed_toolbox_process.stdout_text,
+        "\"dispatchArguments\": [\"--command-token\", \"studio.toolbox.palette.invoke\"",
+        "#1341: failed toolbox execution JSON should preserve planned toolbox dispatch arguments");
+    expect_contains(failed_toolbox_process.stdout_text,
+        "\"executedCommand\": \"'/bin/false' '--command-token' 'studio.toolbox.palette.invoke'",
+        "#1341: failed toolbox execution JSON should preserve the failed toolbox command");
+
     const auto unknown_context_process = run_process_capture(
         studio_host_path,
         {
