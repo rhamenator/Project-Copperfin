@@ -12,6 +12,38 @@ void append_argument(std::vector<std::string>& arguments, std::string key, std::
     arguments.push_back(std::move(value));
 }
 
+std::string toolbox_dispatch_execution_readiness_error(
+    const StudioToolboxDispatchResult& dispatch,
+    bool admit_execution) {
+    if (!dispatch.ok) {
+        return dispatch.error;
+    }
+    if (!admit_execution) {
+        return "A toolbox dispatch execution catalog entry requires explicit execution admission.";
+    }
+    const auto& dispatch_plan = dispatch.plan;
+    if (dispatch_plan.command_token.empty()) {
+        return "A toolbox dispatch execution catalog entry requires a command token.";
+    }
+    if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
+        return "A toolbox dispatch execution catalog entry requires an admitted non-dry-run dispatch.";
+    }
+    if (dispatch_plan.executed) {
+        return "A toolbox dispatch execution catalog entry requires a non-executed dispatch.";
+    }
+    if (dispatch_plan.items.empty() || dispatch_plan.item_count == 0U) {
+        return "A toolbox dispatch execution catalog entry requires validated toolbox item metadata.";
+    }
+    if (dispatch_plan.item_count != dispatch_plan.items.size()) {
+        return "A toolbox dispatch execution catalog entry requires consistent toolbox item metadata.";
+    }
+    if (dispatch_plan.dispatch_arguments.empty()) {
+        return "A toolbox dispatch execution catalog entry requires dispatch arguments.";
+    }
+
+    return {};
+}
+
 }  // namespace
 
 StudioToolboxDispatchResult plan_studio_toolbox_dispatch(
@@ -304,6 +336,73 @@ StudioToolboxDispatchExecutionResult execute_studio_toolbox_dispatch(
         .executed = true,
         .dry_run = false,
         .mutates_asset = mutates_asset
+    };
+}
+
+StudioToolboxDispatchExecutionCatalogResult plan_studio_toolbox_dispatch_execution_catalog(
+    const StudioToolboxDispatchExecutionCatalogRequest& request) {
+    auto dispatch_catalog = plan_studio_toolbox_dispatch_catalog({
+        .toolbox_context = request.toolbox_context,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .admit_palette_invocation = request.admit_palette_invocation
+    });
+    if (!dispatch_catalog.ok) {
+        return {
+            .ok = false,
+            .error = dispatch_catalog.error,
+            .toolbox_context = request.toolbox_context,
+            .command_token = {},
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .item_count = 0U,
+            .items = {},
+            .invocation_admission = {},
+            .dispatch = {},
+            .execution_ready_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    const auto execution_error = toolbox_dispatch_execution_readiness_error(
+        dispatch_catalog.dispatch, request.admit_execution);
+    const bool execution_ready = execution_error.empty();
+    std::vector<StudioToolboxDispatchExecutionCatalogEntry> entries;
+    entries.reserve(dispatch_catalog.items.size());
+    for (const auto& item : dispatch_catalog.items) {
+        entries.push_back({
+            .item = item,
+            .execution_admitted = request.admit_execution,
+            .execution_ready = execution_ready,
+            .execution_error = execution_error
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .toolbox_context = request.toolbox_context,
+        .command_token = dispatch_catalog.command_token,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .item_count = dispatch_catalog.item_count,
+        .items = std::move(dispatch_catalog.items),
+        .invocation_admission = std::move(dispatch_catalog.invocation_admission),
+        .dispatch = std::move(dispatch_catalog.dispatch),
+        .execution_ready_count = execution_ready ? dispatch_catalog.item_count : 0U,
+        .error_count = execution_ready ? 0U : dispatch_catalog.item_count,
+        .dry_run = execution_ready ? dispatch_catalog.dispatch.plan.dry_run : true,
+        .mutates_asset = execution_ready ? dispatch_catalog.dispatch.plan.mutates_asset : false,
+        .entries = std::move(entries)
     };
 }
 

@@ -39,6 +39,17 @@ const copperfin::studio::StudioToolboxPaletteLaunchCatalogEntry* find_launch_cat
     return nullptr;
 }
 
+const copperfin::studio::StudioToolboxDispatchExecutionCatalogEntry* find_execution_catalog_entry(
+    const std::vector<copperfin::studio::StudioToolboxDispatchExecutionCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.item.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
     for (std::size_t index = 0U; (index + 1U) < arguments.size(); index += 2U) {
         if (arguments[index] == key && arguments[index + 1U] == value) {
@@ -790,6 +801,108 @@ int main() {
             dry_run_dispatch_catalog.invocation_admission.plan.dry_run &&
             dry_run_dispatch_catalog.invocation_admission.plan.item_count == dry_run_dispatch_catalog.item_count,
         "#1287: dry-run toolbox dispatch catalogs should retain admission catalog dry-run state");
+
+    const auto form_execution_catalog = copperfin::studio::plan_studio_toolbox_dispatch_execution_catalog({
+        .toolbox_context = StudioToolboxContext::form,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = true,
+        .admit_execution = true
+    });
+    expect(form_execution_catalog.ok &&
+            form_execution_catalog.toolbox_context == StudioToolboxContext::form &&
+            form_execution_catalog.command_token == "studio.toolbox.palette.invoke" &&
+            form_execution_catalog.item_count == form_items.size() &&
+            form_execution_catalog.items.size() == form_items.size() &&
+            form_execution_catalog.entries.size() == form_items.size() &&
+            form_execution_catalog.execution_ready_count == form_items.size() &&
+            form_execution_catalog.error_count == 0U &&
+            !form_execution_catalog.dry_run &&
+            !form_execution_catalog.mutates_asset &&
+            form_execution_catalog.invocation_admission.ok &&
+            form_execution_catalog.dispatch.ok &&
+            has_toolbox_item(form_execution_catalog.items, "textbox"),
+        "#1330: admitted toolbox dispatch execution catalogs should mark every toolbox item ready without launch");
+    const auto* textbox_execution = find_execution_catalog_entry(form_execution_catalog.entries, "textbox");
+    expect(textbox_execution != nullptr &&
+            textbox_execution->execution_admitted &&
+            textbox_execution->execution_ready &&
+            textbox_execution->execution_error.empty() &&
+            std::string(textbox_execution->item.vfp_class) == "TextBox" &&
+            form_execution_catalog.dispatch.plan.dispatch_admitted &&
+            !form_execution_catalog.dispatch.plan.executed &&
+            has_argument_pair(
+                form_execution_catalog.dispatch.plan.dispatch_arguments,
+                "--toolbox-context",
+                "form"),
+        "#1330: toolbox dispatch execution catalog entries should preserve item and dispatch metadata");
+
+    const auto unadmitted_execution_catalog = copperfin::studio::plan_studio_toolbox_dispatch_execution_catalog({
+        .toolbox_context = StudioToolboxContext::form,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = true,
+        .admit_execution = false
+    });
+    const auto* unadmitted_textbox_execution =
+        find_execution_catalog_entry(unadmitted_execution_catalog.entries, "textbox");
+    expect(unadmitted_execution_catalog.ok &&
+            unadmitted_execution_catalog.item_count == form_items.size() &&
+            unadmitted_execution_catalog.execution_ready_count == 0U &&
+            unadmitted_execution_catalog.error_count == form_items.size() &&
+            unadmitted_execution_catalog.dry_run &&
+            unadmitted_textbox_execution != nullptr &&
+            !unadmitted_textbox_execution->execution_admitted &&
+            !unadmitted_textbox_execution->execution_ready &&
+            unadmitted_textbox_execution->execution_error ==
+                "A toolbox dispatch execution catalog entry requires explicit execution admission.",
+        "#1330: toolbox dispatch execution catalogs should require explicit execution admission per item");
+
+    const auto dry_run_execution_catalog = copperfin::studio::plan_studio_toolbox_dispatch_execution_catalog({
+        .toolbox_context = StudioToolboxContext::form,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = false,
+        .admit_execution = true
+    });
+    const auto* dry_run_textbox_execution =
+        find_execution_catalog_entry(dry_run_execution_catalog.entries, "textbox");
+    expect(dry_run_execution_catalog.ok &&
+            dry_run_execution_catalog.item_count == form_items.size() &&
+            dry_run_execution_catalog.execution_ready_count == 0U &&
+            dry_run_execution_catalog.error_count == form_items.size() &&
+            dry_run_execution_catalog.dry_run &&
+            dry_run_textbox_execution != nullptr &&
+            dry_run_textbox_execution->execution_admitted &&
+            !dry_run_textbox_execution->execution_ready &&
+            dry_run_textbox_execution->execution_error ==
+                "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1330: toolbox dispatch execution catalogs should preserve dispatch readiness failures per item");
+
+    const auto missing_execution_catalog = copperfin::studio::plan_studio_toolbox_dispatch_execution_catalog({
+        .toolbox_context = static_cast<StudioToolboxContext>(999),
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = true,
+        .admit_execution = true
+    });
+    expect(!missing_execution_catalog.ok &&
+            missing_execution_catalog.item_count == 0U &&
+            missing_execution_catalog.items.empty() &&
+            missing_execution_catalog.entries.empty() &&
+            missing_execution_catalog.execution_ready_count == 0U &&
+            missing_execution_catalog.error_count == 0U &&
+            missing_execution_catalog.dry_run &&
+            !missing_execution_catalog.mutates_asset,
+        "#1330: toolbox dispatch execution catalogs should reject empty toolbox contexts without mutation");
 
     const auto visual_selection_dispatch_catalog =
         copperfin::studio::plan_studio_toolbox_dispatch_catalog_for_selection({
