@@ -14056,6 +14056,13 @@ void test_studio_host_json_plans_toolbox_object_creation_batches(const std::stri
         "#1246: toolbox-create-batch-plan JSON should expose requested contexts");
     expect_contains(batch_plan_process.stdout_text, "\"itemCount\": 3",
         "#1246: toolbox-create-batch-plan JSON should expose batch item counts");
+    expect_contains(batch_plan_process.stdout_text,
+        "\"planReadyItemIds\": [\"textbox\", \"textbox\", \"commandbutton\"]",
+        "#1404: toolbox-create-batch-plan JSON should summarize plan-ready item ids");
+    expect_contains(batch_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1404: toolbox-create-batch-plan JSON should expose empty blocked item ids");
+    expect_contains(batch_plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1404: toolbox-create-batch-plan JSON should expose empty blocked plan errors");
     expect_contains(batch_plan_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1246: toolbox-create-batch-plan JSON should expose textbox descriptors");
     expect_contains(batch_plan_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
@@ -14183,6 +14190,13 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batches(const
         "#1305: selection-toolbox-create-batch-plan JSON should expose plan counts");
     expect_contains(batch_plan_process.stdout_text, "\"errorCount\": 0",
         "#1305: selection-toolbox-create-batch-plan JSON should expose zero errors");
+    expect_contains(batch_plan_process.stdout_text,
+        "\"planReadyItemIds\": [\"textbox\", \"commandbutton\", \"textbox\"]",
+        "#1404: selection-toolbox-create-batch-plan JSON should summarize plan-ready item ids");
+    expect_contains(batch_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1404: selection-toolbox-create-batch-plan JSON should expose empty blocked item ids");
+    expect_contains(batch_plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1404: selection-toolbox-create-batch-plan JSON should expose empty blocked plan errors");
     expect_contains(batch_plan_process.stdout_text, "\"batchPlanOk\": true",
         "#1305: selection-toolbox-create-batch-plan JSON should expose nested batch-plan state");
     expect_contains(batch_plan_process.stdout_text, "\"batchPlan\": {",
@@ -14254,6 +14268,13 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batches(const
         "#1305: selection-toolbox-create-batch-plan JSON should reject unavailable selected-context items");
     expect_contains(unavailable_plan_process.stdout_text, "\"batchPlanOk\": false",
         "#1305: unavailable selection-toolbox-create-batch-plan JSON should expose failed batch-plan state");
+    expect_contains(unavailable_plan_process.stdout_text, "\"planReadyItemIds\": []",
+        "#1404: unavailable selection-toolbox-create-batch-plan JSON should expose empty ready item ids");
+    expect_contains(unavailable_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1404: unavailable selection-toolbox-create-batch-plan JSON should not fabricate blocked item ids");
+    expect_contains(unavailable_plan_process.stdout_text,
+        "\"planBlockedErrors\": [\"The requested toolbox item is not available in the requested designer context.\"]",
+        "#1404: unavailable selection-toolbox-create-batch-plan JSON should summarize blocked plan errors");
     expect_contains(unavailable_plan_process.stdout_text,
         "The requested toolbox item is not available in the requested designer context.",
         "#1305: unavailable selection-toolbox-create-batch-plan JSON should report planner errors");

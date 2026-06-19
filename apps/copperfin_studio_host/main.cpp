@@ -7235,6 +7235,14 @@ void print_json_toolbox_create_batch_plan_result(
     }
 
     const auto& plan = result.plan;
+    std::vector<std::string> plan_ready_item_ids;
+    plan_ready_item_ids.reserve(plan.plans.size());
+    for (const auto& create_plan : plan.plans) {
+        plan_ready_item_ids.push_back(std::string(create_plan.toolbox_item.id));
+    }
+    const std::vector<std::string> plan_blocked_item_ids;
+    const std::vector<std::string> plan_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -7247,6 +7255,15 @@ void print_json_toolbox_create_batch_plan_result(
     print_json_string(copperfin::studio::studio_toolbox_context_name(plan.toolbox_context));
     std::cout << ",\n";
     std::cout << "    \"itemCount\": " << plan.item_count << ",\n";
+    std::cout << "    \"planReadyItemIds\": ";
+    print_json_string_array(plan_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedItemIds\": ";
+    print_json_string_array(plan_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedErrors\": ";
+    print_json_string_array(plan_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (plan.mutates_asset ? "true" : "false") << ",\n";
     std::cout << "    \"plans\": [\n";
@@ -7364,6 +7381,21 @@ void print_json_toolbox_create_batch_from_dispatch_result(
 
 void print_json_selection_toolbox_create_batch_plan_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateBatchPlanResult& result) {
+    std::vector<std::string> plan_ready_item_ids;
+    std::vector<std::string> plan_blocked_item_ids;
+    std::vector<std::string> plan_blocked_errors;
+    if (result.batch_plan.ok) {
+        plan_ready_item_ids.reserve(result.batch_plan.plan.plans.size());
+        for (const auto& create_plan : result.batch_plan.plan.plans) {
+            plan_ready_item_ids.push_back(std::string(create_plan.toolbox_item.id));
+        }
+    } else {
+        const std::string& error = !result.batch_plan.error.empty() ? result.batch_plan.error : result.error;
+        if (!error.empty()) {
+            plan_blocked_errors.push_back(error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
     std::cout << "  \"selectionToolboxCreateBatchPlan\": {\n";
@@ -7384,6 +7416,15 @@ void print_json_selection_toolbox_create_batch_plan_result(
     std::cout << "    \"itemCount\": " << result.item_count << ",\n";
     std::cout << "    \"planCount\": " << result.plan_count << ",\n";
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
+    std::cout << "    \"planReadyItemIds\": ";
+    print_json_string_array(plan_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedItemIds\": ";
+    print_json_string_array(plan_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedErrors\": ";
+    print_json_string_array(plan_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
     std::cout << "    \"batchPlanOk\": " << (result.batch_plan.ok ? "true" : "false") << ",\n";
