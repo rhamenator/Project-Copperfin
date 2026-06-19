@@ -13339,6 +13339,13 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(
         "#1256: admitted toolbox-create-batch-dispatch-catalog JSON should expose non-dry-run state");
     expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": true",
         "#1256: admitted toolbox-create-batch-dispatch-catalog JSON should expose mutation intent");
+    expect_contains(catalog_process.stdout_text,
+        "\"dispatchReadyItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1380: toolbox-create-batch-dispatch-catalog JSON should summarize dispatch-ready form items");
+    expect_contains(catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1380: admitted toolbox-create-batch-dispatch-catalog JSON should summarize empty blocked item ids");
+    expect_contains(catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1380: admitted toolbox-create-batch-dispatch-catalog JSON should summarize empty blocked dispatch errors");
     expect(visual_object_count(form_path) == before_count,
         "#1256: toolbox-create-batch-dispatch-catalog host command should not mutate the visual asset");
 
@@ -13358,6 +13365,13 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(
         "#1256: non-admitted toolbox-create-batch-dispatch-catalog JSON should preserve batch plans");
     expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchCount\": 0",
         "#1256: non-admitted toolbox-create-batch-dispatch-catalog JSON should expose zero dispatches");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1380: non-admitted toolbox-create-batch-dispatch-catalog JSON should summarize empty ready item ids");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1380: non-admitted toolbox-create-batch-dispatch-catalog JSON should summarize aggregate blocked state without fabricated item ids");
+    expect_contains(dry_run_catalog_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A toolbox batch create dispatch request requires an admitted non-dry-run create operation.\"",
+        "#1380: non-admitted toolbox-create-batch-dispatch-catalog JSON should summarize blocked dispatch errors");
     expect_contains(dry_run_catalog_process.stdout_text, "\"dispatch\": null",
         "#1256: non-admitted toolbox-create-batch-dispatch-catalog JSON should not expose stale dispatch plans");
     expect_contains(dry_run_catalog_process.stdout_text,
@@ -13385,6 +13399,12 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(
         "#1256: report toolbox-create-batch-dispatch-catalog JSON should expose report contexts");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1256: report toolbox-create-batch-dispatch-catalog JSON should include label plans");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
+        "#1380: report toolbox-create-batch-dispatch-catalog JSON should summarize dispatch-ready report items");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1380: report toolbox-create-batch-dispatch-catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1380: report toolbox-create-batch-dispatch-catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1256: report toolbox-create-batch-dispatch-catalog JSON should preserve report dispatch context");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
