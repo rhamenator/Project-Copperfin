@@ -5835,6 +5835,72 @@ void test_studio_host_json_restores_report_settings_by_record_selection(const st
     }
 }
 
+void test_studio_host_json_restores_label_settings_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_settings_restore_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_deleted_settings_json(label_path);
+    expect(dbf_record_deleted(label_path, 0U),
+           "#1495: label settings restore fixture should start with deleted settings");
+
+    const auto restore_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--restore-object",
+            "--record", "0",
+            "--json"
+        },
+        temp_root);
+
+    if (restore_process.exit_code != 0) {
+        std::cerr << "studio host label settings restore stdout:\n" << restore_process.stdout_text << "\n";
+        std::cerr << "studio host label settings restore stderr:\n" << restore_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(restore_process.exit_code == 0,
+           "#1495: label settings restore should exit successfully");
+    expect(!dbf_record_deleted(label_path, 0U),
+           "#1495: label settings restore should clear the LBX settings record delete flag");
+    expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                    "#1495: restored label settings JSON should retain label identity");
+    expect_contains(restore_process.stdout_text, "\"settingCount\": 3",
+                    "#1495: restored label settings JSON should restore live setting counts");
+    expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
+                    "#1495: restored label settings JSON should clear deleted setting counts");
+    expect_contains_in_order(
+        restore_process.stdout_text,
+        {
+            "\"settings\": [",
+            "\"name\": \"ORIENTATION\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"TOPMARGIN\"",
+            "\"recordIndex\": 0"
+        },
+        "#1495: label layout JSON should move root settings back into live-setting metadata");
+    expect_contains(restore_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    "#1495: restored label settings selections should advertise selected-settings availability");
+    expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    "#1495: restored label settings selections should expose settings selection kind");
+    expect_contains(restore_process.stdout_text, "\"sectionCount\": 2",
+                    "#1495: restoring label settings should preserve live section metadata");
+    expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1495: restoring label settings should preserve deleted object metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -49549,6 +49615,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
+    test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
