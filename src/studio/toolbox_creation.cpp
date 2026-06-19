@@ -818,6 +818,70 @@ StudioToolboxObjectCreateDispatchCatalogResult plan_visual_object_create_dispatc
     };
 }
 
+StudioSelectionToolboxObjectCreateDispatchCatalogResult
+plan_visual_object_create_dispatch_catalog_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateDispatchCatalogRequest& request) {
+    auto launch_plan = plan_studio_toolbox_palette_launch({
+        .selection_context = request.selection_context,
+        .asset_path = request.path,
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    if (!launch_plan.ok) {
+        return {
+            .ok = false,
+            .error = "A selection-context toolbox object creation dispatch catalog request requires a toolbox palette.",
+            .selection_context = request.selection_context,
+            .toolbox_context = StudioToolboxContext::form,
+            .launch_plan = std::move(launch_plan),
+            .item_count = 0U,
+            .dispatch_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    auto dispatch_catalog = plan_visual_object_create_dispatch_catalog({
+        .toolbox_context = launch_plan.plan.toolbox_context,
+        .path = request.path,
+        .parent_name = request.parent_name,
+        .field_values = request.field_values,
+        .admit_create_operation = request.admit_create_operation
+    });
+    if (!dispatch_catalog.ok) {
+        return {
+            .ok = false,
+            .error = dispatch_catalog.error,
+            .selection_context = request.selection_context,
+            .toolbox_context = launch_plan.plan.toolbox_context,
+            .launch_plan = std::move(launch_plan),
+            .item_count = 0U,
+            .dispatch_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .toolbox_context = dispatch_catalog.toolbox_context,
+        .launch_plan = std::move(launch_plan),
+        .item_count = dispatch_catalog.item_count,
+        .dispatch_count = dispatch_catalog.dispatch_count,
+        .error_count = dispatch_catalog.error_count,
+        .dry_run = dispatch_catalog.dry_run,
+        .mutates_asset = dispatch_catalog.mutates_asset,
+        .entries = std::move(dispatch_catalog.entries)
+    };
+}
+
 StudioToolboxObjectCreateBatchPlanCatalogResult plan_visual_object_batch_catalog_from_toolbox_context(
     const StudioToolboxObjectCreateBatchPlanCatalogRequest& request) {
     const auto items = studio_toolbox_items_for_context(request.toolbox_context);

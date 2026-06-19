@@ -219,6 +219,28 @@ struct StudioToolboxObjectCreateDispatchCatalogResult {
     std::vector<StudioToolboxObjectCreateDispatchCatalogEntry> entries;
 };
 
+struct StudioSelectionToolboxObjectCreateDispatchCatalogRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string path;
+    std::string parent_name;
+    std::vector<vfp::VisualObjectPropertyChange> field_values;
+    bool admit_create_operation = false;
+};
+
+struct StudioSelectionToolboxObjectCreateDispatchCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    StudioToolboxPaletteLaunchPlanResult launch_plan;
+    std::size_t item_count = 0;
+    std::size_t dispatch_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioToolboxObjectCreateDispatchCatalogEntry> entries;
+};
+
 struct StudioToolboxObjectCreateBatchPlanCatalogRequest {
     StudioToolboxContext toolbox_context = StudioToolboxContext::form;
     std::string path;
@@ -282,6 +304,9 @@ plan_visual_object_catalog_from_toolbox_selection(
     const StudioSelectionToolboxObjectCreatePlanCatalogRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateDispatchCatalogResult plan_visual_object_create_dispatch_catalog(
     const StudioToolboxObjectCreateDispatchCatalogRequest& request);
+[[nodiscard]] StudioSelectionToolboxObjectCreateDispatchCatalogResult
+plan_visual_object_create_dispatch_catalog_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateDispatchCatalogRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchPlanCatalogResult plan_visual_object_batch_catalog_from_toolbox_context(
     const StudioToolboxObjectCreateBatchPlanCatalogRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchDispatchCatalogResult plan_visual_object_batch_create_dispatch_catalog(

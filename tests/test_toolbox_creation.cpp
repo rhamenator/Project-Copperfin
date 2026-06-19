@@ -1332,6 +1332,155 @@ void test_toolbox_creation_dispatch_catalog_reports_non_admitted_errors_without_
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_selection_dispatch_catalog_plans_context_dispatches_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_selection_dispatch_catalog_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto visual_catalog =
+        copperfin::studio::plan_visual_object_create_dispatch_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+            .path = table_path.string(),
+            .parent_name = "frmMain",
+            .field_values = {
+                {.property_name = "CAPTION", .property_value = "Selection Dispatch"}
+            },
+            .admit_create_operation = true
+        });
+    const auto* visual_textbox_entry = find_create_dispatch_entry(visual_catalog.entries, "textbox");
+    expect(visual_catalog.ok &&
+            visual_catalog.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            visual_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_catalog.launch_plan.ok &&
+            visual_catalog.launch_plan.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_catalog.item_count == visual_catalog.entries.size() &&
+            visual_catalog.dispatch_count == visual_catalog.item_count &&
+            visual_catalog.error_count == 0U &&
+            !visual_catalog.dry_run &&
+            visual_catalog.mutates_asset,
+        "#1294: admitted visual selection toolbox create dispatch catalogs should summarize form dispatches");
+    expect(visual_textbox_entry != nullptr &&
+            visual_textbox_entry->create_plan.ok &&
+            visual_textbox_entry->dispatch.ok &&
+            visual_textbox_entry->create_plan.plan.object_name == "txt2" &&
+            visual_textbox_entry->create_plan.plan.parent_name == "frmMain" &&
+            visual_textbox_entry->dispatch.plan.object_name == "txt2" &&
+            visual_textbox_entry->dispatch.plan.dispatch_admitted &&
+            !visual_textbox_entry->dispatch.plan.executed &&
+            visual_textbox_entry->dispatch.plan.mutates_asset &&
+            has_argument_pair(visual_textbox_entry->dispatch.plan.dispatch_arguments, "--toolbox-create",
+                "textbox") &&
+            has_argument_pair(visual_textbox_entry->dispatch.plan.dispatch_arguments, "--field-value",
+                "CAPTION=Selection Dispatch"),
+        "#1294: admitted visual selection toolbox create dispatch catalogs should preserve textbox metadata");
+    expect(object_count(table_path) == before_count,
+        "#1294: admitted visual selection toolbox create dispatch catalogs should not mutate assets");
+
+    const auto report_catalog =
+        copperfin::studio::plan_visual_object_create_dispatch_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+            .path = table_path.string(),
+            .parent_name = "DetailBand",
+            .field_values = {
+                {.property_name = "CAPTION", .property_value = "Report Selection Dispatch"}
+            },
+            .admit_create_operation = true
+        });
+    const auto* report_label_entry = find_create_dispatch_entry(report_catalog.entries, "label");
+    expect(report_catalog.ok &&
+            report_catalog.selection_context ==
+                copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            report_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            report_catalog.launch_plan.ok &&
+            report_catalog.dispatch_count == report_catalog.item_count &&
+            report_label_entry != nullptr &&
+            report_label_entry->dispatch.ok &&
+            report_label_entry->dispatch.plan.object_name == "lbl1" &&
+            has_argument_pair(report_label_entry->dispatch.plan.dispatch_arguments, "--toolbox-context",
+                "report") &&
+            find_create_dispatch_entry(report_catalog.entries, "textbox") == nullptr,
+        "#1294: admitted report selection toolbox create dispatch catalogs should resolve report-safe dispatches");
+    expect(object_count(table_path) == before_count,
+        "#1294: admitted report selection toolbox create dispatch catalogs should not mutate assets");
+
+    const auto unsupported_catalog =
+        copperfin::studio::plan_visual_object_create_dispatch_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::menu_item,
+            .path = table_path.string(),
+            .parent_name = "File",
+            .field_values = {},
+            .admit_create_operation = true
+        });
+    expect(!unsupported_catalog.ok &&
+            unsupported_catalog.error ==
+                "A selection-context toolbox object creation dispatch catalog request requires a toolbox palette." &&
+            unsupported_catalog.selection_context == copperfin::studio::StudioEditorSelectionContext::menu_item &&
+            !unsupported_catalog.launch_plan.ok &&
+            unsupported_catalog.launch_plan.error == "The selected Studio context does not expose a toolbox palette." &&
+            unsupported_catalog.item_count == 0U &&
+            unsupported_catalog.dispatch_count == 0U &&
+            unsupported_catalog.error_count == 0U &&
+            unsupported_catalog.dry_run &&
+            !unsupported_catalog.mutates_asset &&
+            unsupported_catalog.entries.empty(),
+        "#1294: unsupported selection toolbox create dispatch catalogs should reject without mutation");
+
+    expect(object_count(table_path) == before_count,
+        "#1294: selection toolbox create dispatch catalogs should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
+void test_toolbox_creation_selection_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_selection_dispatch_catalog_rejection_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto catalog =
+        copperfin::studio::plan_visual_object_create_dispatch_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+            .path = table_path.string(),
+            .parent_name = "frmMain",
+            .field_values = {},
+            .admit_create_operation = false
+        });
+    const auto* textbox_entry = find_create_dispatch_entry(catalog.entries, "textbox");
+
+    expect(catalog.ok &&
+            catalog.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            catalog.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            catalog.launch_plan.ok &&
+            catalog.item_count == catalog.entries.size() &&
+            catalog.dispatch_count == 0U &&
+            catalog.error_count == catalog.item_count &&
+            catalog.dry_run &&
+            !catalog.mutates_asset,
+        "#1294: non-admitted selection toolbox create dispatch catalogs should summarize per-item errors");
+    expect(textbox_entry != nullptr &&
+            textbox_entry->create_plan.ok &&
+            !textbox_entry->dispatch.ok &&
+            textbox_entry->dispatch.error ==
+                "A toolbox create dispatch request requires an admitted non-dry-run create operation." &&
+            textbox_entry->dispatch.plan.dispatch_arguments.empty(),
+        "#1294: non-admitted selection toolbox create dispatch entries should not expose stale arguments");
+    expect(object_count(table_path) == before_count,
+        "#1294: non-admitted selection toolbox create dispatch catalogs should not mutate assets");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2432,6 +2581,8 @@ int main() {
     test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutation();
     test_toolbox_creation_dispatch_catalog_plans_context_dispatches_without_mutation();
     test_toolbox_creation_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
+    test_toolbox_creation_selection_dispatch_catalog_plans_context_dispatches_without_mutation();
+    test_toolbox_creation_selection_dispatch_catalog_reports_non_admitted_errors_without_stale_arguments();
     test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_mutation();
     test_toolbox_creation_batch_plan_catalog_reports_planning_errors_without_stale_plans();
     test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_mutation();
