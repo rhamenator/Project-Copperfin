@@ -1424,6 +1424,45 @@ StudioSelectionToolboxObjectCreateResult create_visual_object_from_toolbox_selec
     };
 }
 
+StudioToolboxObjectCreateFromDispatchResult create_visual_object_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateFromPaletteDispatchRequest& request) {
+    auto plan_result = plan_visual_object_from_toolbox_dispatch(request);
+    if (!plan_result.ok) {
+        return {
+            .ok = false,
+            .error = plan_result.error,
+            .create_plan = plan_result,
+            .create_result = failed_create_result(plan_result.error),
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto create_result = vfp::create_visual_object({
+        .path = plan_result.plan.path,
+        .field_values = plan_result.plan.field_values
+    });
+    if (!create_result.ok) {
+        return {
+            .ok = false,
+            .error = create_result.error,
+            .create_plan = plan_result,
+            .create_result = create_result,
+            .dry_run = false,
+            .mutates_asset = false
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .create_plan = plan_result,
+        .create_result = create_result,
+        .dry_run = false,
+        .mutates_asset = true
+    };
+}
+
 StudioSelectionToolboxObjectCreateBatchResult create_visual_objects_from_toolbox_selection(
     const StudioSelectionToolboxObjectCreateBatchPlanRequest& request) {
     auto plan_result = plan_visual_objects_from_toolbox_selection(request);

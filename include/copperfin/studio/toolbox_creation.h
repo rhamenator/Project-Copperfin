@@ -83,6 +83,15 @@ struct StudioSelectionToolboxObjectCreateResult {
     bool mutates_asset = false;
 };
 
+struct StudioToolboxObjectCreateFromDispatchResult {
+    bool ok = false;
+    std::string error;
+    StudioToolboxObjectCreatePlanResult create_plan;
+    vfp::VisualObjectCreateResult create_result;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 struct StudioToolboxObjectCreateBatchItem {
     std::string toolbox_item_id;
     std::string object_name;
@@ -479,6 +488,8 @@ plan_visual_object_batch_create_dispatch_catalog_from_toolbox_selection(
     const StudioToolboxObjectCreateRequest& request);
 [[nodiscard]] StudioSelectionToolboxObjectCreateResult create_visual_object_from_toolbox_selection(
     const StudioSelectionToolboxObjectCreatePlanRequest& request);
+[[nodiscard]] StudioToolboxObjectCreateFromDispatchResult create_visual_object_from_toolbox_dispatch(
+    const StudioToolboxObjectCreateFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioSelectionToolboxObjectCreateBatchResult create_visual_objects_from_toolbox_selection(
     const StudioSelectionToolboxObjectCreateBatchPlanRequest& request);
 [[nodiscard]] vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
