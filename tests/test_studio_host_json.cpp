@@ -9096,6 +9096,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1342: admitted designer execution JSON should expose builder execution counts");
     expect_contains(visual_process.stdout_text, "\"toolboxExecutionCount\": 1",
         "#1342: admitted designer execution JSON should expose toolbox execution counts");
+    expect_contains(visual_process.stdout_text, "\"editorActionExecutedCount\": 5",
+        "#1344: admitted designer execution JSON should expose editor action executed counts");
+    expect_contains(visual_process.stdout_text, "\"builderExecutedCount\": 3",
+        "#1344: admitted designer execution JSON should expose builder executed counts");
+    expect_contains(visual_process.stdout_text, "\"toolboxExecutedCount\": 1",
+        "#1344: admitted designer execution JSON should expose toolbox executed counts");
     expect_contains(visual_process.stdout_text, "\"editorActionErrorCount\": 0",
         "#1343: admitted designer execution JSON should expose zero editor action errors");
     expect_contains(visual_process.stdout_text, "\"builderErrorCount\": 0",
@@ -9233,6 +9239,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: failed designer execution JSON should not mark aggregate execution complete");
     expect_contains(failed_builder_process.stdout_text, "\"builderId\": \"form-builder\"",
         "#1340: failed designer execution JSON should preserve planned builder identity");
+    expect_contains(failed_builder_process.stdout_text, "\"editorActionExecutedCount\": 5",
+        "#1344: failed builder execution JSON should preserve editor action executed counts");
+    expect_contains(failed_builder_process.stdout_text, "\"builderExecutedCount\": 0",
+        "#1344: failed builder execution JSON should expose zero builder executed counts");
+    expect_contains(failed_builder_process.stdout_text, "\"toolboxExecutedCount\": 1",
+        "#1344: failed builder execution JSON should preserve toolbox executed counts");
     expect_contains(failed_builder_process.stdout_text, "\"editorActionErrorCount\": 0",
         "#1343: failed builder execution JSON should preserve zero editor action errors");
     expect_contains(failed_builder_process.stdout_text, "\"builderErrorCount\": 3",
@@ -9270,6 +9282,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1341: failed editor action execution JSON should expose child errors");
     expect_contains(failed_editor_process.stdout_text, "\"actionId\": \"show-property-grid\"",
         "#1341: failed editor action execution JSON should preserve planned editor action identity");
+    expect_contains(failed_editor_process.stdout_text, "\"editorActionExecutedCount\": 0",
+        "#1344: failed editor action execution JSON should expose zero editor action executed counts");
+    expect_contains(failed_editor_process.stdout_text, "\"builderExecutedCount\": 3",
+        "#1344: failed editor action execution JSON should preserve builder executed counts");
+    expect_contains(failed_editor_process.stdout_text, "\"toolboxExecutedCount\": 1",
+        "#1344: failed editor action execution JSON should preserve toolbox executed counts");
     expect_contains(failed_editor_process.stdout_text, "\"editorActionErrorCount\": 5",
         "#1343: failed editor action execution JSON should expose editor action error counts");
     expect_contains(failed_editor_process.stdout_text, "\"builderErrorCount\": 0",
@@ -9311,6 +9329,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1342: failed toolbox execution JSON should preserve builder execution counts");
     expect_contains(failed_toolbox_process.stdout_text, "\"toolboxExecutionCount\": 1",
         "#1342: failed toolbox execution JSON should preserve toolbox execution counts");
+    expect_contains(failed_toolbox_process.stdout_text, "\"editorActionExecutedCount\": 5",
+        "#1344: failed toolbox execution JSON should preserve editor action executed counts");
+    expect_contains(failed_toolbox_process.stdout_text, "\"builderExecutedCount\": 3",
+        "#1344: failed toolbox execution JSON should preserve builder executed counts");
+    expect_contains(failed_toolbox_process.stdout_text, "\"toolboxExecutedCount\": 0",
+        "#1344: failed toolbox execution JSON should expose zero toolbox executed counts");
     expect_contains(failed_toolbox_process.stdout_text, "\"editorActionErrorCount\": 0",
         "#1343: failed toolbox execution JSON should preserve zero editor action errors");
     expect_contains(failed_toolbox_process.stdout_text, "\"builderErrorCount\": 0",

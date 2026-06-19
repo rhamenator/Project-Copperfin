@@ -10928,18 +10928,28 @@ void print_json_designer_execution_result(
             ? *planned_dispatch_plan
             : result.dispatch_plan;
     const std::size_t toolbox_execution_count = child_dispatch_plan.toolbox_dispatch.ok ? 1U : 0U;
+    std::size_t editor_action_executed_count = 0U;
     std::size_t editor_action_error_count = 0U;
     for (const auto& execution : result.editor_action_executions) {
+        if (execution.executed) {
+            ++editor_action_executed_count;
+        }
         if (!execution.ok) {
             ++editor_action_error_count;
         }
     }
+    std::size_t builder_executed_count = 0U;
     std::size_t builder_error_count = 0U;
     for (const auto& execution : result.builder_executions) {
+        if (execution.executed) {
+            ++builder_executed_count;
+        }
         if (!execution.ok) {
             ++builder_error_count;
         }
     }
+    const std::size_t toolbox_executed_count =
+        toolbox_execution_count != 0U && result.toolbox_execution.executed ? 1U : 0U;
     const std::size_t toolbox_error_count =
         toolbox_execution_count != 0U && !result.toolbox_execution.ok ? 1U : 0U;
 
@@ -10955,6 +10965,9 @@ void print_json_designer_execution_result(
     std::cout << "    \"editorActionExecutionCount\": " << result.editor_action_executions.size() << ",\n";
     std::cout << "    \"builderExecutionCount\": " << result.builder_executions.size() << ",\n";
     std::cout << "    \"toolboxExecutionCount\": " << toolbox_execution_count << ",\n";
+    std::cout << "    \"editorActionExecutedCount\": " << editor_action_executed_count << ",\n";
+    std::cout << "    \"builderExecutedCount\": " << builder_executed_count << ",\n";
+    std::cout << "    \"toolboxExecutedCount\": " << toolbox_executed_count << ",\n";
     std::cout << "    \"editorActionErrorCount\": " << editor_action_error_count << ",\n";
     std::cout << "    \"builderErrorCount\": " << builder_error_count << ",\n";
     std::cout << "    \"toolboxErrorCount\": " << toolbox_error_count << ",\n";
