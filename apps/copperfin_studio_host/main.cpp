@@ -267,6 +267,17 @@ void print_json_string_array(const std::vector<std::string>& values) {
     std::cout << "]";
 }
 
+void print_json_int_array(const std::vector<int>& values) {
+    std::cout << "[";
+    for (std::size_t index = 0U; index < values.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ", ";
+        }
+        std::cout << values[index];
+    }
+    std::cout << "]";
+}
+
 std::string shell_quote(const std::string& value) {
     if (value.empty()) {
         return "''";
@@ -10954,6 +10965,7 @@ void print_json_designer_execution_result(
     std::vector<std::string> failed_editor_action_ids;
     std::vector<std::string> failed_editor_action_command_tokens;
     std::vector<std::string> failed_editor_action_executed_commands;
+    std::vector<int> failed_editor_action_exit_codes;
     std::vector<std::string> failed_editor_action_errors;
     for (std::size_t index = 0U; index < result.editor_action_executions.size(); ++index) {
         const auto& execution = result.editor_action_executions[index];
@@ -10972,6 +10984,7 @@ void print_json_designer_execution_result(
                     editor_action_launch_command,
                     child_dispatch_plan.editor_action_dispatches[index].plan.dispatch_arguments));
             }
+            failed_editor_action_exit_codes.push_back(execution.observation.exit_code);
             failed_editor_action_errors.push_back(execution.error);
         }
     }
@@ -10980,6 +10993,7 @@ void print_json_designer_execution_result(
     std::vector<std::string> failed_builder_ids;
     std::vector<std::string> failed_builder_command_tokens;
     std::vector<std::string> failed_builder_executed_commands;
+    std::vector<int> failed_builder_exit_codes;
     std::vector<std::string> failed_builder_errors;
     for (std::size_t index = 0U; index < result.builder_executions.size(); ++index) {
         const auto& execution = result.builder_executions[index];
@@ -10998,6 +11012,7 @@ void print_json_designer_execution_result(
                     builder_launch_command,
                     child_dispatch_plan.builder_dispatches[index].plan.dispatch_arguments));
             }
+            failed_builder_exit_codes.push_back(execution.observation.exit_code);
             failed_builder_errors.push_back(execution.error);
         }
     }
@@ -11012,6 +11027,7 @@ void print_json_designer_execution_result(
         child_dispatch_plan.toolbox_dispatch.ok
             ? build_shell_command(toolbox_launch_command, child_dispatch_plan.toolbox_dispatch.plan.dispatch_arguments)
             : std::string{};
+    const int toolbox_exit_code = result.toolbox_execution.observation.exit_code;
 
     std::cout << "{\n";
     std::cout << "    \"ok\": " << (result.error_count == 0U ? "true" : "false") << ",\n";
@@ -11040,6 +11056,9 @@ void print_json_designer_execution_result(
     std::cout << "    \"failedEditorActionExecutedCommands\": ";
     print_json_string_array(failed_editor_action_executed_commands);
     std::cout << ",\n";
+    std::cout << "    \"failedEditorActionExitCodes\": ";
+    print_json_int_array(failed_editor_action_exit_codes);
+    std::cout << ",\n";
     std::cout << "    \"failedEditorActionErrors\": ";
     print_json_string_array(failed_editor_action_errors);
     std::cout << ",\n";
@@ -11052,6 +11071,9 @@ void print_json_designer_execution_result(
     std::cout << "    \"failedBuilderExecutedCommands\": ";
     print_json_string_array(failed_builder_executed_commands);
     std::cout << ",\n";
+    std::cout << "    \"failedBuilderExitCodes\": ";
+    print_json_int_array(failed_builder_exit_codes);
+    std::cout << ",\n";
     std::cout << "    \"failedBuilderErrors\": ";
     print_json_string_array(failed_builder_errors);
     std::cout << ",\n";
@@ -11062,6 +11084,7 @@ void print_json_designer_execution_result(
     std::cout << "    \"toolboxExecutedCommand\": ";
     print_json_string(toolbox_executed_command);
     std::cout << ",\n";
+    std::cout << "    \"toolboxExitCode\": " << toolbox_exit_code << ",\n";
     std::cout << "    \"toolboxError\": ";
     print_json_string(toolbox_error);
     std::cout << ",\n";

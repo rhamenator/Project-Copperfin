@@ -1,3 +1,4 @@
+1355	OPEN	E2/#23 slice: Expose aggregate designer failed-child exit-code summaries in host JSON		2026-06-19T07:55:06Z
 1354	OPEN	E2/#23 slice: Expose aggregate designer failed-child executed-command summaries in host JSON		2026-06-19T07:51:48Z
 1353	OPEN	E2/#23 slice: Expose aggregate designer failed-child command-token summaries in host JSON		2026-06-19T07:48:41Z
 1352	OPEN	E2/#23 slice: Expose aggregate designer child descriptor detail metadata in host JSON		2026-06-19T07:45:36Z
