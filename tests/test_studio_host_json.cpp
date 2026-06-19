@@ -9178,6 +9178,243 @@ void test_studio_host_json_plans_toolbox_object_creation_from_palette_dispatch(
     }
 }
 
+void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_create_from_dispatch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto create_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "textbox",
+            "--selection-context", "visual_object",
+            "--record", "0",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--create-unique-id", "dispatch-host-created-textbox-guid",
+            "--field-value", "CAPTION=Dispatch Host Created",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    if (create_process.exit_code != 0) {
+        std::cerr << "studio host toolbox-create-from-dispatch stdout:\n"
+                  << create_process.stdout_text << "\n";
+        std::cerr << "studio host toolbox-create-from-dispatch stderr:\n"
+                  << create_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+    expect(create_process.exit_code == 0,
+        "#1314: toolbox-create-from-dispatch JSON command should exit successfully");
+    expect_contains(create_process.stdout_text, "\"status\": \"ok\"",
+        "#1314: successful toolbox-create-from-dispatch JSON should report ok status");
+    expect_contains(create_process.stdout_text, "\"toolboxCreateFromDispatch\": {",
+        "#1314: toolbox-create-from-dispatch JSON should expose a stable result object");
+    expect_contains(create_process.stdout_text, "\"createPlanOk\": true",
+        "#1314: toolbox-create-from-dispatch JSON should expose create-plan state");
+    expect_contains(create_process.stdout_text, "\"createResult\": {",
+        "#1314: toolbox-create-from-dispatch JSON should expose lower-level create results");
+    expect_contains(create_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1314: toolbox-create-from-dispatch JSON should expose selected toolbox items");
+    expect_contains(create_process.stdout_text, "\"className\": \"TextBox\"",
+        "#1314: toolbox-create-from-dispatch JSON should expose descriptor metadata");
+    expect_contains(create_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#1314: toolbox-create-from-dispatch JSON should use dispatch toolbox contexts");
+    expect_contains(create_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1314: toolbox-create-from-dispatch JSON should resolve visual-object form contexts");
+    expect_contains(create_process.stdout_text, "\"recordIndex\": 2",
+        "#1314: toolbox-create-from-dispatch JSON should expose appended record index");
+    expect_contains(create_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1314: toolbox-create-from-dispatch JSON should expose generated object names");
+    expect_contains(create_process.stdout_text, "\"uniqueId\": \"dispatch-host-created-textbox-guid\"",
+        "#1314: toolbox-create-from-dispatch JSON should expose created unique ids");
+    expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
+        "#1314: toolbox-create-from-dispatch JSON should expose created parents");
+    expect_contains(create_process.stdout_text, "\"propertyValue\": \"Dispatch Host Created\"",
+        "#1314: toolbox-create-from-dispatch JSON should expose caller field values");
+    expect_contains(create_process.stdout_text, "\"dryRun\": false",
+        "#1314: toolbox-create-from-dispatch JSON should expose execution state");
+    expect_contains(create_process.stdout_text, "\"mutatesAsset\": true",
+        "#1314: toolbox-create-from-dispatch JSON should expose mutation state");
+    expect(visual_object_count(form_path) == before_count + 1U,
+        "#1314: toolbox-create-from-dispatch host command should mutate the asset exactly once");
+    expect(visual_object_property(form_path, "dispatch-host-created-textbox-guid", "CAPTION") ==
+            "Dispatch Host Created",
+        "#1314: toolbox-create-from-dispatch host command should persist caller fields");
+
+    const auto report_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "label",
+            "--selection-context", "report_expression",
+            "--object-name", "rptCustomer",
+            "--create-unique-id", "dispatch-host-report-label-guid",
+            "--field-value", "CAPTION=Dispatch Report",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(report_process.exit_code == 0,
+        "#1314: report toolbox-create-from-dispatch JSON command should exit successfully");
+    expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1314: report toolbox-create-from-dispatch JSON should resolve report contexts");
+    expect_contains(report_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#1314: report toolbox-create-from-dispatch JSON should expose generated label names");
+    expect_contains(report_process.stdout_text, "\"uniqueId\": \"dispatch-host-report-label-guid\"",
+        "#1314: report toolbox-create-from-dispatch JSON should expose report label unique ids");
+    expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
+        "#1314: report toolbox-create-from-dispatch JSON should exclude form-only textbox metadata");
+    expect(visual_object_count(form_path) == before_count + 2U,
+        "#1314: report toolbox-create-from-dispatch host command should mutate the asset exactly once");
+
+    const std::size_t committed_count = visual_object_count(form_path);
+    const auto non_admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "textbox",
+            "--selection-context", "visual_object",
+            "--object-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(non_admitted_process.exit_code == 4,
+        "#1314: toolbox-create-from-dispatch JSON should reject non-admitted palette dispatches");
+    expect_contains(non_admitted_process.stdout_text, "\"createPlan\": null",
+        "#1314: non-admitted toolbox-create-from-dispatch JSON should not expose stale create plans");
+    expect_contains(non_admitted_process.stdout_text,
+        "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1314: non-admitted toolbox-create-from-dispatch JSON should report dispatch errors");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1314: non-admitted toolbox-create-from-dispatch commands should not mutate assets");
+
+    const auto unavailable_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "textbox",
+            "--selection-context", "report_expression",
+            "--object-name", "rptCustomer",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(unavailable_process.exit_code == 4,
+        "#1314: toolbox-create-from-dispatch JSON should reject unavailable dispatch items");
+    expect_contains(unavailable_process.stdout_text, "\"createPlan\": null",
+        "#1314: unavailable toolbox-create-from-dispatch JSON should not expose stale create plans");
+    expect_contains(unavailable_process.stdout_text,
+        "The requested toolbox item is not available in the admitted toolbox dispatch.",
+        "#1314: unavailable toolbox-create-from-dispatch JSON should report availability errors");
+    expect_contains(unavailable_process.stdout_text, "\"objectName\": \"\"",
+        "#1314: unavailable toolbox-create-from-dispatch JSON should avoid stale object names");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1314: unavailable toolbox-create-from-dispatch commands should not mutate assets");
+
+    const auto invalid_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "commandbutton",
+            "--selection-context", "visual_object",
+            "--object-name", "frmCustomer",
+            "--create-unique-id", "dispatch-host-invalid-field-guid",
+            "--field-value", "UNKNOWN=Invalid",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_field_process.exit_code == 4,
+        "#1314: toolbox-create-from-dispatch JSON should reject invalid create fields");
+    expect_contains(invalid_field_process.stdout_text, "\"createPlanOk\": true",
+        "#1314: invalid-field toolbox-create-from-dispatch JSON should expose successful dispatch planning");
+    expect_contains(invalid_field_process.stdout_text,
+        "The requested field was not found in the asset.",
+        "#1314: invalid-field toolbox-create-from-dispatch JSON should report lower-layer failures");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1314: invalid-field toolbox-create-from-dispatch commands should not partially mutate assets");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "textbox",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1314: toolbox-create-from-dispatch JSON should reject missing selection contexts");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1314: missing-context toolbox-create-from-dispatch JSON should report parser errors");
+
+    const auto invalid_admission_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "textbox",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_admission_process.exit_code == 2,
+        "#1314: toolbox-create-from-dispatch JSON should reject invalid admission tokens");
+    expect_contains(invalid_admission_process.stdout_text,
+        "The --admit-palette-invocation value must be true or false.",
+        "#1314: invalid-admission toolbox-create-from-dispatch JSON should report parser errors");
+
+    const auto malformed_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "textbox",
+            "--selection-context", "visual_object",
+            "--field-value", "BROKEN",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(malformed_field_process.exit_code == 2,
+        "#1314: toolbox-create-from-dispatch JSON should reject malformed field values");
+    expect_contains(malformed_field_process.stdout_text,
+        "Toolbox field values must use name=value syntax.",
+        "#1314: malformed-field toolbox-create-from-dispatch JSON should report parser errors");
+
+    const auto unknown_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "textbox",
+            "--selection-context", "visual_object",
+            "--toolbox-context", "form",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_option_process.exit_code == 2,
+        "#1314: toolbox-create-from-dispatch JSON should reject unknown options");
+    expect_contains(unknown_option_process.stdout_text,
+        "Unknown toolbox-create-from-dispatch option: --toolbox-context",
+        "#1314: unknown-option toolbox-create-from-dispatch JSON should report parser errors");
+    expect(visual_object_count(form_path) == committed_count,
+        "#1314: rejected toolbox-create-from-dispatch commands should not mutate assets");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_plans_toolbox_object_creation_dispatches_from_palette_dispatch(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -36475,6 +36712,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_toolbox_object_creation_dispatch(argv[1]);
     test_studio_host_json_plans_selection_toolbox_object_creation_dispatch(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_from_palette_dispatch(argv[1]);
+    test_studio_host_json_creates_toolbox_object_from_palette_dispatch(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_dispatches_from_palette_dispatch(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batches_from_palette_dispatch(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatches_from_palette_dispatch(argv[1]);
