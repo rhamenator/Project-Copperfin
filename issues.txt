@@ -1,3 +1,4 @@
+1337	OPEN	E2/#23 slice: Expose aggregate designer execution child identities in host JSON		2026-06-19T06:42:42Z
 1336	OPEN	E2/#23 slice: Preserve aggregate designer dispatch catalog dispatch arguments in host JSON		2026-06-19T06:37:51Z
 1335	OPEN	E2/#23 slice: Expose aggregate designer execution child commands in host JSON		2026-06-19T06:33:30Z
 1334	OPEN	E2/#23 slice: Preserve aggregate designer execution catalog dispatch arguments in host JSON		2026-06-19T06:25:06Z

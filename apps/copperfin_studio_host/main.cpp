@@ -10964,17 +10964,38 @@ void print_json_designer_execution_result(
     std::cout << "    \"editorActionExecutions\": [\n";
     for (std::size_t index = 0U; index < result.editor_action_executions.size(); ++index) {
         const auto& execution = result.editor_action_executions[index];
-        std::string executed_command;
+        const copperfin::studio::StudioEditorActionDispatchPlan* plan = nullptr;
         if (index < result.dispatch_plan.editor_action_dispatches.size() &&
             result.dispatch_plan.editor_action_dispatches[index].ok) {
+            plan = &result.dispatch_plan.editor_action_dispatches[index].plan;
+        }
+        std::string executed_command;
+        if (plan != nullptr) {
             executed_command = build_shell_command(
                 editor_action_launch_command,
-                result.dispatch_plan.editor_action_dispatches[index].plan.dispatch_arguments);
+                plan->dispatch_arguments);
         }
         std::cout << "      {\n";
         std::cout << "        \"ok\": " << (execution.ok ? "true" : "false") << ",\n";
         std::cout << "        \"error\": ";
         print_json_string(execution.error);
+        std::cout << ",\n";
+        std::cout << "        \"actionId\": ";
+        if (plan != nullptr) {
+            print_json_string_view(plan->action.id);
+        } else {
+            print_json_string("");
+        }
+        std::cout << ",\n";
+        std::cout << "        \"commandToken\": ";
+        print_json_string(plan != nullptr ? plan->command_token : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"selectionContext\": ";
+        if (plan != nullptr) {
+            print_json_string(copperfin::studio::studio_editor_selection_context_name(plan->selection_context));
+        } else {
+            print_json_string("");
+        }
         std::cout << ",\n";
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
@@ -10991,17 +11012,38 @@ void print_json_designer_execution_result(
     std::cout << "    \"builderExecutions\": [\n";
     for (std::size_t index = 0U; index < result.builder_executions.size(); ++index) {
         const auto& execution = result.builder_executions[index];
-        std::string executed_command;
+        const copperfin::studio::StudioBuilderDispatchPlan* plan = nullptr;
         if (index < result.dispatch_plan.builder_dispatches.size() &&
             result.dispatch_plan.builder_dispatches[index].ok) {
+            plan = &result.dispatch_plan.builder_dispatches[index].plan;
+        }
+        std::string executed_command;
+        if (plan != nullptr) {
             executed_command = build_shell_command(
                 builder_launch_command,
-                result.dispatch_plan.builder_dispatches[index].plan.dispatch_arguments);
+                plan->dispatch_arguments);
         }
         std::cout << "      {\n";
         std::cout << "        \"ok\": " << (execution.ok ? "true" : "false") << ",\n";
         std::cout << "        \"error\": ";
         print_json_string(execution.error);
+        std::cout << ",\n";
+        std::cout << "        \"builderId\": ";
+        if (plan != nullptr) {
+            print_json_string_view(plan->builder.id);
+        } else {
+            print_json_string("");
+        }
+        std::cout << ",\n";
+        std::cout << "        \"commandToken\": ";
+        print_json_string(plan != nullptr ? plan->command_token : std::string{});
+        std::cout << ",\n";
+        std::cout << "        \"context\": ";
+        if (plan != nullptr) {
+            print_json_string(copperfin::studio::studio_builder_context_name(plan->context));
+        } else {
+            print_json_string("");
+        }
         std::cout << ",\n";
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
@@ -11020,6 +11062,34 @@ void print_json_designer_execution_result(
     std::cout << "      \"error\": ";
     print_json_string(result.toolbox_execution.error);
     std::cout << ",\n";
+    std::cout << "      \"selectionContext\": ";
+    if (result.dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(copperfin::studio::studio_editor_selection_context_name(
+            result.dispatch_plan.toolbox_dispatch.plan.selection_context));
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << "      \"toolboxContext\": ";
+    if (result.dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(copperfin::studio::studio_toolbox_context_name(
+            result.dispatch_plan.toolbox_dispatch.plan.toolbox_context));
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << "      \"commandToken\": ";
+    if (result.dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(result.dispatch_plan.toolbox_dispatch.plan.command_token);
+    } else {
+        print_json_string("");
+    }
+    std::cout << ",\n";
+    std::cout << "      \"itemCount\": "
+              << (result.dispatch_plan.toolbox_dispatch.ok
+                      ? result.dispatch_plan.toolbox_dispatch.plan.item_count
+                      : 0U)
+              << ",\n";
     std::cout << "      \"executedCommand\": ";
     if (result.dispatch_plan.toolbox_dispatch.ok) {
         print_json_string(build_shell_command(
