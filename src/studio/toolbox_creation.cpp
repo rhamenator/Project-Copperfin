@@ -786,6 +786,64 @@ StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dis
     };
 }
 
+StudioSelectionToolboxObjectCreateBatchDispatchResult
+plan_visual_object_batch_create_dispatch_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateBatchDispatchRequest& request) {
+    auto batch_plan = plan_visual_objects_from_toolbox_selection(request.batch_request);
+    if (!batch_plan.ok) {
+        return {
+            .ok = false,
+            .error = batch_plan.error,
+            .selection_context = batch_plan.selection_context,
+            .toolbox_context = batch_plan.toolbox_context,
+            .launch_plan = batch_plan.launch_plan,
+            .item_count = batch_plan.item_count,
+            .batch_plan = batch_plan,
+            .dispatch = {},
+            .dispatch_count = 0U,
+            .error_count = batch_plan.error_count,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto dispatch = plan_visual_object_batch_create_dispatch({
+        .batch_plan = batch_plan.batch_plan.plan,
+        .admit_create_operation = request.admit_create_operation
+    });
+    if (!dispatch.ok) {
+        return {
+            .ok = false,
+            .error = dispatch.error,
+            .selection_context = batch_plan.selection_context,
+            .toolbox_context = batch_plan.toolbox_context,
+            .launch_plan = batch_plan.launch_plan,
+            .item_count = batch_plan.item_count,
+            .batch_plan = batch_plan,
+            .dispatch = dispatch,
+            .dispatch_count = 0U,
+            .error_count = 1U,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = batch_plan.selection_context,
+        .toolbox_context = batch_plan.toolbox_context,
+        .launch_plan = batch_plan.launch_plan,
+        .item_count = batch_plan.item_count,
+        .batch_plan = batch_plan,
+        .dispatch = dispatch,
+        .dispatch_count = 1U,
+        .error_count = 0U,
+        .dry_run = dispatch.plan.dry_run,
+        .mutates_asset = dispatch.plan.mutates_asset
+    };
+}
+
 StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch_from_toolbox_dispatch(
     const StudioToolboxObjectCreateBatchDispatchFromPaletteDispatchRequest& request) {
     const auto batch_plan = plan_visual_objects_from_toolbox_dispatch(request.create_request);

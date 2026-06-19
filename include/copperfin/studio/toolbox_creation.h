@@ -184,6 +184,11 @@ struct StudioToolboxObjectCreateBatchDispatchRequest {
     bool admit_create_operation = false;
 };
 
+struct StudioSelectionToolboxObjectCreateBatchDispatchRequest {
+    StudioSelectionToolboxObjectCreateBatchPlanRequest batch_request;
+    bool admit_create_operation = false;
+};
+
 struct StudioToolboxObjectCreateBatchDispatchFromPaletteDispatchRequest {
     StudioToolboxObjectCreateBatchFromPaletteDispatchRequest create_request;
     bool admit_create_operation = false;
@@ -206,6 +211,21 @@ struct StudioToolboxObjectCreateBatchDispatchResult {
     bool ok = false;
     std::string error;
     StudioToolboxObjectCreateBatchDispatchPlan plan;
+};
+
+struct StudioSelectionToolboxObjectCreateBatchDispatchResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    StudioToolboxPaletteLaunchPlanResult launch_plan;
+    std::size_t item_count = 0;
+    StudioSelectionToolboxObjectCreateBatchPlanResult batch_plan;
+    StudioToolboxObjectCreateBatchDispatchResult dispatch;
+    std::size_t dispatch_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
 };
 
 struct StudioToolboxObjectCreatePlanCatalogRequest {
@@ -405,6 +425,9 @@ struct StudioSelectionToolboxObjectCreateBatchDispatchCatalogResult {
     const StudioToolboxObjectCreateDispatchFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch(
     const StudioToolboxObjectCreateBatchDispatchRequest& request);
+[[nodiscard]] StudioSelectionToolboxObjectCreateBatchDispatchResult
+plan_visual_object_batch_create_dispatch_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateBatchDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dispatch_from_toolbox_dispatch(
     const StudioToolboxObjectCreateBatchDispatchFromPaletteDispatchRequest& request);
 [[nodiscard]] StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolbox_context(
