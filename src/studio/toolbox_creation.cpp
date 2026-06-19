@@ -1424,6 +1424,65 @@ StudioSelectionToolboxObjectCreateResult create_visual_object_from_toolbox_selec
     };
 }
 
+StudioSelectionToolboxObjectCreateBatchResult create_visual_objects_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateBatchPlanRequest& request) {
+    auto plan_result = plan_visual_objects_from_toolbox_selection(request);
+    if (!plan_result.ok) {
+        return {
+            .ok = false,
+            .error = plan_result.error,
+            .selection_context = plan_result.selection_context,
+            .toolbox_context = plan_result.toolbox_context,
+            .launch_plan = plan_result.launch_plan,
+            .item_count = plan_result.item_count,
+            .batch_plan = plan_result,
+            .create_result = failed_batch_create_result(plan_result.error),
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    std::vector<vfp::VisualObjectCreateBatchItem> objects;
+    objects.reserve(plan_result.batch_plan.plan.plans.size());
+    for (const auto& plan : plan_result.batch_plan.plan.plans) {
+        objects.push_back({
+            .field_values = plan.field_values
+        });
+    }
+
+    auto create_result = vfp::create_visual_objects({
+        .path = plan_result.batch_plan.plan.path,
+        .objects = std::move(objects)
+    });
+    if (!create_result.ok) {
+        return {
+            .ok = false,
+            .error = create_result.error,
+            .selection_context = plan_result.selection_context,
+            .toolbox_context = plan_result.toolbox_context,
+            .launch_plan = plan_result.launch_plan,
+            .item_count = plan_result.item_count,
+            .batch_plan = plan_result,
+            .create_result = create_result,
+            .dry_run = false,
+            .mutates_asset = false
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = plan_result.selection_context,
+        .toolbox_context = plan_result.toolbox_context,
+        .launch_plan = plan_result.launch_plan,
+        .item_count = plan_result.item_count,
+        .batch_plan = plan_result,
+        .create_result = create_result,
+        .dry_run = false,
+        .mutates_asset = true
+    };
+}
+
 vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request) {
     const auto plan_result = plan_visual_objects_from_toolbox_items(request);

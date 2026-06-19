@@ -139,6 +139,19 @@ struct StudioSelectionToolboxObjectCreateBatchPlanResult {
     StudioToolboxObjectCreateBatchPlanResult batch_plan;
 };
 
+struct StudioSelectionToolboxObjectCreateBatchResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    StudioToolboxPaletteLaunchPlanResult launch_plan;
+    std::size_t item_count = 0;
+    StudioSelectionToolboxObjectCreateBatchPlanResult batch_plan;
+    vfp::VisualObjectCreateBatchResult create_result;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 struct StudioToolboxObjectCreateDispatchRequest {
     StudioToolboxObjectCreatePlan create_plan;
     bool admit_create_operation = false;
@@ -466,6 +479,8 @@ plan_visual_object_batch_create_dispatch_catalog_from_toolbox_selection(
     const StudioToolboxObjectCreateRequest& request);
 [[nodiscard]] StudioSelectionToolboxObjectCreateResult create_visual_object_from_toolbox_selection(
     const StudioSelectionToolboxObjectCreatePlanRequest& request);
+[[nodiscard]] StudioSelectionToolboxObjectCreateBatchResult create_visual_objects_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateBatchPlanRequest& request);
 [[nodiscard]] vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request);
 

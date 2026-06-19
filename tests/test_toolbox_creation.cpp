@@ -840,6 +840,236 @@ void test_toolbox_creation_selection_batch_planner_resolves_contexts_without_mut
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_selection_batch_create_executes_context_resolved_batches() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_selection_batch_create_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto visual_batch = copperfin::studio::create_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "selection-batch-created-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "First Selection Batch Created"}
+                }
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = "cmdSelectionBatchCreate",
+                .unique_id = "selection-batch-created-command-guid",
+                .parent_name = "cntToolbar",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Run Selection Batch Created"}
+                }
+            },
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "selection-batch-created-second-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Second Selection Batch Created"}
+                }
+            }
+        }
+    });
+    const auto& visual_plans = visual_batch.batch_plan.batch_plan.plan.plans;
+
+    expect(visual_batch.ok &&
+            visual_batch.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            visual_batch.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_batch.launch_plan.ok &&
+            visual_batch.item_count == 3U &&
+            visual_batch.batch_plan.ok &&
+            visual_batch.batch_plan.batch_plan.ok &&
+            visual_batch.batch_plan.plan_count == 1U &&
+            visual_batch.batch_plan.error_count == 0U &&
+            visual_batch.create_result.ok &&
+            visual_batch.create_result.record_indexes.size() == 3U &&
+            visual_batch.create_result.record_indexes[0] == before_count &&
+            visual_batch.create_result.record_indexes[1] == before_count + 1U &&
+            visual_batch.create_result.record_indexes[2] == before_count + 2U &&
+            !visual_batch.dry_run &&
+            visual_batch.mutates_asset,
+        "#1310: visual selection toolbox batch creates should resolve form context and append ordered objects");
+    expect(visual_plans.size() == 3U &&
+            visual_plans[0].toolbox_item.id == "textbox" &&
+            visual_plans[0].object_name == "txt2" &&
+            visual_plans[0].unique_id == "selection-batch-created-textbox-guid" &&
+            visual_plans[0].parent_name == "frmMain" &&
+            has_field_value(visual_plans[0].field_values, "CLASS", "TextBox") &&
+            has_field_value(visual_plans[0].field_values, "CAPTION", "First Selection Batch Created") &&
+            visual_plans[1].toolbox_item.id == "commandbutton" &&
+            visual_plans[1].object_name == "cmdSelectionBatchCreate" &&
+            visual_plans[1].unique_id == "selection-batch-created-command-guid" &&
+            visual_plans[1].parent_name == "cntToolbar" &&
+            has_field_value(visual_plans[1].field_values, "CLASS", "CommandButton") &&
+            has_field_value(visual_plans[1].field_values, "CAPTION", "Run Selection Batch Created") &&
+            visual_plans[2].toolbox_item.id == "textbox" &&
+            visual_plans[2].object_name == "txt3" &&
+            visual_plans[2].unique_id == "selection-batch-created-second-guid" &&
+            visual_plans[2].parent_name == "frmMain" &&
+            has_field_value(visual_plans[2].field_values, "CLASS", "TextBox") &&
+            has_field_value(visual_plans[2].field_values, "CAPTION", "Second Selection Batch Created"),
+        "#1310: visual selection toolbox batch creates should preserve ordered planning metadata");
+    expect(visual_batch.create_result.created_objects.size() == 3U &&
+            visual_batch.create_result.created_objects[0].object_name == "txt2" &&
+            visual_batch.create_result.created_objects[0].unique_id == "selection-batch-created-textbox-guid" &&
+            visual_batch.create_result.created_objects[0].parent_name == "frmMain" &&
+            visual_batch.create_result.created_objects[1].object_name == "cmdSelectionBatchCreate" &&
+            visual_batch.create_result.created_objects[1].unique_id == "selection-batch-created-command-guid" &&
+            visual_batch.create_result.created_objects[1].parent_name == "cntToolbar" &&
+            visual_batch.create_result.created_objects[2].object_name == "txt3" &&
+            visual_batch.create_result.created_objects[2].unique_id == "selection-batch-created-second-guid" &&
+            visual_batch.create_result.created_objects[2].parent_name == "frmMain",
+        "#1310: visual selection toolbox batch creates should report created identity metadata in order");
+
+    const auto first_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-batch-created-textbox-guid",
+        .property_name = "CAPTION"
+    });
+    const auto command_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-batch-created-command-guid",
+        .property_name = "CAPTION"
+    });
+    const auto second_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-batch-created-second-guid",
+        .property_name = "CAPTION"
+    });
+    expect(first_caption.ok && first_caption.exists && first_caption.value == "First Selection Batch Created" &&
+            command_caption.ok && command_caption.exists && command_caption.value == "Run Selection Batch Created" &&
+            second_caption.ok && second_caption.exists && second_caption.value == "Second Selection Batch Created",
+        "#1310: visual selection toolbox batch creates should persist caller-provided fields");
+    expect(object_count(table_path) == before_count + 3U,
+        "#1310: visual selection toolbox batch creates should mutate once per accepted item");
+
+    const std::size_t before_report_count = object_count(table_path);
+    const auto report_batch = copperfin::studio::create_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "label",
+                .object_name = {},
+                .unique_id = "report-selection-batch-created-label-guid",
+                .parent_name = "DetailBand",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Report Selection Batch Created"}
+                }
+            }
+        }
+    });
+    expect(report_batch.ok &&
+            report_batch.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            report_batch.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            report_batch.launch_plan.ok &&
+            report_batch.item_count == 1U &&
+            report_batch.batch_plan.ok &&
+            report_batch.create_result.ok &&
+            report_batch.create_result.record_indexes.size() == 1U &&
+            report_batch.create_result.record_indexes[0] == before_report_count &&
+            report_batch.create_result.created_objects.size() == 1U &&
+            report_batch.create_result.created_objects[0].object_name == "lbl1" &&
+            report_batch.create_result.created_objects[0].unique_id == "report-selection-batch-created-label-guid" &&
+            report_batch.create_result.created_objects[0].parent_name == "DetailBand" &&
+            !report_batch.dry_run &&
+            report_batch.mutates_asset,
+        "#1310: report selection toolbox batch creates should resolve report context and append labels");
+    const auto report_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "report-selection-batch-created-label-guid",
+        .property_name = "CAPTION"
+    });
+    expect(report_caption.ok && report_caption.exists && report_caption.value == "Report Selection Batch Created",
+        "#1310: report selection toolbox batch creates should persist caller-provided fields");
+
+    const std::size_t before_rejections_count = object_count(table_path);
+    const auto unavailable_batch = copperfin::studio::create_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "report-selection-batch-rejected-textbox-guid",
+                .parent_name = "DetailBand",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Should Not Exist"}
+                }
+            }
+        }
+    });
+    expect(!unavailable_batch.ok &&
+            unavailable_batch.error ==
+                "The requested toolbox item is not available in the requested designer context." &&
+            unavailable_batch.selection_context ==
+                copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            unavailable_batch.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            unavailable_batch.launch_plan.ok &&
+            unavailable_batch.item_count == 1U &&
+            !unavailable_batch.batch_plan.ok &&
+            !unavailable_batch.create_result.ok &&
+            unavailable_batch.create_result.record_indexes.empty() &&
+            unavailable_batch.create_result.created_objects.empty() &&
+            unavailable_batch.dry_run &&
+            !unavailable_batch.mutates_asset,
+        "#1310: unavailable selection toolbox batch creates should reject without stale create metadata");
+    expect(object_count(table_path) == before_rejections_count,
+        "#1310: unavailable selection toolbox batch creates should not mutate assets");
+
+    const auto unsupported_batch = copperfin::studio::create_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::menu_item,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "unsupported-selection-batch-rejected-guid",
+                .parent_name = {},
+                .field_values = {}
+            }
+        }
+    });
+    expect(!unsupported_batch.ok &&
+            unsupported_batch.error ==
+                "A selection-context toolbox object batch creation plan request requires a toolbox palette." &&
+            unsupported_batch.selection_context == copperfin::studio::StudioEditorSelectionContext::menu_item &&
+            !unsupported_batch.launch_plan.ok &&
+            !unsupported_batch.batch_plan.ok &&
+            !unsupported_batch.create_result.ok &&
+            unsupported_batch.create_result.record_indexes.empty() &&
+            unsupported_batch.create_result.created_objects.empty() &&
+            unsupported_batch.dry_run &&
+            !unsupported_batch.mutates_asset,
+        "#1310: unsupported selection toolbox batch creates should reject without stale create metadata");
+    expect(object_count(table_path) == before_rejections_count,
+        "#1310: unsupported selection toolbox batch creates should not mutate assets");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_selection_batch_dispatch_planner_resolves_contexts_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3681,6 +3911,7 @@ int main() {
     test_toolbox_creation_selection_create_executes_context_resolved_creates();
     test_toolbox_creation_selection_dispatch_planner_resolves_contexts_without_mutation();
     test_toolbox_creation_selection_batch_planner_resolves_contexts_without_mutation();
+    test_toolbox_creation_selection_batch_create_executes_context_resolved_batches();
     test_toolbox_creation_selection_batch_dispatch_planner_resolves_contexts_without_mutation();
     test_toolbox_creation_planner_uses_admitted_palette_dispatch_without_mutation();
     test_toolbox_creation_planner_rejects_invalid_palette_dispatches_without_mutation();
