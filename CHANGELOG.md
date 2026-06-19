@@ -2,6 +2,7 @@
 
 ## 2026-06-18
 
+- E2/#1274 Studio host selection-context builder/wizard invocation admission catalog JSON shipped: `copperfin_studio_host --selection-builder-invocation-admission-catalog --selection-context <token>` now exposes non-executing selected-context builder admission catalogs with mixed visual form/control builders, menu builders, dry-run/admission state, and parser validation.
 - E2/#1273 selection-context builder/wizard invocation admission catalog planning shipped: `plan_studio_builder_invocation_admission_catalog_for_selection` now builds non-executing builder admission catalogs for one Studio selection context while preserving mixed visual form/control builders and context-specific menu/data-environment builder metadata.
 - E2/#1272 builder/wizard dispatch catalog planning now routes through `plan_studio_builder_invocation_admission_catalog`, keeping launch/admission metadata single-sourced before dispatch planning while preserving non-executing public dispatch catalog behavior.
 - E2/#1271 Studio host builder/wizard invocation admission catalog JSON shipped: `copperfin_studio_host --builder-invocation-admission-catalog --builder-context <token>` now exposes non-executing per-context builder admission catalogs with aggregate counts, UI-admission state, dry-run/non-mutating state, and per-builder launch/admission metadata while rejecting invalid context, record, and boolean options before planning.
