@@ -11780,11 +11780,41 @@ void print_json_designer_dispatch_result(
     }
 
     const auto& plan = result.plan;
+    const std::string selection_context =
+        copperfin::studio::studio_editor_selection_context_name(plan.selection_context);
+    std::vector<std::string> dispatch_ok_selection_contexts;
+    std::vector<std::string> dispatch_blocked_selection_contexts;
+    std::vector<std::string> dispatch_blocked_errors;
+    if (plan.error_count == 0U) {
+        dispatch_ok_selection_contexts.push_back(selection_context);
+    } else {
+        dispatch_blocked_selection_contexts.push_back(selection_context);
+        std::string blocked_error;
+        for (const auto& dispatch : plan.editor_action_dispatches) {
+            if (!dispatch.ok) {
+                blocked_error = dispatch.error;
+                break;
+            }
+        }
+        if (blocked_error.empty()) {
+            for (const auto& dispatch : plan.builder_dispatches) {
+                if (!dispatch.ok) {
+                    blocked_error = dispatch.error;
+                    break;
+                }
+            }
+        }
+        if (blocked_error.empty() && !plan.toolbox_dispatch.ok) {
+            blocked_error = plan.toolbox_dispatch.error;
+        }
+        dispatch_blocked_errors.push_back(blocked_error);
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
     std::cout << "    \"selectionContext\": ";
-    print_json_string(copperfin::studio::studio_editor_selection_context_name(plan.selection_context));
+    print_json_string(selection_context);
     std::cout << ",\n";
     std::cout << "    \"assetPath\": ";
     print_json_string(plan.asset_path);
@@ -11801,6 +11831,15 @@ void print_json_designer_dispatch_result(
     std::cout << ",\n";
     std::cout << "    \"line\": " << plan.line << ",\n";
     std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"dispatchOkSelectionContexts\": ";
+    print_json_string_array(dispatch_ok_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedSelectionContexts\": ";
+    print_json_string_array(dispatch_blocked_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"editorActionDispatchCount\": " << plan.editor_action_dispatch_count << ",\n";
     std::cout << "    \"builderDispatchCount\": " << plan.builder_dispatch_count << ",\n";
     std::cout << "    \"toolboxDispatchCount\": " << plan.toolbox_dispatch_count << ",\n";

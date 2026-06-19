@@ -9247,6 +9247,12 @@ void test_studio_host_json_exposes_designer_dispatch(const std::string& studio_h
         "#1238: designer dispatch JSON should preserve editor lines");
     expect_contains(visual_process.stdout_text, "\"column\": 4",
         "#1238: designer dispatch JSON should preserve editor columns");
+    expect_contains(visual_process.stdout_text, "\"dispatchOkSelectionContexts\": [\"visual_object\"]",
+        "#1401: designer dispatch JSON should summarize dispatch-clean selected contexts");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedSelectionContexts\": []",
+        "#1401: designer dispatch JSON should expose empty blocked selected contexts for clean dispatch");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1401: designer dispatch JSON should expose empty blocked errors for clean dispatch");
     expect_contains(visual_process.stdout_text, "\"editorActionDispatchCount\": ",
         "#1238: designer dispatch JSON should expose editor dispatch counts");
     expect_contains(visual_process.stdout_text, "\"builderDispatchCount\": ",
@@ -9292,6 +9298,13 @@ void test_studio_host_json_exposes_designer_dispatch(const std::string& studio_h
         "#1238: default designer dispatch JSON should expose zero aggregate dispatches");
     expect_contains(menu_process.stdout_text, "\"errorCount\": 4",
         "#1238: default menu designer dispatch JSON should expose per-surface dispatch errors");
+    expect_contains(menu_process.stdout_text, "\"dispatchOkSelectionContexts\": []",
+        "#1401: default menu dispatch JSON should expose empty clean selected contexts");
+    expect_contains(menu_process.stdout_text, "\"dispatchBlockedSelectionContexts\": [\"menu_item\"]",
+        "#1401: default menu dispatch JSON should summarize dispatch-blocked selected contexts");
+    expect_contains(menu_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"An editor action dispatch request requires an admitted non-dry-run invocation.\"]",
+        "#1401: default menu dispatch JSON should summarize first blocked selected-context reason");
     expect_contains(menu_process.stdout_text, "\"dispatchOk\": false",
         "#1238: default menu designer dispatch JSON should expose rejected dispatches");
     expect_contains(menu_process.stdout_text,
