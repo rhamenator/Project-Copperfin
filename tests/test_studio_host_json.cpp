@@ -8325,6 +8325,141 @@ void test_studio_host_json_exposes_visual_method_list(const std::string& studio_
     }
 }
 
+void test_studio_host_json_exposes_visual_method_query(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_method_query_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "method-query.scx";
+    write_synthetic_form_table_for_visual_object_list(form_path);
+
+    const auto query_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-query",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "cansave",
+            "--json"
+        },
+        temp_root);
+    expect(query_process.exit_code == 0,
+        "#1423: visual method query JSON should exit successfully for existing methods");
+    expect_contains(query_process.stdout_text, "\"visualMethodQuery\": {",
+        "#1423: visual method query JSON should expose a query object");
+    expect_contains(query_process.stdout_text, "\"exists\": true",
+        "#1423: visual method query JSON should report existing methods");
+    expect_contains(query_process.stdout_text, "\"recordIndex\": 1",
+        "#1423: visual method query JSON should expose resolved record indexes");
+    expect_contains(query_process.stdout_text, "\"recordDeleted\": false",
+        "#1423: visual method query JSON should expose selected-record deleted state");
+    expect_contains(query_process.stdout_text, "\"dryRun\": true",
+        "#1423: visual method query JSON should remain dry-run");
+    expect_contains(query_process.stdout_text, "\"mutatesAsset\": false",
+        "#1423: visual method query JSON should remain non-mutating");
+    expect_contains(query_process.stdout_text, "\"methodName\": \"CanSave\"",
+        "#1423: visual method query JSON should expose resolved method names");
+    expect_contains(query_process.stdout_text, "\"kind\": \"function\"",
+        "#1423: visual method query JSON should expose method declaration kind");
+    expect_contains(query_process.stdout_text, "\"sourceText\": \"RETURN .T.\"",
+        "#1423: visual method query JSON should expose method source text");
+    expect_contains(query_process.stdout_text, "\"sourceLineIndex\": 2",
+        "#1423: visual method query JSON should expose method source-line metadata");
+    expect_contains(query_process.stdout_text, "\"sourceMemoBlockNumber\": ",
+        "#1423: visual method query JSON should expose method memo-block metadata");
+
+    const auto missing_method_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-query",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "MissingMethod",
+            "--json"
+        },
+        temp_root);
+    expect(missing_method_process.exit_code == 0,
+        "#1423: visual method query JSON should succeed for absent methods");
+    expect_contains(missing_method_process.stdout_text, "\"exists\": false",
+        "#1423: absent visual method query JSON should report missing methods");
+    expect_contains(missing_method_process.stdout_text, "\"recordIndex\": 1",
+        "#1423: absent visual method query JSON should still expose selected records");
+    expect_contains(missing_method_process.stdout_text, "\"method\": null",
+        "#1423: absent visual method query JSON should null method snapshots");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-query",
+            "--unique-id", "save-guid",
+            "--method-name", "Click",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1423: visual method query JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualMethodQuery\": null",
+        "#1423: missing-path visual method query JSON should not expose a query object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1423: missing-path visual method query JSON should report parser errors");
+
+    const auto missing_method_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-query",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(missing_method_name_process.exit_code == 2,
+        "#1423: visual method query JSON should reject missing method names");
+    expect_contains(missing_method_name_process.stdout_text, "No method name was provided.",
+        "#1423: missing method-name visual method query JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-query",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--method-name", "Click",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1423: visual method query JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1423: invalid-record visual method query JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-query",
+            "--path", form_path.string(),
+            "--object-name", "missingObject",
+            "--method-name", "Click",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1423: visual method query JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualMethodQuery\": null",
+        "#1423: unresolved visual method query JSON should not expose a query object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1423: unresolved visual method query JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-method-query --path <asset>",
+        "#1423: usage text should expose visual method query commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_object_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -40937,6 +41072,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_property_query(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
     test_studio_host_json_exposes_visual_method_list(argv[1]);
+    test_studio_host_json_exposes_visual_method_query(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);
     test_studio_host_json_exposes_visual_object_descendants(argv[1]);
