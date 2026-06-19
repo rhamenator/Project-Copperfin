@@ -4383,6 +4383,12 @@ void test_studio_host_json_exposes_builder_launch_catalog(const std::string& stu
         "#1269: builder launch catalog JSON should remain a dry-run surface");
     expect_contains(control_process.stdout_text, "\"mutatesAsset\": false",
         "#1269: builder launch catalog JSON should remain non-mutating");
+    expect_contains(control_process.stdout_text, "\"launchReadyBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1360: builder launch catalog JSON should summarize launch-ready builders");
+    expect_contains(control_process.stdout_text, "\"launchBlockedBuilderIds\": []",
+        "#1360: builder launch catalog JSON should summarize empty blocked builder ids");
+    expect_contains(control_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1360: builder launch catalog JSON should summarize empty blocked launch errors");
     expect_contains(control_process.stdout_text, "\"entries\": [",
         "#1269: builder launch catalog JSON should expose per-builder entries");
     expect_contains(control_process.stdout_text, "\"builderId\": \"grid-builder\"",
