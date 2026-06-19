@@ -9870,6 +9870,10 @@ void print_json_editor_action_invocation_admission_result(
 
     const auto& plan = result.plan;
     const auto& action = plan.action;
+    const std::vector<std::string> admission_ready_action_ids{std::string(action.id)};
+    const std::vector<std::string> admission_blocked_action_ids;
+    const std::vector<std::string> admission_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9906,6 +9910,15 @@ void print_json_editor_action_invocation_admission_result(
     std::cout << ",\n";
     std::cout << "    \"line\": " << plan.line << ",\n";
     std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"admissionReadyActionIds\": ";
+    print_json_string_array(admission_ready_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedActionIds\": ";
+    print_json_string_array(admission_blocked_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedErrors\": ";
+    print_json_string_array(admission_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"editorInvocationAdmitted\": "
               << (plan.editor_invocation_admitted ? "true" : "false") << ",\n";
     std::cout << "    \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";

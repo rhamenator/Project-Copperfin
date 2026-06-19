@@ -6327,6 +6327,12 @@ void test_studio_host_json_exposes_editor_action_invocation_admission(const std:
         "#1218: editor action invocation-admission JSON should carry line metadata");
     expect_contains(method_process.stdout_text, "\"column\": 7",
         "#1218: editor action invocation-admission JSON should carry column metadata");
+    expect_contains(method_process.stdout_text, "\"admissionReadyActionIds\": [\"edit-visual-method\"]",
+        "#1396: editor action invocation-admission JSON should summarize admission-ready action ids");
+    expect_contains(method_process.stdout_text, "\"admissionBlockedActionIds\": []",
+        "#1396: editor action invocation-admission JSON should summarize empty blocked action ids");
+    expect_contains(method_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1396: editor action invocation-admission JSON should summarize empty admission errors");
     expect_contains(method_process.stdout_text, "\"editorInvocationAdmitted\": true",
         "#1218: admitted editor action invocation-admission JSON should expose admitted state");
     expect_contains(method_process.stdout_text, "\"dryRun\": false",
@@ -6346,6 +6352,12 @@ void test_studio_host_json_exposes_editor_action_invocation_admission(const std:
         "#1218: editor action invocation-admission JSON should default to dry-run admission");
     expect_contains(dry_run_process.stdout_text, "\"actionId\": \"show-property-grid\"",
         "#1218: dry-run editor action invocation-admission JSON should expose action ids");
+    expect_contains(dry_run_process.stdout_text, "\"admissionReadyActionIds\": [\"show-property-grid\"]",
+        "#1396: dry-run editor action invocation-admission JSON should summarize admission-ready action ids");
+    expect_contains(dry_run_process.stdout_text, "\"admissionBlockedActionIds\": []",
+        "#1396: dry-run editor action invocation-admission JSON should summarize empty blocked action ids");
+    expect_contains(dry_run_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1396: dry-run editor action invocation-admission JSON should summarize empty admission errors");
     expect_contains(dry_run_process.stdout_text, "\"editorInvocationAdmitted\": false",
         "#1218: default editor action invocation-admission JSON should not admit invocation");
     expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",

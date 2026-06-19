@@ -1,3 +1,4 @@
+1396	OPEN	E2/#23 slice: Expose editor action invocation-admission summaries in host JSON		2026-06-19T10:33:53Z
 1395	OPEN	E2/#23 slice: Expose editor action launch-plan summaries in host JSON		2026-06-19T10:30:49Z
 1394	OPEN	E2/#23 slice: Expose builder execution summaries in host JSON		2026-06-19T10:27:36Z
 1393	OPEN	E2/#23 slice: Expose builder dispatch summaries in host JSON		2026-06-19T10:24:22Z
