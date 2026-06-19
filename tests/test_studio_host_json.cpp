@@ -4247,6 +4247,14 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1457: report object selections should expose object selection kind");
     expect_contains(object_process.stdout_text, "\"selectedReportObject\": {",
                     "#1454: report object selections should expose selected-object JSON");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1509: selected report objects should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1509: selected report objects should serialize null selected sections");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1509: selected report objects should not advertise selected-settings availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1509: selected report objects should serialize null selected settings");
     expect_contains(object_process.stdout_text, "\"recordIndex\": 3",
                     "#1454: selected report object JSON should expose the selected object record index");
     expect_contains(object_process.stdout_text, "\"objectTypeCode\": 8",
