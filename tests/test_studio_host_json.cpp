@@ -4805,6 +4805,12 @@ void test_studio_host_json_exposes_builder_invocation_admission_catalog(
         "#1271: admitted builder invocation admission catalog JSON should report non-dry-run state");
     expect_contains(admitted_process.stdout_text, "\"mutatesAsset\": false",
         "#1271: builder invocation admission catalog JSON should remain non-mutating");
+    expect_contains(admitted_process.stdout_text, "\"admissionReadyBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1361: builder invocation admission catalog JSON should summarize admission-ready builders");
+    expect_contains(admitted_process.stdout_text, "\"admissionBlockedBuilderIds\": []",
+        "#1361: builder invocation admission catalog JSON should summarize empty blocked builder ids");
+    expect_contains(admitted_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1361: builder invocation admission catalog JSON should summarize empty blocked admission errors");
     expect_contains(admitted_process.stdout_text, "\"builderId\": \"grid-builder\"",
         "#1271: builder invocation admission catalog JSON should include grid builders");
     expect_contains(admitted_process.stdout_text, "\"admissionOk\": true",
@@ -4838,6 +4844,8 @@ void test_studio_host_json_exposes_builder_invocation_admission_catalog(
         "#1271: dry-run builder invocation admission catalog JSON should still admit entries");
     expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
         "#1271: dry-run builder invocation admission catalog JSON should expose aggregate dry-run state");
+    expect_contains(dry_run_process.stdout_text, "\"admissionReadyBuilderIds\": [\"control-builder\", \"grid-builder\"]",
+        "#1361: dry-run builder invocation admission catalog JSON should preserve admission-ready builder summaries");
     expect_contains(dry_run_process.stdout_text, "\"uiLaunchAdmitted\": false",
         "#1271: dry-run builder invocation admission catalog entries should expose omitted admission");
 
