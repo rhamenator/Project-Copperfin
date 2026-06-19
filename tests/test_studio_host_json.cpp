@@ -9505,6 +9505,248 @@ void test_studio_host_json_moves_visual_methods(const std::string& studio_host_p
     }
 }
 
+void test_studio_host_json_reorders_visual_methods(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_method_reorder_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "method-reorder.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Alpha\r\nTHISFORM.Alpha()\r\nENDPROC\r\nFUNCTION Bravo\r\nRETURN .T.\r\nENDFUNC\r\nPROCEDURE Charlie\r\nTHISFORM.Charlie()\r\nENDPROC"
+        },
+        {
+            "cmdOther",
+            "otherButton",
+            "other-guid",
+            "PROCEDURE Other\r\nTHISFORM.Other()\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1429: synthetic SCX table for visual method reorder should be created");
+
+    const auto method_order = [&]() {
+        std::vector<std::string> names;
+        const auto methods = copperfin::vfp::list_visual_object_methods({
+            .path = form_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "save-guid"
+        });
+        if (!methods.ok) {
+            return names;
+        }
+        for (const auto& method : methods.methods) {
+            names.push_back(method.method_name);
+        }
+        return names;
+    };
+    const auto order_is = [](const std::vector<std::string>& names,
+                             std::initializer_list<const char*> expected) {
+        if (names.size() != expected.size()) {
+            return false;
+        }
+        auto name_it = names.begin();
+        auto expected_it = expected.begin();
+        for (; name_it != names.end(); ++name_it, ++expected_it) {
+            if (*name_it != *expected_it) {
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const auto first_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "Charlie",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(first_process.exit_code == 0,
+        "#1429: visual method reorder JSON should exit successfully for first placement");
+    expect_contains(first_process.stdout_text, "\"visualMethodReorder\": {",
+        "#1429: visual method reorder JSON should expose a reorder object");
+    expect_contains(first_process.stdout_text, "\"affectedObjectCount\": 1",
+        "#1429: visual method reorder JSON should expose affected object counts");
+    expect_contains(first_process.stdout_text, "\"dryRun\": false",
+        "#1429: visual method reorder JSON should expose committed execution state");
+    expect_contains(first_process.stdout_text, "\"mutatesAsset\": true",
+        "#1429: visual method reorder JSON should expose mutation state");
+    expect_contains(first_process.stdout_text, "\"undoAvailable\": true",
+        "#1429: visual method reorder JSON should expose undo availability");
+    expect(order_is(method_order(), {"Charlie", "Alpha", "Bravo"}),
+        "#1429: visual method reorder host command should move methods to the front");
+
+    const auto after_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "Alpha",
+            "--placement", "after",
+            "--relative-method-name", "Bravo",
+            "--json"
+        },
+        temp_root);
+    expect(after_process.exit_code == 0,
+        "#1429: visual method reorder JSON should exit successfully for relative placement");
+    expect(order_is(method_order(), {"Charlie", "Bravo", "Alpha"}),
+        "#1429: visual method reorder host command should support after-relative placement");
+
+    const auto other_methods = copperfin::vfp::list_visual_object_methods({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "other-guid"
+    });
+    expect(other_methods.ok && other_methods.methods.size() == 1U &&
+            other_methods.methods.front().method_name == "Other",
+        "#1429: visual method reorder host command should preserve unrelated objects");
+
+    const auto missing_relative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "Alpha",
+            "--placement", "before",
+            "--json"
+        },
+        temp_root);
+    expect(missing_relative_process.exit_code == 4,
+        "#1429: visual method reorder JSON should reject missing relative method names for before placement");
+    expect_contains(missing_relative_process.stdout_text, "\"visualMethodReorder\": null",
+        "#1429: missing-relative visual method reorder JSON should not expose a reorder object");
+    expect_contains(missing_relative_process.stdout_text, "No relative method name was provided.",
+        "#1429: missing-relative visual method reorder JSON should report editor errors");
+    expect(order_is(method_order(), {"Charlie", "Bravo", "Alpha"}),
+        "#1429: failed visual method reorder commands should not mutate method order");
+
+    const auto unknown_placement_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "Alpha",
+            "--placement", "middle",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_placement_process.exit_code == 4,
+        "#1429: visual method reorder JSON should reject unknown placements");
+    expect_contains(unknown_placement_process.stdout_text, "Unknown method placement was requested.",
+        "#1429: unknown-placement visual method reorder JSON should report editor errors");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--unique-id", "save-guid",
+            "--method-name", "Alpha",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1429: visual method reorder JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualMethodReorder\": null",
+        "#1429: missing-path visual method reorder JSON should not expose a reorder object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1429: missing-path visual method reorder JSON should report parser errors");
+
+    const auto missing_method_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(missing_method_name_process.exit_code == 2,
+        "#1429: visual method reorder JSON should reject missing method names");
+    expect_contains(missing_method_name_process.stdout_text, "No method name was provided.",
+        "#1429: missing method-name visual method reorder JSON should report parser errors");
+
+    const auto missing_placement_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "Alpha",
+            "--json"
+        },
+        temp_root);
+    expect(missing_placement_process.exit_code == 2,
+        "#1429: visual method reorder JSON should reject missing placements");
+    expect_contains(missing_placement_process.stdout_text, "No method placement was provided.",
+        "#1429: missing placement visual method reorder JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--method-name", "Alpha",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1429: visual method reorder JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1429: invalid-record visual method reorder JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-reorder",
+            "--path", form_path.string(),
+            "--object-name", "missingObject",
+            "--method-name", "Alpha",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1429: visual method reorder JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualMethodReorder\": null",
+        "#1429: unresolved visual method reorder JSON should not expose a reorder object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1429: unresolved visual method reorder JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-method-reorder --path <asset>",
+        "#1429: usage text should expose visual method reorder commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_object_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -42123,6 +42365,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_visual_methods(argv[1]);
     test_studio_host_json_copies_visual_methods(argv[1]);
     test_studio_host_json_moves_visual_methods(argv[1]);
+    test_studio_host_json_reorders_visual_methods(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);
     test_studio_host_json_exposes_visual_object_descendants(argv[1]);
