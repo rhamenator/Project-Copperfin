@@ -78,8 +78,15 @@ StudioBuilderDispatchResult plan_studio_builder_dispatch(
 
 StudioBuilderDispatchCatalogResult plan_studio_builder_dispatch_catalog(
     const StudioBuilderDispatchCatalogRequest& request) {
-    const auto builders = studio_builders_for_context(request.context);
-    if (builders.empty()) {
+    auto admission_catalog = plan_studio_builder_invocation_admission_catalog({
+        .context = request.context,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .admit_ui_launches = request.admit_ui_launches
+    });
+    if (!admission_catalog.ok) {
         return {
             .ok = false,
             .error = "A builder dispatch catalog request requires at least one context builder.",
@@ -94,45 +101,23 @@ StudioBuilderDispatchCatalogResult plan_studio_builder_dispatch_catalog(
     }
 
     std::vector<StudioBuilderDispatchCatalogEntry> entries;
-    entries.reserve(builders.size());
+    entries.reserve(admission_catalog.entries.size());
     std::size_t dispatch_count = 0U;
     std::size_t error_count = 0U;
     bool dry_run = true;
     bool mutates_asset = false;
 
-    for (const auto& builder : builders) {
-        auto launch_plan = plan_studio_builder_launch({
-            .context = request.context,
-            .builder_id = std::string(builder.id),
-            .asset_path = request.asset_path,
-            .record_index = request.record_index,
-            .object_name = request.object_name,
-            .unique_id = request.unique_id
-        });
-
-        StudioBuilderInvocationAdmissionResult invocation_admission{};
+    for (auto& admission_entry : admission_catalog.entries) {
         StudioBuilderDispatchResult dispatch{};
-        if (launch_plan.ok) {
-            invocation_admission = plan_studio_builder_invocation_admission({
-                .launch_plan = launch_plan.plan,
-                .admit_ui_launch = request.admit_ui_launches
-            });
-        } else {
-            invocation_admission = {
-                .ok = false,
-                .error = launch_plan.error,
-                .plan = {}
-            };
-        }
 
-        if (invocation_admission.ok) {
+        if (admission_entry.invocation_admission.ok) {
             dispatch = plan_studio_builder_dispatch({
-                .admission_plan = invocation_admission.plan
+                .admission_plan = admission_entry.invocation_admission.plan
             });
         } else {
             dispatch = {
                 .ok = false,
-                .error = invocation_admission.error,
+                .error = admission_entry.invocation_admission.error,
                 .plan = {}
             };
         }
@@ -146,9 +131,9 @@ StudioBuilderDispatchCatalogResult plan_studio_builder_dispatch_catalog(
         }
 
         entries.push_back({
-            .builder = builder,
-            .launch_plan = std::move(launch_plan),
-            .invocation_admission = std::move(invocation_admission),
+            .builder = admission_entry.builder,
+            .launch_plan = std::move(admission_entry.launch_plan),
+            .invocation_admission = std::move(admission_entry.invocation_admission),
             .dispatch = std::move(dispatch)
         });
     }
@@ -157,7 +142,7 @@ StudioBuilderDispatchCatalogResult plan_studio_builder_dispatch_catalog(
         .ok = true,
         .error = {},
         .context = request.context,
-        .builder_count = entries.size(),
+        .builder_count = admission_catalog.builder_count,
         .dispatch_count = dispatch_count,
         .error_count = error_count,
         .dry_run = dispatch_count == 0U ? true : dry_run,

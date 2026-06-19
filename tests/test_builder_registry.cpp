@@ -440,7 +440,14 @@ int main() {
     expect(catalog_grid_dispatch != nullptr &&
                catalog_grid_dispatch->launch_plan.ok &&
                catalog_grid_dispatch->invocation_admission.ok &&
+               catalog_grid_admission != nullptr &&
                catalog_grid_dispatch->dispatch.ok &&
+               std::string(catalog_grid_dispatch->launch_plan.plan.builder.id) ==
+                   std::string(catalog_grid_admission->launch_plan.plan.builder.id) &&
+               catalog_grid_dispatch->invocation_admission.plan.command_token ==
+                   catalog_grid_admission->invocation_admission.plan.command_token &&
+               catalog_grid_dispatch->invocation_admission.plan.ui_launch_admitted ==
+                   catalog_grid_admission->invocation_admission.plan.ui_launch_admitted &&
                std::string(catalog_grid_dispatch->dispatch.plan.builder.id) == "grid-builder" &&
                catalog_grid_dispatch->dispatch.plan.builder.kind == StudioBuilderKind::builder &&
                catalog_grid_dispatch->dispatch.plan.context == StudioBuilderContext::control &&
@@ -456,7 +463,7 @@ int main() {
                    catalog_grid_dispatch->dispatch.plan.dispatch_arguments,
                    "--builder-context",
                    "control"),
-           "#1231: builder dispatch catalog entries should preserve builder and target metadata");
+           "#1272: builder dispatch catalog entries should preserve shared launch/admission catalog metadata");
 
     const auto dry_run_control_dispatch_catalog = copperfin::studio::plan_studio_builder_dispatch_catalog({
         .context = StudioBuilderContext::control,
@@ -478,11 +485,14 @@ int main() {
     expect(dry_run_grid_dispatch != nullptr &&
                dry_run_grid_dispatch->launch_plan.ok &&
                dry_run_grid_dispatch->invocation_admission.ok &&
+               dry_run_grid_admission != nullptr &&
                !dry_run_grid_dispatch->invocation_admission.plan.ui_launch_admitted &&
+               dry_run_grid_dispatch->invocation_admission.plan.dry_run ==
+                   dry_run_grid_admission->invocation_admission.plan.dry_run &&
                !dry_run_grid_dispatch->dispatch.ok &&
                dry_run_grid_dispatch->dispatch.error ==
                    "A builder dispatch request requires an admitted non-dry-run invocation.",
-           "#1231: dry-run builder dispatch catalog entries should preserve admission failures");
+           "#1272: dry-run builder dispatch catalog entries should preserve shared admission failures");
 
     const auto label_dispatch_catalog = copperfin::studio::plan_studio_builder_dispatch_catalog({
         .context = StudioBuilderContext::label,
