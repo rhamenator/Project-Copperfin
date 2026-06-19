@@ -7756,6 +7756,12 @@ void test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalo
         "#1289: admitted selection toolbox invocation-admission catalog JSON should not be dry-run");
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1289: selection toolbox invocation-admission catalog JSON should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"admissionReadyItemIds\": [\"label\", \"textbox\"",
+        "#1373: selection toolbox invocation-admission catalog JSON should summarize admission-ready items");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedItemIds\": []",
+        "#1373: admitted selection toolbox invocation-admission catalog JSON should summarize empty blocked item ids");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1373: admitted selection toolbox invocation-admission catalog JSON should summarize empty blocked admission errors");
     expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
         "#1289: visual selection toolbox invocation-admission catalog JSON should include form-safe TextBox items");
     expect_contains(visual_process.stdout_text, "\"launchPlanOk\": true",
@@ -7789,6 +7795,12 @@ void test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalo
         "#1289: dry-run selection toolbox invocation-admission catalog JSON should expose unadmitted palette state");
     expect_contains(report_process.stdout_text, "\"dryRun\": true",
         "#1289: dry-run selection toolbox invocation-admission catalog JSON should preserve dry-run state");
+    expect_contains(report_process.stdout_text, "\"admissionReadyItemIds\": [\"label\"",
+        "#1373: dry-run selection toolbox invocation-admission catalog JSON should preserve admission-ready items");
+    expect_contains(report_process.stdout_text, "\"admissionBlockedItemIds\": []",
+        "#1373: dry-run selection toolbox invocation-admission catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1373: dry-run selection toolbox invocation-admission catalog JSON should summarize empty blocked admission errors");
 
     const auto unsupported_process = run_process_capture(
         studio_host_path,
