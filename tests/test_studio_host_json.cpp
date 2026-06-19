@@ -3708,6 +3708,20 @@ void write_synthetic_report_table_for_deleted_settings_json(const std::filesyste
     expect(delete_result.ok, "#1476: synthetic FRX table should mark report settings deleted");
 }
 
+void write_synthetic_report_table_for_column_setup_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "COLS=2\nCOLWIDTH=3600\nCOLSPACING=120"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1518: synthetic report table for column setup JSON should be created");
+}
+
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -3860,6 +3874,90 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1459: unplaced/deleted report object JSON should expose null section object indexes");
     expect_contains(process.stdout_text, "\"title\": \"Record 5\"",
                     "#1452: report layout JSON should preserve synthesized unplaced-object titles");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_report_layout_column_setup(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_column_setup_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "columns.frx";
+    write_synthetic_report_table_for_column_setup_json(report_path);
+    const auto report_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--json"},
+        temp_root);
+
+    if (report_process.exit_code != 0) {
+        std::cerr << "studio host report column setup stdout:\n" << report_process.stdout_text << "\n";
+        std::cerr << "studio host report column setup stderr:\n" << report_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(report_process.exit_code == 0,
+           "#1518: report column setup JSON should exit successfully");
+    expect_contains(report_process.stdout_text, "\"reportLayout\": {",
+                    "#1518: report column setup JSON should expose report-layout JSON");
+    expect_contains(report_process.stdout_text, "\"pageSetupAvailable\": false",
+                    "#1518: report column setup JSON should not fabricate page setup availability");
+    expect_contains(report_process.stdout_text, "\"columnSetupAvailable\": true",
+                    "#1518: report column setup JSON should expose column setup availability");
+    expect_contains(report_process.stdout_text, "\"columnCountAvailable\": true",
+                    "#1518: report column setup JSON should expose column count availability");
+    expect_contains(report_process.stdout_text, "\"columnCount\": 2",
+                    "#1518: report column setup JSON should expose column counts");
+    expect_contains(report_process.stdout_text, "\"columnWidthAvailable\": true",
+                    "#1518: report column setup JSON should expose column width availability");
+    expect_contains(report_process.stdout_text, "\"columnWidth\": 3600",
+                    "#1518: report column setup JSON should expose column widths");
+    expect_contains(report_process.stdout_text, "\"columnSpacingAvailable\": true",
+                    "#1518: report column setup JSON should expose column spacing availability");
+    expect_contains(report_process.stdout_text, "\"columnSpacing\": 120",
+                    "#1518: report column setup JSON should expose column spacing");
+    expect_contains(report_process.stdout_text, "\"settingCount\": 3",
+                    "#1518: report column setup JSON should preserve compact setting counts");
+    expect_contains(report_process.stdout_text, "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"2\"",
+                    "#1518: report column setup JSON should preserve column-count setting provenance");
+    expect_contains(report_process.stdout_text, "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"3600\"",
+                    "#1518: report column setup JSON should preserve column-width setting provenance");
+    expect_contains(report_process.stdout_text, "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2, \"memoBlockNumber\": 1, \"value\": \"120\"",
+                    "#1518: report column setup JSON should preserve column-spacing setting provenance");
+
+    const fs::path label_path = temp_root / "columns.lbx";
+    write_synthetic_report_table_for_column_setup_json(label_path);
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--json"},
+        temp_root);
+
+    if (label_process.exit_code != 0) {
+        std::cerr << "studio host label column setup stdout:\n" << label_process.stdout_text << "\n";
+        std::cerr << "studio host label column setup stderr:\n" << label_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(label_process.exit_code == 0,
+           "#1518: label column setup JSON should exit successfully");
+    expect_contains(label_process.stdout_text, "\"isLabel\": true",
+                    "#1518: label column setup JSON should preserve label identity");
+    expect_contains(label_process.stdout_text, "\"pageSetupAvailable\": false",
+                    "#1518: label column setup JSON should not fabricate page setup availability");
+    expect_contains(label_process.stdout_text, "\"columnSetupAvailable\": true",
+                    "#1518: label column setup JSON should expose column setup availability");
+    expect_contains(label_process.stdout_text, "\"columnCount\": 2",
+                    "#1518: label column setup JSON should expose column counts");
+    expect_contains(label_process.stdout_text, "\"columnWidth\": 3600",
+                    "#1518: label column setup JSON should expose column widths");
+    expect_contains(label_process.stdout_text, "\"columnSpacing\": 120",
+                    "#1518: label column setup JSON should expose column spacing");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -50099,6 +50197,7 @@ int main(int argc, char** argv) {
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
+    test_studio_host_json_exposes_report_layout_column_setup(argv[1]);
     test_studio_host_json_exposes_label_layout_parity(argv[1]);
     test_studio_host_json_exposes_selected_report_sections(argv[1]);
     test_studio_host_json_exposes_selected_report_objects(argv[1]);

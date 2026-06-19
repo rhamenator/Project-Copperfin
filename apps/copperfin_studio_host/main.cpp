@@ -20475,6 +20475,17 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      \"gridHorizontalAvailable\": "
                   << (report_layout.grid_horizontal_available ? "true" : "false") << ",\n";
         std::cout << "      \"gridHorizontal\": " << report_layout.grid_horizontal << ",\n";
+        std::cout << "      \"columnSetupAvailable\": "
+                  << (report_layout.column_setup_available ? "true" : "false") << ",\n";
+        std::cout << "      \"columnCountAvailable\": "
+                  << (report_layout.column_count_available ? "true" : "false") << ",\n";
+        std::cout << "      \"columnCount\": " << report_layout.column_count << ",\n";
+        std::cout << "      \"columnWidthAvailable\": "
+                  << (report_layout.column_width_available ? "true" : "false") << ",\n";
+        std::cout << "      \"columnWidth\": " << report_layout.column_width << ",\n";
+        std::cout << "      \"columnSpacingAvailable\": "
+                  << (report_layout.column_spacing_available ? "true" : "false") << ",\n";
+        std::cout << "      \"columnSpacing\": " << report_layout.column_spacing << ",\n";
         std::cout << "      \"liveObjectCount\": " << report_layout.live_object_count << ",\n";
         std::cout << "      \"settingCount\": " << report_layout.settings.size() << ",\n";
         std::cout << "      \"deletedSettingCount\": " << report_layout.deleted_settings.size() << ",\n";

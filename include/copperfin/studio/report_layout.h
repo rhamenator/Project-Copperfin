@@ -116,6 +116,13 @@ struct StudioReportLayoutSnapshot {
     int grid_vertical = 0;
     bool grid_horizontal_available = false;
     int grid_horizontal = 0;
+    bool column_setup_available = false;
+    bool column_count_available = false;
+    int column_count = 0;
+    bool column_width_available = false;
+    int column_width = 0;
+    bool column_spacing_available = false;
+    int column_spacing = 0;
     std::size_t live_object_count = 0;
     std::vector<StudioNamedValue> settings{};
     std::vector<StudioNamedValue> deleted_settings{};

@@ -354,6 +354,9 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     append_numeric("BOTMARGIN");
     append_numeric("GRIDV");
     append_numeric("GRIDH");
+    append_numeric("COLS");
+    append_numeric("COLWIDTH");
+    append_numeric("COLSPACING");
 }
 
 std::string make_section_id(std::size_t record_index, int objcode) {
@@ -416,32 +419,52 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
         }
 
         assign_setting(*parsed_value);
-        snapshot.page_setup_available = true;
     };
 
     apply_setting("ORIENTATION", [&](int value) {
+        snapshot.page_setup_available = true;
         snapshot.orientation_available = true;
         snapshot.orientation_code = value;
     });
     apply_setting("PAPERSIZE", [&](int value) {
+        snapshot.page_setup_available = true;
         snapshot.paper_size_available = true;
         snapshot.paper_size_code = value;
     });
     apply_setting("TOPMARGIN", [&](int value) {
+        snapshot.page_setup_available = true;
         snapshot.top_margin_available = true;
         snapshot.top_margin = value;
     });
     apply_setting("BOTMARGIN", [&](int value) {
+        snapshot.page_setup_available = true;
         snapshot.bottom_margin_available = true;
         snapshot.bottom_margin = value;
     });
     apply_setting("GRIDV", [&](int value) {
+        snapshot.page_setup_available = true;
         snapshot.grid_vertical_available = true;
         snapshot.grid_vertical = value;
     });
     apply_setting("GRIDH", [&](int value) {
+        snapshot.page_setup_available = true;
         snapshot.grid_horizontal_available = true;
         snapshot.grid_horizontal = value;
+    });
+    apply_setting("COLS", [&](int value) {
+        snapshot.column_setup_available = true;
+        snapshot.column_count_available = true;
+        snapshot.column_count = value;
+    });
+    apply_setting("COLWIDTH", [&](int value) {
+        snapshot.column_setup_available = true;
+        snapshot.column_width_available = true;
+        snapshot.column_width = value;
+    });
+    apply_setting("COLSPACING", [&](int value) {
+        snapshot.column_setup_available = true;
+        snapshot.column_spacing_available = true;
+        snapshot.column_spacing = value;
     });
 }
 
