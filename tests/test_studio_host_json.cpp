@@ -384,6 +384,32 @@ std::string visual_object_property(
     return result.value;
 }
 
+std::string visual_object_property_order(
+    const std::filesystem::path& form_path,
+    const std::string& unique_id) {
+    const auto result = copperfin::vfp::list_visual_object_properties({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = unique_id
+    });
+    if (!result.ok) {
+        return {};
+    }
+
+    std::string order;
+    for (const auto& property : result.properties) {
+        if (property.direct_field) {
+            continue;
+        }
+        if (!order.empty()) {
+            order += ",";
+        }
+        order += property.property_name;
+    }
+    return order;
+}
+
 std::string visual_object_order(const std::filesystem::path& form_path) {
     const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
     if (!list_result.ok) {
@@ -9834,6 +9860,243 @@ void test_studio_host_json_renames_visual_property_batches(const std::string& st
     const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
     expect_contains(usage_process.stdout_text, "--visual-property-rename-batch --path <asset>",
         "#1442: usage text should expose visual property rename-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_reorders_visual_properties(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_property_reorder_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "reorder.scx");
+
+    const auto reorder_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(reorder_process.exit_code == 0,
+        "#1443: visual property reorder JSON should exit successfully for memo-backed properties");
+    expect_contains(reorder_process.stdout_text, "\"visualPropertyReorder\": {",
+        "#1443: visual property reorder JSON should expose a reorder object");
+    expect_contains(reorder_process.stdout_text, "\"affectedObjectCount\": 1",
+        "#1443: visual property reorder JSON should expose affected object counts");
+    expect_contains(reorder_process.stdout_text, "\"dryRun\": false",
+        "#1443: visual property reorder JSON should expose committed execution state");
+    expect_contains(reorder_process.stdout_text, "\"mutatesAsset\": true",
+        "#1443: visual property reorder JSON should expose mutation state");
+    expect_contains(reorder_process.stdout_text, "\"undoAvailable\": true",
+        "#1443: visual property reorder JSON should expose undo availability");
+    expect(visual_object_property_order(form_path, "existing-textbox-guid") == "Left,ControlSource" &&
+            visual_object_property(form_path, "existing-textbox-guid", "Left") == "12" &&
+            visual_object_property(form_path, "existing-textbox-guid", "ControlSource") == "\"customer.name\"",
+        "#1443: visual property reorder host command should reorder properties and preserve values");
+
+    const auto relative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--placement", "before",
+            "--relative-property-name", "Left",
+            "--json"
+        },
+        temp_root);
+    expect(relative_process.exit_code == 0,
+        "#1443: visual property reorder JSON should support relative placements");
+    expect(visual_object_property_order(form_path, "existing-textbox-guid") == "ControlSource,Left",
+        "#1443: visual property reorder host command should apply relative placements");
+
+    const auto missing_relative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--placement", "after",
+            "--relative-property-name", "MissingProperty",
+            "--json"
+        },
+        temp_root);
+    expect(missing_relative_process.exit_code == 4,
+        "#1443: visual property reorder JSON should reject missing relative properties");
+    expect_contains(missing_relative_process.stdout_text, "\"visualPropertyReorder\": null",
+        "#1443: missing-relative visual property reorder JSON should not expose a reorder object");
+    expect_contains(missing_relative_process.stdout_text, "The relative property was not found.",
+        "#1443: missing-relative visual property reorder JSON should report editor errors");
+    expect(visual_object_property_order(form_path, "existing-textbox-guid") == "ControlSource,Left",
+        "#1443: failed visual property reorder commands should not mutate property order");
+
+    const auto self_relative_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--placement", "before",
+            "--relative-property-name", "Left",
+            "--json"
+        },
+        temp_root);
+    expect(self_relative_process.exit_code == 4,
+        "#1443: visual property reorder JSON should reject self-relative placement");
+    expect_contains(self_relative_process.stdout_text, "The source property cannot be positioned relative to itself.",
+        "#1443: self-relative visual property reorder JSON should report editor errors");
+
+    const fs::path direct_path = temp_root / "reorder_direct.scx";
+    write_synthetic_form_table_for_toolbox_creation(direct_path);
+    const auto direct_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", direct_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "CAPTION",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(direct_field_process.exit_code == 4,
+        "#1443: visual property reorder JSON should reject direct DBF-backed fields");
+    expect_contains(direct_field_process.stdout_text, "\"visualPropertyReorder\": null",
+        "#1443: direct-field visual property reorder JSON should not expose a reorder object");
+    expect_contains(direct_field_process.stdout_text, "Direct DBF-backed fields cannot be reordered per object.",
+        "#1443: direct-field visual property reorder JSON should report editor errors");
+    expect(visual_object_property(direct_path, "existing-textbox-guid", "CAPTION") == "Existing",
+        "#1443: direct-field visual property reorder commands should not mutate direct fields");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1443: visual property reorder JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualPropertyReorder\": null",
+        "#1443: missing-path visual property reorder JSON should not expose a reorder object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1443: missing-path visual property reorder JSON should report parser errors");
+
+    const auto missing_property_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(missing_property_name_process.exit_code == 2,
+        "#1443: visual property reorder JSON should reject missing property names");
+    expect_contains(missing_property_name_process.stdout_text, "No property name was provided.",
+        "#1443: missing property-name visual property reorder JSON should report parser errors");
+
+    const auto missing_placement_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--json"
+        },
+        temp_root);
+    expect(missing_placement_process.exit_code == 2,
+        "#1443: visual property reorder JSON should reject missing placements");
+    expect_contains(missing_placement_process.stdout_text, "No property placement was provided.",
+        "#1443: missing-placement visual property reorder JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--property-name", "Left",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1443: visual property reorder JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1443: invalid-record visual property reorder JSON should report parser errors");
+
+    const auto unknown_placement_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--placement", "middle",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_placement_process.exit_code == 4,
+        "#1443: visual property reorder JSON should reject unknown placements");
+    expect_contains(unknown_placement_process.stdout_text, "Unknown property placement was requested.",
+        "#1443: unknown-placement visual property reorder JSON should report editor errors");
+
+    const auto missing_relative_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--placement", "before",
+            "--json"
+        },
+        temp_root);
+    expect(missing_relative_name_process.exit_code == 4,
+        "#1443: visual property reorder JSON should reject missing relative names");
+    expect_contains(missing_relative_name_process.stdout_text, "No relative property name was provided.",
+        "#1443: missing-relative-name visual property reorder JSON should report editor errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", form_path.string(),
+            "--object-name", "missingObject",
+            "--property-name", "Left",
+            "--placement", "first",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1443: visual property reorder JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualPropertyReorder\": null",
+        "#1443: unresolved visual property reorder JSON should not expose a reorder object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1443: unresolved visual property reorder JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-property-reorder --path <asset>",
+        "#1443: usage text should expose visual property reorder commands");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -45306,6 +45569,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_moves_visual_property_batches(argv[1]);
     test_studio_host_json_renames_visual_properties(argv[1]);
     test_studio_host_json_renames_visual_property_batches(argv[1]);
+    test_studio_host_json_reorders_visual_properties(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
     test_studio_host_json_exposes_visual_method_list(argv[1]);
     test_studio_host_json_exposes_visual_method_query(argv[1]);
