@@ -8866,6 +8866,10 @@ void print_json_builder_invocation_admission_result(
 
     const auto& plan = result.plan;
     const auto& builder = plan.builder;
+    const std::vector<std::string> admission_ready_builder_ids{std::string(builder.id)};
+    const std::vector<std::string> admission_blocked_builder_ids;
+    const std::vector<std::string> admission_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -8903,6 +8907,15 @@ void print_json_builder_invocation_admission_result(
     std::cout << ",\n";
     std::cout << "    \"uniqueId\": ";
     print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"admissionReadyBuilderIds\": ";
+    print_json_string_array(admission_ready_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedBuilderIds\": ";
+    print_json_string_array(admission_blocked_builder_ids);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedErrors\": ";
+    print_json_string_array(admission_blocked_errors);
     std::cout << ",\n";
     std::cout << "    \"uiLaunchAdmitted\": " << (plan.ui_launch_admitted ? "true" : "false") << ",\n";
     std::cout << "    \"dryRun\": " << (plan.dry_run ? "true" : "false") << ",\n";

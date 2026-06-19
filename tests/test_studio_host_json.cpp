@@ -4685,6 +4685,12 @@ void test_studio_host_json_exposes_builder_invocation_admission(const std::strin
         "#1216: builder invocation-admission JSON should preserve object names");
     expect_contains(admitted_process.stdout_text, "\"uniqueId\": \"grid-guid\"",
         "#1216: builder invocation-admission JSON should preserve unique ids");
+    expect_contains(admitted_process.stdout_text, "\"admissionReadyBuilderIds\": [\"grid-builder\"]",
+        "#1392: builder invocation-admission JSON should summarize admission-ready builder ids");
+    expect_contains(admitted_process.stdout_text, "\"admissionBlockedBuilderIds\": []",
+        "#1392: builder invocation-admission JSON should summarize empty blocked builder ids");
+    expect_contains(admitted_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1392: builder invocation-admission JSON should summarize empty admission errors");
     expect_contains(admitted_process.stdout_text, "\"uiLaunchAdmitted\": true",
         "#1216: builder invocation-admission JSON should expose UI-admission state");
     expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
@@ -4709,6 +4715,12 @@ void test_studio_host_json_exposes_builder_invocation_admission(const std::strin
         "#1216: selection-context invocation-admission JSON should expose wizard ids");
     expect_contains(selection_process.stdout_text, "\"kind\": \"wizard\"",
         "#1216: selection-context invocation-admission JSON should preserve wizard kind metadata");
+    expect_contains(selection_process.stdout_text, "\"admissionReadyBuilderIds\": [\"label-wizard\"]",
+        "#1392: selection-context builder invocation-admission JSON should summarize admission-ready builder ids");
+    expect_contains(selection_process.stdout_text, "\"admissionBlockedBuilderIds\": []",
+        "#1392: selection-context builder invocation-admission JSON should summarize empty blocked builder ids");
+    expect_contains(selection_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1392: selection-context builder invocation-admission JSON should summarize empty admission errors");
     expect_contains(selection_process.stdout_text, "\"uiLaunchAdmitted\": false",
         "#1216: omitted UI admission should default to false");
     expect_contains(selection_process.stdout_text, "\"dryRun\": true",
