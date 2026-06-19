@@ -10706,6 +10706,14 @@ void print_json_toolbox_execution_result(
     }
 
     const auto& plan = result.dispatch_plan;
+    std::vector<std::string> execution_ready_item_ids;
+    execution_ready_item_ids.reserve(plan.items.size());
+    for (const auto& item : plan.items) {
+        execution_ready_item_ids.push_back(std::string(item.id));
+    }
+    const std::vector<std::string> execution_blocked_item_ids;
+    const std::vector<std::string> execution_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -10729,6 +10737,15 @@ void print_json_toolbox_execution_result(
     print_json_string(plan.unique_id);
     std::cout << ",\n";
     std::cout << "    \"itemCount\": " << plan.item_count << ",\n";
+    std::cout << "    \"executionReadyItemIds\": ";
+    print_json_string_array(execution_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedItemIds\": ";
+    print_json_string_array(execution_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedErrors\": ";
+    print_json_string_array(execution_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"items\": [\n";
     for (std::size_t index = 0U; index < plan.items.size(); ++index) {
         print_json_toolbox_item_descriptor(plan.items[index], "      ");

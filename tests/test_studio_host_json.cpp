@@ -8099,6 +8099,12 @@ void test_studio_host_json_exposes_toolbox_execution(const std::string& studio_h
         "#1323: toolbox execution JSON should carry unique-id selectors");
     expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
         "#1323: visual-object toolbox execution JSON should include form-safe TextBox items");
+    expect_contains(visual_process.stdout_text, "\"executionReadyItemIds\": [\"label\", \"textbox\"",
+        "#1390: toolbox execution JSON should summarize execution-ready items");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedItemIds\": []",
+        "#1390: admitted toolbox execution JSON should summarize empty blocked item ids");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1390: admitted toolbox execution JSON should summarize empty execution errors");
     expect_contains(visual_process.stdout_text, "\"launchCommand\": \"/bin/true\"",
         "#1323: toolbox execution JSON should expose launch commands");
     expect_contains(visual_process.stdout_text, "\"executedCommand\": \"'/bin/true'",
@@ -8137,6 +8143,12 @@ void test_studio_host_json_exposes_toolbox_execution(const std::string& studio_h
         "#1323: report toolbox execution JSON should include report-safe Label items");
     expect_not_contains(report_process.stdout_text, "\"id\": \"textbox\"",
         "#1323: report toolbox execution JSON should exclude form-only TextBox items");
+    expect_contains(report_process.stdout_text, "\"executionReadyItemIds\": [\"label\"",
+        "#1390: report toolbox execution JSON should summarize execution-ready items");
+    expect_contains(report_process.stdout_text, "\"executionBlockedItemIds\": []",
+        "#1390: report toolbox execution JSON should summarize empty blocked item ids");
+    expect_contains(report_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1390: report toolbox execution JSON should summarize empty execution errors");
     expect_contains(report_process.stdout_text, "\"executed\": true",
         "#1323: report toolbox execution JSON should mark execution complete");
 
