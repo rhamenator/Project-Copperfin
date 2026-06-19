@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E3 update: latest implemented slice is `#1518`, exposing compact non-mutating report/label column setup summary JSON for column count, column width, and column spacing while preserving provenance-rich settings arrays. `#1517` is the immediately preceding page setup summary slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1517` have been closed with evidence-backed approval; close `#1518` with evidence after validation and sync, then keep parent `#24` open unless root-level closure evidence is explicit.
+Current E3 update: latest implemented and closed slice is `#1518`, exposing compact non-mutating report/label column setup summary JSON for column count, column width, and column spacing while preserving provenance-rich settings arrays. `#1517` is the immediately preceding page setup summary slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1518` have been closed with evidence-backed approval; parent `#24` remains open and currently has no open prompt-sized children.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 

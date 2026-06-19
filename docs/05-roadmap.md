@@ -71,7 +71,7 @@ Goal:
 Current state:
 
 - `#22` is closed; `#23` and `#24` remain open as designer lane parents.
-- `#24` currently has `#1518` implemented pending evidence-backed closure after `#1452`-`#1517` closed; keep work prompt-sized and create the next native child only after `#1518` is closed.
+- `#24` currently has no open prompt-sized children after `#1452`-`#1518` closed; create the next native child before more E3 implementation work.
 - `#27`-`#29` currently have no active-open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
 
 ## Phase F: Federation, Interop, And Modern Platform
