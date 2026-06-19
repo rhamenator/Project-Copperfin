@@ -8815,6 +8815,202 @@ void test_studio_host_json_deletes_visual_methods(const std::string& studio_host
     }
 }
 
+void test_studio_host_json_renames_visual_methods(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_method_rename_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "method-rename.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\nFUNCTION CanSave\r\nRETURN .T.\r\nENDFUNC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1426: synthetic SCX table for visual method rename should be created");
+
+    const auto rename_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "Click",
+            "--new-method-name", "DoClick",
+            "--json"
+        },
+        temp_root);
+    expect(rename_process.exit_code == 0,
+        "#1426: visual method rename JSON should exit successfully for existing methods");
+    expect_contains(rename_process.stdout_text, "\"visualMethodRename\": {",
+        "#1426: visual method rename JSON should expose a rename object");
+    expect_contains(rename_process.stdout_text, "\"affectedObjectCount\": 1",
+        "#1426: visual method rename JSON should expose affected object counts");
+    expect_contains(rename_process.stdout_text, "\"dryRun\": false",
+        "#1426: visual method rename JSON should expose committed execution state");
+    expect_contains(rename_process.stdout_text, "\"mutatesAsset\": true",
+        "#1426: visual method rename JSON should expose mutation state");
+    expect_contains(rename_process.stdout_text, "\"undoAvailable\": true",
+        "#1426: visual method rename JSON should expose undo availability");
+    auto renamed_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "DoClick"
+    });
+    expect(renamed_method.ok && renamed_method.exists &&
+            renamed_method.method.kind == "procedure" &&
+            renamed_method.method.source_text == "THISFORM.Save()",
+        "#1426: visual method rename host command should rename selected methods and preserve bodies");
+    auto old_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "Click"
+    });
+    expect(old_method.ok && !old_method.exists,
+        "#1426: visual method rename host command should remove old method declarations");
+    auto can_save_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "CanSave"
+    });
+    expect(can_save_method.ok && can_save_method.exists && can_save_method.method.source_text == "RETURN .T.",
+        "#1426: visual method rename host command should preserve unrelated methods");
+
+    const auto collision_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "DoClick",
+            "--new-method-name", "CanSave",
+            "--json"
+        },
+        temp_root);
+    expect(collision_process.exit_code == 4,
+        "#1426: visual method rename JSON should reject target collisions");
+    expect_contains(collision_process.stdout_text, "\"visualMethodRename\": null",
+        "#1426: target-collision visual method rename JSON should not expose a rename object");
+    expect_contains(collision_process.stdout_text, "The requested target method already exists.",
+        "#1426: target-collision visual method rename JSON should report editor errors");
+    renamed_method = copperfin::vfp::query_visual_object_method({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "save-guid",
+        .method_name = "DoClick"
+    });
+    expect(renamed_method.ok && renamed_method.exists,
+        "#1426: failed visual method rename commands should not remove source methods");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename",
+            "--unique-id", "save-guid",
+            "--method-name", "DoClick",
+            "--new-method-name", "Clicked",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1426: visual method rename JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualMethodRename\": null",
+        "#1426: missing-path visual method rename JSON should not expose a rename object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1426: missing-path visual method rename JSON should report parser errors");
+
+    const auto missing_method_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--new-method-name", "Clicked",
+            "--json"
+        },
+        temp_root);
+    expect(missing_method_name_process.exit_code == 2,
+        "#1426: visual method rename JSON should reject missing source method names");
+    expect_contains(missing_method_name_process.stdout_text, "No method name was provided.",
+        "#1426: missing source method-name visual method rename JSON should report parser errors");
+
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--method-name", "DoClick",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 2,
+        "#1426: visual method rename JSON should reject missing target method names");
+    expect_contains(missing_target_process.stdout_text, "No target method name was provided.",
+        "#1426: missing target method-name visual method rename JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--method-name", "DoClick",
+            "--new-method-name", "Clicked",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1426: visual method rename JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1426: invalid-record visual method rename JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename",
+            "--path", form_path.string(),
+            "--object-name", "missingObject",
+            "--method-name", "DoClick",
+            "--new-method-name", "Clicked",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1426: visual method rename JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualMethodRename\": null",
+        "#1426: unresolved visual method rename JSON should not expose a rename object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1426: unresolved visual method rename JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-method-rename --path <asset>",
+        "#1426: usage text should expose visual method rename commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_object_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -41430,6 +41626,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_method_query(argv[1]);
     test_studio_host_json_updates_visual_methods(argv[1]);
     test_studio_host_json_deletes_visual_methods(argv[1]);
+    test_studio_host_json_renames_visual_methods(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);
     test_studio_host_json_exposes_visual_object_descendants(argv[1]);
