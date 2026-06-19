@@ -6907,6 +6907,18 @@ void test_studio_host_json_exposes_selected_label_settings(const std::string& st
                     "#1497: deleted label settings selections should advertise report-selection availability");
     expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                     "#1497: deleted label settings selections should expose settings selection kind");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1505: selected deleted label settings should not advertise selected-section availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1505: selected deleted label settings should serialize null selected sections");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#1505: selected deleted label settings should not advertise selected-object availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportObject\": null",
+                    "#1505: selected deleted label settings should serialize null selected objects");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1505: selected deleted label settings should not advertise containing-object-section availability");
+    expect_contains(deleted_settings_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1505: selected deleted label settings should serialize null containing-object sections");
     expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
                     "#1497: deleted selected label settings JSON should not expose live settings");
     expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 3",
