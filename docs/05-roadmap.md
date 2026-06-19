@@ -17,16 +17,16 @@ Goal:
 Current state:
 
 - critical-path closure is complete
-- adjacent open branches now proceed from the post-Phase-A queue instead of the old runtime-safety gate
+- adjacent work now proceeds from the post-D1/E1 designer queue instead of the old runtime-safety gate
 
 Active issue lanes:
 
 - critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- next execution branches come from the open post-Phase-A tree (`#154`-`#203`) and any still-open gap-tracking evidence issues
+- live execution is currently centered on E3/#24 report/label designer fidelity; E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
 
 Execution rule:
 
-- do not reopen closed Phase A lanes without a concrete regression; prefer the highest-value open child issue in the adjacent branch tree
+- do not reopen closed Phase A lanes without a concrete regression; prefer the current active queue in `docs/23-phase-a-dependency-breakdown.md`
 
 ## Phase B: Runtime Safety And Diagnostic Fidelity
 
@@ -71,6 +71,7 @@ Goal:
 Current state:
 
 - `#22` is closed; `#23` and `#24` remain open as designer lane parents.
+- `#23` still has many open evidence-audit child rows; close completed children only with specific issue/test/validation evidence, and keep parent `#23` open until root-level closure evidence is explicit.
 - `#24` currently has no open prompt-sized children after `#1452`-`#1518` closed; create the next native child before more E3 implementation work.
 - `#27`-`#29` currently have no active-open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
 
