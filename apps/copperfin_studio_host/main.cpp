@@ -50,6 +50,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-method-delete --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-delete-batch --path <asset> --method-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-rename --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --new-method-name <name> [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-method-rename-batch --path <asset> --method-name <name> --new-method-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-copy --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-move --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-reorder --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --placement <first|last|before|after> [--relative-method-name <name>] [--json]\n";
@@ -935,6 +936,15 @@ struct VisualMethodRenameParseResult {
     bool new_method_name_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectMethodRenameRequest request;
+};
+
+struct VisualMethodRenameBatchParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectMethodRenameBatchRequest request;
 };
 
 struct VisualMethodCopyParseResult {
@@ -4786,6 +4796,96 @@ VisualMethodRenameParseResult parse_visual_method_rename_arguments(const std::ve
     }
     if (result.ok && !result.new_method_name_provided) {
         fail("No target method name was provided.");
+    }
+    return result;
+}
+
+VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(const std::vector<std::string>& args) {
+    VisualMethodRenameBatchParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-method-rename-batch") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    auto current_method = [&]() -> copperfin::vfp::VisualObjectMethodRenameBatchItem* {
+        if (result.request.methods.empty()) {
+            fail("Visual method rename batch item options require a preceding --method-name.");
+            return nullptr;
+        }
+        return &result.request.methods.back();
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-method-rename-batch") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--method-name") {
+            result.request.methods.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = {},
+                .method_name = require_value(argument),
+                .new_method_name = {}
+            });
+        } else if (argument == "--new-method-name") {
+            if (auto* method = current_method()) {
+                method->new_method_name = require_value(argument);
+            }
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            if (auto* method = current_method()) {
+                method->record_index = record_index;
+            }
+        } else if (argument == "--object-name") {
+            if (auto* method = current_method()) {
+                method->object_name = require_value(argument);
+            }
+        } else if (argument == "--unique-id") {
+            if (auto* method = current_method()) {
+                method->unique_id = require_value(argument);
+            }
+        } else {
+            fail("Unknown visual-method-rename-batch option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && result.request.methods.empty()) {
+        fail("No method renames were provided.");
+    }
+    if (result.ok) {
+        for (const auto& method : result.request.methods) {
+            if (method.new_method_name.empty()) {
+                fail("No target method name was provided.");
+                break;
+            }
+        }
     }
     return result;
 }
@@ -19695,6 +19795,36 @@ int main(int argc, char** argv) {
             visual_method_delete_batch_parse.request.path);
         if (visual_method_delete_batch_parse.output_json) {
             print_json_visual_method_update_result(result, undo_status, "visualMethodDeleteBatch");
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_method_rename_batch_parse = parse_visual_method_rename_batch_arguments(args);
+    if (visual_method_rename_batch_parse.requested) {
+        if (!visual_method_rename_batch_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_method_rename_batch_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_method_rename_batch_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status, "visualMethodRenameBatch");
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::rename_visual_object_methods(
+            visual_method_rename_batch_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_method_rename_batch_parse.request.path);
+        if (visual_method_rename_batch_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status, "visualMethodRenameBatch");
         } else {
             print_text_visual_method_update_result(result, undo_status);
         }

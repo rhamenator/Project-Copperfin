@@ -9017,6 +9017,255 @@ void test_studio_host_json_deletes_visual_method_batches(const std::string& stud
     }
 }
 
+void test_studio_host_json_renames_visual_method_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_method_rename_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "method-rename-batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\nFUNCTION GetCaption\r\nRETURN THIS.Caption\r\nENDFUNC\r\nPROCEDURE Init\r\nTHIS.Enabled = .T.\r\nENDPROC"
+        },
+        {
+            "txtName",
+            "nameBox",
+            "name-guid",
+            "PROCEDURE LostFocus\r\nTHISFORM.ValidateName()\r\nENDPROC\r\nFUNCTION Valid\r\nRETURN .T.\r\nENDFUNC"
+        },
+        {
+            "lblStatus",
+            "statusLabel",
+            "status-guid",
+            "PROCEDURE Paint\r\nTHIS.Refresh()\r\nENDPROC\r\nFUNCTION RefreshValue\r\nRETURN THIS.Caption\r\nENDFUNC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1431: synthetic SCX table for visual method rename batches should be created");
+
+    const auto method_state = [&](const std::string& unique_id, const std::string& method_name) {
+        return copperfin::vfp::query_visual_object_method({
+            .path = form_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .method_name = method_name
+        });
+    };
+
+    const auto rename_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--method-name", "Click",
+            "--new-method-name", "SaveClick",
+            "--unique-id", "save-guid",
+            "--method-name", "Valid",
+            "--new-method-name", "IsValid",
+            "--object-name", "txtName",
+            "--method-name", "Paint",
+            "--new-method-name", "PaintStatus",
+            "--record", "2",
+            "--json"
+        },
+        temp_root);
+    expect(rename_batch_process.exit_code == 0,
+        "#1431: visual method rename-batch JSON should exit successfully for valid batches");
+    expect_contains(rename_batch_process.stdout_text, "\"visualMethodRenameBatch\": {",
+        "#1431: visual method rename-batch JSON should expose a batch rename object");
+    expect_contains(rename_batch_process.stdout_text, "\"affectedObjectCount\": 3",
+        "#1431: visual method rename-batch JSON should expose affected item counts");
+    expect_contains(rename_batch_process.stdout_text, "\"dryRun\": false",
+        "#1431: visual method rename-batch JSON should expose committed execution state");
+    expect_contains(rename_batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1431: visual method rename-batch JSON should expose mutation state");
+    expect_contains(rename_batch_process.stdout_text, "\"undoAvailable\": true",
+        "#1431: visual method rename-batch JSON should expose undo availability");
+    auto save_click = method_state("save-guid", "Click");
+    auto save_save_click = method_state("save-guid", "SaveClick");
+    auto name_valid = method_state("name-guid", "Valid");
+    auto name_is_valid = method_state("name-guid", "IsValid");
+    auto status_paint = method_state("status-guid", "Paint");
+    auto status_paint_status = method_state("status-guid", "PaintStatus");
+    auto save_init = method_state("save-guid", "Init");
+    auto save_get_caption = method_state("save-guid", "GetCaption");
+    auto name_lost_focus = method_state("name-guid", "LostFocus");
+    auto status_refresh_value = method_state("status-guid", "RefreshValue");
+    expect(save_click.ok && !save_click.exists &&
+            name_valid.ok && !name_valid.exists &&
+            status_paint.ok && !status_paint.exists &&
+            save_save_click.ok && save_save_click.exists && save_save_click.method.kind == "procedure" &&
+            name_is_valid.ok && name_is_valid.exists && name_is_valid.method.kind == "function" &&
+            status_paint_status.ok && status_paint_status.exists && status_paint_status.method.kind == "procedure",
+        "#1431: visual method rename-batch host command should rename all requested methods");
+    expect(save_init.ok && save_init.exists &&
+            save_get_caption.ok && save_get_caption.exists &&
+            name_lost_focus.ok && name_lost_focus.exists &&
+            status_refresh_value.ok && status_refresh_value.exists,
+        "#1431: visual method rename-batch host command should preserve unrelated methods");
+
+    const auto rollback_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--new-method-name", "StartUp",
+            "--unique-id", "save-guid",
+            "--method-name", "MissingMethod",
+            "--new-method-name", "MissingRenamed",
+            "--unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(rollback_process.exit_code == 4,
+        "#1431: visual method rename-batch JSON should reject missing methods");
+    expect_contains(rollback_process.stdout_text, "\"visualMethodRenameBatch\": null",
+        "#1431: failed visual method rename-batch JSON should not expose a batch rename object");
+    expect_contains(rollback_process.stdout_text, "The requested method was not found.",
+        "#1431: missing-method visual method rename-batch JSON should report editor errors");
+    save_init = method_state("save-guid", "Init");
+    auto save_start_up = method_state("save-guid", "StartUp");
+    expect(save_init.ok && save_init.exists &&
+            save_start_up.ok && !save_start_up.exists,
+        "#1431: failed visual method rename-batch commands should roll back earlier renames");
+
+    const auto collision_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--method-name", "GetCaption",
+            "--new-method-name", "SaveClick",
+            "--unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(collision_process.exit_code == 4,
+        "#1431: visual method rename-batch JSON should reject target collisions");
+    expect_contains(collision_process.stdout_text, "The requested target method already exists.",
+        "#1431: target-collision visual method rename-batch JSON should report editor errors");
+    save_get_caption = method_state("save-guid", "GetCaption");
+    expect(save_get_caption.ok && save_get_caption.exists,
+        "#1431: failed visual method rename-batch target collisions should not mutate methods");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--method-name", "Init",
+            "--new-method-name", "StartUp",
+            "--unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1431: visual method rename-batch JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualMethodRenameBatch\": null",
+        "#1431: missing-path visual method rename-batch JSON should not expose a batch rename object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1431: missing-path visual method rename-batch JSON should report parser errors");
+
+    const auto no_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(no_items_process.exit_code == 2,
+        "#1431: visual method rename-batch JSON should reject empty batches");
+    expect_contains(no_items_process.stdout_text, "No method renames were provided.",
+        "#1431: empty visual method rename-batch JSON should report parser errors");
+
+    const auto option_before_item_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--new-method-name", "StartUp",
+            "--method-name", "Init",
+            "--json"
+        },
+        temp_root);
+    expect(option_before_item_process.exit_code == 2,
+        "#1431: visual method rename-batch JSON should reject item options before method names");
+    expect_contains(option_before_item_process.stdout_text,
+        "Visual method rename batch item options require a preceding --method-name.",
+        "#1431: option-before-item visual method rename-batch JSON should report parser errors");
+
+    const auto missing_target_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_target_process.exit_code == 2,
+        "#1431: visual method rename-batch JSON should reject missing target method names");
+    expect_contains(missing_target_process.stdout_text, "No target method name was provided.",
+        "#1431: missing target visual method rename-batch JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--new-method-name", "StartUp",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1431: visual method rename-batch JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1431: invalid-record visual method rename-batch JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-rename-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--new-method-name", "StartUp",
+            "--object-name", "missingObject",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1431: visual method rename-batch JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualMethodRenameBatch\": null",
+        "#1431: unresolved visual method rename-batch JSON should not expose a batch rename object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1431: unresolved visual method rename-batch JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-method-rename-batch --path <asset>",
+        "#1431: usage text should expose visual method rename-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_renames_visual_methods(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -42565,6 +42814,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_visual_methods(argv[1]);
     test_studio_host_json_deletes_visual_methods(argv[1]);
     test_studio_host_json_deletes_visual_method_batches(argv[1]);
+    test_studio_host_json_renames_visual_method_batches(argv[1]);
     test_studio_host_json_renames_visual_methods(argv[1]);
     test_studio_host_json_copies_visual_methods(argv[1]);
     test_studio_host_json_moves_visual_methods(argv[1]);
