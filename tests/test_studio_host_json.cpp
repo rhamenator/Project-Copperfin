@@ -5385,6 +5385,179 @@ void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_ho
     }
 }
 
+void test_studio_host_json_exposes_builder_execution(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_builder_execution_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "grid-builder",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "true",
+            "--builder-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(admitted_process.exit_code == 0,
+        "#1319: builder execution JSON should accept admitted context-valid builders");
+    expect_contains(admitted_process.stdout_text, "\"builderExecution\": {",
+        "#1319: builder execution JSON should expose a result object");
+    expect_contains(admitted_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1319: builder execution JSON should expose builder ids");
+    expect_contains(admitted_process.stdout_text, "\"selectionContext\": null",
+        "#1319: builder-context execution JSON should expose null Studio selection contexts");
+    expect_contains(admitted_process.stdout_text, "\"context\": \"control\"",
+        "#1319: builder execution JSON should expose resolved builder contexts");
+    expect_contains(admitted_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1319: builder execution JSON should expose stable command tokens");
+    expect_contains(admitted_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1319: builder execution JSON should expose entry points");
+    expect_contains(admitted_process.stdout_text, "\"launchCommand\": \"/bin/true\"",
+        "#1319: builder execution JSON should expose launch commands");
+    expect_contains(admitted_process.stdout_text, "\"executedCommand\": \"'/bin/true'",
+        "#1319: builder execution JSON should expose the shell command");
+    expect_contains(admitted_process.stdout_text, "\"observedExitCode\": 0",
+        "#1319: successful builder execution JSON should expose zero exit status");
+    expect_contains(admitted_process.stdout_text, "\"executionAdmitted\": true",
+        "#1319: builder execution JSON should expose execution admission");
+    expect_contains(admitted_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1319: builder execution JSON should expose dispatch admission");
+    expect_contains(admitted_process.stdout_text, "\"executed\": true",
+        "#1319: admitted builder execution JSON should mark execution complete");
+    expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
+        "#1319: admitted builder execution JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text, "\"mutatesAsset\": false",
+        "#1319: builder execution JSON should remain non-mutating");
+
+    const auto selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "label-wizard",
+            "--selection-context", "label_expression",
+            "--path", "labels/mailing.lbx",
+            "--record", "2",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "true",
+            "--builder-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(selection_process.exit_code == 0,
+        "#1319: builder execution JSON should accept selection-context builders");
+    expect_contains(selection_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#1319: selection-context builder execution JSON should expose Studio selection contexts");
+    expect_contains(selection_process.stdout_text, "\"builderId\": \"label-wizard\"",
+        "#1319: selection-context builder execution JSON should expose wizard ids");
+    expect_contains(selection_process.stdout_text, "\"kind\": \"wizard\"",
+        "#1319: selection-context builder execution JSON should preserve wizard kind metadata");
+    expect_contains(selection_process.stdout_text, "\"executed\": true",
+        "#1319: selection-context builder execution JSON should mark execution complete");
+
+    const auto missing_command_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_command_process.exit_code == 2,
+        "#1319: builder execution JSON should reject missing launch commands");
+    expect_contains(missing_command_process.stdout_text, "No builder launch command was provided.",
+        "#1319: missing builder execution launch commands should report parser errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "false",
+            "--admit-builder-execution", "true",
+            "--builder-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 4,
+        "#1319: builder execution JSON should reject dry-run dispatch requests");
+    expect_contains(dry_run_process.stdout_text, "\"builderExecution\": null",
+        "#1319: dry-run builder execution JSON should not expose a result object");
+    expect_contains(dry_run_process.stdout_text,
+        "A builder dispatch request requires an admitted non-dry-run invocation.",
+        "#1319: dry-run builder execution JSON should report dispatch admission errors");
+
+    const auto unadmitted_execution_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "false",
+            "--builder-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_execution_process.exit_code == 4,
+        "#1319: builder execution JSON should require explicit execution admission");
+    expect_contains(unadmitted_execution_process.stdout_text,
+        "A builder dispatch execution request requires explicit execution admission.",
+        "#1319: unadmitted builder execution JSON should report execution admission errors");
+    expect_contains(unadmitted_execution_process.stdout_text, "\"executed\": false",
+        "#1319: unadmitted builder execution JSON should not mark execution complete");
+
+    const auto failed_command_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "true",
+            "--builder-launch-command", "/bin/false",
+            "--json"
+        },
+        temp_root);
+    expect(failed_command_process.exit_code == 4,
+        "#1319: builder execution JSON should report nonzero process exits");
+    expect_contains(failed_command_process.stdout_text,
+        "Builder launch command returned a non-zero exit code.",
+        "#1319: failed builder execution JSON should report process errors");
+    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": ",
+        "#1319: failed builder execution JSON should expose observed exit status");
+    expect_contains(failed_command_process.stdout_text, "\"executed\": false",
+        "#1319: failed builder execution JSON should not mark execution complete");
+
+    const auto ambiguous_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "grid-builder",
+            "--builder-context", "control",
+            "--selection-context", "visual_object",
+            "--builder-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(ambiguous_context_process.exit_code == 2,
+        "#1319: builder execution JSON should reject simultaneous builder and selection contexts");
+    expect_contains(ambiguous_context_process.stdout_text,
+        "Builder execute requests cannot provide both --builder-context and --selection-context.",
+        "#1319: ambiguous builder execution JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_dispatch_catalog(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -37083,6 +37256,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selection_builder_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
+    test_studio_host_json_exposes_builder_execution(argv[1]);
     test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_catalog(argv[1]);
