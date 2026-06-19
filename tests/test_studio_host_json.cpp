@@ -6637,6 +6637,59 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     }
 }
 
+void test_studio_host_json_exposes_selected_label_settings(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_label_settings_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_json(label_path);
+
+    const auto settings_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "0", "--json"},
+        temp_root);
+
+    if (settings_process.exit_code != 0) {
+        std::cerr << "studio host selected label settings stdout:\n" << settings_process.stdout_text << "\n";
+        std::cerr << "studio host selected label settings stderr:\n" << settings_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(settings_process.exit_code == 0,
+           "#1496: selected label settings JSON should exit successfully");
+    expect_contains(settings_process.stdout_text, "\"isLabel\": true",
+                    "#1496: selected label settings JSON should retain label identity");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                    "#1496: label root selections should advertise selected-settings availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1496: label settings selections should advertise report-selection availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                    "#1496: label settings selections should expose settings selection kind");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSettings\": [",
+                    "#1496: label root selections should expose selected-settings JSON");
+    expect_contains(settings_process.stdout_text, "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"0\"",
+                    "#1496: selected label settings should expose memo-line setting provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                    "#1496: selected label settings should expose later memo-line setting provenance");
+    expect_contains(settings_process.stdout_text, "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"10\"",
+                    "#1496: selected label settings should expose direct setting provenance");
+    expect_contains(settings_process.stdout_text, "\"sectionCount\": 2",
+                    "#1496: selected label settings JSON should preserve live section metadata");
+    expect_contains(settings_process.stdout_text, "\"unplacedObjectCount\": 1",
+                    "#1496: selected label settings JSON should preserve unplaced layout object metadata");
+    expect_contains(settings_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1496: selected label settings JSON should preserve deleted layout object metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -49617,6 +49670,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
+    test_studio_host_json_exposes_selected_label_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);
