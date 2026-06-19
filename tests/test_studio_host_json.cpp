@@ -8839,6 +8839,256 @@ void test_studio_host_json_copies_visual_property_batches(const std::string& stu
     }
 }
 
+void test_studio_host_json_moves_visual_properties(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_property_move_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "move.scx");
+
+    const auto move_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "FormControlSource",
+            "--json"
+        },
+        temp_root);
+    expect(move_process.exit_code == 0,
+        "#1439: visual property move JSON should exit successfully for memo-backed properties");
+    expect_contains(move_process.stdout_text, "\"visualPropertyMove\": {",
+        "#1439: visual property move JSON should expose a move object");
+    expect_contains(move_process.stdout_text, "\"affectedObjectCount\": 1",
+        "#1439: visual property move JSON should expose affected object counts");
+    expect_contains(move_process.stdout_text, "\"dryRun\": false",
+        "#1439: visual property move JSON should expose committed execution state");
+    expect_contains(move_process.stdout_text, "\"mutatesAsset\": true",
+        "#1439: visual property move JSON should expose mutation state");
+    expect_contains(move_process.stdout_text, "\"undoAvailable\": true",
+        "#1439: visual property move JSON should expose undo availability");
+    expect(visual_object_property(form_path, "form-guid", "FormControlSource") == "\"customer.name\"" &&
+            visual_object_property(form_path, "existing-textbox-guid", "ControlSource").empty() &&
+            visual_object_property(form_path, "existing-textbox-guid", "Left") == "12",
+        "#1439: visual property move host command should move values, clear sources, and preserve unrelated properties");
+
+    const fs::path default_path = write_synthetic_form_table_for_property_rename(temp_root, "move_default.scx");
+    const auto default_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", default_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(default_name_process.exit_code == 0,
+        "#1439: visual property move JSON should default target property names from source properties");
+    expect(visual_object_property(default_path, "form-guid", "Left") == "12" &&
+            visual_object_property(default_path, "existing-textbox-guid", "Left").empty(),
+        "#1439: visual property move host command should default target property names and clear sources");
+
+    const auto collision_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "FormControlSource",
+            "--json"
+        },
+        temp_root);
+    expect(collision_process.exit_code == 4,
+        "#1439: visual property move JSON should reject target collisions by default");
+    expect_contains(collision_process.stdout_text, "\"visualPropertyMove\": null",
+        "#1439: target-collision visual property move JSON should not expose a move object");
+    expect_contains(collision_process.stdout_text, "The target object already has the requested property.",
+        "#1439: target-collision visual property move JSON should report editor errors");
+    expect(visual_object_property(form_path, "form-guid", "FormControlSource") == "\"customer.name\"" &&
+            visual_object_property(form_path, "existing-textbox-guid", "Left") == "12",
+        "#1439: failed visual property move commands should not mutate source or target properties");
+
+    const auto replace_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "FormControlSource",
+            "--replace-existing", "true",
+            "--json"
+        },
+        temp_root);
+    expect(replace_process.exit_code == 0,
+        "#1439: visual property move JSON should allow explicit replacement");
+    expect(visual_object_property(form_path, "form-guid", "FormControlSource") == "12" &&
+            visual_object_property(form_path, "existing-textbox-guid", "Left").empty(),
+        "#1439: visual property move host command should replace targets and clear sources when requested");
+
+    const fs::path self_path = write_synthetic_form_table_for_property_rename(temp_root, "move_self.scx");
+    const auto self_move_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", self_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(self_move_process.exit_code == 4,
+        "#1439: visual property move JSON should reject self-moves");
+    expect_contains(self_move_process.stdout_text, "\"visualPropertyMove\": null",
+        "#1439: self-move visual property move JSON should not expose a move object");
+    expect_contains(self_move_process.stdout_text, "The source property cannot be moved onto itself.",
+        "#1439: self-move visual property move JSON should report editor errors");
+    expect(visual_object_property(self_path, "existing-textbox-guid", "ControlSource") == "\"customer.name\"",
+        "#1439: self-move visual property move commands should not mutate source properties");
+
+    const fs::path missing_source_path = write_synthetic_form_table_for_property_rename(temp_root, "move_missing.scx");
+    const auto missing_source_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", missing_source_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "MissingProperty",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "CopiedMissing",
+            "--json"
+        },
+        temp_root);
+    expect(missing_source_process.exit_code == 4,
+        "#1439: visual property move JSON should reject missing source properties");
+    expect_contains(missing_source_process.stdout_text, "\"visualPropertyMove\": null",
+        "#1439: missing-source visual property move JSON should not expose a move object");
+    expect_contains(missing_source_process.stdout_text, "The source property was not found.",
+        "#1439: missing-source visual property move JSON should report editor errors");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1439: visual property move JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualPropertyMove\": null",
+        "#1439: missing-path visual property move JSON should not expose a move object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1439: missing-path visual property move JSON should report parser errors");
+
+    const auto missing_property_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", missing_source_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_property_name_process.exit_code == 2,
+        "#1439: visual property move JSON should reject missing property names");
+    expect_contains(missing_property_name_process.stdout_text, "No property name was provided.",
+        "#1439: missing property-name visual property move JSON should report parser errors");
+
+    const auto invalid_source_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", missing_source_path.string(),
+            "--source-record", "-1",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_source_record_process.exit_code == 2,
+        "#1439: visual property move JSON should reject invalid source record values");
+    expect_contains(invalid_source_record_process.stdout_text,
+        "The --source-record value must be a non-negative integer.",
+        "#1439: invalid-source-record visual property move JSON should report parser errors");
+
+    const auto invalid_target_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", missing_source_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_target_record_process.exit_code == 2,
+        "#1439: visual property move JSON should reject invalid target record values");
+    expect_contains(invalid_target_record_process.stdout_text,
+        "The --target-record value must be a non-negative integer.",
+        "#1439: invalid-target-record visual property move JSON should report parser errors");
+
+    const auto invalid_replace_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", missing_source_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--replace-existing", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_replace_process.exit_code == 2,
+        "#1439: visual property move JSON should reject invalid replace-existing values");
+    expect_contains(invalid_replace_process.stdout_text,
+        "The --replace-existing value must be true or false.",
+        "#1439: invalid replace-existing visual property move JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-move",
+            "--path", missing_source_path.string(),
+            "--source-object-name", "missingObject",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1439: visual property move JSON should reject unresolved source objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualPropertyMove\": null",
+        "#1439: unresolved visual property move JSON should not expose a move object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1439: unresolved visual property move JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-property-move --path <asset>",
+        "#1439: usage text should expose visual property move commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_property_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -44301,6 +44551,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_visual_property_batches(argv[1]);
     test_studio_host_json_copies_visual_properties(argv[1]);
     test_studio_host_json_copies_visual_property_batches(argv[1]);
+    test_studio_host_json_moves_visual_properties(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
     test_studio_host_json_exposes_visual_method_list(argv[1]);
     test_studio_host_json_exposes_visual_method_query(argv[1]);
