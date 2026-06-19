@@ -195,6 +195,18 @@ const copperfin::studio::StudioDesignerDispatchCatalogEntry* find_dispatch_catal
     return nullptr;
 }
 
+const copperfin::studio::StudioDesignerDispatchExecutionCatalogEntry*
+find_dispatch_execution_catalog_entry(
+    const std::vector<copperfin::studio::StudioDesignerDispatchExecutionCatalogEntry>& entries,
+    copperfin::studio::StudioEditorSelectionContext context) {
+    for (const auto& entry : entries) {
+        if (entry.selection_context == context) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -1072,15 +1084,33 @@ int main() {
         .admit_execution = false,
         .editor_action_executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
             ++editor_execution_calls;
-            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         },
         .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
             ++builder_execution_calls;
-            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         },
         .toolbox_executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
             ++toolbox_execution_calls;
-            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         }
     });
     expect(editor_execution_calls == 0U &&
@@ -1098,15 +1128,33 @@ int main() {
         .admit_execution = true,
         .editor_action_executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
             ++editor_execution_calls;
-            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         },
         .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
             ++builder_execution_calls;
-            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         },
         .toolbox_executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
             ++toolbox_execution_calls;
-            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         }
     });
     expect(editor_execution_calls == 0U &&
@@ -1120,11 +1168,23 @@ int main() {
         .dispatch_plan = visual_dispatch.plan,
         .admit_execution = true,
         .editor_action_executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
-            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         },
         .builder_executor = {},
         .toolbox_executor = [](const copperfin::studio::StudioToolboxDispatchPlan&) {
-            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
         }
     });
     expect(!missing_builder_executor_execution.ok &&
@@ -1139,7 +1199,10 @@ int main() {
         .editor_action_executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
             return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
                 .launched = true,
-                .exit_code = 0
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
             };
         },
         .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
@@ -1155,7 +1218,10 @@ int main() {
         .toolbox_executor = [](const copperfin::studio::StudioToolboxDispatchPlan&) {
             return copperfin::studio::StudioToolboxDispatchExecutionObservation{
                 .launched = true,
-                .exit_code = 0
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
             };
         }
     });
@@ -1348,6 +1414,116 @@ int main() {
                menu_dispatch_entry->dispatch.plan.toolbox_dispatch.error ==
                    menu_invocation_entry->toolbox_error,
            "#1284: designer dispatch catalogs should retain unsupported-toolbox admission metadata");
+
+    const auto execution_catalog = copperfin::studio::plan_studio_designer_dispatch_execution_catalog({
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .symbol = "Click",
+        .line = 12U,
+        .column = 4U,
+        .admit_editor_invocations = true,
+        .admit_builder_invocations = true,
+        .admit_toolbox_invocation = true,
+        .admit_execution = true
+    });
+    const auto* visual_execution_entry = find_dispatch_execution_catalog_entry(
+        execution_catalog.contexts, StudioEditorSelectionContext::visual_object);
+    const auto* menu_execution_entry = find_dispatch_execution_catalog_entry(
+        execution_catalog.contexts, StudioEditorSelectionContext::menu_item);
+    expect(execution_catalog.ok &&
+               execution_catalog.context_count == execution_catalog.contexts.size() &&
+               execution_catalog.execution_ready_count > 0U &&
+               execution_catalog.error_count > 0U &&
+               !execution_catalog.dry_run &&
+               !execution_catalog.mutates_asset,
+           "#1332: designer dispatch execution catalogs should summarize non-mutating aggregate readiness");
+    expect(visual_execution_entry != nullptr &&
+               visual_execution_entry->dispatch.ok &&
+               visual_execution_entry->execution_admitted &&
+               visual_execution_entry->execution_ready &&
+               visual_execution_entry->execution_error.empty() &&
+               visual_execution_entry->editor_action_dispatch_count > 0U &&
+               visual_execution_entry->builder_dispatch_count > 0U &&
+               visual_execution_entry->toolbox_dispatch_count == 1U &&
+               visual_execution_entry->dispatch_count ==
+                   visual_execution_entry->editor_action_dispatch_count +
+                       visual_execution_entry->builder_dispatch_count +
+                       visual_execution_entry->toolbox_dispatch_count &&
+               visual_execution_entry->dispatch_error_count == 0U &&
+               !visual_execution_entry->dispatch_dry_run &&
+               !visual_execution_entry->dispatch_mutates_asset &&
+               has_editor_dispatch(
+                   visual_execution_entry->dispatch.plan.editor_action_dispatches,
+                   "edit-visual-method",
+                   true) &&
+               has_builder_dispatch(visual_execution_entry->dispatch.plan.builder_dispatches, "form-builder", true) &&
+               visual_execution_entry->dispatch.plan.toolbox_dispatch.ok &&
+               visual_execution_entry->dispatch.plan.toolbox_dispatch.plan.dispatch_admitted &&
+               !visual_execution_entry->dispatch.plan.toolbox_dispatch.plan.executed,
+           "#1332: designer dispatch execution catalogs should preserve visual aggregate dispatch metadata");
+    expect(menu_execution_entry != nullptr &&
+               !menu_execution_entry->execution_ready &&
+               menu_execution_entry->execution_error ==
+                   "A designer dispatch execution catalog entry requires an error-free dispatch plan." &&
+               menu_execution_entry->dispatch_error_count > 0U &&
+               menu_execution_entry->dispatch.ok &&
+               !menu_execution_entry->dispatch.plan.toolbox_dispatch.ok,
+           "#1332: designer dispatch execution catalogs should propagate aggregate dispatch errors");
+
+    const auto unadmitted_execution_catalog =
+        copperfin::studio::plan_studio_designer_dispatch_execution_catalog({
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid",
+            .symbol = "Click",
+            .line = 12U,
+            .column = 4U,
+            .admit_editor_invocations = true,
+            .admit_builder_invocations = true,
+            .admit_toolbox_invocation = true,
+            .admit_execution = false
+        });
+    const auto* unadmitted_visual_execution_entry = find_dispatch_execution_catalog_entry(
+        unadmitted_execution_catalog.contexts, StudioEditorSelectionContext::visual_object);
+    expect(unadmitted_execution_catalog.ok &&
+               unadmitted_execution_catalog.execution_ready_count == 0U &&
+               unadmitted_execution_catalog.error_count == unadmitted_execution_catalog.context_count &&
+               unadmitted_execution_catalog.dry_run &&
+               unadmitted_visual_execution_entry != nullptr &&
+               !unadmitted_visual_execution_entry->execution_admitted &&
+               !unadmitted_visual_execution_entry->execution_ready &&
+               unadmitted_visual_execution_entry->execution_error ==
+                   "A designer dispatch execution catalog entry requires explicit execution admission.",
+           "#1332: designer dispatch execution catalogs should require explicit aggregate execution admission");
+
+    const auto dry_run_execution_catalog =
+        copperfin::studio::plan_studio_designer_dispatch_execution_catalog({
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid",
+            .symbol = "Click",
+            .line = 12U,
+            .column = 4U,
+            .admit_editor_invocations = false,
+            .admit_builder_invocations = false,
+            .admit_toolbox_invocation = false,
+            .admit_execution = true
+        });
+    const auto* dry_run_visual_execution_entry = find_dispatch_execution_catalog_entry(
+        dry_run_execution_catalog.contexts, StudioEditorSelectionContext::visual_object);
+    expect(dry_run_execution_catalog.ok &&
+               dry_run_execution_catalog.execution_ready_count == 0U &&
+               dry_run_execution_catalog.error_count == dry_run_execution_catalog.context_count &&
+               dry_run_execution_catalog.dry_run &&
+               dry_run_visual_execution_entry != nullptr &&
+               !dry_run_visual_execution_entry->execution_ready &&
+               dry_run_visual_execution_entry->execution_error ==
+                   "A designer dispatch execution catalog entry requires at least one admitted dispatch.",
+           "#1332: designer dispatch execution catalogs should report dry-run aggregate preflight failures");
 
     const auto launch_surface_catalog = copperfin::studio::plan_studio_designer_launch_surface_catalog({
         .asset_path = "forms/customer.scx",
