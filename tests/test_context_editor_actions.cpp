@@ -560,6 +560,165 @@ int main() {
                has_argument_pair(method_dispatch.plan.dispatch_arguments, "--column", "7"),
            "#1225: editor action dispatch should materialize a deterministic argument contract");
 
+    bool editor_action_executor_called = false;
+    const auto executed_method_dispatch = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = method_dispatch.plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan& plan) {
+            editor_action_executor_called = true;
+            expect(std::string(plan.action.id) == "edit-visual-method" &&
+                       plan.selection_context == StudioEditorSelectionContext::visual_object &&
+                       plan.command_token == "studio.method_editor.open" &&
+                       plan.target_surface == "method-editor" &&
+                       has_argument_pair(plan.dispatch_arguments, "--action-id", "edit-visual-method") &&
+                       has_argument_pair(plan.dispatch_arguments, "--target-surface", "method-editor"),
+                   "#1320: editor action dispatch execution should invoke executors with validated dispatch metadata");
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = "method editor launched",
+                .error = {},
+                .mutates_asset = true
+            };
+        }
+    });
+    expect(editor_action_executor_called &&
+               executed_method_dispatch.ok &&
+               executed_method_dispatch.execution_admitted &&
+               executed_method_dispatch.executed &&
+               !executed_method_dispatch.dry_run &&
+               executed_method_dispatch.mutates_asset &&
+               executed_method_dispatch.observation.launched &&
+               executed_method_dispatch.observation.exit_code == 0 &&
+               executed_method_dispatch.observation.output == "method editor launched" &&
+               std::string(executed_method_dispatch.dispatch_plan.action.id) == "edit-visual-method" &&
+               executed_method_dispatch.dispatch_plan.executed &&
+               executed_method_dispatch.dispatch_plan.dispatch_admitted &&
+               !executed_method_dispatch.dispatch_plan.dry_run &&
+               executed_method_dispatch.dispatch_plan.command_token == "studio.method_editor.open",
+           "#1320: editor action dispatch execution should preserve dispatch metadata and executed state");
+
+    editor_action_executor_called = false;
+    const auto unadmitted_execution = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = method_dispatch.plan,
+        .admit_execution = false,
+        .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            editor_action_executor_called = true;
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true
+            };
+        }
+    });
+    expect(!editor_action_executor_called &&
+               !unadmitted_execution.ok &&
+               unadmitted_execution.error ==
+                   "An editor action dispatch execution request requires explicit execution admission." &&
+               !unadmitted_execution.executed &&
+               unadmitted_execution.dry_run,
+           "#1320: editor action dispatch execution should reject unadmitted execution without invoking executors");
+
+    const auto missing_executor_execution = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = method_dispatch.plan,
+        .admit_execution = true,
+        .executor = {}
+    });
+    expect(!missing_executor_execution.ok &&
+               missing_executor_execution.error ==
+                   "An editor action dispatch execution request requires an executor.",
+           "#1320: editor action dispatch execution should reject missing executors");
+
+    auto stale_dispatch_plan = method_dispatch.plan;
+    stale_dispatch_plan.executed = true;
+    editor_action_executor_called = false;
+    const auto stale_execution = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = stale_dispatch_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            editor_action_executor_called = true;
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!editor_action_executor_called &&
+               !stale_execution.ok &&
+               stale_execution.error ==
+                   "An editor action dispatch execution request requires a non-executed dispatch.",
+           "#1320: editor action dispatch execution should reject stale executed dispatches");
+
+    auto missing_arguments_plan = method_dispatch.plan;
+    missing_arguments_plan.dispatch_arguments.clear();
+    editor_action_executor_called = false;
+    const auto missing_arguments_execution = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = missing_arguments_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            editor_action_executor_called = true;
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!editor_action_executor_called &&
+               !missing_arguments_execution.ok &&
+               missing_arguments_execution.error ==
+                   "An editor action dispatch execution request requires dispatch arguments.",
+           "#1320: editor action dispatch execution should reject missing dispatch arguments before launch");
+
+    auto missing_action_execution_plan = method_dispatch.plan;
+    missing_action_execution_plan.action = {};
+    editor_action_executor_called = false;
+    const auto missing_action_execution = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = missing_action_execution_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            editor_action_executor_called = true;
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!editor_action_executor_called &&
+               !missing_action_execution.ok &&
+               missing_action_execution.error ==
+                   "An editor action dispatch execution request requires a validated action id.",
+           "#1320: editor action dispatch execution should reject incomplete action metadata before launch");
+
+    const auto launch_failure_execution = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = method_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = false,
+                .exit_code = 0,
+                .output = {},
+                .error = "editor launcher unavailable",
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!launch_failure_execution.ok &&
+               launch_failure_execution.error == "editor launcher unavailable" &&
+               !launch_failure_execution.executed &&
+               launch_failure_execution.dry_run &&
+               launch_failure_execution.observation.error == "editor launcher unavailable",
+           "#1320: editor action dispatch execution should surface launch failures without stale execution metadata");
+
+    const auto non_zero_execution = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = method_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 9,
+                .output = {},
+                .error = "editor action failed",
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!non_zero_execution.ok &&
+               non_zero_execution.error == "editor action failed" &&
+               non_zero_execution.observation.launched &&
+               non_zero_execution.observation.exit_code == 9 &&
+               !non_zero_execution.executed &&
+               non_zero_execution.dry_run,
+           "#1320: editor action dispatch execution should reject non-zero executor exit codes");
+
     const auto dry_run_dispatch = copperfin::studio::plan_studio_editor_action_dispatch({
         .admission_plan = dry_run_property_invocation.plan
     });

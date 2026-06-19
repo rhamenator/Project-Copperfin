@@ -3,6 +3,7 @@
 #include "copperfin/studio/editor_action_invocation_admission.h"
 
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -68,9 +69,39 @@ struct StudioEditorActionDispatchCatalogResult {
     std::vector<StudioEditorActionDispatchCatalogEntry> entries;
 };
 
+struct StudioEditorActionDispatchExecutionObservation {
+    bool launched = false;
+    int exit_code = 0;
+    std::string output;
+    std::string error;
+    bool mutates_asset = false;
+};
+
+using StudioEditorActionDispatchExecutor =
+    std::function<StudioEditorActionDispatchExecutionObservation(const StudioEditorActionDispatchPlan&)>;
+
+struct StudioEditorActionDispatchExecutionRequest {
+    StudioEditorActionDispatchPlan dispatch_plan;
+    bool admit_execution = false;
+    StudioEditorActionDispatchExecutor executor;
+};
+
+struct StudioEditorActionDispatchExecutionResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorActionDispatchPlan dispatch_plan;
+    StudioEditorActionDispatchExecutionObservation observation;
+    bool execution_admitted = false;
+    bool executed = false;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 [[nodiscard]] StudioEditorActionDispatchResult plan_studio_editor_action_dispatch(
     const StudioEditorActionDispatchRequest& request);
 [[nodiscard]] StudioEditorActionDispatchCatalogResult plan_studio_editor_action_dispatch_catalog(
     const StudioEditorActionDispatchCatalogRequest& request);
+[[nodiscard]] StudioEditorActionDispatchExecutionResult execute_studio_editor_action_dispatch(
+    const StudioEditorActionDispatchExecutionRequest& request);
 
 }  // namespace copperfin::studio

@@ -154,4 +154,87 @@ StudioEditorActionDispatchCatalogResult plan_studio_editor_action_dispatch_catal
     };
 }
 
+StudioEditorActionDispatchExecutionResult execute_studio_editor_action_dispatch(
+    const StudioEditorActionDispatchExecutionRequest& request) {
+    auto failed = [&](std::string error) {
+        return StudioEditorActionDispatchExecutionResult{
+            .ok = false,
+            .error = std::move(error),
+            .dispatch_plan = {},
+            .observation = {},
+            .execution_admitted = request.admit_execution,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    };
+
+    const auto& dispatch_plan = request.dispatch_plan;
+    if (!request.admit_execution) {
+        return failed("An editor action dispatch execution request requires explicit execution admission.");
+    }
+    if (!request.executor) {
+        return failed("An editor action dispatch execution request requires an executor.");
+    }
+    if (dispatch_plan.action.id.empty()) {
+        return failed("An editor action dispatch execution request requires a validated action id.");
+    }
+    if (dispatch_plan.command_token.empty()) {
+        return failed("An editor action dispatch execution request requires a command token.");
+    }
+    if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
+        return failed("An editor action dispatch execution request requires an admitted non-dry-run dispatch.");
+    }
+    if (dispatch_plan.executed) {
+        return failed("An editor action dispatch execution request requires a non-executed dispatch.");
+    }
+    if (dispatch_plan.dispatch_arguments.empty()) {
+        return failed("An editor action dispatch execution request requires dispatch arguments.");
+    }
+
+    auto observation = request.executor(dispatch_plan);
+    if (!observation.launched) {
+        return {
+            .ok = false,
+            .error = observation.error.empty()
+                ? "An editor action dispatch executor did not launch the editor action."
+                : observation.error,
+            .dispatch_plan = {},
+            .observation = std::move(observation),
+            .execution_admitted = true,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+    if (observation.exit_code != 0) {
+        return {
+            .ok = false,
+            .error = observation.error.empty()
+                ? "An editor action dispatch executor returned a non-zero exit code."
+                : observation.error,
+            .dispatch_plan = {},
+            .observation = std::move(observation),
+            .execution_admitted = true,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto executed_plan = dispatch_plan;
+    executed_plan.executed = true;
+    const bool mutates_asset = observation.mutates_asset;
+    return {
+        .ok = true,
+        .error = {},
+        .dispatch_plan = std::move(executed_plan),
+        .observation = std::move(observation),
+        .execution_admitted = true,
+        .executed = true,
+        .dry_run = false,
+        .mutates_asset = mutates_asset
+    };
+}
+
 }  // namespace copperfin::studio
