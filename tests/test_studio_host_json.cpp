@@ -9135,6 +9135,10 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1349: designer execution JSON should expose an editor child entry for target metadata checks");
     if (editor_child_begin != std::string::npos) {
         const auto editor_child_json = visual_process.stdout_text.substr(editor_child_begin, 900);
+        expect_contains(editor_child_json, "\"label\": \"Edit Method\"",
+            "#1351: aggregate editor child JSON should expose action labels");
+        expect_contains(editor_child_json, "\"kind\": \"source_editor\"",
+            "#1351: aggregate editor child JSON should expose action kinds");
         expect_contains(editor_child_json, "\"targetSurface\": \"method-editor\"",
             "#1349: aggregate editor child JSON should expose target surfaces");
         expect_contains(editor_child_json, "\"assetPath\": \"forms/customer.scx\"",
@@ -9174,6 +9178,10 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1349: designer execution JSON should expose a builder child entry for target metadata checks");
     if (builder_child_begin != std::string::npos) {
         const auto builder_child_json = visual_process.stdout_text.substr(builder_child_begin, 700);
+        expect_contains(builder_child_json, "\"title\": \"Form Builder\"",
+            "#1351: aggregate builder child JSON should expose builder titles");
+        expect_contains(builder_child_json, "\"kind\": \"builder\"",
+            "#1351: aggregate builder child JSON should expose builder kinds");
         expect_contains(builder_child_json, "\"entryPoint\": \"cf_builders.form_builder\"",
             "#1349: aggregate builder child JSON should expose entry points");
         expect_contains(builder_child_json, "\"assetPath\": \"forms/customer.scx\"",
