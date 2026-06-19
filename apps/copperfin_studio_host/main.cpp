@@ -11628,10 +11628,55 @@ void print_json_designer_dispatch_catalog_result(
         return;
     }
 
+    std::vector<std::string> dispatch_ok_selection_contexts;
+    std::vector<std::string> dispatch_blocked_selection_contexts;
+    std::vector<std::string> dispatch_blocked_errors;
+    for (const auto& context : result.contexts) {
+        const std::string selection_context =
+            copperfin::studio::studio_editor_selection_context_name(context.selection_context);
+        if (context.error_count == 0U) {
+            dispatch_ok_selection_contexts.push_back(selection_context);
+        } else {
+            dispatch_blocked_selection_contexts.push_back(selection_context);
+            std::string blocked_error;
+            if (!context.dispatch.ok) {
+                blocked_error = context.dispatch.error;
+            } else {
+                for (const auto& dispatch : context.dispatch.plan.editor_action_dispatches) {
+                    if (!dispatch.ok) {
+                        blocked_error = dispatch.error;
+                        break;
+                    }
+                }
+                if (blocked_error.empty()) {
+                    for (const auto& dispatch : context.dispatch.plan.builder_dispatches) {
+                        if (!dispatch.ok) {
+                            blocked_error = dispatch.error;
+                            break;
+                        }
+                    }
+                }
+                if (blocked_error.empty() && !context.dispatch.plan.toolbox_dispatch.ok) {
+                    blocked_error = context.dispatch.plan.toolbox_dispatch.error;
+                }
+            }
+            dispatch_blocked_errors.push_back(blocked_error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
     std::cout << "    \"contextCount\": " << result.context_count << ",\n";
+    std::cout << "    \"dispatchOkSelectionContexts\": ";
+    print_json_string_array(dispatch_ok_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedSelectionContexts\": ";
+    print_json_string_array(dispatch_blocked_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"contexts\": [\n";
     for (std::size_t index = 0U; index < result.contexts.size(); ++index) {
         print_json_designer_dispatch_catalog_context(result.contexts[index], "      ");

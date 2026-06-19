@@ -9606,6 +9606,13 @@ void test_studio_host_json_exposes_designer_dispatch_catalog(const std::string& 
         "#1240: designer dispatch catalog JSON should expose a catalog object");
     expect_contains(catalog_process.stdout_text, "\"contextCount\": 9",
         "#1240: designer dispatch catalog JSON should expose context counts");
+    expect_contains(catalog_process.stdout_text, "\"dispatchOkSelectionContexts\": [\"visual_object\"",
+        "#1357: designer dispatch catalog JSON should summarize dispatch-clean contexts");
+    expect_contains(catalog_process.stdout_text, "\"dispatchBlockedSelectionContexts\": [\"menu_item\"",
+        "#1357: designer dispatch catalog JSON should summarize dispatch-blocked contexts");
+    expect_contains(catalog_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"The selected Studio context does not expose a toolbox palette.\"",
+        "#1357: designer dispatch catalog JSON should summarize blocked dispatch errors");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
         "#1240: designer dispatch catalog JSON should include visual-object contexts");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"report_expression\"",
@@ -9654,6 +9661,23 @@ void test_studio_host_json_exposes_designer_dispatch_catalog(const std::string& 
     expect_contains(catalog_process.stdout_text,
         "\"toolboxError\": \"The selected Studio context does not expose a toolbox palette.\"",
         "#1240: designer dispatch catalog JSON should preserve unsupported toolbox reasons");
+
+    const auto unadmitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_process.exit_code == 0,
+        "#1357: designer dispatch catalog JSON should summarize unadmitted dispatch-blocked contexts");
+    expect_contains(unadmitted_process.stdout_text, "\"dispatchOkSelectionContexts\": []",
+        "#1357: unadmitted designer dispatch catalog JSON should summarize no dispatch-clean contexts");
+    expect_contains(unadmitted_process.stdout_text, "\"dispatchBlockedSelectionContexts\": [\"visual_object\"",
+        "#1357: unadmitted designer dispatch catalog JSON should summarize dispatch-blocked contexts");
+    expect_contains(unadmitted_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"An editor action dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1357: unadmitted designer dispatch catalog JSON should summarize child dispatch errors");
 
     const auto invalid_boolean_process = run_process_capture(
         studio_host_path,
