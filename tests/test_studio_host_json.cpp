@@ -6959,6 +6959,141 @@ void test_studio_host_json_exposes_editor_action_dispatch_catalog(const std::str
     }
 }
 
+void test_studio_host_json_exposes_editor_action_dispatch_execution_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_editor_action_dispatch_execution_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "cmdSave",
+            "--unique-id", "button-guid",
+            "--symbol", "cmdSave.Click",
+            "--line", "42",
+            "--column", "7",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(admitted_process.exit_code == 0,
+        "#1329: editor action dispatch execution catalog JSON should accept admitted visual-object catalogs");
+    expect_contains(admitted_process.stdout_text, "\"editorActionDispatchExecutionCatalog\": {",
+        "#1329: editor action dispatch execution catalog JSON should expose a catalog object");
+    expect_contains(admitted_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1329: editor action dispatch execution catalog JSON should expose selected contexts");
+    expect_contains(admitted_process.stdout_text, "\"actionCount\": 5",
+        "#1329: editor action dispatch execution catalog JSON should expose action counts");
+    expect_contains(admitted_process.stdout_text, "\"executionReadyCount\": 5",
+        "#1329: admitted editor action dispatch execution catalog JSON should expose readiness counts");
+    expect_contains(admitted_process.stdout_text, "\"errorCount\": 0",
+        "#1329: admitted editor action dispatch execution catalog JSON should expose zero errors");
+    expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
+        "#1329: admitted editor action dispatch execution catalog JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
+        "#1329: editor action dispatch execution catalog JSON should expose method actions");
+    expect_contains(admitted_process.stdout_text, "\"launchOk\": true",
+        "#1329: editor action dispatch execution catalog JSON should expose launch readiness");
+    expect_contains(admitted_process.stdout_text, "\"admissionOk\": true",
+        "#1329: editor action dispatch execution catalog JSON should expose invocation admission readiness");
+    expect_contains(admitted_process.stdout_text, "\"dispatchOk\": true",
+        "#1329: editor action dispatch execution catalog JSON should expose dispatch readiness");
+    expect_contains(admitted_process.stdout_text, "\"executionAdmitted\": true",
+        "#1329: editor action dispatch execution catalog JSON should expose execution admission state");
+    expect_contains(admitted_process.stdout_text, "\"executionReady\": true",
+        "#1329: editor action dispatch execution catalog JSON should expose execution readiness");
+    expect_contains(admitted_process.stdout_text, "\"executionError\": \"\"",
+        "#1329: admitted editor action dispatch execution catalog JSON should expose empty execution errors");
+    expect_contains(admitted_process.stdout_text, "\"targetSurface\": \"method-editor\"",
+        "#1329: editor action dispatch execution catalog JSON should preserve target surfaces");
+    expect_contains(admitted_process.stdout_text, "\"dispatchArguments\": [",
+        "#1329: editor action dispatch execution catalog JSON should expose dispatch arguments");
+    expect_contains(admitted_process.stdout_text, "\"executed\": false",
+        "#1329: editor action dispatch execution catalog JSON should not launch editors");
+
+    const auto unadmitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "false",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_process.exit_code == 0,
+        "#1329: editor action dispatch execution catalog JSON should report unadmitted execution as catalog errors");
+    expect_contains(unadmitted_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1329: unadmitted editor action dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(unadmitted_process.stdout_text, "\"errorCount\": 5",
+        "#1329: unadmitted editor action dispatch execution catalog JSON should expose per-action errors");
+    expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
+        "#1329: unadmitted editor action dispatch execution catalog JSON should expose admission false");
+    expect_contains(unadmitted_process.stdout_text,
+        "An editor action dispatch execution catalog entry requires explicit execution admission.",
+        "#1329: unadmitted editor action dispatch execution catalog JSON should expose execution errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--admit-editor-action-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1329: editor action dispatch execution catalog JSON should report dry-run dispatch failures");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1329: dry-run editor action dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(dry_run_process.stdout_text, "\"errorCount\": 5",
+        "#1329: dry-run editor action dispatch execution catalog JSON should expose per-action errors");
+    expect_contains(dry_run_process.stdout_text,
+        "An editor action dispatch request requires an admitted non-dry-run invocation.",
+        "#1329: dry-run editor action dispatch execution catalog JSON should expose dispatch errors");
+
+    const auto invalid_execution_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--admit-editor-action-execution", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_execution_bool_process.exit_code == 2,
+        "#1329: editor action dispatch execution catalog JSON should reject invalid execution booleans");
+    expect_contains(invalid_execution_bool_process.stdout_text,
+        "The --admit-editor-action-execution value must be true or false.",
+        "#1329: invalid editor execution catalog admission JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-dispatch-execution-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1329: editor action dispatch execution catalog JSON should reject missing selection contexts");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1329: missing-context editor action dispatch execution catalog JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_palette_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -37929,6 +38064,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_editor_action_dispatch(argv[1]);
     test_studio_host_json_exposes_editor_action_execution(argv[1]);
     test_studio_host_json_exposes_editor_action_dispatch_catalog(argv[1]);
+    test_studio_host_json_exposes_editor_action_dispatch_execution_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
