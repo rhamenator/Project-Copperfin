@@ -9892,6 +9892,13 @@ void test_studio_host_json_exposes_designer_launch_surface_catalog(const std::st
         "#1214: designer launch-surface catalog JSON should expose a catalog object");
     expect_contains(catalog_process.stdout_text, "\"contextCount\": 9",
         "#1214: designer launch-surface catalog JSON should expose all Studio contexts");
+    expect_contains(catalog_process.stdout_text, "\"launchReadySelectionContexts\": [\"visual_object\"",
+        "#1359: designer launch-surface catalog JSON should summarize launch-ready contexts");
+    expect_contains(catalog_process.stdout_text, "\"launchBlockedSelectionContexts\": [\"menu_item\"",
+        "#1359: designer launch-surface catalog JSON should summarize launch-blocked contexts");
+    expect_contains(catalog_process.stdout_text,
+        "\"launchBlockedErrors\": [\"The selected Studio context does not expose a toolbox palette.\"",
+        "#1359: designer launch-surface catalog JSON should summarize blocked launch errors");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
         "#1214: designer launch-surface catalog JSON should include visual-object contexts");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"menu_item\"",
