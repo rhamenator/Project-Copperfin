@@ -23217,6 +23217,197 @@ void test_studio_host_json_reparents_objects_by_stable_selectors(const std::stri
     }
 }
 
+void test_studio_host_json_reparents_visual_object_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_reparent_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "reparent_batch.scx";
+    write_synthetic_form_table_for_object_reparent(form_path);
+    const auto reparent_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", form_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--parent-unique-id", "panel-guid",
+            "--selected-object-name", "cntPanel",
+            "--clear-parent",
+            "--json"
+        },
+        temp_root);
+    expect(reparent_batch_process.exit_code == 0,
+        "#1445: visual object reparent-batch JSON should exit successfully for valid batches");
+    expect_contains(reparent_batch_process.stdout_text, "\"visualObjectReparentBatch\": {",
+        "#1445: visual object reparent-batch JSON should expose a batch reparent object");
+    expect_contains(reparent_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+        "#1445: visual object reparent-batch JSON should expose affected item counts");
+    expect_contains(reparent_batch_process.stdout_text, "\"dryRun\": false",
+        "#1445: visual object reparent-batch JSON should expose committed execution state");
+    expect_contains(reparent_batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1445: visual object reparent-batch JSON should expose mutation state");
+    expect_contains(reparent_batch_process.stdout_text, "\"undoAvailable\": true",
+        "#1445: visual object reparent-batch JSON should expose undo availability");
+    expect(visual_object_parent(form_path, "existing-textbox-guid") == "cntPanel" &&
+            visual_object_parent(form_path, "panel-guid").empty(),
+        "#1445: visual object reparent-batch host command should apply per-item parent selectors");
+
+    const fs::path rollback_path = temp_root / "reparent_batch_rollback.scx";
+    write_synthetic_form_table_for_object_reparent(rollback_path);
+    const auto rollback_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", rollback_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--parent-unique-id", "panel-guid",
+            "--selected-object-name", "cntPanel",
+            "--parent-name", "missingParent",
+            "--json"
+        },
+        temp_root);
+    expect(rollback_process.exit_code == 4,
+        "#1445: visual object reparent-batch JSON should reject unresolved parent selectors");
+    expect_contains(rollback_process.stdout_text, "\"visualObjectReparentBatch\": null",
+        "#1445: failed visual object reparent-batch JSON should not expose a batch reparent object");
+    expect_contains(rollback_process.stdout_text, "No visual object with the requested name was found.",
+        "#1445: missing-parent visual object reparent-batch JSON should report editor errors");
+    expect(visual_object_parent(rollback_path, "existing-textbox-guid") == "frmCustomer" &&
+            visual_object_parent(rollback_path, "panel-guid") == "frmCustomer",
+        "#1445: failed visual object reparent-batch commands should roll back earlier reparent operations");
+
+    const fs::path cycle_path = temp_root / "reparent_batch_cycle.scx";
+    write_synthetic_form_table_for_object_reparent(cycle_path);
+    const auto cycle_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", cycle_path.string(),
+            "--selected-unique-id", "form-guid",
+            "--parent-unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(cycle_process.exit_code == 4,
+        "#1445: visual object reparent-batch JSON should reject descendant-cycle parent selections");
+    expect_contains(cycle_process.stdout_text, "A visual object cannot be reparented to one of its descendants.",
+        "#1445: descendant-cycle visual object reparent-batch JSON should report editor errors");
+    expect(visual_object_parent(cycle_path, "form-guid").empty() &&
+            visual_object_parent(cycle_path, "existing-textbox-guid") == "frmCustomer",
+        "#1445: descendant-cycle visual object reparent-batch commands should not mutate parent fields");
+
+    const fs::path self_path = temp_root / "reparent_batch_self.scx";
+    write_synthetic_form_table_for_object_reparent(self_path);
+    const auto self_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", self_path.string(),
+            "--selected-unique-id", "panel-guid",
+            "--parent-unique-id", "panel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(self_process.exit_code == 4,
+        "#1445: visual object reparent-batch JSON should reject self-parenting");
+    expect_contains(self_process.stdout_text, "A visual object cannot be reparented to itself.",
+        "#1445: self-parent visual object reparent-batch JSON should report editor errors");
+    expect(visual_object_parent(self_path, "panel-guid") == "frmCustomer",
+        "#1445: self-parent visual object reparent-batch commands should not mutate parent fields");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--selected-unique-id", "existing-textbox-guid",
+            "--parent-unique-id", "panel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1445: visual object reparent-batch JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectReparentBatch\": null",
+        "#1445: missing-path visual object reparent-batch JSON should not expose a batch reparent object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1445: missing-path visual object reparent-batch JSON should report parser errors");
+
+    const auto no_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(no_items_process.exit_code == 2,
+        "#1445: visual object reparent-batch JSON should reject empty batches");
+    expect_contains(no_items_process.stdout_text, "No visual object reparent operations were provided.",
+        "#1445: empty visual object reparent-batch JSON should report parser errors");
+
+    const auto option_before_item_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", form_path.string(),
+            "--parent-name", "cntPanel",
+            "--selected-unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(option_before_item_process.exit_code == 2,
+        "#1445: visual object reparent-batch JSON should reject item options before selected objects");
+    expect_contains(option_before_item_process.stdout_text,
+        "Visual object reparent batch item options require a preceding selected-object selector.",
+        "#1445: option-before-item visual object reparent-batch JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", form_path.string(),
+            "--selected-record", "-1",
+            "--clear-parent",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1445: visual object reparent-batch JSON should reject invalid selected-record values");
+    expect_contains(invalid_record_process.stdout_text, "The --selected-record value must be a non-negative integer.",
+        "#1445: invalid-record visual object reparent-batch JSON should report parser errors");
+
+    const fs::path missing_object_path = temp_root / "reparent_batch_missing_object.scx";
+    write_synthetic_form_table_for_object_reparent(missing_object_path);
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-reparent-batch",
+            "--path", missing_object_path.string(),
+            "--selected-object-name", "missingObject",
+            "--parent-name", "cntPanel",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1445: visual object reparent-batch JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualObjectReparentBatch\": null",
+        "#1445: unresolved visual object reparent-batch JSON should not expose a batch reparent object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1445: unresolved visual object reparent-batch JSON should report editor errors");
+    expect(visual_object_parent(missing_object_path, "existing-textbox-guid") == "frmCustomer",
+        "#1445: unresolved visual object reparent-batch commands should not mutate parent fields");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-reparent-batch --path <asset>",
+        "#1445: usage text should expose visual object reparent-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_reorders_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -45903,6 +46094,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_reparents_visual_object_batches(argv[1]);
     test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_groups_objects_by_stable_child_selectors(argv[1]);
     test_studio_host_json_aligns_objects_by_stable_selectors(argv[1]);

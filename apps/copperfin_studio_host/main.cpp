@@ -44,6 +44,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-object-children --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-descendants --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-ancestors --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-object-reparent-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-update --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --method-kind <procedure|function> --method-source <text> [--json]\n";
@@ -985,6 +986,15 @@ struct VisualObjectAncestorsParseResult {
     bool path_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectAncestorsListRequest request;
+};
+
+struct VisualObjectReparentBatchParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectReparentBatchRequest request;
 };
 
 struct VisualMethodListParseResult {
@@ -5379,6 +5389,104 @@ VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(const s
 
     if (result.ok && !result.path_provided) {
         fail("No asset path was provided.");
+    }
+    return result;
+}
+
+VisualObjectReparentBatchParseResult parse_visual_object_reparent_batch_arguments(
+    const std::vector<std::string>& args) {
+    VisualObjectReparentBatchParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-object-reparent-batch") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    auto current_object = [&]() -> copperfin::vfp::VisualObjectReparentBatchItem* {
+        if (result.request.objects.empty()) {
+            fail("Visual object reparent batch item options require a preceding selected-object selector.");
+            return nullptr;
+        }
+        return &result.request.objects.back();
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-object-reparent-batch") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--selected-record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --selected-record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.objects.push_back({
+                .record_index = record_index,
+                .object_name = {},
+                .unique_id = {},
+                .parent_object_name = {},
+                .parent_unique_id = {},
+                .clear_parent = false
+            });
+        } else if (argument == "--selected-object-name") {
+            result.request.objects.push_back({
+                .record_index = 0U,
+                .object_name = require_value(argument),
+                .unique_id = {},
+                .parent_object_name = {},
+                .parent_unique_id = {},
+                .clear_parent = false
+            });
+        } else if (argument == "--selected-unique-id") {
+            result.request.objects.push_back({
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = require_value(argument),
+                .parent_object_name = {},
+                .parent_unique_id = {},
+                .clear_parent = false
+            });
+        } else if (argument == "--parent-name") {
+            if (auto* object = current_object()) {
+                object->parent_object_name = require_value(argument);
+            }
+        } else if (argument == "--parent-unique-id") {
+            if (auto* object = current_object()) {
+                object->parent_unique_id = require_value(argument);
+            }
+        } else if (argument == "--clear-parent") {
+            if (auto* object = current_object()) {
+                object->clear_parent = true;
+            }
+        } else {
+            fail("Unknown visual-object-reparent-batch option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && result.request.objects.empty()) {
+        fail("No visual object reparent operations were provided.");
     }
     return result;
 }
@@ -21416,6 +21524,36 @@ int main(int argc, char** argv) {
             print_json_visual_method_list_result(result);
         } else {
             print_text_visual_method_list_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_object_reparent_batch_parse = parse_visual_object_reparent_batch_arguments(args);
+    if (visual_object_reparent_batch_parse.requested) {
+        if (!visual_object_reparent_batch_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_object_reparent_batch_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_object_reparent_batch_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status, "visualObjectReparentBatch");
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::reparent_visual_objects(
+            visual_object_reparent_batch_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_object_reparent_batch_parse.request.path);
+        if (visual_object_reparent_batch_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status, "visualObjectReparentBatch");
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
         }
         return result.ok ? 0 : 4;
     }

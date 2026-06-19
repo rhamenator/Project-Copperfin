@@ -7503,6 +7503,42 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
             return {.ok = false, .error = "The requested parent record is not currently available."};
         }
 
+        std::vector<std::size_t> visited_parent_record_indexes;
+        std::size_t parent_chain_record_index = parent_record_index;
+        while (parent_chain_record_index < table_result.table.records.size()) {
+            if (std::find(
+                    visited_parent_record_indexes.begin(),
+                    visited_parent_record_indexes.end(),
+                    parent_chain_record_index) != visited_parent_record_indexes.end()) {
+                return {.ok = false, .error = "The selected parent object's parent chain contains a cycle."};
+            }
+            visited_parent_record_indexes.push_back(parent_chain_record_index);
+            if (parent_chain_record_index == source_record_index) {
+                return {.ok = false, .error = "A visual object cannot be reparented to one of its descendants."};
+            }
+
+            const auto* parent_chain_record = find_visual_object_record_by_record_index(
+                table_result.table,
+                parent_chain_record_index);
+            if (parent_chain_record == nullptr) {
+                break;
+            }
+            const auto* parent_chain_value = find_record_value(*parent_chain_record, "PARENT");
+            const std::string parent_chain_name = parent_chain_value == nullptr
+                ? std::string{}
+                : trim_both(parent_chain_value->display_value);
+            if (parent_chain_name.empty()) {
+                break;
+            }
+            const auto* next_parent_record = find_visual_object_record_by_name(
+                table_result.table,
+                parent_chain_name);
+            if (next_parent_record == nullptr) {
+                break;
+            }
+            parent_chain_record_index = next_parent_record->record_index;
+        }
+
         parent_name = visual_object_record_name(table_result.table.records[parent_record_index]);
         if (parent_name.empty()) {
             return {.ok = false, .error = "The selected parent does not expose an object name."};
