@@ -14611,6 +14611,14 @@ void test_studio_host_json_creates_toolbox_object_batches(const std::string& stu
         "#1248: toolbox-create-batch JSON should expose later unique ids");
     expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
         "#1248: toolbox-create-batch JSON should expose created parent names");
+    expect_contains(create_process.stdout_text,
+        "\"createdObjectNames\": [\"txt2\", \"txt3\", \"cmdCreateBatch\"]",
+        "#1383: toolbox-create-batch JSON should summarize created object names");
+    expect_contains(create_process.stdout_text,
+        "\"createdUniqueIds\": [\"first-created-textbox-guid\", \"second-created-textbox-guid\", \"created-command-guid\"]",
+        "#1383: toolbox-create-batch JSON should summarize created unique ids");
+    expect_contains(create_process.stdout_text, "\"createErrors\": []",
+        "#1383: successful toolbox-create-batch JSON should summarize empty create errors");
     expect(visual_object_count(form_path) == before_count + 3U,
         "#1248: toolbox-create-batch host command should mutate the visual asset exactly once per item");
 
@@ -14664,6 +14672,13 @@ void test_studio_host_json_creates_toolbox_object_batches(const std::string& stu
         "#1248: failed toolbox-create-batch JSON should not expose stale record indexes");
     expect_contains(duplicate_process.stdout_text, "\"createdObjects\": [\n    ]",
         "#1248: failed toolbox-create-batch JSON should not expose stale created objects");
+    expect_contains(duplicate_process.stdout_text, "\"createdObjectNames\": []",
+        "#1383: failed toolbox-create-batch JSON should summarize no created object names");
+    expect_contains(duplicate_process.stdout_text, "\"createdUniqueIds\": []",
+        "#1383: failed toolbox-create-batch JSON should summarize no created unique ids");
+    expect_contains(duplicate_process.stdout_text,
+        "\"createErrors\": [\"The requested toolbox object identity already exists in the asset.\"",
+        "#1383: failed toolbox-create-batch JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1248: duplicate-rejected toolbox-create-batch commands should not partially mutate");
 
@@ -14792,6 +14807,14 @@ void test_studio_host_json_creates_selection_toolbox_object_batches(const std::s
         "#1311: selection-toolbox-create-batch JSON should expose later unique ids");
     expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
         "#1311: selection-toolbox-create-batch JSON should expose created parents");
+    expect_contains(create_process.stdout_text,
+        "\"createdObjectNames\": [\"txt2\", \"cmdSelectionBatchHost\", \"txt3\"]",
+        "#1383: selection-toolbox-create-batch JSON should summarize created object names");
+    expect_contains(create_process.stdout_text,
+        "\"createdUniqueIds\": [\"selection-batch-host-first-guid\", \"selection-batch-host-command-guid\", \"selection-batch-host-second-guid\"]",
+        "#1383: selection-toolbox-create-batch JSON should summarize created unique ids");
+    expect_contains(create_process.stdout_text, "\"createErrors\": []",
+        "#1383: successful selection-toolbox-create-batch JSON should summarize empty create errors");
     expect_contains(create_process.stdout_text, "\"className\": \"TextBox\"",
         "#1311: selection-toolbox-create-batch JSON should expose descriptor class names");
     expect_contains(create_process.stdout_text, "\"propertyValue\": \"First Selection Batch\"",
@@ -14852,6 +14875,10 @@ void test_studio_host_json_creates_selection_toolbox_object_batches(const std::s
         "#1311: report selection-toolbox-create-batch JSON should expose generated labels");
     expect_contains(report_process.stdout_text, "\"uniqueId\": \"selection-batch-host-report-label-guid\"",
         "#1311: report selection-toolbox-create-batch JSON should expose label unique ids");
+    expect_contains(report_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
+        "#1383: report selection-toolbox-create-batch JSON should summarize created report object names");
+    expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"selection-batch-host-report-label-guid\"]",
+        "#1383: report selection-toolbox-create-batch JSON should summarize created report unique ids");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1311: report selection-toolbox-create-batch JSON should exclude form-only textbox plans");
 
@@ -14880,6 +14907,13 @@ void test_studio_host_json_creates_selection_toolbox_object_batches(const std::s
     expect_contains(unavailable_process.stdout_text,
         "The requested toolbox item is not available in the requested designer context.",
         "#1311: unavailable selection-toolbox-create-batch JSON should report planner errors");
+    expect_contains(unavailable_process.stdout_text, "\"createdObjectNames\": []",
+        "#1383: unavailable selection-toolbox-create-batch JSON should summarize no created object names");
+    expect_contains(unavailable_process.stdout_text, "\"createdUniqueIds\": []",
+        "#1383: unavailable selection-toolbox-create-batch JSON should summarize no created unique ids");
+    expect_contains(unavailable_process.stdout_text,
+        "\"createErrors\": [\"The requested toolbox item is not available in the requested designer context.\"",
+        "#1383: unavailable selection-toolbox-create-batch JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1311: unavailable selection-toolbox-create-batch commands should not mutate assets");
 
