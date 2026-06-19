@@ -10346,6 +10346,251 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(
     }
 }
 
+void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatch_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        "copperfin_studio_host_selection_toolbox_create_batch_dispatch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "customer.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const std::size_t before_count = visual_object_count(form_path);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--parent-name", "frmCustomer",
+            "--field-value", "CAPTION=Selection Batch Dispatch",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1299: selection toolbox batch dispatch catalog JSON command should exit successfully");
+    expect_contains(catalog_process.stdout_text, "\"selectionToolboxCreateBatchDispatchCatalog\": {",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose selected contexts");
+    expect_contains(catalog_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose resolved toolbox contexts");
+    expect_contains(catalog_process.stdout_text, "\"launchPlanOk\": true",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose launch metadata");
+    expect_contains(catalog_process.stdout_text, "\"dispatchCount\": 1",
+        "#1299: admitted selection toolbox batch dispatch catalog JSON should expose one dispatch");
+    expect_contains(catalog_process.stdout_text, "\"errorCount\": 0",
+        "#1299: admitted selection toolbox batch dispatch catalog JSON should expose zero errors");
+    expect_contains(catalog_process.stdout_text, "\"batchPlanOk\": true",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose batch plan state");
+    expect_contains(catalog_process.stdout_text, "\"batchPlan\": {",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose nested batch plans");
+    expect_contains(catalog_process.stdout_text, "\"dispatchOk\": true",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose dispatch state");
+    expect_contains(catalog_process.stdout_text, "\"dispatch\": {",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose nested dispatch plans");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should include textbox plans");
+    expect_contains(catalog_process.stdout_text, "\"toolboxItemId\": \"commandbutton\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should include command button plans");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"txt2\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose generated textbox names");
+    expect_contains(catalog_process.stdout_text, "\"objectName\": \"cmd1\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose generated command names");
+    expect_contains(catalog_process.stdout_text, "\"dispatchArguments\": [",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose dispatch arguments");
+    expect_contains(catalog_process.stdout_text, "\"--toolbox-create-batch\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should dispatch to toolbox-create-batch");
+    expect_contains(catalog_process.stdout_text, "\"--toolbox-item\", \"textbox\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should include textbox dispatch arguments");
+    expect_contains(catalog_process.stdout_text, "\"--toolbox-item\", \"commandbutton\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should include command dispatch arguments");
+    expect_contains(catalog_process.stdout_text, "\"--field-value\", \"CAPTION=Selection Batch Dispatch\"",
+        "#1299: selection toolbox batch dispatch catalog JSON should preserve shared field values");
+    expect_contains(catalog_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1299: selection toolbox batch dispatch catalog JSON should expose dispatch admission state");
+    expect_contains(catalog_process.stdout_text, "\"dryRun\": false",
+        "#1299: admitted selection toolbox batch dispatch catalog JSON should expose non-dry-run state");
+    expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": true",
+        "#1299: admitted selection toolbox batch dispatch catalog JSON should expose mutation intent");
+    expect(visual_object_count(form_path) == before_count,
+        "#1299: selection toolbox batch dispatch catalog host command should not mutate the visual asset");
+
+    const auto dry_run_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--parent-name", "frmCustomer",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_catalog_process.exit_code == 0,
+        "#1299: non-admitted selection toolbox batch dispatch catalog JSON should return a catalog");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"batchPlanOk\": true",
+        "#1299: non-admitted selection toolbox batch dispatch catalog JSON should preserve batch plans");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchOk\": false",
+        "#1299: non-admitted selection toolbox batch dispatch catalog JSON should expose dispatch failure");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatchCount\": 0",
+        "#1299: non-admitted selection toolbox batch dispatch catalog JSON should expose zero dispatches");
+    expect_contains(dry_run_catalog_process.stdout_text, "\"dispatch\": null",
+        "#1299: non-admitted selection toolbox batch dispatch catalog JSON should not expose stale dispatch plans");
+    expect_contains(dry_run_catalog_process.stdout_text,
+        "A toolbox batch create dispatch request requires an admitted non-dry-run create operation.",
+        "#1299: non-admitted selection toolbox batch dispatch catalog JSON should expose dispatch errors");
+    expect_not_contains(dry_run_catalog_process.stdout_text, "\"--toolbox-create-batch\"",
+        "#1299: non-admitted selection toolbox batch dispatch catalog JSON should not expose stale arguments");
+    expect(visual_object_count(form_path) == before_count,
+        "#1299: non-admitted selection toolbox batch dispatch catalog host command should not mutate the asset");
+
+    const auto report_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "report_expression",
+            "--parent-name", "DetailBand",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(report_catalog_process.exit_code == 0,
+        "#1299: report selection toolbox batch dispatch catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+        "#1299: report selection toolbox batch dispatch catalog JSON should expose report selections");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1299: report selection toolbox batch dispatch catalog JSON should expose report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#1299: report selection toolbox batch dispatch catalog JSON should include label plans");
+    expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
+        "#1299: report selection toolbox batch dispatch catalog JSON should preserve report dispatch context");
+    expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#1299: report selection toolbox batch dispatch catalog JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#1299: report selection toolbox batch dispatch catalog host command should not mutate the asset");
+
+    const auto unsupported_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "menu_item",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_selection_process.exit_code == 4,
+        "#1299: selection toolbox batch dispatch catalog JSON should reject unsupported selections");
+    expect_contains(unsupported_selection_process.stdout_text,
+        "\"selectionToolboxCreateBatchDispatchCatalog\": null",
+        "#1299: unsupported selection toolbox batch dispatch catalog JSON should suppress stale payloads");
+    expect_contains(unsupported_selection_process.stdout_text,
+        "A selection-context toolbox object batch creation dispatch catalog request requires a toolbox palette.",
+        "#1299: unsupported selection toolbox batch dispatch catalog JSON should report palette errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1299: unsupported selection toolbox batch dispatch catalog host command should not mutate the asset");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1299: selection toolbox batch dispatch catalog JSON should reject missing paths");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1299: missing path selection toolbox batch dispatch catalog JSON should report parser errors");
+
+    const auto missing_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_selection_process.exit_code == 2,
+        "#1299: selection toolbox batch dispatch catalog JSON should reject missing selections");
+    expect_contains(missing_selection_process.stdout_text, "No selection context was provided.",
+        "#1299: missing selection toolbox batch dispatch catalog JSON should report parser errors");
+
+    const auto unknown_selection_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_selection_process.exit_code == 2,
+        "#1299: selection toolbox batch dispatch catalog JSON should reject unknown selections");
+    expect_contains(unknown_selection_process.stdout_text, "Unknown selection context token: unknown",
+        "#1299: unknown selection toolbox batch dispatch catalog JSON should report parser errors");
+
+    const auto invalid_admission_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--admit-create-operation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_admission_process.exit_code == 2,
+        "#1299: selection toolbox batch dispatch catalog JSON should reject invalid admission tokens");
+    expect_contains(invalid_admission_process.stdout_text,
+        "The --admit-create-operation value must be true or false.",
+        "#1299: invalid selection toolbox batch dispatch catalog admission tokens should report parser errors");
+
+    const auto invalid_field_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--field-value", "BROKEN",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_field_process.exit_code == 2,
+        "#1299: selection toolbox batch dispatch catalog JSON should reject malformed field values");
+    expect_contains(invalid_field_process.stdout_text, "Toolbox field values must use name=value syntax.",
+        "#1299: malformed selection toolbox batch dispatch catalog field values should report parser errors");
+
+    const auto unknown_option_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "visual_object",
+            "--toolbox-context", "form",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_option_process.exit_code == 2,
+        "#1299: selection toolbox batch dispatch catalog JSON should reject unknown options");
+    expect_contains(unknown_option_process.stdout_text,
+        "Unknown selection-toolbox-create-batch-dispatch-catalog option: --toolbox-context",
+        "#1299: unknown selection toolbox batch dispatch catalog options should report parser errors");
+    expect(visual_object_count(form_path) == before_count,
+        "#1299: rejected selection toolbox batch dispatch catalog host commands should not mutate the visual asset");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_plans_toolbox_object_creation_batches(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -34650,6 +34895,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(argv[1]);
     test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch_catalog(argv[1]);
+    test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatch_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batches(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_batch_dispatch(argv[1]);
     test_studio_host_json_creates_toolbox_object_batches(argv[1]);
