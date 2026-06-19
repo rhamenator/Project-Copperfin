@@ -5708,6 +5708,153 @@ void test_studio_host_json_exposes_editor_action_launch_plans(const std::string&
     }
 }
 
+void test_studio_host_json_exposes_editor_action_launch_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_editor_action_launch_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-catalog",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "cmdSave",
+            "--unique-id", "button-guid",
+            "--symbol", "cmdSave.Click",
+            "--line", "42",
+            "--column", "7",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1280: editor action launch catalog JSON should accept visual-object catalogs");
+    expect_contains(visual_process.stdout_text, "\"editorActionLaunchCatalog\": {",
+        "#1280: editor action launch catalog JSON should expose a catalog object");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1280: editor action launch catalog JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"actionCount\": 5",
+        "#1280: visual-object launch catalog JSON should expose action counts");
+    expect_contains(visual_process.stdout_text, "\"launchPlanCount\": 5",
+        "#1280: visual-object launch catalog JSON should expose launch-plan counts");
+    expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
+        "#1280: visual-object launch catalog JSON should expose error counts");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": true",
+        "#1280: editor action launch catalog JSON should stay dry-run");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1280: editor action launch catalog JSON should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"entries\": [",
+        "#1280: editor action launch catalog JSON should expose per-action entries");
+    expect_contains(visual_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
+        "#1280: editor action launch catalog JSON should include method actions");
+    expect_contains(visual_process.stdout_text, "\"kind\": \"source_editor\"",
+        "#1280: editor action launch catalog JSON should expose action kind metadata");
+    expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
+        "#1280: editor action launch catalog JSON should expose command tokens");
+    expect_contains(visual_process.stdout_text, "\"targetSurface\": \"method-editor\"",
+        "#1280: editor action launch catalog JSON should expose target surfaces");
+    expect_contains(visual_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1280: editor action launch catalog JSON should carry asset paths");
+    expect_contains(visual_process.stdout_text, "\"recordIndex\": 4",
+        "#1280: editor action launch catalog JSON should carry record indexes");
+    expect_contains(visual_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1280: editor action launch catalog JSON should carry object-name selectors");
+    expect_contains(visual_process.stdout_text, "\"uniqueId\": \"button-guid\"",
+        "#1280: editor action launch catalog JSON should carry unique-id selectors");
+    expect_contains(visual_process.stdout_text, "\"symbol\": \"cmdSave.Click\"",
+        "#1280: editor action launch catalog JSON should carry launch symbols");
+    expect_contains(visual_process.stdout_text, "\"line\": 42",
+        "#1280: editor action launch catalog JSON should carry line metadata");
+    expect_contains(visual_process.stdout_text, "\"column\": 7",
+        "#1280: editor action launch catalog JSON should carry column metadata");
+
+    const auto report_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-catalog",
+            "--selection-context", "report_expression",
+            "--path", "reports/orders.frx",
+            "--record", "2",
+            "--symbol", "Expr1.Expression",
+            "--json"
+        },
+        temp_root);
+    expect(report_process.exit_code == 0,
+        "#1280: editor action launch catalog JSON should accept report-expression catalogs");
+    expect_contains(report_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+        "#1280: report-expression launch catalog JSON should expose selected contexts");
+    expect_contains(report_process.stdout_text, "\"actionId\": \"edit-report-expression\"",
+        "#1280: report-expression launch catalog JSON should include expression editor actions");
+    expect_contains(report_process.stdout_text, "\"kind\": \"expression_editor\"",
+        "#1280: report-expression launch catalog JSON should expose expression-editor metadata");
+    expect_contains(report_process.stdout_text, "\"targetSurface\": \"expression-editor\"",
+        "#1280: report-expression launch catalog JSON should expose expression editor target surfaces");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-catalog",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1280: editor action launch catalog JSON should reject unknown selection contexts");
+    expect_contains(unknown_context_process.stdout_text, "\"editorActionLaunchCatalog\": null",
+        "#1280: invalid editor action launch catalog JSON should not expose catalog objects");
+    expect_contains(unknown_context_process.stdout_text, "Unknown selection context token: unknown",
+        "#1280: invalid editor action launch catalog contexts should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1280: editor action launch catalog JSON should reject missing selection contexts");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1280: missing-context editor action launch catalog JSON should report parser errors");
+
+    const auto invalid_line_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-catalog",
+            "--selection-context", "visual_object",
+            "--line", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_line_process.exit_code == 2,
+        "#1280: editor action launch catalog JSON should reject invalid line values");
+    expect_contains(invalid_line_process.stdout_text, "The --line value must be a non-negative integer.",
+        "#1280: invalid-line editor action launch catalog JSON should report parser errors");
+
+    const auto invalid_column_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-catalog",
+            "--selection-context", "visual_object",
+            "--column", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_column_process.exit_code == 2,
+        "#1280: editor action launch catalog JSON should reject invalid column values");
+    expect_contains(invalid_column_process.stdout_text, "The --column value must be a non-negative integer.",
+        "#1280: invalid-column editor action launch catalog JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_editor_action_invocation_admission(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -33297,6 +33444,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
     test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
+    test_studio_host_json_exposes_editor_action_launch_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_invocation_admission(argv[1]);
     test_studio_host_json_exposes_editor_action_dispatch(argv[1]);
     test_studio_host_json_exposes_editor_action_dispatch_catalog(argv[1]);

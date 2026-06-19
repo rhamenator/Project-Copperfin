@@ -2,6 +2,7 @@
 
 ## 2026-06-18
 
+- E2/#1280 Studio host selection-context editor-action launch catalog JSON shipped: `copperfin_studio_host --editor-action-launch-catalog --selection-context <token>` now exposes non-executing selected-context editor-action launch catalogs with action metadata, selected-object/editor metadata, command tokens, target surfaces, source position metadata, and parser validation.
 - E2/#1279 selection-context editor-action launch catalog planning shipped: `plan_studio_editor_action_launch_catalog` now builds non-executing editor-action launch catalogs for one Studio selection context while preserving action metadata, selected-object/editor metadata, command tokens, target surfaces, and source position metadata.
 - E2/#1278 Studio host selection-context builder/wizard launch catalog JSON shipped: `copperfin_studio_host --selection-builder-launch-catalog --selection-context <token>` now exposes non-executing selected-context builder launch catalogs with mixed visual form/control builders, menu builders, VFP-equivalent metadata, and parser validation.
 - E2/#1277 selection-context builder/wizard launch catalog planning shipped: `plan_studio_builder_launch_catalog_for_selection` now builds non-executing builder launch catalogs for one Studio selection context while preserving mixed visual form/control builders and context-specific menu/data-environment builder metadata.
