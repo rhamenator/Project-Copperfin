@@ -341,6 +341,164 @@ int main() {
                 std::to_string(visual_plan.plan.item_count)),
         "#1233: toolbox dispatch should materialize a deterministic argument contract");
 
+    bool toolbox_executor_called = false;
+    const auto executed_toolbox_dispatch = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = toolbox_dispatch.plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan& plan) {
+            toolbox_executor_called = true;
+            expect(plan.selection_context == StudioEditorSelectionContext::visual_object &&
+                    plan.toolbox_context == StudioToolboxContext::form &&
+                    plan.command_token == "studio.toolbox.palette.invoke" &&
+                    plan.item_count == visual_plan.plan.item_count &&
+                    has_toolbox_item(plan.items, "textbox") &&
+                    has_argument_pair(plan.dispatch_arguments, "--toolbox-context", "form") &&
+                    has_argument_pair(plan.dispatch_arguments, "--item-count",
+                        std::to_string(visual_plan.plan.item_count)),
+                "#1322: toolbox dispatch execution should invoke executors with validated dispatch metadata");
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = "toolbox palette launched",
+                .error = {},
+                .mutates_asset = true
+            };
+        }
+    });
+    expect(toolbox_executor_called &&
+            executed_toolbox_dispatch.ok &&
+            executed_toolbox_dispatch.execution_admitted &&
+            executed_toolbox_dispatch.executed &&
+            !executed_toolbox_dispatch.dry_run &&
+            executed_toolbox_dispatch.mutates_asset &&
+            executed_toolbox_dispatch.observation.launched &&
+            executed_toolbox_dispatch.observation.exit_code == 0 &&
+            executed_toolbox_dispatch.observation.output == "toolbox palette launched" &&
+            executed_toolbox_dispatch.dispatch_plan.executed &&
+            executed_toolbox_dispatch.dispatch_plan.dispatch_admitted &&
+            !executed_toolbox_dispatch.dispatch_plan.dry_run &&
+            executed_toolbox_dispatch.dispatch_plan.command_token == "studio.toolbox.palette.invoke" &&
+            executed_toolbox_dispatch.dispatch_plan.item_count == visual_plan.plan.item_count &&
+            has_toolbox_item(executed_toolbox_dispatch.dispatch_plan.items, "textbox"),
+        "#1322: toolbox dispatch execution should preserve dispatch metadata and executed state");
+
+    toolbox_executor_called = false;
+    const auto unadmitted_execution = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = toolbox_dispatch.plan,
+        .admit_execution = false,
+        .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            toolbox_executor_called = true;
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!toolbox_executor_called &&
+            !unadmitted_execution.ok &&
+            unadmitted_execution.error ==
+                "A toolbox dispatch execution request requires explicit execution admission." &&
+            !unadmitted_execution.executed &&
+            unadmitted_execution.dry_run,
+        "#1322: toolbox dispatch execution should reject unadmitted execution without invoking executors");
+
+    const auto missing_executor_execution = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = toolbox_dispatch.plan,
+        .admit_execution = true,
+        .executor = {}
+    });
+    expect(!missing_executor_execution.ok &&
+            missing_executor_execution.error == "A toolbox dispatch execution request requires an executor.",
+        "#1322: toolbox dispatch execution should reject missing executors");
+
+    auto stale_dispatch_plan = toolbox_dispatch.plan;
+    stale_dispatch_plan.executed = true;
+    toolbox_executor_called = false;
+    const auto stale_execution = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = stale_dispatch_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            toolbox_executor_called = true;
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!toolbox_executor_called &&
+            !stale_execution.ok &&
+            stale_execution.error == "A toolbox dispatch execution request requires a non-executed dispatch.",
+        "#1322: toolbox dispatch execution should reject stale executed dispatches");
+
+    auto missing_arguments_plan = toolbox_dispatch.plan;
+    missing_arguments_plan.dispatch_arguments.clear();
+    toolbox_executor_called = false;
+    const auto missing_arguments_execution = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = missing_arguments_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            toolbox_executor_called = true;
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!toolbox_executor_called &&
+            !missing_arguments_execution.ok &&
+            missing_arguments_execution.error == "A toolbox dispatch execution request requires dispatch arguments.",
+        "#1322: toolbox dispatch execution should reject missing dispatch arguments before launch");
+
+    auto missing_items_execution_plan = toolbox_dispatch.plan;
+    missing_items_execution_plan.items.clear();
+    missing_items_execution_plan.item_count = 0U;
+    toolbox_executor_called = false;
+    const auto missing_items_execution = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = missing_items_execution_plan,
+        .admit_execution = true,
+        .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            toolbox_executor_called = true;
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!toolbox_executor_called &&
+            !missing_items_execution.ok &&
+            missing_items_execution.error ==
+                "A toolbox dispatch execution request requires validated toolbox item metadata.",
+        "#1322: toolbox dispatch execution should reject missing item metadata before launch");
+
+    const auto launch_failure_execution = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = toolbox_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = false,
+                .exit_code = 0,
+                .output = {},
+                .error = "toolbox launcher unavailable",
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!launch_failure_execution.ok &&
+            launch_failure_execution.error == "toolbox launcher unavailable" &&
+            !launch_failure_execution.executed &&
+            launch_failure_execution.dry_run &&
+            launch_failure_execution.observation.error == "toolbox launcher unavailable",
+        "#1322: toolbox dispatch execution should surface launch failures without stale execution metadata");
+
+    const auto non_zero_execution = copperfin::studio::execute_studio_toolbox_dispatch({
+        .dispatch_plan = toolbox_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 9,
+                .output = {},
+                .error = "toolbox failed",
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!non_zero_execution.ok &&
+            non_zero_execution.error == "toolbox failed" &&
+            non_zero_execution.observation.launched &&
+            non_zero_execution.observation.exit_code == 9 &&
+            !non_zero_execution.executed &&
+            non_zero_execution.dry_run,
+        "#1322: toolbox dispatch execution should reject non-zero executor exit codes");
+
     const auto dry_run_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
         .launch_plan = report_plan.plan,
         .admit_palette_invocation = false

@@ -3,6 +3,7 @@
 #include "copperfin/studio/toolbox_invocation_admission.h"
 
 #include <cstddef>
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -93,11 +94,41 @@ struct StudioSelectionToolboxDispatchCatalogResult {
     bool mutates_asset = false;
 };
 
+struct StudioToolboxDispatchExecutionObservation {
+    bool launched = false;
+    int exit_code = 0;
+    std::string output;
+    std::string error;
+    bool mutates_asset = false;
+};
+
+using StudioToolboxDispatchExecutor =
+    std::function<StudioToolboxDispatchExecutionObservation(const StudioToolboxDispatchPlan&)>;
+
+struct StudioToolboxDispatchExecutionRequest {
+    StudioToolboxDispatchPlan dispatch_plan;
+    bool admit_execution = false;
+    StudioToolboxDispatchExecutor executor;
+};
+
+struct StudioToolboxDispatchExecutionResult {
+    bool ok = false;
+    std::string error;
+    StudioToolboxDispatchPlan dispatch_plan;
+    StudioToolboxDispatchExecutionObservation observation;
+    bool execution_admitted = false;
+    bool executed = false;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 [[nodiscard]] StudioToolboxDispatchResult plan_studio_toolbox_dispatch(
     const StudioToolboxDispatchRequest& request);
 [[nodiscard]] StudioToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog(
     const StudioToolboxDispatchCatalogRequest& request);
 [[nodiscard]] StudioSelectionToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog_for_selection(
     const StudioSelectionToolboxDispatchCatalogRequest& request);
+[[nodiscard]] StudioToolboxDispatchExecutionResult execute_studio_toolbox_dispatch(
+    const StudioToolboxDispatchExecutionRequest& request);
 
 }  // namespace copperfin::studio
