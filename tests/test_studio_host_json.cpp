@@ -9987,6 +9987,13 @@ void test_studio_host_json_exposes_designer_invocation_admission_catalog(const s
         "#1224: designer invocation-admission catalog JSON should expose a catalog object");
     expect_contains(catalog_process.stdout_text, "\"contextCount\": 9",
         "#1224: designer invocation-admission catalog JSON should expose all Studio contexts");
+    expect_contains(catalog_process.stdout_text, "\"admissionOkSelectionContexts\": [\"visual_object\"",
+        "#1358: designer invocation-admission catalog JSON should summarize admission-clean contexts");
+    expect_contains(catalog_process.stdout_text, "\"admissionBlockedSelectionContexts\": [\"menu_item\"",
+        "#1358: designer invocation-admission catalog JSON should summarize admission-blocked contexts");
+    expect_contains(catalog_process.stdout_text,
+        "\"admissionBlockedErrors\": [\"The selected Studio context does not expose a toolbox palette.\"",
+        "#1358: designer invocation-admission catalog JSON should summarize blocked admission errors");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
         "#1224: designer invocation-admission catalog JSON should include visual-object contexts");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"report_expression\"",
@@ -10014,6 +10021,23 @@ void test_studio_host_json_exposes_designer_invocation_admission_catalog(const s
         "#1224: designer invocation-admission catalog JSON should expose unsupported toolbox reasons");
     expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
         "#1224: designer invocation-admission catalog JSON should remain non-mutating");
+
+    const auto unadmitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-invocation-admission-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_process.exit_code == 0,
+        "#1358: designer invocation-admission catalog JSON should summarize dry-run admission catalogs");
+    expect_contains(unadmitted_process.stdout_text, "\"admissionOkSelectionContexts\": [\"visual_object\"",
+        "#1358: dry-run designer invocation-admission catalog JSON should preserve admission-clean contexts");
+    expect_contains(unadmitted_process.stdout_text, "\"admissionBlockedSelectionContexts\": [\"menu_item\"",
+        "#1358: dry-run designer invocation-admission catalog JSON should summarize admission-blocked contexts");
+    expect_contains(unadmitted_process.stdout_text,
+        "\"admissionBlockedErrors\": [\"The selected Studio context does not expose a toolbox palette.\"",
+        "#1358: dry-run designer invocation-admission catalog JSON should summarize blocked admission errors");
 
     const auto invalid_record_process = run_process_capture(
         studio_host_path,

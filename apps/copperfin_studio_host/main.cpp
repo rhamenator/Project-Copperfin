@@ -11945,10 +11945,37 @@ void print_json_designer_invocation_admission_catalog_result(
         return;
     }
 
+    std::vector<std::string> admission_ok_selection_contexts;
+    std::vector<std::string> admission_blocked_selection_contexts;
+    std::vector<std::string> admission_blocked_errors;
+    for (const auto& context : result.contexts) {
+        const std::string selection_context =
+            copperfin::studio::studio_editor_selection_context_name(context.selection_context);
+        if (context.invocation_admission.ok && context.toolbox_error.empty()) {
+            admission_ok_selection_contexts.push_back(selection_context);
+        } else {
+            admission_blocked_selection_contexts.push_back(selection_context);
+            if (!context.invocation_admission.ok) {
+                admission_blocked_errors.push_back(context.invocation_admission.error);
+            } else {
+                admission_blocked_errors.push_back(context.toolbox_error);
+            }
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
     std::cout << "    \"contextCount\": " << result.context_count << ",\n";
+    std::cout << "    \"admissionOkSelectionContexts\": ";
+    print_json_string_array(admission_ok_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedSelectionContexts\": ";
+    print_json_string_array(admission_blocked_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"admissionBlockedErrors\": ";
+    print_json_string_array(admission_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"contexts\": [\n";
     for (std::size_t index = 0U; index < result.contexts.size(); ++index) {
         print_json_designer_invocation_admission_catalog_context(result.contexts[index], "      ");

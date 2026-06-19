@@ -1,3 +1,4 @@
+1358	OPEN	E2/#23 slice: Expose designer invocation admission catalog context status summaries in host JSON		2026-06-19T08:06:51Z
 1357	OPEN	E2/#23 slice: Expose designer dispatch catalog context status summaries in host JSON		2026-06-19T08:03:19Z
 1356	OPEN	E2/#23 slice: Expose designer dispatch execution catalog context readiness summaries in host JSON		2026-06-19T07:58:53Z
 1355	OPEN	E2/#23 slice: Expose aggregate designer failed-child exit-code summaries in host JSON		2026-06-19T07:55:06Z
