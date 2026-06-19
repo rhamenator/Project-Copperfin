@@ -57,6 +57,17 @@ const copperfin::studio::StudioBuilderLaunchCatalogEntry* find_launch_catalog_en
     return nullptr;
 }
 
+const copperfin::studio::StudioBuilderInvocationAdmissionCatalogEntry* find_admission_catalog_entry(
+    const std::vector<copperfin::studio::StudioBuilderInvocationAdmissionCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.builder.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 int main() {
@@ -241,6 +252,108 @@ int main() {
                dry_run_label_invocation.plan.dry_run &&
                !dry_run_label_invocation.plan.mutates_asset,
            "#1215: non-admitted builder invocation plans should remain deterministic dry runs");
+
+    const auto admitted_control_admission_catalog =
+        copperfin::studio::plan_studio_builder_invocation_admission_catalog({
+            .context = StudioBuilderContext::control,
+            .asset_path = "forms/customer.scx",
+            .record_index = 4U,
+            .object_name = "grdOrders",
+            .unique_id = "grid-guid",
+            .admit_ui_launches = true
+        });
+    expect(admitted_control_admission_catalog.ok &&
+               admitted_control_admission_catalog.context == StudioBuilderContext::control &&
+               admitted_control_admission_catalog.builder_count == control_builders.size() &&
+               admitted_control_admission_catalog.admission_count == control_builders.size() &&
+               admitted_control_admission_catalog.error_count == 0U &&
+               !admitted_control_admission_catalog.dry_run &&
+               !admitted_control_admission_catalog.mutates_asset,
+           "#1270: admitted builder invocation admission catalogs should admit every context builder");
+    const auto* catalog_grid_admission = find_admission_catalog_entry(
+        admitted_control_admission_catalog.entries, "grid-builder");
+    expect(catalog_grid_admission != nullptr &&
+               catalog_grid_admission->launch_plan.ok &&
+               catalog_grid_admission->invocation_admission.ok &&
+               std::string(catalog_grid_admission->invocation_admission.plan.builder.id) == "grid-builder" &&
+               catalog_grid_admission->invocation_admission.plan.builder.kind == StudioBuilderKind::builder &&
+               catalog_grid_admission->invocation_admission.plan.context == StudioBuilderContext::control &&
+               catalog_grid_admission->invocation_admission.plan.command_token == "studio.builder.invoke" &&
+               catalog_grid_admission->invocation_admission.plan.entry_point == "cf_builders.grid_builder" &&
+               catalog_grid_admission->invocation_admission.plan.asset_path == "forms/customer.scx" &&
+               catalog_grid_admission->invocation_admission.plan.record_index == 4U &&
+               catalog_grid_admission->invocation_admission.plan.object_name == "grdOrders" &&
+               catalog_grid_admission->invocation_admission.plan.unique_id == "grid-guid" &&
+               catalog_grid_admission->invocation_admission.plan.ui_launch_admitted &&
+               !catalog_grid_admission->invocation_admission.plan.dry_run &&
+               !catalog_grid_admission->invocation_admission.plan.mutates_asset,
+           "#1270: builder invocation admission catalog entries should preserve admission metadata");
+
+    const auto dry_run_control_admission_catalog =
+        copperfin::studio::plan_studio_builder_invocation_admission_catalog({
+            .context = StudioBuilderContext::control,
+            .asset_path = "forms/customer.scx",
+            .record_index = 4U,
+            .object_name = "grdOrders",
+            .unique_id = "grid-guid",
+            .admit_ui_launches = false
+        });
+    expect(dry_run_control_admission_catalog.ok &&
+               dry_run_control_admission_catalog.builder_count == control_builders.size() &&
+               dry_run_control_admission_catalog.admission_count == control_builders.size() &&
+               dry_run_control_admission_catalog.error_count == 0U &&
+               dry_run_control_admission_catalog.dry_run &&
+               !dry_run_control_admission_catalog.mutates_asset,
+           "#1270: dry-run builder invocation admission catalogs should preserve dry-run admissions");
+    const auto* dry_run_grid_admission = find_admission_catalog_entry(
+        dry_run_control_admission_catalog.entries, "grid-builder");
+    expect(dry_run_grid_admission != nullptr &&
+               dry_run_grid_admission->invocation_admission.ok &&
+               !dry_run_grid_admission->invocation_admission.plan.ui_launch_admitted &&
+               dry_run_grid_admission->invocation_admission.plan.dry_run &&
+               !dry_run_grid_admission->invocation_admission.plan.mutates_asset,
+           "#1270: dry-run builder invocation admission catalog entries should remain non-mutating");
+
+    const auto label_admission_catalog =
+        copperfin::studio::plan_studio_builder_invocation_admission_catalog({
+            .context = StudioBuilderContext::label,
+            .asset_path = "labels/mailing.lbx",
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .admit_ui_launches = true
+        });
+    const auto* label_wizard_admission = find_admission_catalog_entry(
+        label_admission_catalog.entries, "label-wizard");
+    expect(label_admission_catalog.ok &&
+               label_wizard_admission != nullptr &&
+               label_wizard_admission->invocation_admission.ok &&
+               label_wizard_admission->invocation_admission.plan.builder.kind == StudioBuilderKind::wizard &&
+               label_wizard_admission->invocation_admission.plan.context == StudioBuilderContext::label &&
+               label_wizard_admission->invocation_admission.plan.entry_point == "cf_wizards.label_wizard" &&
+               label_wizard_admission->invocation_admission.plan.asset_path == "labels/mailing.lbx" &&
+               label_wizard_admission->invocation_admission.plan.ui_launch_admitted &&
+               !label_wizard_admission->invocation_admission.plan.mutates_asset,
+           "#1270: label invocation admission catalogs should include wizard admission metadata");
+
+    const auto missing_admission_catalog =
+        copperfin::studio::plan_studio_builder_invocation_admission_catalog({
+            .context = static_cast<StudioBuilderContext>(999),
+            .asset_path = "forms/customer.scx",
+            .record_index = 4U,
+            .object_name = "grdOrders",
+            .unique_id = "grid-guid",
+            .admit_ui_launches = true
+        });
+    expect(!missing_admission_catalog.ok &&
+               missing_admission_catalog.error ==
+                   "A builder invocation admission catalog request requires at least one context builder." &&
+               missing_admission_catalog.builder_count == 0U &&
+               missing_admission_catalog.admission_count == 0U &&
+               missing_admission_catalog.error_count == 0U &&
+               missing_admission_catalog.dry_run &&
+               !missing_admission_catalog.mutates_asset,
+           "#1270: builder invocation admission catalogs should reject empty contexts without mutation");
 
     const auto control_dispatch = copperfin::studio::plan_studio_builder_dispatch({
         .admission_plan = admitted_control_invocation.plan

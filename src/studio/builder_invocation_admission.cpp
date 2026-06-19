@@ -1,5 +1,7 @@
 #include "copperfin/studio/builder_invocation_admission.h"
 
+#include <utility>
+
 namespace copperfin::studio {
 
 StudioBuilderInvocationAdmissionResult plan_studio_builder_invocation_admission(
@@ -35,6 +37,82 @@ StudioBuilderInvocationAdmissionResult plan_studio_builder_invocation_admission(
             .dry_run = !request.admit_ui_launch,
             .mutates_asset = false
         }
+    };
+}
+
+StudioBuilderInvocationAdmissionCatalogResult plan_studio_builder_invocation_admission_catalog(
+    const StudioBuilderInvocationAdmissionCatalogRequest& request) {
+    const auto builders = studio_builders_for_context(request.context);
+    if (builders.empty()) {
+        return {
+            .ok = false,
+            .error = "A builder invocation admission catalog request requires at least one context builder.",
+            .context = request.context,
+            .builder_count = 0U,
+            .admission_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioBuilderInvocationAdmissionCatalogEntry> entries;
+    entries.reserve(builders.size());
+    std::size_t admission_count = 0U;
+    std::size_t error_count = 0U;
+    bool dry_run = true;
+    bool mutates_asset = false;
+
+    for (const auto& builder : builders) {
+        auto launch_plan = plan_studio_builder_launch({
+            .context = request.context,
+            .builder_id = std::string(builder.id),
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id
+        });
+
+        StudioBuilderInvocationAdmissionResult invocation_admission{};
+        if (launch_plan.ok) {
+            invocation_admission = plan_studio_builder_invocation_admission({
+                .launch_plan = launch_plan.plan,
+                .admit_ui_launch = request.admit_ui_launches
+            });
+        } else {
+            invocation_admission = {
+                .ok = false,
+                .error = launch_plan.error,
+                .plan = {}
+            };
+        }
+
+        if (invocation_admission.ok) {
+            ++admission_count;
+            dry_run = dry_run && invocation_admission.plan.dry_run;
+            mutates_asset = mutates_asset || invocation_admission.plan.mutates_asset;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .builder = builder,
+            .launch_plan = std::move(launch_plan),
+            .invocation_admission = std::move(invocation_admission)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .context = request.context,
+        .builder_count = builders.size(),
+        .admission_count = admission_count,
+        .error_count = error_count,
+        .dry_run = dry_run,
+        .mutates_asset = mutates_asset,
+        .entries = std::move(entries)
     };
 }
 

@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1269`, exposing builder/wizard launch catalog planning through `copperfin_studio_host --builder-launch-catalog` JSON. `#1268` is the immediately preceding core planner slice. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1270`, adding builder/wizard invocation-admission catalog planning. `#1269` is the immediately preceding host JSON launch-catalog slice. Both remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
