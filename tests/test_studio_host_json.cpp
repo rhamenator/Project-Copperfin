@@ -3614,7 +3614,7 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {"9", "1", "", "", "0", "", "2000", "", "", ""},
         {"9", "4", "", "", "2000", "", "5000", "", "", ""},
         {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
-        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", ""},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", "", "label-guid"},
         {"6", "", "", "50", "8000", "100", "100", "", "", ""},
         {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", "", ""}
     };
@@ -3963,6 +3963,64 @@ void test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(cons
                     "#1463: nudged report object JSON should recompute section-relative bottom coordinates");
     expect_contains(nudge_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
                     "#1463: nudged report object JSON should preserve containing section metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_align_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto align_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--record", "3",
+            "--align-object",
+            "--alignment-mode", "left",
+            "--anchor-unique-id", "label-guid",
+            "--align-target-unique-id", "field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (align_process.exit_code != 0) {
+        std::cerr << "studio host report object align stdout:\n" << align_process.stdout_text << "\n";
+        std::cerr << "studio host report object align stderr:\n" << align_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(align_process.exit_code == 0,
+           "#1464: report layout object alignment should exit successfully");
+    expect(visual_object_property(report_path, "field-guid", "HPOS") == "900" &&
+               visual_object_property(report_path, "field-guid", "VPOS") == "2600",
+           "#1464: report layout object left alignment should mutate FRX HPOS and preserve VPOS");
+    expect(visual_object_property(report_path, "label-guid", "HPOS") == "900",
+           "#1464: report layout object alignment should preserve anchor geometry");
+    expect_contains(align_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1464: aligned report object JSON should retain selected-object availability");
+    expect_contains(align_process.stdout_text, "\"left\": 900",
+                    "#1464: aligned report object JSON should expose updated left coordinates");
+    expect_contains(align_process.stdout_text, "\"top\": 2600",
+                    "#1464: aligned report object JSON should preserve top coordinates");
+    expect_contains(align_process.stdout_text, "\"right\": 4900",
+                    "#1464: aligned report object JSON should recompute right-edge coordinates");
+    expect_contains(align_process.stdout_text, "\"bottom\": 3050",
+                    "#1464: aligned report object JSON should preserve bottom-edge coordinates");
+    expect_contains(align_process.stdout_text, "\"sectionRelativeTop\": 600",
+                    "#1464: aligned report object JSON should preserve section-relative top coordinates");
+    expect_contains(align_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1464: aligned report object JSON should preserve containing section metadata");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -47616,6 +47674,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_report_sections(argv[1]);
     test_studio_host_json_exposes_selected_report_objects(argv[1]);
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
