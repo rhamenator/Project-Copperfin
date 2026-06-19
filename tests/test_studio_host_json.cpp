@@ -13148,6 +13148,13 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_ca
         "#1297: selection toolbox batch create-plan catalog JSON should expose dry-run state");
     expect_contains(visual_catalog_process.stdout_text, "\"mutatesAsset\": false",
         "#1297: selection toolbox batch create-plan catalog JSON should remain non-mutating");
+    expect_contains(visual_catalog_process.stdout_text,
+        "\"planReadyItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1379: selection toolbox batch create-plan catalog JSON should summarize plan-ready visual items");
+    expect_contains(visual_catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1379: selection toolbox batch create-plan catalog JSON should summarize empty blocked item ids");
+    expect_contains(visual_catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1379: selection toolbox batch create-plan catalog JSON should summarize empty blocked plan errors");
     expect(visual_object_count(form_path) == before_count,
         "#1297: visual selection toolbox batch create-plan catalog host command should not mutate assets");
 
@@ -13169,6 +13176,12 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_ca
         "#1297: report selection toolbox batch create-plan catalog JSON should resolve report contexts");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1297: report selection toolbox batch create-plan catalog JSON should include label plans");
+    expect_contains(report_catalog_process.stdout_text, "\"planReadyItemIds\": [\"label\"",
+        "#1379: report selection toolbox batch create-plan catalog JSON should summarize plan-ready report items");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1379: report selection toolbox batch create-plan catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1379: report selection toolbox batch create-plan catalog JSON should summarize empty blocked plan errors");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1297: report selection toolbox batch create-plan catalog JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
