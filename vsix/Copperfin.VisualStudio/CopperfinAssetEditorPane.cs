@@ -14,7 +14,7 @@ internal sealed class CopperfinAssetEditorPane : WindowPane, IVsPersistDocData, 
     private string documentPath;
     private uint docCookie;
 
-    public CopperfinAssetEditorPane(IServiceProvider serviceProvider, string documentPath)
+    public CopperfinAssetEditorPane(System.IServiceProvider serviceProvider, string documentPath)
         : base(serviceProvider)
     {
         control = new CopperfinAssetEditorControl();

@@ -1259,5 +1259,16 @@ internal static class FoxProIntelliSenseCatalog
         public bool ShouldRefresh => (DateTime.UtcNow - BuiltAtUtc) > TimeSpan.FromSeconds(15);
     }
 
-    private readonly record struct InvocationArgument(string Text, int ColumnNumber);
+    private readonly struct InvocationArgument
+    {
+        public InvocationArgument(string text, int columnNumber)
+        {
+            Text = text;
+            ColumnNumber = columnNumber;
+        }
+
+        public string Text { get; }
+
+        public int ColumnNumber { get; }
+    }
 }

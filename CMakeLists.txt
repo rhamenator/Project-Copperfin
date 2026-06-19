@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(Copperfin LANGUAGES CXX)
 
+include(CheckCXXCompilerFlag)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -96,7 +98,16 @@ add_library(cf_design_model
 )
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set_source_files_properties(src/studio/vs_launch_contract.cpp PROPERTIES COMPILE_OPTIONS "-g1;-fno-var-tracking;-fno-var-tracking-assignments;-fzero-init-padding-bits=standard")
+    set(copperfin_vs_launch_contract_compile_options
+        -g1
+        -fno-var-tracking
+        -fno-var-tracking-assignments
+    )
+    check_cxx_compiler_flag("-fzero-init-padding-bits=standard" COPPERFIN_HAS_FZERO_INIT_PADDING_BITS)
+    if(COPPERFIN_HAS_FZERO_INIT_PADDING_BITS)
+        list(APPEND copperfin_vs_launch_contract_compile_options -fzero-init-padding-bits=standard)
+    endif()
+    set_source_files_properties(src/studio/vs_launch_contract.cpp PROPERTIES COMPILE_OPTIONS "${copperfin_vs_launch_contract_compile_options}")
 endif()
 
 add_library(cf_runtime_pipeline
