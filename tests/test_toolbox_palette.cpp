@@ -346,6 +346,85 @@ int main() {
             !empty_invocation_catalog.mutates_asset,
         "#1285: toolbox invocation admission catalogs should reject empty item metadata");
 
+    const auto visual_selection_invocation_catalog =
+        copperfin::studio::plan_studio_toolbox_invocation_admission_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid",
+            .admit_palette_invocation = true
+        });
+    expect(visual_selection_invocation_catalog.ok &&
+            visual_selection_invocation_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+            visual_selection_invocation_catalog.toolbox_context == StudioToolboxContext::form &&
+            visual_selection_invocation_catalog.command_token == "studio.toolbox.palette.invoke" &&
+            visual_selection_invocation_catalog.asset_path == "forms/customer.scx" &&
+            visual_selection_invocation_catalog.record_index == 1U &&
+            visual_selection_invocation_catalog.object_name == "frmCustomer" &&
+            visual_selection_invocation_catalog.unique_id == "form-guid" &&
+            visual_selection_invocation_catalog.item_count == form_items.size() &&
+            visual_selection_invocation_catalog.items.size() == form_items.size() &&
+            visual_selection_invocation_catalog.launch_plan.ok &&
+            visual_selection_invocation_catalog.launch_plan.plan.toolbox_context == StudioToolboxContext::form &&
+            visual_selection_invocation_catalog.invocation_admission.ok &&
+            visual_selection_invocation_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            visual_selection_invocation_catalog.admission_count == 1U &&
+            visual_selection_invocation_catalog.error_count == 0U &&
+            !visual_selection_invocation_catalog.dry_run &&
+            !visual_selection_invocation_catalog.mutates_asset &&
+            has_toolbox_item(visual_selection_invocation_catalog.items, "textbox"),
+        "#1288: visual selection toolbox admission catalogs should resolve form toolbox metadata");
+
+    const auto report_selection_invocation_catalog =
+        copperfin::studio::plan_studio_toolbox_invocation_admission_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::report_expression,
+            .asset_path = "reports/orders.frx",
+            .record_index = 3U,
+            .object_name = "Field1",
+            .unique_id = "field-guid",
+            .admit_palette_invocation = false
+        });
+    expect(report_selection_invocation_catalog.ok &&
+            report_selection_invocation_catalog.selection_context == StudioEditorSelectionContext::report_expression &&
+            report_selection_invocation_catalog.toolbox_context == StudioToolboxContext::report &&
+            report_selection_invocation_catalog.item_count == report_items.size() &&
+            report_selection_invocation_catalog.launch_plan.ok &&
+            report_selection_invocation_catalog.invocation_admission.ok &&
+            !report_selection_invocation_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            report_selection_invocation_catalog.admission_count == 1U &&
+            report_selection_invocation_catalog.error_count == 0U &&
+            report_selection_invocation_catalog.dry_run &&
+            !report_selection_invocation_catalog.mutates_asset &&
+            has_toolbox_item(report_selection_invocation_catalog.items, "label") &&
+            !has_toolbox_item(report_selection_invocation_catalog.items, "textbox"),
+        "#1288: report selection toolbox admission catalogs should preserve report-safe dry-run metadata");
+
+    const auto menu_selection_invocation_catalog =
+        copperfin::studio::plan_studio_toolbox_invocation_admission_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::menu_item,
+            .asset_path = "menus/main.mnx",
+            .record_index = 2U,
+            .object_name = "File",
+            .unique_id = "menu-guid",
+            .admit_palette_invocation = true
+        });
+    expect(!menu_selection_invocation_catalog.ok &&
+            menu_selection_invocation_catalog.error ==
+                "A selection-context toolbox invocation admission catalog request requires a toolbox palette." &&
+            menu_selection_invocation_catalog.selection_context == StudioEditorSelectionContext::menu_item &&
+            menu_selection_invocation_catalog.item_count == 0U &&
+            menu_selection_invocation_catalog.items.empty() &&
+            !menu_selection_invocation_catalog.launch_plan.ok &&
+            menu_selection_invocation_catalog.launch_plan.error ==
+                "The selected Studio context does not expose a toolbox palette." &&
+            !menu_selection_invocation_catalog.invocation_admission.ok &&
+            menu_selection_invocation_catalog.admission_count == 0U &&
+            menu_selection_invocation_catalog.error_count == 0U &&
+            menu_selection_invocation_catalog.dry_run &&
+            !menu_selection_invocation_catalog.mutates_asset,
+        "#1288: unsupported selection toolbox admission catalogs should reject without mutation");
+
     const auto dry_run_dispatch = copperfin::studio::plan_studio_toolbox_dispatch({
         .admission_plan = dry_run_invocation.plan
     });

@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest implemented E2 slice: `#1287`, which routes toolbox palette dispatch catalog planning through the shared toolbox invocation-admission catalog seam. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
+- Latest implemented E2 slice: `#1288`, which adds selection-context toolbox palette invocation admission catalog planning through `plan_studio_toolbox_invocation_admission_catalog_for_selection`. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
 - Current continuation shape: continue prompt-sized E2/#23 children in designer interactions, builder/wizard invocation, toolbox flows, and context-aware editors, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
 - Next work: continue prompt-sized `#23` children in designer interactions, builder/wizard invocation, toolbox flows, or context-aware editors. The visual-object host-wrapper gap scanner reported zero missing wrappers after `#1202`, so do not open more wrapper slices unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
@@ -357,13 +357,13 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#23` | create/pick next host-wrapper child | expose the next implemented rollback-safe visual-object editor API through `copperfin_studio_host` after `#1136`; do not divert back to the closed Phase A safety gate, `#92`-`#101`, `#22`, or `#154`-`#203` without reopened regression evidence |
+| `#23` | create/pick next prompt-sized E2 child | continue designer interactions, builder/wizard invocation, toolbox flows, and context-aware editor seams with stable non-mutating planning/admission/dispatch surfaces first, host exposure where useful, and focused tests/docs per slice; do not divert back to the closed Phase A safety gate, `#92`-`#101`, `#22`, or `#154`-`#203` without reopened regression evidence |
 
 Decision rule for agents:
 
 1. Check live GitHub open issues under `#23`.
-2. If a prompt-sized host-wrapper child exists, work that child.
-3. If no such child exists, create the next prompt-sized `#23` child for an already-implemented rollback-safe visual-object editor API that lacks a Studio host command.
+2. If a prompt-sized designer interaction, builder/wizard, toolbox-flow, or context-aware editor child exists, work that child.
+3. If no such child exists, create the next prompt-sized `#23` child for the highest-value missing non-mutating planning/admission/dispatch seam or host exposure.
 4. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
 
 Historical-closed prompt-sized native slice queues:
