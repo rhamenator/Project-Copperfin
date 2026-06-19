@@ -3738,6 +3738,22 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report layout JSON should preserve document titles");
     expect_contains(process.stdout_text, "\"documentTitleFieldIndex\": null",
                     "#1452: report layout JSON should expose missing document-title field provenance as null");
+    expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1516: report layout JSON should expose preview bounds availability");
+    expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1516: report layout JSON should include section-origin preview bounds");
+    expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1516: report layout JSON should expose top preview bounds across live sections and objects");
+    expect_contains(process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1516: report layout JSON should expose right preview bounds across live objects");
+    expect_contains(process.stdout_text, "\"previewBoundsBottom\": 8100",
+                    "#1516: report layout JSON should expose bottom preview bounds including live unplaced objects");
+    expect_contains(process.stdout_text, "\"previewBoundsWidth\": 5200",
+                    "#1516: report layout JSON should expose computed preview bounds width");
+    expect_contains(process.stdout_text, "\"previewBoundsHeight\": 8100",
+                    "#1516: report layout JSON should expose computed preview bounds height");
+    expect_contains(process.stdout_text, "\"liveObjectCount\": 3",
+                    "#1516: report layout JSON should summarize live placed and unplaced object counts");
     expect_contains(process.stdout_text, "\"settingCount\": 3",
                     "#1452: report layout JSON should summarize live setting counts");
     expect_contains(process.stdout_text, "\"deletedObjectCount\": 1",
@@ -3851,6 +3867,14 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1501: unselected label layout JSON should retain label identity");
     expect_contains(summary_process.stdout_text, "\"documentTitle\": \"mailing.lbx\"",
                     "#1501: unselected label layout JSON should preserve label document titles");
+    expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1516: label layout JSON should expose preview bounds availability");
+    expect_contains(summary_process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1516: label layout JSON should expose shared right preview bounds");
+    expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                    "#1516: label layout JSON should expose shared bottom preview bounds");
+    expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 3",
+                    "#1516: label layout JSON should summarize live placed and unplaced object counts");
     expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
                     "#1501: unselected label layout JSON should summarize live settings");
     expect_contains(summary_process.stdout_text, "\"sectionCount\": 2",

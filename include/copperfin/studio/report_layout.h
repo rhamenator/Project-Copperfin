@@ -96,6 +96,14 @@ struct StudioReportLayoutSnapshot {
     std::string document_title{};
     std::size_t document_title_field_index = StudioReportMissingFieldIndex;
     std::uint32_t document_title_memo_block_number = 0;
+    bool preview_bounds_available = false;
+    int preview_bounds_left = 0;
+    int preview_bounds_top = 0;
+    int preview_bounds_right = 0;
+    int preview_bounds_bottom = 0;
+    int preview_bounds_width = 0;
+    int preview_bounds_height = 0;
+    std::size_t live_object_count = 0;
     std::vector<StudioNamedValue> settings{};
     std::vector<StudioNamedValue> deleted_settings{};
     std::vector<StudioReportSectionSnapshot> sections{};

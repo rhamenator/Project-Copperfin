@@ -353,6 +353,27 @@ std::size_t find_section_index(
     return sections.size();
 }
 
+void expand_preview_bounds(StudioReportLayoutSnapshot& snapshot, int left, int top, int right, int bottom) {
+    if (!snapshot.preview_bounds_available) {
+        snapshot.preview_bounds_available = true;
+        snapshot.preview_bounds_left = left;
+        snapshot.preview_bounds_top = top;
+        snapshot.preview_bounds_right = right;
+        snapshot.preview_bounds_bottom = bottom;
+        return;
+    }
+
+    snapshot.preview_bounds_left = std::min(snapshot.preview_bounds_left, left);
+    snapshot.preview_bounds_top = std::min(snapshot.preview_bounds_top, top);
+    snapshot.preview_bounds_right = std::max(snapshot.preview_bounds_right, right);
+    snapshot.preview_bounds_bottom = std::max(snapshot.preview_bounds_bottom, bottom);
+}
+
+void finalize_preview_bounds(StudioReportLayoutSnapshot& snapshot) {
+    snapshot.preview_bounds_width = std::max(0, snapshot.preview_bounds_right - snapshot.preview_bounds_left);
+    snapshot.preview_bounds_height = std::max(0, snapshot.preview_bounds_bottom - snapshot.preview_bounds_top);
+}
+
 StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
@@ -433,6 +454,12 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
     for (std::size_t section_index = 0; section_index < snapshot.sections.size(); ++section_index) {
         snapshot.sections[section_index].section_index = section_index;
         snapshot.sections[section_index].section_count = snapshot.sections.size();
+        expand_preview_bounds(
+            snapshot,
+            0,
+            snapshot.sections[section_index].top,
+            0,
+            snapshot.sections[section_index].bottom);
     }
 
     for (const auto& record : document.table_preview.records) {
@@ -452,8 +479,12 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
             object.containing_section_record_index = snapshot.sections[section_index].record_index;
             object.section_relative_top = object.top - snapshot.sections[section_index].top;
             object.section_relative_bottom = object.bottom - snapshot.sections[section_index].top;
+            expand_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
+            ++snapshot.live_object_count;
             snapshot.sections[section_index].objects.push_back(std::move(object));
         } else {
+            expand_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
+            ++snapshot.live_object_count;
             snapshot.unplaced_objects.push_back(std::move(object));
         }
     }
@@ -485,6 +516,8 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
         }
         return left.record_index < right.record_index;
     });
+
+    finalize_preview_bounds(snapshot);
 
     return snapshot;
 }

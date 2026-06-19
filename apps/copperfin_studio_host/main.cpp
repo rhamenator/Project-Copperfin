@@ -20447,6 +20447,15 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         print_json_report_field_index_or_null(report_layout.document_title_field_index);
         std::cout << ",\n";
         std::cout << "      \"documentTitleMemoBlockNumber\": " << report_layout.document_title_memo_block_number << ",\n";
+        std::cout << "      \"previewBoundsAvailable\": "
+                  << (report_layout.preview_bounds_available ? "true" : "false") << ",\n";
+        std::cout << "      \"previewBoundsLeft\": " << report_layout.preview_bounds_left << ",\n";
+        std::cout << "      \"previewBoundsTop\": " << report_layout.preview_bounds_top << ",\n";
+        std::cout << "      \"previewBoundsRight\": " << report_layout.preview_bounds_right << ",\n";
+        std::cout << "      \"previewBoundsBottom\": " << report_layout.preview_bounds_bottom << ",\n";
+        std::cout << "      \"previewBoundsWidth\": " << report_layout.preview_bounds_width << ",\n";
+        std::cout << "      \"previewBoundsHeight\": " << report_layout.preview_bounds_height << ",\n";
+        std::cout << "      \"liveObjectCount\": " << report_layout.live_object_count << ",\n";
         std::cout << "      \"settingCount\": " << report_layout.settings.size() << ",\n";
         std::cout << "      \"deletedSettingCount\": " << report_layout.deleted_settings.size() << ",\n";
         std::cout << "      \"sectionCount\": " << report_layout.sections.size() << ",\n";
