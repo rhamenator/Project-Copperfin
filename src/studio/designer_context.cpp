@@ -201,4 +201,81 @@ plan_studio_builder_invocation_admission_catalog_for_selection(
     };
 }
 
+StudioSelectionBuilderDispatchCatalogResult
+plan_studio_builder_dispatch_catalog_for_selection(
+    const StudioSelectionBuilderDispatchCatalogRequest& request) {
+    auto admission_catalog = plan_studio_builder_invocation_admission_catalog_for_selection({
+        .selection_context = request.selection_context,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .admit_ui_launches = request.admit_ui_launches
+    });
+    if (!admission_catalog.ok) {
+        return {
+            .ok = false,
+            .error = "A selection-context builder dispatch catalog request requires at least one builder.",
+            .selection_context = request.selection_context,
+            .builder_count = 0U,
+            .dispatch_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    std::vector<StudioSelectionBuilderDispatchCatalogEntry> entries;
+    entries.reserve(admission_catalog.entries.size());
+    std::size_t dispatch_count = 0U;
+    std::size_t error_count = 0U;
+    bool dry_run = true;
+    bool mutates_asset = false;
+
+    for (auto& admission_entry : admission_catalog.entries) {
+        StudioBuilderDispatchResult dispatch{};
+
+        if (admission_entry.invocation_admission.ok) {
+            dispatch = plan_studio_builder_dispatch({
+                .admission_plan = admission_entry.invocation_admission.plan
+            });
+        } else {
+            dispatch = {
+                .ok = false,
+                .error = admission_entry.invocation_admission.error,
+                .plan = {}
+            };
+        }
+
+        if (dispatch.ok) {
+            ++dispatch_count;
+            dry_run = dry_run && dispatch.plan.dry_run;
+            mutates_asset = mutates_asset || dispatch.plan.mutates_asset;
+        } else {
+            ++error_count;
+        }
+
+        entries.push_back({
+            .builder = admission_entry.builder,
+            .selection_context = request.selection_context,
+            .launch_plan = std::move(admission_entry.launch_plan),
+            .invocation_admission = std::move(admission_entry.invocation_admission),
+            .dispatch = std::move(dispatch)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .builder_count = admission_catalog.builder_count,
+        .dispatch_count = dispatch_count,
+        .error_count = error_count,
+        .dry_run = dispatch_count == 0U ? true : dry_run,
+        .mutates_asset = mutates_asset,
+        .entries = std::move(entries)
+    };
+}
+
 }  // namespace copperfin::studio

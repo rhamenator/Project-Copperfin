@@ -1,5 +1,6 @@
 #pragma once
 
+#include "copperfin/studio/builder_dispatch.h"
 #include "copperfin/studio/builder_invocation_admission.h"
 #include "copperfin/studio/builder_registry.h"
 #include "copperfin/studio/context_editor_actions.h"
@@ -70,6 +71,35 @@ struct StudioSelectionBuilderInvocationAdmissionCatalogResult {
     std::vector<StudioSelectionBuilderInvocationAdmissionCatalogEntry> entries;
 };
 
+struct StudioSelectionBuilderDispatchCatalogRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    bool admit_ui_launches = false;
+};
+
+struct StudioSelectionBuilderDispatchCatalogEntry {
+    StudioBuilderDescriptor builder;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioSelectionBuilderLaunchPlanResult launch_plan;
+    StudioBuilderInvocationAdmissionResult invocation_admission;
+    StudioBuilderDispatchResult dispatch;
+};
+
+struct StudioSelectionBuilderDispatchCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::size_t builder_count = 0;
+    std::size_t dispatch_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioSelectionBuilderDispatchCatalogEntry> entries;
+};
+
 [[nodiscard]] StudioDesignerContextResult studio_designer_context_for_selection(
     const StudioDesignerContextRequest& request);
 [[nodiscard]] StudioSelectionBuilderLaunchPlanResult plan_studio_builder_launch_for_selection(
@@ -77,5 +107,8 @@ struct StudioSelectionBuilderInvocationAdmissionCatalogResult {
 [[nodiscard]] StudioSelectionBuilderInvocationAdmissionCatalogResult
 plan_studio_builder_invocation_admission_catalog_for_selection(
     const StudioSelectionBuilderInvocationAdmissionCatalogRequest& request);
+[[nodiscard]] StudioSelectionBuilderDispatchCatalogResult
+plan_studio_builder_dispatch_catalog_for_selection(
+    const StudioSelectionBuilderDispatchCatalogRequest& request);
 
 }  // namespace copperfin::studio

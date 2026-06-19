@@ -160,6 +160,18 @@ find_selection_builder_admission_entry(
     return nullptr;
 }
 
+const copperfin::studio::StudioSelectionBuilderDispatchCatalogEntry*
+find_selection_builder_dispatch_entry(
+    const std::vector<copperfin::studio::StudioSelectionBuilderDispatchCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.builder.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 const copperfin::studio::StudioDesignerDispatchCatalogEntry* find_dispatch_catalog_entry(
     const std::vector<copperfin::studio::StudioDesignerDispatchCatalogEntry>& entries,
     copperfin::studio::StudioEditorSelectionContext context) {
@@ -538,6 +550,112 @@ int main() {
                empty_selection_admission_catalog.dry_run &&
                !empty_selection_admission_catalog.mutates_asset,
            "#1273: selection builder admission catalogs should reject empty builder contexts without mutation");
+
+    const auto visual_builder_dispatch_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid",
+            .admit_ui_launches = true
+        });
+    const auto* visual_form_dispatch = find_selection_builder_dispatch_entry(
+        visual_builder_dispatch_catalog.entries, "form-builder");
+    const auto* visual_grid_dispatch = find_selection_builder_dispatch_entry(
+        visual_builder_dispatch_catalog.entries, "grid-builder");
+    expect(visual_builder_dispatch_catalog.ok &&
+               visual_builder_dispatch_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_builder_dispatch_catalog.builder_count == visual_context.builder_count &&
+               visual_builder_dispatch_catalog.dispatch_count == visual_context.builder_count &&
+               visual_builder_dispatch_catalog.error_count == 0U &&
+               !visual_builder_dispatch_catalog.dry_run &&
+               !visual_builder_dispatch_catalog.mutates_asset,
+           "#1275: visual selection builder dispatch catalogs should dispatch every admitted visual builder");
+    expect(visual_form_dispatch != nullptr &&
+               visual_form_dispatch->selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_form_dispatch->launch_plan.ok &&
+               visual_form_dispatch->invocation_admission.ok &&
+               visual_form_dispatch->dispatch.ok &&
+               visual_form_dispatch->dispatch.plan.context == copperfin::studio::StudioBuilderContext::form &&
+               visual_form_dispatch->dispatch.plan.command_token == "studio.builder.invoke" &&
+               visual_form_dispatch->dispatch.plan.entry_point == "cf_builders.form_builder" &&
+               visual_form_dispatch->dispatch.plan.asset_path == "forms/customer.scx" &&
+               visual_form_dispatch->dispatch.plan.record_index == 1U &&
+               visual_form_dispatch->dispatch.plan.object_name == "frmCustomer" &&
+               visual_form_dispatch->dispatch.plan.unique_id == "form-guid" &&
+               visual_form_dispatch->dispatch.plan.dispatch_admitted &&
+               !visual_form_dispatch->dispatch.plan.executed &&
+               !visual_form_dispatch->dispatch.plan.mutates_asset,
+           "#1275: visual selection dispatch catalogs should preserve form builder dispatch metadata");
+    expect(visual_grid_dispatch != nullptr &&
+               visual_grid_dispatch->dispatch.ok &&
+               visual_grid_dispatch->dispatch.plan.context == copperfin::studio::StudioBuilderContext::control &&
+               visual_grid_dispatch->dispatch.plan.dispatch_admitted,
+           "#1275: visual selection dispatch catalogs should include control builders beside form builders");
+
+    const auto dry_run_visual_dispatch_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "frmCustomer",
+            .unique_id = "form-guid",
+            .admit_ui_launches = false
+        });
+    const auto* dry_run_visual_form_dispatch = find_selection_builder_dispatch_entry(
+        dry_run_visual_dispatch_catalog.entries, "form-builder");
+    expect(dry_run_visual_dispatch_catalog.ok &&
+               dry_run_visual_dispatch_catalog.builder_count == visual_context.builder_count &&
+               dry_run_visual_dispatch_catalog.dispatch_count == 0U &&
+               dry_run_visual_dispatch_catalog.error_count == visual_context.builder_count &&
+               dry_run_visual_dispatch_catalog.dry_run &&
+               !dry_run_visual_dispatch_catalog.mutates_asset &&
+               dry_run_visual_form_dispatch != nullptr &&
+               dry_run_visual_form_dispatch->invocation_admission.ok &&
+               !dry_run_visual_form_dispatch->dispatch.ok &&
+               dry_run_visual_form_dispatch->dispatch.error ==
+                   "A builder dispatch request requires an admitted non-dry-run invocation.",
+           "#1275: dry-run selection builder dispatch catalogs should reject non-admitted dispatches");
+
+    const auto menu_builder_dispatch_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::menu_item,
+            .asset_path = "menus/main.mnx",
+            .record_index = 0U,
+            .object_name = "mnuMain",
+            .unique_id = "menu-guid",
+            .admit_ui_launches = true
+        });
+    const auto* menu_builder_dispatch = find_selection_builder_dispatch_entry(
+        menu_builder_dispatch_catalog.entries, "menu-designer");
+    expect(menu_builder_dispatch_catalog.ok &&
+               menu_builder_dispatch_catalog.builder_count == menu_context.builder_count &&
+               menu_builder_dispatch != nullptr &&
+               menu_builder_dispatch->dispatch.ok &&
+               menu_builder_dispatch->dispatch.plan.context == copperfin::studio::StudioBuilderContext::menu &&
+               menu_builder_dispatch->dispatch.plan.entry_point == "cf_builders.menu_designer" &&
+               menu_builder_dispatch->dispatch.plan.asset_path == "menus/main.mnx",
+           "#1275: menu selection builder dispatch catalogs should preserve menu designer dispatch metadata");
+
+    const auto empty_selection_dispatch_catalog =
+        copperfin::studio::plan_studio_builder_dispatch_catalog_for_selection({
+            .selection_context = static_cast<StudioEditorSelectionContext>(999),
+            .asset_path = "forms/customer.scx",
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .admit_ui_launches = true
+        });
+    expect(!empty_selection_dispatch_catalog.ok &&
+               empty_selection_dispatch_catalog.error ==
+                   "A selection-context builder dispatch catalog request requires at least one builder." &&
+               empty_selection_dispatch_catalog.builder_count == 0U &&
+               empty_selection_dispatch_catalog.dispatch_count == 0U &&
+               empty_selection_dispatch_catalog.error_count == 0U &&
+               empty_selection_dispatch_catalog.dry_run &&
+               !empty_selection_dispatch_catalog.mutates_asset,
+           "#1275: selection builder dispatch catalogs should reject empty builder contexts without mutation");
 
     const auto visual_launch_surfaces = copperfin::studio::plan_studio_designer_launch_surfaces({
         .selection_context = StudioEditorSelectionContext::visual_object,
