@@ -1,3 +1,4 @@
+1370	OPEN	E2/#23 slice: Expose toolbox dispatch catalog status summaries in host JSON		2026-06-19T08:54:45Z
 1369	OPEN	E2/#23 slice: Expose toolbox invocation admission catalog status summaries in host JSON		2026-06-19T08:50:40Z
 1368	OPEN	E2/#23 slice: Expose toolbox palette launch catalog status summaries in host JSON		2026-06-19T08:46:31Z
 1367	OPEN	E2/#23 slice: Expose editor action dispatch execution catalog readiness summaries in host JSON		2026-06-19T08:42:25Z

@@ -8249,6 +8249,12 @@ void test_studio_host_json_exposes_toolbox_dispatch_catalog(const std::string& s
         "#1236: admitted toolbox dispatch catalog JSON should not be dry-run");
     expect_contains(form_process.stdout_text, "\"mutatesAsset\": false",
         "#1236: toolbox dispatch catalog JSON should remain non-mutating");
+    expect_contains(form_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\", \"textbox\"",
+        "#1370: toolbox dispatch catalog JSON should summarize dispatch-ready items");
+    expect_contains(form_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1370: admitted toolbox dispatch catalog JSON should summarize empty blocked item ids");
+    expect_contains(form_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1370: admitted toolbox dispatch catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(form_process.stdout_text, "\"invocationAdmissionOk\": true",
         "#1236: toolbox dispatch catalog JSON should expose admission results");
     expect_contains(form_process.stdout_text, "\"paletteInvocationAdmitted\": true",
@@ -8296,6 +8302,13 @@ void test_studio_host_json_exposes_toolbox_dispatch_catalog(const std::string& s
         "#1236: dry-run toolbox dispatch catalog JSON should expose dispatch error counts");
     expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
         "#1236: dry-run toolbox dispatch catalog JSON should preserve dry-run state");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchReadyItemIds\": []",
+        "#1370: dry-run toolbox dispatch catalog JSON should summarize empty dispatch-ready items");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchBlockedItemIds\": [\"label\", \"textbox\"",
+        "#1370: dry-run toolbox dispatch catalog JSON should summarize blocked item ids");
+    expect_contains(dry_run_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"A toolbox dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1370: dry-run toolbox dispatch catalog JSON should summarize blocked dispatch errors");
     expect_contains(dry_run_process.stdout_text, "\"paletteInvocationAdmitted\": false",
         "#1236: dry-run toolbox dispatch catalog JSON should expose unadmitted palette state");
     expect_contains(dry_run_process.stdout_text, "\"dispatchOk\": false",
