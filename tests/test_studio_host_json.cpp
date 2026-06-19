@@ -9959,6 +9959,258 @@ void test_studio_host_json_copies_visual_method_batches(const std::string& studi
     }
 }
 
+void test_studio_host_json_moves_visual_method_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_method_move_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "method-move-batch.scx";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "PROCEDURE Click\r\nTHISFORM.Save()\r\nENDPROC\r\nFUNCTION CanSave\r\nRETURN .T.\r\nENDFUNC\r\nPROCEDURE Init\r\nTHIS.Enabled = .T.\r\nENDPROC"
+        },
+        {
+            "cmdCancel",
+            "cancelButton",
+            "cancel-guid",
+            "PROCEDURE Cancel\r\nTHISFORM.Cancel()\r\nENDPROC"
+        },
+        {
+            "cmdOther",
+            "otherButton",
+            "other-guid",
+            "PROCEDURE Other\r\nTHISFORM.Other()\r\nENDPROC"
+        }
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1433: synthetic SCX table for visual method move batches should be created");
+
+    const auto method_state = [&](const std::string& unique_id, const std::string& method_name) {
+        return copperfin::vfp::query_visual_object_method({
+            .path = form_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .method_name = method_name
+        });
+    };
+
+    const auto move_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--method-name", "Click",
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "MovedClick",
+            "--method-name", "CanSave",
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--method-name", "Other",
+            "--source-unique-id", "other-guid",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "MovedOther",
+            "--json"
+        },
+        temp_root);
+    expect(move_batch_process.exit_code == 0,
+        "#1433: visual method move-batch JSON should exit successfully for valid batches");
+    expect_contains(move_batch_process.stdout_text, "\"visualMethodMoveBatch\": {",
+        "#1433: visual method move-batch JSON should expose a batch move object");
+    expect_contains(move_batch_process.stdout_text, "\"affectedObjectCount\": 3",
+        "#1433: visual method move-batch JSON should expose affected item counts");
+    expect_contains(move_batch_process.stdout_text, "\"dryRun\": false",
+        "#1433: visual method move-batch JSON should expose committed execution state");
+    expect_contains(move_batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1433: visual method move-batch JSON should expose mutation state");
+    expect_contains(move_batch_process.stdout_text, "\"undoAvailable\": true",
+        "#1433: visual method move-batch JSON should expose undo availability");
+    auto moved_click = method_state("cancel-guid", "MovedClick");
+    auto moved_can_save = method_state("cancel-guid", "CanSave");
+    auto moved_other = method_state("cancel-guid", "MovedOther");
+    auto source_click = method_state("save-guid", "Click");
+    auto source_can_save = method_state("save-guid", "CanSave");
+    auto source_other = method_state("other-guid", "Other");
+    auto source_init = method_state("save-guid", "Init");
+    expect(moved_click.ok && moved_click.exists && moved_click.method.source_text == "THISFORM.Save()" &&
+            moved_can_save.ok && moved_can_save.exists && moved_can_save.method.kind == "function" &&
+            moved_other.ok && moved_other.exists && moved_other.method.source_text == "THISFORM.Other()",
+        "#1433: visual method move-batch host command should move all requested methods to targets");
+    expect(source_click.ok && !source_click.exists &&
+            source_can_save.ok && !source_can_save.exists &&
+            source_other.ok && !source_other.exists &&
+            source_init.ok && source_init.exists,
+        "#1433: visual method move-batch host command should remove moved source methods and preserve unrelated sources");
+
+    const auto rollback_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "MovedInit",
+            "--method-name", "MissingMethod",
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "MovedMissing",
+            "--json"
+        },
+        temp_root);
+    expect(rollback_process.exit_code == 4,
+        "#1433: visual method move-batch JSON should reject missing source methods");
+    expect_contains(rollback_process.stdout_text, "\"visualMethodMoveBatch\": null",
+        "#1433: failed visual method move-batch JSON should not expose a batch move object");
+    expect_contains(rollback_process.stdout_text, "The source method was not found.",
+        "#1433: missing-source visual method move-batch JSON should report editor errors");
+    auto moved_init = method_state("cancel-guid", "MovedInit");
+    source_init = method_state("save-guid", "Init");
+    expect(moved_init.ok && !moved_init.exists &&
+            source_init.ok && source_init.exists,
+        "#1433: failed visual method move-batch commands should roll back target copies and source deletes");
+
+    const auto collision_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--target-method-name", "Cancel",
+            "--json"
+        },
+        temp_root);
+    expect(collision_process.exit_code == 4,
+        "#1433: visual method move-batch JSON should reject target collisions");
+    expect_contains(collision_process.stdout_text, "The target object already has a method with the requested name.",
+        "#1433: target-collision visual method move-batch JSON should report editor errors");
+    source_init = method_state("save-guid", "Init");
+    expect(source_init.ok && source_init.exists,
+        "#1433: failed visual method move-batch target collisions should not delete source methods");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--method-name", "Init",
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1433: visual method move-batch JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualMethodMoveBatch\": null",
+        "#1433: missing-path visual method move-batch JSON should not expose a batch move object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1433: missing-path visual method move-batch JSON should report parser errors");
+
+    const auto no_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(no_items_process.exit_code == 2,
+        "#1433: visual method move-batch JSON should reject empty batches");
+    expect_contains(no_items_process.stdout_text, "No method moves were provided.",
+        "#1433: empty visual method move-batch JSON should report parser errors");
+
+    const auto option_before_item_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--source-unique-id", "save-guid",
+            "--method-name", "Init",
+            "--json"
+        },
+        temp_root);
+    expect(option_before_item_process.exit_code == 2,
+        "#1433: visual method move-batch JSON should reject item options before method names");
+    expect_contains(option_before_item_process.stdout_text,
+        "Visual method move batch item options require a preceding --method-name.",
+        "#1433: option-before-item visual method move-batch JSON should report parser errors");
+
+    const auto invalid_source_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--source-record", "-1",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_source_record_process.exit_code == 2,
+        "#1433: visual method move-batch JSON should reject invalid source records");
+    expect_contains(invalid_source_record_process.stdout_text,
+        "The --source-record value must be a non-negative integer.",
+        "#1433: invalid-source-record visual method move-batch JSON should report parser errors");
+
+    const auto invalid_replace_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--source-unique-id", "save-guid",
+            "--target-unique-id", "cancel-guid",
+            "--replace-existing", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_replace_process.exit_code == 2,
+        "#1433: visual method move-batch JSON should reject invalid replace-existing values");
+    expect_contains(invalid_replace_process.stdout_text,
+        "The --replace-existing value must be true or false.",
+        "#1433: invalid replace-existing visual method move-batch JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-move-batch",
+            "--path", form_path.string(),
+            "--method-name", "Init",
+            "--source-object-name", "missingObject",
+            "--target-unique-id", "cancel-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1433: visual method move-batch JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualMethodMoveBatch\": null",
+        "#1433: unresolved visual method move-batch JSON should not expose a batch move object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1433: unresolved visual method move-batch JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-method-move-batch --path <asset>",
+        "#1433: usage text should expose visual method move-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_moves_visual_methods(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -43064,6 +43316,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_copies_visual_methods(argv[1]);
     test_studio_host_json_copies_visual_method_batches(argv[1]);
     test_studio_host_json_moves_visual_methods(argv[1]);
+    test_studio_host_json_moves_visual_method_batches(argv[1]);
     test_studio_host_json_reorders_visual_methods(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);

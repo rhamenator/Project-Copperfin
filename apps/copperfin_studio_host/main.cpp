@@ -54,6 +54,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-method-copy --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-copy-batch --path <asset> --method-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-move --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-method-move-batch --path <asset> --method-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] ... [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-method-reorder --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --placement <first|last|before|after> [--relative-method-name <name>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
@@ -965,6 +966,15 @@ struct VisualMethodCopyBatchParseResult {
     bool path_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectMethodCopyBatchRequest request;
+};
+
+struct VisualMethodMoveBatchParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectMethodMoveBatchRequest request;
 };
 
 struct VisualMethodMoveParseResult {
@@ -5091,6 +5101,120 @@ VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(const 
     }
     if (result.ok && result.request.methods.empty()) {
         fail("No method copies were provided.");
+    }
+    return result;
+}
+
+VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(const std::vector<std::string>& args) {
+    VisualMethodMoveBatchParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-method-move-batch") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    auto current_method = [&]() -> copperfin::vfp::VisualObjectMethodMoveBatchItem* {
+        if (result.request.methods.empty()) {
+            fail("Visual method move batch item options require a preceding --method-name.");
+            return nullptr;
+        }
+        return &result.request.methods.back();
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-method-move-batch") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--method-name") {
+            result.request.methods.push_back({
+                .source_record_index = 0U,
+                .source_object_name = {},
+                .source_unique_id = {},
+                .source_method_name = require_value(argument),
+                .target_record_index = 0U,
+                .target_object_name = {},
+                .target_unique_id = {},
+                .target_method_name = {},
+                .replace_existing = false
+            });
+        } else if (argument == "--source-record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --source-record value must be a non-negative integer.");
+                continue;
+            }
+            if (auto* method = current_method()) {
+                method->source_record_index = record_index;
+            }
+        } else if (argument == "--source-object-name") {
+            if (auto* method = current_method()) {
+                method->source_object_name = require_value(argument);
+            }
+        } else if (argument == "--source-unique-id") {
+            if (auto* method = current_method()) {
+                method->source_unique_id = require_value(argument);
+            }
+        } else if (argument == "--target-record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --target-record value must be a non-negative integer.");
+                continue;
+            }
+            if (auto* method = current_method()) {
+                method->target_record_index = record_index;
+            }
+        } else if (argument == "--target-object-name") {
+            if (auto* method = current_method()) {
+                method->target_object_name = require_value(argument);
+            }
+        } else if (argument == "--target-unique-id") {
+            if (auto* method = current_method()) {
+                method->target_unique_id = require_value(argument);
+            }
+        } else if (argument == "--target-method-name") {
+            if (auto* method = current_method()) {
+                method->target_method_name = require_value(argument);
+            }
+        } else if (argument == "--replace-existing") {
+            const std::string token = require_value(argument);
+            bool replace_existing = false;
+            if (!parse_bool_token(token, replace_existing)) {
+                fail("The --replace-existing value must be true or false.");
+                continue;
+            }
+            if (auto* method = current_method()) {
+                method->replace_existing = replace_existing;
+            }
+        } else {
+            fail("Unknown visual-method-move-batch option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    if (result.ok && result.request.methods.empty()) {
+        fail("No method moves were provided.");
     }
     return result;
 }
@@ -19979,6 +20103,36 @@ int main(int argc, char** argv) {
             visual_method_copy_batch_parse.request.path);
         if (visual_method_copy_batch_parse.output_json) {
             print_json_visual_method_update_result(result, undo_status, "visualMethodCopyBatch");
+        } else {
+            print_text_visual_method_update_result(result, undo_status);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_method_move_batch_parse = parse_visual_method_move_batch_arguments(args);
+    if (visual_method_move_batch_parse.requested) {
+        if (!visual_method_move_batch_parse.ok) {
+            const auto result = copperfin::vfp::VisualAssetEditResult{
+                .ok = false,
+                .error = visual_method_move_batch_parse.error,
+                .affected_object_count = 0U
+            };
+            const auto undo_status = copperfin::vfp::VisualAssetUndoStatus{};
+            if (visual_method_move_batch_parse.output_json) {
+                print_json_visual_method_update_result(result, undo_status, "visualMethodMoveBatch");
+            } else {
+                print_text_visual_method_update_result(result, undo_status);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::move_visual_object_methods(
+            visual_method_move_batch_parse.request);
+        const auto undo_status = copperfin::vfp::query_visual_object_undo(
+            visual_method_move_batch_parse.request.path);
+        if (visual_method_move_batch_parse.output_json) {
+            print_json_visual_method_update_result(result, undo_status, "visualMethodMoveBatch");
         } else {
             print_text_visual_method_update_result(result, undo_status);
         }
