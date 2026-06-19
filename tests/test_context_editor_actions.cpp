@@ -48,6 +48,17 @@ const copperfin::studio::StudioEditorActionDispatchCatalogEntry* find_dispatch_c
     return nullptr;
 }
 
+const copperfin::studio::StudioEditorActionDispatchExecutionCatalogEntry* find_execution_catalog_entry(
+    const std::vector<copperfin::studio::StudioEditorActionDispatchExecutionCatalogEntry>& entries,
+    std::string_view id) {
+    for (const auto& entry : entries) {
+        if (entry.action.id == id) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 const copperfin::studio::StudioEditorActionLaunchCatalogEntry* find_launch_catalog_entry(
     const std::vector<copperfin::studio::StudioEditorActionLaunchCatalogEntry>& entries,
     std::string_view id) {
@@ -905,6 +916,127 @@ int main() {
                dry_run_property_dispatch->invocation_admission.plan.dry_run ==
                    dry_run_property_invocation_entry->invocation_admission.plan.dry_run,
            "#1283: dry-run editor action dispatch catalogs should retain admission catalog dry-run state");
+
+    const auto admitted_visual_execution_catalog =
+        copperfin::studio::plan_studio_editor_action_dispatch_execution_catalog({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = true,
+            .admit_execution = true
+        });
+    expect(admitted_visual_execution_catalog.ok &&
+               admitted_visual_execution_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+               admitted_visual_execution_catalog.action_count == visual_actions.size() &&
+               admitted_visual_execution_catalog.execution_ready_count == visual_actions.size() &&
+               admitted_visual_execution_catalog.error_count == 0U &&
+               !admitted_visual_execution_catalog.dry_run &&
+               !admitted_visual_execution_catalog.mutates_asset,
+           "#1328: admitted editor action dispatch execution catalogs should mark every action ready without launch");
+    const auto* visual_method_execution = find_execution_catalog_entry(
+        admitted_visual_execution_catalog.entries, "edit-visual-method");
+    expect(visual_method_execution != nullptr &&
+               visual_method_execution->launch_plan.ok &&
+               visual_method_execution->invocation_admission.ok &&
+               visual_method_execution->dispatch.ok &&
+               visual_method_execution->execution_admitted &&
+               visual_method_execution->execution_ready &&
+               visual_method_execution->execution_error.empty() &&
+               std::string(visual_method_execution->action.id) == "edit-visual-method" &&
+               std::string(visual_method_execution->dispatch.plan.action.id) == "edit-visual-method" &&
+               visual_method_execution->dispatch.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+               visual_method_execution->dispatch.plan.dispatch_admitted &&
+               !visual_method_execution->dispatch.plan.dry_run &&
+               !visual_method_execution->dispatch.plan.executed &&
+               has_argument_pair(
+                   visual_method_execution->dispatch.plan.dispatch_arguments,
+                   "--target-surface",
+                   "method-editor"),
+           "#1328: editor action dispatch execution catalog entries should preserve dispatch metadata");
+
+    const auto unadmitted_visual_execution_catalog =
+        copperfin::studio::plan_studio_editor_action_dispatch_execution_catalog({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = true,
+            .admit_execution = false
+        });
+    const auto* unadmitted_method_execution = find_execution_catalog_entry(
+        unadmitted_visual_execution_catalog.entries, "edit-visual-method");
+    expect(unadmitted_visual_execution_catalog.ok &&
+               unadmitted_visual_execution_catalog.action_count == visual_actions.size() &&
+               unadmitted_visual_execution_catalog.execution_ready_count == 0U &&
+               unadmitted_visual_execution_catalog.error_count == visual_actions.size() &&
+               unadmitted_visual_execution_catalog.dry_run &&
+               unadmitted_method_execution != nullptr &&
+               unadmitted_method_execution->dispatch.ok &&
+               !unadmitted_method_execution->execution_admitted &&
+               !unadmitted_method_execution->execution_ready &&
+               unadmitted_method_execution->execution_error ==
+                   "An editor action dispatch execution catalog entry requires explicit execution admission.",
+           "#1328: editor action dispatch execution catalogs should require explicit execution admission");
+
+    const auto dry_run_visual_execution_catalog =
+        copperfin::studio::plan_studio_editor_action_dispatch_execution_catalog({
+            .selection_context = StudioEditorSelectionContext::visual_object,
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = false,
+            .admit_execution = true
+        });
+    const auto* dry_run_method_execution = find_execution_catalog_entry(
+        dry_run_visual_execution_catalog.entries, "edit-visual-method");
+    expect(dry_run_visual_execution_catalog.ok &&
+               dry_run_visual_execution_catalog.action_count == visual_actions.size() &&
+               dry_run_visual_execution_catalog.execution_ready_count == 0U &&
+               dry_run_visual_execution_catalog.error_count == visual_actions.size() &&
+               dry_run_visual_execution_catalog.dry_run &&
+               dry_run_method_execution != nullptr &&
+               !dry_run_method_execution->dispatch.ok &&
+               dry_run_method_execution->execution_admitted &&
+               !dry_run_method_execution->execution_ready &&
+               dry_run_method_execution->execution_error ==
+                   "An editor action dispatch request requires an admitted non-dry-run invocation.",
+           "#1328: editor action dispatch execution catalogs should preserve dispatch readiness failures");
+
+    const auto missing_execution_catalog =
+        copperfin::studio::plan_studio_editor_action_dispatch_execution_catalog({
+            .selection_context = static_cast<StudioEditorSelectionContext>(999),
+            .asset_path = "forms/customer.scx",
+            .record_index = 1U,
+            .object_name = "cmdSave",
+            .unique_id = "button-guid",
+            .symbol = "cmdSave.Click",
+            .line = 42U,
+            .column = 7U,
+            .admit_editor_invocations = true,
+            .admit_execution = true
+        });
+    expect(!missing_execution_catalog.ok &&
+               missing_execution_catalog.error ==
+                   "An editor action dispatch execution catalog request requires at least one context action." &&
+               missing_execution_catalog.action_count == 0U &&
+               missing_execution_catalog.execution_ready_count == 0U &&
+               missing_execution_catalog.error_count == 0U &&
+               missing_execution_catalog.dry_run &&
+               !missing_execution_catalog.mutates_asset,
+           "#1328: editor action dispatch execution catalogs should reject empty contexts without mutation");
 
     const auto report_dispatch_catalog =
         copperfin::studio::plan_studio_editor_action_dispatch_catalog({
