@@ -20042,6 +20042,41 @@ const copperfin::studio::StudioReportSectionSnapshot* find_selected_report_secti
     return deleted_section == report_layout.deleted_sections.end() ? nullptr : &*deleted_section;
 }
 
+const copperfin::studio::StudioLayoutObjectSnapshot* find_selected_report_object(
+    const copperfin::studio::StudioReportLayoutSnapshot& report_layout,
+    std::size_t record_index) {
+    if (!report_layout.available) {
+        return nullptr;
+    }
+    for (const auto& section : report_layout.sections) {
+        const auto object = std::find_if(
+            section.objects.begin(),
+            section.objects.end(),
+            [&](const copperfin::studio::StudioLayoutObjectSnapshot& item) {
+                return item.record_index == record_index;
+            });
+        if (object != section.objects.end()) {
+            return &*object;
+        }
+    }
+    const auto unplaced_object = std::find_if(
+        report_layout.unplaced_objects.begin(),
+        report_layout.unplaced_objects.end(),
+        [&](const copperfin::studio::StudioLayoutObjectSnapshot& object) {
+            return object.record_index == record_index;
+        });
+    if (unplaced_object != report_layout.unplaced_objects.end()) {
+        return &*unplaced_object;
+    }
+    const auto deleted_object = std::find_if(
+        report_layout.deleted_objects.begin(),
+        report_layout.deleted_objects.end(),
+        [&](const copperfin::studio::StudioLayoutObjectSnapshot& object) {
+            return object.record_index == record_index;
+        });
+    return deleted_object == report_layout.deleted_objects.end() ? nullptr : &*deleted_object;
+}
+
 void print_json_report_layout_object(
     const copperfin::studio::StudioLayoutObjectSnapshot& object,
     const std::string& indent) {
@@ -20233,6 +20268,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto* selected_report_section = document.selection_record_available
         ? find_selected_report_section(report_layout, document.selection_record_index)
         : nullptr;
+    const auto* selected_report_object = document.selection_record_available
+        ? find_selected_report_object(report_layout, document.selection_record_index)
+        : nullptr;
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -20362,6 +20400,15 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "null,\n";
     } else {
         print_json_report_layout_section(*selected_report_section, "    ");
+        std::cout << ",\n";
+    }
+    std::cout << "    \"selectedReportObjectAvailable\": "
+              << (selected_report_object == nullptr ? "false" : "true") << ",\n";
+    std::cout << "    \"selectedReportObject\": ";
+    if (selected_report_object == nullptr) {
+        std::cout << "null,\n";
+    } else {
+        print_json_report_layout_object(*selected_report_object, "    ");
         std::cout << ",\n";
     }
     std::cout << "    \"projectWorkspace\": ";
