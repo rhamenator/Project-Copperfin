@@ -1124,6 +1124,91 @@ void test_toolbox_creation_catalog_plans_form_and_report_contexts_without_mutati
     expect(object_count(table_path) == before_count,
         "#1243: report toolbox creation catalogs should not mutate the visual asset");
 
+    const auto visual_selection_catalog =
+        copperfin::studio::plan_visual_object_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+            .path = table_path.string(),
+            .parent_name = "frmMain",
+            .field_values = {
+                {.property_name = "CAPTION", .property_value = "Selection Planned"}
+            }
+        });
+    const auto* selection_textbox_entry = find_create_plan_entry(visual_selection_catalog.entries, "textbox");
+    expect(visual_selection_catalog.ok &&
+            visual_selection_catalog.selection_context ==
+                copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            visual_selection_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_selection_catalog.launch_plan.ok &&
+            visual_selection_catalog.launch_plan.plan.toolbox_context ==
+                copperfin::studio::StudioToolboxContext::form &&
+            visual_selection_catalog.item_count == form_catalog.item_count &&
+            visual_selection_catalog.plan_count == visual_selection_catalog.item_count &&
+            visual_selection_catalog.error_count == 0U &&
+            visual_selection_catalog.dry_run &&
+            !visual_selection_catalog.mutates_asset &&
+            selection_textbox_entry != nullptr &&
+            selection_textbox_entry->create_plan.ok &&
+            selection_textbox_entry->create_plan.plan.object_name == "txt2" &&
+            selection_textbox_entry->create_plan.plan.parent_name == "frmMain" &&
+            has_field_value(selection_textbox_entry->create_plan.plan.field_values, "CLASS", "TextBox") &&
+            has_field_value(selection_textbox_entry->create_plan.plan.field_values, "CAPTION", "Selection Planned"),
+        "#1292: visual selection toolbox creation catalogs should resolve form create plans");
+
+    const auto report_selection_catalog =
+        copperfin::studio::plan_visual_object_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+            .path = table_path.string(),
+            .parent_name = "DetailBand",
+            .field_values = {
+                {.property_name = "CAPTION", .property_value = "Selection Report"}
+            }
+        });
+    const auto* selection_report_label_entry =
+        find_create_plan_entry(report_selection_catalog.entries, "label");
+    expect(report_selection_catalog.ok &&
+            report_selection_catalog.selection_context ==
+                copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            report_selection_catalog.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            report_selection_catalog.launch_plan.ok &&
+            report_selection_catalog.item_count == report_catalog.item_count &&
+            report_selection_catalog.plan_count == report_selection_catalog.item_count &&
+            report_selection_catalog.error_count == 0U &&
+            report_selection_catalog.dry_run &&
+            !report_selection_catalog.mutates_asset &&
+            selection_report_label_entry != nullptr &&
+            selection_report_label_entry->create_plan.ok &&
+            selection_report_label_entry->create_plan.plan.object_name == "lbl1" &&
+            selection_report_label_entry->create_plan.plan.parent_name == "DetailBand" &&
+            has_field_value(selection_report_label_entry->create_plan.plan.field_values, "CLASS", "Label") &&
+            find_create_plan_entry(report_selection_catalog.entries, "textbox") == nullptr,
+        "#1292: report selection toolbox creation catalogs should resolve report-safe create plans");
+
+    const auto unsupported_selection_catalog =
+        copperfin::studio::plan_visual_object_catalog_from_toolbox_selection({
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::menu_item,
+            .path = table_path.string(),
+            .parent_name = "File",
+            .field_values = {}
+        });
+    expect(!unsupported_selection_catalog.ok &&
+            unsupported_selection_catalog.error ==
+                "A selection-context toolbox object creation catalog request requires a toolbox palette." &&
+            unsupported_selection_catalog.selection_context ==
+                copperfin::studio::StudioEditorSelectionContext::menu_item &&
+            !unsupported_selection_catalog.launch_plan.ok &&
+            unsupported_selection_catalog.launch_plan.error ==
+                "The selected Studio context does not expose a toolbox palette." &&
+            unsupported_selection_catalog.item_count == 0U &&
+            unsupported_selection_catalog.plan_count == 0U &&
+            unsupported_selection_catalog.error_count == 0U &&
+            unsupported_selection_catalog.dry_run &&
+            !unsupported_selection_catalog.mutates_asset &&
+            unsupported_selection_catalog.entries.empty(),
+        "#1292: unsupported selection toolbox creation catalogs should reject without mutation");
+
+    expect(object_count(table_path) == before_count,
+        "#1292: selection toolbox creation catalogs should not mutate the visual asset");
+
     fs::remove_all(temp_dir, ignored);
 }
 

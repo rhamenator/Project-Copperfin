@@ -685,6 +685,68 @@ StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolb
     };
 }
 
+StudioSelectionToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreatePlanCatalogRequest& request) {
+    auto launch_plan = plan_studio_toolbox_palette_launch({
+        .selection_context = request.selection_context,
+        .asset_path = request.path,
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    if (!launch_plan.ok) {
+        return {
+            .ok = false,
+            .error = "A selection-context toolbox object creation catalog request requires a toolbox palette.",
+            .selection_context = request.selection_context,
+            .toolbox_context = StudioToolboxContext::form,
+            .launch_plan = std::move(launch_plan),
+            .item_count = 0U,
+            .plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    auto create_catalog = plan_visual_object_catalog_from_toolbox_context({
+        .toolbox_context = launch_plan.plan.toolbox_context,
+        .path = request.path,
+        .parent_name = request.parent_name,
+        .field_values = request.field_values
+    });
+    if (!create_catalog.ok) {
+        return {
+            .ok = false,
+            .error = create_catalog.error,
+            .selection_context = request.selection_context,
+            .toolbox_context = launch_plan.plan.toolbox_context,
+            .launch_plan = std::move(launch_plan),
+            .item_count = 0U,
+            .plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .toolbox_context = create_catalog.toolbox_context,
+        .launch_plan = std::move(launch_plan),
+        .item_count = create_catalog.item_count,
+        .plan_count = create_catalog.plan_count,
+        .error_count = create_catalog.error_count,
+        .dry_run = create_catalog.dry_run,
+        .mutates_asset = create_catalog.mutates_asset,
+        .entries = std::move(create_catalog.entries)
+    };
+}
+
 StudioToolboxObjectCreateDispatchCatalogResult plan_visual_object_create_dispatch_catalog(
     const StudioToolboxObjectCreateDispatchCatalogRequest& request) {
     const auto create_catalog = plan_visual_object_catalog_from_toolbox_context({
