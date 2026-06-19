@@ -9098,10 +9098,19 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: designer execution JSON should expose toolbox launch commands");
     expect_contains(visual_process.stdout_text, "\"editorActionExecutions\": [",
         "#1325: designer execution JSON should expose editor execution results");
+    expect_contains(visual_process.stdout_text,
+        "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.method_editor.open'",
+        "#1335: designer execution JSON should expose editor child executed commands");
     expect_contains(visual_process.stdout_text, "\"builderExecutions\": [",
         "#1325: designer execution JSON should expose builder execution results");
+    expect_contains(visual_process.stdout_text,
+        "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.builder.invoke'",
+        "#1335: designer execution JSON should expose builder child executed commands");
     expect_contains(visual_process.stdout_text, "\"toolboxExecution\": {",
         "#1325: designer execution JSON should expose toolbox execution results");
+    expect_contains(visual_process.stdout_text,
+        "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.toolbox.palette.invoke'",
+        "#1335: designer execution JSON should expose toolbox child executed commands");
 
     const auto missing_builder_command_process = run_process_capture(
         studio_host_path,

@@ -10964,10 +10964,20 @@ void print_json_designer_execution_result(
     std::cout << "    \"editorActionExecutions\": [\n";
     for (std::size_t index = 0U; index < result.editor_action_executions.size(); ++index) {
         const auto& execution = result.editor_action_executions[index];
+        std::string executed_command;
+        if (index < result.dispatch_plan.editor_action_dispatches.size() &&
+            result.dispatch_plan.editor_action_dispatches[index].ok) {
+            executed_command = build_shell_command(
+                editor_action_launch_command,
+                result.dispatch_plan.editor_action_dispatches[index].plan.dispatch_arguments);
+        }
         std::cout << "      {\n";
         std::cout << "        \"ok\": " << (execution.ok ? "true" : "false") << ",\n";
         std::cout << "        \"error\": ";
         print_json_string(execution.error);
+        std::cout << ",\n";
+        std::cout << "        \"executedCommand\": ";
+        print_json_string(executed_command);
         std::cout << ",\n";
         std::cout << "        \"observedExitCode\": " << execution.observation.exit_code << ",\n";
         std::cout << "        \"executed\": " << (execution.executed ? "true" : "false") << "\n";
@@ -10981,10 +10991,20 @@ void print_json_designer_execution_result(
     std::cout << "    \"builderExecutions\": [\n";
     for (std::size_t index = 0U; index < result.builder_executions.size(); ++index) {
         const auto& execution = result.builder_executions[index];
+        std::string executed_command;
+        if (index < result.dispatch_plan.builder_dispatches.size() &&
+            result.dispatch_plan.builder_dispatches[index].ok) {
+            executed_command = build_shell_command(
+                builder_launch_command,
+                result.dispatch_plan.builder_dispatches[index].plan.dispatch_arguments);
+        }
         std::cout << "      {\n";
         std::cout << "        \"ok\": " << (execution.ok ? "true" : "false") << ",\n";
         std::cout << "        \"error\": ";
         print_json_string(execution.error);
+        std::cout << ",\n";
+        std::cout << "        \"executedCommand\": ";
+        print_json_string(executed_command);
         std::cout << ",\n";
         std::cout << "        \"observedExitCode\": " << execution.observation.exit_code << ",\n";
         std::cout << "        \"executed\": " << (execution.executed ? "true" : "false") << "\n";
@@ -10999,6 +11019,15 @@ void print_json_designer_execution_result(
     std::cout << "      \"ok\": " << (result.toolbox_execution.ok ? "true" : "false") << ",\n";
     std::cout << "      \"error\": ";
     print_json_string(result.toolbox_execution.error);
+    std::cout << ",\n";
+    std::cout << "      \"executedCommand\": ";
+    if (result.dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(build_shell_command(
+            toolbox_launch_command,
+            result.dispatch_plan.toolbox_dispatch.plan.dispatch_arguments));
+    } else {
+        print_json_string("");
+    }
     std::cout << ",\n";
     std::cout << "      \"observedExitCode\": " << result.toolbox_execution.observation.exit_code << ",\n";
     std::cout << "      \"executed\": " << (result.toolbox_execution.executed ? "true" : "false") << "\n";
