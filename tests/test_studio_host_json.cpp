@@ -3864,6 +3864,48 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
     expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                     "#1481: selected label objects should expose containing section availability");
 
+    const auto unplaced_object_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "5", "--json"},
+        temp_root);
+
+    if (unplaced_object_process.exit_code != 0) {
+        std::cerr << "studio host selected unplaced label object stdout:\n"
+                  << unplaced_object_process.stdout_text << "\n";
+        std::cerr << "studio host selected unplaced label object stderr:\n"
+                  << unplaced_object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(unplaced_object_process.exit_code == 0,
+           "#1499: selected unplaced label object JSON should exit successfully");
+    expect_contains(unplaced_object_process.stdout_text, "\"isLabel\": true",
+                    "#1499: selected unplaced label object JSON should retain label identity");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1499: unplaced label object selections should advertise selected-object availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1499: unplaced label object selections should advertise report-selection availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1499: unplaced label object selections should expose object selection kind");
+    expect_contains(unplaced_object_process.stdout_text, "\"unplacedObjectCount\": 1",
+                    "#1499: unplaced selected label object JSON should expose unplaced object counts");
+    expect_contains_in_order(
+        unplaced_object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 5",
+            "\"deleted\": false",
+            "\"containingSectionId\": \"\"",
+            "\"containingSectionRecordIndex\": null",
+            "\"sectionObjectIndex\": null",
+            "\"objectKind\": \"line\""
+        },
+        "#1499: unplaced label object selections should expose selected-object metadata without section membership");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1499: unplaced label objects should not advertise selected containing-section availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1499: unplaced label objects should serialize null selected containing-section JSON");
+
     const auto section_process = run_process_capture(
         studio_host_path,
         {"--path", label_path.string(), "--record", "2", "--json"},
