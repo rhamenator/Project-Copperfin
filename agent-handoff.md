@@ -28,11 +28,11 @@ Important:
 
 Current priority order:
 
-Current E3 update: latest implemented slice is `#1466`, proving Studio host report layout object snap-to-grid mutation through stable selectors and refreshed report-layout JSON. `#1465` is the immediately preceding resize mutation coverage slice. It follows the completed local E2 host-exposure sweep through `#1451`. These issues remain open unless explicit issue-closure approval has been given.
+Current E3 update: latest implemented slice is `#1467`, proving Studio host report layout object delete-state mutation through stable selectors and refreshed report-layout JSON. `#1466` is the immediately preceding snap-to-grid mutation coverage slice. It follows the completed local E2 host-exposure sweep through `#1451`. These issues remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1466`, proving Studio host report layout object snap-to-grid mutation through stable selectors and refreshed report-layout JSON. `#1465` remains the latest prior resize mutation coverage slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, and unmatched-selection JSON coverage.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1467`, proving Studio host report layout object delete-state mutation through stable selectors and refreshed report-layout JSON. `#1466` remains the latest prior snap-to-grid mutation coverage slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, and unmatched-selection JSON coverage.
 
 Next: continue E3/#24 by opening or picking the next prompt-sized report/label designer fidelity child before coding. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` covers duplicate batches, `#1449` covers rename batches, `#1450` covers reorder batches, and `#1451` covers subtree duplication; the current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, debugger, or E2 host-wrapper slices unless new evidence shows a regression.
 

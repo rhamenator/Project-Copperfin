@@ -4151,6 +4151,61 @@ void test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(const
     }
 }
 
+void test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_delete_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto delete_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--record", "3",
+            "--delete-object",
+            "--unique-id", "field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (delete_process.exit_code != 0) {
+        std::cerr << "studio host report object delete stdout:\n" << delete_process.stdout_text << "\n";
+        std::cerr << "studio host report object delete stderr:\n" << delete_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(delete_process.exit_code == 0,
+           "#1467: report layout object delete should exit successfully");
+    expect(visual_object_deleted(report_path, "field-guid"),
+           "#1467: report layout object delete should mark the FRX object record deleted");
+    expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 2",
+                    "#1467: deleted report object JSON should move the object into deleted report objects");
+    expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1467: deleted selected report object JSON should remain available");
+    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1467: deleted report objects should not advertise containing-section availability");
+    expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1467: deleted report objects should serialize null containing-section JSON");
+    expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1467: deleted report object selections should still classify as report objects");
+    expect_contains(delete_process.stdout_text, "\"recordIndex\": 3",
+                    "#1467: deleted selected report object JSON should preserve selected record indexes");
+    expect_contains(delete_process.stdout_text, "\"deleted\": true",
+                    "#1467: deleted selected report object JSON should expose deleted state");
+    expect_contains(delete_process.stdout_text, "\"containingSectionRecordIndex\": null",
+                    "#1467: deleted report object JSON should not fabricate containing section record indexes");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -47801,6 +47856,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
