@@ -462,6 +462,68 @@ StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
     };
 }
 
+StudioSelectionToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateBatchPlanRequest& request) {
+    auto launch_plan = plan_studio_toolbox_palette_launch({
+        .selection_context = request.selection_context,
+        .asset_path = request.path,
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {}
+    });
+    if (!launch_plan.ok) {
+        return {
+            .ok = false,
+            .error = "A selection-context toolbox object batch creation plan request requires a toolbox palette.",
+            .selection_context = request.selection_context,
+            .toolbox_context = StudioToolboxContext::form,
+            .launch_plan = std::move(launch_plan),
+            .item_count = 0U,
+            .plan_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .batch_plan = {}
+        };
+    }
+
+    auto batch_plan = plan_visual_objects_from_toolbox_items({
+        .path = request.path,
+        .toolbox_context_provided = true,
+        .toolbox_context = launch_plan.plan.toolbox_context,
+        .items = request.items
+    });
+    if (!batch_plan.ok) {
+        return {
+            .ok = false,
+            .error = batch_plan.error,
+            .selection_context = request.selection_context,
+            .toolbox_context = launch_plan.plan.toolbox_context,
+            .launch_plan = std::move(launch_plan),
+            .item_count = request.items.size(),
+            .plan_count = 0U,
+            .error_count = 1U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .batch_plan = std::move(batch_plan)
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .toolbox_context = batch_plan.plan.toolbox_context,
+        .launch_plan = std::move(launch_plan),
+        .item_count = batch_plan.plan.item_count,
+        .plan_count = 1U,
+        .error_count = 0U,
+        .dry_run = batch_plan.plan.dry_run,
+        .mutates_asset = batch_plan.plan.mutates_asset,
+        .batch_plan = std::move(batch_plan)
+    };
+}
+
 StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_dispatch(
     const StudioToolboxObjectCreateBatchFromPaletteDispatchRequest& request) {
     const auto& dispatch_plan = request.dispatch_plan;

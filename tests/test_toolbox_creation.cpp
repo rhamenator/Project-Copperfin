@@ -506,6 +506,192 @@ void test_toolbox_creation_selection_dispatch_planner_resolves_contexts_without_
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_selection_batch_planner_resolves_contexts_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_selection_batch_plan_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto visual_batch = copperfin::studio::plan_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = "selection-batch-textbox-guid",
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "First Selection Batch"}
+                }
+            },
+            {
+                .toolbox_item_id = "commandbutton",
+                .object_name = "cmdSave",
+                .unique_id = "selection-batch-command-guid",
+                .parent_name = "cntToolbar",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Run Selection Batch"}
+                }
+            },
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = "frmMain",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Second Selection Batch"}
+                }
+            }
+        }
+    });
+    const auto* visual_textbox_plan = find_create_batch_plan(visual_batch.batch_plan.plan.plans, "textbox");
+    const auto* visual_command_plan = find_create_batch_plan(visual_batch.batch_plan.plan.plans, "commandbutton");
+    const auto& visual_plans = visual_batch.batch_plan.plan.plans;
+
+    expect(visual_batch.ok &&
+            visual_batch.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            visual_batch.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_batch.launch_plan.ok &&
+            visual_batch.launch_plan.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_batch.item_count == 3U &&
+            visual_batch.plan_count == 1U &&
+            visual_batch.error_count == 0U &&
+            visual_batch.batch_plan.ok &&
+            visual_batch.batch_plan.plan.toolbox_context_provided &&
+            visual_batch.batch_plan.plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_batch.batch_plan.plan.item_count == 3U &&
+            visual_batch.dry_run &&
+            !visual_batch.mutates_asset,
+        "#1304: visual selection toolbox batch create planning should summarize ordered form batches");
+    expect(visual_plans.size() == 3U &&
+            visual_plans[0].toolbox_item.id == "textbox" &&
+            visual_plans[0].object_name == "txt2" &&
+            visual_plans[0].unique_id == "selection-batch-textbox-guid" &&
+            visual_plans[0].parent_name == "frmMain" &&
+            has_field_value(visual_plans[0].field_values, "CLASS", "TextBox") &&
+            has_field_value(visual_plans[0].field_values, "CAPTION", "First Selection Batch") &&
+            visual_plans[1].toolbox_item.id == "commandbutton" &&
+            visual_plans[1].object_name == "cmdSave" &&
+            visual_plans[1].unique_id == "selection-batch-command-guid" &&
+            visual_plans[1].parent_name == "cntToolbar" &&
+            has_field_value(visual_plans[1].field_values, "CLASS", "CommandButton") &&
+            has_field_value(visual_plans[1].field_values, "CAPTION", "Run Selection Batch") &&
+            visual_plans[2].toolbox_item.id == "textbox" &&
+            visual_plans[2].object_name == "txt3" &&
+            visual_plans[2].parent_name == "frmMain" &&
+            has_field_value(visual_plans[2].field_values, "CLASS", "TextBox") &&
+            has_field_value(visual_plans[2].field_values, "CAPTION", "Second Selection Batch"),
+        "#1304: visual selection toolbox batch create planning should preserve ordered identity and field metadata");
+    expect(visual_textbox_plan != nullptr &&
+            visual_command_plan != nullptr &&
+            visual_plans[0].target_record_index > before_count &&
+            visual_plans[1].target_record_index > visual_plans[0].target_record_index &&
+            visual_plans[2].target_record_index > visual_plans[1].target_record_index,
+        "#1304: visual selection toolbox batch create planning should reserve names and target records in order");
+    expect(object_count(table_path) == before_count,
+        "#1304: visual selection toolbox batch create planning should not mutate assets");
+
+    const auto report_batch = copperfin::studio::plan_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "label",
+                .object_name = {},
+                .unique_id = "report-selection-batch-label-guid",
+                .parent_name = "DetailBand",
+                .field_values = {
+                    {.property_name = "CAPTION", .property_value = "Report Selection Batch"}
+                }
+            }
+        }
+    });
+    expect(report_batch.ok &&
+            report_batch.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            report_batch.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            report_batch.launch_plan.ok &&
+            report_batch.item_count == 1U &&
+            report_batch.plan_count == 1U &&
+            report_batch.error_count == 0U &&
+            report_batch.batch_plan.ok &&
+            report_batch.batch_plan.plan.plans.size() == 1U &&
+            report_batch.batch_plan.plan.plans[0].toolbox_item.id == "label" &&
+            report_batch.batch_plan.plan.plans[0].object_name == "lbl1" &&
+            report_batch.batch_plan.plan.plans[0].unique_id == "report-selection-batch-label-guid" &&
+            report_batch.batch_plan.plan.plans[0].parent_name == "DetailBand" &&
+            has_field_value(report_batch.batch_plan.plan.plans[0].field_values, "CLASS", "Label") &&
+            has_field_value(report_batch.batch_plan.plan.plans[0].field_values, "CAPTION", "Report Selection Batch"),
+        "#1304: report selection toolbox batch create planning should resolve report-safe batches");
+    expect(object_count(table_path) == before_count,
+        "#1304: report selection toolbox batch create planning should not mutate assets");
+
+    const auto unavailable_batch = copperfin::studio::plan_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = "DetailBand",
+                .field_values = {}
+            }
+        }
+    });
+    expect(!unavailable_batch.ok &&
+            unavailable_batch.error ==
+                "The requested toolbox item is not available in the requested designer context." &&
+            unavailable_batch.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            unavailable_batch.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            unavailable_batch.launch_plan.ok &&
+            unavailable_batch.item_count == 1U &&
+            unavailable_batch.plan_count == 0U &&
+            unavailable_batch.error_count == 1U &&
+            unavailable_batch.dry_run &&
+            !unavailable_batch.mutates_asset &&
+            !unavailable_batch.batch_plan.ok &&
+            unavailable_batch.batch_plan.plan.plans.empty(),
+        "#1304: unavailable selection toolbox batch create planning should reject without stale plans");
+
+    const auto unsupported_batch = copperfin::studio::plan_visual_objects_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::menu_item,
+        .path = table_path.string(),
+        .items = {
+            {
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = {},
+                .field_values = {}
+            }
+        }
+    });
+    expect(!unsupported_batch.ok &&
+            unsupported_batch.error ==
+                "A selection-context toolbox object batch creation plan request requires a toolbox palette." &&
+            unsupported_batch.selection_context == copperfin::studio::StudioEditorSelectionContext::menu_item &&
+            !unsupported_batch.launch_plan.ok &&
+            unsupported_batch.launch_plan.error == "The selected Studio context does not expose a toolbox palette." &&
+            unsupported_batch.item_count == 0U &&
+            unsupported_batch.plan_count == 0U &&
+            unsupported_batch.error_count == 0U &&
+            unsupported_batch.dry_run &&
+            !unsupported_batch.mutates_asset &&
+            unsupported_batch.batch_plan.plan.plans.empty(),
+        "#1304: unsupported selection toolbox batch create planning should reject without stale plans");
+
+    expect(object_count(table_path) == before_count,
+        "#1304: selection toolbox batch create planning should not mutate the visual asset");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_planner_uses_admitted_palette_dispatch_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3110,6 +3296,7 @@ int main() {
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
     test_toolbox_creation_selection_planner_resolves_contexts_without_mutation();
     test_toolbox_creation_selection_dispatch_planner_resolves_contexts_without_mutation();
+    test_toolbox_creation_selection_batch_planner_resolves_contexts_without_mutation();
     test_toolbox_creation_planner_uses_admitted_palette_dispatch_without_mutation();
     test_toolbox_creation_planner_rejects_invalid_palette_dispatches_without_mutation();
     test_toolbox_creation_batch_planner_uses_admitted_palette_dispatch_without_mutation();
