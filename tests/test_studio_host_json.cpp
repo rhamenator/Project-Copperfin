@@ -4187,6 +4187,18 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
                     "#1478: deleted report section selections should advertise report-selection availability");
     expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                     "#1478: deleted report section selections should expose section selection kind");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#1513: selected deleted report sections should not advertise selected-object availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObject\": null",
+                    "#1513: selected deleted report sections should serialize null selected objects");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1513: selected deleted report sections should not advertise containing-object-section availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1513: selected deleted report sections should serialize null containing-object sections");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1513: selected deleted report sections should not advertise selected-settings availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1513: selected deleted report sections should serialize null selected settings");
     expect_contains(deleted_section_process.stdout_text, "\"sectionCount\": 0",
                     "#1478: deleted selected report section JSON should not expose live sections");
     expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
