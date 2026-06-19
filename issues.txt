@@ -1,3 +1,4 @@
+1350	OPEN	E2/#23 slice: Expose aggregate designer toolbox child item descriptors in host JSON		2026-06-19T07:38:05Z
 1349	OPEN	E2/#23 slice: Expose aggregate designer child target metadata in host JSON		2026-06-19T07:34:24Z
 1348	OPEN	E2/#23 slice: Expose aggregate designer child launch commands in host JSON		2026-06-19T07:31:08Z
 1347	OPEN	E2/#23 slice: Normalize Studio host observed process exit codes		2026-06-19T07:25:58Z

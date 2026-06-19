@@ -9198,7 +9198,7 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect(toolbox_child_begin != std::string::npos,
         "#1349: designer execution JSON should expose a toolbox child entry for target metadata checks");
     if (toolbox_child_begin != std::string::npos) {
-        const auto toolbox_child_json = visual_process.stdout_text.substr(toolbox_child_begin, 800);
+        const auto toolbox_child_json = visual_process.stdout_text.substr(toolbox_child_begin, 1600);
         expect_contains(toolbox_child_json, "\"assetPath\": \"forms/customer.scx\"",
             "#1349: aggregate toolbox child JSON should expose asset paths");
         expect_contains(toolbox_child_json, "\"recordIndex\": 1",
@@ -9207,6 +9207,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
             "#1349: aggregate toolbox child JSON should expose object names");
         expect_contains(toolbox_child_json, "\"uniqueId\": \"form-guid\"",
             "#1349: aggregate toolbox child JSON should expose unique ids");
+        expect_contains(toolbox_child_json, "\"items\": [",
+            "#1350: aggregate toolbox child JSON should expose toolbox item descriptors");
+        expect_contains(toolbox_child_json, "\"id\": \"textbox\"",
+            "#1350: aggregate toolbox child JSON should include form-safe TextBox items");
+        expect_contains(toolbox_child_json, "\"baseClass\": \"TextBox\"",
+            "#1350: aggregate toolbox child JSON should expose toolbox item base classes");
     }
     expect_contains(visual_process.stdout_text, "\"toolboxContext\": \"form\"",
         "#1337: designer execution JSON should expose toolbox child contexts");

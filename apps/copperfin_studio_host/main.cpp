@@ -11275,6 +11275,18 @@ void print_json_designer_execution_result(
                       ? child_dispatch_plan.toolbox_dispatch.plan.item_count
                       : 0U)
               << ",\n";
+    std::cout << "      \"items\": [\n";
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
+        const auto& items = child_dispatch_plan.toolbox_dispatch.plan.items;
+        for (std::size_t index = 0U; index < items.size(); ++index) {
+            print_json_toolbox_item_descriptor(items[index], "        ");
+            if ((index + 1U) != items.size()) {
+                std::cout << ",";
+            }
+            std::cout << "\n";
+        }
+    }
+    std::cout << "      ],\n";
     std::cout << "      \"dispatchArguments\": ";
     if (child_dispatch_plan.toolbox_dispatch.ok) {
         print_json_string_array(child_dispatch_plan.toolbox_dispatch.plan.dispatch_arguments);
