@@ -11840,6 +11840,14 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
         "#1315: toolbox-create-batch-from-dispatch JSON should expose created unique ids");
     expect_contains(create_process.stdout_text, "\"parentName\": \"cntToolbar\"",
         "#1315: toolbox-create-batch-from-dispatch JSON should preserve parent overrides");
+    expect_contains(create_process.stdout_text,
+        "\"createdObjectNames\": [\"txt2\", \"cmdDispatchHostBatch\", \"txt3\"]",
+        "#1385: toolbox-create-batch-from-dispatch JSON should summarize created object names");
+    expect_contains(create_process.stdout_text,
+        "\"createdUniqueIds\": [\"first-dispatch-host-batch-guid\", \"dispatch-host-batch-command-guid\", \"second-dispatch-host-batch-guid\"]",
+        "#1385: toolbox-create-batch-from-dispatch JSON should summarize created unique ids");
+    expect_contains(create_process.stdout_text, "\"createErrors\": []",
+        "#1385: successful toolbox-create-batch-from-dispatch JSON should summarize empty create errors");
     expect_contains(create_process.stdout_text, "\"dryRun\": false",
         "#1315: toolbox-create-batch-from-dispatch JSON should expose execution state");
     expect_contains(create_process.stdout_text, "\"mutatesAsset\": true",
@@ -11874,6 +11882,10 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
         "#1315: report toolbox-create-batch-from-dispatch JSON should resolve report contexts");
     expect_contains(report_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1315: report toolbox-create-batch-from-dispatch JSON should expose generated label names");
+    expect_contains(report_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
+        "#1385: report toolbox-create-batch-from-dispatch JSON should summarize created report object names");
+    expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-batch-report-label-guid\"]",
+        "#1385: report toolbox-create-batch-from-dispatch JSON should summarize created report unique ids");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1315: report toolbox-create-batch-from-dispatch JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 4U,
@@ -11898,6 +11910,13 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
     expect_contains(non_admitted_process.stdout_text,
         "A toolbox dispatch request requires an admitted non-dry-run invocation.",
         "#1315: non-admitted toolbox-create-batch-from-dispatch JSON should report dispatch errors");
+    expect_contains(non_admitted_process.stdout_text, "\"createdObjectNames\": []",
+        "#1385: non-admitted toolbox-create-batch-from-dispatch JSON should summarize no created object names");
+    expect_contains(non_admitted_process.stdout_text, "\"createdUniqueIds\": []",
+        "#1385: non-admitted toolbox-create-batch-from-dispatch JSON should summarize no created unique ids");
+    expect_contains(non_admitted_process.stdout_text,
+        "\"createErrors\": [\"A toolbox dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1385: non-admitted toolbox-create-batch-from-dispatch JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1315: non-admitted toolbox-create-batch-from-dispatch commands should not mutate assets");
 
@@ -11920,6 +11939,13 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
     expect_contains(unavailable_process.stdout_text,
         "The requested toolbox item is not available in the admitted toolbox dispatch.",
         "#1315: unavailable toolbox-create-batch-from-dispatch JSON should report availability errors");
+    expect_contains(unavailable_process.stdout_text, "\"createdObjectNames\": []",
+        "#1385: unavailable toolbox-create-batch-from-dispatch JSON should summarize no created object names");
+    expect_contains(unavailable_process.stdout_text, "\"createdUniqueIds\": []",
+        "#1385: unavailable toolbox-create-batch-from-dispatch JSON should summarize no created unique ids");
+    expect_contains(unavailable_process.stdout_text,
+        "\"createErrors\": [\"The requested toolbox item is not available in the admitted toolbox dispatch.\"",
+        "#1385: unavailable toolbox-create-batch-from-dispatch JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1315: unavailable toolbox-create-batch-from-dispatch commands should not mutate assets");
 
@@ -11966,6 +11992,11 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
     expect_contains(invalid_field_process.stdout_text,
         "The requested field was not found in the asset.",
         "#1315: invalid-field toolbox-create-batch-from-dispatch JSON should report lower-layer failures");
+    expect_contains(invalid_field_process.stdout_text, "\"createdObjectNames\": []",
+        "#1385: invalid-field toolbox-create-batch-from-dispatch JSON should summarize no created object names");
+    expect_contains(invalid_field_process.stdout_text,
+        "\"createErrors\": [\"The requested field was not found in the asset.\"",
+        "#1385: invalid-field toolbox-create-batch-from-dispatch JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1315: invalid-field toolbox-create-batch-from-dispatch commands should not partially mutate assets");
 
