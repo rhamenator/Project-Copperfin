@@ -2,6 +2,7 @@
 
 ## 2026-06-18
 
+- E2/#1285 toolbox palette invocation admission catalog planning shipped: `plan_studio_toolbox_invocation_admission_catalog` now builds non-executing per-toolbox-context admission catalogs while preserving command tokens, selected asset/object metadata, item descriptors, requested palette-admission state, and dry-run/non-mutating status.
 - E2/#1284 aggregate designer dispatch catalog planning now routes through `plan_studio_designer_invocation_admission_catalog`, keeping per-context launch/admission metadata single-sourced before aggregate dispatch planning while preserving non-executing public dispatch catalog behavior.
 - E2/#1283 editor-action dispatch catalog planning now routes through `plan_studio_editor_action_invocation_admission_catalog`, keeping launch/admission metadata single-sourced before dispatch planning while preserving non-executing public dispatch catalog behavior.
 - E2/#1282 Studio host selection-context editor-action invocation admission catalog JSON shipped: `copperfin_studio_host --editor-action-invocation-admission-catalog --selection-context <token>` now exposes non-executing selected-context editor-action invocation admission catalogs with action metadata, selected-object/editor metadata, command tokens, target surfaces, source position metadata, requested admission state, dry-run/non-mutating status, and parser validation.

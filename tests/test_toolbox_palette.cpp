@@ -276,6 +276,76 @@ int main() {
             !has_toolbox_item(dry_run_invocation.plan.items, "textbox"),
         "#1219: toolbox invocation admission should default to dry-run and preserve filtered report items");
 
+    const auto form_invocation_catalog = copperfin::studio::plan_studio_toolbox_invocation_admission_catalog({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .toolbox_context = StudioToolboxContext::form,
+        .asset_path = "forms/customer.scx",
+        .record_index = 1U,
+        .object_name = "frmCustomer",
+        .unique_id = "form-guid",
+        .admit_palette_invocation = true
+    });
+    expect(form_invocation_catalog.ok &&
+            form_invocation_catalog.selection_context == StudioEditorSelectionContext::visual_object &&
+            form_invocation_catalog.toolbox_context == StudioToolboxContext::form &&
+            form_invocation_catalog.command_token == "studio.toolbox.palette.invoke" &&
+            form_invocation_catalog.asset_path == "forms/customer.scx" &&
+            form_invocation_catalog.record_index == 1U &&
+            form_invocation_catalog.object_name == "frmCustomer" &&
+            form_invocation_catalog.unique_id == "form-guid" &&
+            form_invocation_catalog.item_count == form_items.size() &&
+            form_invocation_catalog.items.size() == form_items.size() &&
+            form_invocation_catalog.admission_count == 1U &&
+            form_invocation_catalog.error_count == 0U &&
+            !form_invocation_catalog.dry_run &&
+            !form_invocation_catalog.mutates_asset &&
+            form_invocation_catalog.invocation_admission.ok &&
+            form_invocation_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            has_toolbox_item(form_invocation_catalog.items, "textbox"),
+        "#1285: admitted toolbox invocation admission catalogs should preserve form item metadata");
+
+    const auto report_invocation_catalog = copperfin::studio::plan_studio_toolbox_invocation_admission_catalog({
+        .selection_context = StudioEditorSelectionContext::report_expression,
+        .toolbox_context = StudioToolboxContext::report,
+        .asset_path = "reports/orders.frx",
+        .record_index = 3U,
+        .object_name = "Field1",
+        .unique_id = "field-guid",
+        .admit_palette_invocation = false
+    });
+    expect(report_invocation_catalog.ok &&
+            report_invocation_catalog.selection_context == StudioEditorSelectionContext::report_expression &&
+            report_invocation_catalog.toolbox_context == StudioToolboxContext::report &&
+            report_invocation_catalog.item_count == report_items.size() &&
+            report_invocation_catalog.admission_count == 1U &&
+            report_invocation_catalog.error_count == 0U &&
+            report_invocation_catalog.dry_run &&
+            !report_invocation_catalog.mutates_asset &&
+            report_invocation_catalog.invocation_admission.ok &&
+            !report_invocation_catalog.invocation_admission.plan.palette_invocation_admitted &&
+            has_toolbox_item(report_invocation_catalog.items, "label") &&
+            !has_toolbox_item(report_invocation_catalog.items, "textbox"),
+        "#1285: dry-run toolbox invocation admission catalogs should preserve report-safe item metadata");
+
+    const auto empty_invocation_catalog = copperfin::studio::plan_studio_toolbox_invocation_admission_catalog({
+        .selection_context = StudioEditorSelectionContext::visual_object,
+        .toolbox_context = static_cast<StudioToolboxContext>(999),
+        .asset_path = "forms/customer.scx",
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .admit_palette_invocation = true
+    });
+    expect(!empty_invocation_catalog.ok &&
+            empty_invocation_catalog.error ==
+                "A toolbox invocation admission catalog request requires validated toolbox item metadata." &&
+            empty_invocation_catalog.item_count == 0U &&
+            empty_invocation_catalog.admission_count == 0U &&
+            empty_invocation_catalog.error_count == 0U &&
+            empty_invocation_catalog.dry_run &&
+            !empty_invocation_catalog.mutates_asset,
+        "#1285: toolbox invocation admission catalogs should reject empty item metadata");
+
     const auto dry_run_dispatch = copperfin::studio::plan_studio_toolbox_dispatch({
         .admission_plan = dry_run_invocation.plan
     });

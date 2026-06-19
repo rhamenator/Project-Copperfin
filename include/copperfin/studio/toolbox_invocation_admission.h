@@ -34,7 +34,38 @@ struct StudioToolboxInvocationAdmissionResult {
     StudioToolboxInvocationAdmissionPlan plan;
 };
 
+struct StudioToolboxInvocationAdmissionCatalogRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    bool admit_palette_invocation = false;
+};
+
+struct StudioToolboxInvocationAdmissionCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::string command_token;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::size_t item_count = 0;
+    std::vector<StudioToolboxItemDescriptor> items;
+    StudioToolboxInvocationAdmissionResult invocation_admission;
+    std::size_t admission_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 [[nodiscard]] StudioToolboxInvocationAdmissionResult plan_studio_toolbox_invocation_admission(
     const StudioToolboxInvocationAdmissionRequest& request);
+[[nodiscard]] StudioToolboxInvocationAdmissionCatalogResult plan_studio_toolbox_invocation_admission_catalog(
+    const StudioToolboxInvocationAdmissionCatalogRequest& request);
 
 }  // namespace copperfin::studio
