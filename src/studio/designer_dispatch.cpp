@@ -114,49 +114,46 @@ StudioDesignerDispatchResult plan_studio_designer_dispatch(
 
 StudioDesignerDispatchCatalogResult plan_studio_designer_dispatch_catalog(
     const StudioDesignerDispatchCatalogRequest& request) {
-    const auto launch_surface_catalog = plan_studio_designer_launch_surface_catalog({
+    auto admission_catalog = plan_studio_designer_invocation_admission_catalog({
         .asset_path = request.asset_path,
         .record_index = request.record_index,
         .object_name = request.object_name,
         .unique_id = request.unique_id,
         .symbol = request.symbol,
         .line = request.line,
-        .column = request.column
+        .column = request.column,
+        .admit_editor_invocations = request.admit_editor_invocations,
+        .admit_builder_invocations = request.admit_builder_invocations,
+        .admit_toolbox_invocation = request.admit_toolbox_invocation
     });
-    if (!launch_surface_catalog.ok) {
+    if (!admission_catalog.ok) {
         return {
             .ok = false,
-            .error = launch_surface_catalog.error,
+            .error = admission_catalog.error,
             .context_count = 0U,
             .contexts = {}
         };
     }
 
     std::vector<StudioDesignerDispatchCatalogEntry> entries;
-    entries.reserve(launch_surface_catalog.contexts.size());
-    for (const auto& context : launch_surface_catalog.contexts) {
-        auto admission = plan_studio_designer_invocation_admission({
-            .launch_surface_plan = context.launch_surface_plan.plan,
-            .admit_editor_invocations = request.admit_editor_invocations,
-            .admit_builder_invocations = request.admit_builder_invocations,
-            .admit_toolbox_invocation = request.admit_toolbox_invocation
-        });
+    entries.reserve(admission_catalog.contexts.size());
+    for (auto& admission_entry : admission_catalog.contexts) {
         StudioDesignerDispatchResult dispatch{};
-        if (admission.ok) {
+        if (admission_entry.invocation_admission.ok) {
             dispatch = plan_studio_designer_dispatch({
-                .invocation_admission_plan = admission.plan
+                .invocation_admission_plan = admission_entry.invocation_admission.plan
             });
         } else {
             dispatch = {
                 .ok = false,
-                .error = admission.error,
+                .error = admission_entry.invocation_admission.error,
                 .plan = {}
             };
         }
 
         const auto& plan = dispatch.plan;
         entries.push_back({
-            .selection_context = context.selection_context,
+            .selection_context = admission_entry.selection_context,
             .editor_action_dispatch_count = dispatch.ok ? plan.editor_action_dispatch_count : 0U,
             .builder_dispatch_count = dispatch.ok ? plan.builder_dispatch_count : 0U,
             .toolbox_dispatch_count = dispatch.ok ? plan.toolbox_dispatch_count : 0U,
@@ -171,7 +168,7 @@ StudioDesignerDispatchCatalogResult plan_studio_designer_dispatch_catalog(
     return {
         .ok = true,
         .error = {},
-        .context_count = entries.size(),
+        .context_count = admission_catalog.context_count,
         .contexts = std::move(entries)
     };
 }

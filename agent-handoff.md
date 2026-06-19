@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1283`, routing editor-action dispatch catalog planning through `plan_studio_editor_action_invocation_admission_catalog`. `#1282` is the immediately preceding Studio host invocation-admission catalog JSON slice. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1284`, routing aggregate designer dispatch catalog planning through `plan_studio_designer_invocation_admission_catalog`. `#1283` is the immediately preceding editor-action dispatch catalog refactor. Both remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 

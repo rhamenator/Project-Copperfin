@@ -1107,6 +1107,24 @@ int main() {
                visual_dispatch_entry->dispatch.plan.toolbox_dispatch.ok &&
                visual_dispatch_entry->dispatch.plan.toolbox_dispatch.plan.dispatch_admitted,
            "#1239: designer dispatch catalog should summarize visual dispatches and requested policies");
+    expect(visual_invocation_entry != nullptr &&
+               visual_dispatch_entry != nullptr &&
+               visual_dispatch_entry->dispatch.ok &&
+               visual_dispatch_entry->dispatch.plan.selection_context ==
+                   visual_invocation_entry->invocation_admission.plan.selection_context &&
+               visual_dispatch_entry->dispatch.plan.editor_action_dispatch_count ==
+                   visual_invocation_entry->editor_action_invocation_count &&
+               visual_dispatch_entry->dispatch.plan.builder_dispatch_count ==
+                   visual_invocation_entry->builder_invocation_count &&
+               visual_dispatch_entry->dispatch.plan.toolbox_dispatch_count ==
+                   (visual_invocation_entry->toolbox_available ? 1U : 0U) &&
+               visual_dispatch_entry->dispatch.plan.asset_path ==
+                   visual_invocation_entry->invocation_admission.plan.asset_path &&
+               visual_dispatch_entry->dispatch.plan.object_name ==
+                   visual_invocation_entry->invocation_admission.plan.object_name &&
+               visual_dispatch_entry->dispatch.plan.symbol ==
+                   visual_invocation_entry->invocation_admission.plan.symbol,
+           "#1284: designer dispatch catalogs should preserve shared invocation-admission catalog metadata");
 
     const auto* report_dispatch_entry = find_dispatch_catalog_entry(
         dispatch_catalog.contexts, StudioEditorSelectionContext::report_expression);
@@ -1137,6 +1155,18 @@ int main() {
                has_editor_dispatch(
                    menu_dispatch_entry->dispatch.plan.editor_action_dispatches, "show-property-grid", true),
            "#1239: designer dispatch catalog should summarize menu dispatches and unsupported toolbox errors");
+    expect(menu_invocation_entry != nullptr &&
+               menu_dispatch_entry != nullptr &&
+               menu_dispatch_entry->dispatch.ok &&
+               menu_dispatch_entry->dispatch.plan.editor_action_dispatch_count ==
+                   menu_invocation_entry->editor_action_invocation_count &&
+               menu_dispatch_entry->dispatch.plan.builder_dispatch_count ==
+                   menu_invocation_entry->builder_invocation_count &&
+               menu_dispatch_entry->dispatch.plan.toolbox_dispatch_count == 0U &&
+               !menu_dispatch_entry->dispatch.plan.toolbox_dispatch.ok &&
+               menu_dispatch_entry->dispatch.plan.toolbox_dispatch.error ==
+                   menu_invocation_entry->toolbox_error,
+           "#1284: designer dispatch catalogs should retain unsupported-toolbox admission metadata");
 
     const auto launch_surface_catalog = copperfin::studio::plan_studio_designer_launch_surface_catalog({
         .asset_path = "forms/customer.scx",
