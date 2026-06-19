@@ -3817,6 +3817,14 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1454: selected report object JSON should expose highlight counts");
     expect_contains(object_process.stdout_text, "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",
                     "#1454: selected report object JSON should expose highlight provenance");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1455: section-contained report objects should advertise containing-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                    "#1455: section-contained report objects should expose containing-section JSON");
+    expect_contains(object_process.stdout_text, "\"id\": \"detail_2\"",
+                    "#1455: containing-section JSON should expose selected object section ids");
+    expect_contains(object_process.stdout_text, "\"bandKind\": \"detail\"",
+                    "#1455: containing-section JSON should expose selected object band kinds");
 
     const auto section_process = run_process_capture(
         studio_host_path,
@@ -3835,6 +3843,10 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1454: non-object report selections should not advertise selected-object availability");
     expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
                     "#1454: non-object report selections should serialize null selected objects");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1455: non-object report selections should not advertise containing-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1455: non-object report selections should serialize null containing sections");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
