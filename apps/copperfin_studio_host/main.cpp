@@ -6378,6 +6378,20 @@ ToolboxCreateParseResult parse_toolbox_create_arguments(const std::vector<std::s
 }
 
 void print_json_toolbox_create_result(const copperfin::vfp::VisualObjectCreateResult& result) {
+    std::vector<std::string> created_object_names;
+    std::vector<std::string> created_unique_ids;
+    std::vector<std::string> create_errors;
+    if (result.ok) {
+        if (!result.object_name.empty()) {
+            created_object_names.push_back(result.object_name);
+        }
+        if (!result.unique_id.empty()) {
+            created_unique_ids.push_back(result.unique_id);
+        }
+    } else if (!result.error.empty()) {
+        create_errors.push_back(result.error);
+    }
+
     std::cout << "{\n";
     std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
     std::cout << "  \"toolboxCreate\": {\n";
@@ -6394,6 +6408,15 @@ void print_json_toolbox_create_result(const copperfin::vfp::VisualObjectCreateRe
     std::cout << ",\n";
     std::cout << "    \"parentName\": ";
     print_json_string(result.parent_name);
+    std::cout << ",\n";
+    std::cout << "    \"createdObjectNames\": ";
+    print_json_string_array(created_object_names);
+    std::cout << ",\n";
+    std::cout << "    \"createdUniqueIds\": ";
+    print_json_string_array(created_unique_ids);
+    std::cout << ",\n";
+    std::cout << "    \"createErrors\": ";
+    print_json_string_array(create_errors);
     std::cout << "\n";
     std::cout << "  }\n";
     std::cout << "}\n";
@@ -6402,6 +6425,24 @@ void print_json_toolbox_create_result(const copperfin::vfp::VisualObjectCreateRe
 
 void print_json_selection_toolbox_create_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateResult& result) {
+    std::vector<std::string> created_object_names;
+    std::vector<std::string> created_unique_ids;
+    std::vector<std::string> create_errors;
+    if (result.create_result.ok) {
+        if (!result.create_result.object_name.empty()) {
+            created_object_names.push_back(result.create_result.object_name);
+        }
+        if (!result.create_result.unique_id.empty()) {
+            created_unique_ids.push_back(result.create_result.unique_id);
+        }
+    } else {
+        const std::string& error =
+            !result.create_result.error.empty() ? result.create_result.error : result.error;
+        if (!error.empty()) {
+            create_errors.push_back(error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
     std::cout << "  \"selectionToolboxCreate\": {\n";
@@ -6490,6 +6531,15 @@ void print_json_selection_toolbox_create_result(
     print_json_string(result.create_result.parent_name);
     std::cout << "\n";
     std::cout << "    },\n";
+    std::cout << "    \"createdObjectNames\": ";
+    print_json_string_array(created_object_names);
+    std::cout << ",\n";
+    std::cout << "    \"createdUniqueIds\": ";
+    print_json_string_array(created_unique_ids);
+    std::cout << ",\n";
+    std::cout << "    \"createErrors\": ";
+    print_json_string_array(create_errors);
+    std::cout << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << "\n";
     std::cout << "  }\n";

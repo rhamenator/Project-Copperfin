@@ -15061,6 +15061,12 @@ void test_studio_host_json_creates_selection_toolbox_objects(const std::string& 
         "#1309: selection-toolbox-create JSON should expose created unique ids");
     expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
         "#1309: selection-toolbox-create JSON should expose created parents");
+    expect_contains(create_process.stdout_text, "\"createdObjectNames\": [\"txt2\"]",
+        "#1382: selection-toolbox-create JSON should summarize created object names");
+    expect_contains(create_process.stdout_text, "\"createdUniqueIds\": [\"selection-created-textbox-guid\"]",
+        "#1382: selection-toolbox-create JSON should summarize created unique ids");
+    expect_contains(create_process.stdout_text, "\"createErrors\": []",
+        "#1382: successful selection-toolbox-create JSON should summarize empty create errors");
     expect_contains(create_process.stdout_text, "\"className\": \"TextBox\"",
         "#1309: selection-toolbox-create JSON should expose descriptor metadata");
     expect_contains(create_process.stdout_text, "\"propertyValue\": \"Selection Created\"",
@@ -15112,6 +15118,10 @@ void test_studio_host_json_creates_selection_toolbox_objects(const std::string& 
         "#1309: report selection-toolbox-create JSON should expose generated label names");
     expect_contains(report_process.stdout_text, "\"uniqueId\": \"selection-report-label-guid\"",
         "#1309: report selection-toolbox-create JSON should expose report label unique ids");
+    expect_contains(report_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
+        "#1382: report selection-toolbox-create JSON should summarize created report object names");
+    expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"selection-report-label-guid\"]",
+        "#1382: report selection-toolbox-create JSON should summarize created report unique ids");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1309: report selection-toolbox-create JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 2U,
@@ -15143,6 +15153,13 @@ void test_studio_host_json_creates_selection_toolbox_objects(const std::string& 
         "#1309: unavailable selection-toolbox-create JSON should report planner errors");
     expect_contains(unavailable_process.stdout_text, "\"objectName\": \"\"",
         "#1309: unavailable selection-toolbox-create JSON should avoid stale object names");
+    expect_contains(unavailable_process.stdout_text, "\"createdObjectNames\": []",
+        "#1382: unavailable selection-toolbox-create JSON should summarize no created object names");
+    expect_contains(unavailable_process.stdout_text, "\"createdUniqueIds\": []",
+        "#1382: unavailable selection-toolbox-create JSON should summarize no created unique ids");
+    expect_contains(unavailable_process.stdout_text,
+        "\"createErrors\": [\"The requested toolbox item is not available in the requested designer context.\"",
+        "#1382: unavailable selection-toolbox-create JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1309: unavailable selection-toolbox-create commands should not mutate the asset");
 
@@ -15307,6 +15324,12 @@ void test_studio_host_json_creates_toolbox_objects(const std::string& studio_hos
                     "#1018: toolbox-create JSON should expose created unique id");
     expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
                     "#1018: toolbox-create JSON should expose created parent name");
+    expect_contains(create_process.stdout_text, "\"createdObjectNames\": [\"txt2\"]",
+                    "#1382: toolbox-create JSON should summarize created object names");
+    expect_contains(create_process.stdout_text, "\"createdUniqueIds\": [\"created-textbox-guid\"]",
+                    "#1382: toolbox-create JSON should summarize created unique ids");
+    expect_contains(create_process.stdout_text, "\"createErrors\": []",
+                    "#1382: successful toolbox-create JSON should summarize empty create errors");
 
     const auto caption = copperfin::vfp::query_visual_object_property({
         .path = form_path.string(),
@@ -15350,6 +15373,13 @@ void test_studio_host_json_creates_toolbox_objects(const std::string& studio_hos
                     "#1018: failed toolbox-create JSON should expose clean error text");
     expect_contains(failure_process.stdout_text, "\"objectName\": \"\"",
                     "#1018: failed toolbox-create JSON should not report stale object names");
+    expect_contains(failure_process.stdout_text, "\"createdObjectNames\": []",
+                    "#1382: failed toolbox-create JSON should summarize no created object names");
+    expect_contains(failure_process.stdout_text, "\"createdUniqueIds\": []",
+                    "#1382: failed toolbox-create JSON should summarize no created unique ids");
+    expect_contains(failure_process.stdout_text,
+                    "\"createErrors\": [\"The requested toolbox item was not found.\"",
+                    "#1382: failed toolbox-create JSON should summarize create errors");
     expect(visual_object_count(form_path) == object_count_before_failure,
         "#1018: failed toolbox-create host commands should not mutate the asset");
 
@@ -15372,6 +15402,10 @@ void test_studio_host_json_creates_toolbox_objects(const std::string& studio_hos
                     "#1019: report-compatible toolbox creates should expose generated label names");
     expect_contains(report_label_process.stdout_text, "\"uniqueId\": \"report-label-guid\"",
                     "#1019: report-compatible toolbox creates should expose created unique ids");
+    expect_contains(report_label_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
+                    "#1382: report toolbox-create JSON should summarize created report object names");
+    expect_contains(report_label_process.stdout_text, "\"createdUniqueIds\": [\"report-label-guid\"]",
+                    "#1382: report toolbox-create JSON should summarize created report unique ids");
 
     const std::size_t object_count_before_context_failure = visual_object_count(form_path);
     const auto report_textbox_process = run_process_capture(
