@@ -4027,6 +4027,71 @@ void test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(cons
     }
 }
 
+void test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_resize_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto resize_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--record", "3",
+            "--resize-object",
+            "--resize-mode", "size",
+            "--anchor-unique-id", "label-guid",
+            "--resize-target-unique-id", "field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (resize_process.exit_code != 0) {
+        std::cerr << "studio host report object resize stdout:\n" << resize_process.stdout_text << "\n";
+        std::cerr << "studio host report object resize stderr:\n" << resize_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(resize_process.exit_code == 0,
+           "#1465: report layout object resize should exit successfully");
+    expect(visual_object_property(report_path, "field-guid", "WIDTH") == "1800" &&
+               visual_object_property(report_path, "field-guid", "HEIGHT") == "350",
+           "#1465: report layout object size resize should mutate FRX WIDTH and HEIGHT fields");
+    expect(visual_object_property(report_path, "field-guid", "HPOS") == "1200" &&
+               visual_object_property(report_path, "field-guid", "VPOS") == "2600",
+           "#1465: report layout object size resize should preserve FRX HPOS and VPOS fields");
+    expect_contains(resize_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1465: resized report object JSON should retain selected-object availability");
+    expect_contains(resize_process.stdout_text, "\"left\": 1200",
+                    "#1465: resized report object JSON should preserve left coordinates");
+    expect_contains(resize_process.stdout_text, "\"top\": 2600",
+                    "#1465: resized report object JSON should preserve top coordinates");
+    expect_contains(resize_process.stdout_text, "\"width\": 1800",
+                    "#1465: resized report object JSON should expose updated width");
+    expect_contains(resize_process.stdout_text, "\"height\": 350",
+                    "#1465: resized report object JSON should expose updated height");
+    expect_contains(resize_process.stdout_text, "\"right\": 3000",
+                    "#1465: resized report object JSON should recompute right-edge coordinates");
+    expect_contains(resize_process.stdout_text, "\"bottom\": 2950",
+                    "#1465: resized report object JSON should recompute bottom-edge coordinates");
+    expect_contains(resize_process.stdout_text, "\"sectionRelativeTop\": 600",
+                    "#1465: resized report object JSON should preserve section-relative top coordinates");
+    expect_contains(resize_process.stdout_text, "\"sectionRelativeBottom\": 950",
+                    "#1465: resized report object JSON should recompute section-relative bottom coordinates");
+    expect_contains(resize_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1465: resized report object JSON should preserve containing section metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -47675,6 +47740,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_report_objects(argv[1]);
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
