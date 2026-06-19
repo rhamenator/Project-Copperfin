@@ -10613,6 +10613,14 @@ void print_json_toolbox_dispatch_result(const copperfin::studio::StudioToolboxDi
     }
 
     const auto& plan = result.plan;
+    std::vector<std::string> dispatch_ready_item_ids;
+    dispatch_ready_item_ids.reserve(plan.items.size());
+    for (const auto& item : plan.items) {
+        dispatch_ready_item_ids.push_back(std::string(item.id));
+    }
+    const std::vector<std::string> dispatch_blocked_item_ids;
+    const std::vector<std::string> dispatch_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -10636,6 +10644,15 @@ void print_json_toolbox_dispatch_result(const copperfin::studio::StudioToolboxDi
     print_json_string(plan.unique_id);
     std::cout << ",\n";
     std::cout << "    \"itemCount\": " << plan.item_count << ",\n";
+    std::cout << "    \"dispatchReadyItemIds\": ";
+    print_json_string_array(dispatch_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedItemIds\": ";
+    print_json_string_array(dispatch_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"items\": [\n";
     for (std::size_t index = 0U; index < plan.items.size(); ++index) {
         print_json_toolbox_item_descriptor(plan.items[index], "      ");

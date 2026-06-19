@@ -7930,6 +7930,12 @@ void test_studio_host_json_exposes_toolbox_dispatch(const std::string& studio_ho
         "#1234: toolbox dispatch JSON should carry unique-id selectors");
     expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
         "#1234: visual-object toolbox dispatch JSON should include form-safe TextBox items");
+    expect_contains(visual_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\", \"textbox\"",
+        "#1389: toolbox dispatch JSON should summarize dispatch-ready items");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1389: admitted toolbox dispatch JSON should summarize empty blocked item ids");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1389: admitted toolbox dispatch JSON should summarize empty dispatch errors");
     expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [",
         "#1234: toolbox dispatch JSON should expose dispatch arguments");
     expect_contains(visual_process.stdout_text, "\"--toolbox-context\"",
@@ -7964,6 +7970,12 @@ void test_studio_host_json_exposes_toolbox_dispatch(const std::string& studio_ho
         "#1234: report toolbox dispatch JSON should include report-safe Label items");
     expect_not_contains(report_process.stdout_text, "\"id\": \"textbox\"",
         "#1234: report toolbox dispatch JSON should exclude form-only TextBox items");
+    expect_contains(report_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
+        "#1389: report toolbox dispatch JSON should summarize dispatch-ready items");
+    expect_contains(report_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#1389: report toolbox dispatch JSON should summarize empty blocked item ids");
+    expect_contains(report_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1389: report toolbox dispatch JSON should summarize empty dispatch errors");
 
     const auto dry_run_process = run_process_capture(
         studio_host_path,
