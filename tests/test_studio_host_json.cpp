@@ -8234,6 +8234,212 @@ void test_studio_host_json_clears_visual_properties(const std::string& studio_ho
     }
 }
 
+void test_studio_host_json_copies_visual_properties(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_property_copy_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = write_synthetic_form_table_for_property_rename(temp_root, "copy.scx");
+
+    const auto copy_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "FormControlSource",
+            "--json"
+        },
+        temp_root);
+    expect(copy_process.exit_code == 0,
+        "#1436: visual property copy JSON should exit successfully for memo-backed properties");
+    expect_contains(copy_process.stdout_text, "\"visualPropertyCopy\": {",
+        "#1436: visual property copy JSON should expose a copy object");
+    expect_contains(copy_process.stdout_text, "\"affectedObjectCount\": 1",
+        "#1436: visual property copy JSON should expose affected object counts");
+    expect_contains(copy_process.stdout_text, "\"dryRun\": false",
+        "#1436: visual property copy JSON should expose committed execution state");
+    expect_contains(copy_process.stdout_text, "\"mutatesAsset\": true",
+        "#1436: visual property copy JSON should expose mutation state");
+    expect_contains(copy_process.stdout_text, "\"undoAvailable\": true",
+        "#1436: visual property copy JSON should expose undo availability");
+    expect(visual_object_property(form_path, "form-guid", "FormControlSource") == "\"customer.name\"" &&
+            visual_object_property(form_path, "existing-textbox-guid", "ControlSource") == "\"customer.name\"",
+        "#1436: visual property copy host command should copy source values and preserve source properties");
+
+    const auto default_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(default_name_process.exit_code == 0,
+        "#1436: visual property copy JSON should default target property names from source properties");
+    expect(visual_object_property(form_path, "form-guid", "Left") == "12",
+        "#1436: visual property copy host command should default target property names from sources");
+
+    const auto collision_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "FormControlSource",
+            "--json"
+        },
+        temp_root);
+    expect(collision_process.exit_code == 4,
+        "#1436: visual property copy JSON should reject target collisions by default");
+    expect_contains(collision_process.stdout_text, "\"visualPropertyCopy\": null",
+        "#1436: target-collision visual property copy JSON should not expose a copy object");
+    expect_contains(collision_process.stdout_text, "The target object already has the requested property.",
+        "#1436: target-collision visual property copy JSON should report editor errors");
+    expect(visual_object_property(form_path, "form-guid", "FormControlSource") == "\"customer.name\"",
+        "#1436: failed visual property copy commands should not mutate target properties");
+
+    const auto replace_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "Left",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "FormControlSource",
+            "--replace-existing", "true",
+            "--json"
+        },
+        temp_root);
+    expect(replace_process.exit_code == 0,
+        "#1436: visual property copy JSON should allow explicit replacement");
+    expect(visual_object_property(form_path, "form-guid", "FormControlSource") == "12",
+        "#1436: visual property copy host command should replace target values when requested");
+
+    const auto missing_source_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "MissingProperty",
+            "--target-unique-id", "form-guid",
+            "--target-property-name", "CopiedMissing",
+            "--json"
+        },
+        temp_root);
+    expect(missing_source_process.exit_code == 4,
+        "#1436: visual property copy JSON should reject missing source properties");
+    expect_contains(missing_source_process.stdout_text, "\"visualPropertyCopy\": null",
+        "#1436: missing-source visual property copy JSON should not expose a copy object");
+    expect_contains(missing_source_process.stdout_text, "The source property was not found.",
+        "#1436: missing-source visual property copy JSON should report editor errors");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1436: visual property copy JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualPropertyCopy\": null",
+        "#1436: missing-path visual property copy JSON should not expose a copy object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1436: missing-path visual property copy JSON should report parser errors");
+
+    const auto missing_property_name_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_property_name_process.exit_code == 2,
+        "#1436: visual property copy JSON should reject missing property names");
+    expect_contains(missing_property_name_process.stdout_text, "No property name was provided.",
+        "#1436: missing property-name visual property copy JSON should report parser errors");
+
+    const auto invalid_source_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-record", "-1",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_source_record_process.exit_code == 2,
+        "#1436: visual property copy JSON should reject invalid source record values");
+    expect_contains(invalid_source_record_process.stdout_text,
+        "The --source-record value must be a non-negative integer.",
+        "#1436: invalid-source-record visual property copy JSON should report parser errors");
+
+    const auto invalid_replace_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-unique-id", "existing-textbox-guid",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--replace-existing", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_replace_process.exit_code == 2,
+        "#1436: visual property copy JSON should reject invalid replace-existing values");
+    expect_contains(invalid_replace_process.stdout_text,
+        "The --replace-existing value must be true or false.",
+        "#1436: invalid replace-existing visual property copy JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-copy",
+            "--path", form_path.string(),
+            "--source-object-name", "missingObject",
+            "--property-name", "ControlSource",
+            "--target-unique-id", "form-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1436: visual property copy JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualPropertyCopy\": null",
+        "#1436: unresolved visual property copy JSON should not expose a copy object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1436: unresolved visual property copy JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-property-copy --path <asset>",
+        "#1436: usage text should expose visual property copy commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_property_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -43693,6 +43899,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_property_filter(argv[1]);
     test_studio_host_json_exposes_visual_property_query(argv[1]);
     test_studio_host_json_clears_visual_properties(argv[1]);
+    test_studio_host_json_copies_visual_properties(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
     test_studio_host_json_exposes_visual_method_list(argv[1]);
     test_studio_host_json_exposes_visual_method_query(argv[1]);
