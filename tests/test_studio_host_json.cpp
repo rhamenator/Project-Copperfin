@@ -9008,6 +9008,104 @@ void test_studio_host_json_exposes_selection_toolbox_dispatch_catalog(const std:
     }
 }
 
+void test_studio_host_json_exposes_selection_toolbox_dispatch_execution_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selection_toolbox_dispatch_execution_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1408: selection toolbox dispatch execution catalog JSON should accept admitted visual contexts");
+    expect_contains(visual_process.stdout_text, "\"selectionToolboxDispatchExecutionCatalog\": {",
+        "#1408: selection toolbox dispatch execution catalog JSON should expose catalog objects");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1408: selection toolbox dispatch execution catalog JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1408: visual selection toolbox dispatch execution catalog JSON should resolve form contexts");
+    expect_contains(visual_process.stdout_text, "\"executionReadyCount\": 14",
+        "#1408: admitted visual selection toolbox dispatch execution catalog JSON should expose ready counts");
+    expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
+        "#1408: admitted visual selection toolbox dispatch execution catalog JSON should expose zero errors");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": false",
+        "#1408: admitted visual selection toolbox dispatch execution catalog JSON should not be dry-run");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1408: selection toolbox dispatch execution catalog JSON should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"executionReadyItemIds\": [\"label\", \"textbox\"",
+        "#1408: selection toolbox dispatch execution catalog JSON should summarize execution-ready items");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedItemIds\": []",
+        "#1408: admitted selection toolbox dispatch execution catalog JSON should summarize empty blocked ids");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1408: admitted selection toolbox dispatch execution catalog JSON should summarize empty blocked errors");
+    expect_contains(visual_process.stdout_text, "\"executionAdmitted\": true",
+        "#1408: selection toolbox dispatch execution catalog entries should expose execution admission");
+    expect_contains(visual_process.stdout_text, "\"executionReady\": true",
+        "#1408: selection toolbox dispatch execution catalog entries should expose execution readiness");
+    expect_contains(visual_process.stdout_text, "\"dispatchOk\": true",
+        "#1408: selection toolbox dispatch execution catalog JSON should expose dispatch status");
+    expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [",
+        "#1408: selection toolbox dispatch execution catalog JSON should preserve dispatch arguments");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-dispatch-execution-catalog",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1408: dry-run selection toolbox dispatch execution catalog JSON should report aggregate errors");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1408: dry-run selection toolbox dispatch execution catalog JSON should expose zero ready count");
+    expect_contains(dry_run_process.stdout_text, "\"errorCount\": 14",
+        "#1408: dry-run selection toolbox dispatch execution catalog JSON should expose item error counts");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyItemIds\": []",
+        "#1408: dry-run selection toolbox dispatch execution catalog JSON should summarize empty ready items");
+    expect_contains(dry_run_process.stdout_text, "\"executionBlockedItemIds\": [\"label\", \"textbox\"",
+        "#1408: dry-run selection toolbox dispatch execution catalog JSON should summarize blocked item ids");
+    expect_contains(dry_run_process.stdout_text,
+        "\"executionBlockedErrors\": [\"A toolbox dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1408: dry-run selection toolbox dispatch execution catalog JSON should summarize blocked errors");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchOk\": false",
+        "#1408: dry-run selection toolbox dispatch execution catalog JSON should preserve dispatch rejection");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-dispatch-execution-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1408: selection toolbox dispatch execution catalog JSON should reject missing selections");
+    expect_contains(missing_context_process.stdout_text, "\"selectionToolboxDispatchExecutionCatalog\": null",
+        "#1408: missing selection toolbox dispatch execution catalog JSON should omit catalog objects");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1408: missing selection toolbox dispatch execution catalog JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -39659,6 +39757,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_dispatch_execution_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_dispatch_catalog(argv[1]);
+    test_studio_host_json_exposes_selection_toolbox_dispatch_execution_catalog(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission(argv[1]);
     test_studio_host_json_exposes_designer_dispatch(argv[1]);

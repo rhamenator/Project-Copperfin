@@ -56,6 +56,7 @@ Current local CHM snapshot from the installed VFP help set:
 
 The native runtime/parser currently has first-pass support for these command families:
 
+- E2 designer/tooling selection-toolbox-dispatch-execution-catalog note — Studio host selected-context toolbox dispatch-execution catalog JSON now exposes non-executing toolbox execution-readiness planning with compact ready/blocked item-id summaries and detailed item/readiness metadata.
 - E2 designer/tooling selection-builder-dispatch-execution-catalog note — Studio host selected-context builder dispatch-execution catalog JSON now exposes non-executing builder execution-readiness planning with compact ready/blocked builder-id summaries and detailed launch/admission/dispatch readiness entries.
 - E2 designer/tooling selection-builder-catalog-status-summary note — Studio host selected-context builder launch, invocation-admission, and dispatch catalog JSON now emits compact ready and blocked builder-id summaries with blocked errors beside detailed per-builder selected-context entries.
 - E2 designer/tooling direct-launch-summary note — Studio host direct designer launch-surface JSON now emits compact ready and blocked selected-context summaries with blocked launch errors beside detailed aggregate action, builder, and toolbox launch-surface metadata.

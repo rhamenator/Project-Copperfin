@@ -406,4 +406,76 @@ StudioToolboxDispatchExecutionCatalogResult plan_studio_toolbox_dispatch_executi
     };
 }
 
+StudioSelectionToolboxDispatchExecutionCatalogResult
+plan_studio_toolbox_dispatch_execution_catalog_for_selection(
+    const StudioSelectionToolboxDispatchExecutionCatalogRequest& request) {
+    auto dispatch_catalog = plan_studio_toolbox_dispatch_catalog_for_selection({
+        .selection_context = request.selection_context,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .admit_palette_invocation = request.admit_palette_invocation
+    });
+    if (!dispatch_catalog.ok) {
+        return {
+            .ok = false,
+            .error = dispatch_catalog.error,
+            .selection_context = request.selection_context,
+            .toolbox_context = dispatch_catalog.toolbox_context,
+            .command_token = {},
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id,
+            .item_count = 0U,
+            .items = {},
+            .launch_plan = std::move(dispatch_catalog.launch_plan),
+            .invocation_admission = {},
+            .dispatch = {},
+            .execution_ready_count = 0U,
+            .error_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .entries = {}
+        };
+    }
+
+    const auto execution_error = toolbox_dispatch_execution_readiness_error(
+        dispatch_catalog.dispatch, request.admit_execution);
+    const bool execution_ready = execution_error.empty();
+    std::vector<StudioToolboxDispatchExecutionCatalogEntry> entries;
+    entries.reserve(dispatch_catalog.items.size());
+    for (const auto& item : dispatch_catalog.items) {
+        entries.push_back({
+            .item = item,
+            .execution_admitted = request.admit_execution,
+            .execution_ready = execution_ready,
+            .execution_error = execution_error
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = request.selection_context,
+        .toolbox_context = dispatch_catalog.toolbox_context,
+        .command_token = dispatch_catalog.command_token,
+        .asset_path = request.asset_path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id,
+        .item_count = dispatch_catalog.item_count,
+        .items = std::move(dispatch_catalog.items),
+        .launch_plan = std::move(dispatch_catalog.launch_plan),
+        .invocation_admission = std::move(dispatch_catalog.invocation_admission),
+        .dispatch = std::move(dispatch_catalog.dispatch),
+        .execution_ready_count = execution_ready ? dispatch_catalog.item_count : 0U,
+        .error_count = execution_ready ? 0U : dispatch_catalog.item_count,
+        .dry_run = execution_ready ? dispatch_catalog.dispatch.plan.dry_run : true,
+        .mutates_asset = execution_ready ? dispatch_catalog.dispatch.plan.mutates_asset : false,
+        .entries = std::move(entries)
+    };
+}
+
 }  // namespace copperfin::studio

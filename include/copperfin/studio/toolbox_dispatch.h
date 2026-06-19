@@ -159,6 +159,38 @@ struct StudioToolboxDispatchExecutionCatalogResult {
     std::vector<StudioToolboxDispatchExecutionCatalogEntry> entries;
 };
 
+struct StudioSelectionToolboxDispatchExecutionCatalogRequest {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    bool admit_palette_invocation = false;
+    bool admit_execution = false;
+};
+
+struct StudioSelectionToolboxDispatchExecutionCatalogResult {
+    bool ok = false;
+    std::string error;
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::string command_token;
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::size_t item_count = 0;
+    std::vector<StudioToolboxItemDescriptor> items;
+    StudioToolboxPaletteLaunchPlanResult launch_plan;
+    StudioToolboxInvocationAdmissionResult invocation_admission;
+    StudioToolboxDispatchResult dispatch;
+    std::size_t execution_ready_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioToolboxDispatchExecutionCatalogEntry> entries;
+};
+
 [[nodiscard]] StudioToolboxDispatchResult plan_studio_toolbox_dispatch(
     const StudioToolboxDispatchRequest& request);
 [[nodiscard]] StudioToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog(
@@ -169,5 +201,8 @@ struct StudioToolboxDispatchExecutionCatalogResult {
     const StudioToolboxDispatchExecutionRequest& request);
 [[nodiscard]] StudioToolboxDispatchExecutionCatalogResult plan_studio_toolbox_dispatch_execution_catalog(
     const StudioToolboxDispatchExecutionCatalogRequest& request);
+[[nodiscard]] StudioSelectionToolboxDispatchExecutionCatalogResult
+plan_studio_toolbox_dispatch_execution_catalog_for_selection(
+    const StudioSelectionToolboxDispatchExecutionCatalogRequest& request);
 
 }  // namespace copperfin::studio
