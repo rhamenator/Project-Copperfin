@@ -30,6 +30,7 @@ struct StudioLayoutObjectSnapshot {
     std::string containing_section_id{};
     std::size_t containing_section_record_index = StudioReportMissingRecordIndex;
     int section_relative_top = 0;
+    int section_relative_bottom = 0;
     std::size_t section_object_index = StudioReportMissingRecordIndex;
     std::size_t section_object_count = 0;
     std::string object_kind{};
@@ -57,6 +58,7 @@ struct StudioLayoutObjectSnapshot {
     int height = 0;
     std::size_t height_field_index = StudioReportMissingFieldIndex;
     std::uint32_t height_memo_block_number = 0;
+    int bottom = 0;
     std::vector<StudioNamedValue> highlights{};
 };
 
@@ -83,6 +85,7 @@ struct StudioReportSectionSnapshot {
     int height = 0;
     std::size_t height_field_index = StudioReportMissingFieldIndex;
     std::uint32_t height_memo_block_number = 0;
+    int bottom = 0;
     std::vector<StudioLayoutObjectSnapshot> objects{};
 };
 

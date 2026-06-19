@@ -3685,6 +3685,8 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report layout JSON should expose section object-code field provenance");
     expect_contains(process.stdout_text, "\"topFieldIndex\": 4",
                     "#1452: report layout JSON should expose section top field provenance");
+    expect_contains(process.stdout_text, "\"bottom\": 2000",
+                    "#1461: report layout JSON should expose section bottom-edge coordinates");
     expect_contains(process.stdout_text, "\"objectCount\": 1",
                     "#1452: report layout JSON should summarize section object counts");
     expect_contains(process.stdout_text, "\"objectTypeCode\": 8",
@@ -3697,6 +3699,8 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1458: report layout JSON should expose object containing section record indexes");
     expect_contains(process.stdout_text, "\"sectionRelativeTop\": 600",
                     "#1458: report layout JSON should expose object top coordinates relative to containing sections");
+    expect_contains(process.stdout_text, "\"sectionRelativeBottom\": 1050",
+                    "#1461: report layout JSON should expose object bottom coordinates relative to containing sections");
     expect_contains(process.stdout_text, "\"sectionObjectIndex\": 0",
                     "#1459: report layout JSON should expose object order inside containing sections");
     expect_contains(process.stdout_text, "\"sectionObjectCount\": 1",
@@ -3709,6 +3713,8 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report layout JSON should expose expression memo provenance");
     expect_contains(process.stdout_text, "\"leftFieldIndex\": 3",
                     "#1452: report layout JSON should expose object left field provenance");
+    expect_contains(process.stdout_text, "\"bottom\": 3050",
+                    "#1461: report layout JSON should expose object bottom-edge coordinates");
     expect_contains(process.stdout_text, "\"highlightCount\": 1",
                     "#1452: report layout JSON should summarize object highlights");
     expect_contains(process.stdout_text, "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",
@@ -3772,6 +3778,8 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
                     "#1460: selected report section JSON should expose live section counts");
     expect_contains(section_process.stdout_text, "\"objectCode\": 1",
                     "#1453: selected report section JSON should preserve raw section object codes");
+    expect_contains(section_process.stdout_text, "\"bottom\": 2000",
+                    "#1461: selected report section JSON should expose section bottom-edge coordinates");
     expect_contains(section_process.stdout_text, "\"objectCount\": 1",
                     "#1453: selected report section JSON should preserve selected section object counts");
     expect_contains(section_process.stdout_text, "\"objectKind\": \"label\"",
@@ -3845,6 +3853,8 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1458: selected report object JSON should expose containing section record indexes");
     expect_contains(object_process.stdout_text, "\"sectionRelativeTop\": 600",
                     "#1458: selected report object JSON should expose top coordinates relative to containing sections");
+    expect_contains(object_process.stdout_text, "\"sectionRelativeBottom\": 1050",
+                    "#1461: selected report object JSON should expose bottom coordinates relative to containing sections");
     expect_contains(object_process.stdout_text, "\"sectionObjectIndex\": 0",
                     "#1459: selected report object JSON should expose object order inside containing sections");
     expect_contains(object_process.stdout_text, "\"sectionObjectCount\": 1",
@@ -3853,6 +3863,8 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1454: selected report object JSON should expose report object expressions");
     expect_contains(object_process.stdout_text, "\"expressionFieldIndex\": 2",
                     "#1454: selected report object JSON should expose expression field provenance");
+    expect_contains(object_process.stdout_text, "\"bottom\": 3050",
+                    "#1461: selected report object JSON should expose object bottom-edge coordinates");
     expect_contains(object_process.stdout_text, "\"highlightCount\": 1",
                     "#1454: selected report object JSON should expose highlight counts");
     expect_contains(object_process.stdout_text, "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",

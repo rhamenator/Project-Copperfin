@@ -234,6 +234,7 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     object.height_field_index = field_index_or_missing(record, "HEIGHT");
     object.height_memo_block_number = memo_block_number_or_zero(record, "HEIGHT");
+    object.bottom = object.top + object.height;
 
     if (object.title.empty()) {
         object.title = "Record " + std::to_string(record.record_index);
@@ -355,6 +356,8 @@ StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
     const std::uint32_t objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
+    const int top = parse_scaled_int_or_default(record, "VPOS");
+    const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
         .id = make_section_id(record.record_index, objcode),
         .id_field_index = StudioReportMissingFieldIndex,
@@ -370,12 +373,13 @@ StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
         .objcode_code = objcode,
         .objcode_field_index = objcode_field_index,
         .objcode_memo_block_number = objcode_memo_block_number,
-        .top = parse_scaled_int_or_default(record, "VPOS"),
+        .top = top,
         .top_field_index = field_index_or_missing(record, "VPOS"),
         .top_memo_block_number = memo_block_number_or_zero(record, "VPOS"),
-        .height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT")),
+        .height = height,
         .height_field_index = field_index_or_missing(record, "HEIGHT"),
-        .height_memo_block_number = memo_block_number_or_zero(record, "HEIGHT")
+        .height_memo_block_number = memo_block_number_or_zero(record, "HEIGHT"),
+        .bottom = top + height
     };
 }
 
@@ -446,6 +450,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
             object.containing_section_id = snapshot.sections[section_index].id;
             object.containing_section_record_index = snapshot.sections[section_index].record_index;
             object.section_relative_top = object.top - snapshot.sections[section_index].top;
+            object.section_relative_bottom = object.bottom - snapshot.sections[section_index].top;
             snapshot.sections[section_index].objects.push_back(std::move(object));
         } else {
             snapshot.unplaced_objects.push_back(std::move(object));

@@ -20138,6 +20138,7 @@ void print_json_report_layout_object(
     print_json_report_record_index_or_null(object.containing_section_record_index);
     std::cout << ",\n";
     std::cout << indent << "  \"sectionRelativeTop\": " << object.section_relative_top << ",\n";
+    std::cout << indent << "  \"sectionRelativeBottom\": " << object.section_relative_bottom << ",\n";
     std::cout << indent << "  \"sectionObjectIndex\": ";
     print_json_report_record_index_or_null(object.section_object_index);
     std::cout << ",\n";
@@ -20193,6 +20194,7 @@ void print_json_report_layout_object(
     print_json_report_field_index_or_null(object.height_field_index);
     std::cout << ",\n";
     std::cout << indent << "  \"heightMemoBlockNumber\": " << object.height_memo_block_number << ",\n";
+    std::cout << indent << "  \"bottom\": " << object.bottom << ",\n";
     std::cout << indent << "  \"highlightCount\": " << object.highlights.size() << ",\n";
     std::cout << indent << "  \"highlights\": ";
     print_json_report_named_values(object.highlights, indent + "  ");
@@ -20261,6 +20263,7 @@ void print_json_report_layout_section(
     print_json_report_field_index_or_null(section.height_field_index);
     std::cout << ",\n";
     std::cout << indent << "  \"heightMemoBlockNumber\": " << section.height_memo_block_number << ",\n";
+    std::cout << indent << "  \"bottom\": " << section.bottom << ",\n";
     std::cout << indent << "  \"objectCount\": " << section.objects.size() << ",\n";
     std::cout << indent << "  \"objects\": ";
     print_json_report_layout_objects(section.objects, indent + "  ");

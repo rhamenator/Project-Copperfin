@@ -1,3 +1,4 @@
+- 2026-06-19: E3/#1461 report layout bottom-edge metadata shipped: report/label sections and layout objects now carry explicit bottom-edge coordinates, including section-relative object bottoms, through the core model and Studio host JSON.
 - 2026-06-19: E3/#1460 report section order metadata shipped: `StudioReportSectionSnapshot` and `copperfin_studio_host --json` now expose zero-based section order and live section count for report/label sections.
 - 2026-06-19: E3/#1459 report object section-order metadata shipped: `StudioLayoutObjectSnapshot` and `copperfin_studio_host --json` now expose zero-based object order and containing section object count for section-contained report/label objects.
 - 2026-06-19: E3/#1458 report object containing-section metadata shipped: `StudioLayoutObjectSnapshot` and `copperfin_studio_host --json` now expose containing section id, containing section record index, and section-relative top for section-contained report/label objects.

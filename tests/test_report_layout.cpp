@@ -152,6 +152,8 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[0].section_count == 2U, "#1460: report sections should carry live section counts");
     expect(layout.sections[1].section_index == 1U, "#1460: later report sections should carry sorted order");
     expect(layout.sections[1].section_count == 2U, "#1460: later report sections should carry live section counts");
+    expect(layout.sections[0].bottom == 2000, "#1461: report sections should carry bottom-edge coordinates");
+    expect(layout.sections[1].bottom == 7000, "#1461: later report sections should carry bottom-edge coordinates");
     expect(layout.sections[0].id == "page_header_1", "#729: report section ids should remain synthesized from band and record");
     expect(layout.sections[0].id_field_index == copperfin::studio::StudioReportMissingFieldIndex,
         "#729: synthesized report section ids should use missing DBF field provenance");
@@ -193,6 +195,8 @@ void test_build_report_layout_groups_band_objects() {
         "#1458: section-contained report objects should carry containing section record indexes");
     expect(layout.sections[1].objects[0].section_relative_top == 600,
         "#1458: section-contained report objects should carry top coordinates relative to their band");
+    expect(layout.sections[1].objects[0].section_relative_bottom == 1050,
+        "#1461: section-contained report objects should carry bottom coordinates relative to their band");
     expect(layout.sections[1].objects[0].section_object_index == 0U,
         "#1459: section-contained report objects should carry zero-based order within their section");
     expect(layout.sections[1].objects[0].section_object_count == 1U,
@@ -225,6 +229,7 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.sections[1].objects[0].height_field_index == 6U, "#665: layout objects should preserve HEIGHT field provenance");
     expect(layout.sections[1].objects[0].height_memo_block_number == 306U,
         "#723: layout objects should preserve HEIGHT memo block provenance");
+    expect(layout.sections[1].objects[0].bottom == 3050, "#1461: report layout objects should carry bottom-edge coordinates");
     const auto orientation = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
         return setting.name == "ORIENTATION";
     });
@@ -275,6 +280,8 @@ void test_build_report_layout_groups_band_objects() {
             "#1458: unplaced report objects should expose missing containing section record indexes");
         expect(layout.unplaced_objects[0].section_relative_top == 0,
             "#1458: unplaced report objects should use zero relative section top");
+        expect(layout.unplaced_objects[0].section_relative_bottom == 0,
+            "#1461: unplaced report objects should use zero relative section bottom");
         expect(layout.unplaced_objects[0].section_object_index == copperfin::studio::StudioReportMissingRecordIndex,
             "#1459: unplaced report objects should expose missing section object indexes");
         expect(layout.unplaced_objects[0].section_object_count == 0U,
@@ -283,6 +290,8 @@ void test_build_report_layout_groups_band_objects() {
             "#675: synthesized report layout object title should use the missing-field sentinel");
         expect(layout.unplaced_objects[0].title_memo_block_number == 0U,
             "#716: synthesized report layout object titles should expose memo block zero");
+        expect(layout.unplaced_objects[0].bottom == 8100,
+            "#1461: unplaced report objects should still carry absolute bottom-edge coordinates");
     }
     expect(layout.deleted_objects.size() == 1U, "#689: deleted report layout objects should be preserved separately");
     if (!layout.deleted_objects.empty()) {
@@ -295,6 +304,8 @@ void test_build_report_layout_groups_band_objects() {
             "#1459: deleted report objects should expose missing section object indexes");
         expect(layout.deleted_objects[0].section_object_count == 0U,
             "#1459: deleted report objects should expose zero section object counts");
+        expect(layout.deleted_objects[0].section_relative_bottom == 0,
+            "#1461: deleted report objects should not fabricate relative bottom-edge coordinates");
         expect(layout.deleted_objects[0].title == "\"Deleted label\"", "#689: deleted report layout objects should retain title metadata");
         expect(layout.deleted_objects[0].title_field_index == 1U,
             "#689: deleted report layout objects should retain title provenance");
@@ -314,6 +325,8 @@ void test_build_report_layout_groups_band_objects() {
             "#723: deleted report layout objects should retain WIDTH memo block provenance");
         expect(layout.deleted_objects[0].height_memo_block_number == 606U,
             "#723: deleted report layout objects should retain HEIGHT memo block provenance");
+        expect(layout.deleted_objects[0].bottom == 2900,
+            "#1461: deleted report objects should still carry absolute bottom-edge coordinates");
     }
     expect(layout.deleted_sections.size() == 1U, "#690: deleted report sections should be preserved separately");
     if (!layout.deleted_sections.empty()) {
@@ -335,6 +348,8 @@ void test_build_report_layout_groups_band_objects() {
             "#722: deleted report sections should retain VPOS memo block provenance");
         expect(layout.deleted_sections[0].height_memo_block_number == 83U,
             "#722: deleted report sections should retain HEIGHT memo block provenance");
+        expect(layout.deleted_sections[0].bottom == 9700,
+            "#1461: deleted report sections should still carry bottom-edge coordinates");
     }
     const auto deleted_setting = std::find_if(layout.deleted_settings.begin(), layout.deleted_settings.end(), [](const auto& setting) {
         return setting.name == "DELETEDSETTING";
