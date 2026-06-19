@@ -4446,6 +4446,62 @@ void test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(co
     }
 }
 
+void test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_duplicate_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_reorder_json(report_path);
+    const std::size_t before_count = visual_object_count(report_path);
+
+    const auto duplicate_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--duplicate-object",
+            "--unique-id", "middle-field-guid",
+            "--new-unique-id", "middle-copy-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (duplicate_process.exit_code != 0) {
+        std::cerr << "studio host report object duplicate stdout:\n" << duplicate_process.stdout_text << "\n";
+        std::cerr << "studio host report object duplicate stderr:\n" << duplicate_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(duplicate_process.exit_code == 0,
+           "#1471: report layout object duplicate should exit successfully");
+    expect(visual_object_count(report_path) == before_count + 1U,
+           "#1471: report layout object duplicate should append one FRX object record");
+    expect(visual_object_exists(report_path, "middle-copy-guid"),
+           "#1471: report layout object duplicate should persist replacement unique ids");
+    expect(visual_object_order(report_path) == "left-field-guid,middle-field-guid,right-field-guid,middle-copy-guid",
+           "#1471: report layout object duplicate should append the copied FRX object after existing layout objects");
+    expect_contains_in_order(
+        duplicate_process.stdout_text,
+        {
+            "\"recordIndex\": 5",
+            "\"containingSectionId\": \"detail_1\"",
+            "\"sectionObjectIndex\": 3",
+            "\"sectionObjectCount\": 4",
+            "\"expression\": \"middle.value\""
+        },
+        "#1471: report layout JSON should expose the duplicated object in refreshed section membership");
+    expect_contains(duplicate_process.stdout_text, "\"sectionObjectCount\": 4",
+                    "#1471: duplicated report object JSON should refresh containing section object counts");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -48100,6 +48156,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
