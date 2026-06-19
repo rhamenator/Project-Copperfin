@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1285`, adding toolbox palette invocation admission catalog planning through `plan_studio_toolbox_invocation_admission_catalog`. `#1284` is the immediately preceding aggregate designer dispatch catalog refactor. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1286`, exposing toolbox palette invocation admission catalog planning through `copperfin_studio_host --toolbox-invocation-admission-catalog` JSON. `#1285` is the immediately preceding core toolbox admission catalog slice. Both remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
