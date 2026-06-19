@@ -10953,6 +10953,7 @@ void print_json_designer_execution_result(
     std::size_t editor_action_error_count = 0U;
     std::vector<std::string> failed_editor_action_ids;
     std::vector<std::string> failed_editor_action_command_tokens;
+    std::vector<std::string> failed_editor_action_executed_commands;
     std::vector<std::string> failed_editor_action_errors;
     for (std::size_t index = 0U; index < result.editor_action_executions.size(); ++index) {
         const auto& execution = result.editor_action_executions[index];
@@ -10967,6 +10968,9 @@ void print_json_designer_execution_result(
                     std::string(child_dispatch_plan.editor_action_dispatches[index].plan.action.id));
                 failed_editor_action_command_tokens.push_back(
                     child_dispatch_plan.editor_action_dispatches[index].plan.command_token);
+                failed_editor_action_executed_commands.push_back(build_shell_command(
+                    editor_action_launch_command,
+                    child_dispatch_plan.editor_action_dispatches[index].plan.dispatch_arguments));
             }
             failed_editor_action_errors.push_back(execution.error);
         }
@@ -10975,6 +10979,7 @@ void print_json_designer_execution_result(
     std::size_t builder_error_count = 0U;
     std::vector<std::string> failed_builder_ids;
     std::vector<std::string> failed_builder_command_tokens;
+    std::vector<std::string> failed_builder_executed_commands;
     std::vector<std::string> failed_builder_errors;
     for (std::size_t index = 0U; index < result.builder_executions.size(); ++index) {
         const auto& execution = result.builder_executions[index];
@@ -10989,6 +10994,9 @@ void print_json_designer_execution_result(
                     std::string(child_dispatch_plan.builder_dispatches[index].plan.builder.id));
                 failed_builder_command_tokens.push_back(
                     child_dispatch_plan.builder_dispatches[index].plan.command_token);
+                failed_builder_executed_commands.push_back(build_shell_command(
+                    builder_launch_command,
+                    child_dispatch_plan.builder_dispatches[index].plan.dispatch_arguments));
             }
             failed_builder_errors.push_back(execution.error);
         }
@@ -11000,6 +11008,10 @@ void print_json_designer_execution_result(
     const std::string toolbox_error = toolbox_error_count != 0U ? result.toolbox_execution.error : std::string{};
     const std::string toolbox_command_token =
         child_dispatch_plan.toolbox_dispatch.ok ? child_dispatch_plan.toolbox_dispatch.plan.command_token : std::string{};
+    const std::string toolbox_executed_command =
+        child_dispatch_plan.toolbox_dispatch.ok
+            ? build_shell_command(toolbox_launch_command, child_dispatch_plan.toolbox_dispatch.plan.dispatch_arguments)
+            : std::string{};
 
     std::cout << "{\n";
     std::cout << "    \"ok\": " << (result.error_count == 0U ? "true" : "false") << ",\n";
@@ -11025,6 +11037,9 @@ void print_json_designer_execution_result(
     std::cout << "    \"failedEditorActionCommandTokens\": ";
     print_json_string_array(failed_editor_action_command_tokens);
     std::cout << ",\n";
+    std::cout << "    \"failedEditorActionExecutedCommands\": ";
+    print_json_string_array(failed_editor_action_executed_commands);
+    std::cout << ",\n";
     std::cout << "    \"failedEditorActionErrors\": ";
     print_json_string_array(failed_editor_action_errors);
     std::cout << ",\n";
@@ -11034,12 +11049,18 @@ void print_json_designer_execution_result(
     std::cout << "    \"failedBuilderCommandTokens\": ";
     print_json_string_array(failed_builder_command_tokens);
     std::cout << ",\n";
+    std::cout << "    \"failedBuilderExecutedCommands\": ";
+    print_json_string_array(failed_builder_executed_commands);
+    std::cout << ",\n";
     std::cout << "    \"failedBuilderErrors\": ";
     print_json_string_array(failed_builder_errors);
     std::cout << ",\n";
     std::cout << "    \"toolboxFailed\": " << (toolbox_error_count != 0U ? "true" : "false") << ",\n";
     std::cout << "    \"toolboxCommandToken\": ";
     print_json_string(toolbox_command_token);
+    std::cout << ",\n";
+    std::cout << "    \"toolboxExecutedCommand\": ";
+    print_json_string(toolbox_executed_command);
     std::cout << ",\n";
     std::cout << "    \"toolboxError\": ";
     print_json_string(toolbox_error);
