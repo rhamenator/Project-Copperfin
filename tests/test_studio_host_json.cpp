@@ -6857,6 +6857,18 @@ void test_studio_host_json_exposes_selected_label_settings(const std::string& st
                     "#1496: label settings selections should expose settings selection kind");
     expect_contains(settings_process.stdout_text, "\"selectedReportSettings\": [",
                     "#1496: label root selections should expose selected-settings JSON");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1504: selected label settings should not advertise selected-section availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1504: selected label settings should serialize null selected sections");
+    expect_contains(settings_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#1504: selected label settings should not advertise selected-object availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportObject\": null",
+                    "#1504: selected label settings should serialize null selected objects");
+    expect_contains(settings_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1504: selected label settings should not advertise containing-object-section availability");
+    expect_contains(settings_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1504: selected label settings should serialize null containing-object sections");
     expect_contains(settings_process.stdout_text, "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"0\"",
                     "#1496: selected label settings should expose memo-line setting provenance");
     expect_contains(settings_process.stdout_text, "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"1\"",
