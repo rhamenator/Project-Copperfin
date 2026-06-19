@@ -12313,6 +12313,13 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
         "#1244: toolbox-create-plan-catalog JSON should expose dry-run state");
     expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
         "#1244: toolbox-create-plan-catalog JSON should remain non-mutating");
+    expect_contains(catalog_process.stdout_text,
+        "\"planReadyItemIds\": [\"label\", \"textbox\", \"editbox\", \"commandbutton\"",
+        "#1374: toolbox-create-plan-catalog JSON should summarize plan-ready form items");
+    expect_contains(catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1374: toolbox-create-plan-catalog JSON should summarize empty blocked item ids");
+    expect_contains(catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1374: toolbox-create-plan-catalog JSON should summarize empty blocked plan errors");
     expect(visual_object_count(form_path) == before_count,
         "#1244: toolbox-create-plan-catalog host command should not mutate the visual asset");
 
@@ -12332,6 +12339,12 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
         "#1244: report toolbox-create-plan-catalog JSON should expose report contexts");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1244: report toolbox-create-plan-catalog JSON should include label plans");
+    expect_contains(report_catalog_process.stdout_text, "\"planReadyItemIds\": [\"label\"",
+        "#1374: report toolbox-create-plan-catalog JSON should summarize plan-ready report items");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#1374: report toolbox-create-plan-catalog JSON should summarize empty blocked item ids");
+    expect_contains(report_catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#1374: report toolbox-create-plan-catalog JSON should summarize empty blocked plan errors");
     expect_contains(report_catalog_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1244: report toolbox-create-plan-catalog JSON should expose generated label names");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",

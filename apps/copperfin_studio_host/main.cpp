@@ -7771,6 +7771,18 @@ void print_json_toolbox_create_plan_catalog_result(
         return;
     }
 
+    std::vector<std::string> plan_ready_item_ids;
+    std::vector<std::string> plan_blocked_item_ids;
+    std::vector<std::string> plan_blocked_errors;
+    for (const auto& entry : result.entries) {
+        if (entry.create_plan.ok) {
+            plan_ready_item_ids.push_back(std::string(entry.toolbox_item.id));
+        } else {
+            plan_blocked_item_ids.push_back(std::string(entry.toolbox_item.id));
+            plan_blocked_errors.push_back(entry.create_plan.error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -7782,6 +7794,15 @@ void print_json_toolbox_create_plan_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"planReadyItemIds\": ";
+    print_json_string_array(plan_ready_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedItemIds\": ";
+    print_json_string_array(plan_blocked_item_ids);
+    std::cout << ",\n";
+    std::cout << "    \"planBlockedErrors\": ";
+    print_json_string_array(plan_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"entries\": [\n";
     for (std::size_t index = 0U; index < result.entries.size(); ++index) {
         print_json_toolbox_create_plan_catalog_entry(result.entries[index], "      ");
