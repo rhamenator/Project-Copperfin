@@ -10056,6 +10056,20 @@ void print_json_toolbox_palette_launch_catalog_result(
         return;
     }
 
+    std::vector<std::string> launch_ready_selection_contexts;
+    std::vector<std::string> launch_blocked_selection_contexts;
+    std::vector<std::string> launch_blocked_errors;
+    for (const auto& entry : result.entries) {
+        const std::string selection_context =
+            copperfin::studio::studio_editor_selection_context_name(entry.selection_context);
+        if (entry.launch_plan.ok) {
+            launch_ready_selection_contexts.push_back(selection_context);
+        } else {
+            launch_blocked_selection_contexts.push_back(selection_context);
+            launch_blocked_errors.push_back(entry.error);
+        }
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -10064,6 +10078,15 @@ void print_json_toolbox_palette_launch_catalog_result(
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
     std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
+    std::cout << "    \"launchReadySelectionContexts\": ";
+    print_json_string_array(launch_ready_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedSelectionContexts\": ";
+    print_json_string_array(launch_blocked_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedErrors\": ";
+    print_json_string_array(launch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"entries\": [\n";
     for (std::size_t index = 0U; index < result.entries.size(); ++index) {
         print_json_toolbox_palette_launch_catalog_entry(result.entries[index], "      ");

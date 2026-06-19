@@ -7364,6 +7364,13 @@ void test_studio_host_json_exposes_toolbox_palette_launch_catalog(const std::str
         "#1317: toolbox palette launch catalog JSON should remain dry-run");
     expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
         "#1317: toolbox palette launch catalog JSON should remain non-mutating");
+    expect_contains(catalog_process.stdout_text, "\"launchReadySelectionContexts\": [\"visual_object\"",
+        "#1368: toolbox palette launch catalog JSON should summarize launch-ready contexts");
+    expect_contains(catalog_process.stdout_text, "\"launchBlockedSelectionContexts\": [\"menu_item\"",
+        "#1368: toolbox palette launch catalog JSON should summarize launch-blocked contexts");
+    expect_contains(catalog_process.stdout_text,
+        "\"launchBlockedErrors\": [\"The selected Studio context does not expose a toolbox palette.\"",
+        "#1368: toolbox palette launch catalog JSON should summarize launch-blocked errors");
     expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
         "#1317: toolbox palette launch catalog JSON should include visual-object entries");
     expect_contains(catalog_process.stdout_text, "\"toolboxContext\": \"form\"",
