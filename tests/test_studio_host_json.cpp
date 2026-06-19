@@ -5453,6 +5453,80 @@ void test_studio_host_json_deletes_report_sections_by_record_selection(const std
     }
 }
 
+void test_studio_host_json_deletes_label_sections_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_section_delete_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_reorder_json(label_path);
+
+    const auto delete_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--delete-object",
+            "--record", "1",
+            "--json"
+        },
+        temp_root);
+
+    if (delete_process.exit_code != 0) {
+        std::cerr << "studio host label section delete stdout:\n" << delete_process.stdout_text << "\n";
+        std::cerr << "studio host label section delete stderr:\n" << delete_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(delete_process.exit_code == 0,
+           "#1492: label section delete should exit successfully");
+    expect(dbf_record_deleted(label_path, 1U),
+           "#1492: label section delete should mark the LBX section record deleted");
+    expect_contains(delete_process.stdout_text, "\"isLabel\": true",
+                    "#1492: deleted label section JSON should retain label identity");
+    expect_contains(delete_process.stdout_text, "\"sectionCount\": 0",
+                    "#1492: deleted label section JSON should remove the section from live section counts");
+    expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
+                    "#1492: deleted label section JSON should expose deleted section counts");
+    expect_contains_in_order(
+        delete_process.stdout_text,
+        {
+            "\"deletedSections\": [",
+            "\"recordIndex\": 1",
+            "\"deleted\": true",
+            "\"sectionIndex\": null",
+            "\"sectionCount\": 0",
+            "\"bandKind\": \"detail\""
+        },
+        "#1492: label layout JSON should move the section into deleted-section metadata");
+    expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1492: deleted label section selections should advertise selected-section availability");
+    expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#1492: deleted label section selections should expose section selection kind");
+    expect_contains_in_order(
+        delete_process.stdout_text,
+        {
+            "\"selectedReportSection\": {",
+            "\"bandKind\": \"detail\"",
+            "\"recordIndex\": 1",
+            "\"deleted\": true",
+            "\"sectionIndex\": null",
+            "\"sectionCount\": 0"
+        },
+        "#1492: deleted label section selections should expose deleted selected-section metadata");
+    expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 3",
+                    "#1492: deleting the only live label section should leave former section objects unplaced");
+    expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"\"",
+                    "#1492: former label section objects should not fabricate containing-section ids");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_restores_report_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -49339,6 +49413,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
+    test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
