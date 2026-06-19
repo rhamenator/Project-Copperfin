@@ -13,20 +13,20 @@ It is intentionally narrower than the top-level roadmap:
 This is the only actionable queue in this file as of 2026-06-17. If another section in this document appears to name a different next issue, that section is historical unless GitHub shows a reopened, active issue with fresh regression evidence.
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
-- The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 has no known remaining local implementation miss after the visual-asset host-exposure scan; closure is still subject to explicit issue-closure approval.
-- Latest implemented E3 slice: `#1516`, which exposes non-mutating report/label layout preview-bounds JSON and live object counts for `.frx` and `.lbx` designer surfaces. `#1515` is the immediately preceding selected deleted report settings no-section/object JSON parity slice. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
+- The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 remains open with many prompt-sized children still open in GitHub; treat them as evidence-audit/closure cleanup unless fresh implementation evidence shows a real remaining local miss.
+- Latest implemented and closed E3 slice: `#1516`, which exposes non-mutating report/label layout preview-bounds JSON and live object counts for `.frx` and `.lbx` designer surfaces. `#1515` is the immediately preceding selected deleted report settings no-section/object JSON parity slice. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
 - Current continuation shape: continue prompt-sized E3/#24 children in report/label designer fidelity, report/label section editing, report/label output preview metadata, and layout/runtime parity seams, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
-- Next work: continue prompt-sized `#24` children in report/label designer fidelity. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` covers duplicate batches, `#1449` covers rename batches, `#1450` covers reorder batches, and `#1451` covers subtree duplication; the current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
-- Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
+- Next work: create the next prompt-sized `#24` child in report/label designer fidelity before coding, unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` covers duplicate batches, `#1449` covers rename batches, `#1450` covers reorder batches, and `#1451` covers subtree duplication; the current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
+- Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Issue Tree Status" table.
 - If any older handoff, prompt, transfer note, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, `#94`, or `#154`-`#203` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
-- Do not continue work by counting forward through any historical numbered issue list in this file; use the live GitHub issue tree and the "Current Active Queue" table instead.
+- Do not continue work by counting forward through any historical numbered issue list in this file; use the live GitHub issue tree and the "Current Issue Tree Status" table instead.
 
 ## Reading Notes
 
 - The Phase A percentages and dependency rows below are historical planning estimates. Do not use them as current completion metrics.
 - The dependency edges are pragmatic engineering dependencies, not strict architectural laws. They explain why the Phase A runtime/storage order was chosen.
 - The CPM section is historical closure evidence. It is not the current execution gate.
-- Current execution guidance is summarized in "Current Agent Directive" and mirrored in the "Current Active Queue" table under "Issue Hierarchy"; create or pick a prompt-sized child there before writing code.
+- Current execution guidance is summarized in "Current Agent Directive" and mirrored in the "Current Issue Tree Status" table under "Issue Hierarchy"; create or pick a prompt-sized child there before writing code.
 
 ## Historical Phase A Areas
 
@@ -351,13 +351,13 @@ Historical-closed lane structure under `#8`:
 | `#8` | `#100` Finish field-transfer and macro-target data movement parity | G12 / WP9 |
 | `#8` | `#101` Finish headless interaction macro/eval fidelity | G14 / WP12 |
 
-## Current Active Queue
+## Current Issue Tree Status
 
-Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This table supersedes the historical dependency graph, historical critical path, and numbered closure list in this file.
+Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure. This table supersedes the historical dependency graph, historical critical path, and numbered closure list in this file. If a parent has no open child rows, create the next native child before coding under that parent.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#24` | `#1516` implemented; validation/closure pending | Studio host JSON now exposes non-mutating report/label layout preview bounds and live object counts for `.frx` and `.lbx` designer surfaces |
+| `#24` | `#1516` closed | Studio host JSON now exposes non-mutating report/label layout preview bounds and live object counts for `.frx` and `.lbx` designer surfaces |
 | `#24` | `#1515` closed | Studio host regression coverage now proves selected deleted `.frx` report settings rows preserve deleted-settings selection while explicitly clearing selected-section, selected-object, and containing-object-section JSON surfaces |
 | `#24` | `#1514` closed | Studio host regression coverage now proves selected live `.frx` report settings rows preserve settings selection while explicitly clearing selected-section, selected-object, and containing-object-section JSON surfaces |
 | `#24` | `#1513` closed | Studio host regression coverage now proves selected deleted `.frx` report section rows preserve deleted-section selection while explicitly clearing selected-object, containing-object-section, and selected-settings JSON surfaces |
@@ -422,52 +422,52 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 | `#24` | `#1454` closed | Studio host JSON now exposes the selected report/label layout object for selected object records and returns false/null for non-object selections |
 | `#24` | `#1453` closed | Studio host JSON now exposes the selected report/label section for selected band records and returns false/null for non-section selections |
 | `#24` | `#1452` closed | Studio host JSON now exposes report/label layout provenance, live/deleted counts, deleted collections, section/object raw codes, field ordinals, memo blocks, and memo-line indexes |
-| `#23` | `#1451` implemented; closure pending approval | Studio host JSON now exposes visual-object subtree duplication with copied-root metadata and replacement-map failure coverage |
-| `#23` | `#1450` implemented; closure pending approval | Studio host JSON now exposes visual-object reorder-batch mutations with in-memory rollback/no-write failure handling and committed mutation metadata |
-| `#23` | `#1449` implemented; closure pending approval | Studio host JSON now exposes visual-object rename-batch mutations with rollback and committed mutation metadata |
-| `#23` | `#1448` implemented; closure pending approval | Studio host JSON now exposes visual-object duplicate-batch mutations with rollback and committed mutation metadata |
-| `#23` | `#1447` implemented; closure pending approval | Studio host JSON now exposes multi-object property update-batch mutations with nested rollback and undo metadata |
-| `#23` | `#1446` implemented; closure pending approval | Studio host JSON now exposes selected-object property update-batch mutations with rollback and undo metadata |
-| `#23` | `#1445` implemented; closure pending approval | Studio host JSON now exposes visual-object reparent-batch mutations with rollback, undo metadata, and cycle rejection |
-| `#23` | `#1444` implemented; closure pending approval | Studio host JSON now exposes selected-object property reorder-batch mutations with rollback and undo metadata |
-| `#23` | `#1443` implemented; closure pending approval | Studio host JSON now exposes selected-object property reorder mutations with undo metadata |
-| `#23` | `#1442` implemented; closure pending approval | Studio host JSON now exposes selected-object property rename-batch mutations with rollback and undo metadata |
-| `#23` | `#1441` implemented; closure pending approval | Studio host JSON now exposes selected-object property rename mutations with undo metadata |
-| `#23` | `#1440` implemented; closure pending approval | Studio host JSON now exposes selected-object property move-batch mutations with rollback and undo metadata |
-| `#23` | `#1439` implemented; closure pending approval | Studio host JSON now exposes selected-object property move mutations with undo metadata |
-| `#23` | `#1438` implemented; closure pending approval | Studio host JSON now exposes selected-object property copy-batch mutations with rollback and undo metadata |
-| `#23` | `#1437` implemented; closure pending approval | Studio host JSON now exposes selected-object property clear-batch mutations with rollback and undo metadata |
-| `#23` | `#1436` implemented; closure pending approval | Studio host JSON now exposes selected-object property copy mutations with undo metadata |
-| `#23` | `#1435` implemented; closure pending approval | Studio host JSON now exposes selected-object property clear mutations with undo metadata |
-| `#23` | `#1434` implemented; closure pending approval | Studio host JSON now exposes selected-object method reorder-batch mutations with rollback and undo metadata |
-| `#23` | `#1433` implemented; closure pending approval | Studio host JSON now exposes selected-object method move-batch mutations with rollback and undo metadata |
-| `#23` | `#1432` implemented; closure pending approval | Studio host JSON now exposes selected-object method copy-batch mutations with rollback and undo metadata |
-| `#23` | `#1431` implemented; closure pending approval | Studio host JSON now exposes selected-object method rename-batch mutations with rollback and undo metadata |
-| `#23` | `#1430` implemented; closure pending approval | Studio host JSON now exposes selected-object method delete-batch mutations with rollback and undo metadata |
-| `#23` | `#1429` implemented; closure pending approval | Studio host JSON now exposes selected-object method reorder mutations with undo metadata |
-| `#23` | `#1428` implemented; closure pending approval | Studio host JSON now exposes selected-object method move mutations with undo metadata |
-| `#23` | `#1427` implemented; closure pending approval | Studio host JSON now exposes selected-object method copy mutations with undo metadata |
-| `#23` | `#1426` implemented; closure pending approval | Studio host JSON now exposes selected-object method rename mutations with undo metadata |
-| `#23` | `#1425` implemented; closure pending approval | Studio host JSON now exposes selected-object method deletion mutations with undo metadata |
-| `#23` | `#1424` implemented; closure pending approval | Studio host JSON now exposes selected-object method update/append mutations with undo metadata |
-| `#23` | `#1423` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object method point queries with absent-method success |
-| `#23` | `#1422` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object method listings with source-line and memo metadata |
-| `#23` | `#1421` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object ancestor listings with depth and outline snapshot metadata |
-| `#23` | `#1420` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object descendant listings with traversal depth and outline snapshot metadata |
-| `#23` | `#1419` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object immediate-child listings with outline snapshot metadata |
-| `#23` | `#1418` implemented; closure pending approval | Studio host JSON now exposes non-mutating visual object outline listings with hierarchy, identity, class, caption, and count metadata |
-| `#23` | `#1417` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object visual property lists with direct and memo-backed property metadata |
-| `#23` | `#1416` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object visual property point reads for direct and memo-backed properties |
-| `#23` | `#1415` implemented; closure pending approval | Studio host JSON now exposes non-mutating selected-object visual property-grid search over direct and memo-backed properties |
-| `#23` | `#1414` implemented; closure pending approval | Studio host JSON now exposes non-mutating toolbox palette context/category/search queries over toolbox descriptors |
-| `#23` | `#1413` implemented; closure pending approval | menu-item selections now expose a dedicated non-mutating menu command editor action through editor/designer surfaces |
-| `#23` | `#1412` implemented; closure pending approval | visual property-grid data now supports non-mutating selected-object search over property names, values, and backing metadata |
-| `#23` | `#1411` implemented; closure pending approval | toolbox palette model now supports non-mutating context/category/search queries over toolbox descriptors |
-| `#23` | `#1410` implemented; closure pending approval | data-environment selections now expose the shared property-grid editor action beside existing data-environment editor/builder actions |
-| `#23` | `#1409` implemented; closure pending approval | Studio host usage now advertises selected-context builder/toolbox dispatch-execution catalog commands with focused usage coverage |
-| `#23` | `#1408` implemented; closure pending approval | selected-context toolbox dispatch-execution catalog JSON now reports non-executing execution readiness with compact ready/blocked item summaries |
-| `#23` | `#1407` implemented; closure pending approval | selected-context builder dispatch-execution catalog JSON now reports non-executing execution readiness with compact ready/blocked builder summaries |
-| `#23` | `#1406` implemented; closure pending approval | selected-context builder launch/admission/dispatch catalog JSON now has compact ready/blocked builder-id and error summaries beside detailed entries |
+| `#23` | `#1451` open; evidence audit pending | Studio host JSON now exposes visual-object subtree duplication with copied-root metadata and replacement-map failure coverage |
+| `#23` | `#1450` open; evidence audit pending | Studio host JSON now exposes visual-object reorder-batch mutations with in-memory rollback/no-write failure handling and committed mutation metadata |
+| `#23` | `#1449` open; evidence audit pending | Studio host JSON now exposes visual-object rename-batch mutations with rollback and committed mutation metadata |
+| `#23` | `#1448` open; evidence audit pending | Studio host JSON now exposes visual-object duplicate-batch mutations with rollback and committed mutation metadata |
+| `#23` | `#1447` open; evidence audit pending | Studio host JSON now exposes multi-object property update-batch mutations with nested rollback and undo metadata |
+| `#23` | `#1446` open; evidence audit pending | Studio host JSON now exposes selected-object property update-batch mutations with rollback and undo metadata |
+| `#23` | `#1445` open; evidence audit pending | Studio host JSON now exposes visual-object reparent-batch mutations with rollback, undo metadata, and cycle rejection |
+| `#23` | `#1444` open; evidence audit pending | Studio host JSON now exposes selected-object property reorder-batch mutations with rollback and undo metadata |
+| `#23` | `#1443` open; evidence audit pending | Studio host JSON now exposes selected-object property reorder mutations with undo metadata |
+| `#23` | `#1442` open; evidence audit pending | Studio host JSON now exposes selected-object property rename-batch mutations with rollback and undo metadata |
+| `#23` | `#1441` open; evidence audit pending | Studio host JSON now exposes selected-object property rename mutations with undo metadata |
+| `#23` | `#1440` open; evidence audit pending | Studio host JSON now exposes selected-object property move-batch mutations with rollback and undo metadata |
+| `#23` | `#1439` open; evidence audit pending | Studio host JSON now exposes selected-object property move mutations with undo metadata |
+| `#23` | `#1438` open; evidence audit pending | Studio host JSON now exposes selected-object property copy-batch mutations with rollback and undo metadata |
+| `#23` | `#1437` open; evidence audit pending | Studio host JSON now exposes selected-object property clear-batch mutations with rollback and undo metadata |
+| `#23` | `#1436` open; evidence audit pending | Studio host JSON now exposes selected-object property copy mutations with undo metadata |
+| `#23` | `#1435` open; evidence audit pending | Studio host JSON now exposes selected-object property clear mutations with undo metadata |
+| `#23` | `#1434` open; evidence audit pending | Studio host JSON now exposes selected-object method reorder-batch mutations with rollback and undo metadata |
+| `#23` | `#1433` open; evidence audit pending | Studio host JSON now exposes selected-object method move-batch mutations with rollback and undo metadata |
+| `#23` | `#1432` open; evidence audit pending | Studio host JSON now exposes selected-object method copy-batch mutations with rollback and undo metadata |
+| `#23` | `#1431` open; evidence audit pending | Studio host JSON now exposes selected-object method rename-batch mutations with rollback and undo metadata |
+| `#23` | `#1430` open; evidence audit pending | Studio host JSON now exposes selected-object method delete-batch mutations with rollback and undo metadata |
+| `#23` | `#1429` open; evidence audit pending | Studio host JSON now exposes selected-object method reorder mutations with undo metadata |
+| `#23` | `#1428` open; evidence audit pending | Studio host JSON now exposes selected-object method move mutations with undo metadata |
+| `#23` | `#1427` open; evidence audit pending | Studio host JSON now exposes selected-object method copy mutations with undo metadata |
+| `#23` | `#1426` open; evidence audit pending | Studio host JSON now exposes selected-object method rename mutations with undo metadata |
+| `#23` | `#1425` open; evidence audit pending | Studio host JSON now exposes selected-object method deletion mutations with undo metadata |
+| `#23` | `#1424` open; evidence audit pending | Studio host JSON now exposes selected-object method update/append mutations with undo metadata |
+| `#23` | `#1423` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object method point queries with absent-method success |
+| `#23` | `#1422` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object method listings with source-line and memo metadata |
+| `#23` | `#1421` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object ancestor listings with depth and outline snapshot metadata |
+| `#23` | `#1420` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object descendant listings with traversal depth and outline snapshot metadata |
+| `#23` | `#1419` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object immediate-child listings with outline snapshot metadata |
+| `#23` | `#1418` open; evidence audit pending | Studio host JSON now exposes non-mutating visual object outline listings with hierarchy, identity, class, caption, and count metadata |
+| `#23` | `#1417` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property lists with direct and memo-backed property metadata |
+| `#23` | `#1416` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property point reads for direct and memo-backed properties |
+| `#23` | `#1415` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property-grid search over direct and memo-backed properties |
+| `#23` | `#1414` open; evidence audit pending | Studio host JSON now exposes non-mutating toolbox palette context/category/search queries over toolbox descriptors |
+| `#23` | `#1413` open; evidence audit pending | menu-item selections now expose a dedicated non-mutating menu command editor action through editor/designer surfaces |
+| `#23` | `#1412` open; evidence audit pending | visual property-grid data now supports non-mutating selected-object search over property names, values, and backing metadata |
+| `#23` | `#1411` open; evidence audit pending | toolbox palette model now supports non-mutating context/category/search queries over toolbox descriptors |
+| `#23` | `#1410` open; evidence audit pending | data-environment selections now expose the shared property-grid editor action beside existing data-environment editor/builder actions |
+| `#23` | `#1409` open; evidence audit pending | Studio host usage now advertises selected-context builder/toolbox dispatch-execution catalog commands with focused usage coverage |
+| `#23` | `#1408` open; evidence audit pending | selected-context toolbox dispatch-execution catalog JSON now reports non-executing execution readiness with compact ready/blocked item summaries |
+| `#23` | `#1407` open; evidence audit pending | selected-context builder dispatch-execution catalog JSON now reports non-executing execution readiness with compact ready/blocked builder summaries |
+| `#23` | `#1406` open; evidence audit pending | selected-context builder launch/admission/dispatch catalog JSON now has compact ready/blocked builder-id and error summaries beside detailed entries |
 | `#23` | create/pick next prompt-sized E2 child | continue designer interactions, builder/wizard invocation, toolbox flows, and context-aware editor seams with stable non-mutating planning/admission/dispatch surfaces first, host exposure where useful, and focused tests/docs per slice; do not divert back to the closed Phase A safety gate, `#92`-`#101`, `#22`, or `#154`-`#203` without reopened regression evidence |
 
 Decision rule for agents:
@@ -993,6 +993,6 @@ Use this document together with:
 
 Operationally:
 
-- pick or create one prompt-sized child from the Current Active Queue unless the live issue tracker shows a higher-weight blocker
+- pick or create one prompt-sized child from the Current Issue Tree Status unless the live issue tracker shows a higher-weight blocker
 - do not treat the closed Phase A/A3/A4 notes as active runtime queues without fresh issue evidence
 - treat G16 corpus expansion as a repeated enabling activity, not a one-time task

@@ -70,7 +70,9 @@ Goal:
 
 Current state:
 
-- active-open queues remain under `#22`-`#29` (`#168`-`#183`)
+- `#22` is closed; `#23` and `#24` remain open as designer lane parents.
+- `#24` currently has no open prompt-sized children after `#1452`-`#1516` closed; create the next native child before more E3 implementation work.
+- `#27`-`#29` currently have no active-open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
 
 ## Phase F: Federation, Interop, And Modern Platform
 
@@ -80,7 +82,7 @@ Goal:
 
 Current state:
 
-- active-open queues under `#30`-`#32`, `#57`, `#91` (`#184`-`#189`, `#201`-`#203`)
+- active-open native slice queues under `#30`-`#32`, `#57`, and `#91` are currently listed as exhausted in `remaining-work.md` after `#200`-`#203` shipped; re-audit the parent issues before opening new federation/interop children.
 
 ## Phase G: Security And Policy
 
