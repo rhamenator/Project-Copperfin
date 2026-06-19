@@ -33,6 +33,20 @@ std::optional<StudioToolboxContext> toolbox_context_for_selection_context(
     return std::nullopt;
 }
 
+std::vector<StudioEditorSelectionContext> all_toolbox_palette_selection_contexts() {
+    return {
+        StudioEditorSelectionContext::visual_object,
+        StudioEditorSelectionContext::visual_method,
+        StudioEditorSelectionContext::container_object,
+        StudioEditorSelectionContext::class_designer,
+        StudioEditorSelectionContext::report_expression,
+        StudioEditorSelectionContext::label_expression,
+        StudioEditorSelectionContext::menu_item,
+        StudioEditorSelectionContext::project_item,
+        StudioEditorSelectionContext::data_environment
+    };
+}
+
 }  // namespace
 
 const char* studio_toolbox_context_name(StudioToolboxContext context) {
@@ -254,6 +268,54 @@ StudioToolboxPaletteLaunchPlanResult plan_studio_toolbox_palette_launch(
             .item_count = item_count,
             .items = std::move(items)
         }
+    };
+}
+
+StudioToolboxPaletteLaunchCatalogResult plan_studio_toolbox_palette_launch_catalog(
+    const StudioToolboxPaletteLaunchCatalogRequest& request) {
+    const auto contexts = all_toolbox_palette_selection_contexts();
+    std::vector<StudioToolboxPaletteLaunchCatalogEntry> entries;
+    entries.reserve(contexts.size());
+
+    std::size_t launch_plan_count = 0U;
+    std::size_t error_count = 0U;
+
+    for (const auto context : contexts) {
+        auto launch_plan = plan_studio_toolbox_palette_launch({
+            .selection_context = context,
+            .asset_path = request.asset_path,
+            .record_index = request.record_index,
+            .object_name = request.object_name,
+            .unique_id = request.unique_id
+        });
+
+        if (launch_plan.ok) {
+            ++launch_plan_count;
+        } else {
+            ++error_count;
+        }
+
+        const bool toolbox_available = launch_plan.ok;
+        const std::size_t item_count = toolbox_available ? launch_plan.plan.item_count : 0U;
+        const std::string error = launch_plan.error;
+        entries.push_back({
+            .selection_context = context,
+            .toolbox_available = toolbox_available,
+            .item_count = item_count,
+            .error = error,
+            .launch_plan = std::move(launch_plan)
+        });
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .context_count = contexts.size(),
+        .launch_plan_count = launch_plan_count,
+        .error_count = error_count,
+        .dry_run = true,
+        .mutates_asset = false,
+        .entries = std::move(entries)
     };
 }
 

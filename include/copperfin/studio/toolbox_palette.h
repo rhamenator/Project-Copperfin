@@ -53,10 +53,38 @@ struct StudioToolboxPaletteLaunchPlanResult {
     StudioToolboxPaletteLaunchPlan plan;
 };
 
+struct StudioToolboxPaletteLaunchCatalogRequest {
+    std::string asset_path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+};
+
+struct StudioToolboxPaletteLaunchCatalogEntry {
+    StudioEditorSelectionContext selection_context = StudioEditorSelectionContext::visual_object;
+    bool toolbox_available = false;
+    std::size_t item_count = 0;
+    std::string error;
+    StudioToolboxPaletteLaunchPlanResult launch_plan;
+};
+
+struct StudioToolboxPaletteLaunchCatalogResult {
+    bool ok = false;
+    std::string error;
+    std::size_t context_count = 0;
+    std::size_t launch_plan_count = 0;
+    std::size_t error_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioToolboxPaletteLaunchCatalogEntry> entries;
+};
+
 [[nodiscard]] const char* studio_toolbox_context_name(StudioToolboxContext context);
 [[nodiscard]] const std::vector<StudioToolboxItemDescriptor>& studio_toolbox_palette();
 [[nodiscard]] std::vector<StudioToolboxItemDescriptor> studio_toolbox_items_for_context(StudioToolboxContext context);
 [[nodiscard]] StudioToolboxPaletteLaunchPlanResult plan_studio_toolbox_palette_launch(
     const StudioToolboxPaletteLaunchRequest& request);
+[[nodiscard]] StudioToolboxPaletteLaunchCatalogResult plan_studio_toolbox_palette_launch_catalog(
+    const StudioToolboxPaletteLaunchCatalogRequest& request);
 
 }  // namespace copperfin::studio

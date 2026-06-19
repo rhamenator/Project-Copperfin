@@ -28,6 +28,17 @@ bool has_toolbox_item(
     return false;
 }
 
+const copperfin::studio::StudioToolboxPaletteLaunchCatalogEntry* find_launch_catalog_entry(
+    const std::vector<copperfin::studio::StudioToolboxPaletteLaunchCatalogEntry>& entries,
+    copperfin::studio::StudioEditorSelectionContext context) {
+    for (const auto& entry : entries) {
+        if (entry.selection_context == context) {
+            return &entry;
+        }
+    }
+    return nullptr;
+}
+
 bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
     for (std::size_t index = 0U; (index + 1U) < arguments.size(); index += 2U) {
         if (arguments[index] == key && arguments[index + 1U] == value) {
@@ -209,6 +220,74 @@ int main() {
     });
     expect(!data_plan.ok,
         "#1209: data-environment selection contexts should reject toolbox palette launch planning");
+
+    const auto launch_catalog = copperfin::studio::plan_studio_toolbox_palette_launch_catalog({
+        .asset_path = "forms/customer.scx",
+        .record_index = 4U,
+        .object_name = "cmdSave",
+        .unique_id = "button-guid"
+    });
+    const auto* catalog_visual = find_launch_catalog_entry(
+        launch_catalog.entries, StudioEditorSelectionContext::visual_object);
+    const auto* catalog_container = find_launch_catalog_entry(
+        launch_catalog.entries, StudioEditorSelectionContext::container_object);
+    const auto* catalog_report = find_launch_catalog_entry(
+        launch_catalog.entries, StudioEditorSelectionContext::report_expression);
+    const auto* catalog_menu = find_launch_catalog_entry(
+        launch_catalog.entries, StudioEditorSelectionContext::menu_item);
+    const auto* catalog_project = find_launch_catalog_entry(
+        launch_catalog.entries, StudioEditorSelectionContext::project_item);
+    const auto* catalog_data = find_launch_catalog_entry(
+        launch_catalog.entries, StudioEditorSelectionContext::data_environment);
+    expect(launch_catalog.ok &&
+            launch_catalog.context_count == 9U &&
+            launch_catalog.entries.size() == launch_catalog.context_count &&
+            launch_catalog.launch_plan_count == 6U &&
+            launch_catalog.error_count == 3U &&
+            launch_catalog.dry_run &&
+            !launch_catalog.mutates_asset,
+        "#1316: toolbox palette launch catalogs should summarize every known selection context");
+    expect(catalog_visual != nullptr &&
+            catalog_visual->toolbox_available &&
+            catalog_visual->item_count == catalog_visual->launch_plan.plan.item_count &&
+            catalog_visual->launch_plan.ok &&
+            catalog_visual->launch_plan.plan.selection_context == StudioEditorSelectionContext::visual_object &&
+            catalog_visual->launch_plan.plan.toolbox_context == StudioToolboxContext::form &&
+            catalog_visual->launch_plan.plan.asset_path == "forms/customer.scx" &&
+            catalog_visual->launch_plan.plan.record_index == 4U &&
+            catalog_visual->launch_plan.plan.object_name == "cmdSave" &&
+            catalog_visual->launch_plan.plan.unique_id == "button-guid" &&
+            has_toolbox_item(catalog_visual->launch_plan.plan.items, "textbox"),
+        "#1316: visual-object toolbox palette launch catalog entries should preserve form metadata");
+    expect(catalog_container != nullptr &&
+            catalog_container->toolbox_available &&
+            catalog_container->launch_plan.ok &&
+            catalog_container->launch_plan.plan.toolbox_context == StudioToolboxContext::container &&
+            has_toolbox_item(catalog_container->launch_plan.plan.items, "grid"),
+        "#1316: container toolbox palette launch catalog entries should preserve container filtering");
+    expect(catalog_report != nullptr &&
+            catalog_report->toolbox_available &&
+            catalog_report->launch_plan.ok &&
+            catalog_report->launch_plan.plan.toolbox_context == StudioToolboxContext::report &&
+            has_toolbox_item(catalog_report->launch_plan.plan.items, "label") &&
+            !has_toolbox_item(catalog_report->launch_plan.plan.items, "textbox"),
+        "#1316: report toolbox palette launch catalog entries should preserve report filtering");
+    expect(catalog_menu != nullptr &&
+            catalog_project != nullptr &&
+            catalog_data != nullptr &&
+            !catalog_menu->toolbox_available &&
+            !catalog_project->toolbox_available &&
+            !catalog_data->toolbox_available &&
+            catalog_menu->item_count == 0U &&
+            catalog_project->item_count == 0U &&
+            catalog_data->item_count == 0U &&
+            !catalog_menu->launch_plan.ok &&
+            !catalog_project->launch_plan.ok &&
+            !catalog_data->launch_plan.ok &&
+            catalog_menu->error == "The selected Studio context does not expose a toolbox palette." &&
+            catalog_project->error == "The selected Studio context does not expose a toolbox palette." &&
+            catalog_data->error == "The selected Studio context does not expose a toolbox palette.",
+        "#1316: unsupported toolbox palette launch catalog entries should report deterministic errors");
 
     const auto admitted_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
         .launch_plan = visual_plan.plan,
