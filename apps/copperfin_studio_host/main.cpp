@@ -10997,6 +10997,13 @@ void print_json_designer_execution_result(
             print_json_string("");
         }
         std::cout << ",\n";
+        std::cout << "        \"dispatchArguments\": ";
+        if (plan != nullptr) {
+            print_json_string_array(plan->dispatch_arguments);
+        } else {
+            std::cout << "[]";
+        }
+        std::cout << ",\n";
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
         std::cout << ",\n";
@@ -11045,6 +11052,13 @@ void print_json_designer_execution_result(
             print_json_string("");
         }
         std::cout << ",\n";
+        std::cout << "        \"dispatchArguments\": ";
+        if (plan != nullptr) {
+            print_json_string_array(plan->dispatch_arguments);
+        } else {
+            std::cout << "[]";
+        }
+        std::cout << ",\n";
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
         std::cout << ",\n";
@@ -11090,6 +11104,13 @@ void print_json_designer_execution_result(
                       ? result.dispatch_plan.toolbox_dispatch.plan.item_count
                       : 0U)
               << ",\n";
+    std::cout << "      \"dispatchArguments\": ";
+    if (result.dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string_array(result.dispatch_plan.toolbox_dispatch.plan.dispatch_arguments);
+    } else {
+        std::cout << "[]";
+    }
+    std::cout << ",\n";
     std::cout << "      \"executedCommand\": ";
     if (result.dispatch_plan.toolbox_dispatch.ok) {
         print_json_string(build_shell_command(

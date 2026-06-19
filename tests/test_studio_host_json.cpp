@@ -9102,6 +9102,8 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1337: designer execution JSON should expose editor child action identities");
     expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
         "#1337: designer execution JSON should expose editor child command tokens");
+    expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.method_editor.open\"",
+        "#1338: designer execution JSON should expose editor child dispatch arguments");
     expect_contains(visual_process.stdout_text,
         "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.method_editor.open'",
         "#1335: designer execution JSON should expose editor child executed commands");
@@ -9111,6 +9113,8 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1337: designer execution JSON should expose builder child identities");
     expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
         "#1337: designer execution JSON should expose builder child command tokens");
+    expect_contains(visual_process.stdout_text, "\"dispatchArguments\": [\"--command-token\", \"studio.builder.invoke\"",
+        "#1338: designer execution JSON should expose builder child dispatch arguments");
     expect_contains(visual_process.stdout_text,
         "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.builder.invoke'",
         "#1335: designer execution JSON should expose builder child executed commands");
@@ -9120,6 +9124,9 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1337: designer execution JSON should expose toolbox child contexts");
     expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
         "#1337: designer execution JSON should expose toolbox child command tokens");
+    expect_contains(visual_process.stdout_text,
+        "\"dispatchArguments\": [\"--command-token\", \"studio.toolbox.palette.invoke\"",
+        "#1338: designer execution JSON should expose toolbox child dispatch arguments");
     expect_contains(visual_process.stdout_text,
         "\"executedCommand\": \"'/bin/true' '--command-token' 'studio.toolbox.palette.invoke'",
         "#1335: designer execution JSON should expose toolbox child executed commands");
