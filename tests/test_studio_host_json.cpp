@@ -6916,6 +6916,12 @@ void test_studio_host_json_exposes_editor_action_dispatch_catalog(const std::str
         "#1228: admitted visual-object dispatch catalog JSON should not be dry-run");
     expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
         "#1228: editor action dispatch catalog JSON should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"dispatchReadyActionIds\": [\"show-property-grid\"",
+        "#1366: editor action dispatch catalog JSON should summarize dispatch-ready actions");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedActionIds\": []",
+        "#1366: admitted editor action dispatch catalog JSON should summarize empty blocked action ids");
+    expect_contains(visual_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1366: admitted editor action dispatch catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(visual_process.stdout_text, "\"entries\": [",
         "#1228: editor action dispatch catalog JSON should expose per-action entries");
     expect_contains(visual_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
@@ -6963,6 +6969,13 @@ void test_studio_host_json_exposes_editor_action_dispatch_catalog(const std::str
         "#1228: dry-run editor action dispatch catalog JSON should expose per-action error counts");
     expect_contains(dry_run_process.stdout_text, "\"dryRun\": true",
         "#1228: dry-run editor action dispatch catalog JSON should expose aggregate dry-run state");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchReadyActionIds\": []",
+        "#1366: dry-run editor action dispatch catalog JSON should summarize empty dispatch-ready actions");
+    expect_contains(dry_run_process.stdout_text, "\"dispatchBlockedActionIds\": [\"show-property-grid\"",
+        "#1366: dry-run editor action dispatch catalog JSON should summarize blocked actions");
+    expect_contains(dry_run_process.stdout_text,
+        "\"dispatchBlockedErrors\": [\"An editor action dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1366: dry-run editor action dispatch catalog JSON should summarize blocked dispatch errors");
     expect_contains(dry_run_process.stdout_text,
         "An editor action dispatch request requires an admitted non-dry-run invocation.",
         "#1228: dry-run editor action dispatch catalog JSON should expose dispatch errors");

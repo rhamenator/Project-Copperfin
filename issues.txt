@@ -1,3 +1,4 @@
+1366	OPEN	E2/#23 slice: Expose editor action dispatch catalog status summaries in host JSON		2026-06-19T08:38:28Z
 1365	OPEN	E2/#23 slice: Expose editor action invocation admission catalog status summaries in host JSON		2026-06-19T08:33:32Z
 1364	OPEN	E2/#23 slice: Expose editor action launch catalog status summaries in host JSON		2026-06-19T08:29:50Z
 1363	OPEN	E2/#23 slice: Expose builder dispatch execution catalog readiness summaries in host JSON		2026-06-19T08:26:26Z
