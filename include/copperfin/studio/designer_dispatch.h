@@ -42,6 +42,29 @@ struct StudioDesignerDispatchResult {
     StudioDesignerDispatchPlan plan;
 };
 
+struct StudioDesignerDispatchExecutionRequest {
+    StudioDesignerDispatchPlan dispatch_plan;
+    bool admit_execution = false;
+    StudioEditorActionDispatchExecutor editor_action_executor;
+    StudioBuilderDispatchExecutor builder_executor;
+    StudioToolboxDispatchExecutor toolbox_executor;
+};
+
+struct StudioDesignerDispatchExecutionResult {
+    bool ok = false;
+    std::string error;
+    StudioDesignerDispatchPlan dispatch_plan;
+    std::vector<StudioEditorActionDispatchExecutionResult> editor_action_executions;
+    std::vector<StudioBuilderDispatchExecutionResult> builder_executions;
+    StudioToolboxDispatchExecutionResult toolbox_execution;
+    std::size_t execution_count = 0;
+    std::size_t error_count = 0;
+    bool execution_admitted = false;
+    bool executed = false;
+    bool dry_run = true;
+    bool mutates_asset = false;
+};
+
 struct StudioDesignerDispatchCatalogRequest {
     std::string asset_path;
     std::size_t record_index = 0;
@@ -78,5 +101,7 @@ struct StudioDesignerDispatchCatalogResult {
     const StudioDesignerDispatchRequest& request);
 [[nodiscard]] StudioDesignerDispatchCatalogResult plan_studio_designer_dispatch_catalog(
     const StudioDesignerDispatchCatalogRequest& request);
+[[nodiscard]] StudioDesignerDispatchExecutionResult execute_studio_designer_dispatch(
+    const StudioDesignerDispatchExecutionRequest& request);
 
 }  // namespace copperfin::studio

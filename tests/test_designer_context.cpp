@@ -990,6 +990,187 @@ int main() {
                empty_dispatch.error == "A designer dispatch request requires at least one invocation admission.",
            "#1237: aggregate designer dispatch should reject empty invocation inputs");
 
+    std::size_t editor_execution_calls = 0U;
+    std::size_t builder_execution_calls = 0U;
+    std::size_t toolbox_execution_calls = 0U;
+    const auto executed_visual_dispatch = copperfin::studio::execute_studio_designer_dispatch({
+        .dispatch_plan = visual_dispatch.plan,
+        .admit_execution = true,
+        .editor_action_executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan& plan) {
+            ++editor_execution_calls;
+            expect(plan.selection_context == StudioEditorSelectionContext::visual_object &&
+                       plan.dispatch_admitted &&
+                       !plan.dry_run &&
+                       !plan.executed,
+                   "#1324: designer dispatch execution should invoke editor executors with admitted dispatches");
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = "editor action executed",
+                .error = {},
+                .mutates_asset = false
+            };
+        },
+        .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan& plan) {
+            ++builder_execution_calls;
+            expect(plan.dispatch_admitted &&
+                       !plan.dry_run &&
+                       !plan.executed &&
+                       plan.command_token == "studio.builder.invoke",
+                   "#1324: designer dispatch execution should invoke builder executors with admitted dispatches");
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = "builder executed",
+                .error = {},
+                .mutates_asset = true
+            };
+        },
+        .toolbox_executor = [&](const copperfin::studio::StudioToolboxDispatchPlan& plan) {
+            ++toolbox_execution_calls;
+            expect(plan.dispatch_admitted &&
+                       !plan.dry_run &&
+                       !plan.executed &&
+                       plan.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+                       has_id(plan.items, "textbox"),
+                   "#1324: designer dispatch execution should invoke toolbox executors with admitted dispatches");
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0,
+                .output = "toolbox executed",
+                .error = {},
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(executed_visual_dispatch.ok &&
+               executed_visual_dispatch.execution_admitted &&
+               executed_visual_dispatch.executed &&
+               !executed_visual_dispatch.dry_run &&
+               executed_visual_dispatch.mutates_asset &&
+               executed_visual_dispatch.execution_count == expected_visual_dispatch_count &&
+               executed_visual_dispatch.error_count == 0U &&
+               editor_execution_calls == visual_dispatch.plan.editor_action_dispatch_count &&
+               builder_execution_calls == visual_dispatch.plan.builder_dispatch_count &&
+               toolbox_execution_calls == 1U &&
+               executed_visual_dispatch.editor_action_executions.size() ==
+                   visual_dispatch.plan.editor_action_dispatch_count &&
+               executed_visual_dispatch.builder_executions.size() ==
+                   visual_dispatch.plan.builder_dispatch_count &&
+               executed_visual_dispatch.toolbox_execution.ok &&
+               executed_visual_dispatch.dispatch_plan.dispatch_count == visual_dispatch.plan.dispatch_count &&
+               executed_visual_dispatch.dispatch_plan.editor_action_dispatches.front().plan.executed &&
+               executed_visual_dispatch.dispatch_plan.builder_dispatches.front().plan.executed &&
+               executed_visual_dispatch.dispatch_plan.toolbox_dispatch.plan.executed,
+           "#1324: designer dispatch execution should preserve aggregate metadata and executed child state");
+
+    editor_execution_calls = 0U;
+    builder_execution_calls = 0U;
+    toolbox_execution_calls = 0U;
+    const auto unadmitted_designer_execution = copperfin::studio::execute_studio_designer_dispatch({
+        .dispatch_plan = visual_dispatch.plan,
+        .admit_execution = false,
+        .editor_action_executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            ++editor_execution_calls;
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+        },
+        .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            ++builder_execution_calls;
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+        },
+        .toolbox_executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            ++toolbox_execution_calls;
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(editor_execution_calls == 0U &&
+               builder_execution_calls == 0U &&
+               toolbox_execution_calls == 0U &&
+               !unadmitted_designer_execution.ok &&
+               unadmitted_designer_execution.error ==
+                   "A designer dispatch execution request requires explicit execution admission.",
+           "#1324: designer dispatch execution should reject unadmitted execution before child executors");
+
+    auto errorful_dispatch_plan = visual_dispatch.plan;
+    errorful_dispatch_plan.error_count = 1U;
+    const auto errorful_execution = copperfin::studio::execute_studio_designer_dispatch({
+        .dispatch_plan = errorful_dispatch_plan,
+        .admit_execution = true,
+        .editor_action_executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            ++editor_execution_calls;
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+        },
+        .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            ++builder_execution_calls;
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{.launched = true};
+        },
+        .toolbox_executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            ++toolbox_execution_calls;
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(editor_execution_calls == 0U &&
+               builder_execution_calls == 0U &&
+               toolbox_execution_calls == 0U &&
+               !errorful_execution.ok &&
+               errorful_execution.error == "A designer dispatch execution request requires an error-free dispatch plan.",
+           "#1324: designer dispatch execution should reject aggregate dispatch errors before partial execution");
+
+    const auto missing_builder_executor_execution = copperfin::studio::execute_studio_designer_dispatch({
+        .dispatch_plan = visual_dispatch.plan,
+        .admit_execution = true,
+        .editor_action_executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{.launched = true};
+        },
+        .builder_executor = {},
+        .toolbox_executor = [](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+        }
+    });
+    expect(!missing_builder_executor_execution.ok &&
+               missing_builder_executor_execution.error ==
+                   "A designer dispatch execution request requires a builder executor.",
+           "#1324: designer dispatch execution should preflight required child executors before launch");
+
+    builder_execution_calls = 0U;
+    const auto child_failure_execution = copperfin::studio::execute_studio_designer_dispatch({
+        .dispatch_plan = visual_dispatch.plan,
+        .admit_execution = true,
+        .editor_action_executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0
+            };
+        },
+        .builder_executor = [&](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            ++builder_execution_calls;
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 9,
+                .output = {},
+                .error = "builder failed",
+                .mutates_asset = false
+            };
+        },
+        .toolbox_executor = [](const copperfin::studio::StudioToolboxDispatchPlan&) {
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 0
+            };
+        }
+    });
+    expect(child_failure_execution.ok &&
+               !child_failure_execution.executed &&
+               child_failure_execution.dry_run &&
+               child_failure_execution.dispatch_plan.dispatch_count == 0U &&
+               child_failure_execution.error_count == builder_execution_calls &&
+               child_failure_execution.execution_count ==
+                   expected_visual_dispatch_count - builder_execution_calls &&
+               !child_failure_execution.builder_executions.empty() &&
+               !child_failure_execution.builder_executions.front().ok &&
+               child_failure_execution.builder_executions.front().error == "builder failed",
+           "#1324: designer dispatch execution should summarize child failures without stale aggregate metadata");
+
     const auto invocation_catalog = copperfin::studio::plan_studio_designer_invocation_admission_catalog({
         .asset_path = "forms/customer.scx",
         .record_index = 1U,

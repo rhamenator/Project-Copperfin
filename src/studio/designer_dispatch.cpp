@@ -1,5 +1,6 @@
 #include "copperfin/studio/designer_dispatch.h"
 
+#include <string>
 #include <utility>
 
 namespace copperfin::studio {
@@ -170,6 +171,196 @@ StudioDesignerDispatchCatalogResult plan_studio_designer_dispatch_catalog(
         .error = {},
         .context_count = admission_catalog.context_count,
         .contexts = std::move(entries)
+    };
+}
+
+StudioDesignerDispatchExecutionResult execute_studio_designer_dispatch(
+    const StudioDesignerDispatchExecutionRequest& request) {
+    auto failed = [&](std::string error) {
+        return StudioDesignerDispatchExecutionResult{
+            .ok = false,
+            .error = std::move(error),
+            .dispatch_plan = {},
+            .editor_action_executions = {},
+            .builder_executions = {},
+            .toolbox_execution = {},
+            .execution_count = 0U,
+            .error_count = 0U,
+            .execution_admitted = request.admit_execution,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    };
+
+    const auto& dispatch_plan = request.dispatch_plan;
+    if (!request.admit_execution) {
+        return failed("A designer dispatch execution request requires explicit execution admission.");
+    }
+    if (dispatch_plan.dispatch_count == 0U) {
+        return failed("A designer dispatch execution request requires at least one admitted dispatch.");
+    }
+    if (dispatch_plan.error_count != 0U) {
+        return failed("A designer dispatch execution request requires an error-free dispatch plan.");
+    }
+    if (dispatch_plan.dry_run) {
+        return failed("A designer dispatch execution request requires a non-dry-run dispatch plan.");
+    }
+
+    bool needs_editor_executor = false;
+    for (const auto& dispatch : dispatch_plan.editor_action_dispatches) {
+        if (dispatch.ok) {
+            needs_editor_executor = true;
+            break;
+        }
+    }
+    bool needs_builder_executor = false;
+    for (const auto& dispatch : dispatch_plan.builder_dispatches) {
+        if (dispatch.ok) {
+            needs_builder_executor = true;
+            break;
+        }
+    }
+    const bool needs_toolbox_executor = dispatch_plan.toolbox_dispatch.ok;
+    if (needs_editor_executor && !request.editor_action_executor) {
+        return failed("A designer dispatch execution request requires an editor action executor.");
+    }
+    if (needs_builder_executor && !request.builder_executor) {
+        return failed("A designer dispatch execution request requires a builder executor.");
+    }
+    if (needs_toolbox_executor && !request.toolbox_executor) {
+        return failed("A designer dispatch execution request requires a toolbox executor.");
+    }
+
+    std::vector<StudioEditorActionDispatchExecutionResult> editor_executions;
+    editor_executions.reserve(dispatch_plan.editor_action_dispatches.size());
+    std::vector<StudioBuilderDispatchExecutionResult> builder_executions;
+    builder_executions.reserve(dispatch_plan.builder_dispatches.size());
+    StudioToolboxDispatchExecutionResult toolbox_execution{};
+
+    std::size_t execution_count = 0U;
+    std::size_t error_count = 0U;
+    bool mutates_asset = false;
+
+    for (const auto& dispatch : dispatch_plan.editor_action_dispatches) {
+        if (!dispatch.ok) {
+            ++error_count;
+            editor_executions.push_back({
+                .ok = false,
+                .error = dispatch.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = true,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            });
+            continue;
+        }
+        auto execution = execute_studio_editor_action_dispatch({
+            .dispatch_plan = dispatch.plan,
+            .admit_execution = true,
+            .executor = request.editor_action_executor
+        });
+        if (execution.ok) {
+            ++execution_count;
+            mutates_asset = mutates_asset || execution.mutates_asset;
+        } else {
+            ++error_count;
+        }
+        editor_executions.push_back(std::move(execution));
+    }
+
+    for (const auto& dispatch : dispatch_plan.builder_dispatches) {
+        if (!dispatch.ok) {
+            ++error_count;
+            builder_executions.push_back({
+                .ok = false,
+                .error = dispatch.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = true,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            });
+            continue;
+        }
+        auto execution = execute_studio_builder_dispatch({
+            .dispatch_plan = dispatch.plan,
+            .admit_execution = true,
+            .executor = request.builder_executor
+        });
+        if (execution.ok) {
+            ++execution_count;
+            mutates_asset = mutates_asset || execution.mutates_asset;
+        } else {
+            ++error_count;
+        }
+        builder_executions.push_back(std::move(execution));
+    }
+
+    if (dispatch_plan.toolbox_dispatch.ok) {
+        toolbox_execution = execute_studio_toolbox_dispatch({
+            .dispatch_plan = dispatch_plan.toolbox_dispatch.plan,
+            .admit_execution = true,
+            .executor = request.toolbox_executor
+        });
+        if (toolbox_execution.ok) {
+            ++execution_count;
+            mutates_asset = mutates_asset || toolbox_execution.mutates_asset;
+        } else {
+            ++error_count;
+        }
+    }
+
+    if (error_count != 0U) {
+        return {
+            .ok = true,
+            .error = {},
+            .dispatch_plan = {},
+            .editor_action_executions = std::move(editor_executions),
+            .builder_executions = std::move(builder_executions),
+            .toolbox_execution = std::move(toolbox_execution),
+            .execution_count = execution_count,
+            .error_count = error_count,
+            .execution_admitted = true,
+            .executed = false,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto executed_plan = dispatch_plan;
+    for (auto& dispatch : executed_plan.editor_action_dispatches) {
+        if (dispatch.ok) {
+            dispatch.plan.executed = true;
+        }
+    }
+    for (auto& dispatch : executed_plan.builder_dispatches) {
+        if (dispatch.ok) {
+            dispatch.plan.executed = true;
+        }
+    }
+    if (executed_plan.toolbox_dispatch.ok) {
+        executed_plan.toolbox_dispatch.plan.executed = true;
+    }
+    executed_plan.dry_run = false;
+    executed_plan.mutates_asset = mutates_asset;
+
+    return {
+        .ok = true,
+        .error = {},
+        .dispatch_plan = std::move(executed_plan),
+        .editor_action_executions = std::move(editor_executions),
+        .builder_executions = std::move(builder_executions),
+        .toolbox_execution = std::move(toolbox_execution),
+        .execution_count = execution_count,
+        .error_count = 0U,
+        .execution_admitted = true,
+        .executed = true,
+        .dry_run = false,
+        .mutates_asset = mutates_asset
     };
 }
 
