@@ -3999,10 +3999,20 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
 
     expect(section_process.exit_code == 0,
            "#1481: label layout JSON should exit successfully for selected label sections");
+    expect_contains(section_process.stdout_text, "\"isLabel\": true",
+                    "#1502: selected label sections should retain label identity");
     expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                     "#1481: selected label sections should reuse report section selection kind");
     expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                     "#1481: selected label sections should expose selected section JSON");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#1502: selected label sections should not advertise selected-object availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                    "#1502: selected label sections should serialize null selected objects");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1502: selected label sections should not advertise containing-object-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1502: selected label sections should serialize null containing-object sections");
     expect_contains(section_process.stdout_text, "\"bandKind\": \"detail\"",
                     "#1481: selected label sections should expose band metadata");
     expect_contains(section_process.stdout_text, "\"objectCount\": 1",
