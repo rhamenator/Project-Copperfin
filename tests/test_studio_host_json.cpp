@@ -244,6 +244,62 @@ void write_synthetic_form_table_for_toolbox_creation(const std::filesystem::path
     expect(create_result.ok, "#1018: synthetic SCX table for toolbox creation should be created");
 }
 
+void write_synthetic_form_table_for_visual_object_list(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "NAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U},
+        {.name = "PROPERTIES", .type = 'M', .length = 4U},
+        {.name = "METHODS", .type = 'M', .length = 4U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {
+            "Page1",
+            "pageOne",
+            "page-guid",
+            "",
+            "pageframe",
+            "Page",
+            "Caption = \"Page\"\r\nWidth = 200\r\n",
+            "PROCEDURE Activate\r\nRETURN\r\n"
+        },
+        {
+            "cmdSave",
+            "saveButton",
+            "save-guid",
+            "Page1",
+            "cmdButton",
+            "CommandButton",
+            "Caption = \"Save\"\r\n",
+            "PROCEDURE Click\r\nRETURN\r\nFUNCTION CanSave\r\nRETURN .T.\r\n"
+        },
+        {
+            "",
+            "fallbackButton",
+            "fallback-guid",
+            "Page1",
+            "commandButton",
+            "CommandButton",
+            "Caption = \"Fallback\"\r\n",
+            ""
+        }
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1418: synthetic SCX table for visual-object list should be created");
+    const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "fallback-guid",
+        .deleted = true
+    });
+    expect(delete_result.ok, "#1418: synthetic SCX table should allow marking fallback object deleted");
+}
+
 std::size_t visual_object_count(const std::filesystem::path& form_path) {
     const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
     return list_result.ok ? list_result.objects.size() : 0U;
@@ -8126,6 +8182,139 @@ void test_studio_host_json_exposes_visual_property_list(const std::string& studi
     const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
     expect_contains(usage_process.stdout_text, "--visual-property-list --path <asset>",
         "#1417: usage text should expose visual property list commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_visual_object_list(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_list_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "outline.scx";
+    write_synthetic_form_table_for_visual_object_list(form_path);
+
+    const auto list_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-list",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(list_process.exit_code == 0,
+        "#1418: visual object list JSON should exit successfully for readable assets");
+    expect_contains(list_process.stdout_text, "\"visualObjectList\": {",
+        "#1418: visual object list JSON should expose a list object");
+    expect_contains(list_process.stdout_text, "\"objectCount\": 3",
+        "#1418: visual object list JSON should expose object counts");
+    expect_contains(list_process.stdout_text, "\"dryRun\": true",
+        "#1418: visual object list JSON should remain dry-run");
+    expect_contains(list_process.stdout_text, "\"mutatesAsset\": false",
+        "#1418: visual object list JSON should remain non-mutating");
+    expect_contains(list_process.stdout_text, "\"recordIndex\": 0",
+        "#1418: visual object list JSON should expose record indexes");
+    expect_contains(list_process.stdout_text, "\"deleted\": false",
+        "#1418: visual object list JSON should expose live deletion state");
+    expect_contains(list_process.stdout_text, "\"objectName\": \"Page1\"",
+        "#1418: visual object list JSON should expose OBJNAME identities");
+    expect_contains(list_process.stdout_text, "\"uniqueId\": \"page-guid\"",
+        "#1418: visual object list JSON should expose stable unique ids");
+    expect_contains(list_process.stdout_text, "\"objectPath\": \"Page1\"",
+        "#1418: visual object list JSON should expose root object paths");
+    expect_contains(list_process.stdout_text, "\"objectDepth\": 0",
+        "#1418: visual object list JSON should expose root object depth");
+    expect_contains(list_process.stdout_text, "\"parentRecordIndex\": null",
+        "#1418: visual object list JSON should null missing parent record links");
+    expect_contains(list_process.stdout_text, "\"ancestorRecordIndexes\": []",
+        "#1418: visual object list JSON should expose root ancestor metadata");
+    expect_contains(list_process.stdout_text, "\"childCount\": 2",
+        "#1418: visual object list JSON should expose child counts");
+    expect_contains(list_process.stdout_text, "\"propertyCount\": 10",
+        "#1418: visual object list JSON should expose direct plus memo property counts");
+    expect_contains(list_process.stdout_text, "\"methodCount\": 1",
+        "#1418: visual object list JSON should expose method counts");
+    expect_contains(list_process.stdout_text, "\"className\": \"pageframe\"",
+        "#1418: visual object list JSON should expose class names");
+    expect_contains(list_process.stdout_text, "\"baseclassName\": \"Page\"",
+        "#1418: visual object list JSON should expose baseclass names");
+    expect_contains(list_process.stdout_text, "\"caption\": \"\\\"Page\\\"\"",
+        "#1418: visual object list JSON should expose parsed captions");
+
+    const auto child_begin = list_process.stdout_text.find("\"objectName\": \"cmdSave\"");
+    expect(child_begin != std::string::npos,
+        "#1418: visual object list JSON should include child controls");
+    if (child_begin != std::string::npos) {
+        const auto child_json = list_process.stdout_text.substr(child_begin);
+        expect_contains(child_json, "\"parentName\": \"Page1\"",
+            "#1418: child visual object list JSON should expose parent names");
+        expect_contains(child_json, "\"parentRecordIndex\": 0",
+            "#1418: child visual object list JSON should expose resolved parent records");
+        expect_contains(child_json, "\"ancestorRecordIndexes\": [0]",
+            "#1418: child visual object list JSON should expose ancestor records");
+        expect_contains(child_json, "\"objectPath\": \"Page1.cmdSave\"",
+            "#1418: child visual object list JSON should expose hierarchical paths");
+        expect_contains(child_json, "\"objectDepth\": 1",
+            "#1418: child visual object list JSON should expose nested depth");
+        expect_contains(child_json, "\"siblingIndex\": 0",
+            "#1418: child visual object list JSON should expose sibling order");
+        expect_contains(child_json, "\"siblingCount\": 2",
+            "#1418: child visual object list JSON should expose sibling counts");
+        expect_contains(child_json, "\"methodCount\": 2",
+            "#1418: child visual object list JSON should expose parsed method counts");
+    }
+
+    const auto fallback_begin = list_process.stdout_text.find("\"objectName\": \"fallbackButton\"");
+    expect(fallback_begin != std::string::npos,
+        "#1418: visual object list JSON should include fallback NAME rows");
+    if (fallback_begin != std::string::npos) {
+        const auto fallback_entry_begin = list_process.stdout_text.rfind("{", fallback_begin);
+        const auto fallback_json = fallback_entry_begin == std::string::npos
+            ? list_process.stdout_text.substr(fallback_begin)
+            : list_process.stdout_text.substr(fallback_entry_begin);
+        expect_contains(fallback_json, "\"deleted\": true",
+            "#1418: fallback visual object list JSON should preserve deleted rows");
+        expect_contains(fallback_json, "\"uniqueId\": \"fallback-guid\"",
+            "#1418: fallback visual object list JSON should preserve unique ids");
+        expect_contains(fallback_json, "\"caption\": \"\\\"Fallback\\\"\"",
+            "#1418: fallback visual object list JSON should expose captions");
+    }
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-list",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1418: visual object list JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectList\": null",
+        "#1418: missing-path visual object list JSON should not expose a list object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1418: missing-path visual object list JSON should report parser errors");
+
+    const auto invalid_asset_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-list",
+            "--path", (temp_root / "missing.scx").string(),
+            "--json"
+        },
+        temp_root);
+    expect(invalid_asset_process.exit_code == 4,
+        "#1418: visual object list JSON should reject unreadable assets");
+    expect_contains(invalid_asset_process.stdout_text, "\"visualObjectList\": null",
+        "#1418: unreadable visual object list JSON should not expose a list object");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-list --path <asset>",
+        "#1418: usage text should expose visual object list commands");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -40233,6 +40422,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_property_filter(argv[1]);
     test_studio_host_json_exposes_visual_property_query(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
+    test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
