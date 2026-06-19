@@ -357,6 +357,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
+| `#23` | `#1409` implemented; closure pending approval | Studio host usage now advertises selected-context builder/toolbox dispatch-execution catalog commands with focused usage coverage |
 | `#23` | `#1408` implemented; closure pending approval | selected-context toolbox dispatch-execution catalog JSON now reports non-executing execution readiness with compact ready/blocked item summaries |
 | `#23` | `#1407` implemented; closure pending approval | selected-context builder dispatch-execution catalog JSON now reports non-executing execution readiness with compact ready/blocked builder summaries |
 | `#23` | `#1406` implemented; closure pending approval | selected-context builder launch/admission/dispatch catalog JSON now has compact ready/blocked builder-id and error summaries beside detailed entries |
