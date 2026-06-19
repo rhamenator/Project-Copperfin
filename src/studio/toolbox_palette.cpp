@@ -1,7 +1,9 @@
 #include "copperfin/studio/toolbox_palette.h"
 
 #include <algorithm>
+#include <cctype>
 #include <optional>
+#include <string>
 #include <utility>
 
 namespace copperfin::studio {
@@ -10,6 +12,36 @@ namespace {
 
 bool supports_context(const StudioToolboxItemDescriptor& item, StudioToolboxContext context) {
     return std::find(item.contexts.begin(), item.contexts.end(), context) != item.contexts.end();
+}
+
+std::string lowercase_copy(std::string_view value) {
+    std::string result;
+    result.reserve(value.size());
+    for (const char ch : value) {
+        result.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
+    }
+    return result;
+}
+
+bool contains_case_insensitive(std::string_view value, const std::string& lowered_needle) {
+    if (lowered_needle.empty()) {
+        return true;
+    }
+    return lowercase_copy(value).find(lowered_needle) != std::string::npos;
+}
+
+bool matches_category(const StudioToolboxItemDescriptor& item, const std::string& lowered_category) {
+    return lowered_category.empty() || lowercase_copy(item.category) == lowered_category;
+}
+
+bool matches_search_text(const StudioToolboxItemDescriptor& item, const std::string& lowered_search_text) {
+    return lowered_search_text.empty() ||
+        contains_case_insensitive(item.id, lowered_search_text) ||
+        contains_case_insensitive(item.title, lowered_search_text) ||
+        contains_case_insensitive(item.category, lowered_search_text) ||
+        contains_case_insensitive(item.vfp_class, lowered_search_text) ||
+        contains_case_insensitive(item.base_class, lowered_search_text) ||
+        contains_case_insensitive(item.description, lowered_search_text);
 }
 
 std::optional<StudioToolboxContext> toolbox_context_for_selection_context(
@@ -232,6 +264,33 @@ std::vector<StudioToolboxItemDescriptor> studio_toolbox_items_for_context(Studio
         return supports_context(item, context);
     });
     return filtered;
+}
+
+StudioToolboxPaletteQueryResult query_studio_toolbox_palette(
+    const StudioToolboxPaletteQueryRequest& request) {
+    const std::string lowered_search_text = lowercase_copy(request.search_text);
+    const std::string lowered_category = lowercase_copy(request.category);
+
+    std::vector<StudioToolboxItemDescriptor> filtered;
+    const auto& items = studio_toolbox_palette();
+    std::copy_if(items.begin(), items.end(), std::back_inserter(filtered), [&](const StudioToolboxItemDescriptor& item) {
+        return supports_context(item, request.toolbox_context) &&
+            matches_category(item, lowered_category) &&
+            matches_search_text(item, lowered_search_text);
+    });
+
+    const auto item_count = filtered.size();
+    return {
+        .ok = true,
+        .error = {},
+        .toolbox_context = request.toolbox_context,
+        .search_text = request.search_text,
+        .category = request.category,
+        .item_count = item_count,
+        .dry_run = true,
+        .mutates_asset = false,
+        .items = std::move(filtered)
+    };
 }
 
 StudioToolboxPaletteLaunchPlanResult plan_studio_toolbox_palette_launch(

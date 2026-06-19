@@ -131,6 +131,66 @@ int main() {
     expect(!has_toolbox_item(report_items, "textbox"), "#957: report context should exclude form-only TextBox");
     expect(!has_toolbox_item(report_items, "pageframe"), "#957: report context should exclude form-only PageFrame");
 
+    const auto all_form_query = copperfin::studio::query_studio_toolbox_palette({
+        .toolbox_context = StudioToolboxContext::form,
+        .search_text = {},
+        .category = {}
+    });
+    expect(all_form_query.ok &&
+               all_form_query.toolbox_context == StudioToolboxContext::form &&
+               all_form_query.item_count == form_items.size() &&
+               all_form_query.items.size() == all_form_query.item_count &&
+               all_form_query.dry_run &&
+               !all_form_query.mutates_asset &&
+               has_toolbox_item(all_form_query.items, "textbox") &&
+               has_toolbox_item(all_form_query.items, "pageframe"),
+           "#1411: toolbox palette queries should preserve unfiltered context items without mutation");
+
+    const auto graphics_query = copperfin::studio::query_studio_toolbox_palette({
+        .toolbox_context = StudioToolboxContext::form,
+        .search_text = {},
+        .category = "graphics"
+    });
+    expect(graphics_query.ok &&
+               graphics_query.category == "graphics" &&
+               has_toolbox_item(graphics_query.items, "image") &&
+               has_toolbox_item(graphics_query.items, "line") &&
+               has_toolbox_item(graphics_query.items, "shape") &&
+               !has_toolbox_item(graphics_query.items, "textbox"),
+           "#1411: toolbox palette queries should filter categories case-insensitively");
+
+    const auto text_query = copperfin::studio::query_studio_toolbox_palette({
+        .toolbox_context = StudioToolboxContext::form,
+        .search_text = "rowsource",
+        .category = {}
+    });
+    expect(text_query.ok &&
+               text_query.search_text == "rowsource" &&
+               has_toolbox_item(text_query.items, "combobox") &&
+               has_toolbox_item(text_query.items, "listbox") &&
+               !has_toolbox_item(text_query.items, "pageframe"),
+           "#1411: toolbox palette queries should search descriptor text case-insensitively");
+
+    const auto combined_query = copperfin::studio::query_studio_toolbox_palette({
+        .toolbox_context = StudioToolboxContext::form,
+        .search_text = "command",
+        .category = "Standard Controls"
+    });
+    expect(combined_query.ok &&
+               combined_query.item_count == 1U &&
+               has_toolbox_item(combined_query.items, "commandbutton"),
+           "#1411: toolbox palette queries should combine category and search filters");
+
+    const auto report_textbox_query = copperfin::studio::query_studio_toolbox_palette({
+        .toolbox_context = StudioToolboxContext::report,
+        .search_text = "textbox",
+        .category = {}
+    });
+    expect(report_textbox_query.ok &&
+               report_textbox_query.item_count == 0U &&
+               report_textbox_query.items.empty(),
+           "#1411: toolbox palette queries should return empty results when context filters remove matches");
+
     const auto visual_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
         .asset_path = "forms/customer.scx",
@@ -399,7 +459,11 @@ int main() {
         .admit_execution = false,
         .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
             toolbox_executor_called = true;
-            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .output = {},
+                .error = {}
+            };
         }
     });
     expect(!toolbox_executor_called &&
@@ -427,7 +491,11 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
             toolbox_executor_called = true;
-            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .output = {},
+                .error = {}
+            };
         }
     });
     expect(!toolbox_executor_called &&
@@ -443,7 +511,11 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
             toolbox_executor_called = true;
-            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .output = {},
+                .error = {}
+            };
         }
     });
     expect(!toolbox_executor_called &&
@@ -460,7 +532,11 @@ int main() {
         .admit_execution = true,
         .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
             toolbox_executor_called = true;
-            return copperfin::studio::StudioToolboxDispatchExecutionObservation{.launched = true};
+            return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                .launched = true,
+                .output = {},
+                .error = {}
+            };
         }
     });
     expect(!toolbox_executor_called &&

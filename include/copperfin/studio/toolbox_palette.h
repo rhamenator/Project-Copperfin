@@ -47,6 +47,24 @@ struct StudioToolboxPaletteLaunchPlan {
     std::vector<StudioToolboxItemDescriptor> items;
 };
 
+struct StudioToolboxPaletteQueryRequest {
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::string search_text;
+    std::string category;
+};
+
+struct StudioToolboxPaletteQueryResult {
+    bool ok = false;
+    std::string error;
+    StudioToolboxContext toolbox_context = StudioToolboxContext::form;
+    std::string search_text;
+    std::string category;
+    std::size_t item_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
+    std::vector<StudioToolboxItemDescriptor> items;
+};
+
 struct StudioToolboxPaletteLaunchPlanResult {
     bool ok = false;
     std::string error;
@@ -82,6 +100,8 @@ struct StudioToolboxPaletteLaunchCatalogResult {
 [[nodiscard]] const char* studio_toolbox_context_name(StudioToolboxContext context);
 [[nodiscard]] const std::vector<StudioToolboxItemDescriptor>& studio_toolbox_palette();
 [[nodiscard]] std::vector<StudioToolboxItemDescriptor> studio_toolbox_items_for_context(StudioToolboxContext context);
+[[nodiscard]] StudioToolboxPaletteQueryResult query_studio_toolbox_palette(
+    const StudioToolboxPaletteQueryRequest& request);
 [[nodiscard]] StudioToolboxPaletteLaunchPlanResult plan_studio_toolbox_palette_launch(
     const StudioToolboxPaletteLaunchRequest& request);
 [[nodiscard]] StudioToolboxPaletteLaunchCatalogResult plan_studio_toolbox_palette_launch_catalog(
