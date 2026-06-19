@@ -9300,6 +9300,125 @@ void test_studio_host_json_exposes_designer_dispatch_catalog(const std::string& 
     }
 }
 
+void test_studio_host_json_exposes_designer_dispatch_execution_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_designer_dispatch_execution_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-execution-catalog",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--symbol", "Click",
+            "--line", "12",
+            "--column", "4",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(catalog_process.exit_code == 0,
+        "#1333: designer dispatch execution catalog JSON should accept admitted aggregate policies");
+    expect_contains(catalog_process.stdout_text, "\"designerDispatchExecutionCatalog\": {",
+        "#1333: designer dispatch execution catalog JSON should expose a catalog object");
+    expect_contains(catalog_process.stdout_text, "\"contextCount\": 9",
+        "#1333: designer dispatch execution catalog JSON should expose context counts");
+    expect_contains(catalog_process.stdout_text, "\"executionReadyCount\": ",
+        "#1333: designer dispatch execution catalog JSON should expose readiness counts");
+    expect_contains(catalog_process.stdout_text, "\"errorCount\": ",
+        "#1333: designer dispatch execution catalog JSON should expose error counts");
+    expect_contains(catalog_process.stdout_text, "\"dryRun\": false",
+        "#1333: admitted designer dispatch execution catalog JSON should expose non-dry-run state");
+    expect_contains(catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#1333: designer dispatch execution catalog JSON should remain non-mutating");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1333: designer dispatch execution catalog JSON should include visual-object contexts");
+    expect_contains(catalog_process.stdout_text, "\"dispatchErrorCount\": 0",
+        "#1333: visual-object execution catalog JSON should expose clean dispatch plans");
+    expect_contains(catalog_process.stdout_text, "\"executionAdmitted\": true",
+        "#1333: designer dispatch execution catalog JSON should expose execution admission");
+    expect_contains(catalog_process.stdout_text, "\"executionReady\": true",
+        "#1333: designer dispatch execution catalog JSON should expose ready contexts");
+    expect_contains(catalog_process.stdout_text, "\"executionError\": \"\"",
+        "#1333: admitted ready designer dispatch execution catalog JSON should expose empty execution errors");
+    expect_contains(catalog_process.stdout_text, "\"editorActionIds\": [\"edit-visual-method\"",
+        "#1333: designer dispatch execution catalog JSON should preserve editor action dispatch ids");
+    expect_contains(catalog_process.stdout_text, "\"builderIds\": [\"form-builder\"",
+        "#1333: designer dispatch execution catalog JSON should preserve builder dispatch ids");
+    expect_contains(catalog_process.stdout_text, "\"toolboxDispatchOk\": true",
+        "#1333: designer dispatch execution catalog JSON should expose toolbox dispatch status");
+    expect_contains(catalog_process.stdout_text, "\"selectionContext\": \"menu_item\"",
+        "#1333: designer dispatch execution catalog JSON should include menu contexts");
+    expect_contains(catalog_process.stdout_text,
+        "A designer dispatch execution catalog entry requires an error-free dispatch plan.",
+        "#1333: designer dispatch execution catalog JSON should propagate dispatch-plan errors");
+
+    const auto unadmitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-execution-catalog",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "false",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_process.exit_code == 0,
+        "#1333: designer dispatch execution catalog JSON should report unadmitted execution as catalog errors");
+    expect_contains(unadmitted_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1333: unadmitted designer dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
+        "#1333: unadmitted designer dispatch execution catalog JSON should expose admission false");
+    expect_contains(unadmitted_process.stdout_text,
+        "A designer dispatch execution catalog entry requires explicit execution admission.",
+        "#1333: unadmitted designer dispatch execution catalog JSON should expose execution errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-execution-catalog",
+            "--admit-designer-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1333: designer dispatch execution catalog JSON should report dry-run aggregate failures");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1333: dry-run designer dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(dry_run_process.stdout_text,
+        "A designer dispatch execution catalog entry requires at least one admitted dispatch.",
+        "#1333: dry-run designer dispatch execution catalog JSON should expose aggregate preflight errors");
+
+    const auto invalid_execution_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-dispatch-execution-catalog",
+            "--admit-designer-execution", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_execution_bool_process.exit_code == 2,
+        "#1333: designer dispatch execution catalog JSON should reject invalid execution booleans");
+    expect_contains(invalid_execution_bool_process.stdout_text,
+        "The --admit-designer-execution value must be true or false.",
+        "#1333: invalid designer execution catalog admission JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_launch_surface_catalog(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -38215,6 +38334,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_launch_surface_catalog(argv[1]);
     test_studio_host_json_exposes_designer_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_designer_dispatch_catalog(argv[1]);
+    test_studio_host_json_exposes_designer_dispatch_execution_catalog(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation(argv[1]);
     test_studio_host_json_plans_selection_toolbox_object_creation(argv[1]);
     test_studio_host_json_plans_toolbox_object_creation_dispatch(argv[1]);
