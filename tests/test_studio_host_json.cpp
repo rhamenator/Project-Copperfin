@@ -7608,6 +7608,12 @@ void test_studio_host_json_exposes_toolbox_invocation_admission_catalog(const st
         "#1286: admitted toolbox invocation-admission catalog JSON should not be dry-run");
     expect_contains(form_process.stdout_text, "\"mutatesAsset\": false",
         "#1286: toolbox invocation-admission catalog JSON should remain non-mutating");
+    expect_contains(form_process.stdout_text, "\"admissionReadyItemIds\": [\"label\", \"textbox\"",
+        "#1369: toolbox invocation-admission catalog JSON should summarize admission-ready items");
+    expect_contains(form_process.stdout_text, "\"admissionBlockedItemIds\": []",
+        "#1369: admitted toolbox invocation-admission catalog JSON should summarize empty blocked item ids");
+    expect_contains(form_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1369: admitted toolbox invocation-admission catalog JSON should summarize empty blocked admission errors");
     expect_contains(form_process.stdout_text, "\"id\": \"textbox\"",
         "#1286: form toolbox invocation-admission catalog JSON should include form-safe TextBox items");
     expect_contains(form_process.stdout_text, "\"invocationAdmissionOk\": true",
@@ -7639,6 +7645,8 @@ void test_studio_host_json_exposes_toolbox_invocation_admission_catalog(const st
         "#1286: dry-run toolbox invocation-admission catalog JSON should expose unadmitted palette state");
     expect_contains(report_process.stdout_text, "\"dryRun\": true",
         "#1286: dry-run toolbox invocation-admission catalog JSON should preserve dry-run state");
+    expect_contains(report_process.stdout_text, "\"admissionReadyItemIds\": [\"label\"",
+        "#1369: dry-run toolbox invocation-admission catalog JSON should preserve admission-ready items");
 
     const auto invalid_boolean_process = run_process_capture(
         studio_host_path,
