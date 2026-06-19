@@ -11199,6 +11199,12 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
         "#1314: toolbox-create-from-dispatch JSON should expose created unique ids");
     expect_contains(create_process.stdout_text, "\"parentName\": \"frmCustomer\"",
         "#1314: toolbox-create-from-dispatch JSON should expose created parents");
+    expect_contains(create_process.stdout_text, "\"createdObjectNames\": [\"txt2\"]",
+        "#1384: toolbox-create-from-dispatch JSON should summarize created object names");
+    expect_contains(create_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-created-textbox-guid\"]",
+        "#1384: toolbox-create-from-dispatch JSON should summarize created unique ids");
+    expect_contains(create_process.stdout_text, "\"createErrors\": []",
+        "#1384: successful toolbox-create-from-dispatch JSON should summarize empty create errors");
     expect_contains(create_process.stdout_text, "\"propertyValue\": \"Dispatch Host Created\"",
         "#1314: toolbox-create-from-dispatch JSON should expose caller field values");
     expect_contains(create_process.stdout_text, "\"dryRun\": false",
@@ -11232,6 +11238,10 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
         "#1314: report toolbox-create-from-dispatch JSON should expose generated label names");
     expect_contains(report_process.stdout_text, "\"uniqueId\": \"dispatch-host-report-label-guid\"",
         "#1314: report toolbox-create-from-dispatch JSON should expose report label unique ids");
+    expect_contains(report_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
+        "#1384: report toolbox-create-from-dispatch JSON should summarize created report object names");
+    expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-report-label-guid\"]",
+        "#1384: report toolbox-create-from-dispatch JSON should summarize created report unique ids");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1314: report toolbox-create-from-dispatch JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 2U,
@@ -11255,6 +11265,13 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
     expect_contains(non_admitted_process.stdout_text,
         "A toolbox dispatch request requires an admitted non-dry-run invocation.",
         "#1314: non-admitted toolbox-create-from-dispatch JSON should report dispatch errors");
+    expect_contains(non_admitted_process.stdout_text, "\"createdObjectNames\": []",
+        "#1384: non-admitted toolbox-create-from-dispatch JSON should summarize no created object names");
+    expect_contains(non_admitted_process.stdout_text, "\"createdUniqueIds\": []",
+        "#1384: non-admitted toolbox-create-from-dispatch JSON should summarize no created unique ids");
+    expect_contains(non_admitted_process.stdout_text,
+        "\"createErrors\": [\"A toolbox dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1384: non-admitted toolbox-create-from-dispatch JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1314: non-admitted toolbox-create-from-dispatch commands should not mutate assets");
 
@@ -11278,6 +11295,13 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
         "#1314: unavailable toolbox-create-from-dispatch JSON should report availability errors");
     expect_contains(unavailable_process.stdout_text, "\"objectName\": \"\"",
         "#1314: unavailable toolbox-create-from-dispatch JSON should avoid stale object names");
+    expect_contains(unavailable_process.stdout_text, "\"createdObjectNames\": []",
+        "#1384: unavailable toolbox-create-from-dispatch JSON should summarize no created object names");
+    expect_contains(unavailable_process.stdout_text, "\"createdUniqueIds\": []",
+        "#1384: unavailable toolbox-create-from-dispatch JSON should summarize no created unique ids");
+    expect_contains(unavailable_process.stdout_text,
+        "\"createErrors\": [\"The requested toolbox item is not available in the admitted toolbox dispatch.\"",
+        "#1384: unavailable toolbox-create-from-dispatch JSON should summarize create errors");
     expect(visual_object_count(form_path) == committed_count,
         "#1314: unavailable toolbox-create-from-dispatch commands should not mutate assets");
 
