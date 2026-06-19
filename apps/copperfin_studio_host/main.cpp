@@ -11100,6 +11100,9 @@ void print_json_designer_execution_result(
             std::cout << "[]";
         }
         std::cout << ",\n";
+        std::cout << "        \"launchCommand\": ";
+        print_json_string(editor_action_launch_command);
+        std::cout << ",\n";
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
         std::cout << ",\n";
@@ -11161,6 +11164,9 @@ void print_json_designer_execution_result(
             std::cout << "[]";
         }
         std::cout << ",\n";
+        std::cout << "        \"launchCommand\": ";
+        print_json_string(builder_launch_command);
+        std::cout << ",\n";
         std::cout << "        \"executedCommand\": ";
         print_json_string(executed_command);
         std::cout << ",\n";
@@ -11218,6 +11224,9 @@ void print_json_designer_execution_result(
     } else {
         std::cout << "[]";
     }
+    std::cout << ",\n";
+    std::cout << "      \"launchCommand\": ";
+    print_json_string(toolbox_launch_command);
     std::cout << ",\n";
     std::cout << "      \"executedCommand\": ";
     if (child_dispatch_plan.toolbox_dispatch.ok) {
