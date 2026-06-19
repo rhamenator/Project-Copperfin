@@ -9682,6 +9682,10 @@ void print_json_editor_action_launch_plan_result(
 
     const auto& plan = result.plan;
     const auto& action = plan.action;
+    const std::vector<std::string> launch_ready_action_ids{std::string(action.id)};
+    const std::vector<std::string> launch_blocked_action_ids;
+    const std::vector<std::string> launch_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -9718,6 +9722,15 @@ void print_json_editor_action_launch_plan_result(
     std::cout << ",\n";
     std::cout << "    \"line\": " << plan.line << ",\n";
     std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"launchReadyActionIds\": ";
+    print_json_string_array(launch_ready_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedActionIds\": ";
+    print_json_string_array(launch_blocked_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedErrors\": ";
+    print_json_string_array(launch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"description\": ";
     print_json_string_view(action.description);
     std::cout << "\n";

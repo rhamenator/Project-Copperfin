@@ -5986,6 +5986,12 @@ void test_studio_host_json_exposes_editor_action_launch_plans(const std::string&
         "#1208: editor action launch-plan JSON should carry line metadata");
     expect_contains(method_process.stdout_text, "\"column\": 7",
         "#1208: editor action launch-plan JSON should carry column metadata");
+    expect_contains(method_process.stdout_text, "\"launchReadyActionIds\": [\"edit-visual-method\"]",
+        "#1395: editor action launch-plan JSON should summarize launch-ready action ids");
+    expect_contains(method_process.stdout_text, "\"launchBlockedActionIds\": []",
+        "#1395: editor action launch-plan JSON should summarize empty blocked action ids");
+    expect_contains(method_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1395: editor action launch-plan JSON should summarize empty launch errors");
 
     const auto expression_process = run_process_capture(
         studio_host_path,
@@ -6004,6 +6010,12 @@ void test_studio_host_json_exposes_editor_action_launch_plans(const std::string&
         "#1208: expression editor launch-plan JSON should expose expression-editor metadata");
     expect_contains(expression_process.stdout_text, "\"targetSurface\": \"expression-editor\"",
         "#1208: expression editor launch-plan JSON should expose expression editor target surfaces");
+    expect_contains(expression_process.stdout_text, "\"launchReadyActionIds\": [\"edit-report-expression\"]",
+        "#1395: expression editor launch-plan JSON should summarize launch-ready action ids");
+    expect_contains(expression_process.stdout_text, "\"launchBlockedActionIds\": []",
+        "#1395: expression editor launch-plan JSON should summarize empty blocked action ids");
+    expect_contains(expression_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1395: expression editor launch-plan JSON should summarize empty launch errors");
 
     const auto data_process = run_process_capture(
         studio_host_path,
