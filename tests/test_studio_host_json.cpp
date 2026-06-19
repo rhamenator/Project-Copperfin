@@ -4043,6 +4043,14 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1498: deleted label section selections should advertise report-selection availability");
     expect_contains(deleted_section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                     "#1498: deleted label section selections should expose section selection kind");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#1503: selected deleted label sections should not advertise selected-object availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObject\": null",
+                    "#1503: selected deleted label sections should serialize null selected objects");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1503: selected deleted label sections should not advertise containing-object-section availability");
+    expect_contains(deleted_section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1503: selected deleted label sections should serialize null containing-object sections");
     expect_contains(deleted_section_process.stdout_text, "\"sectionCount\": 0",
                     "#1498: deleted selected label section JSON should not expose live sections");
     expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
