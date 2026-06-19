@@ -4364,6 +4364,66 @@ void test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(cons
     }
 }
 
+void test_studio_host_json_aligns_label_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_label_layout_align_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "mailing.lbx";
+    write_synthetic_report_table_for_layout_json(label_path);
+
+    const auto align_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", label_path.string(),
+            "--record", "3",
+            "--align-object",
+            "--alignment-mode", "left",
+            "--anchor-unique-id", "label-guid",
+            "--align-target-unique-id", "field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (align_process.exit_code != 0) {
+        std::cerr << "studio host label object align stdout:\n" << align_process.stdout_text << "\n";
+        std::cerr << "studio host label object align stderr:\n" << align_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(align_process.exit_code == 0,
+           "#1483: label layout object alignment should exit successfully");
+    expect(visual_object_property(label_path, "field-guid", "HPOS") == "900" &&
+               visual_object_property(label_path, "field-guid", "VPOS") == "2600",
+           "#1483: label layout object left alignment should mutate LBX HPOS and preserve VPOS");
+    expect(visual_object_property(label_path, "label-guid", "HPOS") == "900",
+           "#1483: label layout object alignment should preserve anchor geometry");
+    expect_contains(align_process.stdout_text, "\"isLabel\": true",
+                    "#1483: aligned label layout JSON should retain label identity");
+    expect_contains(align_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1483: aligned label object JSON should retain selected-object availability");
+    expect_contains(align_process.stdout_text, "\"left\": 900",
+                    "#1483: aligned label object JSON should expose updated left coordinates");
+    expect_contains(align_process.stdout_text, "\"top\": 2600",
+                    "#1483: aligned label object JSON should preserve top coordinates");
+    expect_contains(align_process.stdout_text, "\"right\": 4900",
+                    "#1483: aligned label object JSON should recompute right-edge coordinates");
+    expect_contains(align_process.stdout_text, "\"bottom\": 3050",
+                    "#1483: aligned label object JSON should preserve bottom-edge coordinates");
+    expect_contains(align_process.stdout_text, "\"sectionRelativeTop\": 600",
+                    "#1483: aligned label object JSON should preserve section-relative top coordinates");
+    expect_contains(align_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1483: aligned label object JSON should preserve containing section metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -48760,6 +48820,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_nudges_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_nudges_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_aligns_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_aligns_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(argv[1]);
