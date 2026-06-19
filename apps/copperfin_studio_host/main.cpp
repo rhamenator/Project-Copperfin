@@ -10904,6 +10904,7 @@ void print_json_designer_dispatch_result(
 
 void print_json_designer_execution_result(
     const copperfin::studio::StudioDesignerDispatchExecutionResult& result,
+    const copperfin::studio::StudioDesignerDispatchPlan* planned_dispatch_plan,
     const std::string& editor_action_launch_command,
     const std::string& builder_launch_command,
     const std::string& toolbox_launch_command) {
@@ -10960,14 +10961,18 @@ void print_json_designer_execution_result(
         std::cout << ",\n";
         std::cout << "    \"dispatchCount\": " << plan.dispatch_count;
     }
+    const auto& child_dispatch_plan =
+        result.dispatch_plan.dispatch_count == 0U && planned_dispatch_plan != nullptr
+            ? *planned_dispatch_plan
+            : result.dispatch_plan;
     std::cout << ",\n";
     std::cout << "    \"editorActionExecutions\": [\n";
     for (std::size_t index = 0U; index < result.editor_action_executions.size(); ++index) {
         const auto& execution = result.editor_action_executions[index];
         const copperfin::studio::StudioEditorActionDispatchPlan* plan = nullptr;
-        if (index < result.dispatch_plan.editor_action_dispatches.size() &&
-            result.dispatch_plan.editor_action_dispatches[index].ok) {
-            plan = &result.dispatch_plan.editor_action_dispatches[index].plan;
+        if (index < child_dispatch_plan.editor_action_dispatches.size() &&
+            child_dispatch_plan.editor_action_dispatches[index].ok) {
+            plan = &child_dispatch_plan.editor_action_dispatches[index].plan;
         }
         std::string executed_command;
         if (plan != nullptr) {
@@ -11026,9 +11031,9 @@ void print_json_designer_execution_result(
     for (std::size_t index = 0U; index < result.builder_executions.size(); ++index) {
         const auto& execution = result.builder_executions[index];
         const copperfin::studio::StudioBuilderDispatchPlan* plan = nullptr;
-        if (index < result.dispatch_plan.builder_dispatches.size() &&
-            result.dispatch_plan.builder_dispatches[index].ok) {
-            plan = &result.dispatch_plan.builder_dispatches[index].plan;
+        if (index < child_dispatch_plan.builder_dispatches.size() &&
+            child_dispatch_plan.builder_dispatches[index].ok) {
+            plan = &child_dispatch_plan.builder_dispatches[index].plan;
         }
         std::string executed_command;
         if (plan != nullptr) {
@@ -11089,45 +11094,45 @@ void print_json_designer_execution_result(
     print_json_string(result.toolbox_execution.error);
     std::cout << ",\n";
     std::cout << "      \"selectionContext\": ";
-    if (result.dispatch_plan.toolbox_dispatch.ok) {
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
         print_json_string(copperfin::studio::studio_editor_selection_context_name(
-            result.dispatch_plan.toolbox_dispatch.plan.selection_context));
+            child_dispatch_plan.toolbox_dispatch.plan.selection_context));
     } else {
         print_json_string("");
     }
     std::cout << ",\n";
     std::cout << "      \"toolboxContext\": ";
-    if (result.dispatch_plan.toolbox_dispatch.ok) {
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
         print_json_string(copperfin::studio::studio_toolbox_context_name(
-            result.dispatch_plan.toolbox_dispatch.plan.toolbox_context));
+            child_dispatch_plan.toolbox_dispatch.plan.toolbox_context));
     } else {
         print_json_string("");
     }
     std::cout << ",\n";
     std::cout << "      \"commandToken\": ";
-    if (result.dispatch_plan.toolbox_dispatch.ok) {
-        print_json_string(result.dispatch_plan.toolbox_dispatch.plan.command_token);
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string(child_dispatch_plan.toolbox_dispatch.plan.command_token);
     } else {
         print_json_string("");
     }
     std::cout << ",\n";
     std::cout << "      \"itemCount\": "
-              << (result.dispatch_plan.toolbox_dispatch.ok
-                      ? result.dispatch_plan.toolbox_dispatch.plan.item_count
+              << (child_dispatch_plan.toolbox_dispatch.ok
+                      ? child_dispatch_plan.toolbox_dispatch.plan.item_count
                       : 0U)
               << ",\n";
     std::cout << "      \"dispatchArguments\": ";
-    if (result.dispatch_plan.toolbox_dispatch.ok) {
-        print_json_string_array(result.dispatch_plan.toolbox_dispatch.plan.dispatch_arguments);
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
+        print_json_string_array(child_dispatch_plan.toolbox_dispatch.plan.dispatch_arguments);
     } else {
         std::cout << "[]";
     }
     std::cout << ",\n";
     std::cout << "      \"executedCommand\": ";
-    if (result.dispatch_plan.toolbox_dispatch.ok) {
+    if (child_dispatch_plan.toolbox_dispatch.ok) {
         print_json_string(build_shell_command(
             toolbox_launch_command,
-            result.dispatch_plan.toolbox_dispatch.plan.dispatch_arguments));
+            child_dispatch_plan.toolbox_dispatch.plan.dispatch_arguments));
     } else {
         print_json_string("");
     }
@@ -16262,10 +16267,13 @@ int main(int argc, char** argv) {
 
     const auto designer_execute_parse = parse_designer_execute_arguments(args);
     if (designer_execute_parse.requested) {
-        auto print_designer_execution = [&](const copperfin::studio::StudioDesignerDispatchExecutionResult& result) {
+        auto print_designer_execution = [&](
+            const copperfin::studio::StudioDesignerDispatchExecutionResult& result,
+            const copperfin::studio::StudioDesignerDispatchPlan* planned_dispatch_plan) {
             if (designer_execute_parse.output_json) {
                 print_json_designer_execution_result(
                     result,
+                    planned_dispatch_plan,
                     designer_execute_parse.editor_action_launch_command,
                     designer_execute_parse.builder_launch_command,
                     designer_execute_parse.toolbox_launch_command);
@@ -16292,7 +16300,7 @@ int main(int argc, char** argv) {
 
         if (!designer_execute_parse.ok) {
             const auto result = failed_execution(designer_execute_parse.error);
-            print_designer_execution(result);
+            print_designer_execution(result, nullptr);
             if (!designer_execute_parse.output_json) {
                 print_usage();
             }
@@ -16303,7 +16311,7 @@ int main(int argc, char** argv) {
             designer_execute_parse.request);
         if (!launch_result.ok) {
             const auto result = failed_execution(launch_result.error);
-            print_designer_execution(result);
+            print_designer_execution(result, nullptr);
             return 4;
         }
 
@@ -16315,7 +16323,7 @@ int main(int argc, char** argv) {
         });
         if (!admission_result.ok) {
             const auto result = failed_execution(admission_result.error);
-            print_designer_execution(result);
+            print_designer_execution(result, nullptr);
             return 4;
         }
 
@@ -16324,7 +16332,7 @@ int main(int argc, char** argv) {
         });
         if (!dispatch_result.ok) {
             const auto result = failed_execution(dispatch_result.error);
-            print_designer_execution(result);
+            print_designer_execution(result, nullptr);
             return 4;
         }
 
@@ -16377,7 +16385,7 @@ int main(int argc, char** argv) {
                 };
             }
         });
-        print_designer_execution(result);
+        print_designer_execution(result, &dispatch_result.plan);
         return result.ok && result.error_count == 0U ? 0 : 4;
     }
 

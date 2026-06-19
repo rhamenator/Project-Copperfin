@@ -1,3 +1,4 @@
+1340	OPEN	E2/#23 slice: Preserve aggregate designer child metadata on failed execution JSON		2026-06-19T06:57:34Z
 1339	OPEN	E2/#23 slice: Expose aggregate designer execution child state in host JSON		2026-06-19T06:52:06Z
 1338	OPEN	E2/#23 slice: Expose aggregate designer execution child dispatch arguments in host JSON		2026-06-19T06:47:13Z
 1337	OPEN	E2/#23 slice: Expose aggregate designer execution child identities in host JSON		2026-06-19T06:42:42Z

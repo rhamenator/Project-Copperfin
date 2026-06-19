@@ -9219,6 +9219,16 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: failed designer execution JSON should expose execution error counts");
     expect_contains(failed_builder_process.stdout_text, "\"executed\": false",
         "#1325: failed designer execution JSON should not mark aggregate execution complete");
+    expect_contains(failed_builder_process.stdout_text, "\"builderId\": \"form-builder\"",
+        "#1340: failed designer execution JSON should preserve planned builder identity");
+    expect_contains(failed_builder_process.stdout_text, "\"commandToken\": \"studio.builder.invoke\"",
+        "#1340: failed designer execution JSON should preserve planned builder command token");
+    expect_contains(failed_builder_process.stdout_text,
+        "\"dispatchArguments\": [\"--command-token\", \"studio.builder.invoke\"",
+        "#1340: failed designer execution JSON should preserve planned builder dispatch arguments");
+    expect_contains(failed_builder_process.stdout_text,
+        "\"executedCommand\": \"'/bin/false' '--command-token' 'studio.builder.invoke'",
+        "#1340: failed designer execution JSON should preserve the failed builder command");
 
     const auto unknown_context_process = run_process_capture(
         studio_host_path,
