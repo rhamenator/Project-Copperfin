@@ -11988,6 +11988,27 @@ void print_json_designer_execution_result(
             ? build_shell_command(toolbox_launch_command, child_dispatch_plan.toolbox_dispatch.plan.dispatch_arguments)
             : std::string{};
     const int toolbox_exit_code = result.toolbox_execution.observation.exit_code;
+    const std::string selection_context =
+        copperfin::studio::studio_editor_selection_context_name(child_dispatch_plan.selection_context);
+    std::vector<std::string> execution_ready_selection_contexts;
+    std::vector<std::string> execution_blocked_selection_contexts;
+    std::vector<std::string> execution_blocked_errors;
+    if (result.error_count == 0U) {
+        execution_ready_selection_contexts.push_back(selection_context);
+    } else {
+        execution_blocked_selection_contexts.push_back(selection_context);
+        std::string blocked_error;
+        if (!failed_editor_action_errors.empty()) {
+            blocked_error = failed_editor_action_errors.front();
+        } else if (!failed_builder_errors.empty()) {
+            blocked_error = failed_builder_errors.front();
+        } else if (!toolbox_error.empty()) {
+            blocked_error = toolbox_error;
+        } else {
+            blocked_error = result.error;
+        }
+        execution_blocked_errors.push_back(blocked_error);
+    }
 
     std::cout << "{\n";
     std::cout << "    \"ok\": " << (result.error_count == 0U ? "true" : "false") << ",\n";
@@ -11998,6 +12019,15 @@ void print_json_designer_execution_result(
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
     std::cout << "    \"executionCount\": " << result.execution_count << ",\n";
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
+    std::cout << "    \"executionReadySelectionContexts\": ";
+    print_json_string_array(execution_ready_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedSelectionContexts\": ";
+    print_json_string_array(execution_blocked_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"executionBlockedErrors\": ";
+    print_json_string_array(execution_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"editorActionExecutionCount\": " << result.editor_action_executions.size() << ",\n";
     std::cout << "    \"builderExecutionCount\": " << result.builder_executions.size() << ",\n";
     std::cout << "    \"toolboxExecutionCount\": " << toolbox_execution_count << ",\n";

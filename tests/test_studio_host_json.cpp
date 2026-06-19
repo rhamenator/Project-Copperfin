@@ -9428,6 +9428,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: designer execution JSON should expose execution counts");
     expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
         "#1325: admitted designer execution JSON should expose zero execution errors");
+    expect_contains(visual_process.stdout_text, "\"executionReadySelectionContexts\": [\"visual_object\"]",
+        "#1402: admitted designer execution JSON should summarize execution-ready selected contexts");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedSelectionContexts\": []",
+        "#1402: admitted designer execution JSON should expose empty blocked selected contexts");
+    expect_contains(visual_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1402: admitted designer execution JSON should expose empty blocked execution errors");
     expect_contains(visual_process.stdout_text, "\"editorActionExecutionCount\": 5",
         "#1342: admitted designer execution JSON should expose editor action execution counts");
     expect_contains(visual_process.stdout_text, "\"builderExecutionCount\": 3",
@@ -9677,6 +9683,13 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: failed designer child execution JSON should expose child errors");
     expect_contains(failed_builder_process.stdout_text, "\"errorCount\": ",
         "#1325: failed designer execution JSON should expose execution error counts");
+    expect_contains(failed_builder_process.stdout_text, "\"executionReadySelectionContexts\": []",
+        "#1402: failed builder execution JSON should expose empty execution-ready selected contexts");
+    expect_contains(failed_builder_process.stdout_text, "\"executionBlockedSelectionContexts\": [\"visual_object\"]",
+        "#1402: failed builder execution JSON should summarize execution-blocked selected contexts");
+    expect_contains(failed_builder_process.stdout_text,
+        "\"executionBlockedErrors\": [\"Designer builder launch command returned a non-zero exit code.\"]",
+        "#1402: failed builder execution JSON should summarize blocked selected-context errors");
     expect_contains(failed_builder_process.stdout_text, "\"executed\": false",
         "#1325: failed designer execution JSON should not mark aggregate execution complete");
     expect_contains(failed_builder_process.stdout_text, "\"builderId\": \"form-builder\"",
