@@ -4004,6 +4004,47 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
     expect_contains(object_process.stdout_text, "\"bandKind\": \"detail\"",
                     "#1455: containing-section JSON should expose selected object band kinds");
 
+    const auto deleted_object_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "6", "--json"},
+        temp_root);
+
+    if (deleted_object_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted report object stdout:\n"
+                  << deleted_object_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted report object stderr:\n"
+                  << deleted_object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_object_process.exit_code == 0,
+           "#1479: selected deleted report object JSON should exit successfully");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1479: deleted report object selections should advertise selected-object availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1479: deleted report object selections should advertise report-selection availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1479: deleted report object selections should expose object selection kind");
+    expect_contains(deleted_object_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1479: deleted selected report object JSON should expose deleted object counts");
+    expect_contains_in_order(
+        deleted_object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 6",
+            "\"deleted\": true",
+            "\"containingSectionId\": \"\"",
+            "\"containingSectionRecordIndex\": null",
+            "\"sectionObjectIndex\": null",
+            "\"sectionObjectCount\": 0",
+            "\"expression\": \"\\\"Deleted label\\\"\""
+        },
+        "#1479: deleted report object selections should expose deleted selected-object metadata");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1479: deleted report objects should not advertise selected containing-section availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1479: deleted report objects should serialize null selected containing-section JSON");
+
     const auto section_process = run_process_capture(
         studio_host_path,
         {"--path", report_path.string(), "--record", "1", "--json"},
