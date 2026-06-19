@@ -30,6 +30,8 @@ struct StudioLayoutObjectSnapshot {
     std::string containing_section_id{};
     std::size_t containing_section_record_index = StudioReportMissingRecordIndex;
     int section_relative_top = 0;
+    std::size_t section_object_index = StudioReportMissingRecordIndex;
+    std::size_t section_object_count = 0;
     std::string object_kind{};
     std::size_t object_kind_field_index = StudioReportMissingFieldIndex;
     std::uint32_t object_kind_memo_block_number = 0;

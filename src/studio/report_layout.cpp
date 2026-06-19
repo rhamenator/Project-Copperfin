@@ -459,6 +459,10 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
             }
             return left.record_index < right.record_index;
         });
+        for (std::size_t object_index = 0; object_index < section.objects.size(); ++object_index) {
+            section.objects[object_index].section_object_index = object_index;
+            section.objects[object_index].section_object_count = section.objects.size();
+        }
     }
 
     std::sort(snapshot.unplaced_objects.begin(), snapshot.unplaced_objects.end(), [](const StudioLayoutObjectSnapshot& left,

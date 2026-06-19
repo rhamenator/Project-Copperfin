@@ -3693,6 +3693,10 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1458: report layout JSON should expose object containing section record indexes");
     expect_contains(process.stdout_text, "\"sectionRelativeTop\": 600",
                     "#1458: report layout JSON should expose object top coordinates relative to containing sections");
+    expect_contains(process.stdout_text, "\"sectionObjectIndex\": 0",
+                    "#1459: report layout JSON should expose object order inside containing sections");
+    expect_contains(process.stdout_text, "\"sectionObjectCount\": 1",
+                    "#1459: report layout JSON should expose containing section object counts");
     expect_contains(process.stdout_text, "\"expression\": \"customer.company\"",
                     "#1452: report layout JSON should expose report object expressions");
     expect_contains(process.stdout_text, "\"expressionFieldIndex\": 2",
@@ -3709,6 +3713,8 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report layout JSON should summarize unplaced objects");
     expect_contains(process.stdout_text, "\"containingSectionRecordIndex\": null",
                     "#1458: unplaced/deleted report object JSON should expose null containing section record indexes");
+    expect_contains(process.stdout_text, "\"sectionObjectIndex\": null",
+                    "#1459: unplaced/deleted report object JSON should expose null section object indexes");
     expect_contains(process.stdout_text, "\"title\": \"Record 5\"",
                     "#1452: report layout JSON should preserve synthesized unplaced-object titles");
 
@@ -3831,6 +3837,10 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
                     "#1458: selected report object JSON should expose containing section record indexes");
     expect_contains(object_process.stdout_text, "\"sectionRelativeTop\": 600",
                     "#1458: selected report object JSON should expose top coordinates relative to containing sections");
+    expect_contains(object_process.stdout_text, "\"sectionObjectIndex\": 0",
+                    "#1459: selected report object JSON should expose object order inside containing sections");
+    expect_contains(object_process.stdout_text, "\"sectionObjectCount\": 1",
+                    "#1459: selected report object JSON should expose containing section object counts");
     expect_contains(object_process.stdout_text, "\"expression\": \"customer.company\"",
                     "#1454: selected report object JSON should expose report object expressions");
     expect_contains(object_process.stdout_text, "\"expressionFieldIndex\": 2",

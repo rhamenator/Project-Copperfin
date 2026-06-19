@@ -20138,6 +20138,10 @@ void print_json_report_layout_object(
     print_json_report_record_index_or_null(object.containing_section_record_index);
     std::cout << ",\n";
     std::cout << indent << "  \"sectionRelativeTop\": " << object.section_relative_top << ",\n";
+    std::cout << indent << "  \"sectionObjectIndex\": ";
+    print_json_report_record_index_or_null(object.section_object_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"sectionObjectCount\": " << object.section_object_count << ",\n";
     std::cout << indent << "  \"objectTypeCode\": " << object.objtype_code << ",\n";
     std::cout << indent << "  \"objectTypeFieldIndex\": ";
     print_json_report_field_index_or_null(object.objtype_field_index);
