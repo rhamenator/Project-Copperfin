@@ -356,6 +356,15 @@ bool visual_object_exists(const std::filesystem::path& form_path, const std::str
     return false;
 }
 
+bool dbf_record_deleted(const std::filesystem::path& table_path, std::size_t record_index) {
+    const auto table_result =
+        copperfin::vfp::parse_dbf_table_from_file(table_path.string(), record_index + 1U);
+    if (!table_result.ok || record_index >= table_result.table.records.size()) {
+        return false;
+    }
+    return table_result.table.records[record_index].deleted;
+}
+
 bool visual_object_is_deleted(const std::filesystem::path& form_path, const std::string& unique_id) {
     const auto list_result = copperfin::vfp::list_visual_objects(form_path.string());
     if (!list_result.ok) {
@@ -4553,6 +4562,63 @@ void test_studio_host_json_renames_report_layout_object_identity_by_stable_selec
             "\"expression\": \"right.value\""
         },
         "#1472: report layout JSON should keep the renamed object in refreshed section membership");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_deletes_report_sections_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_section_delete_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_reorder_json(report_path);
+
+    const auto delete_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--delete-object",
+            "--record", "1",
+            "--json"
+        },
+        temp_root);
+
+    if (delete_process.exit_code != 0) {
+        std::cerr << "studio host report section delete stdout:\n" << delete_process.stdout_text << "\n";
+        std::cerr << "studio host report section delete stderr:\n" << delete_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(delete_process.exit_code == 0,
+           "#1473: report section delete should exit successfully");
+    expect(dbf_record_deleted(report_path, 1U),
+           "#1473: report section delete should mark the FRX section record deleted");
+    expect_contains(delete_process.stdout_text, "\"sectionCount\": 0",
+                    "#1473: deleted report section JSON should remove the section from live section counts");
+    expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
+                    "#1473: deleted report section JSON should expose deleted section counts");
+    expect_contains_in_order(
+        delete_process.stdout_text,
+        {
+            "\"deletedSections\": [",
+            "\"recordIndex\": 1",
+            "\"deleted\": true",
+            "\"sectionIndex\": null",
+            "\"sectionCount\": 0",
+            "\"bandKind\": \"detail\""
+        },
+        "#1473: report layout JSON should move the section into deleted-section metadata");
+    expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 3",
+                    "#1473: deleting the only live section should leave former section objects unplaced");
+    expect_contains(delete_process.stdout_text, "\"containingSectionId\": \"\"",
+                    "#1473: former section objects should not fabricate containing-section ids");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -48215,6 +48281,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
+    test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
