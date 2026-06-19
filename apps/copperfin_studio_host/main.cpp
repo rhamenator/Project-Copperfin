@@ -10065,6 +10065,10 @@ void print_json_editor_action_dispatch_result(
 
     const auto& plan = result.plan;
     const auto& action = plan.action;
+    const std::vector<std::string> dispatch_ready_action_ids{std::string(action.id)};
+    const std::vector<std::string> dispatch_blocked_action_ids;
+    const std::vector<std::string> dispatch_blocked_errors;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
@@ -10098,6 +10102,15 @@ void print_json_editor_action_dispatch_result(
     std::cout << ",\n";
     std::cout << "    \"line\": " << plan.line << ",\n";
     std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"dispatchReadyActionIds\": ";
+    print_json_string_array(dispatch_ready_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedActionIds\": ";
+    print_json_string_array(dispatch_blocked_action_ids);
+    std::cout << ",\n";
+    std::cout << "    \"dispatchBlockedErrors\": ";
+    print_json_string_array(dispatch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"dispatchArguments\": [";
     for (std::size_t index = 0U; index < plan.dispatch_arguments.size(); ++index) {
         if (index != 0U) {

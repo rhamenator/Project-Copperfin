@@ -6646,6 +6646,12 @@ void test_studio_host_json_exposes_editor_action_dispatch(const std::string& stu
         "#1226: editor action dispatch JSON should carry line metadata");
     expect_contains(method_process.stdout_text, "\"column\": 7",
         "#1226: editor action dispatch JSON should carry column metadata");
+    expect_contains(method_process.stdout_text, "\"dispatchReadyActionIds\": [\"edit-visual-method\"]",
+        "#1397: editor action dispatch JSON should summarize dispatch-ready action ids");
+    expect_contains(method_process.stdout_text, "\"dispatchBlockedActionIds\": []",
+        "#1397: editor action dispatch JSON should summarize empty blocked action ids");
+    expect_contains(method_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1397: editor action dispatch JSON should summarize empty dispatch errors");
     expect_contains(method_process.stdout_text, "\"dispatchArguments\": [",
         "#1226: editor action dispatch JSON should expose dispatch arguments");
     expect_contains(method_process.stdout_text, "\"--command-token\"",
@@ -6687,6 +6693,12 @@ void test_studio_host_json_exposes_editor_action_dispatch(const std::string& stu
         "#1226: expression editor dispatch JSON should expose expression-editor metadata");
     expect_contains(expression_process.stdout_text, "\"targetSurface\": \"expression-editor\"",
         "#1226: expression editor dispatch JSON should expose expression editor target surfaces");
+    expect_contains(expression_process.stdout_text, "\"dispatchReadyActionIds\": [\"edit-report-expression\"]",
+        "#1397: expression editor dispatch JSON should summarize dispatch-ready action ids");
+    expect_contains(expression_process.stdout_text, "\"dispatchBlockedActionIds\": []",
+        "#1397: expression editor dispatch JSON should summarize empty blocked action ids");
+    expect_contains(expression_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#1397: expression editor dispatch JSON should summarize empty dispatch errors");
     expect_contains(expression_process.stdout_text, "\"--selection-context\"",
         "#1226: expression editor dispatch JSON should expose selection-context arguments");
     expect_contains(expression_process.stdout_text, "\"report_expression\"",

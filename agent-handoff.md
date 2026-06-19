@@ -28,11 +28,11 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1396`, exposing direct editor action invocation-admission summaries (`admissionReadyActionIds`, `admissionBlockedActionIds`, `admissionBlockedErrors`) in `copperfin_studio_host --editor-action-invocation-admission ... --json` success output. `#1395` is the immediately preceding direct editor action launch-plan summary host JSON slice. These issues remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1397`, exposing direct editor action dispatch summaries (`dispatchReadyActionIds`, `dispatchBlockedActionIds`, `dispatchBlockedErrors`) in `copperfin_studio_host --editor-action-dispatch ... --json` success output. `#1396` is the immediately preceding direct editor action invocation-admission summary host JSON slice. These issues remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1396`, adding direct editor action invocation-admission summary JSON. `#1395` remains the latest prior direct editor action launch-plan summary host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, and unmatched-selection JSON coverage.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1397`, adding direct editor action dispatch summary JSON. `#1396` remains the latest prior direct editor action invocation-admission summary host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, and unmatched-selection JSON coverage.
 
 Next: continue `#23` by opening or picking the next prompt-sized designer interaction, builder/wizard invocation, toolbox-flow, or context-aware editor child before coding. The visual-object host-wrapper scanner reported zero missing wrappers after `#1202`, so do not open more wrapper slices unless a new editor API is added or the scanner regresses. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
