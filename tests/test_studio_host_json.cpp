@@ -3634,7 +3634,7 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
         {.name = "UNIQUEID", .type = 'C', .length = 24U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1", "", "", "", "", "", "10", ""},
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "", "", "", "", "", "10", ""},
         {"9", "1", "", "", "0", "", "2000", "", "", ""},
         {"9", "4", "", "", "2000", "", "5000", "", "", ""},
         {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", "", "field-guid"},
@@ -3752,9 +3752,35 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1516: report layout JSON should expose computed preview bounds width");
     expect_contains(process.stdout_text, "\"previewBoundsHeight\": 8100",
                     "#1516: report layout JSON should expose computed preview bounds height");
+    expect_contains(process.stdout_text, "\"pageSetupAvailable\": true",
+                    "#1517: report layout JSON should expose page setup summary availability");
+    expect_contains(process.stdout_text, "\"orientationAvailable\": true",
+                    "#1517: report layout JSON should expose orientation summary availability");
+    expect_contains(process.stdout_text, "\"orientationCode\": 0",
+                    "#1517: report layout JSON should expose orientation codes");
+    expect_contains(process.stdout_text, "\"paperSizeAvailable\": true",
+                    "#1517: report layout JSON should expose paper-size summary availability");
+    expect_contains(process.stdout_text, "\"paperSizeCode\": 1",
+                    "#1517: report layout JSON should expose paper-size codes");
+    expect_contains(process.stdout_text, "\"topMarginAvailable\": true",
+                    "#1517: report layout JSON should expose top-margin summary availability");
+    expect_contains(process.stdout_text, "\"topMargin\": 10",
+                    "#1517: report layout JSON should expose top margins");
+    expect_contains(process.stdout_text, "\"bottomMarginAvailable\": true",
+                    "#1517: report layout JSON should expose bottom-margin summary availability");
+    expect_contains(process.stdout_text, "\"bottomMargin\": 20",
+                    "#1517: report layout JSON should expose bottom margins");
+    expect_contains(process.stdout_text, "\"gridVerticalAvailable\": true",
+                    "#1517: report layout JSON should expose vertical-grid summary availability");
+    expect_contains(process.stdout_text, "\"gridVertical\": 4",
+                    "#1517: report layout JSON should expose vertical grid spacing");
+    expect_contains(process.stdout_text, "\"gridHorizontalAvailable\": true",
+                    "#1517: report layout JSON should expose horizontal-grid summary availability");
+    expect_contains(process.stdout_text, "\"gridHorizontal\": 8",
+                    "#1517: report layout JSON should expose horizontal grid spacing");
     expect_contains(process.stdout_text, "\"liveObjectCount\": 3",
                     "#1516: report layout JSON should summarize live placed and unplaced object counts");
-    expect_contains(process.stdout_text, "\"settingCount\": 3",
+    expect_contains(process.stdout_text, "\"settingCount\": 6",
                     "#1452: report layout JSON should summarize live setting counts");
     expect_contains(process.stdout_text, "\"deletedObjectCount\": 1",
                     "#1452: report layout JSON should summarize deleted report object counts");
@@ -3768,6 +3794,12 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1452: report layout JSON should expose later memo-line setting provenance");
     expect_contains(process.stdout_text, "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"10\"",
                     "#1452: report layout JSON should expose direct setting provenance");
+    expect_contains(process.stdout_text, "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2, \"memoBlockNumber\": 1, \"value\": \"20\"",
+                    "#1517: report layout JSON should expose bottom-margin setting provenance");
+    expect_contains(process.stdout_text, "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3, \"memoBlockNumber\": 1, \"value\": \"4\"",
+                    "#1517: report layout JSON should expose vertical-grid setting provenance");
+    expect_contains(process.stdout_text, "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4, \"memoBlockNumber\": 1, \"value\": \"8\"",
+                    "#1517: report layout JSON should expose horizontal-grid setting provenance");
     expect_contains(process.stdout_text, "\"sectionCount\": 2",
                     "#1452: report layout JSON should summarize live section counts");
     expect_contains(process.stdout_text, "\"id\": \"page_header_1\"",
@@ -3875,7 +3907,21 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1516: label layout JSON should expose shared bottom preview bounds");
     expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 3",
                     "#1516: label layout JSON should summarize live placed and unplaced object counts");
-    expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
+    expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                    "#1517: label layout JSON should expose page setup summary availability");
+    expect_contains(summary_process.stdout_text, "\"orientationCode\": 0",
+                    "#1517: label layout JSON should expose orientation codes");
+    expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 1",
+                    "#1517: label layout JSON should expose paper-size codes");
+    expect_contains(summary_process.stdout_text, "\"topMargin\": 10",
+                    "#1517: label layout JSON should expose top margins");
+    expect_contains(summary_process.stdout_text, "\"bottomMargin\": 20",
+                    "#1517: label layout JSON should expose bottom margins");
+    expect_contains(summary_process.stdout_text, "\"gridVertical\": 4",
+                    "#1517: label layout JSON should expose vertical grid spacing");
+    expect_contains(summary_process.stdout_text, "\"gridHorizontal\": 8",
+                    "#1517: label layout JSON should expose horizontal grid spacing");
+    expect_contains(summary_process.stdout_text, "\"settingCount\": 6",
                     "#1501: unselected label layout JSON should summarize live settings");
     expect_contains(summary_process.stdout_text, "\"sectionCount\": 2",
                     "#1501: unselected label layout JSON should summarize live sections");
@@ -3911,7 +3957,7 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1481: label layout JSON should identify label assets");
     expect_contains(object_process.stdout_text, "\"documentTitle\": \"mailing.lbx\"",
                     "#1481: label layout JSON should preserve label document titles");
-    expect_contains(object_process.stdout_text, "\"settingCount\": 3",
+    expect_contains(object_process.stdout_text, "\"settingCount\": 6",
                     "#1481: label layout JSON should expose live settings");
     expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
                     "#1481: label layout JSON should expose live sections");
@@ -5968,7 +6014,9 @@ void test_studio_host_json_deletes_report_settings_by_record_selection(const std
            "#1475: report settings delete should mark the FRX settings record deleted");
     expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
                     "#1475: deleted report settings JSON should remove settings from live counts");
-    expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 3",
+    expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
+                    "#1517: deleted report settings JSON should clear live page setup summaries");
+    expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
                     "#1475: deleted report settings JSON should expose deleted setting counts");
     expect_contains_in_order(
         delete_process.stdout_text,
@@ -5977,6 +6025,12 @@ void test_studio_host_json_deletes_report_settings_by_record_selection(const std
             "\"name\": \"ORIENTATION\"",
             "\"recordIndex\": 0",
             "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"BOTMARGIN\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDV\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDH\"",
             "\"recordIndex\": 0",
             "\"name\": \"TOPMARGIN\"",
             "\"recordIndex\": 0"
@@ -6028,7 +6082,9 @@ void test_studio_host_json_deletes_label_settings_by_record_selection(const std:
                     "#1494: deleted label settings JSON should retain label identity");
     expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
                     "#1494: deleted label settings JSON should remove settings from live counts");
-    expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 3",
+    expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
+                    "#1517: deleted label settings JSON should clear live page setup summaries");
+    expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
                     "#1494: deleted label settings JSON should expose deleted setting counts");
     expect_contains_in_order(
         delete_process.stdout_text,
@@ -6037,6 +6093,12 @@ void test_studio_host_json_deletes_label_settings_by_record_selection(const std:
             "\"name\": \"ORIENTATION\"",
             "\"recordIndex\": 0",
             "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"BOTMARGIN\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDV\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDH\"",
             "\"recordIndex\": 0",
             "\"name\": \"TOPMARGIN\"",
             "\"recordIndex\": 0"
@@ -6090,7 +6152,7 @@ void test_studio_host_json_restores_report_settings_by_record_selection(const st
            "#1476: report settings restore should exit successfully");
     expect(!dbf_record_deleted(report_path, 0U),
            "#1476: report settings restore should clear the FRX settings record delete flag");
-    expect_contains(restore_process.stdout_text, "\"settingCount\": 3",
+    expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
                     "#1476: restored report settings JSON should restore live setting counts");
     expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
                     "#1476: restored report settings JSON should clear deleted setting counts");
@@ -6101,6 +6163,12 @@ void test_studio_host_json_restores_report_settings_by_record_selection(const st
             "\"name\": \"ORIENTATION\"",
             "\"recordIndex\": 0",
             "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"BOTMARGIN\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDV\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDH\"",
             "\"recordIndex\": 0",
             "\"name\": \"TOPMARGIN\"",
             "\"recordIndex\": 0"
@@ -6152,7 +6220,7 @@ void test_studio_host_json_restores_label_settings_by_record_selection(const std
            "#1495: label settings restore should clear the LBX settings record delete flag");
     expect_contains(restore_process.stdout_text, "\"isLabel\": true",
                     "#1495: restored label settings JSON should retain label identity");
-    expect_contains(restore_process.stdout_text, "\"settingCount\": 3",
+    expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
                     "#1495: restored label settings JSON should restore live setting counts");
     expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
                     "#1495: restored label settings JSON should clear deleted setting counts");
@@ -6163,6 +6231,12 @@ void test_studio_host_json_restores_label_settings_by_record_selection(const std
             "\"name\": \"ORIENTATION\"",
             "\"recordIndex\": 0",
             "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"BOTMARGIN\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDV\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDH\"",
             "\"recordIndex\": 0",
             "\"name\": \"TOPMARGIN\"",
             "\"recordIndex\": 0"
@@ -6271,7 +6345,7 @@ void test_studio_host_json_exposes_selected_report_settings(const std::string& s
                     "#1515: selected deleted report settings should serialize null containing-object sections");
     expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
                     "#1477: deleted selected report settings JSON should not expose live settings");
-    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 3",
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 6",
                     "#1477: deleted selected report settings JSON should expose deleted setting counts");
     expect_contains_in_order(
         deleted_settings_process.stdout_text,
@@ -6280,6 +6354,12 @@ void test_studio_host_json_exposes_selected_report_settings(const std::string& s
             "\"name\": \"ORIENTATION\"",
             "\"recordIndex\": 0",
             "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"BOTMARGIN\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDV\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDH\"",
             "\"recordIndex\": 0",
             "\"name\": \"TOPMARGIN\"",
             "\"recordIndex\": 0"
@@ -7041,7 +7121,7 @@ void test_studio_host_json_exposes_selected_label_settings(const std::string& st
                     "#1505: selected deleted label settings should serialize null containing-object sections");
     expect_contains(deleted_settings_process.stdout_text, "\"settingCount\": 0",
                     "#1497: deleted selected label settings JSON should not expose live settings");
-    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 3",
+    expect_contains(deleted_settings_process.stdout_text, "\"deletedSettingCount\": 6",
                     "#1497: deleted selected label settings JSON should expose deleted setting counts");
     expect_contains_in_order(
         deleted_settings_process.stdout_text,
@@ -7050,6 +7130,12 @@ void test_studio_host_json_exposes_selected_label_settings(const std::string& st
             "\"name\": \"ORIENTATION\"",
             "\"recordIndex\": 0",
             "\"name\": \"PAPERSIZE\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"BOTMARGIN\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDV\"",
+            "\"recordIndex\": 0",
+            "\"name\": \"GRIDH\"",
             "\"recordIndex\": 0",
             "\"name\": \"TOPMARGIN\"",
             "\"recordIndex\": 0"

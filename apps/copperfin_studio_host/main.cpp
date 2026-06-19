@@ -20455,6 +20455,26 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      \"previewBoundsBottom\": " << report_layout.preview_bounds_bottom << ",\n";
         std::cout << "      \"previewBoundsWidth\": " << report_layout.preview_bounds_width << ",\n";
         std::cout << "      \"previewBoundsHeight\": " << report_layout.preview_bounds_height << ",\n";
+        std::cout << "      \"pageSetupAvailable\": "
+                  << (report_layout.page_setup_available ? "true" : "false") << ",\n";
+        std::cout << "      \"orientationAvailable\": "
+                  << (report_layout.orientation_available ? "true" : "false") << ",\n";
+        std::cout << "      \"orientationCode\": " << report_layout.orientation_code << ",\n";
+        std::cout << "      \"paperSizeAvailable\": "
+                  << (report_layout.paper_size_available ? "true" : "false") << ",\n";
+        std::cout << "      \"paperSizeCode\": " << report_layout.paper_size_code << ",\n";
+        std::cout << "      \"topMarginAvailable\": "
+                  << (report_layout.top_margin_available ? "true" : "false") << ",\n";
+        std::cout << "      \"topMargin\": " << report_layout.top_margin << ",\n";
+        std::cout << "      \"bottomMarginAvailable\": "
+                  << (report_layout.bottom_margin_available ? "true" : "false") << ",\n";
+        std::cout << "      \"bottomMargin\": " << report_layout.bottom_margin << ",\n";
+        std::cout << "      \"gridVerticalAvailable\": "
+                  << (report_layout.grid_vertical_available ? "true" : "false") << ",\n";
+        std::cout << "      \"gridVertical\": " << report_layout.grid_vertical << ",\n";
+        std::cout << "      \"gridHorizontalAvailable\": "
+                  << (report_layout.grid_horizontal_available ? "true" : "false") << ",\n";
+        std::cout << "      \"gridHorizontal\": " << report_layout.grid_horizontal << ",\n";
         std::cout << "      \"liveObjectCount\": " << report_layout.live_object_count << ",\n";
         std::cout << "      \"settingCount\": " << report_layout.settings.size() << ",\n";
         std::cout << "      \"deletedSettingCount\": " << report_layout.deleted_settings.size() << ",\n";

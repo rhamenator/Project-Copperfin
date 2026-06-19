@@ -97,6 +97,30 @@ int parse_scaled_int_or_default(const DbfRecord& record, std::string_view field_
     return parsed.value_or(fallback);
 }
 
+std::optional<int> parse_named_value_int(const StudioNamedValue& named_value) {
+    const std::string raw = trim_copy(named_value.value);
+    if (raw.empty()) {
+        return std::nullopt;
+    }
+
+    const auto dot = raw.find('.');
+    const std::string integer_portion = dot == std::string::npos ? raw : raw.substr(0U, dot);
+    if (integer_portion.empty()) {
+        return std::nullopt;
+    }
+
+    int parsed_value = 0;
+    const auto [ptr, ec] = std::from_chars(
+        integer_portion.data(),
+        integer_portion.data() + integer_portion.size(),
+        parsed_value);
+    if (ec != std::errc() || ptr != integer_portion.data() + integer_portion.size()) {
+        return std::nullopt;
+    }
+
+    return parsed_value;
+}
+
 std::string band_kind_name(int objcode) {
     switch (objcode) {
         case 0:
@@ -374,6 +398,53 @@ void finalize_preview_bounds(StudioReportLayoutSnapshot& snapshot) {
     snapshot.preview_bounds_height = std::max(0, snapshot.preview_bounds_bottom - snapshot.preview_bounds_top);
 }
 
+void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
+    const auto apply_setting = [&](std::string_view setting_name, auto assign_setting) {
+        const auto setting = std::find_if(
+            snapshot.settings.begin(),
+            snapshot.settings.end(),
+            [&](const StudioNamedValue& named_value) {
+                return named_value.name == setting_name;
+            });
+        if (setting == snapshot.settings.end()) {
+            return;
+        }
+
+        const auto parsed_value = parse_named_value_int(*setting);
+        if (!parsed_value.has_value()) {
+            return;
+        }
+
+        assign_setting(*parsed_value);
+        snapshot.page_setup_available = true;
+    };
+
+    apply_setting("ORIENTATION", [&](int value) {
+        snapshot.orientation_available = true;
+        snapshot.orientation_code = value;
+    });
+    apply_setting("PAPERSIZE", [&](int value) {
+        snapshot.paper_size_available = true;
+        snapshot.paper_size_code = value;
+    });
+    apply_setting("TOPMARGIN", [&](int value) {
+        snapshot.top_margin_available = true;
+        snapshot.top_margin = value;
+    });
+    apply_setting("BOTMARGIN", [&](int value) {
+        snapshot.bottom_margin_available = true;
+        snapshot.bottom_margin = value;
+    });
+    apply_setting("GRIDV", [&](int value) {
+        snapshot.grid_vertical_available = true;
+        snapshot.grid_vertical = value;
+    });
+    apply_setting("GRIDH", [&](int value) {
+        snapshot.grid_horizontal_available = true;
+        snapshot.grid_horizontal = value;
+    });
+}
+
 StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
@@ -518,6 +589,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
     });
 
     finalize_preview_bounds(snapshot);
+    finalize_page_setup_summary(snapshot);
 
     return snapshot;
 }
