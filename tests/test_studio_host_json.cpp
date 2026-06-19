@@ -4206,6 +4206,72 @@ void test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(con
     }
 }
 
+void test_studio_host_json_restores_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_restore_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+    const auto seed_delete_result = copperfin::vfp::set_visual_object_deleted_state({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "field-guid",
+        .deleted = true
+    });
+    expect(seed_delete_result.ok && visual_object_deleted(report_path, "field-guid"),
+           "#1468: report layout restore fixture should start with a deleted report object");
+
+    const auto restore_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", report_path.string(),
+            "--record", "3",
+            "--restore-object",
+            "--unique-id", "field-guid",
+            "--json"
+        },
+        temp_root);
+
+    if (restore_process.exit_code != 0) {
+        std::cerr << "studio host report object restore stdout:\n" << restore_process.stdout_text << "\n";
+        std::cerr << "studio host report object restore stderr:\n" << restore_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(restore_process.exit_code == 0,
+           "#1468: report layout object restore should exit successfully");
+    expect(!visual_object_deleted(report_path, "field-guid"),
+           "#1468: report layout object restore should clear the FRX object deleted flag");
+    expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1468: restored report object JSON should move the object out of deleted report objects");
+    expect_contains(restore_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1468: restored selected report object JSON should remain available");
+    expect_contains(restore_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1468: restored report objects should advertise containing-section availability");
+    expect_contains(restore_process.stdout_text, "\"selectedReportObjectSection\": {",
+                    "#1468: restored report objects should serialize containing-section JSON");
+    expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1468: restored report object selections should classify as report objects");
+    expect_contains(restore_process.stdout_text, "\"recordIndex\": 3",
+                    "#1468: restored selected report object JSON should preserve selected record indexes");
+    expect_contains(restore_process.stdout_text, "\"deleted\": false",
+                    "#1468: restored selected report object JSON should expose live state");
+    expect_contains(restore_process.stdout_text, "\"containingSectionId\": \"detail_2\"",
+                    "#1468: restored report object JSON should expose containing section ids again");
+    expect_contains(restore_process.stdout_text, "\"containingSectionRecordIndex\": 2",
+                    "#1468: restored report object JSON should expose containing section record indexes again");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -47857,6 +47923,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_resizes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_snaps_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_restores_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
