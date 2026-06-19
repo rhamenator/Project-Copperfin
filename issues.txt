@@ -1,3 +1,4 @@
+1323	OPEN	E2/#23 slice: Expose toolbox dispatch execution through host JSON		2026-06-19T05:06:23Z
 1322	OPEN	E2/#23 slice: Add toolbox dispatch execution seam		2026-06-19T05:02:36Z
 1321	OPEN	E2/#23 slice: Expose editor action dispatch execution through host JSON		2026-06-19T04:56:50Z
 1320	OPEN	E2/#23 slice: Add editor action dispatch execution seam		2026-06-19T04:48:37Z

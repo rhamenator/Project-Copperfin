@@ -7645,6 +7645,188 @@ void test_studio_host_json_exposes_toolbox_dispatch(const std::string& studio_ho
     }
 }
 
+void test_studio_host_json_exposes_toolbox_execution(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_toolbox_execution_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1323: toolbox execution JSON should accept admitted visual-object contexts");
+    expect_contains(visual_process.stdout_text, "\"toolboxExecution\": {",
+        "#1323: toolbox execution JSON should expose an execution object");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1323: toolbox execution JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1323: visual-object toolbox execution JSON should resolve form toolbox contexts");
+    expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
+        "#1323: toolbox execution JSON should expose command tokens");
+    expect_contains(visual_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1323: toolbox execution JSON should carry asset paths");
+    expect_contains(visual_process.stdout_text, "\"recordIndex\": 1",
+        "#1323: toolbox execution JSON should carry record indexes");
+    expect_contains(visual_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1323: toolbox execution JSON should carry object-name selectors");
+    expect_contains(visual_process.stdout_text, "\"uniqueId\": \"form-guid\"",
+        "#1323: toolbox execution JSON should carry unique-id selectors");
+    expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
+        "#1323: visual-object toolbox execution JSON should include form-safe TextBox items");
+    expect_contains(visual_process.stdout_text, "\"launchCommand\": \"/bin/true\"",
+        "#1323: toolbox execution JSON should expose launch commands");
+    expect_contains(visual_process.stdout_text, "\"executedCommand\": \"'/bin/true'",
+        "#1323: toolbox execution JSON should expose the shell command");
+    expect_contains(visual_process.stdout_text, "\"observedExitCode\": 0",
+        "#1323: successful toolbox execution JSON should expose zero exit status");
+    expect_contains(visual_process.stdout_text, "\"executionAdmitted\": true",
+        "#1323: toolbox execution JSON should expose execution admission");
+    expect_contains(visual_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1323: toolbox execution JSON should expose dispatch admission");
+    expect_contains(visual_process.stdout_text, "\"executed\": true",
+        "#1323: toolbox execution JSON should mark execution complete");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": false",
+        "#1323: admitted toolbox execution JSON should not be dry-run");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1323: toolbox execution JSON should remain non-mutating");
+
+    const auto report_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "report_expression",
+            "--path", "reports/orders.frx",
+            "--record", "3",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(report_process.exit_code == 0,
+        "#1323: toolbox execution JSON should accept admitted report contexts");
+    expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1323: report toolbox execution JSON should resolve report toolbox contexts");
+    expect_contains(report_process.stdout_text, "\"id\": \"label\"",
+        "#1323: report toolbox execution JSON should include report-safe Label items");
+    expect_not_contains(report_process.stdout_text, "\"id\": \"textbox\"",
+        "#1323: report toolbox execution JSON should exclude form-only TextBox items");
+    expect_contains(report_process.stdout_text, "\"executed\": true",
+        "#1323: report toolbox execution JSON should mark execution complete");
+
+    const auto missing_command_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_command_process.exit_code == 2,
+        "#1323: toolbox execution JSON should reject missing launch commands");
+    expect_contains(missing_command_process.stdout_text, "No toolbox launch command was provided.",
+        "#1323: missing toolbox launch commands should report parser errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "false",
+            "--admit-toolbox-execution", "true",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 4,
+        "#1323: toolbox execution JSON should reject dry-run dispatch requests");
+    expect_contains(dry_run_process.stdout_text, "\"toolboxExecution\": null",
+        "#1323: dry-run toolbox execution JSON should not expose a result object");
+    expect_contains(dry_run_process.stdout_text,
+        "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+        "#1323: dry-run toolbox execution JSON should report dispatch admission errors");
+
+    const auto unadmitted_execution_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "false",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_execution_process.exit_code == 4,
+        "#1323: toolbox execution JSON should require explicit execution admission");
+    expect_contains(unadmitted_execution_process.stdout_text,
+        "A toolbox dispatch execution request requires explicit execution admission.",
+        "#1323: unadmitted toolbox execution JSON should report execution admission errors");
+    expect_contains(unadmitted_execution_process.stdout_text, "\"executed\": false",
+        "#1323: unadmitted toolbox execution JSON should not mark execution complete");
+
+    const auto failed_command_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--toolbox-launch-command", "/bin/false",
+            "--json"
+        },
+        temp_root);
+    expect(failed_command_process.exit_code == 4,
+        "#1323: toolbox execution JSON should report nonzero process exits");
+    expect_contains(failed_command_process.stdout_text,
+        "Toolbox launch command returned a non-zero exit code.",
+        "#1323: failed toolbox execution JSON should report process errors");
+    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": ",
+        "#1323: failed toolbox execution JSON should expose observed exit status");
+    expect_contains(failed_command_process.stdout_text, "\"executed\": false",
+        "#1323: failed toolbox execution JSON should not mark execution complete");
+
+    const auto unsupported_process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "menu_item",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--toolbox-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_process.exit_code == 4,
+        "#1323: toolbox execution JSON should reject unsupported selection contexts");
+    expect_contains(unsupported_process.stdout_text, "\"toolboxExecution\": null",
+        "#1323: unsupported toolbox execution JSON should not expose a result object");
+    expect_contains(unsupported_process.stdout_text,
+        "The selected Studio context does not expose a toolbox palette.",
+        "#1323: unsupported toolbox execution JSON should report validation errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_dispatch_catalog(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -37461,6 +37643,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_dispatch(argv[1]);
+    test_studio_host_json_exposes_toolbox_execution(argv[1]);
     test_studio_host_json_exposes_toolbox_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);

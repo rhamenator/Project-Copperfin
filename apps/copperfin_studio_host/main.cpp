@@ -58,6 +58,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --toolbox-invocation-admission-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --selection-toolbox-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --toolbox-dispatch --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --toolbox-execute --selection-context <token> --toolbox-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--admit-toolbox-execution <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --toolbox-dispatch-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --selection-toolbox-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --designer-launch-surfaces --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
@@ -739,6 +740,18 @@ struct ToolboxDispatchParseResult {
     bool output_json = false;
     bool selection_context_provided = false;
     bool admit_palette_invocation = false;
+    std::string error;
+    copperfin::studio::StudioToolboxPaletteLaunchRequest request;
+};
+
+struct ToolboxExecuteParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool selection_context_provided = false;
+    bool admit_palette_invocation = false;
+    bool admit_execution = false;
+    std::string launch_command;
     std::string error;
     copperfin::studio::StudioToolboxPaletteLaunchRequest request;
 };
@@ -2536,6 +2549,88 @@ ToolboxDispatchParseResult parse_toolbox_dispatch_arguments(const std::vector<st
 
     if (result.ok && !result.selection_context_provided) {
         fail("No selection context was provided.");
+    }
+    return result;
+}
+
+ToolboxExecuteParseResult parse_toolbox_execute_arguments(const std::vector<std::string>& args) {
+    ToolboxExecuteParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--toolbox-execute") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--toolbox-execute") {
+            continue;
+        }
+        if (argument == "--selection-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioEditorSelectionContext parsed_context{};
+            if (!parse_editor_selection_context_token(token, parsed_context)) {
+                fail("Unknown selection context token: " + token);
+                continue;
+            }
+            result.selection_context_provided = true;
+            result.request.selection_context = parsed_context;
+        } else if (argument == "--path") {
+            result.request.asset_path = require_value(argument);
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--admit-palette-invocation") {
+            const std::string token = require_value(argument);
+            bool admitted = false;
+            if (!parse_bool_token(token, admitted)) {
+                fail("The --admit-palette-invocation value must be true or false.");
+                continue;
+            }
+            result.admit_palette_invocation = admitted;
+        } else if (argument == "--admit-toolbox-execution") {
+            const std::string token = require_value(argument);
+            bool admitted = false;
+            if (!parse_bool_token(token, admitted)) {
+                fail("The --admit-toolbox-execution value must be true or false.");
+                continue;
+            }
+            result.admit_execution = admitted;
+        } else if (argument == "--toolbox-launch-command") {
+            result.launch_command = require_value(argument);
+        } else {
+            fail("Unknown toolbox-execute option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.selection_context_provided) {
+        fail("No selection context was provided.");
+    }
+    if (result.ok && result.launch_command.empty()) {
+        fail("No toolbox launch command was provided.");
     }
     return result;
 }
@@ -9130,6 +9225,82 @@ void print_json_toolbox_dispatch_result(const copperfin::studio::StudioToolboxDi
     std::cout << "}\n";
 }
 
+void print_json_toolbox_execution_result(
+    const copperfin::studio::StudioToolboxDispatchExecutionResult& result,
+    const std::string& launch_command,
+    const std::string& executed_command) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"toolboxExecution\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << ",\n";
+        std::cout << "  \"executionAdmitted\": " << (result.execution_admitted ? "true" : "false") << ",\n";
+        std::cout << "  \"executed\": " << (result.executed ? "true" : "false") << ",\n";
+        std::cout << "  \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
+        std::cout << "  \"launchCommand\": ";
+        print_json_string(launch_command);
+        std::cout << ",\n";
+        std::cout << "  \"executedCommand\": ";
+        print_json_string(executed_command);
+        std::cout << ",\n";
+        std::cout << "  \"observedExitCode\": " << result.observation.exit_code << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    const auto& plan = result.dispatch_plan;
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"selectionContext\": ";
+    print_json_string(copperfin::studio::studio_editor_selection_context_name(plan.selection_context));
+    std::cout << ",\n";
+    std::cout << "    \"toolboxContext\": ";
+    print_json_string(copperfin::studio::studio_toolbox_context_name(plan.toolbox_context));
+    std::cout << ",\n";
+    std::cout << "    \"commandToken\": ";
+    print_json_string(plan.command_token);
+    std::cout << ",\n";
+    std::cout << "    \"assetPath\": ";
+    print_json_string(plan.asset_path);
+    std::cout << ",\n";
+    std::cout << "    \"recordIndex\": " << plan.record_index << ",\n";
+    std::cout << "    \"objectName\": ";
+    print_json_string(plan.object_name);
+    std::cout << ",\n";
+    std::cout << "    \"uniqueId\": ";
+    print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"itemCount\": " << plan.item_count << ",\n";
+    std::cout << "    \"items\": [\n";
+    for (std::size_t index = 0U; index < plan.items.size(); ++index) {
+        print_json_toolbox_item_descriptor(plan.items[index], "      ");
+        if ((index + 1U) != plan.items.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ],\n";
+    std::cout << "    \"launchCommand\": ";
+    print_json_string(launch_command);
+    std::cout << ",\n";
+    std::cout << "    \"executedCommand\": ";
+    print_json_string(executed_command);
+    std::cout << ",\n";
+    std::cout << "    \"observedExitCode\": " << result.observation.exit_code << ",\n";
+    std::cout << "    \"executionAdmitted\": " << (result.execution_admitted ? "true" : "false") << ",\n";
+    std::cout << "    \"dispatchAdmitted\": " << (plan.dispatch_admitted ? "true" : "false") << ",\n";
+    std::cout << "    \"executed\": " << (result.executed ? "true" : "false") << ",\n";
+    std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
+    std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << "\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_json_toolbox_invocation_admission_catalog_result(
     const copperfin::studio::StudioToolboxInvocationAdmissionCatalogResult& result) {
     std::cout << "{\n";
@@ -11541,6 +11712,40 @@ void print_text_toolbox_dispatch_result(const copperfin::studio::StudioToolboxDi
     std::cout << "dry_run: " << (plan.dry_run ? "true" : "false") << "\n";
     std::cout << "executed: " << (plan.executed ? "true" : "false") << "\n";
     std::cout << "mutates_asset: " << (plan.mutates_asset ? "true" : "false") << "\n";
+}
+
+void print_text_toolbox_execution_result(
+    const copperfin::studio::StudioToolboxDispatchExecutionResult& result,
+    const std::string& launch_command,
+    const std::string& executed_command) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    std::cout << "execution_admitted: " << (result.execution_admitted ? "true" : "false") << "\n";
+    std::cout << "executed: " << (result.executed ? "true" : "false") << "\n";
+    std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
+    std::cout << "launch_command: " << launch_command << "\n";
+    std::cout << "executed_command: " << executed_command << "\n";
+    std::cout << "observed_exit_code: " << result.observation.exit_code << "\n";
+    if (!result.ok) {
+        return;
+    }
+    const auto& plan = result.dispatch_plan;
+    std::cout << "selection_context: "
+              << copperfin::studio::studio_editor_selection_context_name(plan.selection_context) << "\n";
+    std::cout << "toolbox_context: " << copperfin::studio::studio_toolbox_context_name(plan.toolbox_context) << "\n";
+    std::cout << "command_token: " << plan.command_token << "\n";
+    std::cout << "asset_path: " << plan.asset_path << "\n";
+    std::cout << "record_index: " << plan.record_index << "\n";
+    std::cout << "object_name: " << plan.object_name << "\n";
+    std::cout << "unique_id: " << plan.unique_id << "\n";
+    std::cout << "item_count: " << plan.item_count << "\n";
+    for (const auto& item : plan.items) {
+        std::cout << "item: " << item.id << " " << item.title << "\n";
+    }
+    std::cout << "dispatch_admitted: " << (plan.dispatch_admitted ? "true" : "false") << "\n";
+    std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
 }
 
 void print_text_toolbox_dispatch_catalog_result(
@@ -14092,6 +14297,127 @@ int main(int argc, char** argv) {
             print_json_toolbox_dispatch_result(result);
         } else {
             print_text_toolbox_dispatch_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto toolbox_execute_parse = parse_toolbox_execute_arguments(args);
+    if (toolbox_execute_parse.requested) {
+        if (!toolbox_execute_parse.ok) {
+            const auto result = copperfin::studio::StudioToolboxDispatchExecutionResult{
+                .ok = false,
+                .error = toolbox_execute_parse.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = toolbox_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (toolbox_execute_parse.output_json) {
+                print_json_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+            } else {
+                print_text_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto launch_result = copperfin::studio::plan_studio_toolbox_palette_launch(
+            toolbox_execute_parse.request);
+        if (!launch_result.ok) {
+            const auto result = copperfin::studio::StudioToolboxDispatchExecutionResult{
+                .ok = false,
+                .error = launch_result.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = toolbox_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (toolbox_execute_parse.output_json) {
+                print_json_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+            } else {
+                print_text_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+            }
+            return 4;
+        }
+
+        const auto admission_result = copperfin::studio::plan_studio_toolbox_invocation_admission({
+            .launch_plan = launch_result.plan,
+            .admit_palette_invocation = toolbox_execute_parse.admit_palette_invocation
+        });
+        if (!admission_result.ok) {
+            const auto result = copperfin::studio::StudioToolboxDispatchExecutionResult{
+                .ok = false,
+                .error = admission_result.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = toolbox_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (toolbox_execute_parse.output_json) {
+                print_json_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+            } else {
+                print_text_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+            }
+            return 4;
+        }
+
+        const auto dispatch_result = copperfin::studio::plan_studio_toolbox_dispatch({
+            .admission_plan = admission_result.plan
+        });
+        if (!dispatch_result.ok) {
+            const auto result = copperfin::studio::StudioToolboxDispatchExecutionResult{
+                .ok = false,
+                .error = dispatch_result.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = toolbox_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (toolbox_execute_parse.output_json) {
+                print_json_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+            } else {
+                print_text_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
+            }
+            return 4;
+        }
+
+        const std::string executed_command = build_shell_command(
+            toolbox_execute_parse.launch_command,
+            dispatch_result.plan.dispatch_arguments);
+        const auto result = copperfin::studio::execute_studio_toolbox_dispatch({
+            .dispatch_plan = dispatch_result.plan,
+            .admit_execution = toolbox_execute_parse.admit_execution,
+            .executor = [&](const copperfin::studio::StudioToolboxDispatchPlan&) {
+                const int exit_code = std::system(executed_command.c_str());
+                return copperfin::studio::StudioToolboxDispatchExecutionObservation{
+                    .launched = true,
+                    .exit_code = exit_code,
+                    .output = {},
+                    .error = exit_code == 0
+                        ? std::string{}
+                        : "Toolbox launch command returned a non-zero exit code.",
+                    .mutates_asset = false
+                };
+            }
+        });
+        if (toolbox_execute_parse.output_json) {
+            print_json_toolbox_execution_result(
+                result,
+                toolbox_execute_parse.launch_command,
+                executed_command);
+        } else {
+            print_text_toolbox_execution_result(
+                result,
+                toolbox_execute_parse.launch_command,
+                executed_command);
         }
         return result.ok ? 0 : 4;
     }

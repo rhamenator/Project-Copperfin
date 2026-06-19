@@ -28,11 +28,11 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1322`, adding injected toolbox dispatch execution for admitted toolbox palette dispatch contracts. `#1321` is the immediately preceding editor-action dispatch execution host JSON slice. Both remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1323`, exposing admitted toolbox dispatch execution through `copperfin_studio_host --toolbox-execute` JSON with explicit execution admission and observed process status. `#1322` is the immediately preceding injected toolbox dispatch execution seam. Both remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1322`, adding `execute_studio_toolbox_dispatch` so admitted toolbox palette dispatch contracts can run through an injected executor with deterministic launch observation, executed-state, item metadata validation, and mutation reporting. `#1321` remains the latest prior editor-action dispatch execution host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, and unmatched-selection JSON coverage.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1323`, exposing `copperfin_studio_host --toolbox-execute` so admitted toolbox dispatch contracts can run through host JSON with explicit execution admission, shell command construction, observed exit-code reporting, item metadata, and no-stale-metadata failures. `#1322` remains the latest prior injected toolbox dispatch execution seam pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, and unmatched-selection JSON coverage.
 
 Next: continue `#23` by opening or picking the next prompt-sized designer interaction, builder/wizard invocation, toolbox-flow, or context-aware editor child before coding. The visual-object host-wrapper scanner reported zero missing wrappers after `#1202`, so do not open more wrapper slices unless a new editor API is added or the scanner regresses. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
