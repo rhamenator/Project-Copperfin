@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 has no known remaining local implementation miss after the visual-asset host-exposure scan; closure is still subject to explicit issue-closure approval.
-- Latest implemented E3 slice: `#1452`, which exposes report/label layout provenance through Studio host JSON. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
+- Latest implemented E3 slice: `#1453`, which exposes selected report/label sections through Studio host JSON. `#1452` is the immediately preceding report-layout provenance JSON slice. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
 - Current continuation shape: continue prompt-sized E3/#24 children in report/label designer fidelity, report/label section editing, report/label output preview metadata, and layout/runtime parity seams, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
 - Next work: continue prompt-sized `#24` children in report/label designer fidelity. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` covers duplicate batches, `#1449` covers rename batches, `#1450` covers reorder batches, and `#1451` covers subtree duplication; the current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
@@ -357,6 +357,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
+| `#24` | `#1453` implemented; closure pending approval | Studio host JSON now exposes the selected report/label section for selected band records and returns false/null for non-section selections |
 | `#24` | `#1452` implemented; closure pending approval | Studio host JSON now exposes report/label layout provenance, live/deleted counts, deleted collections, section/object raw codes, field ordinals, memo blocks, and memo-line indexes |
 | `#23` | `#1451` implemented; closure pending approval | Studio host JSON now exposes visual-object subtree duplication with copied-root metadata and replacement-map failure coverage |
 | `#23` | `#1450` implemented; closure pending approval | Studio host JSON now exposes visual-object reorder-batch mutations with in-memory rollback/no-write failure handling and committed mutation metadata |

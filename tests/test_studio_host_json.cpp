@@ -3709,6 +3709,71 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
     }
 }
 
+void test_studio_host_json_exposes_selected_report_sections(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_report_section_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto section_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (section_process.exit_code != 0) {
+        std::cerr << "studio host selected report section stdout:\n" << section_process.stdout_text << "\n";
+        std::cerr << "studio host selected report section stderr:\n" << section_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(section_process.exit_code == 0,
+           "#1453: selected report section JSON smoke should exit successfully");
+    expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#1453: report section selections should advertise selected-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSection\": {",
+                    "#1453: report section selections should expose selected-section JSON");
+    expect_contains(section_process.stdout_text, "\"id\": \"page_header_1\"",
+                    "#1453: selected report section JSON should expose the selected section id");
+    expect_contains(section_process.stdout_text, "\"bandKind\": \"page_header\"",
+                    "#1453: selected report section JSON should expose the selected band kind");
+    expect_contains(section_process.stdout_text, "\"recordIndex\": 1",
+                    "#1453: selected report section JSON should expose the selected section record index");
+    expect_contains(section_process.stdout_text, "\"objectCode\": 1",
+                    "#1453: selected report section JSON should preserve raw section object codes");
+    expect_contains(section_process.stdout_text, "\"objectCount\": 1",
+                    "#1453: selected report section JSON should preserve selected section object counts");
+    expect_contains(section_process.stdout_text, "\"objectKind\": \"label\"",
+                    "#1453: selected report section JSON should include selected section objects");
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "3", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host selected report object stdout:\n" << object_process.stdout_text << "\n";
+        std::cerr << "studio host selected report object stderr:\n" << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0,
+           "#1453: selected report object JSON smoke should exit successfully");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1453: non-section report selections should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1453: non-section report selections should serialize null selected sections");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -47286,6 +47351,7 @@ int main(int argc, char** argv) {
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
+    test_studio_host_json_exposes_selected_report_sections(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);

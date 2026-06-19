@@ -20018,6 +20018,30 @@ const copperfin::studio::StudioObjectSnapshot* find_selected_object(
     return selected == objects.end() ? nullptr : &*selected;
 }
 
+const copperfin::studio::StudioReportSectionSnapshot* find_selected_report_section(
+    const copperfin::studio::StudioReportLayoutSnapshot& report_layout,
+    std::size_t record_index) {
+    if (!report_layout.available) {
+        return nullptr;
+    }
+    const auto live_section = std::find_if(
+        report_layout.sections.begin(),
+        report_layout.sections.end(),
+        [&](const copperfin::studio::StudioReportSectionSnapshot& section) {
+            return section.record_index == record_index;
+        });
+    if (live_section != report_layout.sections.end()) {
+        return &*live_section;
+    }
+    const auto deleted_section = std::find_if(
+        report_layout.deleted_sections.begin(),
+        report_layout.deleted_sections.end(),
+        [&](const copperfin::studio::StudioReportSectionSnapshot& section) {
+            return section.record_index == record_index;
+        });
+    return deleted_section == report_layout.deleted_sections.end() ? nullptr : &*deleted_section;
+}
+
 void print_json_report_layout_object(
     const copperfin::studio::StudioLayoutObjectSnapshot& object,
     const std::string& indent) {
@@ -20206,6 +20230,9 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     const auto* selected_object = document.selection_record_available
         ? find_selected_object(objects, document.selection_record_index)
         : nullptr;
+    const auto* selected_report_section = document.selection_record_available
+        ? find_selected_report_section(report_layout, document.selection_record_index)
+        : nullptr;
 
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
@@ -20327,6 +20354,15 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         print_json_report_layout_objects(report_layout.deleted_objects, "      ");
         std::cout << "\n";
         std::cout << "    },\n";
+    }
+    std::cout << "    \"selectedReportSectionAvailable\": "
+              << (selected_report_section == nullptr ? "false" : "true") << ",\n";
+    std::cout << "    \"selectedReportSection\": ";
+    if (selected_report_section == nullptr) {
+        std::cout << "null,\n";
+    } else {
+        print_json_report_layout_section(*selected_report_section, "    ");
+        std::cout << ",\n";
     }
     std::cout << "    \"projectWorkspace\": ";
     if (!project_workspace.available) {
