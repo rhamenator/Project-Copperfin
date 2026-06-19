@@ -6875,6 +6875,164 @@ void test_studio_host_json_exposes_toolbox_invocation_admission_catalog(const st
     }
 }
 
+void test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selection_toolbox_invocation_admission_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto visual_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-invocation-admission-catalog",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "1",
+            "--object-name", "frmCustomer",
+            "--unique-id", "form-guid",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(visual_process.exit_code == 0,
+        "#1289: selection toolbox invocation-admission catalog JSON should accept admitted visual contexts");
+    expect_contains(visual_process.stdout_text, "\"selectionToolboxInvocationAdmissionCatalog\": {",
+        "#1289: selection toolbox invocation-admission catalog JSON should expose catalog objects");
+    expect_contains(visual_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1289: selection toolbox invocation-admission catalog JSON should expose selected Studio contexts");
+    expect_contains(visual_process.stdout_text, "\"toolboxContext\": \"form\"",
+        "#1289: visual selection toolbox invocation-admission catalog JSON should resolve form contexts");
+    expect_contains(visual_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
+        "#1289: selection toolbox invocation-admission catalog JSON should expose command tokens");
+    expect_contains(visual_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1289: selection toolbox invocation-admission catalog JSON should carry asset paths");
+    expect_contains(visual_process.stdout_text, "\"recordIndex\": 1",
+        "#1289: selection toolbox invocation-admission catalog JSON should carry record indexes");
+    expect_contains(visual_process.stdout_text, "\"objectName\": \"frmCustomer\"",
+        "#1289: selection toolbox invocation-admission catalog JSON should carry object-name selectors");
+    expect_contains(visual_process.stdout_text, "\"uniqueId\": \"form-guid\"",
+        "#1289: selection toolbox invocation-admission catalog JSON should carry unique-id selectors");
+    expect_contains(visual_process.stdout_text, "\"admissionCount\": 1",
+        "#1289: admitted selection toolbox invocation-admission catalog JSON should expose admission counts");
+    expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
+        "#1289: admitted selection toolbox invocation-admission catalog JSON should expose zero errors");
+    expect_contains(visual_process.stdout_text, "\"dryRun\": false",
+        "#1289: admitted selection toolbox invocation-admission catalog JSON should not be dry-run");
+    expect_contains(visual_process.stdout_text, "\"mutatesAsset\": false",
+        "#1289: selection toolbox invocation-admission catalog JSON should remain non-mutating");
+    expect_contains(visual_process.stdout_text, "\"id\": \"textbox\"",
+        "#1289: visual selection toolbox invocation-admission catalog JSON should include form-safe TextBox items");
+    expect_contains(visual_process.stdout_text, "\"launchPlanOk\": true",
+        "#1289: selection toolbox invocation-admission catalog JSON should expose launch-plan state");
+    expect_contains(visual_process.stdout_text, "\"invocationAdmissionOk\": true",
+        "#1289: selection toolbox invocation-admission catalog JSON should expose admission state");
+    expect_contains(visual_process.stdout_text, "\"paletteInvocationAdmitted\": true",
+        "#1289: selection toolbox invocation-admission catalog JSON should expose admitted palette state");
+
+    const auto report_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-invocation-admission-catalog",
+            "--selection-context", "report_expression",
+            "--path", "reports/orders.frx",
+            "--record", "3",
+            "--json"
+        },
+        temp_root);
+    expect(report_process.exit_code == 0,
+        "#1289: selection toolbox invocation-admission catalog JSON should accept dry-run report contexts");
+    expect_contains(report_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+        "#1289: report selection toolbox invocation-admission catalog JSON should expose report selections");
+    expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#1289: report selection toolbox invocation-admission catalog JSON should resolve report contexts");
+    expect_contains(report_process.stdout_text, "\"id\": \"label\"",
+        "#1289: report selection toolbox invocation-admission catalog JSON should include report-safe Label items");
+    expect_not_contains(report_process.stdout_text, "\"id\": \"textbox\"",
+        "#1289: report selection toolbox invocation-admission catalog JSON should exclude form-only TextBox items");
+    expect_contains(report_process.stdout_text, "\"paletteInvocationAdmitted\": false",
+        "#1289: dry-run selection toolbox invocation-admission catalog JSON should expose unadmitted palette state");
+    expect_contains(report_process.stdout_text, "\"dryRun\": true",
+        "#1289: dry-run selection toolbox invocation-admission catalog JSON should preserve dry-run state");
+
+    const auto unsupported_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-invocation-admission-catalog",
+            "--selection-context", "menu_item",
+            "--json"
+        },
+        temp_root);
+    expect(unsupported_process.exit_code == 4,
+        "#1289: selection toolbox invocation-admission catalog JSON should reject unsupported selections");
+    expect_contains(unsupported_process.stdout_text, "\"selectionToolboxInvocationAdmissionCatalog\": null",
+        "#1289: unsupported selection toolbox invocation-admission catalog JSON should omit catalog objects");
+    expect_contains(unsupported_process.stdout_text,
+        "A selection-context toolbox invocation admission catalog request requires a toolbox palette.",
+        "#1289: unsupported selection toolbox invocation-admission catalog JSON should report planner errors");
+
+    const auto invalid_boolean_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-invocation-admission-catalog",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_boolean_process.exit_code == 2,
+        "#1289: selection toolbox invocation-admission catalog JSON should reject invalid booleans");
+    expect_contains(invalid_boolean_process.stdout_text,
+        "The --admit-palette-invocation value must be true or false.",
+        "#1289: invalid selection toolbox invocation-admission catalog boolean JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-invocation-admission-catalog",
+            "--selection-context", "visual_object",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1289: selection toolbox invocation-admission catalog JSON should reject invalid records");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1289: invalid selection toolbox invocation-admission catalog record JSON should report parser errors");
+
+    const auto unknown_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-invocation-admission-catalog",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+    expect(unknown_context_process.exit_code == 2,
+        "#1289: selection toolbox invocation-admission catalog JSON should reject unknown selections");
+    expect_contains(unknown_context_process.stdout_text, "Unknown selection context token: unknown",
+        "#1289: unknown selection toolbox invocation-admission catalog JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-invocation-admission-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1289: selection toolbox invocation-admission catalog JSON should reject missing selections");
+    expect_contains(missing_context_process.stdout_text, "No selection context was provided.",
+        "#1289: missing selection toolbox invocation-admission catalog JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_dispatch(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -33749,6 +33907,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
+    test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_dispatch(argv[1]);
     test_studio_host_json_exposes_toolbox_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_designer_launch_surfaces(argv[1]);
