@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane is E2/#23: designer interactions, builders, toolbox flows, and context-aware editors.
-- Latest implemented E2 slice: `#1433`, which exposes visual object method move batches through Studio host JSON. `#1432` is the immediately preceding visual object method copy-batch host JSON slice. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
+- Latest implemented E2 slice: `#1434`, which exposes visual object method reorder batches through Studio host JSON. `#1433` is the immediately preceding visual object method move-batch host JSON slice. Issue closure still requires explicit user approval if the standing no-close-without-approval rule is active.
 - Current continuation shape: continue prompt-sized E2/#23 children in designer interactions, builder/wizard invocation, toolbox flows, and context-aware editors, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
 - Next work: continue prompt-sized `#23` children in designer interactions, builder/wizard invocation, toolbox flows, or context-aware editors. The visual-object host-wrapper gap scanner reported zero missing wrappers after `#1202`, so do not open more wrapper slices unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Active Queue" table.
@@ -357,6 +357,7 @@ Current active-open prompt-sized slice queue after Phase A/D1/E1 closure. This t
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
+| `#23` | `#1434` implemented; closure pending approval | Studio host JSON now exposes selected-object method reorder-batch mutations with rollback and undo metadata |
 | `#23` | `#1433` implemented; closure pending approval | Studio host JSON now exposes selected-object method move-batch mutations with rollback and undo metadata |
 | `#23` | `#1432` implemented; closure pending approval | Studio host JSON now exposes selected-object method copy-batch mutations with rollback and undo metadata |
 | `#23` | `#1431` implemented; closure pending approval | Studio host JSON now exposes selected-object method rename-batch mutations with rollback and undo metadata |
