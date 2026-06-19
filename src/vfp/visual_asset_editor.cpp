@@ -201,6 +201,19 @@ std::string normalize_visual_property_name(std::string value) {
     return value;
 }
 
+std::string lowercase_copy(std::string_view value) {
+    std::string result;
+    result.reserve(value.size());
+    for (const char ch : value) {
+        result.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(ch))));
+    }
+    return result;
+}
+
+bool contains_case_insensitive(std::string_view value, const std::string& lowered_needle) {
+    return lowered_needle.empty() || lowercase_copy(value).find(lowered_needle) != std::string::npos;
+}
+
 std::string direct_field_descriptor_prefix(const std::string& normalized_property_name) {
     constexpr std::size_t DbfDescriptorNameWidth = 11U;
     return normalized_property_name.substr(0U, std::min(normalized_property_name.size(), DbfDescriptorNameWidth));
@@ -2885,6 +2898,78 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
         .record_index = record_index,
         .record_deleted = record.deleted,
         .properties = std::move(properties)
+    };
+}
+
+namespace {
+
+bool matches_property_filter(const VisualObjectPropertySnapshot& property, const std::string& lowered_search_text) {
+    if (lowered_search_text.empty()) {
+        return true;
+    }
+
+    std::string field_type_text;
+    if (property.field_type != '\0') {
+        field_type_text.push_back(property.field_type);
+    }
+
+    const std::string source_line_text = property.source_line_index == static_cast<std::size_t>(-1)
+        ? std::string{}
+        : std::to_string(property.source_line_index);
+    const std::string backing_kind = property.direct_field ? "direct field" : "memo property";
+
+    return contains_case_insensitive(property.property_name, lowered_search_text) ||
+        contains_case_insensitive(property.value, lowered_search_text) ||
+        contains_case_insensitive(field_type_text, lowered_search_text) ||
+        contains_case_insensitive(source_line_text, lowered_search_text) ||
+        contains_case_insensitive(backing_kind, lowered_search_text);
+}
+
+}  // namespace
+
+VisualObjectPropertyListFilterResult filter_visual_object_properties(
+    const VisualObjectPropertyListFilterRequest& request) {
+    const auto list_result = list_visual_object_properties({
+        .path = request.path,
+        .record_index = request.record_index,
+        .object_name = request.object_name,
+        .unique_id = request.unique_id
+    });
+    if (!list_result.ok) {
+        return {
+            .ok = false,
+            .error = list_result.error,
+            .record_index = 0U,
+            .record_deleted = false,
+            .search_text = request.search_text,
+            .property_count = 0U,
+            .dry_run = true,
+            .mutates_asset = false,
+            .properties = {}
+        };
+    }
+
+    const std::string lowered_search_text = lowercase_copy(request.search_text);
+    std::vector<VisualObjectPropertySnapshot> filtered;
+    std::copy_if(
+        list_result.properties.begin(),
+        list_result.properties.end(),
+        std::back_inserter(filtered),
+        [&](const VisualObjectPropertySnapshot& property) {
+            return matches_property_filter(property, lowered_search_text);
+        });
+
+    const auto property_count = filtered.size();
+    return {
+        .ok = true,
+        .error = {},
+        .record_index = list_result.record_index,
+        .record_deleted = list_result.record_deleted,
+        .search_text = request.search_text,
+        .property_count = property_count,
+        .dry_run = true,
+        .mutates_asset = false,
+        .properties = std::move(filtered)
     };
 }
 

@@ -3134,6 +3134,71 @@ void test_list_visual_object_properties_reads_selected_surface() {
         "#737: visual property lists should include parsed memo-backed Left assignments");
     expect(left != nullptr && left->source_line_index == 1U,
         "#738: later memo-backed property list entries should retain their parsed source line index");
+
+    const auto unfiltered_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = {}
+    });
+    expect(unfiltered_search.ok &&
+            unfiltered_search.record_index == list_result.record_index &&
+            unfiltered_search.property_count == list_result.properties.size() &&
+            unfiltered_search.properties.size() == list_result.properties.size() &&
+            unfiltered_search.dry_run &&
+            !unfiltered_search.mutates_asset,
+        "#1412: unfiltered visual property searches should preserve the selected property list without mutation");
+
+    const auto name_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "caption"
+    });
+    expect(name_search.ok &&
+            name_search.property_count == 1U &&
+            find_property_snapshot(name_search.properties, "Caption") != nullptr,
+        "#1412: visual property searches should match property names case-insensitively");
+
+    const auto value_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "namebox"
+    });
+    expect(value_search.ok &&
+            value_search.property_count == 1U &&
+            find_property_snapshot(value_search.properties, "NAME") != nullptr,
+        "#1412: visual property searches should match direct property values case-insensitively");
+
+    const auto memo_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "memo"
+    });
+    expect(memo_search.ok &&
+            find_property_snapshot(memo_search.properties, "Caption") != nullptr &&
+            find_property_snapshot(memo_search.properties, "Left") != nullptr &&
+            find_property_snapshot(memo_search.properties, "NAME") == nullptr,
+        "#1412: visual property searches should match memo-backed property metadata without direct fields");
+
+    const auto empty_search = copperfin::vfp::filter_visual_object_properties({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "target-guid",
+        .search_text = "does-not-exist"
+    });
+    expect(empty_search.ok &&
+            empty_search.property_count == 0U &&
+            empty_search.properties.empty(),
+        "#1412: visual property searches should return empty successful results for unmatched text");
+
     expect(!copperfin::vfp::query_visual_object_undo(table_path.string()).available,
         "#737: visual property lists should not create undo history");
 

@@ -73,6 +73,14 @@ struct VisualObjectPropertyListRequest {
     std::string unique_id;
 };
 
+struct VisualObjectPropertyListFilterRequest {
+    std::string path;
+    std::size_t record_index = 0;
+    std::string object_name;
+    std::string unique_id;
+    std::string search_text;
+};
+
 struct VisualObjectPropertyClearRequest {
     std::string path;
     std::size_t record_index = 0;
@@ -212,6 +220,18 @@ struct VisualObjectPropertyListResult {
     std::string error;
     std::size_t record_index = 0;
     bool record_deleted = false;
+    std::vector<VisualObjectPropertySnapshot> properties;
+};
+
+struct VisualObjectPropertyListFilterResult {
+    bool ok = false;
+    std::string error;
+    std::size_t record_index = 0;
+    bool record_deleted = false;
+    std::string search_text;
+    std::size_t property_count = 0;
+    bool dry_run = true;
+    bool mutates_asset = false;
     std::vector<VisualObjectPropertySnapshot> properties;
 };
 
@@ -1756,6 +1776,8 @@ struct VisualAssetUndoStatus {
 [[nodiscard]] bool is_property_blob_asset_path(const std::string& path);
 [[nodiscard]] VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectPropertyQueryRequest& request);
 [[nodiscard]] VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectPropertyListRequest& request);
+[[nodiscard]] VisualObjectPropertyListFilterResult filter_visual_object_properties(
+    const VisualObjectPropertyListFilterRequest& request);
 [[nodiscard]] VisualObjectListResult list_visual_objects(const std::string& path);
 [[nodiscard]] VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChildrenListRequest& request);
 [[nodiscard]] VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObjectDescendantsListRequest& request);
