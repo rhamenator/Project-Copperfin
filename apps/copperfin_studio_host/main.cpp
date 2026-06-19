@@ -11451,11 +11451,23 @@ void print_json_designer_launch_surfaces_result(
     }
 
     const auto& plan = result.plan;
+    const std::string selection_context =
+        copperfin::studio::studio_editor_selection_context_name(plan.selection_context);
+    std::vector<std::string> launch_ready_selection_contexts;
+    std::vector<std::string> launch_blocked_selection_contexts;
+    std::vector<std::string> launch_blocked_errors;
+    if (plan.toolbox_error.empty()) {
+        launch_ready_selection_contexts.push_back(selection_context);
+    } else {
+        launch_blocked_selection_contexts.push_back(selection_context);
+        launch_blocked_errors.push_back(plan.toolbox_error);
+    }
+
     std::cout << "{\n";
     std::cout << "    \"ok\": true,\n";
     std::cout << "    \"error\": \"\",\n";
     std::cout << "    \"selectionContext\": ";
-    print_json_string(copperfin::studio::studio_editor_selection_context_name(plan.selection_context));
+    print_json_string(selection_context);
     std::cout << ",\n";
     std::cout << "    \"assetPath\": ";
     print_json_string(plan.asset_path);
@@ -11472,6 +11484,15 @@ void print_json_designer_launch_surfaces_result(
     std::cout << ",\n";
     std::cout << "    \"line\": " << plan.line << ",\n";
     std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"launchReadySelectionContexts\": ";
+    print_json_string_array(launch_ready_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedSelectionContexts\": ";
+    print_json_string_array(launch_blocked_selection_contexts);
+    std::cout << ",\n";
+    std::cout << "    \"launchBlockedErrors\": ";
+    print_json_string_array(launch_blocked_errors);
+    std::cout << ",\n";
     std::cout << "    \"editorActionLaunchPlanCount\": " << plan.editor_action_launch_plan_count << ",\n";
     std::cout << "    \"builderLaunchPlanCount\": " << plan.builder_launch_plan_count << ",\n";
     std::cout << "    \"toolboxAvailable\": " << (plan.toolbox_available ? "true" : "false") << ",\n";

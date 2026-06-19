@@ -8917,6 +8917,12 @@ void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& s
         "#1212: designer launch-surface JSON should preserve editor lines");
     expect_contains(visual_process.stdout_text, "\"column\": 4",
         "#1212: designer launch-surface JSON should preserve editor columns");
+    expect_contains(visual_process.stdout_text, "\"launchReadySelectionContexts\": [\"visual_object\"]",
+        "#1399: designer launch-surface JSON should summarize launch-ready selected contexts");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedSelectionContexts\": []",
+        "#1399: designer launch-surface JSON should expose empty blocked selected contexts for ready launches");
+    expect_contains(visual_process.stdout_text, "\"launchBlockedErrors\": []",
+        "#1399: designer launch-surface JSON should expose empty blocked errors for ready launches");
     expect_contains(visual_process.stdout_text, "\"editorActionLaunchPlanCount\": ",
         "#1212: designer launch-surface JSON should expose action launch-plan counts");
     expect_contains(visual_process.stdout_text, "\"builderLaunchPlanCount\": ",
@@ -8956,6 +8962,13 @@ void test_studio_host_json_exposes_designer_launch_surfaces(const std::string& s
         "#1212: menu launch-surface JSON should expose unsupported toolbox availability");
     expect_contains(menu_process.stdout_text, "\"toolboxPaletteLaunchPlan\": null",
         "#1212: menu launch-surface JSON should expose null toolbox plans");
+    expect_contains(menu_process.stdout_text, "\"launchReadySelectionContexts\": []",
+        "#1399: menu launch-surface JSON should expose empty ready selected contexts");
+    expect_contains(menu_process.stdout_text, "\"launchBlockedSelectionContexts\": [\"menu_item\"]",
+        "#1399: menu launch-surface JSON should summarize launch-blocked selected contexts");
+    expect_contains(menu_process.stdout_text,
+        "\"launchBlockedErrors\": [\"The selected Studio context does not expose a toolbox palette.\"]",
+        "#1399: menu launch-surface JSON should summarize blocked selected-context reasons");
     expect_contains(menu_process.stdout_text,
         "\"toolboxError\": \"The selected Studio context does not expose a toolbox palette.\"",
         "#1212: menu launch-surface JSON should preserve unsupported toolbox reasons");
