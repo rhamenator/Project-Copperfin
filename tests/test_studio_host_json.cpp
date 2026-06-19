@@ -3596,6 +3596,119 @@ void write_synthetic_table_with_data_environment(const std::filesystem::path& as
     expect(create_result.ok, "#1016: synthetic table with DataEnvironment record should be created");
 }
 
+void write_synthetic_report_table_for_layout_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1", "", "", "", "", "", "10"},
+        {"9", "1", "", "", "0", "", "2000", "", ""},
+        {"9", "4", "", "", "2000", "", "5000", "", ""},
+        {"8", "0", "customer.company", "1200", "2600", "4000", "450", "Segoe UI", ""},
+        {"5", "", "\"Invoice\"", "900", "100", "1800", "350", "", ""},
+        {"6", "", "", "50", "8000", "100", "100", "", ""},
+        {"5", "", "\"Deleted label\"", "1000", "2600", "1200", "300", "", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1452: synthetic FRX table for report layout JSON should be created");
+
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 6U, true);
+    expect(delete_result.ok, "#1452: synthetic FRX table should mark deleted layout objects");
+}
+
+void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_provenance_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_report_table_for_layout_json(report_path);
+
+    const auto process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--json"},
+        temp_root);
+
+    if (process.exit_code != 0) {
+        std::cerr << "studio host report layout stdout:\n" << process.stdout_text << "\n";
+        std::cerr << "studio host report layout stderr:\n" << process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(process.exit_code == 0, "#1452: report layout provenance JSON smoke should exit successfully");
+    expect_contains(process.stdout_text, "\"reportLayout\": {",
+                    "#1452: report documents should expose report layout JSON");
+    expect_contains(process.stdout_text, "\"documentTitle\": \"summary.frx\"",
+                    "#1452: report layout JSON should preserve document titles");
+    expect_contains(process.stdout_text, "\"documentTitleFieldIndex\": null",
+                    "#1452: report layout JSON should expose missing document-title field provenance as null");
+    expect_contains(process.stdout_text, "\"settingCount\": 3",
+                    "#1452: report layout JSON should summarize live setting counts");
+    expect_contains(process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1452: report layout JSON should summarize deleted report object counts");
+    expect_contains(process.stdout_text, "\"deletedObjects\": [",
+                    "#1452: report layout JSON should expose deleted report objects separately");
+    expect_contains(process.stdout_text, "\"deleted\": true",
+                    "#1452: report layout JSON should retain deleted report object state");
+    expect_contains(process.stdout_text, "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"0\"",
+                    "#1452: report layout JSON should expose memo-line setting provenance");
+    expect_contains(process.stdout_text, "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                    "#1452: report layout JSON should expose later memo-line setting provenance");
+    expect_contains(process.stdout_text, "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"10\"",
+                    "#1452: report layout JSON should expose direct setting provenance");
+    expect_contains(process.stdout_text, "\"sectionCount\": 2",
+                    "#1452: report layout JSON should summarize live section counts");
+    expect_contains(process.stdout_text, "\"id\": \"page_header_1\"",
+                    "#1452: report layout JSON should expose synthesized section ids");
+    expect_contains(process.stdout_text, "\"idFieldIndex\": null",
+                    "#1452: report layout JSON should expose synthesized section id provenance as null");
+    expect_contains(process.stdout_text, "\"objectCode\": 1",
+                    "#1452: report layout JSON should expose section raw object codes");
+    expect_contains(process.stdout_text, "\"objectCodeFieldIndex\": 1",
+                    "#1452: report layout JSON should expose section object-code field provenance");
+    expect_contains(process.stdout_text, "\"topFieldIndex\": 4",
+                    "#1452: report layout JSON should expose section top field provenance");
+    expect_contains(process.stdout_text, "\"objectCount\": 1",
+                    "#1452: report layout JSON should summarize section object counts");
+    expect_contains(process.stdout_text, "\"objectTypeCode\": 8",
+                    "#1452: report layout JSON should expose report object raw type codes");
+    expect_contains(process.stdout_text, "\"objectKind\": \"field\"",
+                    "#1452: report layout JSON should expose report object kinds");
+    expect_contains(process.stdout_text, "\"expression\": \"customer.company\"",
+                    "#1452: report layout JSON should expose report object expressions");
+    expect_contains(process.stdout_text, "\"expressionFieldIndex\": 2",
+                    "#1452: report layout JSON should expose expression field provenance");
+    expect_contains(process.stdout_text, "\"expressionMemoBlockNumber\": 2",
+                    "#1452: report layout JSON should expose expression memo provenance");
+    expect_contains(process.stdout_text, "\"leftFieldIndex\": 3",
+                    "#1452: report layout JSON should expose object left field provenance");
+    expect_contains(process.stdout_text, "\"highlightCount\": 1",
+                    "#1452: report layout JSON should summarize object highlights");
+    expect_contains(process.stdout_text, "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",
+                    "#1452: report layout JSON should expose highlight memo provenance");
+    expect_contains(process.stdout_text, "\"unplacedObjectCount\": 1",
+                    "#1452: report layout JSON should summarize unplaced objects");
+    expect_contains(process.stdout_text, "\"title\": \"Record 5\"",
+                    "#1452: report layout JSON should preserve synthesized unplaced-object titles");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_designer_contexts(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -47172,6 +47285,7 @@ int main(int argc, char** argv) {
 
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
+    test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
     test_studio_host_json_exposes_builder_launch_catalog(argv[1]);
     test_studio_host_json_exposes_selection_builder_launch_catalog(argv[1]);

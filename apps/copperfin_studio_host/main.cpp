@@ -19693,6 +19693,47 @@ void print_json_line_index_or_null(std::size_t line_index) {
     }
 }
 
+void print_json_report_field_index_or_null(std::size_t field_index) {
+    if (field_index == copperfin::studio::StudioReportMissingFieldIndex) {
+        std::cout << "null";
+    } else {
+        std::cout << field_index;
+    }
+}
+
+void print_json_report_line_index_or_null(std::size_t line_index) {
+    if (line_index == copperfin::studio::StudioReportMissingLineIndex) {
+        std::cout << "null";
+    } else {
+        std::cout << line_index;
+    }
+}
+
+void print_json_report_named_values(
+    const std::vector<copperfin::studio::StudioNamedValue>& values,
+    const std::string& indent) {
+    std::cout << "[\n";
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        const auto& value = values[index];
+        std::cout << indent << "  {\"name\": ";
+        print_json_string(value.name);
+        std::cout << ", \"recordIndex\": " << value.record_index;
+        std::cout << ", \"fieldIndex\": ";
+        print_json_report_field_index_or_null(value.field_index);
+        std::cout << ", \"sourceLineIndex\": ";
+        print_json_report_line_index_or_null(value.source_line_index);
+        std::cout << ", \"memoBlockNumber\": " << value.memo_block_number;
+        std::cout << ", \"value\": ";
+        print_json_string(value.value);
+        std::cout << "}";
+        if ((index + 1U) != values.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << indent << "]";
+}
+
 void print_json_editor_contexts(const std::vector<copperfin::studio::StudioEditorSelectionContext>& contexts) {
     std::cout << "[";
     for (std::size_t index = 0; index < contexts.size(); ++index) {
@@ -19977,6 +20018,149 @@ const copperfin::studio::StudioObjectSnapshot* find_selected_object(
     return selected == objects.end() ? nullptr : &*selected;
 }
 
+void print_json_report_layout_object(
+    const copperfin::studio::StudioLayoutObjectSnapshot& object,
+    const std::string& indent) {
+    std::cout << "{\n";
+    std::cout << indent << "  \"recordIndex\": " << object.record_index << ",\n";
+    std::cout << indent << "  \"deleted\": " << (object.deleted ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"objectTypeCode\": " << object.objtype_code << ",\n";
+    std::cout << indent << "  \"objectTypeFieldIndex\": ";
+    print_json_report_field_index_or_null(object.objtype_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"objectTypeMemoBlockNumber\": " << object.objtype_memo_block_number << ",\n";
+    std::cout << indent << "  \"objectCode\": " << object.objcode_code << ",\n";
+    std::cout << indent << "  \"objectCodeFieldIndex\": ";
+    print_json_report_field_index_or_null(object.objcode_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"objectCodeMemoBlockNumber\": " << object.objcode_memo_block_number << ",\n";
+    std::cout << indent << "  \"objectKind\": ";
+    print_json_string(object.object_kind);
+    std::cout << ",\n";
+    std::cout << indent << "  \"objectKindFieldIndex\": ";
+    print_json_report_field_index_or_null(object.object_kind_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"objectKindMemoBlockNumber\": " << object.object_kind_memo_block_number << ",\n";
+    std::cout << indent << "  \"title\": ";
+    print_json_string(object.title);
+    std::cout << ",\n";
+    std::cout << indent << "  \"titleFieldIndex\": ";
+    print_json_report_field_index_or_null(object.title_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"titleMemoBlockNumber\": " << object.title_memo_block_number << ",\n";
+    std::cout << indent << "  \"expression\": ";
+    print_json_string(object.expression);
+    std::cout << ",\n";
+    std::cout << indent << "  \"expressionFieldIndex\": ";
+    print_json_report_field_index_or_null(object.expression_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"expressionMemoBlockNumber\": " << object.expression_memo_block_number << ",\n";
+    std::cout << indent << "  \"left\": " << object.left << ",\n";
+    std::cout << indent << "  \"leftFieldIndex\": ";
+    print_json_report_field_index_or_null(object.left_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"leftMemoBlockNumber\": " << object.left_memo_block_number << ",\n";
+    std::cout << indent << "  \"top\": " << object.top << ",\n";
+    std::cout << indent << "  \"topFieldIndex\": ";
+    print_json_report_field_index_or_null(object.top_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"topMemoBlockNumber\": " << object.top_memo_block_number << ",\n";
+    std::cout << indent << "  \"width\": " << object.width << ",\n";
+    std::cout << indent << "  \"widthFieldIndex\": ";
+    print_json_report_field_index_or_null(object.width_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"widthMemoBlockNumber\": " << object.width_memo_block_number << ",\n";
+    std::cout << indent << "  \"height\": " << object.height << ",\n";
+    std::cout << indent << "  \"heightFieldIndex\": ";
+    print_json_report_field_index_or_null(object.height_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"heightMemoBlockNumber\": " << object.height_memo_block_number << ",\n";
+    std::cout << indent << "  \"highlightCount\": " << object.highlights.size() << ",\n";
+    std::cout << indent << "  \"highlights\": ";
+    print_json_report_named_values(object.highlights, indent + "  ");
+    std::cout << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_report_layout_objects(
+    const std::vector<copperfin::studio::StudioLayoutObjectSnapshot>& objects,
+    const std::string& indent) {
+    std::cout << "[\n";
+    for (std::size_t object_index = 0; object_index < objects.size(); ++object_index) {
+        std::cout << indent << "  ";
+        print_json_report_layout_object(objects[object_index], indent + "  ");
+        if ((object_index + 1U) != objects.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << indent << "]";
+}
+
+void print_json_report_layout_section(
+    const copperfin::studio::StudioReportSectionSnapshot& section,
+    const std::string& indent) {
+    std::cout << "{\n";
+    std::cout << indent << "  \"id\": ";
+    print_json_string(section.id);
+    std::cout << ",\n";
+    std::cout << indent << "  \"idFieldIndex\": ";
+    print_json_report_field_index_or_null(section.id_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"idMemoBlockNumber\": " << section.id_memo_block_number << ",\n";
+    std::cout << indent << "  \"title\": ";
+    print_json_string(section.title);
+    std::cout << ",\n";
+    std::cout << indent << "  \"titleFieldIndex\": ";
+    print_json_report_field_index_or_null(section.title_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"titleMemoBlockNumber\": " << section.title_memo_block_number << ",\n";
+    std::cout << indent << "  \"bandKind\": ";
+    print_json_string(section.band_kind);
+    std::cout << ",\n";
+    std::cout << indent << "  \"bandKindFieldIndex\": ";
+    print_json_report_field_index_or_null(section.band_kind_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"bandKindMemoBlockNumber\": " << section.band_kind_memo_block_number << ",\n";
+    std::cout << indent << "  \"recordIndex\": " << section.record_index << ",\n";
+    std::cout << indent << "  \"deleted\": " << (section.deleted ? "true" : "false") << ",\n";
+    std::cout << indent << "  \"objectCode\": " << section.objcode_code << ",\n";
+    std::cout << indent << "  \"objectCodeFieldIndex\": ";
+    print_json_report_field_index_or_null(section.objcode_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"objectCodeMemoBlockNumber\": " << section.objcode_memo_block_number << ",\n";
+    std::cout << indent << "  \"top\": " << section.top << ",\n";
+    std::cout << indent << "  \"topFieldIndex\": ";
+    print_json_report_field_index_or_null(section.top_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"topMemoBlockNumber\": " << section.top_memo_block_number << ",\n";
+    std::cout << indent << "  \"height\": " << section.height << ",\n";
+    std::cout << indent << "  \"heightFieldIndex\": ";
+    print_json_report_field_index_or_null(section.height_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"heightMemoBlockNumber\": " << section.height_memo_block_number << ",\n";
+    std::cout << indent << "  \"objectCount\": " << section.objects.size() << ",\n";
+    std::cout << indent << "  \"objects\": ";
+    print_json_report_layout_objects(section.objects, indent + "  ");
+    std::cout << "\n";
+    std::cout << indent << "}";
+}
+
+void print_json_report_layout_sections(
+    const std::vector<copperfin::studio::StudioReportSectionSnapshot>& sections,
+    const std::string& indent) {
+    std::cout << "[\n";
+    for (std::size_t section_index = 0; section_index < sections.size(); ++section_index) {
+        std::cout << indent << "  ";
+        print_json_report_layout_section(sections[section_index], indent + "  ");
+        if ((section_index + 1U) != sections.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << indent << "]";
+}
+
 void print_json_document(const copperfin::studio::StudioDocumentModel& document) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto deleted_object_count = static_cast<std::size_t>(std::count_if(
@@ -20114,107 +20298,34 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      \"documentTitle\": ";
         print_json_string(report_layout.document_title);
         std::cout << ",\n";
-        std::cout << "      \"settings\": [\n";
-        for (std::size_t index = 0; index < report_layout.settings.size(); ++index) {
-            const auto& setting = report_layout.settings[index];
-            std::cout << "        {\"name\": ";
-            print_json_string(setting.name);
-            std::cout << ", \"value\": ";
-            print_json_string(setting.value);
-            std::cout << "}";
-            if ((index + 1U) != report_layout.settings.size()) {
-                std::cout << ",";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "      ],\n";
-        std::cout << "      \"sections\": [\n";
-        for (std::size_t section_index = 0; section_index < report_layout.sections.size(); ++section_index) {
-            const auto& section = report_layout.sections[section_index];
-            std::cout << "        {\n";
-            std::cout << "          \"id\": ";
-            print_json_string(section.id);
-            std::cout << ",\n";
-            std::cout << "          \"title\": ";
-            print_json_string(section.title);
-            std::cout << ",\n";
-            std::cout << "          \"bandKind\": ";
-            print_json_string(section.band_kind);
-            std::cout << ",\n";
-            std::cout << "          \"recordIndex\": " << section.record_index << ",\n";
-            std::cout << "          \"top\": " << section.top << ",\n";
-            std::cout << "          \"height\": " << section.height << ",\n";
-            std::cout << "          \"objects\": [\n";
-            for (std::size_t object_index = 0; object_index < section.objects.size(); ++object_index) {
-                const auto& object = section.objects[object_index];
-                std::cout << "            {\n";
-                std::cout << "              \"recordIndex\": " << object.record_index << ",\n";
-                std::cout << "              \"objectKind\": ";
-                print_json_string(object.object_kind);
-                std::cout << ",\n";
-                std::cout << "              \"title\": ";
-                print_json_string(object.title);
-                std::cout << ",\n";
-                std::cout << "              \"expression\": ";
-                print_json_string(object.expression);
-                std::cout << ",\n";
-                std::cout << "              \"left\": " << object.left << ",\n";
-                std::cout << "              \"top\": " << object.top << ",\n";
-                std::cout << "              \"width\": " << object.width << ",\n";
-                std::cout << "              \"height\": " << object.height << ",\n";
-                std::cout << "              \"highlights\": [\n";
-                for (std::size_t highlight_index = 0; highlight_index < object.highlights.size(); ++highlight_index) {
-                    const auto& highlight = object.highlights[highlight_index];
-                    std::cout << "                {\"name\": ";
-                    print_json_string(highlight.name);
-                    std::cout << ", \"value\": ";
-                    print_json_string(highlight.value);
-                    std::cout << "}";
-                    if ((highlight_index + 1U) != object.highlights.size()) {
-                        std::cout << ",";
-                    }
-                    std::cout << "\n";
-                }
-                std::cout << "              ]\n";
-                std::cout << "            }";
-                if ((object_index + 1U) != section.objects.size()) {
-                    std::cout << ",";
-                }
-                std::cout << "\n";
-            }
-            std::cout << "          ]\n";
-            std::cout << "        }";
-            if ((section_index + 1U) != report_layout.sections.size()) {
-                std::cout << ",";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "      ],\n";
-        std::cout << "      \"unplacedObjects\": [\n";
-        for (std::size_t object_index = 0; object_index < report_layout.unplaced_objects.size(); ++object_index) {
-            const auto& object = report_layout.unplaced_objects[object_index];
-            std::cout << "        {\n";
-            std::cout << "          \"recordIndex\": " << object.record_index << ",\n";
-            std::cout << "          \"objectKind\": ";
-            print_json_string(object.object_kind);
-            std::cout << ",\n";
-            std::cout << "          \"title\": ";
-            print_json_string(object.title);
-            std::cout << ",\n";
-            std::cout << "          \"expression\": ";
-            print_json_string(object.expression);
-            std::cout << ",\n";
-            std::cout << "          \"left\": " << object.left << ",\n";
-            std::cout << "          \"top\": " << object.top << ",\n";
-            std::cout << "          \"width\": " << object.width << ",\n";
-            std::cout << "          \"height\": " << object.height << "\n";
-            std::cout << "        }";
-            if ((object_index + 1U) != report_layout.unplaced_objects.size()) {
-                std::cout << ",";
-            }
-            std::cout << "\n";
-        }
-        std::cout << "      ]\n";
+        std::cout << "      \"documentTitleFieldIndex\": ";
+        print_json_report_field_index_or_null(report_layout.document_title_field_index);
+        std::cout << ",\n";
+        std::cout << "      \"documentTitleMemoBlockNumber\": " << report_layout.document_title_memo_block_number << ",\n";
+        std::cout << "      \"settingCount\": " << report_layout.settings.size() << ",\n";
+        std::cout << "      \"deletedSettingCount\": " << report_layout.deleted_settings.size() << ",\n";
+        std::cout << "      \"sectionCount\": " << report_layout.sections.size() << ",\n";
+        std::cout << "      \"deletedSectionCount\": " << report_layout.deleted_sections.size() << ",\n";
+        std::cout << "      \"unplacedObjectCount\": " << report_layout.unplaced_objects.size() << ",\n";
+        std::cout << "      \"deletedObjectCount\": " << report_layout.deleted_objects.size() << ",\n";
+        std::cout << "      \"settings\": ";
+        print_json_report_named_values(report_layout.settings, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"deletedSettings\": ";
+        print_json_report_named_values(report_layout.deleted_settings, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"sections\": ";
+        print_json_report_layout_sections(report_layout.sections, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"deletedSections\": ";
+        print_json_report_layout_sections(report_layout.deleted_sections, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"unplacedObjects\": ";
+        print_json_report_layout_objects(report_layout.unplaced_objects, "      ");
+        std::cout << ",\n";
+        std::cout << "      \"deletedObjects\": ";
+        print_json_report_layout_objects(report_layout.deleted_objects, "      ");
+        std::cout << "\n";
         std::cout << "    },\n";
     }
     std::cout << "    \"projectWorkspace\": ";
