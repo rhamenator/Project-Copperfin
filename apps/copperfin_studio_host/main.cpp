@@ -43,6 +43,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --visual-object-list --path <asset> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-children --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-object-descendants --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --visual-object-ancestors --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
     std::cout << "   or: copperfin_studio_host --visual-property-filter --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--property-filter-text <text>] [--json]\n";
@@ -855,6 +856,15 @@ struct VisualObjectDescendantsParseResult {
     bool path_provided = false;
     std::string error;
     copperfin::vfp::VisualObjectDescendantsListRequest request;
+};
+
+struct VisualObjectAncestorsParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool path_provided = false;
+    std::string error;
+    copperfin::vfp::VisualObjectAncestorsListRequest request;
 };
 
 struct ToolboxInvocationAdmissionParseResult {
@@ -4233,6 +4243,59 @@ VisualObjectDescendantsParseResult parse_visual_object_descendants_arguments(con
             result.request.unique_id = require_value(argument);
         } else {
             fail("Unknown visual-object-descendants option: " + argument);
+        }
+    }
+
+    if (result.ok && !result.path_provided) {
+        fail("No asset path was provided.");
+    }
+    return result;
+}
+
+VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(const std::vector<std::string>& args) {
+    VisualObjectAncestorsParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--visual-object-ancestors") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json" || argument == "--visual-object-ancestors") {
+            continue;
+        }
+        if (argument == "--path") {
+            result.request.path = require_value(argument);
+            result.path_provided = !result.request.path.empty();
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else {
+            fail("Unknown visual-object-ancestors option: " + argument);
         }
     }
 
@@ -11651,6 +11714,47 @@ void print_json_visual_object_descendants_result(
     std::cout << "}\n";
 }
 
+void print_json_visual_object_ancestors_result(
+    const copperfin::vfp::VisualObjectAncestorsListResult& result) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"visualObjectAncestors\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"recordIndex\": " << result.record_index << ",\n";
+    std::cout << "    \"ancestorCount\": " << result.ancestors.size() << ",\n";
+    std::cout << "    \"dryRun\": true,\n";
+    std::cout << "    \"mutatesAsset\": false,\n";
+    std::cout << "    \"ancestors\": [\n";
+    for (std::size_t index = 0U; index < result.ancestors.size(); ++index) {
+        const auto& ancestor = result.ancestors[index];
+        std::cout << "      {\n";
+        std::cout << "        \"depth\": " << ancestor.depth << ",\n";
+        std::cout << "        \"object\": ";
+        print_json_visual_object_snapshot(ancestor.object, "        ");
+        std::cout << "\n";
+        std::cout << "      }";
+        if ((index + 1U) != result.ancestors.size()) {
+            std::cout << ",";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "    ]\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_json_visual_property_filter_result(
     const copperfin::vfp::VisualObjectPropertyListFilterResult& result) {
     std::cout << "{\n";
@@ -15909,6 +16013,25 @@ void print_text_visual_object_descendants_result(
     }
 }
 
+void print_text_visual_object_ancestors_result(
+    const copperfin::vfp::VisualObjectAncestorsListResult& result) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    if (!result.ok) {
+        return;
+    }
+    std::cout << "record_index: " << result.record_index << "\n";
+    std::cout << "ancestor_count: " << result.ancestors.size() << "\n";
+    std::cout << "dry_run: true\n";
+    std::cout << "mutates_asset: false\n";
+    for (const auto& ancestor : result.ancestors) {
+        std::cout << "ancestor: " << ancestor.depth << " "
+                  << ancestor.object.record_index << " " << ancestor.object.object_name << "\n";
+    }
+}
+
 void print_text_toolbox_invocation_admission_result(
     const copperfin::studio::StudioToolboxInvocationAdmissionResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
@@ -18617,6 +18740,34 @@ int main(int argc, char** argv) {
             print_json_editor_action_dispatch_execution_catalog_result(result);
         } else {
             print_text_editor_action_dispatch_execution_catalog_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto visual_object_ancestors_parse = parse_visual_object_ancestors_arguments(args);
+    if (visual_object_ancestors_parse.requested) {
+        if (!visual_object_ancestors_parse.ok) {
+            const auto result = copperfin::vfp::VisualObjectAncestorsListResult{
+                .ok = false,
+                .error = visual_object_ancestors_parse.error,
+                .record_index = 0U,
+                .ancestors = {}
+            };
+            if (visual_object_ancestors_parse.output_json) {
+                print_json_visual_object_ancestors_result(result);
+            } else {
+                print_text_visual_object_ancestors_result(result);
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto result = copperfin::vfp::list_visual_object_ancestors(
+            visual_object_ancestors_parse.request);
+        if (visual_object_ancestors_parse.output_json) {
+            print_json_visual_object_ancestors_result(result);
+        } else {
+            print_text_visual_object_ancestors_result(result);
         }
         return result.ok ? 0 : 4;
     }

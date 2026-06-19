@@ -8587,6 +8587,127 @@ void test_studio_host_json_exposes_visual_object_descendants(const std::string& 
     }
 }
 
+void test_studio_host_json_exposes_visual_object_ancestors(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_ancestors_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "ancestors.scx";
+    write_synthetic_form_table_for_visual_object_list(form_path);
+
+    const auto ancestors_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-ancestors",
+            "--path", form_path.string(),
+            "--unique-id", "nested-guid",
+            "--json"
+        },
+        temp_root);
+    expect(ancestors_process.exit_code == 0,
+        "#1421: visual object ancestors JSON should exit successfully for selected objects");
+    expect_contains(ancestors_process.stdout_text, "\"visualObjectAncestors\": {",
+        "#1421: visual object ancestors JSON should expose an ancestors object");
+    expect_contains(ancestors_process.stdout_text, "\"recordIndex\": 3",
+        "#1421: visual object ancestors JSON should expose selected object record indexes");
+    expect_contains(ancestors_process.stdout_text, "\"ancestorCount\": 2",
+        "#1421: visual object ancestors JSON should expose ancestor counts");
+    expect_contains(ancestors_process.stdout_text, "\"dryRun\": true",
+        "#1421: visual object ancestors JSON should remain dry-run");
+    expect_contains(ancestors_process.stdout_text, "\"mutatesAsset\": false",
+        "#1421: visual object ancestors JSON should remain non-mutating");
+    expect_contains(ancestors_process.stdout_text, "\"depth\": 1",
+        "#1421: visual object ancestors JSON should expose immediate parent depths");
+    expect_contains(ancestors_process.stdout_text, "\"recordIndex\": 1",
+        "#1421: visual object ancestors JSON should include immediate parent records");
+    expect_contains(ancestors_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1421: visual object ancestors JSON should include immediate parent objects");
+    expect_contains(ancestors_process.stdout_text, "\"objectPath\": \"Page1.cmdSave\"",
+        "#1421: immediate parent ancestor JSON should expose hierarchical paths");
+    expect_contains(ancestors_process.stdout_text, "\"depth\": 2",
+        "#1421: visual object ancestors JSON should expose root ancestor depths");
+    expect_contains(ancestors_process.stdout_text, "\"recordIndex\": 0",
+        "#1421: visual object ancestors JSON should include root ancestor records");
+    expect_contains(ancestors_process.stdout_text, "\"objectName\": \"Page1\"",
+        "#1421: visual object ancestors JSON should include root ancestor objects");
+    expect_contains(ancestors_process.stdout_text, "\"objectPath\": \"Page1\"",
+        "#1421: root ancestor JSON should expose root object paths");
+
+    const auto root_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-ancestors",
+            "--path", form_path.string(),
+            "--unique-id", "page-guid",
+            "--json"
+        },
+        temp_root);
+    expect(root_process.exit_code == 0,
+        "#1421: visual object ancestors JSON should succeed for root objects");
+    expect_contains(root_process.stdout_text, "\"recordIndex\": 0",
+        "#1421: root visual object ancestors JSON should expose selected object record");
+    expect_contains(root_process.stdout_text, "\"ancestorCount\": 0",
+        "#1421: root visual object ancestors JSON should report zero ancestors");
+    expect_contains(root_process.stdout_text, "\"ancestors\": [\n    ]",
+        "#1421: root visual object ancestors JSON should expose an empty ancestors array");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-ancestors",
+            "--unique-id", "nested-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1421: visual object ancestors JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectAncestors\": null",
+        "#1421: missing-path visual object ancestors JSON should not expose an ancestors object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1421: missing-path visual object ancestors JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-ancestors",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1421: visual object ancestors JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1421: invalid-record visual object ancestors JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-ancestors",
+            "--path", form_path.string(),
+            "--object-name", "missingObject",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1421: visual object ancestors JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualObjectAncestors\": null",
+        "#1421: unresolved visual object ancestors JSON should not expose an ancestors object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1421: unresolved visual object ancestors JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-ancestors --path <asset>",
+        "#1421: usage text should expose visual object ancestors commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_toolbox_invocation_admission(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -40691,6 +40812,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);
     test_studio_host_json_exposes_visual_object_descendants(argv[1]);
+    test_studio_host_json_exposes_visual_object_ancestors(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission(argv[1]);
     test_studio_host_json_exposes_toolbox_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_selection_toolbox_invocation_admission_catalog(argv[1]);
