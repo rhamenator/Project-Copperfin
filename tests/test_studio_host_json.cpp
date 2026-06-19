@@ -8198,6 +8198,133 @@ void test_studio_host_json_exposes_visual_property_list(const std::string& studi
     }
 }
 
+void test_studio_host_json_exposes_visual_method_list(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_method_list_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "methods.scx";
+    write_synthetic_form_table_for_visual_object_list(form_path);
+
+    const auto list_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-list",
+            "--path", form_path.string(),
+            "--unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(list_process.exit_code == 0,
+        "#1422: visual method list JSON should exit successfully for resolved objects");
+    expect_contains(list_process.stdout_text, "\"visualMethodList\": {",
+        "#1422: visual method list JSON should expose a list object");
+    expect_contains(list_process.stdout_text, "\"recordIndex\": 1",
+        "#1422: visual method list JSON should expose resolved record indexes");
+    expect_contains(list_process.stdout_text, "\"recordDeleted\": false",
+        "#1422: visual method list JSON should expose selected-record deleted state");
+    expect_contains(list_process.stdout_text, "\"methodCount\": 2",
+        "#1422: visual method list JSON should expose parsed method counts");
+    expect_contains(list_process.stdout_text, "\"dryRun\": true",
+        "#1422: visual method list JSON should remain dry-run");
+    expect_contains(list_process.stdout_text, "\"mutatesAsset\": false",
+        "#1422: visual method list JSON should remain non-mutating");
+    expect_contains(list_process.stdout_text, "\"methodName\": \"Click\"",
+        "#1422: visual method list JSON should include procedure names");
+    expect_contains(list_process.stdout_text, "\"kind\": \"procedure\"",
+        "#1422: visual method list JSON should identify procedures");
+    expect_contains(list_process.stdout_text, "\"sourceText\": \"RETURN\"",
+        "#1422: visual method list JSON should expose procedure source text");
+    expect_contains(list_process.stdout_text, "\"sourceLineIndex\": 0",
+        "#1422: visual method list JSON should expose procedure declaration lines");
+    expect_contains(list_process.stdout_text, "\"sourceMemoBlockNumber\": ",
+        "#1422: visual method list JSON should expose source memo block metadata");
+    expect_contains(list_process.stdout_text, "\"methodName\": \"CanSave\"",
+        "#1422: visual method list JSON should include function names");
+    expect_contains(list_process.stdout_text, "\"kind\": \"function\"",
+        "#1422: visual method list JSON should identify functions");
+    expect_contains(list_process.stdout_text, "\"sourceText\": \"RETURN .T.\"",
+        "#1422: visual method list JSON should expose function source text");
+    expect_contains(list_process.stdout_text, "\"sourceLineIndex\": 2",
+        "#1422: visual method list JSON should expose later method declaration lines");
+
+    const auto empty_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-list",
+            "--path", form_path.string(),
+            "--unique-id", "fallback-guid",
+            "--json"
+        },
+        temp_root);
+    expect(empty_process.exit_code == 0,
+        "#1422: visual method list JSON should succeed for objects without methods");
+    expect_contains(empty_process.stdout_text, "\"recordIndex\": 2",
+        "#1422: empty visual method list JSON should expose selected object records");
+    expect_contains(empty_process.stdout_text, "\"recordDeleted\": true",
+        "#1422: empty visual method list JSON should preserve deleted selected-record state");
+    expect_contains(empty_process.stdout_text, "\"methodCount\": 0",
+        "#1422: empty visual method list JSON should report zero methods");
+    expect_contains(empty_process.stdout_text, "\"methods\": [\n    ]",
+        "#1422: empty visual method list JSON should expose an empty methods array");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-list",
+            "--unique-id", "save-guid",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1422: visual method list JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualMethodList\": null",
+        "#1422: missing-path visual method list JSON should not expose a list object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1422: missing-path visual method list JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-list",
+            "--path", form_path.string(),
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1422: visual method list JSON should reject invalid record values");
+    expect_contains(invalid_record_process.stdout_text, "The --record value must be a non-negative integer.",
+        "#1422: invalid-record visual method list JSON should report parser errors");
+
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-list",
+            "--path", form_path.string(),
+            "--object-name", "missingObject",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1422: visual method list JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualMethodList\": null",
+        "#1422: unresolved visual method list JSON should not expose a list object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1422: unresolved visual method list JSON should report editor errors");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-method-list --path <asset>",
+        "#1422: usage text should expose visual method list commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_visual_object_list(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -40809,6 +40936,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_visual_property_filter(argv[1]);
     test_studio_host_json_exposes_visual_property_query(argv[1]);
     test_studio_host_json_exposes_visual_property_list(argv[1]);
+    test_studio_host_json_exposes_visual_method_list(argv[1]);
     test_studio_host_json_exposes_visual_object_list(argv[1]);
     test_studio_host_json_exposes_visual_object_children(argv[1]);
     test_studio_host_json_exposes_visual_object_descendants(argv[1]);
