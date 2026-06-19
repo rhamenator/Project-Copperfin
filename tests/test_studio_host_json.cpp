@@ -7076,6 +7076,12 @@ void test_studio_host_json_exposes_editor_action_dispatch_execution_catalog(
         "#1329: admitted editor action dispatch execution catalog JSON should expose zero errors");
     expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
         "#1329: admitted editor action dispatch execution catalog JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text, "\"executionReadyActionIds\": [\"show-property-grid\"",
+        "#1367: admitted editor action dispatch execution catalog JSON should summarize execution-ready actions");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedActionIds\": []",
+        "#1367: admitted editor action dispatch execution catalog JSON should summarize empty blocked action ids");
+    expect_contains(admitted_process.stdout_text, "\"executionBlockedErrors\": []",
+        "#1367: admitted editor action dispatch execution catalog JSON should summarize empty blocked execution errors");
     expect_contains(admitted_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
         "#1329: editor action dispatch execution catalog JSON should expose method actions");
     expect_contains(admitted_process.stdout_text, "\"launchOk\": true",
@@ -7115,6 +7121,13 @@ void test_studio_host_json_exposes_editor_action_dispatch_execution_catalog(
         "#1329: unadmitted editor action dispatch execution catalog JSON should expose per-action errors");
     expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
         "#1329: unadmitted editor action dispatch execution catalog JSON should expose admission false");
+    expect_contains(unadmitted_process.stdout_text, "\"executionReadyActionIds\": []",
+        "#1367: unadmitted editor action dispatch execution catalog JSON should summarize empty ready action ids");
+    expect_contains(unadmitted_process.stdout_text, "\"executionBlockedActionIds\": [\"show-property-grid\"",
+        "#1367: unadmitted editor action dispatch execution catalog JSON should summarize blocked action ids");
+    expect_contains(unadmitted_process.stdout_text,
+        "\"executionBlockedErrors\": [\"An editor action dispatch execution catalog entry requires explicit execution admission.\"",
+        "#1367: unadmitted editor action dispatch execution catalog JSON should summarize blocked execution errors");
     expect_contains(unadmitted_process.stdout_text,
         "An editor action dispatch execution catalog entry requires explicit execution admission.",
         "#1329: unadmitted editor action dispatch execution catalog JSON should expose execution errors");
@@ -7134,6 +7147,11 @@ void test_studio_host_json_exposes_editor_action_dispatch_execution_catalog(
         "#1329: dry-run editor action dispatch execution catalog JSON should expose zero readiness");
     expect_contains(dry_run_process.stdout_text, "\"errorCount\": 5",
         "#1329: dry-run editor action dispatch execution catalog JSON should expose per-action errors");
+    expect_contains(dry_run_process.stdout_text, "\"executionBlockedActionIds\": [\"show-property-grid\"",
+        "#1367: dry-run editor action dispatch execution catalog JSON should summarize dispatch-blocked action ids");
+    expect_contains(dry_run_process.stdout_text,
+        "\"executionBlockedErrors\": [\"An editor action dispatch request requires an admitted non-dry-run invocation.\"",
+        "#1367: dry-run editor action dispatch execution catalog JSON should summarize dispatch-blocked errors");
     expect_contains(dry_run_process.stdout_text,
         "An editor action dispatch request requires an admitted non-dry-run invocation.",
         "#1329: dry-run editor action dispatch execution catalog JSON should expose dispatch errors");
