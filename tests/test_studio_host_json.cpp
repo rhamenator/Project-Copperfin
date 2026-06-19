@@ -3864,6 +3864,48 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
     expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                     "#1481: selected label objects should expose containing section availability");
 
+    const auto deleted_object_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "6", "--json"},
+        temp_root);
+
+    if (deleted_object_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted label object stdout:\n"
+                  << deleted_object_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted label object stderr:\n"
+                  << deleted_object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_object_process.exit_code == 0,
+           "#1500: selected deleted label object JSON should exit successfully");
+    expect_contains(deleted_object_process.stdout_text, "\"isLabel\": true",
+                    "#1500: selected deleted label object JSON should retain label identity");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1500: deleted label object selections should advertise selected-object availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1500: deleted label object selections should advertise report-selection availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1500: deleted label object selections should expose object selection kind");
+    expect_contains(deleted_object_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1500: deleted selected label object JSON should expose deleted object counts");
+    expect_contains_in_order(
+        deleted_object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 6",
+            "\"deleted\": true",
+            "\"containingSectionId\": \"\"",
+            "\"containingSectionRecordIndex\": null",
+            "\"sectionObjectIndex\": null",
+            "\"expression\": \"\\\"Deleted label\\\"\""
+        },
+        "#1500: deleted label object selections should expose selected deleted-object metadata");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1500: deleted label objects should not advertise selected containing-section availability");
+    expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1500: deleted label objects should serialize null selected containing-section JSON");
+
     const auto unplaced_object_process = run_process_capture(
         studio_host_path,
         {"--path", label_path.string(), "--record", "5", "--json"},
