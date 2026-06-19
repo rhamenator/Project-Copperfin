@@ -1,3 +1,4 @@
+1327	OPEN	E2/#23 slice: Expose builder dispatch execution catalog through host JSON		2026-06-19T05:30:02Z
 1326	OPEN	E2/#23 slice: Add builder dispatch execution catalog planning		2026-06-19T05:26:15Z
 1325	OPEN	E2/#23 slice: Expose aggregate designer dispatch execution through host JSON		2026-06-19T05:17:47Z
 1324	OPEN	E2/#23 slice: Add aggregate designer dispatch execution seam		2026-06-19T05:13:30Z

@@ -5707,6 +5707,137 @@ void test_studio_host_json_exposes_builder_dispatch_catalog(const std::string& s
     }
 }
 
+void test_studio_host_json_exposes_builder_dispatch_execution_catalog(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_builder_dispatch_execution_catalog_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto admitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-execution-catalog",
+            "--builder-context", "control",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "grdOrders",
+            "--unique-id", "grid-guid",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(admitted_process.exit_code == 0,
+        "#1327: builder dispatch execution catalog JSON should accept admitted control catalogs");
+    expect_contains(admitted_process.stdout_text, "\"builderDispatchExecutionCatalog\": {",
+        "#1327: builder dispatch execution catalog JSON should expose a catalog object");
+    expect_contains(admitted_process.stdout_text, "\"context\": \"control\"",
+        "#1327: builder dispatch execution catalog JSON should expose builder contexts");
+    expect_contains(admitted_process.stdout_text, "\"builderCount\": 2",
+        "#1327: builder dispatch execution catalog JSON should expose builder counts");
+    expect_contains(admitted_process.stdout_text, "\"executionReadyCount\": 2",
+        "#1327: admitted builder dispatch execution catalog JSON should expose readiness counts");
+    expect_contains(admitted_process.stdout_text, "\"errorCount\": 0",
+        "#1327: admitted builder dispatch execution catalog JSON should expose zero errors");
+    expect_contains(admitted_process.stdout_text, "\"dryRun\": false",
+        "#1327: admitted builder dispatch execution catalog JSON should not be dry-run");
+    expect_contains(admitted_process.stdout_text, "\"builderId\": \"grid-builder\"",
+        "#1327: builder dispatch execution catalog JSON should expose builder ids");
+    expect_contains(admitted_process.stdout_text, "\"launchOk\": true",
+        "#1327: builder dispatch execution catalog JSON should expose launch readiness");
+    expect_contains(admitted_process.stdout_text, "\"admissionOk\": true",
+        "#1327: builder dispatch execution catalog JSON should expose invocation admission readiness");
+    expect_contains(admitted_process.stdout_text, "\"dispatchOk\": true",
+        "#1327: builder dispatch execution catalog JSON should expose dispatch readiness");
+    expect_contains(admitted_process.stdout_text, "\"executionAdmitted\": true",
+        "#1327: builder dispatch execution catalog JSON should expose execution admission state");
+    expect_contains(admitted_process.stdout_text, "\"executionReady\": true",
+        "#1327: builder dispatch execution catalog JSON should expose execution readiness");
+    expect_contains(admitted_process.stdout_text, "\"executionError\": \"\"",
+        "#1327: admitted builder dispatch execution catalog JSON should expose empty execution errors");
+    expect_contains(admitted_process.stdout_text, "\"entryPoint\": \"cf_builders.grid_builder\"",
+        "#1327: builder dispatch execution catalog JSON should preserve dispatch entry points");
+    expect_contains(admitted_process.stdout_text, "\"dispatchArguments\": [",
+        "#1327: builder dispatch execution catalog JSON should expose dispatch arguments");
+    expect_contains(admitted_process.stdout_text, "\"executed\": false",
+        "#1327: builder dispatch execution catalog JSON should not launch builders");
+
+    const auto unadmitted_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-execution-catalog",
+            "--builder-context", "control",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "false",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_process.exit_code == 0,
+        "#1327: builder dispatch execution catalog JSON should report unadmitted execution as catalog errors");
+    expect_contains(unadmitted_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1327: unadmitted builder dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(unadmitted_process.stdout_text, "\"errorCount\": 2",
+        "#1327: unadmitted builder dispatch execution catalog JSON should expose per-builder errors");
+    expect_contains(unadmitted_process.stdout_text, "\"executionAdmitted\": false",
+        "#1327: unadmitted builder dispatch execution catalog JSON should expose admission false");
+    expect_contains(unadmitted_process.stdout_text,
+        "A builder dispatch execution catalog entry requires explicit execution admission.",
+        "#1327: unadmitted builder dispatch execution catalog JSON should expose execution errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-execution-catalog",
+            "--builder-context", "control",
+            "--admit-builder-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 0,
+        "#1327: builder dispatch execution catalog JSON should report dry-run dispatch failures");
+    expect_contains(dry_run_process.stdout_text, "\"executionReadyCount\": 0",
+        "#1327: dry-run builder dispatch execution catalog JSON should expose zero readiness");
+    expect_contains(dry_run_process.stdout_text, "\"errorCount\": 2",
+        "#1327: dry-run builder dispatch execution catalog JSON should expose per-builder errors");
+    expect_contains(dry_run_process.stdout_text,
+        "A builder dispatch request requires an admitted non-dry-run invocation.",
+        "#1327: dry-run builder dispatch execution catalog JSON should expose dispatch errors");
+
+    const auto invalid_execution_bool_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-execution-catalog",
+            "--builder-context", "control",
+            "--admit-builder-execution", "maybe",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_execution_bool_process.exit_code == 2,
+        "#1327: builder dispatch execution catalog JSON should reject invalid execution-admission booleans");
+    expect_contains(invalid_execution_bool_process.stdout_text,
+        "The --admit-builder-execution value must be true or false.",
+        "#1327: invalid builder execution catalog admission JSON should report parser errors");
+
+    const auto missing_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-dispatch-execution-catalog",
+            "--json"
+        },
+        temp_root);
+    expect(missing_context_process.exit_code == 2,
+        "#1327: builder dispatch execution catalog JSON should reject missing contexts");
+    expect_contains(missing_context_process.stdout_text, "No builder context was provided.",
+        "#1327: missing-context builder dispatch execution catalog JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_editor_action_launch_plans(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -37790,6 +37921,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_builder_dispatch(argv[1]);
     test_studio_host_json_exposes_builder_execution(argv[1]);
     test_studio_host_json_exposes_builder_dispatch_catalog(argv[1]);
+    test_studio_host_json_exposes_builder_dispatch_execution_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_plans(argv[1]);
     test_studio_host_json_exposes_editor_action_launch_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_invocation_admission(argv[1]);
