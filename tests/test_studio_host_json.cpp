@@ -9070,6 +9070,12 @@ void test_studio_host_json_exposes_designer_invocation_admission(const std::stri
         "#1222: designer invocation-admission JSON should preserve editor lines");
     expect_contains(visual_process.stdout_text, "\"column\": 4",
         "#1222: designer invocation-admission JSON should preserve editor columns");
+    expect_contains(visual_process.stdout_text, "\"admissionOkSelectionContexts\": [\"visual_object\"]",
+        "#1400: designer invocation-admission JSON should summarize admission-clean selected contexts");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedSelectionContexts\": []",
+        "#1400: designer invocation-admission JSON should expose empty blocked selected contexts for clean admission");
+    expect_contains(visual_process.stdout_text, "\"admissionBlockedErrors\": []",
+        "#1400: designer invocation-admission JSON should expose empty blocked errors for clean admission");
     expect_contains(visual_process.stdout_text, "\"editorActionInvocationCount\": ",
         "#1222: designer invocation-admission JSON should expose editor invocation counts");
     expect_contains(visual_process.stdout_text, "\"builderInvocationCount\": ",
@@ -9113,6 +9119,13 @@ void test_studio_host_json_exposes_designer_invocation_admission(const std::stri
         "#1222: menu designer invocation-admission JSON should expose unsupported toolbox availability");
     expect_contains(menu_process.stdout_text, "\"toolboxInvocation\": null",
         "#1222: menu designer invocation-admission JSON should expose null toolbox invocation");
+    expect_contains(menu_process.stdout_text, "\"admissionOkSelectionContexts\": []",
+        "#1400: menu invocation-admission JSON should expose empty clean selected contexts");
+    expect_contains(menu_process.stdout_text, "\"admissionBlockedSelectionContexts\": [\"menu_item\"]",
+        "#1400: menu invocation-admission JSON should summarize admission-blocked selected contexts");
+    expect_contains(menu_process.stdout_text,
+        "\"admissionBlockedErrors\": [\"The selected Studio context does not expose a toolbox palette.\"]",
+        "#1400: menu invocation-admission JSON should summarize blocked selected-context reasons");
     expect_contains(menu_process.stdout_text,
         "\"toolboxError\": \"The selected Studio context does not expose a toolbox palette.\"",
         "#1222: menu designer invocation-admission JSON should preserve unsupported toolbox reasons");

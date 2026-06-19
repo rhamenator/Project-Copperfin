@@ -1,3 +1,4 @@
+1400	OPEN	E2/#23 slice: Expose designer invocation-admission summaries in host JSON		2026-06-19T10:51:31Z
 1399	OPEN	E2/#23 slice: Expose designer launch-surface summaries in host JSON		2026-06-19T10:46:28Z
 1398	OPEN	E2/#23 slice: Expose editor action execution summaries in host JSON		2026-06-19T10:40:51Z
 1397	OPEN	E2/#23 slice: Expose editor action dispatch summaries in host JSON		2026-06-19T10:37:35Z
