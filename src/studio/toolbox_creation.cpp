@@ -583,6 +583,60 @@ StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
     };
 }
 
+StudioSelectionToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreateDispatchRequest& request) {
+    auto create_plan = plan_visual_object_from_toolbox_selection(request.create_request);
+    if (!create_plan.ok) {
+        return {
+            .ok = false,
+            .error = create_plan.error,
+            .selection_context = create_plan.selection_context,
+            .toolbox_context = create_plan.toolbox_context,
+            .launch_plan = create_plan.launch_plan,
+            .create_plan = create_plan,
+            .dispatch = {},
+            .dispatch_count = 0U,
+            .error_count = 1U,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto dispatch = plan_visual_object_create_dispatch({
+        .create_plan = create_plan.create_plan.plan,
+        .admit_create_operation = request.admit_create_operation
+    });
+    if (!dispatch.ok) {
+        return {
+            .ok = false,
+            .error = dispatch.error,
+            .selection_context = create_plan.selection_context,
+            .toolbox_context = create_plan.toolbox_context,
+            .launch_plan = create_plan.launch_plan,
+            .create_plan = create_plan,
+            .dispatch = dispatch,
+            .dispatch_count = 0U,
+            .error_count = 1U,
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = create_plan.selection_context,
+        .toolbox_context = create_plan.toolbox_context,
+        .launch_plan = create_plan.launch_plan,
+        .create_plan = create_plan,
+        .dispatch = dispatch,
+        .dispatch_count = 1U,
+        .error_count = 0U,
+        .dry_run = dispatch.plan.dry_run,
+        .mutates_asset = dispatch.plan.mutates_asset
+    };
+}
+
 StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch_from_toolbox_dispatch(
     const StudioToolboxObjectCreateDispatchFromPaletteDispatchRequest& request) {
     const auto create_plan = plan_visual_object_from_toolbox_dispatch(request.create_request);

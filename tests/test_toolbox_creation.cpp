@@ -349,6 +349,163 @@ void test_toolbox_creation_selection_planner_resolves_contexts_without_mutation(
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_selection_dispatch_planner_resolves_contexts_without_mutation() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_selection_dispatch_plan_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto visual_dispatch = copperfin::studio::plan_visual_object_create_dispatch_from_toolbox_selection({
+        .create_request = {
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+            .path = table_path.string(),
+            .toolbox_item_id = "textbox",
+            .object_name = {},
+            .unique_id = "selection-dispatch-textbox-guid",
+            .parent_name = "frmMain",
+            .field_values = {
+                {.property_name = "CAPTION", .property_value = "Selection Dispatch"}
+            }
+        },
+        .admit_create_operation = true
+    });
+    expect(visual_dispatch.ok &&
+            visual_dispatch.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            visual_dispatch.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_dispatch.launch_plan.ok &&
+            visual_dispatch.create_plan.ok &&
+            visual_dispatch.dispatch.ok &&
+            visual_dispatch.dispatch_count == 1U &&
+            visual_dispatch.error_count == 0U &&
+            !visual_dispatch.dry_run &&
+            visual_dispatch.mutates_asset &&
+            visual_dispatch.create_plan.create_plan.plan.object_name == "txt2" &&
+            visual_dispatch.dispatch.plan.object_name == "txt2" &&
+            visual_dispatch.dispatch.plan.unique_id == "selection-dispatch-textbox-guid" &&
+            visual_dispatch.dispatch.plan.parent_name == "frmMain",
+        "#1302: selection toolbox create-dispatch planning should resolve visual selections to admitted form dispatch plans");
+    expect(has_argument_pair(visual_dispatch.dispatch.plan.dispatch_arguments, "--path", table_path.string()) &&
+            has_argument_pair(visual_dispatch.dispatch.plan.dispatch_arguments, "--toolbox-create", "textbox") &&
+            has_argument_pair(visual_dispatch.dispatch.plan.dispatch_arguments, "--toolbox-context", "form") &&
+            has_argument_pair(visual_dispatch.dispatch.plan.dispatch_arguments, "--object-name", "txt2") &&
+            has_argument_pair(visual_dispatch.dispatch.plan.dispatch_arguments, "--unique-id",
+                "selection-dispatch-textbox-guid") &&
+            has_argument_pair(visual_dispatch.dispatch.plan.dispatch_arguments, "--parent-name", "frmMain") &&
+            has_argument_pair(visual_dispatch.dispatch.plan.dispatch_arguments, "--field-value",
+                "CAPTION=Selection Dispatch"),
+        "#1302: selection toolbox create-dispatch planning should preserve deterministic dispatch arguments");
+    expect(object_count(table_path) == before_count,
+        "#1302: selection toolbox create-dispatch planning should not mutate visual assets");
+
+    const auto non_admitted_dispatch =
+        copperfin::studio::plan_visual_object_create_dispatch_from_toolbox_selection({
+            .create_request = {
+                .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+                .path = table_path.string(),
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = "frmMain",
+                .field_values = {}
+            },
+            .admit_create_operation = false
+        });
+    expect(!non_admitted_dispatch.ok &&
+            non_admitted_dispatch.error ==
+                "A toolbox create dispatch request requires an admitted non-dry-run create operation." &&
+            non_admitted_dispatch.create_plan.ok &&
+            !non_admitted_dispatch.dispatch.ok &&
+            non_admitted_dispatch.dispatch.plan.dispatch_arguments.empty() &&
+            non_admitted_dispatch.dispatch_count == 0U &&
+            non_admitted_dispatch.error_count == 1U &&
+            non_admitted_dispatch.dry_run &&
+            !non_admitted_dispatch.mutates_asset,
+        "#1302: selection toolbox create-dispatch planning should reject non-admitted creates without stale arguments");
+
+    const auto report_dispatch = copperfin::studio::plan_visual_object_create_dispatch_from_toolbox_selection({
+        .create_request = {
+            .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+            .path = table_path.string(),
+            .toolbox_item_id = "label",
+            .object_name = {},
+            .unique_id = {},
+            .parent_name = "DetailBand",
+            .field_values = {}
+        },
+        .admit_create_operation = true
+    });
+    expect(report_dispatch.ok &&
+            report_dispatch.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            report_dispatch.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            report_dispatch.create_plan.ok &&
+            report_dispatch.dispatch.ok &&
+            report_dispatch.dispatch.plan.object_name == "lbl1" &&
+            report_dispatch.dispatch.plan.parent_name == "DetailBand" &&
+            has_argument_pair(report_dispatch.dispatch.plan.dispatch_arguments, "--toolbox-create", "label") &&
+            has_argument_pair(report_dispatch.dispatch.plan.dispatch_arguments, "--toolbox-context", "report"),
+        "#1302: selection toolbox create-dispatch planning should resolve report selections to report-safe dispatches");
+
+    const auto unavailable_dispatch =
+        copperfin::studio::plan_visual_object_create_dispatch_from_toolbox_selection({
+            .create_request = {
+                .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+                .path = table_path.string(),
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = "DetailBand",
+                .field_values = {}
+            },
+            .admit_create_operation = true
+        });
+    expect(!unavailable_dispatch.ok &&
+            unavailable_dispatch.error ==
+                "The requested toolbox item is not available in the requested designer context." &&
+            unavailable_dispatch.launch_plan.ok &&
+            !unavailable_dispatch.create_plan.ok &&
+            !unavailable_dispatch.dispatch.ok &&
+            unavailable_dispatch.dispatch.plan.dispatch_arguments.empty() &&
+            unavailable_dispatch.dispatch_count == 0U &&
+            unavailable_dispatch.error_count == 1U,
+        "#1302: selection toolbox create-dispatch planning should reject unavailable selected-context items");
+
+    const auto unsupported_dispatch =
+        copperfin::studio::plan_visual_object_create_dispatch_from_toolbox_selection({
+            .create_request = {
+                .selection_context = copperfin::studio::StudioEditorSelectionContext::menu_item,
+                .path = table_path.string(),
+                .toolbox_item_id = "textbox",
+                .object_name = {},
+                .unique_id = {},
+                .parent_name = {},
+                .field_values = {}
+            },
+            .admit_create_operation = true
+        });
+    expect(!unsupported_dispatch.ok &&
+            unsupported_dispatch.error ==
+                "A selection-context toolbox object creation plan request requires a toolbox palette." &&
+            unsupported_dispatch.selection_context == copperfin::studio::StudioEditorSelectionContext::menu_item &&
+            !unsupported_dispatch.launch_plan.ok &&
+            !unsupported_dispatch.create_plan.ok &&
+            !unsupported_dispatch.dispatch.ok &&
+            unsupported_dispatch.dispatch.plan.dispatch_arguments.empty() &&
+            unsupported_dispatch.dispatch_count == 0U &&
+            unsupported_dispatch.error_count == 1U &&
+            unsupported_dispatch.dry_run &&
+            !unsupported_dispatch.mutates_asset,
+        "#1302: selection toolbox create-dispatch planning should reject unsupported selections without stale plans");
+    expect(object_count(table_path) == before_count,
+        "#1302: rejected selection toolbox create-dispatch plans should not mutate visual assets");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_planner_uses_admitted_palette_dispatch_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -2952,6 +3109,7 @@ int main() {
     test_toolbox_creation_planner_maps_descriptors_without_mutation();
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
     test_toolbox_creation_selection_planner_resolves_contexts_without_mutation();
+    test_toolbox_creation_selection_dispatch_planner_resolves_contexts_without_mutation();
     test_toolbox_creation_planner_uses_admitted_palette_dispatch_without_mutation();
     test_toolbox_creation_planner_rejects_invalid_palette_dispatches_without_mutation();
     test_toolbox_creation_batch_planner_uses_admitted_palette_dispatch_without_mutation();
