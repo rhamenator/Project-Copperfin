@@ -28,13 +28,13 @@ Important:
 
 Current priority order:
 
-Current E2 update: latest implemented slice is `#1448`, exposing visual object duplicate batches through Studio host JSON. `#1447` is the immediately preceding multi-object visual update-batch host JSON slice. These issues remain open unless explicit issue-closure approval has been given.
+Current E2 update: latest implemented slice is `#1449`, exposing visual object rename batches through Studio host JSON. `#1448` is the immediately preceding duplicate-batch host JSON slice. These issues remain open unless explicit issue-closure approval has been given.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1448`, exposing visual object duplicate batches through Studio host JSON. `#1447` remains the latest prior multi-object visual update-batch host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, and unmatched-selection JSON coverage.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved to E2/#23. Latest implemented slice: `#1449`, exposing visual object rename batches through Studio host JSON. `#1448` remains the latest prior duplicate-batch host JSON slice pending closure approval, while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, and unmatched-selection JSON coverage.
 
-Next: continue `#23` by opening or picking the next prompt-sized designer interaction, builder/wizard invocation, toolbox-flow, or context-aware editor child before coding. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` covers duplicate batches, and the remaining known misses are `rename_visual_objects`, `reorder_visual_objects`, and `duplicate_visual_object_subtree`. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
+Next: continue `#23` by opening or picking the next prompt-sized designer interaction, builder/wizard invocation, toolbox-flow, or context-aware editor child before coding. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` covers duplicate batches, `#1449` covers rename batches, and the remaining known misses are `reorder_visual_objects` and `duplicate_visual_object_subtree`. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, or debugger slices unless new evidence shows a regression.
 
 Language-service queue update:
 

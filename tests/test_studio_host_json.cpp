@@ -23639,6 +23639,193 @@ void test_studio_host_json_renames_objects_by_stable_selectors(const std::string
     }
 }
 
+void test_studio_host_json_renames_visual_object_batches(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_studio_host_visual_object_rename_batch_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path form_path = temp_root / "rename_batch.scx";
+    write_synthetic_form_table_for_toolbox_creation(form_path);
+    const auto rename_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--path", form_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--new-object-name", "txtBatch",
+            "--new-name", "txtBatch",
+            "--new-unique-id", "batch-rename-guid",
+            "--selected-object-name", "frmCustomer",
+            "--new-object-name", "frmBatch",
+            "--new-name", "frmBatch",
+            "--new-unique-id", "form-batch-rename-guid",
+            "--json"
+        },
+        temp_root);
+    expect(rename_batch_process.exit_code == 0,
+        "#1449: visual object rename-batch JSON should exit successfully for valid batches");
+    expect_contains(rename_batch_process.stdout_text, "\"visualObjectRenameBatch\": {",
+        "#1449: visual object rename-batch JSON should expose a batch rename object");
+    expect_contains(rename_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+        "#1449: visual object rename-batch JSON should expose affected object counts");
+    expect_contains(rename_batch_process.stdout_text, "\"dryRun\": false",
+        "#1449: visual object rename-batch JSON should expose committed execution state");
+    expect_contains(rename_batch_process.stdout_text, "\"mutatesAsset\": true",
+        "#1449: visual object rename-batch JSON should expose mutation state");
+    expect_contains(rename_batch_process.stdout_text, "\"undoAvailable\": true",
+        "#1449: visual object rename-batch JSON should expose undo availability state");
+    expect(visual_object_count(form_path) == 2U &&
+            visual_object_exists(form_path, "batch-rename-guid") &&
+            visual_object_exists(form_path, "form-batch-rename-guid") &&
+            !visual_object_exists(form_path, "existing-textbox-guid") &&
+            !visual_object_exists(form_path, "form-guid"),
+        "#1449: visual object rename-batch host command should update all requested identities");
+
+    const fs::path rollback_path = temp_root / "rename_batch_rollback.scx";
+    write_synthetic_form_table_for_toolbox_creation(rollback_path);
+    const auto rollback_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--path", rollback_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--new-object-name", "txtRollback",
+            "--new-name", "txtRollback",
+            "--new-unique-id", "rollback-textbox-guid",
+            "--selected-object-name", "frmCustomer",
+            "--new-object-name", "frmCollision",
+            "--new-name", "frmCollision",
+            "--new-unique-id", "rollback-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(rollback_process.exit_code == 4,
+        "#1449: visual object rename-batch JSON should reject later identity collisions");
+    expect_contains(rollback_process.stdout_text, "\"visualObjectRenameBatch\": null",
+        "#1449: failed visual object rename-batch JSON should not expose a batch rename object");
+    expect_contains(rollback_process.stdout_text, "The requested identity value already exists in the asset.",
+        "#1449: collision visual object rename-batch JSON should report editor errors");
+    expect(visual_object_count(rollback_path) == 2U &&
+            visual_object_exists(rollback_path, "existing-textbox-guid") &&
+            visual_object_exists(rollback_path, "form-guid") &&
+            !visual_object_exists(rollback_path, "rollback-textbox-guid"),
+        "#1449: failed visual object rename-batch commands should roll back earlier renames");
+
+    const auto missing_path_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--selected-unique-id", "existing-textbox-guid",
+            "--new-object-name", "missingPathRename",
+            "--json"
+        },
+        temp_root);
+    expect(missing_path_process.exit_code == 2,
+        "#1449: visual object rename-batch JSON should reject missing asset paths");
+    expect_contains(missing_path_process.stdout_text, "\"visualObjectRenameBatch\": null",
+        "#1449: missing-path visual object rename-batch JSON should not expose a batch rename object");
+    expect_contains(missing_path_process.stdout_text, "No asset path was provided.",
+        "#1449: missing-path visual object rename-batch JSON should report parser errors");
+
+    const auto no_items_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--path", form_path.string(),
+            "--json"
+        },
+        temp_root);
+    expect(no_items_process.exit_code == 2,
+        "#1449: visual object rename-batch JSON should reject empty batches");
+    expect_contains(no_items_process.stdout_text, "No visual object renames were provided.",
+        "#1449: empty visual object rename-batch JSON should report parser errors");
+
+    const auto option_before_item_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--path", form_path.string(),
+            "--new-object-name", "NoSelectedObject",
+            "--selected-unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(option_before_item_process.exit_code == 2,
+        "#1449: visual object rename-batch JSON should reject item options before selected objects");
+    expect_contains(option_before_item_process.stdout_text,
+        "Visual object rename batch item options require a preceding selected-object selector.",
+        "#1449: option-before-item visual object rename-batch JSON should report parser errors");
+
+    const auto invalid_record_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--path", form_path.string(),
+            "--selected-record", "-1",
+            "--new-object-name", "BadRecordRename",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_record_process.exit_code == 2,
+        "#1449: visual object rename-batch JSON should reject invalid selected-record values");
+    expect_contains(invalid_record_process.stdout_text, "The --selected-record value must be a non-negative integer.",
+        "#1449: invalid-record visual object rename-batch JSON should report parser errors");
+
+    const fs::path missing_object_path = temp_root / "rename_batch_missing_object.scx";
+    write_synthetic_form_table_for_toolbox_creation(missing_object_path);
+    const auto missing_object_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--path", missing_object_path.string(),
+            "--selected-object-name", "missingObject",
+            "--new-object-name", "missingObjectRename",
+            "--json"
+        },
+        temp_root);
+    expect(missing_object_process.exit_code == 4,
+        "#1449: visual object rename-batch JSON should reject unresolved selected objects");
+    expect_contains(missing_object_process.stdout_text, "\"visualObjectRenameBatch\": null",
+        "#1449: unresolved visual object rename-batch JSON should not expose a batch rename object");
+    expect_contains(missing_object_process.stdout_text, "No visual object with the requested name was found.",
+        "#1449: unresolved visual object rename-batch JSON should report editor errors");
+    expect(visual_object_count(missing_object_path) == 2U &&
+            visual_object_exists(missing_object_path, "existing-textbox-guid"),
+        "#1449: unresolved visual object rename-batch commands should not mutate the asset");
+
+    const fs::path empty_identity_path = temp_root / "rename_batch_empty_identity.scx";
+    write_synthetic_form_table_for_toolbox_creation(empty_identity_path);
+    const auto empty_identity_process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-rename-batch",
+            "--path", empty_identity_path.string(),
+            "--selected-unique-id", "existing-textbox-guid",
+            "--json"
+        },
+        temp_root);
+    expect(empty_identity_process.exit_code == 4,
+        "#1449: visual object rename-batch JSON should reject empty replacement identities");
+    expect_contains(empty_identity_process.stdout_text, "\"visualObjectRenameBatch\": null",
+        "#1449: empty-identity visual object rename-batch JSON should not expose a batch rename object");
+    expect_contains(empty_identity_process.stdout_text, "No identity fields were provided.",
+        "#1449: empty-identity visual object rename-batch JSON should report editor errors");
+    expect(visual_object_count(empty_identity_path) == 2U &&
+            visual_object_exists(empty_identity_path, "existing-textbox-guid"),
+        "#1449: empty-identity visual object rename-batch commands should not mutate the asset");
+
+    const auto usage_process = run_process_capture(studio_host_path, {}, temp_root);
+    expect_contains(usage_process.stdout_text, "--visual-object-rename-batch --path <asset>",
+        "#1449: usage text should expose visual object rename-batch commands");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_reparents_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -46635,6 +46822,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_visual_object_batches(argv[1]);
     test_studio_host_json_renames_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_renames_visual_object_batches(argv[1]);
     test_studio_host_json_reparents_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reparents_visual_object_batches(argv[1]);
     test_studio_host_json_reorders_objects_by_stable_selectors(argv[1]);
