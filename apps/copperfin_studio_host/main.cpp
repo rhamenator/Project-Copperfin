@@ -10923,6 +10923,12 @@ void print_json_designer_execution_result(
         return;
     }
 
+    const auto& child_dispatch_plan =
+        result.dispatch_plan.dispatch_count == 0U && planned_dispatch_plan != nullptr
+            ? *planned_dispatch_plan
+            : result.dispatch_plan;
+    const std::size_t toolbox_execution_count = child_dispatch_plan.toolbox_dispatch.ok ? 1U : 0U;
+
     std::cout << "{\n";
     std::cout << "    \"ok\": " << (result.error_count == 0U ? "true" : "false") << ",\n";
     std::cout << "    \"error\": \"\",\n";
@@ -10932,6 +10938,9 @@ void print_json_designer_execution_result(
     std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << ",\n";
     std::cout << "    \"executionCount\": " << result.execution_count << ",\n";
     std::cout << "    \"errorCount\": " << result.error_count << ",\n";
+    std::cout << "    \"editorActionExecutionCount\": " << result.editor_action_executions.size() << ",\n";
+    std::cout << "    \"builderExecutionCount\": " << result.builder_executions.size() << ",\n";
+    std::cout << "    \"toolboxExecutionCount\": " << toolbox_execution_count << ",\n";
     std::cout << "    \"editorActionLaunchCommand\": ";
     print_json_string(editor_action_launch_command);
     std::cout << ",\n";
@@ -10961,10 +10970,6 @@ void print_json_designer_execution_result(
         std::cout << ",\n";
         std::cout << "    \"dispatchCount\": " << plan.dispatch_count;
     }
-    const auto& child_dispatch_plan =
-        result.dispatch_plan.dispatch_count == 0U && planned_dispatch_plan != nullptr
-            ? *planned_dispatch_plan
-            : result.dispatch_plan;
     std::cout << ",\n";
     std::cout << "    \"editorActionExecutions\": [\n";
     for (std::size_t index = 0U; index < result.editor_action_executions.size(); ++index) {

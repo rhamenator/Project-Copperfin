@@ -9090,6 +9090,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
         "#1325: designer execution JSON should expose execution counts");
     expect_contains(visual_process.stdout_text, "\"errorCount\": 0",
         "#1325: admitted designer execution JSON should expose zero execution errors");
+    expect_contains(visual_process.stdout_text, "\"editorActionExecutionCount\": 5",
+        "#1342: admitted designer execution JSON should expose editor action execution counts");
+    expect_contains(visual_process.stdout_text, "\"builderExecutionCount\": 3",
+        "#1342: admitted designer execution JSON should expose builder execution counts");
+    expect_contains(visual_process.stdout_text, "\"toolboxExecutionCount\": 1",
+        "#1342: admitted designer execution JSON should expose toolbox execution counts");
     expect_contains(visual_process.stdout_text, "\"editorActionLaunchCommand\": \"/bin/true\"",
         "#1325: designer execution JSON should expose editor launch commands");
     expect_contains(visual_process.stdout_text, "\"builderLaunchCommand\": \"/bin/true\"",
@@ -9281,6 +9287,12 @@ void test_studio_host_json_exposes_designer_execution(const std::string& studio_
     expect_contains(failed_toolbox_process.stdout_text,
         "Designer toolbox launch command returned a non-zero exit code.",
         "#1341: failed toolbox execution JSON should expose child errors");
+    expect_contains(failed_toolbox_process.stdout_text, "\"editorActionExecutionCount\": 5",
+        "#1342: failed toolbox execution JSON should preserve editor action execution counts");
+    expect_contains(failed_toolbox_process.stdout_text, "\"builderExecutionCount\": 3",
+        "#1342: failed toolbox execution JSON should preserve builder execution counts");
+    expect_contains(failed_toolbox_process.stdout_text, "\"toolboxExecutionCount\": 1",
+        "#1342: failed toolbox execution JSON should preserve toolbox execution counts");
     expect_contains(failed_toolbox_process.stdout_text, "\"toolboxContext\": \"form\"",
         "#1341: failed toolbox execution JSON should preserve planned toolbox context");
     expect_contains(failed_toolbox_process.stdout_text, "\"commandToken\": \"studio.toolbox.palette.invoke\"",
