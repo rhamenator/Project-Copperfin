@@ -1,3 +1,4 @@
+1321	OPEN	E2/#23 slice: Expose editor action dispatch execution through host JSON		2026-06-19T04:56:50Z
 1320	OPEN	E2/#23 slice: Add editor action dispatch execution seam		2026-06-19T04:48:37Z
 1319	OPEN	E2/#23 slice: Expose builder dispatch execution through host JSON		2026-06-19T04:40:42Z
 1318	OPEN	E2/#23 slice: Add builder dispatch execution seam		2026-06-19T04:37:10Z

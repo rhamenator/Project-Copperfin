@@ -6491,6 +6491,196 @@ void test_studio_host_json_exposes_editor_action_dispatch(const std::string& stu
     }
 }
 
+void test_studio_host_json_exposes_editor_action_execution(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_editor_action_execution_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto method_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--path", "forms/customer.scx",
+            "--record", "4",
+            "--object-name", "cmdSave",
+            "--unique-id", "button-guid",
+            "--symbol", "cmdSave.Click",
+            "--line", "42",
+            "--column", "7",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "true",
+            "--editor-action-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(method_process.exit_code == 0,
+        "#1321: editor action execution JSON should accept admitted method editor actions");
+    expect_contains(method_process.stdout_text, "\"editorActionExecution\": {",
+        "#1321: editor action execution JSON should expose an execution object");
+    expect_contains(method_process.stdout_text, "\"actionId\": \"edit-visual-method\"",
+        "#1321: editor action execution JSON should expose action ids");
+    expect_contains(method_process.stdout_text, "\"kind\": \"source_editor\"",
+        "#1321: editor action execution JSON should expose action kind metadata");
+    expect_contains(method_process.stdout_text, "\"selectionContext\": \"visual_object\"",
+        "#1321: editor action execution JSON should expose selected Studio contexts");
+    expect_contains(method_process.stdout_text, "\"commandToken\": \"studio.method_editor.open\"",
+        "#1321: editor action execution JSON should expose command tokens");
+    expect_contains(method_process.stdout_text, "\"targetSurface\": \"method-editor\"",
+        "#1321: editor action execution JSON should expose target surfaces");
+    expect_contains(method_process.stdout_text, "\"assetPath\": \"forms/customer.scx\"",
+        "#1321: editor action execution JSON should carry asset paths");
+    expect_contains(method_process.stdout_text, "\"recordIndex\": 4",
+        "#1321: editor action execution JSON should carry record indexes");
+    expect_contains(method_process.stdout_text, "\"objectName\": \"cmdSave\"",
+        "#1321: editor action execution JSON should carry object-name selectors");
+    expect_contains(method_process.stdout_text, "\"uniqueId\": \"button-guid\"",
+        "#1321: editor action execution JSON should carry unique-id selectors");
+    expect_contains(method_process.stdout_text, "\"symbol\": \"cmdSave.Click\"",
+        "#1321: editor action execution JSON should carry launch symbols");
+    expect_contains(method_process.stdout_text, "\"line\": 42",
+        "#1321: editor action execution JSON should carry line metadata");
+    expect_contains(method_process.stdout_text, "\"column\": 7",
+        "#1321: editor action execution JSON should carry column metadata");
+    expect_contains(method_process.stdout_text, "\"launchCommand\": \"/bin/true\"",
+        "#1321: editor action execution JSON should expose launch commands");
+    expect_contains(method_process.stdout_text, "\"executedCommand\": \"'/bin/true'",
+        "#1321: editor action execution JSON should expose the shell command");
+    expect_contains(method_process.stdout_text, "\"observedExitCode\": 0",
+        "#1321: successful editor action execution JSON should expose zero exit status");
+    expect_contains(method_process.stdout_text, "\"executionAdmitted\": true",
+        "#1321: editor action execution JSON should expose execution admission");
+    expect_contains(method_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#1321: editor action execution JSON should expose dispatch admission");
+    expect_contains(method_process.stdout_text, "\"executed\": true",
+        "#1321: editor action execution JSON should mark execution complete");
+    expect_contains(method_process.stdout_text, "\"dryRun\": false",
+        "#1321: admitted editor action execution JSON should not be dry-run");
+    expect_contains(method_process.stdout_text, "\"mutatesAsset\": false",
+        "#1321: editor action execution JSON should remain non-mutating");
+
+    const auto expression_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "edit-report-expression",
+            "--selection-context", "report_expression",
+            "--path", "reports/orders.frx",
+            "--record", "2",
+            "--symbol", "Expr1.Expression",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "true",
+            "--editor-action-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(expression_process.exit_code == 0,
+        "#1321: editor action execution JSON should accept admitted report expression actions");
+    expect_contains(expression_process.stdout_text, "\"kind\": \"expression_editor\"",
+        "#1321: expression editor execution JSON should expose expression-editor metadata");
+    expect_contains(expression_process.stdout_text, "\"targetSurface\": \"expression-editor\"",
+        "#1321: expression editor execution JSON should expose expression editor target surfaces");
+    expect_contains(expression_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+        "#1321: expression editor execution JSON should expose selection contexts");
+    expect_contains(expression_process.stdout_text, "\"executed\": true",
+        "#1321: expression editor execution JSON should mark execution complete");
+
+    const auto missing_command_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "true",
+            "--json"
+        },
+        temp_root);
+    expect(missing_command_process.exit_code == 2,
+        "#1321: editor action execution JSON should reject missing launch commands");
+    expect_contains(missing_command_process.stdout_text, "No editor action launch command was provided.",
+        "#1321: missing editor action launch commands should report parser errors");
+
+    const auto dry_run_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "show-property-grid",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "false",
+            "--admit-editor-action-execution", "true",
+            "--editor-action-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(dry_run_process.exit_code == 4,
+        "#1321: editor action execution JSON should reject dry-run dispatch requests");
+    expect_contains(dry_run_process.stdout_text, "\"editorActionExecution\": null",
+        "#1321: dry-run editor action execution JSON should not expose a result object");
+    expect_contains(dry_run_process.stdout_text,
+        "An editor action dispatch request requires an admitted non-dry-run invocation.",
+        "#1321: dry-run editor action execution JSON should report dispatch admission errors");
+
+    const auto unadmitted_execution_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "false",
+            "--editor-action-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(unadmitted_execution_process.exit_code == 4,
+        "#1321: editor action execution JSON should require explicit execution admission");
+    expect_contains(unadmitted_execution_process.stdout_text,
+        "An editor action dispatch execution request requires explicit execution admission.",
+        "#1321: unadmitted editor action execution JSON should report execution admission errors");
+    expect_contains(unadmitted_execution_process.stdout_text, "\"executed\": false",
+        "#1321: unadmitted editor action execution JSON should not mark execution complete");
+
+    const auto failed_command_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "true",
+            "--editor-action-launch-command", "/bin/false",
+            "--json"
+        },
+        temp_root);
+    expect(failed_command_process.exit_code == 4,
+        "#1321: editor action execution JSON should report nonzero process exits");
+    expect_contains(failed_command_process.stdout_text,
+        "Editor action launch command returned a non-zero exit code.",
+        "#1321: failed editor action execution JSON should report process errors");
+    expect_contains(failed_command_process.stdout_text, "\"observedExitCode\": ",
+        "#1321: failed editor action execution JSON should expose observed exit status");
+    expect_contains(failed_command_process.stdout_text, "\"executed\": false",
+        "#1321: failed editor action execution JSON should not mark execution complete");
+
+    const auto invalid_context_process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "edit-visual-method",
+            "--selection-context", "not-a-context",
+            "--editor-action-launch-command", "/bin/true",
+            "--json"
+        },
+        temp_root);
+    expect(invalid_context_process.exit_code == 2,
+        "#1321: editor action execution JSON should reject unknown selection contexts");
+    expect_contains(invalid_context_process.stdout_text, "Unknown selection context token: not-a-context",
+        "#1321: invalid editor action execution context JSON should report parser errors");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_editor_action_dispatch_catalog(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -37263,6 +37453,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_editor_action_invocation_admission(argv[1]);
     test_studio_host_json_exposes_editor_action_invocation_admission_catalog(argv[1]);
     test_studio_host_json_exposes_editor_action_dispatch(argv[1]);
+    test_studio_host_json_exposes_editor_action_execution(argv[1]);
     test_studio_host_json_exposes_editor_action_dispatch_catalog(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_plans(argv[1]);
     test_studio_host_json_exposes_toolbox_palette_launch_catalog(argv[1]);

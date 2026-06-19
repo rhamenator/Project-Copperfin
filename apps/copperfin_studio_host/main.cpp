@@ -50,6 +50,7 @@ void print_usage() {
     std::cout << "   or: copperfin_studio_host --editor-action-invocation-admission <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --editor-action-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --editor-action-dispatch <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
+    std::cout << "   or: copperfin_studio_host --editor-action-execute <id> --selection-context <token> --editor-action-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--admit-editor-action-execution <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --editor-action-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --toolbox-palette-launch-plan --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
     std::cout << "   or: copperfin_studio_host --toolbox-palette-launch-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
@@ -662,6 +663,18 @@ struct EditorActionDispatchParseResult {
     bool output_json = false;
     bool selection_context_provided = false;
     bool admit_editor_invocation = false;
+    std::string error;
+    copperfin::studio::StudioEditorActionLaunchRequest request;
+};
+
+struct EditorActionExecuteParseResult {
+    bool requested = false;
+    bool ok = true;
+    bool output_json = false;
+    bool selection_context_provided = false;
+    bool admit_editor_invocation = false;
+    bool admit_execution = false;
+    std::string launch_command;
     std::string error;
     copperfin::studio::StudioEditorActionLaunchRequest request;
 };
@@ -2080,6 +2093,111 @@ EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std
     }
     if (result.ok && !result.selection_context_provided) {
         fail("No selection context was provided.");
+    }
+    return result;
+}
+
+EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::vector<std::string>& args) {
+    EditorActionExecuteParseResult result{};
+    result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
+    result.requested = std::find(args.begin(), args.end(), "--editor-action-execute") != args.end();
+    if (!result.requested) {
+        return result;
+    }
+
+    auto fail = [&](std::string error) {
+        result.ok = false;
+        result.error = std::move(error);
+    };
+
+    for (std::size_t index = 0U; index < args.size() && result.ok; ++index) {
+        const std::string& argument = args[index];
+        auto require_value = [&](const std::string& option) -> std::string {
+            if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
+                fail("Missing value for " + option + ".");
+                return {};
+            }
+            ++index;
+            return args[index];
+        };
+
+        if (argument == "--json") {
+            continue;
+        }
+        if (argument == "--editor-action-execute") {
+            result.request.action_id = require_value(argument);
+        } else if (argument == "--selection-context") {
+            const std::string token = require_value(argument);
+            copperfin::studio::StudioEditorSelectionContext parsed_context{};
+            if (!parse_editor_selection_context_token(token, parsed_context)) {
+                fail("Unknown selection context token: " + token);
+                continue;
+            }
+            result.selection_context_provided = true;
+            result.request.selection_context = parsed_context;
+        } else if (argument == "--path") {
+            result.request.asset_path = require_value(argument);
+        } else if (argument == "--record") {
+            const std::string token = require_value(argument);
+            std::size_t record_index = 0U;
+            if (!parse_size_t_token(token, record_index)) {
+                fail("The --record value must be a non-negative integer.");
+                continue;
+            }
+            result.request.record_index = record_index;
+        } else if (argument == "--object-name") {
+            result.request.object_name = require_value(argument);
+        } else if (argument == "--unique-id") {
+            result.request.unique_id = require_value(argument);
+        } else if (argument == "--symbol") {
+            result.request.symbol = require_value(argument);
+        } else if (argument == "--line") {
+            const std::string token = require_value(argument);
+            std::size_t line = 0U;
+            if (!parse_size_t_token(token, line)) {
+                fail("The --line value must be a non-negative integer.");
+                continue;
+            }
+            result.request.line = line;
+        } else if (argument == "--column") {
+            const std::string token = require_value(argument);
+            std::size_t column = 0U;
+            if (!parse_size_t_token(token, column)) {
+                fail("The --column value must be a non-negative integer.");
+                continue;
+            }
+            result.request.column = column;
+        } else if (argument == "--admit-editor-invocation") {
+            const std::string token = require_value(argument);
+            bool admitted = false;
+            if (!parse_bool_token(token, admitted)) {
+                fail("The --admit-editor-invocation value must be true or false.");
+                continue;
+            }
+            result.admit_editor_invocation = admitted;
+        } else if (argument == "--admit-editor-action-execution") {
+            const std::string token = require_value(argument);
+            bool admitted = false;
+            if (!parse_bool_token(token, admitted)) {
+                fail("The --admit-editor-action-execution value must be true or false.");
+                continue;
+            }
+            result.admit_execution = admitted;
+        } else if (argument == "--editor-action-launch-command") {
+            result.launch_command = require_value(argument);
+        } else {
+            fail("Unknown editor-action-execute option: " + argument);
+        }
+    }
+
+    if (result.ok && result.request.action_id.empty()) {
+        fail("No editor action id was provided.");
+    }
+    if (result.ok && !result.selection_context_provided) {
+        fail("No selection context was provided.");
+    }
+    if (result.ok && result.launch_command.empty()) {
+        fail("No editor action launch command was provided.");
     }
     return result;
 }
@@ -8576,6 +8694,84 @@ void print_json_editor_action_dispatch_result(
     std::cout << "}\n";
 }
 
+void print_json_editor_action_execution_result(
+    const copperfin::studio::StudioEditorActionDispatchExecutionResult& result,
+    const std::string& launch_command,
+    const std::string& executed_command) {
+    std::cout << "{\n";
+    std::cout << "  \"status\": " << (result.ok ? "\"ok\"" : "\"error\"") << ",\n";
+    std::cout << "  \"editorActionExecution\": ";
+    if (!result.ok) {
+        std::cout << "null,\n";
+        std::cout << "  \"error\": ";
+        print_json_string(result.error);
+        std::cout << ",\n";
+        std::cout << "  \"executionAdmitted\": " << (result.execution_admitted ? "true" : "false") << ",\n";
+        std::cout << "  \"executed\": " << (result.executed ? "true" : "false") << ",\n";
+        std::cout << "  \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
+        std::cout << "  \"launchCommand\": ";
+        print_json_string(launch_command);
+        std::cout << ",\n";
+        std::cout << "  \"executedCommand\": ";
+        print_json_string(executed_command);
+        std::cout << ",\n";
+        std::cout << "  \"observedExitCode\": " << result.observation.exit_code << "\n";
+        std::cout << "}\n";
+        return;
+    }
+
+    const auto& plan = result.dispatch_plan;
+    const auto& action = plan.action;
+    std::cout << "{\n";
+    std::cout << "    \"ok\": true,\n";
+    std::cout << "    \"error\": \"\",\n";
+    std::cout << "    \"actionId\": ";
+    print_json_string_view(action.id);
+    std::cout << ",\n";
+    std::cout << "    \"kind\": ";
+    print_json_string(copperfin::studio::studio_editor_action_kind_name(action.kind));
+    std::cout << ",\n";
+    std::cout << "    \"selectionContext\": ";
+    print_json_string(copperfin::studio::studio_editor_selection_context_name(plan.selection_context));
+    std::cout << ",\n";
+    std::cout << "    \"commandToken\": ";
+    print_json_string(plan.command_token);
+    std::cout << ",\n";
+    std::cout << "    \"targetSurface\": ";
+    print_json_string(plan.target_surface);
+    std::cout << ",\n";
+    std::cout << "    \"assetPath\": ";
+    print_json_string(plan.asset_path);
+    std::cout << ",\n";
+    std::cout << "    \"recordIndex\": " << plan.record_index << ",\n";
+    std::cout << "    \"objectName\": ";
+    print_json_string(plan.object_name);
+    std::cout << ",\n";
+    std::cout << "    \"uniqueId\": ";
+    print_json_string(plan.unique_id);
+    std::cout << ",\n";
+    std::cout << "    \"symbol\": ";
+    print_json_string(plan.symbol);
+    std::cout << ",\n";
+    std::cout << "    \"line\": " << plan.line << ",\n";
+    std::cout << "    \"column\": " << plan.column << ",\n";
+    std::cout << "    \"launchCommand\": ";
+    print_json_string(launch_command);
+    std::cout << ",\n";
+    std::cout << "    \"executedCommand\": ";
+    print_json_string(executed_command);
+    std::cout << ",\n";
+    std::cout << "    \"observedExitCode\": " << result.observation.exit_code << ",\n";
+    std::cout << "    \"executionAdmitted\": " << (result.execution_admitted ? "true" : "false") << ",\n";
+    std::cout << "    \"dispatchAdmitted\": " << (plan.dispatch_admitted ? "true" : "false") << ",\n";
+    std::cout << "    \"executed\": " << (result.executed ? "true" : "false") << ",\n";
+    std::cout << "    \"dryRun\": " << (result.dry_run ? "true" : "false") << ",\n";
+    std::cout << "    \"mutatesAsset\": " << (result.mutates_asset ? "true" : "false") << "\n";
+    std::cout << "  },\n";
+    std::cout << "  \"error\": \"\"\n";
+    std::cout << "}\n";
+}
+
 void print_json_editor_action_dispatch_catalog_entry(
     const copperfin::studio::StudioEditorActionDispatchCatalogEntry& entry,
     const std::string& indent) {
@@ -11104,6 +11300,41 @@ void print_text_editor_action_dispatch_result(
     std::cout << "mutates_asset: " << (plan.mutates_asset ? "true" : "false") << "\n";
 }
 
+void print_text_editor_action_execution_result(
+    const copperfin::studio::StudioEditorActionDispatchExecutionResult& result,
+    const std::string& launch_command,
+    const std::string& executed_command) {
+    std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
+    if (!result.error.empty()) {
+        std::cout << "error: " << result.error << "\n";
+    }
+    std::cout << "execution_admitted: " << (result.execution_admitted ? "true" : "false") << "\n";
+    std::cout << "executed: " << (result.executed ? "true" : "false") << "\n";
+    std::cout << "dry_run: " << (result.dry_run ? "true" : "false") << "\n";
+    std::cout << "launch_command: " << launch_command << "\n";
+    std::cout << "executed_command: " << executed_command << "\n";
+    std::cout << "observed_exit_code: " << result.observation.exit_code << "\n";
+    if (!result.ok) {
+        return;
+    }
+    const auto& plan = result.dispatch_plan;
+    std::cout << "action_id: " << plan.action.id << "\n";
+    std::cout << "kind: " << copperfin::studio::studio_editor_action_kind_name(plan.action.kind) << "\n";
+    std::cout << "selection_context: "
+              << copperfin::studio::studio_editor_selection_context_name(plan.selection_context) << "\n";
+    std::cout << "command_token: " << plan.command_token << "\n";
+    std::cout << "target_surface: " << plan.target_surface << "\n";
+    std::cout << "asset_path: " << plan.asset_path << "\n";
+    std::cout << "record_index: " << plan.record_index << "\n";
+    std::cout << "object_name: " << plan.object_name << "\n";
+    std::cout << "unique_id: " << plan.unique_id << "\n";
+    std::cout << "symbol: " << plan.symbol << "\n";
+    std::cout << "line: " << plan.line << "\n";
+    std::cout << "column: " << plan.column << "\n";
+    std::cout << "dispatch_admitted: " << (plan.dispatch_admitted ? "true" : "false") << "\n";
+    std::cout << "mutates_asset: " << (result.mutates_asset ? "true" : "false") << "\n";
+}
+
 void print_text_editor_action_dispatch_catalog_result(
     const copperfin::studio::StudioEditorActionDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
@@ -13440,6 +13671,145 @@ int main(int argc, char** argv) {
             print_json_editor_action_dispatch_result(result);
         } else {
             print_text_editor_action_dispatch_result(result);
+        }
+        return result.ok ? 0 : 4;
+    }
+
+    const auto editor_action_execute_parse = parse_editor_action_execute_arguments(args);
+    if (editor_action_execute_parse.requested) {
+        if (!editor_action_execute_parse.ok) {
+            const auto result = copperfin::studio::StudioEditorActionDispatchExecutionResult{
+                .ok = false,
+                .error = editor_action_execute_parse.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = editor_action_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (editor_action_execute_parse.output_json) {
+                print_json_editor_action_execution_result(result, editor_action_execute_parse.launch_command, {});
+            } else {
+                print_text_editor_action_execution_result(result, editor_action_execute_parse.launch_command, {});
+                print_usage();
+            }
+            return 2;
+        }
+
+        const auto launch_result = copperfin::studio::plan_studio_editor_action_launch(
+            editor_action_execute_parse.request);
+        if (!launch_result.ok) {
+            const auto result = copperfin::studio::StudioEditorActionDispatchExecutionResult{
+                .ok = false,
+                .error = launch_result.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = editor_action_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (editor_action_execute_parse.output_json) {
+                print_json_editor_action_execution_result(
+                    result,
+                    editor_action_execute_parse.launch_command,
+                    {});
+            } else {
+                print_text_editor_action_execution_result(
+                    result,
+                    editor_action_execute_parse.launch_command,
+                    {});
+            }
+            return 4;
+        }
+
+        const auto admission_result = copperfin::studio::plan_studio_editor_action_invocation_admission({
+            .launch_plan = launch_result.plan,
+            .admit_editor_invocation = editor_action_execute_parse.admit_editor_invocation
+        });
+        if (!admission_result.ok) {
+            const auto result = copperfin::studio::StudioEditorActionDispatchExecutionResult{
+                .ok = false,
+                .error = admission_result.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = editor_action_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (editor_action_execute_parse.output_json) {
+                print_json_editor_action_execution_result(
+                    result,
+                    editor_action_execute_parse.launch_command,
+                    {});
+            } else {
+                print_text_editor_action_execution_result(
+                    result,
+                    editor_action_execute_parse.launch_command,
+                    {});
+            }
+            return 4;
+        }
+
+        const auto dispatch_result = copperfin::studio::plan_studio_editor_action_dispatch({
+            .admission_plan = admission_result.plan
+        });
+        if (!dispatch_result.ok) {
+            const auto result = copperfin::studio::StudioEditorActionDispatchExecutionResult{
+                .ok = false,
+                .error = dispatch_result.error,
+                .dispatch_plan = {},
+                .observation = {},
+                .execution_admitted = editor_action_execute_parse.admit_execution,
+                .executed = false,
+                .dry_run = true,
+                .mutates_asset = false
+            };
+            if (editor_action_execute_parse.output_json) {
+                print_json_editor_action_execution_result(
+                    result,
+                    editor_action_execute_parse.launch_command,
+                    {});
+            } else {
+                print_text_editor_action_execution_result(
+                    result,
+                    editor_action_execute_parse.launch_command,
+                    {});
+            }
+            return 4;
+        }
+
+        const std::string executed_command = build_shell_command(
+            editor_action_execute_parse.launch_command,
+            dispatch_result.plan.dispatch_arguments);
+        const auto result = copperfin::studio::execute_studio_editor_action_dispatch({
+            .dispatch_plan = dispatch_result.plan,
+            .admit_execution = editor_action_execute_parse.admit_execution,
+            .executor = [&](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+                const int exit_code = std::system(executed_command.c_str());
+                return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                    .launched = true,
+                    .exit_code = exit_code,
+                    .output = {},
+                    .error = exit_code == 0
+                        ? std::string{}
+                        : "Editor action launch command returned a non-zero exit code.",
+                    .mutates_asset = false
+                };
+            }
+        });
+        if (editor_action_execute_parse.output_json) {
+            print_json_editor_action_execution_result(
+                result,
+                editor_action_execute_parse.launch_command,
+                executed_command);
+        } else {
+            print_text_editor_action_execution_result(
+                result,
+                editor_action_execute_parse.launch_command,
+                executed_command);
         }
         return result.ok ? 0 : 4;
     }
