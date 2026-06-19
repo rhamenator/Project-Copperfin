@@ -1376,6 +1376,54 @@ vfp::VisualObjectCreateResult create_visual_object_from_toolbox_item(
     });
 }
 
+StudioSelectionToolboxObjectCreateResult create_visual_object_from_toolbox_selection(
+    const StudioSelectionToolboxObjectCreatePlanRequest& request) {
+    auto plan_result = plan_visual_object_from_toolbox_selection(request);
+    if (!plan_result.ok) {
+        return {
+            .ok = false,
+            .error = plan_result.error,
+            .selection_context = plan_result.selection_context,
+            .toolbox_context = plan_result.toolbox_context,
+            .launch_plan = plan_result.launch_plan,
+            .create_plan = plan_result,
+            .create_result = failed_create_result(plan_result.error),
+            .dry_run = true,
+            .mutates_asset = false
+        };
+    }
+
+    auto create_result = vfp::create_visual_object({
+        .path = plan_result.create_plan.plan.path,
+        .field_values = plan_result.create_plan.plan.field_values
+    });
+    if (!create_result.ok) {
+        return {
+            .ok = false,
+            .error = create_result.error,
+            .selection_context = plan_result.selection_context,
+            .toolbox_context = plan_result.toolbox_context,
+            .launch_plan = plan_result.launch_plan,
+            .create_plan = plan_result,
+            .create_result = create_result,
+            .dry_run = false,
+            .mutates_asset = false
+        };
+    }
+
+    return {
+        .ok = true,
+        .error = {},
+        .selection_context = plan_result.selection_context,
+        .toolbox_context = plan_result.toolbox_context,
+        .launch_plan = plan_result.launch_plan,
+        .create_plan = plan_result,
+        .create_result = create_result,
+        .dry_run = false,
+        .mutates_asset = true
+    };
+}
+
 vfp::VisualObjectCreateBatchResult create_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request) {
     const auto plan_result = plan_visual_objects_from_toolbox_items(request);

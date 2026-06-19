@@ -349,6 +349,154 @@ void test_toolbox_creation_selection_planner_resolves_contexts_without_mutation(
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_selection_create_executes_context_resolved_creates() {
+    namespace fs = std::filesystem;
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_toolbox_creation_selection_create_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = create_toolbox_fixture(temp_dir);
+    const std::size_t before_count = object_count(table_path);
+
+    const auto visual_create = copperfin::studio::create_visual_object_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::visual_object,
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "selection-created-textbox-guid",
+        .parent_name = "frmMain",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Selection Created"}
+        }
+    });
+    expect(visual_create.ok &&
+            visual_create.selection_context == copperfin::studio::StudioEditorSelectionContext::visual_object &&
+            visual_create.toolbox_context == copperfin::studio::StudioToolboxContext::form &&
+            visual_create.launch_plan.ok &&
+            visual_create.create_plan.ok &&
+            visual_create.create_plan.create_plan.ok &&
+            visual_create.create_result.ok &&
+            visual_create.create_result.record_index == before_count &&
+            visual_create.create_result.object_name == "txt2" &&
+            visual_create.create_result.unique_id == "selection-created-textbox-guid" &&
+            visual_create.create_result.parent_name == "frmMain" &&
+            !visual_create.dry_run &&
+            visual_create.mutates_asset,
+        "#1308: visual selection toolbox creates should resolve form context and append one object");
+    expect(visual_create.create_plan.create_plan.plan.object_name == "txt2" &&
+            visual_create.create_plan.create_plan.plan.toolbox_context_provided &&
+            visual_create.create_plan.create_plan.plan.toolbox_context ==
+                copperfin::studio::StudioToolboxContext::form &&
+            has_field_value(visual_create.create_plan.create_plan.plan.field_values, "CLASS", "TextBox") &&
+            has_field_value(visual_create.create_plan.create_plan.plan.field_values, "CAPTION", "Selection Created"),
+        "#1308: visual selection toolbox creates should preserve planning metadata and field values");
+    const auto visual_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-created-textbox-guid",
+        .property_name = "CAPTION"
+    });
+    expect(visual_caption.ok && visual_caption.exists && visual_caption.value == "Selection Created",
+        "#1308: visual selection toolbox creates should persist caller-provided fields");
+    expect(object_count(table_path) == before_count + 1U,
+        "#1308: visual selection toolbox creates should mutate exactly once");
+
+    const auto report_create = copperfin::studio::create_visual_object_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+        .path = table_path.string(),
+        .toolbox_item_id = "label",
+        .object_name = {},
+        .unique_id = "selection-created-report-label-guid",
+        .parent_name = "DetailBand",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Report Created"}
+        }
+    });
+    expect(report_create.ok &&
+            report_create.selection_context == copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            report_create.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            report_create.launch_plan.ok &&
+            report_create.create_plan.ok &&
+            report_create.create_result.ok &&
+            report_create.create_result.record_index == before_count + 1U &&
+            report_create.create_result.object_name == "lbl1" &&
+            report_create.create_result.unique_id == "selection-created-report-label-guid" &&
+            report_create.create_result.parent_name == "DetailBand" &&
+            has_field_value(report_create.create_plan.create_plan.plan.field_values, "CLASS", "Label"),
+        "#1308: report selection toolbox creates should resolve report context and append labels");
+    const auto report_caption = copperfin::vfp::query_visual_object_property({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-created-report-label-guid",
+        .property_name = "CAPTION"
+    });
+    expect(report_caption.ok && report_caption.exists && report_caption.value == "Report Created",
+        "#1308: report selection toolbox creates should persist caller-provided fields");
+    expect(object_count(table_path) == before_count + 2U,
+        "#1308: report selection toolbox creates should mutate exactly once");
+
+    const std::size_t before_rejections_count = object_count(table_path);
+    const auto unavailable_create = copperfin::studio::create_visual_object_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::report_expression,
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "selection-created-rejected-textbox-guid",
+        .parent_name = "DetailBand",
+        .field_values = {
+            {.property_name = "CAPTION", .property_value = "Should Not Exist"}
+        }
+    });
+    expect(!unavailable_create.ok &&
+            unavailable_create.error ==
+                "The requested toolbox item is not available in the requested designer context." &&
+            unavailable_create.selection_context ==
+                copperfin::studio::StudioEditorSelectionContext::report_expression &&
+            unavailable_create.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+            unavailable_create.launch_plan.ok &&
+            !unavailable_create.create_plan.ok &&
+            !unavailable_create.create_result.ok &&
+            unavailable_create.create_result.object_name.empty() &&
+            unavailable_create.create_result.unique_id.empty() &&
+            unavailable_create.create_result.parent_name.empty() &&
+            unavailable_create.dry_run &&
+            !unavailable_create.mutates_asset,
+        "#1308: unavailable selection toolbox creates should reject without stale identity metadata");
+    expect(object_count(table_path) == before_rejections_count,
+        "#1308: unavailable selection toolbox creates should not mutate assets");
+
+    const auto unsupported_create = copperfin::studio::create_visual_object_from_toolbox_selection({
+        .selection_context = copperfin::studio::StudioEditorSelectionContext::menu_item,
+        .path = table_path.string(),
+        .toolbox_item_id = "textbox",
+        .object_name = {},
+        .unique_id = "selection-created-unsupported-guid",
+        .parent_name = {},
+        .field_values = {}
+    });
+    expect(!unsupported_create.ok &&
+            unsupported_create.error ==
+                "A selection-context toolbox object creation plan request requires a toolbox palette." &&
+            unsupported_create.selection_context == copperfin::studio::StudioEditorSelectionContext::menu_item &&
+            !unsupported_create.launch_plan.ok &&
+            !unsupported_create.create_plan.ok &&
+            !unsupported_create.create_result.ok &&
+            unsupported_create.create_result.object_name.empty() &&
+            unsupported_create.create_result.unique_id.empty() &&
+            unsupported_create.create_result.parent_name.empty() &&
+            unsupported_create.dry_run &&
+            !unsupported_create.mutates_asset,
+        "#1308: unsupported selection toolbox creates should reject without stale identity metadata");
+    expect(object_count(table_path) == before_rejections_count,
+        "#1308: unsupported selection toolbox creates should not mutate assets");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_toolbox_creation_selection_dispatch_planner_resolves_contexts_without_mutation() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -3530,6 +3678,7 @@ int main() {
     test_toolbox_creation_planner_maps_descriptors_without_mutation();
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
     test_toolbox_creation_selection_planner_resolves_contexts_without_mutation();
+    test_toolbox_creation_selection_create_executes_context_resolved_creates();
     test_toolbox_creation_selection_dispatch_planner_resolves_contexts_without_mutation();
     test_toolbox_creation_selection_batch_planner_resolves_contexts_without_mutation();
     test_toolbox_creation_selection_batch_dispatch_planner_resolves_contexts_without_mutation();
