@@ -3760,6 +3760,21 @@ void write_synthetic_report_table_for_column_width_field_json(const std::filesys
     expect(create_result.ok, "#1539: synthetic report table for column width field JSON should be created");
 }
 
+void write_synthetic_report_table_for_column_spacing_field_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "COLSPACING", .type = 'N', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "COLS=2\nCOLWIDTH=3600", "120"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1540: synthetic report table for column spacing field JSON should be created");
+}
+
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -7175,6 +7190,86 @@ void test_studio_host_json_updates_report_column_width_fields_by_record_selectio
 
     run_column_width_update(temp_root / "column_width.frx", "column_width.frx", "2800", "report");
     run_column_width_update(temp_root / "column_width.lbx", "column_width.lbx", "3000", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_column_spacing_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_column_spacing_update = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& updated_spacing,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_column_spacing_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "COLSPACING",
+                "--property-value", updated_spacing,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " column spacing field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " column spacing field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1540: report/label column-spacing field update should exit successfully");
+        const auto column_spacing_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "COLSPACING"
+        });
+        expect(column_spacing_property.ok && column_spacing_property.exists &&
+                   column_spacing_property.value == updated_spacing,
+               "#1540: report/label column-spacing field update should persist the COLSPACING field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1540: report/label column-spacing field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1540: report/label column-spacing field update should not fabricate page setup availability");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1540: report/label column-spacing field update should preserve column setup availability");
+        expect_contains(update_process.stdout_text, "\"columnCount\": 2",
+                        "#1540: report/label column-spacing field update should preserve memo-derived column counts");
+        expect_contains(update_process.stdout_text, "\"columnWidth\": 3600",
+                        "#1540: report/label column-spacing field update should preserve memo-derived column widths");
+        expect_contains(update_process.stdout_text, "\"columnSpacing\": " + updated_spacing,
+                        "#1540: report/label column-spacing field update should refresh column spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 3",
+                        "#1540: report/label column-spacing field update should preserve setting counts");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null"
+            },
+            "#1540: report/label column-spacing field update should preserve field setting provenance");
+    };
+
+    run_column_spacing_update(temp_root / "column_spacing.frx", "column_spacing.frx", "240", "report");
+    run_column_spacing_update(temp_root / "column_spacing.lbx", "column_spacing.lbx", "260", "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -51631,6 +51726,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
