@@ -34,7 +34,7 @@ flowchart LR
 
     subgraph UXHosts[Designer And Host Surfaces]
         direction TB
-        DES["Shared Designers<br/>#23 audit cleanup"]
+        DES["Shared Designers<br/>#23 open evidence-audit queue"]
         FORMS["Forms / Classes Runtime<br/>first-pass shipped"]
         RPT["Reports / Labels Designer<br/>E3 active<br/>#1548 latest"]
         MENU["Menus Runtime<br/>first-pass shipped"]
