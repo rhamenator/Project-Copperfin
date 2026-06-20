@@ -93,7 +93,8 @@ Goal:
 
 Current state:
 
-- active-open queue under `#33` and `#34` (`#190`-`#193`)
+- parent issues `#33` and `#34` remain open for deeper policy work, but the tracked prompt-sized child queue `#190`-`#193` is closed
+- create a fresh child issue before new implementation work under this phase
 
 ## Phase H: Portability
 

@@ -64,7 +64,7 @@ Current E3 update: latest implemented slice is `#1536`, proving report/label lay
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1525`, proving report/label section-height editing through the generic Studio host property path while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, unmatched-selection JSON coverage, and selected report/label layout parity through `#1525`.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1536`, proving report/label layout-object top preview-bounds refresh through the generic Studio host property path while preserving detailed selected-object bounds payloads, document preview top/height bounds, and unplaced selected-object metadata.
 
 Next: continue E3/#24 by creating the next prompt-sized report/label designer fidelity child before coding unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, debugger, or E2 host-wrapper slices unless new evidence shows a regression.
 

@@ -67,7 +67,8 @@ classDiagram
     }
 
     class CopperfinInterop {
-        +DotNetBridge
+        +DotNetLauncherStub
+        +PolyglotArtifacts
         +OleAutomation
         +HostContainment
     }
@@ -164,4 +165,5 @@ classDiagram
 - `CopperfinRuntime` is the current execution hub.
 - `CopperfinData` and `CopperfinConnectors` feed the same runtime cursor/session surface from different storage backends.
 - `CopperfinDesignHosts` sit above `CopperfinDesignModel` and should not dictate runtime semantics.
+- `CopperfinInterop` currently covers OLE/automation state, launcher-stub style .NET integration, and emitted polyglot artifacts; it is not yet a blanket first-class runtime bridge for arbitrary .NET/Python execution.
 - `CopperfinInterop` and `CopperfinFederation` are deliberately downstream of the runtime core because they depend on stable execution and memory semantics.

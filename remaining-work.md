@@ -1442,9 +1442,9 @@ Phase A critical path is complete. Runtime safety/diagnostics branches (#13/#14)
 
 ## Dependency Diagrams
 
-### Area Dependency Diagram (Exact Progress)
+### Area Dependency Diagram (Current Issue-Tree Status)
 
-This diagram uses the exact percentages from the gap matrix.
+This diagram uses live issue-tree status instead of stale percentage math. The detailed gap matrix below still records planning estimates, but GitHub issue state and the current prompt-sized queue are authoritative for execution.
 
 ```mermaid
 flowchart TD
@@ -1455,68 +1455,53 @@ flowchart TD
 
     subgraph PA[Phase A - Core Data And Compatibility]
         direction TB
-        A1["DBF/FPT Basic Read Fidelity<br/>92%"]
-        A2["DBF Local-Table Mutation Core<br/>94%"]
-        A3["CDX/DCX Inspection<br/>95%"]
-        A4["MDX Inspection<br/>93%"]
-        A5["DBC/Database Container Fidelity<br/>90%"]
-        A6["Work Areas And Data Sessions<br/>96%"]
-        A7["Local Query/Mutation Commands<br/>93%"]
-        A8["SQL Pass-Through / Remote Cursor Behavior<br/>90%<br/>#7"]
-        A9["PRG Execution Engine<br/>~98%<br/>#7 / #8 closed 2026-06-13"]
+        A1["Storage / Index / DBC Fidelity<br/>Phase A closed"]
+        A2["Work Areas / Sessions / Cursor Semantics<br/>Phase A closed"]
+        A3["Command / Expression Surface<br/>#7 / #8 closed"]
+        A4["Automation Foundations<br/>#10 / #11 / #12 closed"]
     end
 
     subgraph PB[Phase B - Runtime Parity Surfaces]
         direction TB
-        B1["Forms/Classes Runtime Parity<br/>38%<br/>#15"]
-        B2["Reports/Labels Runtime Parity<br/>42%<br/>#16"]
-        B3["Menus Runtime Parity<br/>36%<br/>#17"]
+        B1["Fault Isolation / Diagnostics<br/>#13 / #14 closed"]
+        B2["Forms / Reports / Menus Runtime First Pass<br/>#15-#18 closed"]
     end
 
     subgraph PC[Phase C - Build, Designers, And IDE]
         direction TB
-        C1["Build/Package/Debug Pipeline<br/>48%<br/>#19-#21,#42"]
-        C2["Shared Designers<br/>43%<br/>#22-#24"]
-        C3["Visual Studio Integration<br/>37%<br/>#25"]
-        C4["Standalone Copperfin IDE<br/>32%<br/>#26"]
-        C5["Language Service<br/>46%<br/>#27-#29"]
+        C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
+        C2["Shared Design Model<br/>#22 closed"]
+        C3["Designer Interactions<br/>#23 evidence-audit cleanup"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1536 latest"]
+        C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
     subgraph PD[Phase D - Platform And Enterprise]
         direction TB
-        D1[".NET Interoperability<br/>41%<br/>#32,#57,#91"]
-        D2["Database Federation<br/>34%<br/>#30,#31"]
-        D3["Security/Policy Controls<br/>52%<br/>#33,#34"]
+        D1[".NET / Polyglot Interop<br/>launcher/artifact maturity"]
+        D2["Database Federation<br/>planning slices shipped; live execution open"]
+        D3["Security / Policy Controls<br/>#190-#193 closed; parents open"]
+        D4["Portability<br/>#194-#199 open"]
     end
 
-    A1 --> A2
-    A1 --> A3 --> A4 --> A5
-    A2 --> A7
-    A3 --> A6
-    A4 --> A8
-    A5 --> A8
-    A6 --> A7 --> A8 --> A9
+    A1 --> A2 --> A3 --> A4
+    A3 --> B1 --> B2
+    B2 --> C1 --> C2 --> C3 --> C4
+    C2 --> C5
+    C1 --> D1 --> D2
+    B1 --> D3
+    C1 --> D3
+    C5 --> D4
 
-    A9 --> B1 --> B2 --> B3
-    A9 --> C1 --> C2
-    C2 --> C3 --> C4
-    A9 --> C5
-    C3 --> C5
-
-    A9 --> D1 --> D2
-    A9 --> D3
-    C1 --> D1
-    C3 --> D3
-
-    class A1,A2,A3,A4,A5,A6,A7,A8 green;
-    class A9,B2,C1,C2,C5,D1,D3 amber;
-    class B1,B3,C3,C4,D2 red;
+    class A1,A2,A3,A4,B1,B2,C2 green;
+    class C1,C3,C4,C5,D1,D2,D3 amber;
+    class D4 red;
     class PA,PB,PC,PD lane;
 ```
 
-### Sub-Area Dependency Diagram (Inferred Progress)
+### Sub-Area Dependency Diagram (Current Issue-Tree Status)
 
-This diagram adds the phase sub-areas from the lower roadmap. Percentages with `~` are inferred from the exact gap-matrix areas plus the current backlog text, so they should be treated as planning estimates rather than hard status numbers.
+This diagram keeps the broader roadmap shape but labels nodes by issue-tree status. Create or pick prompt-sized children under open parent issues instead of using this chart as a numbered queue.
 
 ```mermaid
 flowchart LR
@@ -1527,71 +1512,71 @@ flowchart LR
 
     subgraph SA[Phase A]
         direction TB
-        SA1["A1 File And Index Fidelity<br/>~93%"]
-        SA2["A2 Work Areas / Sessions / Cursor Semantics<br/>~93%"]
-        SA3["A3 Command / Expression Surface<br/>~98%<br/>#7,#8 closed 2026-06-13"]
-        SA4["A4 Automation / Interop Semantics<br/>100%<br/>#10,#11,#12"]
+        SA1["A1 File And Index Fidelity<br/>closed"]
+        SA2["A2 Work Areas / Sessions / Cursor Semantics<br/>closed"]
+        SA3["A3 Command / Expression Surface<br/>#7,#8 closed"]
+        SA4["A4 Automation / Interop Foundations<br/>#10,#11,#12 closed"]
     end
 
     subgraph SB[Phase B]
         direction TB
         SB1["B1 Fault Isolation<br/>closed<br/>#13"]
-        SB2["B2 Debug Metadata / Diagnostics<br/>~66%<br/>#14"]
+        SB2["B2 Debug Metadata / Diagnostics<br/>closed queue<br/>#14"]
     end
 
     subgraph SC[Phase C]
         direction TB
-        SC1["C1 Forms / Classes<br/>38%<br/>#15"]
-        SC2["C2 Reports / Labels<br/>42%<br/>#16"]
-        SC3["C3 Menus<br/>36%<br/>#17"]
-        SC4["C4 Projects<br/>~45%<br/>#18"]
+        SC1["C1 Forms / Classes<br/>first pass closed<br/>#15"]
+        SC2["C2 Reports / Labels<br/>first pass closed<br/>#16"]
+        SC3["C3 Menus<br/>first pass closed<br/>#17"]
+        SC4["C4 Projects<br/>first pass closed<br/>#18"]
     end
 
     subgraph SD[Phase D]
         direction TB
-        SD1["D1 Compiler / Package Model<br/>~50%<br/>#19,#42"]
-        SD2["D2 Debugger Completion<br/>~46%<br/>#20"]
-        SD3["D3 Build / Run / Deploy Workflow<br/>~49%<br/>#21,#38-#41"]
+        SD1["D1 Compiler / Package Model<br/>baseline shipped<br/>open depth<br/>#19,#42"]
+        SD2["D2 Debugger Completion<br/>baseline shipped<br/>open depth<br/>#20"]
+        SD3["D3 Build / Run / Deploy Workflow<br/>baseline shipped<br/>open depth<br/>#21,#38-#41"]
     end
 
     subgraph SE[Phase E]
         direction TB
-        SE1["E1 Shared Design Model<br/>43%<br/>#22"]
-        SE2["E2 Designer Interaction<br/>~39%<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>~40%<br/>#24"]
+        SE1["E1 Shared Design Model<br/>closed<br/>#22"]
+        SE2["E2 Designer Interaction<br/>evidence-audit cleanup<br/>#23"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1536 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
         direction TB
-        SF1["F1 Visual Studio Extension<br/>37%<br/>#25"]
-        SF2["F2 Standalone Copperfin IDE<br/>32%<br/>#26"]
+        SF1["F1 Visual Studio Extension<br/>open depth<br/>#25"]
+        SF2["F2 Standalone Copperfin IDE<br/>open depth<br/>#26"]
     end
 
     subgraph SG[Phase G]
         direction TB
-        SG1["G1 Editor Semantics<br/>~49%<br/>#27"]
-        SG2["G2 Navigation / Refactoring<br/>~43%<br/>#28"]
-        SG3["G3 IntelliSense Inputs<br/>~46%<br/>#29"]
+        SG1["G1 Editor Semantics<br/>open depth<br/>#27"]
+        SG2["G2 Navigation / Refactoring<br/>open depth<br/>#28"]
+        SG3["G3 IntelliSense Inputs<br/>open depth<br/>#29"]
     end
 
     subgraph SH[Phase H]
         direction TB
-        SH1["H1 Relational Backends<br/>34%<br/>#30"]
-        SH2["H2 Document / Vector Backends<br/>~22%<br/>#31"]
-        SH3["H3 Modern Integration Surface<br/>~38%<br/>#32,#57,#91"]
+        SH1["H1 Relational Backends<br/>planning slices shipped; live execution open<br/>#30"]
+        SH2["H2 Document / Vector Backends<br/>planning slices shipped; live execution open<br/>#31"]
+        SH3["H3 Modern Integration Surface<br/>launcher/artifact maturity<br/>#32,#57,#91"]
     end
 
     subgraph SI[Phase I]
         direction TB
-        SI1["I1 Runtime / Project Security<br/>~56%<br/>#33"]
-        SI2["I2 Extension / Host Security<br/>~48%<br/>#34"]
+        SI1["I1 Runtime / Project Security<br/>#190-#191 closed; parent open<br/>#33"]
+        SI2["I2 Extension / Host Security<br/>#192-#193 closed; parent open<br/>#34"]
     end
 
     subgraph SJ[Phase J]
         direction TB
-        SJ1["J1 Portable Core<br/>~18%<br/>#35"]
-        SJ2["J2 macOS<br/>~6%<br/>#36"]
-        SJ3["J3 Linux<br/>~6%<br/>#37"]
+        SJ1["J1 Portable Core<br/>active children #194-#195<br/>#35"]
+        SJ2["J2 macOS<br/>active children #196-#197<br/>#36"]
+        SJ3["J3 Linux<br/>active children #198-#199<br/>#37"]
     end
 
     SA1 --> SA2 --> SA3 --> SA4
@@ -1610,17 +1595,17 @@ flowchart LR
     SJ1 --> SJ3
     SF2 --> SJ1
 
-    class SA1,SA2 green;
-    class SA3,SA4,SB1,SB2,SC2,SC4,SD1,SD2,SD3,SE1,SG1,SG2,SG3,SH3,SI1,SI2 amber;
-    class SC1,SC3,SE2,SE3,SF1,SF2,SH1,SH2,SJ1,SJ2,SJ3 red;
+    class SA1,SA2,SA3,SA4,SB1,SB2,SC1,SC2,SC3,SC4,SE1 green;
+    class SD1,SD2,SD3,SE2,SE3,SF1,SF2,SG1,SG2,SG3,SH1,SH2,SH3,SI1,SI2 amber;
+    class SJ1,SJ2,SJ3 red;
     class SA,SB,SC,SD,SE,SF,SG,SH,SI,SJ lane;
 ```
 
-Status legend: green = 85-100%, amber = 40-84%, red = 0-39%. Exact percentages come from the gap matrix; `~` values are planning estimates for sub-areas that do not yet have their own explicit matrix row.
+Status legend: green = closed first-pass lane or closed prompt-sized queue, amber = open parent with shipped baseline or audit cleanup, red = active downstream queue with open prompt-sized children. The issue tracker remains authoritative.
 
 ## Gap Matrix
 
-Current repo status against the Windows-first product goal:
+Current repo status against the Windows-first product goal. Percentages in this matrix are planning estimates retained for product-gap reporting; do not use them as live issue-closure math or as the next-work queue.
 
 | Area | Progress | Notes |
 | --- | --- | --- |
