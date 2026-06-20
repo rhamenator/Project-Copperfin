@@ -3774,6 +3774,20 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1516: report layout JSON should expose computed preview bounds width");
     expect_contains(process.stdout_text, "\"previewBoundsHeight\": 8100",
                     "#1516: report layout JSON should expose computed preview bounds height");
+    expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1524: report layout JSON should expose deleted preview bounds availability");
+    expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                    "#1524: report layout JSON should expose deleted preview left bounds");
+    expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                    "#1524: report layout JSON should expose deleted preview top bounds");
+    expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                    "#1524: report layout JSON should expose deleted preview right bounds");
+    expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                    "#1524: report layout JSON should expose deleted preview bottom bounds");
+    expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                    "#1524: report layout JSON should expose deleted preview width");
+    expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                    "#1524: report layout JSON should expose deleted preview height");
     expect_contains(process.stdout_text, "\"pageSetupAvailable\": true",
                     "#1517: report layout JSON should expose page setup summary availability");
     expect_contains(process.stdout_text, "\"orientationAvailable\": true",
@@ -4064,6 +4078,20 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1516: label layout JSON should expose shared right preview bounds");
     expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 8100",
                     "#1516: label layout JSON should expose shared bottom preview bounds");
+    expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1524: label layout JSON should expose deleted preview bounds availability");
+    expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                    "#1524: label layout JSON should expose deleted preview left bounds");
+    expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                    "#1524: label layout JSON should expose deleted preview top bounds");
+    expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                    "#1524: label layout JSON should expose deleted preview right bounds");
+    expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                    "#1524: label layout JSON should expose deleted preview bottom bounds");
+    expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                    "#1524: label layout JSON should expose deleted preview width");
+    expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                    "#1524: label layout JSON should expose deleted preview height");
     expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 3",
                     "#1516: label layout JSON should summarize live placed and unplaced object counts");
     expect_contains(summary_process.stdout_text, "\"placedObjectCount\": 2",
@@ -4466,6 +4494,20 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
                     "#1478: deleted selected report section JSON should not expose live sections");
     expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
                     "#1478: deleted selected report section JSON should expose deleted section counts");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1524: deleted selected report section JSON should expose deleted preview bounds availability");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                    "#1524: deleted selected report section JSON should expose deleted section preview left bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                    "#1524: deleted selected report section JSON should expose deleted section preview top bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                    "#1524: deleted selected report section JSON should expose deleted section preview right bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                    "#1524: deleted selected report section JSON should expose deleted section preview bottom bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                    "#1524: deleted selected report section JSON should expose deleted section preview width");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                    "#1524: deleted selected report section JSON should expose deleted section preview height");
     expect_contains(deleted_section_process.stdout_text, "\"placedObjectCount\": 0",
                     "#1522: deleted selected report section JSON should not fabricate placed object counts");
     expect_contains(deleted_section_process.stdout_text, "\"deletedPlacedObjectCount\": 0",

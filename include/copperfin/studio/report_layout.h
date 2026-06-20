@@ -108,6 +108,13 @@ struct StudioReportLayoutSnapshot {
     int preview_bounds_bottom = 0;
     int preview_bounds_width = 0;
     int preview_bounds_height = 0;
+    bool deleted_preview_bounds_available = false;
+    int deleted_preview_bounds_left = 0;
+    int deleted_preview_bounds_top = 0;
+    int deleted_preview_bounds_right = 0;
+    int deleted_preview_bounds_bottom = 0;
+    int deleted_preview_bounds_width = 0;
+    int deleted_preview_bounds_height = 0;
     bool page_setup_available = false;
     bool orientation_available = false;
     int orientation_code = 0;

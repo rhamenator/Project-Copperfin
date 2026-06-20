@@ -20472,6 +20472,14 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      \"previewBoundsBottom\": " << report_layout.preview_bounds_bottom << ",\n";
         std::cout << "      \"previewBoundsWidth\": " << report_layout.preview_bounds_width << ",\n";
         std::cout << "      \"previewBoundsHeight\": " << report_layout.preview_bounds_height << ",\n";
+        std::cout << "      \"deletedPreviewBoundsAvailable\": "
+                  << (report_layout.deleted_preview_bounds_available ? "true" : "false") << ",\n";
+        std::cout << "      \"deletedPreviewBoundsLeft\": " << report_layout.deleted_preview_bounds_left << ",\n";
+        std::cout << "      \"deletedPreviewBoundsTop\": " << report_layout.deleted_preview_bounds_top << ",\n";
+        std::cout << "      \"deletedPreviewBoundsRight\": " << report_layout.deleted_preview_bounds_right << ",\n";
+        std::cout << "      \"deletedPreviewBoundsBottom\": " << report_layout.deleted_preview_bounds_bottom << ",\n";
+        std::cout << "      \"deletedPreviewBoundsWidth\": " << report_layout.deleted_preview_bounds_width << ",\n";
+        std::cout << "      \"deletedPreviewBoundsHeight\": " << report_layout.deleted_preview_bounds_height << ",\n";
         std::cout << "      \"pageSetupAvailable\": "
                   << (report_layout.page_setup_available ? "true" : "false") << ",\n";
         std::cout << "      \"orientationAvailable\": "

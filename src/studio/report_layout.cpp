@@ -396,9 +396,29 @@ void expand_preview_bounds(StudioReportLayoutSnapshot& snapshot, int left, int t
     snapshot.preview_bounds_bottom = std::max(snapshot.preview_bounds_bottom, bottom);
 }
 
+void expand_deleted_preview_bounds(StudioReportLayoutSnapshot& snapshot, int left, int top, int right, int bottom) {
+    if (!snapshot.deleted_preview_bounds_available) {
+        snapshot.deleted_preview_bounds_available = true;
+        snapshot.deleted_preview_bounds_left = left;
+        snapshot.deleted_preview_bounds_top = top;
+        snapshot.deleted_preview_bounds_right = right;
+        snapshot.deleted_preview_bounds_bottom = bottom;
+        return;
+    }
+
+    snapshot.deleted_preview_bounds_left = std::min(snapshot.deleted_preview_bounds_left, left);
+    snapshot.deleted_preview_bounds_top = std::min(snapshot.deleted_preview_bounds_top, top);
+    snapshot.deleted_preview_bounds_right = std::max(snapshot.deleted_preview_bounds_right, right);
+    snapshot.deleted_preview_bounds_bottom = std::max(snapshot.deleted_preview_bounds_bottom, bottom);
+}
+
 void finalize_preview_bounds(StudioReportLayoutSnapshot& snapshot) {
     snapshot.preview_bounds_width = std::max(0, snapshot.preview_bounds_right - snapshot.preview_bounds_left);
     snapshot.preview_bounds_height = std::max(0, snapshot.preview_bounds_bottom - snapshot.preview_bounds_top);
+    snapshot.deleted_preview_bounds_width =
+        std::max(0, snapshot.deleted_preview_bounds_right - snapshot.deleted_preview_bounds_left);
+    snapshot.deleted_preview_bounds_height =
+        std::max(0, snapshot.deleted_preview_bounds_bottom - snapshot.deleted_preview_bounds_top);
 }
 
 void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
@@ -572,11 +592,15 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
                 append_report_settings(record, snapshot.deleted_settings);
             }
             if (is_band_record(record)) {
-                snapshot.deleted_sections.push_back(build_report_section(record));
+                StudioReportSectionSnapshot section = build_report_section(record);
+                expand_deleted_preview_bounds(snapshot, 0, section.top, 0, section.bottom);
+                snapshot.deleted_sections.push_back(std::move(section));
             }
             const int objtype = parse_scaled_int_or_default(record, "OBJTYPE");
             if (is_layout_object_type(objtype)) {
-                snapshot.deleted_objects.push_back(build_layout_object(record));
+                StudioLayoutObjectSnapshot object = build_layout_object(record);
+                expand_deleted_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
+                snapshot.deleted_objects.push_back(std::move(object));
             }
             continue;
         }
