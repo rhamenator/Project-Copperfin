@@ -218,8 +218,13 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
 #else
     namespace fs = std::filesystem;
     const fs::path log_path = binary_path.parent_path() / "build-host-symbols.log";
+#if defined(__APPLE__)
+    const std::string command =
+        "nm -gU \"" + binary_path.string() + "\" > \"" + log_path.string() + "\" 2>&1";
+#else
     const std::string command =
         "nm -D --defined-only \"" + binary_path.string() + "\" > \"" + log_path.string() + "\" 2>&1";
+#endif
     if (std::system(command.c_str()) != 0) {
         error = "native wrapper symbol inspection failed";
         if (fs::exists(log_path)) {
@@ -232,16 +237,33 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
     std::string line;
     while (std::getline(input, line)) {
         std::istringstream line_input(line);
-        std::string address;
-        char symbol_type = '\0';
-        std::string symbol;
-        if (!(line_input >> address >> symbol_type >> symbol)) {
+        std::vector<std::string> tokens;
+        std::string token;
+        while (line_input >> token) {
+            tokens.push_back(token);
+        }
+        if (tokens.empty()) {
             continue;
         }
+#if defined(__APPLE__)
+        std::string symbol = tokens.back();
+        if (!symbol.empty() && symbol.front() == '_') {
+            symbol.erase(symbol.begin());
+        }
+        if (symbol.empty()) {
+            continue;
+        }
+#else
+        if (tokens.size() < 3U || tokens[tokens.size() - 2U].size() != 1U) {
+            continue;
+        }
+        const char symbol_type = tokens[tokens.size() - 2U].front();
         const unsigned char normalized_type = static_cast<unsigned char>(symbol_type);
         if (!std::isupper(normalized_type) || symbol_type == 'V' || symbol_type == 'W') {
             continue;
         }
+        const std::string& symbol = tokens.back();
+#endif
         symbols.insert(symbol);
     }
     return symbols;

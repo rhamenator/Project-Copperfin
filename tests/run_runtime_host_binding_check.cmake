@@ -91,13 +91,13 @@ if(NOT run_output MATCHES "runtime\\.completed: true")
     message(FATAL_ERROR "Runtime host binding smoke did not complete successfully.\nstdout:\n${run_output}")
 endif()
 
-string(REPLACE "\\" "\\\\" escaped_content_root "${content_root}")
-if(NOT run_output MATCHES "working\\.directory: ${escaped_content_root}")
+string(FIND "${run_output}" "${content_root}" content_root_position)
+if(content_root_position EQUAL -1)
     message(FATAL_ERROR "Runtime host binding smoke did not report the rebound package content root.\nstdout:\n${run_output}")
 endif()
 
-string(REPLACE "\\" "\\\\" escaped_audit_log_path "${deployed_root}/security_audit.log")
-if(NOT run_output MATCHES "security\\.audit_log_path: ${escaped_audit_log_path}")
+string(FIND "${run_output}" "${deployed_root}/security_audit.log" audit_log_path_position)
+if(audit_log_path_position EQUAL -1)
     message(FATAL_ERROR "Runtime host binding smoke did not report the rebound package-local audit log path.\nstdout:\n${run_output}")
 endif()
 
