@@ -96,7 +96,7 @@ std::filesystem::path create_toolbox_fixture(const std::filesystem::path& temp_d
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
         {.name = "NAME", .type = 'C', .length = 24U},
-        {.name = "UNIQUEID", .type = 'C', .length = 32U},
+        {.name = "UNIQUEID", .type = 'C', .length = 64U},
         {.name = "PARENT", .type = 'C', .length = 24U},
         {.name = "CLASS", .type = 'C', .length = 24U},
         {.name = "BASECLASS", .type = 'C', .length = 24U},
