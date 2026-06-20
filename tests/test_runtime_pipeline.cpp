@@ -324,8 +324,6 @@ bool compile_native_wrapper_scaffold(
 #else
     const pid_t child = fork();
     if (child == 0) {
-        ::close(STDOUT_FILENO);
-        ::close(STDERR_FILENO);
         const int log_fd = ::creat(build_log_path.c_str(), 0644);
         if (log_fd >= 0) {
             ::dup2(log_fd, STDOUT_FILENO);
