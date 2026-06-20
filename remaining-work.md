@@ -1,3 +1,4 @@
+- 2026-06-20: E3/#1565 report/label section top clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 2 --property-name VPOS --json` on FRX and LBX sections clears refreshed selected-section top/bottom geometry and recomputes section-relative object metadata without leaking stale section top values. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1564 report/label section height clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 1 --property-name HEIGHT --json` on FRX and LBX sections clears refreshed selected-section height/bottom geometry, recomputes section-height totals, and moves formerly contained objects into unplaced metadata without leaking stale section geometry. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1563 report/label layout-object top-position clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 3 --property-name VPOS --json` on FRX and LBX layout objects clears refreshed selected-object top/bottom metadata, recomputes containing-section placement into the page-header band, and preserves document preview bounds without leaking stale geometry. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1562 report/label layout-object height clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 3 --property-name HEIGHT --json` on FRX and LBX layout objects clears refreshed selected-object height/bottom-edge metadata without leaking stale geometry, while preserving object selection kind, containing-section metadata, placed counts, and document preview bounds from the remaining layout. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
@@ -1500,7 +1501,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1564 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1565 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1571,7 +1572,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1564 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1565 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
