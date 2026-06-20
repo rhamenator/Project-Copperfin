@@ -6182,6 +6182,85 @@ void test_studio_host_json_updates_report_layout_object_font_metadata_by_record_
     }
 }
 
+void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_placement_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_placement_update = [&](const fs::path& asset_path,
+                                          const std::string& title,
+                                          const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "5",
+                "--property-name", "VPOS",
+                "--property-value", "2600",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " layout placement update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " layout placement update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1531: report/label layout object placement update should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 5U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.value == "2600",
+               "#1531: report/label layout object placement update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1531: report/label layout object placement update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 3",
+                        "#1531: report/label layout object placement update should increment placed counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 0",
+                        "#1531: report/label layout object placement update should clear unplaced counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1531: report/label layout object placement update should preserve selected object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1531: report/label layout object placement update should expose selected containing-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 5",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 700",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"line\""
+            },
+            "#1531: report/label layout object placement update should refresh selected object section metadata");
+    };
+
+    run_placement_update(temp_root / "placement_update.frx", "placement_update.frx", "report");
+    run_placement_update(temp_root / "placement_update.lbx", "placement_update.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -50857,6 +50936,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
+    test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
