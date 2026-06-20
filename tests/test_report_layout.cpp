@@ -523,6 +523,57 @@ void test_build_report_layout_includes_direct_orientation_settings() {
     }
 }
 
+void test_build_report_layout_includes_direct_paper_size_settings() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "paper-size.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "ORIENTATION=0\r\nTOPMARGIN=10\r\nBOTMARGIN=20\r\nGRIDV=4\r\nGRIDH=8", 45U),
+                value("PAPERSIZE", "9")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#1545: report layout should be available for direct paper-size settings");
+    expect(layout.page_setup_available, "#1545: direct paper size should preserve page setup availability");
+    expect(layout.paper_size_available, "#1545: direct paper size should mark paper-size metadata available");
+    expect(layout.paper_size_code == 9, "#1545: direct paper size should refresh paper-size codes");
+    expect(layout.orientation_available && layout.orientation_code == 0,
+        "#1545: direct paper size should preserve memo-derived orientation");
+    expect(layout.top_margin_available && layout.top_margin == 10,
+        "#1545: direct paper size should preserve memo-derived top margins");
+    expect(layout.bottom_margin_available && layout.bottom_margin == 20,
+        "#1545: direct paper size should preserve memo-derived bottom margins");
+    expect(layout.grid_vertical_available && layout.grid_vertical == 4,
+        "#1545: direct paper size should preserve memo-derived vertical grid spacing");
+    expect(layout.grid_horizontal_available && layout.grid_horizontal == 8,
+        "#1545: direct paper size should preserve memo-derived horizontal grid spacing");
+    expect(layout.settings.size() == 6U, "#1545: direct paper size should preserve root setting counts");
+
+    const auto paper_size = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "PAPERSIZE";
+    });
+    expect(paper_size != layout.settings.end(), "#1545: direct paper size should appear in root settings");
+    if (paper_size != layout.settings.end()) {
+        expect(paper_size->record_index == 0U, "#1545: direct paper size should retain source record provenance");
+        expect(paper_size->field_index == 3U, "#1545: direct paper size should retain DBF field provenance");
+        expect(paper_size->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
+            "#1545: direct paper size should not masquerade as a memo-line setting");
+        expect(paper_size->memo_block_number == 0U,
+            "#1545: direct paper size should expose memo block zero for non-memo fields");
+        expect(paper_size->value == "9", "#1545: direct paper size should preserve the field value text");
+    }
+}
+
 }  // namespace
 
 int main() {
@@ -530,6 +581,7 @@ int main() {
     test_build_report_layout_suppresses_unresolved_memo_placeholders();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();
+    test_build_report_layout_includes_direct_paper_size_settings();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

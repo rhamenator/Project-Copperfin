@@ -351,6 +351,7 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     };
 
     append_numeric("ORIENTATION");
+    append_numeric("PAPERSIZE");
     append_numeric("TOPMARGIN");
     append_numeric("BOTMARGIN");
     append_numeric("GRIDV");

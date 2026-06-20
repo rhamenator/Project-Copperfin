@@ -3835,6 +3835,21 @@ void write_synthetic_report_table_for_orientation_field_json(const std::filesyst
     expect(create_result.ok, "#1544: synthetic report table for orientation field JSON should be created");
 }
 
+void write_synthetic_report_table_for_paper_size_field_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "PAPERSIZE", .type = 'N', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nTOPMARGIN=10\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "1"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1545: synthetic report table for paper-size field JSON should be created");
+}
+
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -7417,6 +7432,93 @@ void test_studio_host_json_updates_report_orientation_fields_by_record_selection
 
     run_orientation_update(temp_root / "orientation.frx", "orientation.frx", "1", "report");
     run_orientation_update(temp_root / "orientation.lbx", "orientation.lbx", "2", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_paper_size_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_paper_size_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_paper_size_update = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& updated_paper_size,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_paper_size_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "PAPERSIZE",
+                "--property-value", updated_paper_size,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " paper-size field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " paper-size field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1545: report/label paper-size field update should exit successfully");
+        const auto paper_size_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "PAPERSIZE"
+        });
+        expect(paper_size_property.ok && paper_size_property.exists &&
+                   paper_size_property.value == updated_paper_size,
+               "#1545: report/label paper-size field update should persist the PAPERSIZE field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1545: report/label paper-size field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1545: report/label paper-size field update should preserve page setup availability");
+        expect_contains(update_process.stdout_text, "\"orientationCode\": 0",
+                        "#1545: report/label paper-size field update should preserve memo-derived orientation codes");
+        expect_contains(update_process.stdout_text, "\"paperSizeCode\": " + updated_paper_size,
+                        "#1545: report/label paper-size field update should refresh paper-size codes");
+        expect_contains(update_process.stdout_text, "\"topMargin\": 10",
+                        "#1545: report/label paper-size field update should preserve memo-derived top margins");
+        expect_contains(update_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1545: report/label paper-size field update should preserve memo-derived bottom margins");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": 4",
+                        "#1545: report/label paper-size field update should preserve memo-derived vertical grid spacing");
+        expect_contains(update_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1545: report/label paper-size field update should preserve memo-derived horizontal grid spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 6",
+                        "#1545: report/label paper-size field update should preserve setting counts");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null"
+            },
+            "#1545: report/label paper-size field update should preserve field setting provenance");
+    };
+
+    run_paper_size_update(temp_root / "paper-size.frx", "paper-size.frx", "9", "report");
+    run_paper_size_update(temp_root / "paper-size.lbx", "paper-size.lbx", "5", "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -52115,6 +52217,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_grid_vertical_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_grid_horizontal_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_orientation_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
