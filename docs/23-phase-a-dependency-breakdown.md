@@ -483,10 +483,10 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1441` open; evidence audit pending | Studio host JSON now exposes selected-object property rename mutations with undo metadata |
 | `#23` | `#1440` open; evidence audit pending | Studio host JSON now exposes selected-object property move-batch mutations with rollback and undo metadata |
 | `#23` | `#1439` open; evidence audit pending | Studio host JSON now exposes selected-object property move mutations with undo metadata |
-| `#23` | `#1438` open; evidence audit pending | Studio host JSON now exposes selected-object property copy-batch mutations with rollback and undo metadata |
-| `#23` | `#1437` open; evidence audit pending | Studio host JSON now exposes selected-object property clear-batch mutations with rollback and undo metadata |
-| `#23` | `#1436` open; evidence audit pending | Studio host JSON now exposes selected-object property copy mutations with undo metadata |
-| `#23` | `#1435` open; evidence audit pending | Studio host JSON now exposes selected-object property clear mutations with undo metadata |
+| `#23` | `#1438` closed | Studio host JSON now exposes selected-object property copy-batch mutations with rollback and undo metadata |
+| `#23` | `#1437` closed | Studio host JSON now exposes selected-object property clear-batch mutations with rollback and undo metadata |
+| `#23` | `#1436` closed | Studio host JSON now exposes selected-object property copy mutations with undo metadata |
+| `#23` | `#1435` closed | Studio host JSON now exposes selected-object property clear mutations with undo metadata |
 | `#23` | `#1434` closed | Studio host JSON now exposes selected-object method reorder-batch mutations with rollback and undo metadata |
 | `#23` | `#1433` closed | Studio host JSON now exposes selected-object method move-batch mutations with rollback and undo metadata |
 | `#23` | `#1432` closed | Studio host JSON now exposes selected-object method copy-batch mutations with rollback and undo metadata |
