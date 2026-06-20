@@ -1,3 +1,4 @@
+- 2026-06-20: E2/#1433-#1434 evidence-backed closure batch completed: visual method move-batch and reorder-batch Studio host JSON surfaces were closed after current-head evidence review and focused local validation.
 - 2026-06-20: E2/#1428-#1432 evidence-backed closure batch completed: visual method move/reorder plus delete/rename/copy batch Studio host JSON surfaces were closed after current-head evidence review and focused local validation.
 - 2026-06-20: E2/#1423-#1427 evidence-backed closure batch completed: visual method query, update, delete, rename, and copy Studio host JSON surfaces were closed after current-head evidence review and focused local validation.
 - 2026-06-20: E2/#1419-#1422 evidence-backed closure batch completed: visual object children, descendants, ancestors, and method-list Studio host JSON surfaces were closed after current-head evidence review and focused local validation.

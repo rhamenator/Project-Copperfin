@@ -487,8 +487,8 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1437` open; evidence audit pending | Studio host JSON now exposes selected-object property clear-batch mutations with rollback and undo metadata |
 | `#23` | `#1436` open; evidence audit pending | Studio host JSON now exposes selected-object property copy mutations with undo metadata |
 | `#23` | `#1435` open; evidence audit pending | Studio host JSON now exposes selected-object property clear mutations with undo metadata |
-| `#23` | `#1434` open; evidence audit pending | Studio host JSON now exposes selected-object method reorder-batch mutations with rollback and undo metadata |
-| `#23` | `#1433` open; evidence audit pending | Studio host JSON now exposes selected-object method move-batch mutations with rollback and undo metadata |
+| `#23` | `#1434` closed | Studio host JSON now exposes selected-object method reorder-batch mutations with rollback and undo metadata |
+| `#23` | `#1433` closed | Studio host JSON now exposes selected-object method move-batch mutations with rollback and undo metadata |
 | `#23` | `#1432` closed | Studio host JSON now exposes selected-object method copy-batch mutations with rollback and undo metadata |
 | `#23` | `#1431` closed | Studio host JSON now exposes selected-object method rename-batch mutations with rollback and undo metadata |
 | `#23` | `#1430` closed | Studio host JSON now exposes selected-object method delete-batch mutations with rollback and undo metadata |
