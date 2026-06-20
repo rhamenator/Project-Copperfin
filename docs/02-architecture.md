@@ -36,7 +36,7 @@ flowchart LR
         direction TB
         DES["Shared Designers<br/>#23 audit cleanup"]
         FORMS["Forms / Classes Runtime<br/>first-pass shipped"]
-        RPT["Reports / Labels Runtime<br/>E3 active<br/>#1528 latest"]
+        RPT["Reports / Labels Runtime<br/>E3 active<br/>#1529 latest"]
         MENU["Menus Runtime<br/>first-pass shipped"]
         VS["Visual Studio Integration<br/>partial host"]
         IDE["Standalone Copperfin IDE<br/>partial host"]

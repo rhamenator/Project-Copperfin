@@ -6031,6 +6031,82 @@ void test_studio_host_json_deletes_report_sections_by_record_selection(const std
     }
 }
 
+void test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_expression_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_expression_update = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "3",
+                "--property-name", "EXPR",
+                "--property-value", "customer.contact",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " layout expression update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " layout expression update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1529: report/label layout object expression update should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.value == "customer.contact",
+               "#1529: report/label layout object expression update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1529: report/label layout object expression update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1529: report/label layout object expression update should preserve selected object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1529: report/label layout object expression update should preserve object selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectIndex\": 0",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"customer.contact\"",
+                "\"expression\": \"customer.contact\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#1529: report/label layout object expression update should refresh selected object expression metadata");
+    };
+
+    run_expression_update(temp_root / "expression_update.frx", "expression_update.frx", "report");
+    run_expression_update(temp_root / "expression_update.lbx", "expression_update.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -50704,6 +50780,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
+    test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
