@@ -20505,6 +20505,8 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      \"columnSpacing\": " << report_layout.column_spacing << ",\n";
         std::cout << "      \"liveObjectCount\": " << report_layout.live_object_count << ",\n";
         std::cout << "      \"placedObjectCount\": " << report_layout.placed_object_count << ",\n";
+        std::cout << "      \"deletedPlacedObjectCount\": " << report_layout.deleted_placed_object_count << ",\n";
+        std::cout << "      \"deletedUnplacedObjectCount\": " << report_layout.deleted_unplaced_object_count << ",\n";
         std::cout << "      \"objectKindCount\": " << report_layout.object_kind_counts.size() << ",\n";
         std::cout << "      \"unplacedObjectKindCount\": " << report_layout.unplaced_object_kind_counts.size() << ",\n";
         std::cout << "      \"deletedObjectKindCount\": " << report_layout.deleted_object_kind_counts.size() << ",\n";

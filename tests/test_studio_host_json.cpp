@@ -3804,6 +3804,25 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1516: report layout JSON should summarize live placed and unplaced object counts");
     expect_contains(process.stdout_text, "\"placedObjectCount\": 2",
                     "#1522: report layout JSON should summarize section-contained live object counts");
+    expect_contains(process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                    "#1523: report layout JSON should summarize deleted objects still inside section bands");
+    expect_contains(process.stdout_text, "\"deletedUnplacedObjectCount\": 0",
+                    "#1523: report layout JSON should not fabricate deleted unplaced object counts");
+    const fs::path deleted_unplaced_path = temp_root / "deleted_unplaced_summary.frx";
+    write_synthetic_report_table_for_layout_json(deleted_unplaced_path);
+    const auto delete_unplaced_result = copperfin::vfp::set_record_deleted_flag(deleted_unplaced_path.string(), 5U, true);
+    expect(delete_unplaced_result.ok,
+           "#1523: synthetic report layout should mark an unplaced object deleted");
+    const auto deleted_unplaced_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_unplaced_path.string(), "--json"},
+        temp_root);
+    expect(deleted_unplaced_process.exit_code == 0,
+           "#1523: deleted-unplaced report layout JSON should exit successfully");
+    expect_contains(deleted_unplaced_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                    "#1523: deleted-unplaced report layout JSON should retain deleted placed object counts");
+    expect_contains(deleted_unplaced_process.stdout_text, "\"deletedUnplacedObjectCount\": 1",
+                    "#1523: deleted-unplaced report layout JSON should count deleted objects outside section bands");
     expect_contains(process.stdout_text, "\"objectKindCount\": 3",
                     "#1519: report layout JSON should summarize live object-kind count buckets");
     expect_contains(process.stdout_text, "\"objectKindCounts\": [",
@@ -4049,6 +4068,10 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1516: label layout JSON should summarize live placed and unplaced object counts");
     expect_contains(summary_process.stdout_text, "\"placedObjectCount\": 2",
                     "#1522: label layout JSON should summarize section-contained live object counts");
+    expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                    "#1523: label layout JSON should summarize deleted objects still inside section bands");
+    expect_contains(summary_process.stdout_text, "\"deletedUnplacedObjectCount\": 0",
+                    "#1523: label layout JSON should not fabricate deleted unplaced object counts");
     expect_contains(summary_process.stdout_text, "\"objectKindCount\": 3",
                     "#1519: label layout JSON should summarize live object-kind count buckets");
     expect_contains(summary_process.stdout_text, "\"objectKindCounts\": [",
@@ -4445,6 +4468,10 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
                     "#1478: deleted selected report section JSON should expose deleted section counts");
     expect_contains(deleted_section_process.stdout_text, "\"placedObjectCount\": 0",
                     "#1522: deleted selected report section JSON should not fabricate placed object counts");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedPlacedObjectCount\": 0",
+                    "#1523: deleted selected report section JSON should not fabricate deleted placed object counts");
+    expect_contains(deleted_section_process.stdout_text, "\"deletedUnplacedObjectCount\": 0",
+                    "#1523: deleted selected report section JSON should not fabricate deleted unplaced object counts");
     expect_contains(deleted_section_process.stdout_text, "\"sectionKindCount\": 0",
                     "#1520: deleted selected report section JSON should not fabricate live section band-kind buckets");
     expect_contains(deleted_section_process.stdout_text, "\"deletedSectionKindCount\": 1",

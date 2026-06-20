@@ -665,6 +665,18 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
         return left.record_index < right.record_index;
     });
 
+    for (const auto& object : snapshot.deleted_objects) {
+        const bool inside_live_section =
+            find_section_index(snapshot.sections, object.top, object.height) < snapshot.sections.size();
+        const bool inside_deleted_section =
+            find_section_index(snapshot.deleted_sections, object.top, object.height) < snapshot.deleted_sections.size();
+        if (inside_live_section || inside_deleted_section) {
+            ++snapshot.deleted_placed_object_count;
+        } else {
+            ++snapshot.deleted_unplaced_object_count;
+        }
+    }
+
     finalize_preview_bounds(snapshot);
     finalize_page_setup_summary(snapshot);
     finalize_object_kind_counts(snapshot);
