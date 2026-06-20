@@ -48,6 +48,8 @@ Additional E2 closure note: `#1225`, `#1227`, `#1229`, and `#1231` were closed i
 
 Additional E2 closure note: `#1233`, `#1235`, `#1237`, `#1268`, and `#1270` were closed in GitHub on 2026-06-20 after existing implementation comments plus fresh focused validation confirmed shipped toolbox dispatch, aggregate designer dispatch, builder launch catalog, and builder invocation-admission catalog coverage. Parent `#23` remains open; other open E2 children still need live-state review before any closure.
 
+Additional E2 closure note: `#1283`, `#1284`, and `#1287` were closed in GitHub on 2026-06-20 after existing implementation comments plus fresh focused validation confirmed shipped editor-action, designer, and toolbox dispatch-catalog routing through shared invocation-admission catalog seams. Parent `#23` remains open; other open E2 children still need live-state review before any closure.
+
 Current E3 update: latest implemented and closed slice is `#1520`, exposing compact non-mutating report/label section-kind summary JSON for live and deleted section band-kind buckets while preserving detailed section/object/settings payloads. `#1519` is the immediately preceding object-kind summary slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1520` have been closed with evidence-backed approval; parent `#24` remains open and currently has no open prompt-sized children.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
