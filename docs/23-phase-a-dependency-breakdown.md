@@ -479,10 +479,10 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1445` open; evidence audit pending | Studio host JSON now exposes visual-object reparent-batch mutations with rollback, undo metadata, and cycle rejection |
 | `#23` | `#1444` open; evidence audit pending | Studio host JSON now exposes selected-object property reorder-batch mutations with rollback and undo metadata |
 | `#23` | `#1443` open; evidence audit pending | Studio host JSON now exposes selected-object property reorder mutations with undo metadata |
-| `#23` | `#1442` open; evidence audit pending | Studio host JSON now exposes selected-object property rename-batch mutations with rollback and undo metadata |
-| `#23` | `#1441` open; evidence audit pending | Studio host JSON now exposes selected-object property rename mutations with undo metadata |
-| `#23` | `#1440` open; evidence audit pending | Studio host JSON now exposes selected-object property move-batch mutations with rollback and undo metadata |
-| `#23` | `#1439` open; evidence audit pending | Studio host JSON now exposes selected-object property move mutations with undo metadata |
+| `#23` | `#1442` closed | Studio host JSON now exposes selected-object property rename-batch mutations with rollback and undo metadata |
+| `#23` | `#1441` closed | Studio host JSON now exposes selected-object property rename mutations with undo metadata |
+| `#23` | `#1440` closed | Studio host JSON now exposes selected-object property move-batch mutations with rollback and undo metadata |
+| `#23` | `#1439` closed | Studio host JSON now exposes selected-object property move mutations with undo metadata |
 | `#23` | `#1438` closed | Studio host JSON now exposes selected-object property copy-batch mutations with rollback and undo metadata |
 | `#23` | `#1437` closed | Studio host JSON now exposes selected-object property clear-batch mutations with rollback and undo metadata |
 | `#23` | `#1436` closed | Studio host JSON now exposes selected-object property copy mutations with undo metadata |
