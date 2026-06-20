@@ -738,7 +738,7 @@ void test_toolbox_creation_selection_batch_planner_resolves_contexts_without_mut
         "#1304: visual selection toolbox batch create planning should preserve ordered identity and field metadata");
     expect(visual_textbox_plan != nullptr &&
             visual_command_plan != nullptr &&
-            visual_plans[0].target_record_index > before_count &&
+            visual_plans[0].target_record_index == before_count &&
             visual_plans[1].target_record_index > visual_plans[0].target_record_index &&
             visual_plans[2].target_record_index > visual_plans[1].target_record_index,
         "#1304: visual selection toolbox batch create planning should reserve names and target records in order");
@@ -1152,7 +1152,7 @@ void test_toolbox_creation_selection_batch_dispatch_planner_resolves_contexts_wi
             visual_plans[2].parent_name == "frmMain" &&
             has_field_value(visual_plans[2].field_values, "CAPTION", "Second Selection Dispatch"),
         "#1306: admitted visual selection toolbox batch create dispatch planning should preserve ordered metadata");
-    expect(visual_plans[0].target_record_index > before_count &&
+    expect(visual_plans[0].target_record_index == before_count &&
             visual_plans[1].target_record_index > visual_plans[0].target_record_index &&
             visual_plans[2].target_record_index > visual_plans[1].target_record_index,
         "#1306: admitted visual selection toolbox batch create dispatch planning should reserve target records");
@@ -3085,7 +3085,7 @@ void test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_muta
             !form_catalog.mutates_asset,
         "#1257: form toolbox batch create catalogs should summarize one context batch");
     expect(textbox_plan != nullptr &&
-            textbox_plan->target_record_index > before_count &&
+            textbox_plan->target_record_index == before_count &&
             textbox_plan->object_name == "txt2" &&
             textbox_plan->parent_name == "frmMain" &&
             has_field_value(textbox_plan->field_values, "CLASS", "TextBox") &&
@@ -3195,7 +3195,7 @@ void test_toolbox_creation_selection_batch_plan_catalog_plans_context_batches_wi
             !visual_catalog.mutates_asset,
         "#1296: visual selection toolbox batch create catalogs should summarize form batches");
     expect(visual_textbox_plan != nullptr &&
-            visual_textbox_plan->target_record_index > before_count &&
+            visual_textbox_plan->target_record_index == before_count &&
             visual_textbox_plan->object_name == "txt2" &&
             visual_textbox_plan->parent_name == "frmMain" &&
             has_field_value(visual_textbox_plan->field_values, "CLASS", "TextBox") &&
@@ -3299,7 +3299,7 @@ void test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_
     expect(form_catalog.dispatch.plan.item_count == form_catalog.item_count &&
             form_catalog.dispatch.plan.plans.size() == form_catalog.item_count &&
             textbox_plan != nullptr &&
-            textbox_plan->target_record_index > before_count &&
+            textbox_plan->target_record_index == before_count &&
             textbox_plan->object_name == "txt2" &&
             command_plan != nullptr &&
             command_plan->target_record_index > textbox_plan->target_record_index &&
@@ -3419,7 +3419,7 @@ void test_toolbox_creation_selection_batch_dispatch_catalog_plans_context_batche
             visual_catalog.mutates_asset,
         "#1298: admitted visual selection toolbox batch create dispatch catalogs should summarize form batches");
     expect(visual_textbox_plan != nullptr &&
-            visual_textbox_plan->target_record_index > before_count &&
+            visual_textbox_plan->target_record_index == before_count &&
             visual_textbox_plan->object_name == "txt2" &&
             visual_textbox_plan->parent_name == "frmMain" &&
             has_field_value(visual_textbox_plan->field_values, "CLASS", "TextBox") &&
