@@ -6261,6 +6261,87 @@ void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections
     }
 }
 
+void test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_unplacement_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_unplacement_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "3",
+                "--property-name", "VPOS",
+                "--property-value", "9000",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " layout unplacement update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " layout unplacement update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1532: report/label layout object unplacement update should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.value == "9000",
+               "#1532: report/label layout object unplacement update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1532: report/label layout object unplacement update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 1",
+                        "#1532: report/label layout object unplacement update should decrement placed counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 2",
+                        "#1532: report/label layout object unplacement update should increment unplaced counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1532: report/label layout object unplacement update should preserve selected object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1532: report/label layout object unplacement update should clear selected containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1532: report/label layout object unplacement update should serialize null selected containing sections");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectKind\": \"field\""
+            },
+            "#1532: report/label layout object unplacement update should refresh selected object unplaced metadata");
+    };
+
+    run_unplacement_update(temp_root / "unplacement_update.frx", "unplacement_update.frx", "report");
+    run_unplacement_update(temp_root / "unplacement_update.lbx", "unplacement_update.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -50937,6 +51018,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
+    test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
