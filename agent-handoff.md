@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E3 update: latest implemented slice is `#1542`, proving report/label vertical-grid direct field editing through `--set-property --record 0 --property-name GRIDV` while preserving refreshed page setup metadata, memo-derived margin/horizontal-grid values, and field provenance. Parent `#24` remains open; create or pick the next prompt-sized E3 child before more report/label implementation work.
+Current E3 update: latest implemented slice is `#1543`, proving report/label horizontal-grid direct field editing through `--set-property --record 0 --property-name GRIDH` while preserving refreshed page setup metadata, memo-derived margin/vertical-grid values, and field provenance. Parent `#24` remains open; create or pick the next prompt-sized E3 child before more report/label implementation work.
 
 CI update: hosted Native CMake runs through `ba0cc148` repeated `test_toolbox_creation` failures in #1257/#1296/#1255/#1298. Current source now asserts the actual form toolbox palette order in context-wide batch plan/dispatch catalogs: `label` owns the first append target (`before_count`), `textbox` follows label, and `commandbutton` follows textbox. Local targeted rebuild/relink of `test_toolbox_creation` passed; hosted Native CMake remains authoritative after push.
 
@@ -60,11 +60,11 @@ Additional E2 closure note: `#1233`, `#1235`, `#1237`, `#1268`, and `#1270` were
 
 Additional E2 closure note: `#1283`, `#1284`, and `#1287` were closed in GitHub on 2026-06-20 after existing implementation comments plus fresh focused validation confirmed shipped editor-action, designer, and toolbox dispatch-catalog routing through shared invocation-admission catalog seams. Parent `#23` remains open; other open E2 children still need live-state review before any closure.
 
-Current E3 update: latest implemented slice is `#1542`, proving report/label vertical-grid direct field editing through the generic Studio host property path while preserving refreshed page setup metadata, memo-derived margin/horizontal-grid values, and field provenance. `#1541` is the immediately preceding bottom-margin field slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1542` have been closed with evidence-backed approval; parent `#24` remains open.
+Current E3 update: latest implemented slice is `#1543`, proving report/label horizontal-grid direct field editing through the generic Studio host property path while preserving refreshed page setup metadata, memo-derived margin/vertical-grid values, and field provenance. `#1542` is the immediately preceding vertical-grid field slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1543` have been closed with evidence-backed approval; parent `#24` remains open.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1542`, proving report/label vertical-grid direct field editing through the generic Studio host property path while preserving refreshed page setup metadata, memo-derived margin/horizontal-grid values, and field provenance.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1543`, proving report/label horizontal-grid direct field editing through the generic Studio host property path while preserving refreshed page setup metadata, memo-derived margin/vertical-grid values, and field provenance.
 
 Next: continue E3/#24 by creating the next prompt-sized report/label designer fidelity child before coding unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, debugger, or E2 host-wrapper slices unless new evidence shows a regression.
 
