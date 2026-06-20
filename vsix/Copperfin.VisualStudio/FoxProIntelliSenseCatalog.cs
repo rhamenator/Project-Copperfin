@@ -441,13 +441,13 @@ internal static class FoxProIntelliSenseCatalog
     private static string ExtractMethodName(string qualifiedMethodName)
     {
         var separator = qualifiedMethodName.LastIndexOf('.');
-        return separator >= 0 ? qualifiedMethodName[(separator + 1)..] : qualifiedMethodName;
+        return separator >= 0 ? qualifiedMethodName.Substring(separator + 1) : qualifiedMethodName;
     }
 
     private static string ExtractContainingType(string qualifiedMethodName)
     {
         var separator = qualifiedMethodName.LastIndexOf('.');
-        return separator >= 0 ? qualifiedMethodName[..separator] : "the active project";
+        return separator >= 0 ? qualifiedMethodName.Substring(0, separator) : "the active project";
     }
 
     private static void AddEntries(
@@ -764,9 +764,10 @@ internal static class FoxProIntelliSenseCatalog
         var trimmed = token.Trim();
         if (trimmed.Length >= 2)
         {
-            if ((trimmed[0] == '"' && trimmed[^1] == '"') || (trimmed[0] == '\'' && trimmed[^1] == '\''))
+            var last = trimmed[trimmed.Length - 1];
+            if ((trimmed[0] == '"' && last == '"') || (trimmed[0] == '\'' && last == '\''))
             {
-                return trimmed[1..^1];
+                return trimmed.Substring(1, trimmed.Length - 2);
             }
         }
 
@@ -835,7 +836,7 @@ internal static class FoxProIntelliSenseCatalog
             return;
         }
 
-        var raw = line[startIndex..endIndex];
+        var raw = line.Substring(startIndex, endIndex - startIndex);
         var trimmed = raw.Trim();
         var leadingWhitespace = raw.Length - raw.TrimStart().Length;
         arguments.Add(new InvocationArgument(trimmed, startIndex + leadingWhitespace + 1));
@@ -1016,7 +1017,7 @@ internal static class FoxProIntelliSenseCatalog
             return false;
         }
 
-        var segments = token.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        var segments = token.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
         for (var segmentCount = segments.Length - 1; segmentCount > 0; segmentCount--)
         {
             var prefix = string.Join(".", segments.Take(segmentCount));
@@ -1026,12 +1027,13 @@ internal static class FoxProIntelliSenseCatalog
             }
         }
 
-        if (TryResolveUniqueProjectMethodDefinition(index, segments[^1], out definition))
+        var methodName = segments[segments.Length - 1];
+        if (TryResolveUniqueProjectMethodDefinition(index, methodName, out definition))
         {
             return true;
         }
 
-        return TryResolveDefinition(index, segments[^1], out definition);
+        return TryResolveDefinition(index, methodName, out definition);
     }
 
     private static IReadOnlyList<FoxProSignatureEntry> TryResolveProjectSignatures(ProjectSymbolIndex index, string invocationName)
@@ -1046,7 +1048,7 @@ internal static class FoxProIntelliSenseCatalog
             return Array.Empty<FoxProSignatureEntry>();
         }
 
-        var segments = invocationName.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        var segments = invocationName.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
         for (var segmentCount = segments.Length - 1; segmentCount > 0; segmentCount--)
         {
             var prefix = string.Join(".", segments.Take(segmentCount));
@@ -1056,12 +1058,13 @@ internal static class FoxProIntelliSenseCatalog
             }
         }
 
-        if (TryResolveUniqueProjectMethodSignature(index, segments[^1], out signatures))
+        var methodName = segments[segments.Length - 1];
+        if (TryResolveUniqueProjectMethodSignature(index, methodName, out signatures))
         {
             return signatures;
         }
 
-        return index.Signatures.TryGetValue(segments[^1], out signatures)
+        return index.Signatures.TryGetValue(methodName, out signatures)
             ? signatures
             : Array.Empty<FoxProSignatureEntry>();
     }
@@ -1214,11 +1217,11 @@ internal static class FoxProIntelliSenseCatalog
     private static string NormalizeProjectParameterName(string parameter)
     {
         var separatorIndex = parameter.IndexOf('=');
-        var candidate = separatorIndex >= 0 ? parameter[..separatorIndex] : parameter;
+        var candidate = separatorIndex >= 0 ? parameter.Substring(0, separatorIndex) : parameter;
         var asIndex = candidate.IndexOf(" AS ", StringComparison.OrdinalIgnoreCase);
         if (asIndex >= 0)
         {
-            candidate = candidate[..asIndex];
+            candidate = candidate.Substring(0, asIndex);
         }
 
         return candidate.Trim();
