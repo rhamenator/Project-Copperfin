@@ -1,3 +1,4 @@
+- 2026-06-20: E2/#1166-#1169 evidence-backed closure batch completed: special effect, scroll bars, window state, and show window Studio host wrappers were closed after current-head code/test evidence review and focused local validation.
 - 2026-06-20: E2/#1170-#1174 evidence-backed closure batch completed: title bar, mouse pointer, picture margin, picture position, and picture spacing Studio host wrappers were closed after current-head code/test evidence review and focused local validation.
 - 2026-06-20: E2/#1183-#1186 evidence-backed closure batch completed: font strikethru, outline, shadow, and dynamic-alignment Studio host wrappers were closed after current-head code/test evidence review and focused local validation.
 - 2026-06-20: E2/#1178-#1182 evidence-backed closure batch completed: font name, size, bold, italic, and underline Studio host wrappers were closed after current-head code/test evidence review and focused local validation.
