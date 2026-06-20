@@ -491,7 +491,7 @@ std::set<std::string> read_native_exported_symbols(const std::filesystem::path& 
         if (!symbol.empty() && symbol.front() == '_') {
             symbol.erase(symbol.begin());
         }
-        if (symbol.empty() || symbol.front() == '_') {
+        if (symbol.empty() || (symbol.front() == '_' && symbol != "_FoxTable")) {
             continue;
         }
 #else
