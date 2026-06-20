@@ -18,15 +18,15 @@ Use sources in this order:
 Refresh the local help indexes with:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File E:\Project-Copperfin\scripts\export-vfp-chm-topic-index.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\export-vfp-chm-topic-index.ps1
 ```
 
 Generated outputs:
 
-- [`docs/generated/vfp-chm-index-summary.json`](E:/Project-Copperfin/docs/generated/vfp-chm-index-summary.json)
-- [`docs/generated/vfp-chm-command-topics.json`](E:/Project-Copperfin/docs/generated/vfp-chm-command-topics.json)
-- [`docs/generated/vfp-foxtools-topics.json`](E:/Project-Copperfin/docs/generated/vfp-foxtools-topics.json)
-- [`docs/generated/vfp-chm-topic-manifest.json`](E:/Project-Copperfin/docs/generated/vfp-chm-topic-manifest.json)
+- [`docs/generated/vfp-chm-index-summary.json`](generated/vfp-chm-index-summary.json)
+- [`docs/generated/vfp-chm-command-topics.json`](generated/vfp-chm-command-topics.json)
+- [`docs/generated/vfp-foxtools-topics.json`](generated/vfp-foxtools-topics.json)
+- [`docs/generated/vfp-chm-topic-manifest.json`](generated/vfp-chm-topic-manifest.json)
 
 Those files provide offline keyword-to-topic mappings for:
 

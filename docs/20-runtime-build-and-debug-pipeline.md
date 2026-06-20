@@ -42,21 +42,22 @@ Current package layout:
 Current CLI flow:
 
 ```powershell
-E:\Project-Copperfin\build\Release\copperfin_build_host.exe build `
+$env:COPPERFIN_ROOT = (Get-Location).Path
+& "$env:COPPERFIN_ROOT\build\Release\copperfin_build_host.exe" build `
   --project "C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\solution.pjx" `
-  --output-dir "E:\Project-Copperfin\artifacts\runtime-smoke" `
+  --output-dir "$env:COPPERFIN_ROOT\artifacts\runtime-smoke" `
   --configuration debug `
   --enable-security `
   --emit-dotnet-launcher
 ```
 
 ```powershell
-E:\Project-Copperfin\artifacts\runtime-smoke\SOLUTION\SOLUTION.exe --debug
+& "$env:COPPERFIN_ROOT\artifacts\runtime-smoke\SOLUTION\SOLUTION.exe" --debug
 ```
 
 ```powershell
-E:\Project-Copperfin\artifacts\runtime-smoke\SOLUTION\copperfin_runtime_host.exe `
-  --manifest "E:\Project-Copperfin\artifacts\runtime-smoke\SOLUTION\app.cfmanifest" `
+& "$env:COPPERFIN_ROOT\artifacts\runtime-smoke\SOLUTION\copperfin_runtime_host.exe" `
+  --manifest "$env:COPPERFIN_ROOT\artifacts\runtime-smoke\SOLUTION\app.cfmanifest" `
   --debug `
   --breakpoint 12 `
   --debug-command continue `
@@ -65,8 +66,8 @@ E:\Project-Copperfin\artifacts\runtime-smoke\SOLUTION\copperfin_runtime_host.exe
 ```
 
 ```powershell
-E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe `
-  --manifest "E:\Project-Copperfin\artifacts\menu-debug-smoke\app.cfmanifest" `
+& "$env:COPPERFIN_ROOT\build\Release\copperfin_runtime_host.exe" `
+  --manifest "$env:COPPERFIN_ROOT\artifacts\menu-debug-smoke\app.cfmanifest" `
   --debug `
   --debug-command continue `
   --debug-command select:shortcut.item1 `
@@ -75,8 +76,8 @@ E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe `
 ```
 
 ```powershell
-E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe `
-  --manifest "E:\Project-Copperfin\artifacts\xasset-debug-smoke\app.cfmanifest" `
+& "$env:COPPERFIN_ROOT\build\Release\copperfin_runtime_host.exe" `
+  --manifest "$env:COPPERFIN_ROOT\artifacts\xasset-debug-smoke\app.cfmanifest" `
   --debug `
   --debug-command continue `
   --debug-command break:add-action:frmbooks.release `
@@ -84,8 +85,8 @@ E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe `
 ```
 
 ```powershell
-E:\Project-Copperfin\build\Release\copperfin_runtime_host.exe `
-  --manifest "E:\Project-Copperfin\artifacts\report-debug-smoke\app.cfmanifest" `
+& "$env:COPPERFIN_ROOT\build\Release\copperfin_runtime_host.exe" `
+  --manifest "$env:COPPERFIN_ROOT\artifacts\report-debug-smoke\app.cfmanifest" `
   --debug `
   --debug-command continue
 ```

@@ -628,6 +628,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
             object.section_relative_bottom = object.bottom - snapshot.sections[section_index].top;
             expand_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
             ++snapshot.live_object_count;
+            ++snapshot.placed_object_count;
             snapshot.sections[section_index].objects.push_back(std::move(object));
         } else {
             expand_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);

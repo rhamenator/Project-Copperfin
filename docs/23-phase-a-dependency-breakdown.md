@@ -1,6 +1,6 @@
 # Phase A Dependency Breakdown
 
-This document began as a Phase A expansion of [remaining-work.md](/home/rich/dev/Project-Copperfin/remaining-work.md:306). Phase A is now closed; the live guidance retained here is the post-D1/E1 continuation queue, while the Phase A content is historical dependency evidence.
+This document began as a Phase A expansion of [remaining-work.md](../remaining-work.md). Phase A is now closed; the live guidance retained here is the post-D1/E1 continuation queue, while the Phase A content is historical dependency evidence.
 
 It is intentionally narrower than the top-level roadmap:
 
@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 remains open with many prompt-sized children still open in GitHub; treat them as evidence-audit/closure cleanup unless fresh implementation evidence shows a real remaining local miss.
-- Latest implemented E3 slice: `#1521`, which exposes compact non-mutating report/label section-height summary JSON for live and deleted section height totals while preserving detailed section/object/settings payloads. `#1520` is the immediately preceding section-kind summary slice. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
+- Latest implemented E3 slice: `#1522`, which exposes compact non-mutating report/label placed-object summary JSON while preserving detailed section/object/settings payloads. `#1521` is the immediately preceding section-height summary slice. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
 - Current continuation shape: continue prompt-sized E3/#24 children in report/label designer fidelity, report/label section editing, report/label output preview metadata, and layout/runtime parity seams, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
 - Next work: create the next prompt-sized `#24` child in report/label designer fidelity before coding unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Issue Tree Status" table.
@@ -84,7 +84,7 @@ This was the actionable version of the old Phase A graph. It is retained only as
 | WP13 | Automation activation parity | `#10`, `#11` | 2 | G17 | WP8, WP12 | completed for Phase A; retained here as historical closure context |
 | WP14 | Automation containment and fault behavior | `#10`, `#12` | 1 | G18 | WP13 | completed for Phase A; retained here as historical closure context |
 
-## Dependency Graph
+## Historical Dependency Graph
 
 ```mermaid
 flowchart LR
@@ -96,36 +96,36 @@ flowchart LR
 
     subgraph A1[Phase A1 - File And Index Fidelity]
         direction TB
-        G1["G1 DBF/FPT Parse + Repair<br/>90%<br/>supports #7"]
-        G2["G2 Index Probe + Metadata<br/>91%<br/>supports #7"]
-        G3["G3 DBC/DCT/DCX Fidelity<br/>96%<br/>supports #7 via #96"]
+        G1["G1 DBF/FPT Parse + Repair<br/>Phase A closed<br/>supports #7"]
+        G2["G2 Index Probe + Metadata<br/>Phase A closed<br/>supports #7"]
+        G3["G3 DBC/DCT/DCX Fidelity<br/>Phase A closed<br/>supports #7 via #96"]
     end
 
     subgraph A2[Phase A2 - Work Areas / Sessions / Cursor Semantics]
         direction TB
-        G4["G4 Work-Area Targeting<br/>96%<br/>#7"]
-        G5["G5 Data Sessions + SET State<br/>95%<br/>#7 / #8"]
-        G6["G6 Order / Seek / Collation<br/>92%<br/>#92"]
-        G7["G7 SQL Handle/API Surface<br/>90%<br/>#7"]
-        G8["G8 Remote Cursor Semantics<br/>88%<br/>#93"]
+        G4["G4 Work-Area Targeting<br/>Phase A closed<br/>#7"]
+        G5["G5 Data Sessions + SET State<br/>Phase A closed<br/>#7 / #8"]
+        G6["G6 Order / Seek / Collation<br/>Phase A closed<br/>#92"]
+        G7["G7 SQL Handle/API Surface<br/>Phase A closed<br/>#7"]
+        G8["G8 Remote Cursor Semantics<br/>Phase A closed<br/>#93"]
     end
 
     subgraph A3[Phase A3 - Command / Expression Surface]
         direction TB
-        G9["G9 Macro / Eval Core<br/>82%<br/>#97"]
-        G10["G10 Local Nav + Mutation<br/>91%<br/>#7 / #8"]
-        G11["G11 Structural Table Ops<br/>90%<br/>#94"]
-        G12["G12 Field Projection / Transfer<br/>89%<br/>#100"]
-        G13["G13 Aggregate / View Helpers<br/>94%<br/>#95"]
-        G14["G14 Headless Interaction / Dialogs<br/>84%<br/>#101"]
-        G15["G15 Memory / Assignment Semantics<br/>86%<br/>#99"]
-        G16["G16 Corpus + Regression Harness<br/>55%<br/>supports #7-#12"]
+        G9["G9 Macro / Eval Core<br/>Phase A closed<br/>#97"]
+        G10["G10 Local Nav + Mutation<br/>Phase A closed<br/>#7 / #8"]
+        G11["G11 Structural Table Ops<br/>Phase A closed<br/>#94"]
+        G12["G12 Field Projection / Transfer<br/>Phase A closed<br/>#100"]
+        G13["G13 Aggregate / View Helpers<br/>Phase A closed<br/>#95"]
+        G14["G14 Headless Interaction / Dialogs<br/>Phase A closed<br/>#101"]
+        G15["G15 Memory / Assignment Semantics<br/>Phase A closed<br/>#99"]
+        G16["G16 Corpus + Regression Harness<br/>ongoing enabler<br/>supports #7-#12"]
     end
 
     subgraph A4[Phase A4 - Automation And Interop Semantics]
         direction TB
-        G17["G17 CREATEOBJECT / GETOBJECT<br/>68%<br/>#10 / #11"]
-        G18["G18 OLE/COM Invoke + Containment<br/>100%<br/>#10 / #12"]
+        G17["G17 CREATEOBJECT / GETOBJECT<br/>Phase A closed<br/>#10 / #11"]
+        G18["G18 OLE/COM Invoke + Containment<br/>Phase A closed<br/>#10 / #12"]
     end
 
     G16 --> G1
@@ -176,9 +176,8 @@ flowchart LR
     G15 --> G17
     G17 --> G18
 
-    class G1,G2,G3,G4,G5,G6,G7,G8,G10,G11,G12,G13 green;
-    class G9,G14,G15,G16 amber;
-    class G17,G18 red;
+    class G1,G2,G3,G4,G5,G6,G7,G8,G9,G10,G11,G12,G13,G14,G15,G17,G18 green;
+    class G16 amber;
     class A1,A2,A3,A4 lane;
 ```
 
@@ -222,28 +221,28 @@ This is a historical planning schedule, not a delivery promise or current queue.
 
 ```mermaid
 gantt
-    title Phase A Recommended Work Order
+    title Historical Phase A Recommended Work Order - Closed
     dateFormat  YYYY-MM-DD
     axisFormat  %m-%d
 
     section Foundation
     WP0 Corpus / Regression Harness (#7,#8,#10,#11,#12) :done, wp0, 2026-05-04, 1w
-    WP1 DBF/FPT Validation + Repair (supports #7)       :wp1, after wp0, 2w
-    WP2 Index Fidelity Completion (supports #7 / #92)   :wp2, after wp1, 2w
-    WP4 Work-Area / Session Cleanup (#7,#8)             :wp4, after wp0, 1w
+    WP1 DBF/FPT Validation + Repair (supports #7)       :done, wp1, after wp0, 2w
+    WP2 Index Fidelity Completion (supports #7 / #92)   :done, wp2, after wp1, 2w
+    WP4 Work-Area / Session Cleanup (#7,#8)             :done, wp4, after wp0, 1w
 
     section Runtime Semantics
-    WP5 Order / Collation / Search Residuals (#92)      :crit, wp5, after wp2, 2w
-    WP8 Macro / Eval / Runtime-State Closure (#97/#98/#99) :wp8, after wp4, 2w
-    WP10 Structural Table Ops Closure (#94)             :wp10, after wp8, 2w
-    WP9 Field Projection / Transfer Closure (#100)      :crit, wp9, after wp5, 1w
-    WP12 Headless Interaction Closure (#101)            :crit, wp12, after wp9, 1w
+    WP5 Order / Collation / Search Residuals (#92)      :done, wp5, after wp2, 2w
+    WP8 Macro / Eval / Runtime-State Closure (#97/#98/#99) :done, wp8, after wp4, 2w
+    WP10 Structural Table Ops Closure (#94)             :done, wp10, after wp8, 2w
+    WP9 Field Projection / Transfer Closure (#100)      :done, wp9, after wp5, 1w
+    WP12 Headless Interaction Closure (#101)            :done, wp12, after wp9, 1w
 
     section SQL And Cursor Parity
-    WP6 SQL Handle/API Residuals (#7)                   :wp6, after wp4, 2w
-    WP7 Remote Cursor Semantic Closure (#93)           :wp7, after wp5, 2w
-    WP11 Query / Aggregate Helper Closure (#95)        :wp11, after wp5, 2w
-    WP3 DBC Container Completion (#96)                 :wp3, after wp2, 1w
+    WP6 SQL Handle/API Residuals (#7)                   :done, wp6, after wp4, 2w
+    WP7 Remote Cursor Semantic Closure (#93)           :done, wp7, after wp5, 2w
+    WP11 Query / Aggregate Helper Closure (#95)        :done, wp11, after wp5, 2w
+    WP3 DBC Container Completion (#96)                 :done, wp3, after wp2, 1w
 
     section Historical Complete (Not Remaining Critical Path)
     WP13 Automation Activation Parity (#10/#11, closed)   :done, wp13, 2026-04-30, 2w
@@ -357,6 +356,8 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
+| `#24` | `#1522` in progress | Studio host JSON exposes compact non-mutating report/label placed-object counts while preserving detailed layout payloads |
+| `#24` | `#1521` closed | Studio host JSON exposes compact non-mutating report/label live and deleted section-height totals while preserving detailed layout payloads |
 | `#24` | `#1520` closed | Studio host JSON exposes compact non-mutating report/label live and deleted section band-kind summary counts while preserving detailed layout payloads |
 | `#24` | `#1519` closed | Studio host JSON exposes compact non-mutating report/label live, unplaced, and deleted object-kind summary counts while preserving detailed layout payloads |
 | `#24` | `#1518` closed | Studio host JSON exposes compact non-mutating report/label column setup summary fields for column count, column width, and column spacing while preserving provenance-rich settings arrays |
@@ -476,10 +477,11 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 
 Decision rule for agents:
 
-1. Check live GitHub open issues under `#23`.
-2. If a prompt-sized designer interaction, builder/wizard, toolbox-flow, or context-aware editor child exists, work that child.
-3. If no such child exists, create the next prompt-sized `#23` child for the highest-value missing non-mutating planning/admission/dispatch seam or host exposure.
-4. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
+1. Check live GitHub open issues under `#24` first.
+2. If a prompt-sized report/label designer-fidelity child exists, work that child.
+3. If no such child exists, create the next prompt-sized `#24` child for the highest-value missing report/label non-mutating planning, host exposure, or runtime-parity seam.
+4. Check `#23` only for evidence-audit closure cleanup or fresh visual-asset host-wrapper regressions.
+5. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
 
 Historical-closed prompt-sized native slice queues:
 
@@ -496,15 +498,15 @@ Historical-closed prompt-sized native slice queues:
 Adjacent prompt-sized native slice queues:
 
 - `#22`: closure audit complete after `#729`; all prompt-sized shared design-model children `#658`-`#729` are closed
-- `#23`: `#1136` is implemented; after closure approval, continue with the next host-wrapper child for existing rollback-safe visual-object editor APIs unless the tracker already has that slice open
-- broader repo execution leaves remain pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`; this document currently points to the live E2/#23 continuation lane, not those adjacent historical/planning leaves
+- `#23`: E2 visual-asset host-wrapper implementation has advanced through `#1451`; remaining open child rows are evidence-audit cleanup unless live GitHub shows a fresh host-wrapper regression
+- `#24`: E3 report/label designer fidelity is the active continuation lane; broader repo execution leaves remain pre-split beyond Phase A under `#22`-`#43`, `#57`, and `#91`
 
 <details>
 <summary>Historical post-D1/E1/E2 issue sweep through #1136 implementation</summary>
 
 Historical post-D1 execution order through the current E2 queue:
 
-The numbered list below is retained as closure evidence for the completed D1/E1 and E2 child-issue sweep. It is **not** the current execution queue. Do not continue by counting the next number in this list. For active work, use the table above and create the next prompt-sized child under `#23` unless the issue tracker shows a higher-weight blocker.
+The numbered list below is retained as closure evidence for the completed D1/E1 and E2 child-issue sweep. It is **not** the current execution queue. Do not continue by counting the next number in this list. For active work, use the table above and create the next prompt-sized child under `#24` unless the issue tracker shows a higher-weight blocker.
 
 1. `#658`
 2. `#659`
@@ -992,8 +994,8 @@ For current post-D1/E1 work, the implementation unit should be a prompt-sized is
 
 Use this document together with:
 
-- [remaining-work.md](/home/rich/dev/Project-Copperfin/remaining-work.md:306)
-- [docs/22-vfp-language-reference-coverage.md](/home/rich/dev/Project-Copperfin/docs/22-vfp-language-reference-coverage.md:1)
+- [remaining-work.md](../remaining-work.md)
+- [docs/22-vfp-language-reference-coverage.md](22-vfp-language-reference-coverage.md)
 
 Operationally:
 

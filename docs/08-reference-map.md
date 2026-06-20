@@ -10,9 +10,9 @@ Installed VFP 9:
 - [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/Samples)
 - [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\dv_foxhelp.chm`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/dv_foxhelp.chm)
 - [`C:\Program Files (x86)\Microsoft Visual FoxPro 9\foxtools.chm`](C:/Program%20Files%20(x86)/Microsoft%20Visual%20FoxPro%209/foxtools.chm)
-- [`docs/generated/vfp-chm-command-topics.json`](E:/Project-Copperfin/docs/generated/vfp-chm-command-topics.json)
-- [`docs/generated/vfp-foxtools-topics.json`](E:/Project-Copperfin/docs/generated/vfp-foxtools-topics.json)
-- [`docs/generated/vfp-chm-topic-manifest.json`](E:/Project-Copperfin/docs/generated/vfp-chm-topic-manifest.json)
+- [`docs/generated/vfp-chm-command-topics.json`](generated/vfp-chm-command-topics.json)
+- [`docs/generated/vfp-foxtools-topics.json`](generated/vfp-foxtools-topics.json)
+- [`docs/generated/vfp-chm-topic-manifest.json`](generated/vfp-chm-topic-manifest.json)
 
 Legacy local help fallback:
 

@@ -16,44 +16,44 @@ flowchart LR
 
         subgraph DataPlane[Data Plane]
             direction TB
-            DBF["DBF/FPT Fidelity<br/>92%"]
-            IDX["CDX/DCX/MDX Index Fidelity<br/>~94%"]
-            DBC["DBC Container Fidelity<br/>90%"]
-            WS["Work Areas / Data Sessions<br/>96%"]
-            LQ["Local Query / Mutation Commands<br/>93%"]
-            SQ["SQL Pass-through / Remote Cursors<br/>90%"]
+            DBF["DBF/FPT Fidelity<br/>Phase A closed"]
+            IDX["CDX/DCX/MDX Index Fidelity<br/>Phase A closed"]
+            DBC["DBC Container Fidelity<br/>Phase A closed"]
+            WS["Work Areas / Data Sessions<br/>Phase A closed"]
+            LQ["Local Query / Mutation Commands<br/>Phase A closed"]
+            SQ["SQL Pass-through / Remote Cursors<br/>Phase A closed"]
         end
 
         subgraph RuntimePlane[Execution Plane]
             direction TB
-            PRG["PRG Execution Engine<br/>82%"]
-            EXP["Expression / Runtime Helpers<br/>~78%"]
-            SEC["Security / Policy Enforcement<br/>52%"]
+            PRG["PRG Execution Engine<br/>partial surface"]
+            EXP["Expression / Runtime Helpers<br/>partial surface"]
+            SEC["Security / Policy Enforcement<br/>open depth"]
         end
     end
 
     subgraph UXHosts[Designer And Host Surfaces]
         direction TB
-        DES["Shared Designers<br/>43%"]
-        FORMS["Forms / Classes Runtime<br/>38%"]
-        RPT["Reports / Labels Runtime<br/>42%"]
-        MENU["Menus Runtime<br/>36%"]
-        VS["Visual Studio Integration<br/>37%"]
-        IDE["Standalone Copperfin IDE<br/>32%"]
-        LS["Language Service<br/>46%"]
+        DES["Shared Designers<br/>E2 audit cleanup"]
+        FORMS["Forms / Classes Runtime<br/>first-pass shipped"]
+        RPT["Reports / Labels Runtime<br/>E3 active lane"]
+        MENU["Menus Runtime<br/>first-pass shipped"]
+        VS["Visual Studio Integration<br/>partial host"]
+        IDE["Standalone Copperfin IDE<br/>partial host"]
+        LS["Language Service<br/>managed gate active"]
     end
 
     subgraph Toolchain[Build Packaging Debug]
         direction TB
-        BLD["Build Pipeline<br/>48%"]
-        DBG["Debug Runtime Host<br/>~46%"]
-        PKG["Packaging / Distribution<br/>48%"]
+        BLD["Build Pipeline<br/>baseline shipped"]
+        DBG["Debug Runtime Host<br/>baseline shipped"]
+        PKG["Packaging / Distribution<br/>baseline shipped"]
     end
 
     subgraph Platform[Interop And Federation]
         direction TB
-        DOTNET[".NET Interoperability<br/>41%"]
-        FED["Database Federation<br/>34%"]
+        DOTNET[".NET Interoperability<br/>launcher stub only"]
+        FED["Database Federation<br/>planning slices shipped"]
     end
 
     CORE --> DBF
@@ -92,7 +92,7 @@ flowchart LR
     class DataPlane,RuntimePlane,UXHosts,Toolchain,Platform seam;
 ```
 
-Status legend: green = 85-100%, amber = 40-84%, red = 0-39%. Percentages are exact where a roadmap row exists and `~` where the diagram is using the nearest mapped planning estimate.
+Status legend: green = closed/baseline-shipped lane, amber = partial or active depth lane, red = known missing lane. The diagram intentionally avoids stale percentage math; issue-tree state and focused tests are authoritative.
 
 ## Current Status Snapshot
 

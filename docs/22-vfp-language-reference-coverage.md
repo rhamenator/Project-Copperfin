@@ -18,19 +18,19 @@ This document anchors Copperfin's command/runtime backlog to the official Visual
 
 The generated command inventory lives here:
 
-- [`docs/generated/vfp-language-reference-summary.json`](E:/Project-Copperfin/docs/generated/vfp-language-reference-summary.json)
-- [`docs/generated/vfp-language-reference-commands.json`](E:/Project-Copperfin/docs/generated/vfp-language-reference-commands.json)
-- [`docs/generated/vfp-language-reference-commands.txt`](E:/Project-Copperfin/docs/generated/vfp-language-reference-commands.txt)
-- [`docs/generated/vfp-chm-index-summary.json`](E:/Project-Copperfin/docs/generated/vfp-chm-index-summary.json)
-- [`docs/generated/vfp-chm-command-topics.json`](E:/Project-Copperfin/docs/generated/vfp-chm-command-topics.json)
-- [`docs/generated/vfp-foxtools-topics.json`](E:/Project-Copperfin/docs/generated/vfp-foxtools-topics.json)
-- [`docs/generated/vfp-chm-topic-manifest.json`](E:/Project-Copperfin/docs/generated/vfp-chm-topic-manifest.json)
+- [`docs/generated/vfp-language-reference-summary.json`](generated/vfp-language-reference-summary.json)
+- [`docs/generated/vfp-language-reference-commands.json`](generated/vfp-language-reference-commands.json)
+- [`docs/generated/vfp-language-reference-commands.txt`](generated/vfp-language-reference-commands.txt)
+- [`docs/generated/vfp-chm-index-summary.json`](generated/vfp-chm-index-summary.json)
+- [`docs/generated/vfp-chm-command-topics.json`](generated/vfp-chm-command-topics.json)
+- [`docs/generated/vfp-foxtools-topics.json`](generated/vfp-foxtools-topics.json)
+- [`docs/generated/vfp-chm-topic-manifest.json`](generated/vfp-chm-topic-manifest.json)
 
 Refresh it with:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File E:\Project-Copperfin\scripts\export-vfp-reference-index.ps1
-powershell -ExecutionPolicy Bypass -File E:\Project-Copperfin\scripts\export-vfp-chm-topic-index.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\export-vfp-reference-index.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\export-vfp-chm-topic-index.ps1
 ```
 
 Current official index snapshot from the Learn language-reference page:
@@ -56,6 +56,8 @@ Current local CHM snapshot from the installed VFP help set:
 
 The native runtime/parser currently has first-pass support for these command families:
 
+- E3 designer/tooling report-layout placed-object summary note — Studio host `--json` now exposes compact non-mutating report/label placed-object counts for `.frx` and `.lbx` assets through `StudioReportLayoutSnapshot`, deriving the summary from live objects assigned to sections while preserving detailed section/object/settings payloads.
+- E3 designer/tooling report-layout section-height summary note — Studio host `--json` now exposes compact non-mutating report/label section height totals for live and deleted sections for `.frx` and `.lbx` assets through `StudioReportLayoutSnapshot`, deriving the totals from existing section snapshots while preserving detailed section/object/settings payloads.
 - E3 designer/tooling report-layout section-kind summary note — Studio host `--json` now exposes compact non-mutating report/label section band-kind count buckets for live and deleted sections for `.frx` and `.lbx` assets through `StudioReportLayoutSnapshot`, deriving the summaries from existing section snapshots while preserving detailed section/object/settings payloads.
 - E3 designer/tooling report-layout object-kind summary note — Studio host `--json` now exposes compact non-mutating report/label object-kind count buckets for live objects, live unplaced objects, and deleted objects for `.frx` and `.lbx` assets through `StudioReportLayoutSnapshot`, deriving the summaries from existing layout object snapshots while preserving detailed section/object/settings payloads.
 - E3 designer/tooling report-layout page setup note — Studio host `--json` now exposes compact non-mutating report/label page setup summary fields for orientation, paper size, top/bottom margins, and vertical/horizontal grid spacing for `.frx` and `.lbx` assets through `StudioReportLayoutSnapshot`, deriving the summary from live settings while preserving the provenance-rich settings arrays.
