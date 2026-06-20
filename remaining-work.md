@@ -1,3 +1,4 @@
+- 2026-06-20: E3/#1561 report/label layout-object left-position clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 4 --property-name HPOS --json` on FRX and LBX layout objects clears refreshed selected-object left/right-edge metadata and recomputes document preview bounds without leaking stale geometry, while preserving object selection kind, containing-section metadata, and placed counts. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1560 report/label layout-object width clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 3 --property-name WIDTH --json` on FRX and LBX layout objects clears refreshed selected-object width/right-edge metadata and recomputes document preview bounds without leaking stale geometry, while preserving object selection kind, containing-section metadata, and placed counts. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1559 report/label layout-object font clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 3 --property-name FONTFACE --json` on FRX and LBX layout objects clears refreshed selected-object font/highlight metadata without leaking stale memo-derived font values, while preserving object selection kind, containing-section metadata, and expression highlight provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1558 report/label layout-object expression clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 3 --property-name EXPR --json` on FRX and LBX layout objects clears refreshed selected-object expression metadata without leaking stale memo-derived expression values, while preserving object selection kind, containing-section metadata, expression field provenance, and fallback title identity. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
@@ -1495,7 +1496,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1560 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1561 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1566,7 +1567,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1560 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1561 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
