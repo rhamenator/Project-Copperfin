@@ -3790,6 +3790,21 @@ void write_synthetic_report_table_for_bottom_margin_field_json(const std::filesy
     expect(create_result.ok, "#1541: synthetic report table for bottom margin field JSON should be created");
 }
 
+void write_synthetic_report_table_for_grid_vertical_field_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "GRIDV", .type = 'N', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "TOPMARGIN=10\nBOTMARGIN=20\nGRIDH=8", "4"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1542: synthetic report table for vertical grid field JSON should be created");
+}
+
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -7125,6 +7140,86 @@ void test_studio_host_json_updates_report_bottom_margin_fields_by_record_selecti
 
     run_bottom_margin_update(temp_root / "bottom_margin.frx", "bottom_margin.frx", "34", "report");
     run_bottom_margin_update(temp_root / "bottom_margin.lbx", "bottom_margin.lbx", "36", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_grid_vertical_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_grid_vertical_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_grid_vertical_update = [&](const fs::path& asset_path,
+                                              const std::string& title,
+                                              const std::string& updated_grid,
+                                              const std::string& label) {
+        write_synthetic_report_table_for_grid_vertical_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "GRIDV",
+                "--property-value", updated_grid,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " vertical grid field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " vertical grid field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1542: report/label vertical-grid field update should exit successfully");
+        const auto grid_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "GRIDV"
+        });
+        expect(grid_property.ok && grid_property.exists && grid_property.value == updated_grid,
+               "#1542: report/label vertical-grid field update should persist the GRIDV field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1542: report/label vertical-grid field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1542: report/label vertical-grid field update should preserve page setup availability");
+        expect_contains(update_process.stdout_text, "\"topMargin\": 10",
+                        "#1542: report/label vertical-grid field update should preserve memo-derived top margins");
+        expect_contains(update_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1542: report/label vertical-grid field update should preserve memo-derived bottom margins");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": " + updated_grid,
+                        "#1542: report/label vertical-grid field update should refresh vertical grid spacing");
+        expect_contains(update_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1542: report/label vertical-grid field update should preserve memo-derived horizontal grid spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 4",
+                        "#1542: report/label vertical-grid field update should preserve setting counts");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null"
+            },
+            "#1542: report/label vertical-grid field update should preserve field setting provenance");
+    };
+
+    run_grid_vertical_update(temp_root / "grid_vertical.frx", "grid_vertical.frx", "12", "report");
+    run_grid_vertical_update(temp_root / "grid_vertical.lbx", "grid_vertical.lbx", "14", "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -51820,6 +51915,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_bottom_margin_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_grid_vertical_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
