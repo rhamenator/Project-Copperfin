@@ -1,8 +1,10 @@
 #include "copperfin/studio/vs_launch_contract.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <charconv>
 #include <cctype>
+#include <cstdlib>
 #include <cmath>
 #include <optional>
 
@@ -25,10 +27,17 @@ bool parse_int_value(const std::string& text, int& value) {
 }
 
 bool parse_double_value(const std::string& text, double& value) {
-    const char* begin = text.data();
-    const char* end = text.data() + text.size();
-    const auto result = std::from_chars(begin, end, value);
-    return result.ec == std::errc{} && result.ptr == end;
+    if (text.empty() || std::isspace(static_cast<unsigned char>(text.front()))) {
+        return false;
+    }
+    char* end = nullptr;
+    errno = 0;
+    const double parsed = std::strtod(text.c_str(), &end);
+    if (errno != 0 || end != text.c_str() + text.size()) {
+        return false;
+    }
+    value = parsed;
+    return true;
 }
 
 std::string lowercase_copy(std::string text) {

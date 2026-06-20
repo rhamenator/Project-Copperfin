@@ -126,19 +126,36 @@ std::vector<std::uint8_t> read_binary_file(const std::string& path) {
     };
 }
 
+std::optional<std::string> environment_variable_value(const char* name) {
+#if defined(_MSC_VER)
+    char* value = nullptr;
+    std::size_t value_size = 0;
+    if (_dupenv_s(&value, &value_size, name) != 0 || value == nullptr) {
+        return std::nullopt;
+    }
+    std::string result(value);
+    std::free(value);
+    return result;
+#else
+    const char* value = std::getenv(name);
+    if (value == nullptr) {
+        return std::nullopt;
+    }
+    return std::string(value);
+#endif
+}
+
 bool write_binary_file(const std::string& path, const std::vector<std::uint8_t>& bytes) {
     const auto should_inject_write_failure = [&path](const char* stage) {
-        const char* marker = std::getenv("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
-        const char* stage_filter = std::getenv("COPPERFIN_TEST_FAIL_WRITE_STAGE");
-        if (marker == nullptr || stage_filter == nullptr) {
+        const auto marker = environment_variable_value("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS");
+        const auto stage_filter = environment_variable_value("COPPERFIN_TEST_FAIL_WRITE_STAGE");
+        if (!marker || !stage_filter) {
             return false;
         }
-        const std::string marker_text(marker);
-        const std::string stage_text(stage_filter);
-        if (marker_text.empty() || stage_text != stage) {
+        if (marker->empty() || *stage_filter != stage) {
             return false;
         }
-        return path.find(marker_text) != std::string::npos;
+        return path.find(*marker) != std::string::npos;
     };
 
     const std::filesystem::path target_path(path);
