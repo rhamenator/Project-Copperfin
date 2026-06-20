@@ -34,6 +34,8 @@ Native-test note: `test_runtime_pipeline` has a harness fix for hosted CTest/dot
 
 E2 closure cleanup note: `#1304`, `#1306`, `#1308`, `#1310`, `#1312`, and `#1313` were closed in GitHub on 2026-06-20 after evidence-backed local verification confirmed their shipped `test_toolbox_creation` coverage and repo docs. Parent `#23` remains open; do not orphan or close remaining open children by implication.
 
+Additional E2 closure note: `#1316`, `#1318`, `#1320`, and `#1322` were closed in GitHub on 2026-06-20 after existing implementation comments plus fresh focused validation confirmed shipped toolbox palette launch catalog, builder dispatch execution, editor-action dispatch execution, and toolbox dispatch execution coverage. Parent `#23` remains open; `#1324`, `#1326`, `#1330`, and other open E2 children still need live-state review before any closure.
+
 Current E3 update: latest implemented and closed slice is `#1520`, exposing compact non-mutating report/label section-kind summary JSON for live and deleted section band-kind buckets while preserving detailed section/object/settings payloads. `#1519` is the immediately preceding object-kind summary slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1520` have been closed with evidence-backed approval; parent `#24` remains open and currently has no open prompt-sized children.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
