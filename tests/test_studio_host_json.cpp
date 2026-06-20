@@ -6909,6 +6909,88 @@ void test_studio_host_json_updates_report_settings_memos_by_record_selection(con
     }
 }
 
+void test_studio_host_json_updates_report_page_margin_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_page_margin_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_page_margin_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& updated_margin,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "TOPMARGIN",
+                "--property-value", updated_margin,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " page margin field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " page margin field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1537: report/label page-margin field update should exit successfully");
+        const auto margin_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "TOPMARGIN"
+        });
+        expect(margin_property.ok && margin_property.exists && margin_property.value == updated_margin,
+               "#1537: report/label page-margin field update should persist the TOPMARGIN field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1537: report/label page-margin field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1537: report/label page-margin field update should preserve page setup availability");
+        expect_contains(update_process.stdout_text, "\"topMargin\": " + updated_margin,
+                        "#1537: report/label page-margin field update should refresh top margins");
+        expect_contains(update_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1537: report/label page-margin field update should preserve memo-derived bottom margins");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": 4",
+                        "#1537: report/label page-margin field update should preserve memo-derived vertical grid spacing");
+        expect_contains(update_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1537: report/label page-margin field update should preserve memo-derived horizontal grid spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 6",
+                        "#1537: report/label page-margin field update should preserve setting counts");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            "#1537: report/label page-margin field update should preserve field setting provenance");
+    };
+
+    run_page_margin_update(temp_root / "page_margin.frx", "page_margin.frx", "24", "report");
+    run_page_margin_update(temp_root / "page_margin.lbx", "page_margin.lbx", "26", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_column_setup_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -51356,6 +51438,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);

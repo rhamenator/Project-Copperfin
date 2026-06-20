@@ -1,3 +1,4 @@
+- 2026-06-20: E3/#1537 report/label page-margin field editing coverage is now implemented and closed. Studio host regression coverage now proves `--set-property --record 0 --property-name TOPMARGIN --property-value <n> --json` persists direct FRX and LBX page-setup field edits through the existing generic property-edit path, and refreshed `reportLayout` JSON updates top-margin metadata while preserving memo-derived page setup values, setting counts, and field provenance. Validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `git diff --check`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: Native toolbox-creation catalog palette-order cleanup is now implemented. Hosted Native CMake runs through `ba0cc148` showed `test_toolbox_creation` failing in the context-wide batch create plan/dispatch catalogs because the assertions still assumed the TextBox plan occupied the first append target. The implementation correctly plans all form toolbox items in palette order, with `label` first and `textbox` after it, so the affected #1257/#1296/#1255/#1298 assertions now prove the first label target equals `before_count`, textbox targets follow the label target, and command-button targets still follow textbox. Validation passed with a targeted rebuild/relink of `test_toolbox_creation` and `./build/tests/test_toolbox_creation`; hosted Native CMake Validation remains authoritative.
 - 2026-06-20: E3/#1536 report/label layout-object top preview-bounds coverage is now implemented and closed. Studio host regression coverage now proves `--set-property --record <object> --property-name VPOS --property-value <above-section-band> --json` persists FRX and LBX object vertical-position edits through the existing generic property-edit path, moves an object above all live section bands, and refreshed `reportLayout` JSON updates selected-object top/bottom metadata, document preview top/height bounds, and unplaced selected-object metadata. Validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `git diff --check`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1535 report/label layout-object height preview-bounds coverage is now implemented and closed. Studio host regression coverage now proves `--set-property --record <object> --property-name HEIGHT --property-value <height> --json` persists FRX and LBX object height edits through the existing generic property-edit path, and refreshed `reportLayout` JSON updates selected-object height/bottom-edge metadata and document preview bottom/height bounds while preserving section membership and placed counts. Validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `git diff --check`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open for the next E3 child slice.
@@ -1472,7 +1473,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 evidence-audit cleanup"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1536 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1537 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1543,7 +1544,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>evidence-audit cleanup<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1536 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1537 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
