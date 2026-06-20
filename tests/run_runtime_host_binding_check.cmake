@@ -12,6 +12,7 @@ endif()
 if(temp_root STREQUAL "")
     set(temp_root "/tmp")
 endif()
+string(REGEX REPLACE "[/\\\\]+$" "" temp_root "${temp_root}")
 
 string(TIMESTAMP timestamp "%Y%m%d%H%M%S" UTC)
 set(test_root "${temp_root}/copperfin_runtime_host_binding_${timestamp}")
