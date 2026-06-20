@@ -7300,6 +7300,72 @@ void test_studio_host_json_updates_report_section_heights_by_record_selection(co
     }
 }
 
+void test_studio_host_json_clears_report_section_heights_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_section_height_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_section_height_clear = [&](const fs::path& asset_path,
+                                              const std::string& title,
+                                              const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "1",
+                "--property-name", "HEIGHT",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " section height clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " section height clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1564: report/label section height clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1564: report/label section height clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"sectionHeightTotal\": 5000",
+                        "#1564: report/label section height clear should refresh section height totals");
+        expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 1",
+                        "#1564: report/label section height clear should refresh placed object counts");
+        expect_contains(clear_process.stdout_text, "\"unplacedObjectCount\": 2",
+                        "#1564: report/label section height clear should refresh unplaced object counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1564: report/label section height clear should preserve selected section availability");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"recordIndex\": 1",
+                "\"sectionIndex\": 0",
+                "\"top\": 0",
+                "\"height\": 0",
+                "\"bottom\": 0",
+                "\"objectCount\": 0"
+            },
+            "#1564: report/label section height clear should refresh selected section geometry");
+    };
+
+    run_section_height_clear(temp_root / "section_height_clear.frx", "section_height_clear.frx", "report");
+    run_section_height_clear(temp_root / "section_height_clear.lbx", "section_height_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_tops_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -53546,6 +53612,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_settings_memos_by_record_selection(argv[1]);
