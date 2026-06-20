@@ -1,3 +1,4 @@
+- 2026-06-20: E3/#1550 report/label bottom-margin field clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name BOTMARGIN --json` blanks direct FRX and LBX page setup fields through the existing generic property-clear path, and refreshed `reportLayout` JSON clears bottom-margin availability/value while preserving memo-derived top margin/grid values, setting counts, and remaining field provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1549 report/label top-margin field clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name TOPMARGIN --json` blanks direct FRX and LBX page setup fields through the existing generic property-clear path, and refreshed `reportLayout` JSON clears top-margin availability/value while preserving memo-derived orientation, paper size, bottom margin/grid values, setting counts, and remaining field provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1548 report/label orientation field clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name ORIENTATION --json` blanks direct FRX and LBX page setup fields through the existing generic property-clear path, and refreshed `reportLayout` JSON clears orientation availability/code while preserving memo-derived paper size, margin/grid values, setting counts, and remaining field provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1547 report/label paper-size field clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name PAPERSIZE --json` blanks direct FRX and LBX page setup fields through the existing generic property-clear path, and refreshed `reportLayout` JSON clears paper-size availability/code while preserving memo-derived orientation, margin/grid values, setting counts, and remaining field provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
@@ -1484,7 +1485,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1549 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1550 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1555,7 +1556,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1549 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1550 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
