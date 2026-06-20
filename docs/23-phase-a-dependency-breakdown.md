@@ -499,10 +499,10 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1425` open; evidence audit pending | Studio host JSON now exposes selected-object method deletion mutations with undo metadata |
 | `#23` | `#1424` open; evidence audit pending | Studio host JSON now exposes selected-object method update/append mutations with undo metadata |
 | `#23` | `#1423` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object method point queries with absent-method success |
-| `#23` | `#1422` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object method listings with source-line and memo metadata |
-| `#23` | `#1421` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object ancestor listings with depth and outline snapshot metadata |
-| `#23` | `#1420` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object descendant listings with traversal depth and outline snapshot metadata |
-| `#23` | `#1419` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object immediate-child listings with outline snapshot metadata |
+| `#23` | `#1422` closed | Studio host JSON now exposes non-mutating selected-object method listings with source-line and memo metadata |
+| `#23` | `#1421` closed | Studio host JSON now exposes non-mutating selected-object ancestor listings with depth and outline snapshot metadata |
+| `#23` | `#1420` closed | Studio host JSON now exposes non-mutating selected-object descendant listings with traversal depth and outline snapshot metadata |
+| `#23` | `#1419` closed | Studio host JSON now exposes non-mutating selected-object immediate-child listings with outline snapshot metadata |
 | `#23` | `#1418` closed | Studio host JSON now exposes non-mutating visual object outline listings with hierarchy, identity, class, caption, and count metadata |
 | `#23` | `#1417` closed | Studio host JSON now exposes non-mutating selected-object visual property lists with direct and memo-backed property metadata |
 | `#23` | `#1416` closed | Studio host JSON now exposes non-mutating selected-object visual property point reads for direct and memo-backed properties |
