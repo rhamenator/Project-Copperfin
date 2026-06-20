@@ -7111,6 +7111,91 @@ void test_studio_host_json_updates_report_page_margin_fields_by_record_selection
     }
 }
 
+void test_studio_host_json_clears_report_page_margin_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_page_margin_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_page_margin_clear = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "TOPMARGIN",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " page margin field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " page margin field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1549: report/label page-margin field clear should exit successfully");
+        const auto margin_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "TOPMARGIN"
+        });
+        expect(margin_property.ok && margin_property.exists && margin_property.value.empty(),
+               "#1549: report/label page-margin field clear should blank the TOPMARGIN field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1549: report/label page-margin field clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1549: report/label page-margin field clear should preserve page setup availability");
+        expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
+                        "#1549: report/label page-margin field clear should preserve memo-derived orientation codes");
+        expect_contains(clear_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1549: report/label page-margin field clear should preserve memo-derived paper-size codes");
+        expect_contains(clear_process.stdout_text, "\"topMarginAvailable\": false",
+                        "#1549: report/label page-margin field clear should clear top-margin availability");
+        expect_contains(clear_process.stdout_text, "\"topMargin\": 0",
+                        "#1549: report/label page-margin field clear should clear top margins");
+        expect_contains(clear_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1549: report/label page-margin field clear should preserve memo-derived bottom margins");
+        expect_contains(clear_process.stdout_text, "\"gridVertical\": 4",
+                        "#1549: report/label page-margin field clear should preserve memo-derived vertical grid spacing");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1549: report/label page-margin field clear should preserve memo-derived horizontal grid spacing");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 5",
+                        "#1549: report/label page-margin field clear should remove the direct setting from counts");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            "#1549: report/label page-margin field clear should preserve remaining setting provenance");
+    };
+
+    run_page_margin_clear(temp_root / "page_margin_clear.frx", "page_margin_clear.frx", "report");
+    run_page_margin_clear(temp_root / "page_margin_clear.lbx", "page_margin_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_bottom_margin_fields_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -52383,6 +52468,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_page_margin_fields_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_bottom_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_grid_vertical_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_grid_horizontal_fields_by_record_selection(argv[1]);
