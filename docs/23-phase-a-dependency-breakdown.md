@@ -494,11 +494,11 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1430` open; evidence audit pending | Studio host JSON now exposes selected-object method delete-batch mutations with rollback and undo metadata |
 | `#23` | `#1429` open; evidence audit pending | Studio host JSON now exposes selected-object method reorder mutations with undo metadata |
 | `#23` | `#1428` open; evidence audit pending | Studio host JSON now exposes selected-object method move mutations with undo metadata |
-| `#23` | `#1427` open; evidence audit pending | Studio host JSON now exposes selected-object method copy mutations with undo metadata |
-| `#23` | `#1426` open; evidence audit pending | Studio host JSON now exposes selected-object method rename mutations with undo metadata |
-| `#23` | `#1425` open; evidence audit pending | Studio host JSON now exposes selected-object method deletion mutations with undo metadata |
-| `#23` | `#1424` open; evidence audit pending | Studio host JSON now exposes selected-object method update/append mutations with undo metadata |
-| `#23` | `#1423` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object method point queries with absent-method success |
+| `#23` | `#1427` closed | Studio host JSON now exposes selected-object method copy mutations with undo metadata |
+| `#23` | `#1426` closed | Studio host JSON now exposes selected-object method rename mutations with undo metadata |
+| `#23` | `#1425` closed | Studio host JSON now exposes selected-object method deletion mutations with undo metadata |
+| `#23` | `#1424` closed | Studio host JSON now exposes selected-object method update/append mutations with undo metadata |
+| `#23` | `#1423` closed | Studio host JSON now exposes non-mutating selected-object method point queries with absent-method success |
 | `#23` | `#1422` closed | Studio host JSON now exposes non-mutating selected-object method listings with source-line and memo metadata |
 | `#23` | `#1421` closed | Studio host JSON now exposes non-mutating selected-object ancestor listings with depth and outline snapshot metadata |
 | `#23` | `#1420` closed | Studio host JSON now exposes non-mutating selected-object descendant listings with traversal depth and outline snapshot metadata |

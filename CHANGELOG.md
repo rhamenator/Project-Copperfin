@@ -1,3 +1,4 @@
+- 2026-06-20: E2/#1423-#1427 evidence-backed closure batch completed: visual method query, update, delete, rename, and copy Studio host JSON surfaces were closed after current-head evidence review and focused local validation.
 - 2026-06-20: E2/#1419-#1422 evidence-backed closure batch completed: visual object children, descendants, ancestors, and method-list Studio host JSON surfaces were closed after current-head evidence review and focused local validation.
 - 2026-06-20: E2/#1416-#1418 evidence-backed closure batch completed: visual property query, visual property list, and visual object outline Studio host JSON surfaces were closed after current-head evidence review and focused local validation.
 - 2026-06-20: E2/#1413-#1415 evidence-backed closure batch completed: menu command editor action propagation, toolbox palette query host JSON, and visual property filter host JSON were closed after current-head evidence review and focused local validation.
