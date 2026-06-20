@@ -6102,6 +6102,79 @@ void test_studio_host_json_updates_report_section_heights_by_record_selection(co
     }
 }
 
+void test_studio_host_json_updates_report_section_tops_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_section_top_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_section_top_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "2",
+                "--property-name", "VPOS",
+                "--property-value", "2500",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " section top update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " section top update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1526: report/label section top update should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 2U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.value == "2500",
+               "#1526: report/label section top update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1526: report/label section top update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"sectionHeightTotal\": 7000",
+                        "#1526: report/label section top update should preserve section height totals");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1526: report/label section top update should preserve placed object counts");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"recordIndex\": 2",
+                "\"sectionIndex\": 1",
+                "\"top\": 2500",
+                "\"height\": 5000",
+                "\"bottom\": 7500",
+                "\"objectCount\": 1",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 550"
+            },
+            "#1526: report/label section top update should refresh section and relative object geometry");
+    };
+
+    run_section_top_update(temp_root / "section_top.frx", "section_top.frx", "report");
+    run_section_top_update(temp_root / "section_top.lbx", "section_top.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_label_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -50457,6 +50530,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
