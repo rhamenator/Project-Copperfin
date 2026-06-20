@@ -503,9 +503,9 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1421` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object ancestor listings with depth and outline snapshot metadata |
 | `#23` | `#1420` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object descendant listings with traversal depth and outline snapshot metadata |
 | `#23` | `#1419` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object immediate-child listings with outline snapshot metadata |
-| `#23` | `#1418` open; evidence audit pending | Studio host JSON now exposes non-mutating visual object outline listings with hierarchy, identity, class, caption, and count metadata |
-| `#23` | `#1417` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property lists with direct and memo-backed property metadata |
-| `#23` | `#1416` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property point reads for direct and memo-backed properties |
+| `#23` | `#1418` closed | Studio host JSON now exposes non-mutating visual object outline listings with hierarchy, identity, class, caption, and count metadata |
+| `#23` | `#1417` closed | Studio host JSON now exposes non-mutating selected-object visual property lists with direct and memo-backed property metadata |
+| `#23` | `#1416` closed | Studio host JSON now exposes non-mutating selected-object visual property point reads for direct and memo-backed properties |
 | `#23` | `#1415` closed | Studio host JSON now exposes non-mutating selected-object visual property-grid search over direct and memo-backed properties |
 | `#23` | `#1414` closed | Studio host JSON now exposes non-mutating toolbox palette context/category/search queries over toolbox descriptors |
 | `#23` | `#1413` closed | menu-item selections now expose a dedicated non-mutating menu command editor action through editor/designer surfaces |
