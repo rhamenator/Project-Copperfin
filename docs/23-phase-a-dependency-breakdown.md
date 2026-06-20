@@ -500,10 +500,11 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 Decision rule for agents:
 
 1. Check live GitHub open issues under `#24` first.
-2. If a prompt-sized report/label designer-fidelity child exists, work that child.
-3. If no such child exists, create the next prompt-sized `#24` child for the highest-value missing report/label non-mutating planning, host exposure, or runtime-parity seam.
-4. Check `#23` only for evidence-audit closure cleanup or fresh visual-asset host-wrapper regressions.
-5. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
+2. If `#1544` remains open, finish rebuilt-host or hosted CI validation and close it with evidence if the Studio host executable path passes.
+3. If another prompt-sized report/label designer-fidelity child exists, work that child.
+4. If no such child exists, create the next prompt-sized `#24` child for the highest-value missing report/label non-mutating planning, host exposure, or runtime-parity seam.
+5. Check `#23` only for evidence-audit closure cleanup or fresh visual-asset host-wrapper regressions.
+6. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
 
 Historical-closed prompt-sized native slice queues:
 
