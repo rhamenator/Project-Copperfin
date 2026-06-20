@@ -6678,6 +6678,81 @@ void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_
     }
 }
 
+void test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_width_clear_bounds_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_width_clear = [&](const fs::path& asset_path,
+                                     const std::string& title,
+                                     const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "3",
+                "--property-name", "WIDTH",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " layout width clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " layout width clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1560: report/label layout object width clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1560: report/label layout object width clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1560: report/label layout object width clear should preserve preview bounds availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 2700",
+                        "#1560: report/label layout object width clear should refresh preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 2700",
+                        "#1560: report/label layout object width clear should refresh preview widths");
+        expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1560: report/label layout object width clear should preserve placed counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1560: report/label layout object width clear should preserve selected containing-section availability");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"width\": 0",
+                "\"right\": 1200",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectCount\": 1",
+                "\"objectKind\": \"field\""
+            },
+            "#1560: report/label layout object width clear should refresh selected object bounds and preserve section membership");
+        expect_not_contains(clear_process.stdout_text, "\"width\": 4000",
+                            "#1560: report/label layout object width clear should not leak stale selected-object widths");
+        expect_not_contains(clear_process.stdout_text, "\"right\": 5200",
+                            "#1560: report/label layout object width clear should not leak stale selected-object right bounds");
+    };
+
+    run_width_clear(temp_root / "width_clear_bounds.frx", "width_clear_bounds.frx", "report");
+    run_width_clear(temp_root / "width_clear_bounds.lbx", "width_clear_bounds.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -53236,6 +53311,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
