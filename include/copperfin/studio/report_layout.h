@@ -129,6 +129,8 @@ struct StudioReportLayoutSnapshot {
     bool column_spacing_available = false;
     int column_spacing = 0;
     std::size_t live_object_count = 0;
+    int section_height_total = 0;
+    int deleted_section_height_total = 0;
     std::vector<StudioReportKindCount> object_kind_counts{};
     std::vector<StudioReportKindCount> unplaced_object_kind_counts{};
     std::vector<StudioReportKindCount> deleted_object_kind_counts{};

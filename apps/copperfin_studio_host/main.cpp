@@ -20509,6 +20509,8 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
         std::cout << "      \"deletedObjectKindCount\": " << report_layout.deleted_object_kind_counts.size() << ",\n";
         std::cout << "      \"sectionKindCount\": " << report_layout.section_kind_counts.size() << ",\n";
         std::cout << "      \"deletedSectionKindCount\": " << report_layout.deleted_section_kind_counts.size() << ",\n";
+        std::cout << "      \"sectionHeightTotal\": " << report_layout.section_height_total << ",\n";
+        std::cout << "      \"deletedSectionHeightTotal\": " << report_layout.deleted_section_height_total << ",\n";
         std::cout << "      \"settingCount\": " << report_layout.settings.size() << ",\n";
         std::cout << "      \"deletedSettingCount\": " << report_layout.deleted_settings.size() << ",\n";
         std::cout << "      \"sectionCount\": " << report_layout.sections.size() << ",\n";

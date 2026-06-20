@@ -510,9 +510,11 @@ void finalize_object_kind_counts(StudioReportLayoutSnapshot& snapshot) {
 void finalize_section_kind_counts(StudioReportLayoutSnapshot& snapshot) {
     for (const auto& section : snapshot.sections) {
         increment_kind_count(snapshot.section_kind_counts, section.band_kind);
+        snapshot.section_height_total += section.height;
     }
     for (const auto& section : snapshot.deleted_sections) {
         increment_kind_count(snapshot.deleted_section_kind_counts, section.band_kind);
+        snapshot.deleted_section_height_total += section.height;
     }
 
     sort_kind_counts(snapshot.section_kind_counts);
