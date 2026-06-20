@@ -72,7 +72,7 @@ Current state:
 
 - `#22` is closed; `#23` and `#24` remain open as designer lane parents.
 - `#23` still has many open evidence-audit child rows; close completed children only with specific issue/test/validation evidence, and keep parent `#23` open until root-level closure evidence is explicit.
-- `#24` currently has no open prompt-sized children after `#1452`-`#1543` closed; create the next native child before more E3 implementation work.
+- `#24` has `#1544` implemented but pending rebuilt-host validation/closure after `#1452`-`#1543` closed; finish that validation before creating the next native E3 child unless the live issue tree shows a higher-weight blocker.
 - `#27`-`#29` currently have no active-open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
 
 ## Phase F: Federation, Interop, And Modern Platform

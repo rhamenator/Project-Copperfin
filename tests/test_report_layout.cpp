@@ -472,12 +472,64 @@ void test_build_report_layout_reports_missing_title_provenance_when_unavailable(
         "#728: unavailable report layouts should expose document-title memo block zero");
 }
 
+void test_build_report_layout_includes_direct_orientation_settings() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "orientation.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53"),
+                value("EXPR", "PAPERSIZE=1\r\nTOPMARGIN=10\r\nBOTMARGIN=20\r\nGRIDV=4\r\nGRIDH=8", 44U),
+                value("ORIENTATION", "2")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.available, "#1544: report layout should be available for direct orientation settings");
+    expect(layout.page_setup_available, "#1544: direct orientation should preserve page setup availability");
+    expect(layout.orientation_available, "#1544: direct orientation should mark orientation metadata available");
+    expect(layout.orientation_code == 2, "#1544: direct orientation should refresh orientation codes");
+    expect(layout.paper_size_available && layout.paper_size_code == 1,
+        "#1544: direct orientation should preserve memo-derived paper size");
+    expect(layout.top_margin_available && layout.top_margin == 10,
+        "#1544: direct orientation should preserve memo-derived top margins");
+    expect(layout.bottom_margin_available && layout.bottom_margin == 20,
+        "#1544: direct orientation should preserve memo-derived bottom margins");
+    expect(layout.grid_vertical_available && layout.grid_vertical == 4,
+        "#1544: direct orientation should preserve memo-derived vertical grid spacing");
+    expect(layout.grid_horizontal_available && layout.grid_horizontal == 8,
+        "#1544: direct orientation should preserve memo-derived horizontal grid spacing");
+    expect(layout.settings.size() == 6U, "#1544: direct orientation should preserve root setting counts");
+
+    const auto orientation = std::find_if(layout.settings.begin(), layout.settings.end(), [](const auto& setting) {
+        return setting.name == "ORIENTATION";
+    });
+    expect(orientation != layout.settings.end(), "#1544: direct orientation should appear in root settings");
+    if (orientation != layout.settings.end()) {
+        expect(orientation->record_index == 0U, "#1544: direct orientation should retain source record provenance");
+        expect(orientation->field_index == 3U, "#1544: direct orientation should retain DBF field provenance");
+        expect(orientation->source_line_index == copperfin::studio::StudioReportMissingLineIndex,
+            "#1544: direct orientation should not masquerade as a memo-line setting");
+        expect(orientation->memo_block_number == 0U,
+            "#1544: direct orientation should expose memo block zero for non-memo fields");
+        expect(orientation->value == "2", "#1544: direct orientation should preserve the field value text");
+    }
+}
+
 }  // namespace
 
 int main() {
     test_build_report_layout_groups_band_objects();
     test_build_report_layout_suppresses_unresolved_memo_placeholders();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
+    test_build_report_layout_includes_direct_orientation_settings();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

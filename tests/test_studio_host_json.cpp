@@ -3820,6 +3820,21 @@ void write_synthetic_report_table_for_grid_horizontal_field_json(const std::file
     expect(create_result.ok, "#1543: synthetic report table for horizontal grid field JSON should be created");
 }
 
+void write_synthetic_report_table_for_orientation_field_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "ORIENTATION", .type = 'N', .length = 8U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "PAPERSIZE=1\nTOPMARGIN=10\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "0"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1544: synthetic report table for orientation field JSON should be created");
+}
+
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -7315,6 +7330,93 @@ void test_studio_host_json_updates_report_grid_horizontal_fields_by_record_selec
 
     run_grid_horizontal_update(temp_root / "grid_horizontal.frx", "grid_horizontal.frx", "16", "report");
     run_grid_horizontal_update(temp_root / "grid_horizontal.lbx", "grid_horizontal.lbx", "18", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_orientation_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_orientation_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_orientation_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& updated_orientation,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_orientation_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "ORIENTATION",
+                "--property-value", updated_orientation,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " orientation field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " orientation field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1544: report/label orientation field update should exit successfully");
+        const auto orientation_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "ORIENTATION"
+        });
+        expect(orientation_property.ok && orientation_property.exists &&
+                   orientation_property.value == updated_orientation,
+               "#1544: report/label orientation field update should persist the ORIENTATION field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1544: report/label orientation field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1544: report/label orientation field update should preserve page setup availability");
+        expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
+                        "#1544: report/label orientation field update should refresh orientation codes");
+        expect_contains(update_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1544: report/label orientation field update should preserve memo-derived paper-size codes");
+        expect_contains(update_process.stdout_text, "\"topMargin\": 10",
+                        "#1544: report/label orientation field update should preserve memo-derived top margins");
+        expect_contains(update_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1544: report/label orientation field update should preserve memo-derived bottom margins");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": 4",
+                        "#1544: report/label orientation field update should preserve memo-derived vertical grid spacing");
+        expect_contains(update_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1544: report/label orientation field update should preserve memo-derived horizontal grid spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 6",
+                        "#1544: report/label orientation field update should preserve setting counts");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null"
+            },
+            "#1544: report/label orientation field update should preserve field setting provenance");
+    };
+
+    run_orientation_update(temp_root / "orientation.frx", "orientation.frx", "1", "report");
+    run_orientation_update(temp_root / "orientation.lbx", "orientation.lbx", "2", "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -52012,6 +52114,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_bottom_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_grid_vertical_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_grid_horizontal_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_orientation_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
