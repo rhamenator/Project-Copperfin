@@ -6342,6 +6342,87 @@ void test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced
     }
 }
 
+void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_width_bounds_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_width_update = [&](const fs::path& asset_path,
+                                      const std::string& title,
+                                      const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "3",
+                "--property-name", "WIDTH",
+                "--property-value", "6000",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " layout width update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " layout width update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1533: report/label layout object width update should exit successfully");
+        const auto width_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "WIDTH"
+        });
+        expect(width_property.ok && width_property.exists && width_property.value == "6000",
+               "#1533: report/label layout object width update should persist the WIDTH field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1533: report/label layout object width update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1533: report/label layout object width update should preserve preview bounds availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 7200",
+                        "#1533: report/label layout object width update should refresh preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 7200",
+                        "#1533: report/label layout object width update should refresh preview widths");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1533: report/label layout object width update should preserve placed counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1533: report/label layout object width update should preserve selected containing-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"width\": 6000",
+                "\"right\": 7200",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectCount\": 1",
+                "\"objectKind\": \"field\""
+            },
+            "#1533: report/label layout object width update should refresh selected object bounds and preserve section membership");
+    };
+
+    run_width_update(temp_root / "width_bounds.frx", "width_bounds.frx", "report");
+    run_width_update(temp_root / "width_bounds.lbx", "width_bounds.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -51019,6 +51100,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);

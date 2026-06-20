@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E3 update: latest implemented slice is `#1532`, proving report/label layout-object unplacement transitions through `--set-property --record <object> --property-name VPOS` while preserving refreshed placed/unplaced counts, cleared selected containing-section availability, and unplaced selected-object metadata. Parent `#24` remains open; create or pick the next prompt-sized E3 child before more report/label implementation work.
+Current E3 update: latest implemented slice is `#1533`, proving report/label layout-object width preview-bounds refresh through `--set-property --record <object> --property-name WIDTH` while preserving refreshed selected-object bounds and document preview bounds. Parent `#24` remains open; create or pick the next prompt-sized E3 child before more report/label implementation work.
 
 CI update: a native toolbox-creation planner assertion patch is now applied after hosted Linux native logs from an older pre-fix commit showed first-target reservation checks failing. The tests now expect the first planned append target to equal `before_count`, then subsequent targets to increase, matching existing create-execution assertions and implementation semantics. Local validation passed with syntax-only compilation, the test object target, and `git diff --check`; hosted Native CMake Validation remains authoritative.
 
@@ -58,7 +58,7 @@ Additional E2 closure note: `#1233`, `#1235`, `#1237`, `#1268`, and `#1270` were
 
 Additional E2 closure note: `#1283`, `#1284`, and `#1287` were closed in GitHub on 2026-06-20 after existing implementation comments plus fresh focused validation confirmed shipped editor-action, designer, and toolbox dispatch-catalog routing through shared invocation-admission catalog seams. Parent `#23` remains open; other open E2 children still need live-state review before any closure.
 
-Current E3 update: latest implemented slice is `#1532`, proving report/label layout-object unplacement transitions through the generic Studio host property path while preserving detailed selected-object unplaced payloads. `#1531` is the immediately preceding placement transition slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1532` have been closed with evidence-backed approval; parent `#24` remains open.
+Current E3 update: latest implemented slice is `#1533`, proving report/label layout-object width preview-bounds refresh through the generic Studio host property path while preserving detailed selected-object bounds payloads. `#1532` is the immediately preceding unplacement transition slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1533` have been closed with evidence-backed approval; parent `#24` remains open.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
