@@ -506,9 +506,9 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1418` open; evidence audit pending | Studio host JSON now exposes non-mutating visual object outline listings with hierarchy, identity, class, caption, and count metadata |
 | `#23` | `#1417` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property lists with direct and memo-backed property metadata |
 | `#23` | `#1416` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property point reads for direct and memo-backed properties |
-| `#23` | `#1415` open; evidence audit pending | Studio host JSON now exposes non-mutating selected-object visual property-grid search over direct and memo-backed properties |
-| `#23` | `#1414` open; evidence audit pending | Studio host JSON now exposes non-mutating toolbox palette context/category/search queries over toolbox descriptors |
-| `#23` | `#1413` open; evidence audit pending | menu-item selections now expose a dedicated non-mutating menu command editor action through editor/designer surfaces |
+| `#23` | `#1415` closed | Studio host JSON now exposes non-mutating selected-object visual property-grid search over direct and memo-backed properties |
+| `#23` | `#1414` closed | Studio host JSON now exposes non-mutating toolbox palette context/category/search queries over toolbox descriptors |
+| `#23` | `#1413` closed | menu-item selections now expose a dedicated non-mutating menu command editor action through editor/designer surfaces |
 | `#23` | `#1412` closed | visual property-grid data now supports non-mutating selected-object search over property names, values, and backing metadata |
 | `#23` | `#1411` closed | toolbox palette model now supports non-mutating context/category/search queries over toolbox descriptors |
 | `#23` | `#1410` closed | data-environment selections now expose the shared property-grid editor action beside existing data-environment editor/builder actions |
