@@ -1,3 +1,4 @@
+- 2026-06-20: E3/#1541 report/label bottom-margin field editing coverage is now implemented and closed. Studio host regression coverage now proves `--set-property --record 0 --property-name BOTMARGIN --property-value <n> --json` persists direct FRX and LBX page setup field edits through the existing generic property-edit path, and refreshed `reportLayout` JSON updates bottom-margin metadata while preserving memo-derived top margin/grid values, setting counts, and field provenance. Validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `git diff --check`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1540 report/label column-spacing field editing coverage is now implemented and closed. Studio host regression coverage now proves `--set-property --record 0 --property-name COLSPACING --property-value <n> --json` persists direct FRX and LBX column setup field edits through the existing generic property-edit path, and refreshed `reportLayout` JSON updates column-spacing metadata while preserving memo-derived column count/width values, setting counts, and field provenance. Validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `git diff --check`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1539 report/label column-width field editing coverage is now implemented and closed. Studio host regression coverage now proves `--set-property --record 0 --property-name COLWIDTH --property-value <n> --json` persists direct FRX and LBX column setup field edits through the existing generic property-edit path, and refreshed `reportLayout` JSON updates column-width metadata while preserving memo-derived column count/spacing values, setting counts, and field provenance. Validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `git diff --check`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1538 report/label column-count field editing coverage is now implemented and closed. Studio host regression coverage now proves `--set-property --record 0 --property-name COLS --property-value <n> --json` persists direct FRX and LBX column setup field edits through the existing generic property-edit path, and refreshed `reportLayout` JSON updates column-count metadata while preserving memo-derived column width/spacing values, setting counts, and field provenance. Validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `git diff --check`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open for the next E3 child slice.
@@ -1476,7 +1477,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 evidence-audit cleanup"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1540 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1541 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1547,7 +1548,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>evidence-audit cleanup<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1540 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1541 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
