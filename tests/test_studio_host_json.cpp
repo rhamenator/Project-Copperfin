@@ -6227,6 +6227,75 @@ void test_studio_host_json_updates_report_layout_object_expressions_by_record_se
     }
 }
 
+void test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_expression_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_expression_clear = [&](const fs::path& asset_path,
+                                          const std::string& title,
+                                          const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "3",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " layout expression clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " layout expression clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1558: report/label layout object expression clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1558: report/label layout object expression clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1558: report/label layout object expression clear should preserve selected object availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1558: report/label layout object expression clear should preserve object selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectIndex\": 0",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"field-guid\"",
+                "\"titleFieldIndex\": 9",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#1558: report/label layout object expression clear should refresh selected object expression metadata");
+        expect_not_contains(clear_process.stdout_text, "\"expression\": \"customer.company\"",
+                            "#1558: report/label layout object expression clear should not leak stale expression values");
+    };
+
+    run_expression_clear(temp_root / "expression_clear.frx", "expression_clear.frx", "report");
+    run_expression_clear(temp_root / "expression_clear.lbx", "expression_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -53095,6 +53164,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(argv[1]);
