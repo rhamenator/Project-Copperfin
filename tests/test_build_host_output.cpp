@@ -29,11 +29,14 @@ void expect(bool condition, const std::string& message) {
 
 std::string getenv_value(const std::string& name) {
 #ifdef _WIN32
-    const char* value = std::getenv(name.c_str());
-    if (value == nullptr) {
+    char* value = nullptr;
+    std::size_t value_size = 0;
+    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
         return {};
     }
-    return value;
+    std::string result(value);
+    std::free(value);
+    return result;
 #else
     const char* value = std::getenv(name.c_str());
     if (value == nullptr) {

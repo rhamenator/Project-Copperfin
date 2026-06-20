@@ -1,6 +1,7 @@
 #include "copperfin/studio/context_editor_actions.h"
 
 #include <algorithm>
+#include <iterator>
 #include <string>
 
 namespace copperfin::studio {

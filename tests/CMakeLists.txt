@@ -70,6 +70,7 @@ target_link_libraries(test_studio_host_json PRIVATE cf_vfp_assets)
 
 if(MSVC)
     target_compile_options(test_studio_host_json PRIVATE /W4 /permissive-)
+    target_compile_options(test_studio_host_json PRIVATE /bigobj)
 else()
     target_compile_options(test_studio_host_json PRIVATE -Wall -Wextra -Wpedantic)
 endif()
@@ -94,6 +95,9 @@ copperfin_add_test(test_dbf_table cf_vfp_assets
 copperfin_add_test(test_visual_asset_editor cf_vfp_assets
     test_visual_asset_editor.cpp
 )
+if(MSVC)
+    target_compile_options(test_visual_asset_editor PRIVATE /bigobj)
+endif()
 
 copperfin_add_test(test_product_subsystems cf_design_model
     test_product_subsystems.cpp

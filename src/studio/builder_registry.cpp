@@ -1,6 +1,7 @@
 #include "copperfin/studio/builder_registry.h"
 
 #include <algorithm>
+#include <iterator>
 #include <string>
 #include <utility>
 
