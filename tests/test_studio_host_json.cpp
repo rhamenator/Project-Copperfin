@@ -7029,6 +7029,97 @@ void test_studio_host_json_updates_report_settings_memos_by_record_selection(con
     }
 }
 
+void test_studio_host_json_clears_report_settings_memos_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_settings_memo_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_settings_clear = [&](const fs::path& asset_path,
+                                        const std::string& title,
+                                        const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " settings memo clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " settings memo clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1556: report/label settings memo clear should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.direct_field,
+               "#1556: report/label settings memo clear should preserve the direct EXPR field carrier");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1556: report/label settings memo clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1556: report/label settings memo clear should preserve direct-field page setup availability");
+        expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
+                        "#1556: report/label settings memo clear should clear orientation availability");
+        expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
+                        "#1556: report/label settings memo clear should clear orientation codes");
+        expect_contains(clear_process.stdout_text, "\"paperSizeAvailable\": false",
+                        "#1556: report/label settings memo clear should clear paper-size availability");
+        expect_contains(clear_process.stdout_text, "\"paperSizeCode\": 0",
+                        "#1556: report/label settings memo clear should clear paper-size codes");
+        expect_contains(clear_process.stdout_text, "\"topMarginAvailable\": true",
+                        "#1556: report/label settings memo clear should preserve direct top-margin availability");
+        expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
+                        "#1556: report/label settings memo clear should preserve direct top margins");
+        expect_contains(clear_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1556: report/label settings memo clear should clear bottom-margin availability");
+        expect_contains(clear_process.stdout_text, "\"bottomMargin\": 0",
+                        "#1556: report/label settings memo clear should clear bottom margins");
+        expect_contains(clear_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        "#1556: report/label settings memo clear should clear vertical-grid availability");
+        expect_contains(clear_process.stdout_text, "\"gridVertical\": 0",
+                        "#1556: report/label settings memo clear should clear vertical grid spacing");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#1556: report/label settings memo clear should clear horizontal-grid availability");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontal\": 0",
+                        "#1556: report/label settings memo clear should clear horizontal grid spacing");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 1",
+                        "#1556: report/label settings memo clear should remove memo-derived settings from counts");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            "#1556: report/label settings memo clear should preserve remaining direct-field provenance");
+    };
+
+    run_settings_clear(temp_root / "settings_memo_clear.frx", "settings_memo_clear.frx", "report");
+    run_settings_clear(temp_root / "settings_memo_clear.lbx", "settings_memo_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_page_margin_fields_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -52941,6 +53032,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_bottom_margin_fields_by_record_selection(argv[1]);
