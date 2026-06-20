@@ -7438,6 +7438,91 @@ void test_studio_host_json_updates_report_orientation_fields_by_record_selection
     }
 }
 
+void test_studio_host_json_clears_report_orientation_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_orientation_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_orientation_clear = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_orientation_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "ORIENTATION",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " orientation field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " orientation field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1548: report/label orientation field clear should exit successfully");
+        const auto orientation_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "ORIENTATION"
+        });
+        expect(orientation_property.ok && orientation_property.exists && orientation_property.value.empty(),
+               "#1548: report/label orientation field clear should blank the ORIENTATION field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1548: report/label orientation field clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1548: report/label orientation field clear should preserve page setup availability");
+        expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
+                        "#1548: report/label orientation field clear should clear orientation availability");
+        expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
+                        "#1548: report/label orientation field clear should clear orientation codes");
+        expect_contains(clear_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1548: report/label orientation field clear should preserve memo-derived paper-size codes");
+        expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
+                        "#1548: report/label orientation field clear should preserve memo-derived top margins");
+        expect_contains(clear_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1548: report/label orientation field clear should preserve memo-derived bottom margins");
+        expect_contains(clear_process.stdout_text, "\"gridVertical\": 4",
+                        "#1548: report/label orientation field clear should preserve memo-derived vertical grid spacing");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1548: report/label orientation field clear should preserve memo-derived horizontal grid spacing");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 5",
+                        "#1548: report/label orientation field clear should remove the direct setting from counts");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            "#1548: report/label orientation field clear should preserve remaining setting provenance");
+    };
+
+    run_orientation_clear(temp_root / "orientation-clear.frx", "orientation-clear.frx", "report");
+    run_orientation_clear(temp_root / "orientation-clear.lbx", "orientation-clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_paper_size_fields_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -52302,6 +52387,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_grid_vertical_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_grid_horizontal_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_orientation_fields_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_orientation_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_count_fields_by_record_selection(argv[1]);
