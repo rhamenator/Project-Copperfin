@@ -6423,6 +6423,89 @@ void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_
     }
 }
 
+void test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_left_bounds_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_left_update = [&](const fs::path& asset_path,
+                                     const std::string& title,
+                                     const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "4",
+                "--property-name", "HPOS",
+                "--property-value", "-200",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " layout left update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " layout left update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1534: report/label layout object left update should exit successfully");
+        const auto left_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 4U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HPOS"
+        });
+        expect(left_property.ok && left_property.exists && left_property.value == "-200",
+               "#1534: report/label layout object left update should persist the HPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1534: report/label layout object left update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1534: report/label layout object left update should preserve preview bounds availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": -200",
+                        "#1534: report/label layout object left update should refresh preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1534: report/label layout object left update should preserve preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 5400",
+                        "#1534: report/label layout object left update should refresh preview widths");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1534: report/label layout object left update should preserve placed counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1534: report/label layout object left update should preserve selected containing-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 4",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"left\": -200",
+                "\"width\": 1800",
+                "\"right\": 1600",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 450",
+                "\"objectKind\": \"label\""
+            },
+            "#1534: report/label layout object left update should refresh selected object bounds and preserve section membership");
+    };
+
+    run_left_update(temp_root / "left_bounds.frx", "left_bounds.frx", "report");
+    run_left_update(temp_root / "left_bounds.lbx", "left_bounds.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -51101,6 +51184,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
