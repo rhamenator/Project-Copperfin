@@ -6031,6 +6031,77 @@ void test_studio_host_json_deletes_report_sections_by_record_selection(const std
     }
 }
 
+void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_section_height_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_section_height_update = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& updated_height,
+                                               const std::string& updated_total,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "1",
+                "--property-name", "HEIGHT",
+                "--property-value", updated_height,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " section height update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " section height update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1525: report/label section height update should exit successfully");
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HEIGHT"
+        });
+        expect(height_property.ok && height_property.exists && height_property.value == updated_height,
+               "#1525: report/label section height update should persist the HEIGHT field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1525: report/label section height update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"sectionHeightTotal\": " + updated_total,
+                        "#1525: report/label section height update should refresh section height totals");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1525: report/label section height update should preserve placed object counts");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"recordIndex\": 1",
+                "\"height\": " + updated_height,
+                "\"bottom\": " + updated_height,
+                "\"objectCount\": 1"
+            },
+            "#1525: report/label section height update should refresh selected section geometry");
+    };
+
+    run_section_height_update(temp_root / "section_height.frx", "section_height.frx", "2400", "7400", "report");
+    run_section_height_update(temp_root / "section_height.lbx", "section_height.lbx", "2600", "7600", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_label_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -50385,6 +50456,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
+    test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);

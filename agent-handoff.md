@@ -28,7 +28,7 @@ Important:
 
 Current priority order:
 
-Current E3 update: latest implemented slice is `#1524`, exposing compact non-mutating report/label deleted preview bounds under `reportLayout` while preserving existing live preview/section/object/settings/selection/page/column/object-kind/section-kind/section-height/placed-object/deleted-placement payloads. Parent `#24` remains open; create or pick the next prompt-sized E3 child before more report/label implementation work.
+Current E3 update: latest implemented slice is `#1525`, proving report/label section-height editing through `--set-property --record <section> --property-name HEIGHT` while preserving refreshed `reportLayout` geometry and object membership. Parent `#24` remains open; create or pick the next prompt-sized E3 child before more report/label implementation work.
 
 CI update: a native toolbox-creation planner assertion patch is now applied after hosted Linux native logs from an older pre-fix commit showed first-target reservation checks failing. The tests now expect the first planned append target to equal `before_count`, then subsequent targets to increase, matching existing create-execution assertions and implementation semantics. Local validation passed with syntax-only compilation, the test object target, and `git diff --check`; hosted Native CMake Validation remains authoritative.
 
@@ -58,11 +58,11 @@ Additional E2 closure note: `#1233`, `#1235`, `#1237`, `#1268`, and `#1270` were
 
 Additional E2 closure note: `#1283`, `#1284`, and `#1287` were closed in GitHub on 2026-06-20 after existing implementation comments plus fresh focused validation confirmed shipped editor-action, designer, and toolbox dispatch-catalog routing through shared invocation-admission catalog seams. Parent `#23` remains open; other open E2 children still need live-state review before any closure.
 
-Current E3 update: latest implemented slice is `#1524`, exposing compact non-mutating report/label deleted preview bounds JSON while preserving detailed section/object/settings payloads. `#1523` is the immediately preceding deleted placed/unplaced summary slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1524` have been closed with evidence-backed approval; parent `#24` remains open.
+Current E3 update: latest implemented slice is `#1525`, proving report/label section-height editing through the generic Studio host property path while preserving detailed section/object/settings payloads. `#1524` is the immediately preceding deleted-preview-bounds slice. It follows the completed local E2 host-exposure sweep through `#1451`. Child issues `#1452`-`#1525` have been closed with evidence-backed approval; parent `#24` remains open.
 
 **Phase A critical path is COMPLETE as of 2026-06-13.** All A3 lane issues (#7, #8, #92-#101) are closed.
 
-**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1524`, exposing non-mutating report/label deleted preview bounds JSON while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, unmatched-selection JSON coverage, and selected report/label layout parity through `#1524`.
+**D1/#19 and E1/#22 are COMPLETE as of 2026-06-16.** The live blocker path has moved through E2/#23 into E3/#24. Latest implemented slice: `#1525`, proving report/label section-height editing through the generic Studio host property path while preserving the existing visual-object host-wrapper, selected-context toolbox, dispatch-sourced toolbox, designer-context, builder, editor-action, visual outline, metadata, query, unmatched-selection JSON coverage, and selected report/label layout parity through `#1525`.
 
 Next: continue E3/#24 by creating the next prompt-sized report/label designer fidelity child before coding unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not reopen closed D1/#19, E1/#22, native-wrapper, transpilation, debugger, or E2 host-wrapper slices unless new evidence shows a regression.
 
