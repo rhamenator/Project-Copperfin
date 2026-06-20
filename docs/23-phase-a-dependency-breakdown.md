@@ -356,7 +356,7 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#24` | `#1522` in progress | Studio host JSON exposes compact non-mutating report/label placed-object counts while preserving detailed layout payloads |
+| `#24` | `#1522` closed | Studio host JSON exposes compact non-mutating report/label placed-object counts while preserving detailed layout payloads |
 | `#24` | `#1521` closed | Studio host JSON exposes compact non-mutating report/label live and deleted section-height totals while preserving detailed layout payloads |
 | `#24` | `#1520` closed | Studio host JSON exposes compact non-mutating report/label live and deleted section band-kind summary counts while preserving detailed layout payloads |
 | `#24` | `#1519` closed | Studio host JSON exposes compact non-mutating report/label live, unplaced, and deleted object-kind summary counts while preserving detailed layout payloads |
