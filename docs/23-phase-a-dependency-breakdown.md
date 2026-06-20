@@ -474,11 +474,11 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#23` | `#1450` closed | Studio host JSON now exposes visual-object reorder-batch mutations with in-memory rollback/no-write failure handling and committed mutation metadata |
 | `#23` | `#1449` closed | Studio host JSON now exposes visual-object rename-batch mutations with rollback and committed mutation metadata |
 | `#23` | `#1448` closed | Studio host JSON now exposes visual-object duplicate-batch mutations with rollback and committed mutation metadata |
-| `#23` | `#1447` open; evidence audit pending | Studio host JSON now exposes multi-object property update-batch mutations with nested rollback and undo metadata |
-| `#23` | `#1446` open; evidence audit pending | Studio host JSON now exposes selected-object property update-batch mutations with rollback and undo metadata |
-| `#23` | `#1445` open; evidence audit pending | Studio host JSON now exposes visual-object reparent-batch mutations with rollback, undo metadata, and cycle rejection |
-| `#23` | `#1444` open; evidence audit pending | Studio host JSON now exposes selected-object property reorder-batch mutations with rollback and undo metadata |
-| `#23` | `#1443` open; evidence audit pending | Studio host JSON now exposes selected-object property reorder mutations with undo metadata |
+| `#23` | `#1447` closed | Studio host JSON now exposes multi-object property update-batch mutations with nested rollback and undo metadata |
+| `#23` | `#1446` closed | Studio host JSON now exposes selected-object property update-batch mutations with rollback and undo metadata |
+| `#23` | `#1445` closed | Studio host JSON now exposes visual-object reparent-batch mutations with rollback, undo metadata, and cycle rejection |
+| `#23` | `#1444` closed | Studio host JSON now exposes selected-object property reorder-batch mutations with rollback and undo metadata |
+| `#23` | `#1443` closed | Studio host JSON now exposes selected-object property reorder mutations with undo metadata |
 | `#23` | `#1442` closed | Studio host JSON now exposes selected-object property rename-batch mutations with rollback and undo metadata |
 | `#23` | `#1441` closed | Studio host JSON now exposes selected-object property rename mutations with undo metadata |
 | `#23` | `#1440` closed | Studio host JSON now exposes selected-object property move-batch mutations with rollback and undo metadata |
