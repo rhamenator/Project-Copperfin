@@ -1,3 +1,4 @@
+- 2026-06-20: E3/#1557 report/label column setup memo clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name EXPR --json` on FRX and LBX root column setup clears memo-derived column setup metadata from refreshed `reportLayout` JSON without leaking stale column count, width, spacing, or setting provenance while preserving the direct EXPR field carrier. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1556 report/label settings memo clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name EXPR --json` on FRX and LBX root settings clears memo-derived page setup metadata from refreshed `reportLayout` JSON without leaking stale orientation, paper-size, bottom-margin, or grid values while preserving the direct top-margin field carrier and provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1555 report/label column-spacing field clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name COLSPACING --json` blanks direct FRX and LBX column setup fields through the existing generic property-clear path, and refreshed `reportLayout` JSON clears column-spacing availability/value while preserving memo-derived column count/width values, setting counts, and remaining field provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
 - 2026-06-20: E3/#1554 report/label column-width field clear coverage is now implemented and closed. Studio host regression coverage now proves `--clear-property --record 0 --property-name COLWIDTH --json` blanks direct FRX and LBX column setup fields through the existing generic property-clear path, and refreshed `reportLayout` JSON clears column-width availability/value while preserving memo-derived column count/spacing values, setting counts, and remaining field provenance. No production change was required. Validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#24` remains open for the next E3 child slice.
@@ -1491,7 +1492,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1556 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1557 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1562,7 +1563,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1556 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1557 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]

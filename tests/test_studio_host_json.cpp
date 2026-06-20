@@ -8667,6 +8667,79 @@ void test_studio_host_json_updates_report_column_setup_by_record_selection(const
     }
 }
 
+void test_studio_host_json_clears_report_column_setup_by_record_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_column_setup_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_column_setup_clear = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_column_setup_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " column setup clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " column setup clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1557: report/label column setup clear should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.direct_field,
+               "#1557: report/label column setup clear should preserve the direct EXPR field carrier");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1557: report/label column setup clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1557: report/label column setup clear should not fabricate page setup availability");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1557: report/label column setup clear should clear column setup availability");
+        expect_contains(clear_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1557: report/label column setup clear should clear column-count availability");
+        expect_contains(clear_process.stdout_text, "\"columnCount\": 0",
+                        "#1557: report/label column setup clear should clear column counts");
+        expect_contains(clear_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1557: report/label column setup clear should clear column-width availability");
+        expect_contains(clear_process.stdout_text, "\"columnWidth\": 0",
+                        "#1557: report/label column setup clear should clear column widths");
+        expect_contains(clear_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        "#1557: report/label column setup clear should clear column-spacing availability");
+        expect_contains(clear_process.stdout_text, "\"columnSpacing\": 0",
+                        "#1557: report/label column setup clear should clear column spacing");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1557: report/label column setup clear should remove memo-derived settings from counts");
+    };
+
+    run_column_setup_clear(temp_root / "column_setup_clear.frx", "column_setup_clear.frx", "report");
+    run_column_setup_clear(temp_root / "column_setup_clear.lbx", "column_setup_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_label_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -53052,6 +53125,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_setup_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
