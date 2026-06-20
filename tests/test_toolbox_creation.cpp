@@ -3072,6 +3072,7 @@ void test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_muta
             {.property_name = "CAPTION", .property_value = "Batch Catalog"}
         }
     });
+    const auto* label_plan = find_create_batch_plan(form_catalog.batch_plan.plan.plans, "label");
     const auto* textbox_plan = find_create_batch_plan(form_catalog.batch_plan.plan.plans, "textbox");
     const auto* command_plan = find_create_batch_plan(form_catalog.batch_plan.plan.plans, "commandbutton");
 
@@ -3084,8 +3085,11 @@ void test_toolbox_creation_batch_plan_catalog_plans_context_batches_without_muta
             form_catalog.dry_run &&
             !form_catalog.mutates_asset,
         "#1257: form toolbox batch create catalogs should summarize one context batch");
-    expect(textbox_plan != nullptr &&
-            textbox_plan->target_record_index == before_count &&
+    expect(label_plan != nullptr &&
+            label_plan->target_record_index == before_count &&
+            label_plan->object_name == "lbl1" &&
+            textbox_plan != nullptr &&
+            textbox_plan->target_record_index > label_plan->target_record_index &&
             textbox_plan->object_name == "txt2" &&
             textbox_plan->parent_name == "frmMain" &&
             has_field_value(textbox_plan->field_values, "CLASS", "TextBox") &&
@@ -3179,6 +3183,7 @@ void test_toolbox_creation_selection_batch_plan_catalog_plans_context_batches_wi
                 {.property_name = "CAPTION", .property_value = "Selection Batch Catalog"}
             }
         });
+    const auto* visual_label_plan = find_create_batch_plan(visual_catalog.batch_plan.plan.plans, "label");
     const auto* visual_textbox_plan = find_create_batch_plan(visual_catalog.batch_plan.plan.plans, "textbox");
     const auto* visual_command_plan = find_create_batch_plan(visual_catalog.batch_plan.plan.plans, "commandbutton");
 
@@ -3194,8 +3199,11 @@ void test_toolbox_creation_selection_batch_plan_catalog_plans_context_batches_wi
             visual_catalog.dry_run &&
             !visual_catalog.mutates_asset,
         "#1296: visual selection toolbox batch create catalogs should summarize form batches");
-    expect(visual_textbox_plan != nullptr &&
-            visual_textbox_plan->target_record_index == before_count &&
+    expect(visual_label_plan != nullptr &&
+            visual_label_plan->target_record_index == before_count &&
+            visual_label_plan->object_name == "lbl1" &&
+            visual_textbox_plan != nullptr &&
+            visual_textbox_plan->target_record_index > visual_label_plan->target_record_index &&
             visual_textbox_plan->object_name == "txt2" &&
             visual_textbox_plan->parent_name == "frmMain" &&
             has_field_value(visual_textbox_plan->field_values, "CLASS", "TextBox") &&
@@ -3283,6 +3291,7 @@ void test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_
         },
         .admit_create_operation = true
     });
+    const auto* label_plan = find_create_batch_plan(form_catalog.dispatch.plan.plans, "label");
     const auto* textbox_plan = find_create_batch_plan(form_catalog.dispatch.plan.plans, "textbox");
     const auto* command_plan = find_create_batch_plan(form_catalog.dispatch.plan.plans, "commandbutton");
 
@@ -3298,8 +3307,11 @@ void test_toolbox_creation_batch_dispatch_catalog_plans_context_batches_without_
         "#1255: admitted toolbox batch create dispatch catalogs should summarize one context batch");
     expect(form_catalog.dispatch.plan.item_count == form_catalog.item_count &&
             form_catalog.dispatch.plan.plans.size() == form_catalog.item_count &&
+            label_plan != nullptr &&
+            label_plan->target_record_index == before_count &&
+            label_plan->object_name == "lbl1" &&
             textbox_plan != nullptr &&
-            textbox_plan->target_record_index == before_count &&
+            textbox_plan->target_record_index > label_plan->target_record_index &&
             textbox_plan->object_name == "txt2" &&
             command_plan != nullptr &&
             command_plan->target_record_index > textbox_plan->target_record_index &&
@@ -3402,6 +3414,7 @@ void test_toolbox_creation_selection_batch_dispatch_catalog_plans_context_batche
             },
             .admit_create_operation = true
         });
+    const auto* visual_label_plan = find_create_batch_plan(visual_catalog.dispatch.plan.plans, "label");
     const auto* visual_textbox_plan = find_create_batch_plan(visual_catalog.dispatch.plan.plans, "textbox");
     const auto* visual_command_plan = find_create_batch_plan(visual_catalog.dispatch.plan.plans, "commandbutton");
 
@@ -3418,8 +3431,11 @@ void test_toolbox_creation_selection_batch_dispatch_catalog_plans_context_batche
             !visual_catalog.dry_run &&
             visual_catalog.mutates_asset,
         "#1298: admitted visual selection toolbox batch create dispatch catalogs should summarize form batches");
-    expect(visual_textbox_plan != nullptr &&
-            visual_textbox_plan->target_record_index == before_count &&
+    expect(visual_label_plan != nullptr &&
+            visual_label_plan->target_record_index == before_count &&
+            visual_label_plan->object_name == "lbl1" &&
+            visual_textbox_plan != nullptr &&
+            visual_textbox_plan->target_record_index > visual_label_plan->target_record_index &&
             visual_textbox_plan->object_name == "txt2" &&
             visual_textbox_plan->parent_name == "frmMain" &&
             has_field_value(visual_textbox_plan->field_values, "CLASS", "TextBox") &&
