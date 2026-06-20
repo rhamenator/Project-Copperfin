@@ -14,9 +14,9 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 remains open with many prompt-sized children still open in GitHub; treat them as evidence-audit/closure cleanup unless fresh implementation evidence shows a real remaining local miss.
-- Latest implemented E3 slice: `#1544`, which adds report/label orientation direct field handling and focused Studio host JSON regression coverage while preserving refreshed layout JSON, page setup metadata, memo-derived settings, and field provenance. Full child closure is pending rebuilt-host or hosted CI evidence because the local host rebuild remains blocked in the known slow `src/studio/vs_launch_contract.cpp` compile path. `#1543` is the immediately preceding closed horizontal-grid field slice. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
+- Latest implemented E3 slice: `#1544`, which proves report/label orientation direct field edits through the Studio host generic property path while preserving refreshed layout JSON, page setup metadata, memo-derived settings, and field provenance. `#1543` is the immediately preceding closed horizontal-grid field slice. Latest implemented E2 slice: `#1451`, which exposes visual object subtree duplication through Studio host JSON. Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
 - Current continuation shape: continue prompt-sized E3/#24 children in report/label designer fidelity, report/label section editing, report/label output preview metadata, and layout/runtime parity seams, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
-- Next work: finish rebuilt-host or hosted CI validation for `#1544`, then close it with evidence if the Studio host executable path passes. Only create the next prompt-sized `#24` child after `#1544` is resolved unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
+- Next work: create the next prompt-sized `#24` child in report/label designer fidelity unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The current visual-asset editor API scan reports no remaining visual-object/visual-asset host exposure misses. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Issue Tree Status" table.
 - If any older handoff, prompt, transfer note, or planning text says to redirect to `#151`, `#152`, `#153`, `#92`, `#93`, `#94`, or `#154`-`#203` as the active critical path, treat that text as stale unless the corresponding GitHub issue has been reopened with new regression evidence.
 - Do not continue work by counting forward through any historical numbered issue list in this file; use the live GitHub issue tree and the "Current Issue Tree Status" table instead.
@@ -356,7 +356,7 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
-| `#24` | `#1544` open | Studio host regression coverage added for FRX/LBX root settings ORIENTATION field edits; closure pending rebuilt-host validation |
+| `#24` | `#1544` closed | Studio host regression coverage proves FRX/LBX root settings ORIENTATION field edits persist and refresh page setup metadata |
 | `#24` | `#1543` closed | Studio host regression coverage proves FRX/LBX root settings GRIDH field edits persist and refresh page setup metadata |
 | `#24` | `#1542` closed | Studio host regression coverage proves FRX/LBX root settings GRIDV field edits persist and refresh page setup metadata |
 | `#24` | `#1541` closed | Studio host regression coverage proves FRX/LBX root settings BOTMARGIN field edits persist and refresh page setup metadata |
@@ -500,11 +500,10 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 Decision rule for agents:
 
 1. Check live GitHub open issues under `#24` first.
-2. If `#1544` remains open, finish rebuilt-host or hosted CI validation and close it with evidence if the Studio host executable path passes.
-3. If another prompt-sized report/label designer-fidelity child exists, work that child.
-4. If no such child exists, create the next prompt-sized `#24` child for the highest-value missing report/label non-mutating planning, host exposure, or runtime-parity seam.
-5. Check `#23` only for evidence-audit closure cleanup or fresh visual-asset host-wrapper regressions.
-6. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
+2. If a prompt-sized report/label designer-fidelity child exists, work that child.
+3. If no such child exists, create the next prompt-sized `#24` child for the highest-value missing report/label non-mutating planning, host exposure, or runtime-parity seam.
+4. Check `#23` only for evidence-audit closure cleanup or fresh visual-asset host-wrapper regressions.
+5. Ignore closed historical issue sequences below; they are audit evidence, not a queue.
 
 Historical-closed prompt-sized native slice queues:
 
