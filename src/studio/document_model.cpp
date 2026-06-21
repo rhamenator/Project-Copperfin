@@ -811,10 +811,16 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
         if (table_result.ok) {
             document.table_preview_available = true;
             document.table_preview = std::move(table_result.table);
+            if (request.selection_record_available &&
+                find_preview_record(document, request.record_index) == nullptr) {
+                document.selection_record_available = false;
+            }
         }
     }
 
-    if (!document.selection_record_available && supports_unique_id_record_selection(document.kind)) {
+    if (!document.selection_record_available &&
+        !request.selection_record_available &&
+        supports_unique_id_record_selection(document.kind)) {
         const auto selection_record_index = find_preview_record_index_by_unique_id(document, request.unique_id);
         if (selection_record_index.has_value()) {
             document.selection_record_available = true;

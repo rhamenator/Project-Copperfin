@@ -24046,6 +24046,97 @@ void test_studio_host_json_selects_deep_report_records_by_record_selector(
     }
 }
 
+void test_studio_host_json_clears_out_of_range_report_record_selectors(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_out_of_range_report_record_selector_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_out_of_range_record_selection = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_padded_stable_object_json(asset_path);
+
+        const auto process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--record", "99",
+                "--unique-id", "padded-object-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " out-of-range record selector stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " out-of-range record selector stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1713: out-of-range report/label record selectors should keep JSON inspection non-failing");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1713: out-of-range record selectors should preserve document titles");
+        if (title.find(".lbx") != std::string::npos) {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1713: out-of-range record selectors should retain label identity");
+        }
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"launchSelection\": {",
+                "\"recordAvailable\": false",
+                "\"recordIndex\": 99"
+            },
+            "#1713: out-of-range record selectors should preserve the requested record index without marking it available");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        "#1713: out-of-range record selectors should not advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1713: out-of-range record selectors should expose explicit no-selection kind");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1713: out-of-range record selectors should not fall back to conflicting unique-id objects");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1713: out-of-range record selectors should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1713: out-of-range record selectors should not advertise containing-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1713: out-of-range record selectors should serialize null containing sections");
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1713: out-of-range record selectors should not advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSection\": null",
+                        "#1713: out-of-range record selectors should serialize null selected sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1713: out-of-range record selectors should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1713: out-of-range record selectors should serialize null selected settings");
+        expect_contains(process.stdout_text, "\"sectionCount\": 1",
+                        "#1713: out-of-range record selectors should preserve live section counts");
+        expect_contains(process.stdout_text, "\"settingCount\": 1",
+                        "#1713: out-of-range record selectors should preserve live setting counts");
+        expect_contains(process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1713: out-of-range record selectors should preserve live object counts");
+        expect_not_contains(process.stdout_text, "\"selectedReportObject\": {",
+                            "#1713: out-of-range record selectors should not fall back to the valid unique-id selector");
+    };
+
+    run_out_of_range_record_selection(temp_root / "out_of_range_record.frx",
+                                      "out_of_range_record.frx",
+                                      "report");
+    run_out_of_range_record_selection(temp_root / "out_of_range_record.lbx",
+                                      "out_of_range_record.lbx",
+                                      "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_selects_deep_report_records_by_stable_selector(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -70829,6 +70920,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selector(argv[1]);
     test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(argv[1]);
     test_studio_host_json_selects_deep_report_records_by_record_selector(argv[1]);
+    test_studio_host_json_clears_out_of_range_report_record_selectors(argv[1]);
     test_studio_host_json_selects_deep_report_records_by_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_deep_ambiguous_stable_selector(argv[1]);
     test_studio_host_json_selects_deep_report_sections_and_settings_by_stable_selector(argv[1]);
