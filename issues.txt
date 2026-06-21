@@ -248,11 +248,6 @@
 1161	OPEN	E2/#23 slice: Expose host back-style-object command		2026-06-18T08:41:50Z
 1160	OPEN	E2/#23 slice: Expose host mdi-form-object command		2026-06-18T08:31:44Z
 1159	OPEN	E2/#23 slice: Expose host half-height-caption-object command		2026-06-18T08:22:24Z
-1158	OPEN	E2/#23 slice: Expose host movable-object command		2026-06-18T08:12:38Z
-1157	OPEN	E2/#23 slice: Expose host min-width-object command		2026-06-18T08:04:10Z
-1156	OPEN	E2/#23 slice: Expose host min-height-object command		2026-06-18T07:55:47Z
-1155	OPEN	E2/#23 slice: Expose host min-button-object command		2026-06-18T07:46:08Z
-1154	OPEN	E2/#23 slice: Expose host max-top-object command		2026-06-18T07:37:34Z
 1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
 1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
 1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
