@@ -8732,6 +8732,97 @@ void test_studio_host_json_updates_deleted_report_section_tops_by_record_selecti
     }
 }
 
+void test_studio_host_json_clears_deleted_report_section_tops_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_section_top_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_section_top_clear = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_deleted_section_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "1",
+                "--property-name", "VPOS",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted section top clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted section top clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1578: deleted report/label section top clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1578: deleted report/label section top clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"sectionCount\": 0",
+                        "#1578: deleted report/label section top clear should not fabricate live sections");
+        expect_contains(clear_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1578: deleted report/label section top clear should preserve deleted section counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1578: deleted report/label section top clear should preserve selected section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1578: deleted report/label section top clear should preserve selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 0",
+                "\"height\": 5000",
+                "\"bottom\": 5000"
+            },
+            "#1578: deleted report/label section top clear should refresh deleted-section geometry");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 0",
+                "\"height\": 5000",
+                "\"bottom\": 5000"
+            },
+            "#1578: deleted report/label section top clear should refresh selected-section geometry");
+        expect_contains(clear_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1578: deleted report/label section top clear should preserve unplaced object accounting");
+        expect_contains(clear_process.stdout_text, "\"containingSectionId\": \"\"",
+                        "#1578: deleted report/label section top clear should not fabricate containing sections");
+    };
+
+    run_deleted_section_top_clear(temp_root / "deleted_section_top_clear.frx",
+                                  "deleted_section_top_clear.frx",
+                                  "report");
+    run_deleted_section_top_clear(temp_root / "deleted_section_top_clear.lbx",
+                                  "deleted_section_top_clear.lbx",
+                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_report_section_tops_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -54987,6 +55078,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_section_tops_by_record_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_settings_memos_by_record_selection(argv[1]);
