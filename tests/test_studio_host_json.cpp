@@ -8008,6 +8008,134 @@ void test_studio_host_json_distributes_label_layout_objects_by_stable_selectors(
     }
 }
 
+void test_studio_host_json_distributes_live_edited_report_layout_object_geometry_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_distribute_live_edited_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_live_edited_distribution = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_layout_distribution_json(asset_path);
+
+        const auto set_live_geometry = [&](const std::string& property_name,
+                                           const std::string& property_value) {
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "middle-field-guid",
+                    "--property-name", property_name,
+                    "--property-value", property_value,
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " distribute live " << property_name
+                          << " update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " distribute live " << property_name
+                          << " update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1629: live report/label layout object distribution geometry update should exit successfully");
+            expect(!visual_object_deleted(asset_path, "middle-field-guid"),
+                   "#1629: live report/label layout object distribution geometry update should preserve live state");
+        };
+
+        set_live_geometry("HPOS", "300");
+        set_live_geometry("WIDTH", "250");
+        set_live_geometry("HEIGHT", "500");
+
+        const auto distribute_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--unique-id", "middle-field-guid",
+                "--distribute-object",
+                "--distribution-mode", "horizontal",
+                "--distribute-target-unique-id", "left-field-guid",
+                "--distribute-target-unique-id", "middle-field-guid",
+                "--distribute-target-unique-id", "right-field-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (distribute_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " edited layout distribution stdout:\n"
+                      << distribute_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " edited layout distribution stderr:\n"
+                      << distribute_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(distribute_process.exit_code == 0,
+               "#1629: live edited report/label layout object distribution should exit successfully");
+        expect(visual_object_property(asset_path, "left-field-guid", "HPOS") == "100" &&
+                   visual_object_property(asset_path, "middle-field-guid", "HPOS") == "400" &&
+                   visual_object_property(asset_path, "right-field-guid", "HPOS") == "700",
+               "#1629: live edited report/label layout object distribution should distribute the edited object between endpoints");
+        expect(visual_object_property(asset_path, "middle-field-guid", "WIDTH") == "250" &&
+                   visual_object_property(asset_path, "middle-field-guid", "HEIGHT") == "500",
+               "#1629: live edited report/label layout object distribution should preserve edited size fields");
+        expect_contains(distribute_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1629: live edited report/label layout object distribution should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(distribute_process.stdout_text, "\"isLabel\": true",
+                            "#1629: live edited label layout object distribution should retain label identity");
+        }
+        expect_contains(distribute_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1629: live edited report/label layout object distribution should preserve selected-object availability");
+        expect_contains(distribute_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1629: live edited report/label layout object distribution should preserve containing-section availability");
+        expect_contains(distribute_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1629: live edited report/label layout object distribution should serialize containing-section metadata");
+        expect_contains_in_order(
+            distribute_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1100",
+                "\"sectionObjectIndex\": 1",
+                "\"sectionObjectCount\": 3",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"left\": 400",
+                "\"top\": 2600",
+                "\"width\": 250",
+                "\"right\": 650",
+                "\"height\": 500",
+                "\"bottom\": 3100"
+            },
+            "#1629: live edited report/label layout object distribution should refresh selected distributed geometry and section metadata");
+    };
+
+    run_live_edited_distribution(temp_root / "distribute_live_edited.frx",
+                                 "distribute_live_edited.frx",
+                                 "report");
+    run_live_edited_distribution(temp_root / "distribute_live_edited.lbx",
+                                 "distribute_live_edited.lbx",
+                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -60692,6 +60820,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_label_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_distributes_live_edited_report_layout_object_geometry_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_reorders_live_edited_report_layout_object_geometry_by_record_selection(argv[1]);

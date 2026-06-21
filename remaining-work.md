@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1629 live-edited report/label layout-object distribution coverage shipped: Studio host now resolves the distributed FRX/LBX source object for the final document refresh, and regression coverage proves a live object edited through host HPOS/WIDTH/HEIGHT properties can be horizontally distributed by stable ids without a record selector with computed position persisted, edited size preserved, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the distributed object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1628 live-edited report/label layout-object nudge coverage shipped: Studio host now resolves the nudged FRX/LBX source object for the final document refresh, and regression coverage proves a live object edited through host HPOS/WIDTH/HEIGHT properties can be nudged by stable ids without a record selector with delta-adjusted position persisted, edited size preserved, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the nudged object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1627 live-edited report/label layout-object snap coverage shipped: Studio host now resolves the snapped FRX/LBX source object for the final document refresh, and regression coverage proves a live object edited through host HPOS/VPOS/WIDTH/HEIGHT properties can be snapped to grid by stable ids without a record selector with rounded position persisted, edited size preserved, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the snapped object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1626 live-edited report/label layout-object resize coverage shipped: Studio host now resolves the resized FRX/LBX source object for the final document refresh, and regression coverage proves a live object edited through host HPOS/WIDTH/HEIGHT properties can be resized by stable ids without a record selector with edited left position persisted, anchor dimensions applied, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the resized object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1643,7 +1644,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1628 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1629 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1714,7 +1715,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1628 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1629 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
