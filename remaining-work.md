@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1653 stable-selector edited deleted report/label layout-object unplaced restore coverage shipped: Studio host regression coverage now proves a deleted FRX/LBX layout object can be edited by stable id for out-of-section HPOS/VPOS/HEIGHT values and restored by `--restore-object --unique-id deleted-label-guid`, with the DBF deleted flag cleared, edited unplaced geometry preserved at -300/9000/1200/700, label identity retained, live preview bounds expanded to -300/5200/9700, placed/unplaced counts refreshed to 2/2, and selected-object containing-section metadata kept unavailable/null. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1652 stable-selector edited deleted report/label layout-object restore coverage shipped: Studio host regression coverage now proves a deleted FRX/LBX layout object can be edited by stable id for HPOS/VPOS/HEIGHT and restored by `--restore-object --unique-id deleted-label-guid`, with the DBF deleted flag cleared, edited geometry preserved at 1400/3100/1200/900, label identity retained, `deletedObjectCount` cleared to 0, and live selected-object section metadata rehydrated with `detail_2` section-relative geometry. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp src/studio/document_model.cpp`, `make -C build test_studio_host_json`, `make -C build copperfin_studio_host`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1651 stable-selector deleted report/label layout-object top-position clear coverage shipped: Studio host regression coverage now proves a deleted FRX/LBX layout object VPOS can be cleared by `--clear-property --unique-id deleted-label-guid --property-name VPOS`, with VPOS blanked through the direct-field path, the DBF deleted flag preserved, label identity retained, deleted-object and selected-object top/bottom metadata cleared to 0/300, and containing-section metadata kept null without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1650 stable-selector deleted report/label layout-object top-position update coverage shipped: Studio host regression coverage now proves a deleted FRX/LBX layout object VPOS can be updated by `--set-property --unique-id deleted-label-guid --property-name VPOS --property-value 3100`, with VPOS persisted, the DBF deleted flag preserved, label identity retained, deleted-object and selected-object top/bottom metadata refreshed to 3100/3400, and containing-section metadata kept null without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1667,7 +1668,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1652 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1653 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1738,7 +1739,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1652 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1653 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
