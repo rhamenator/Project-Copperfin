@@ -3714,6 +3714,26 @@ void write_synthetic_report_table_for_stable_group_section_expression_json(
            "#1666: synthetic report table for stable group section expression JSON should be created");
 }
 
+void write_synthetic_report_table_for_stable_title_section_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "", "", ""},
+        {"9", "0", "0", "700", "title-section-guid"},
+        {"9", "4", "700", "2500", ""},
+        {"9", "7", "3200", "500", ""}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1674: synthetic report table for stable title section JSON should be created");
+}
+
 void write_synthetic_report_table_for_deleted_group_section_expression_json(
     const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_group_section_expression_json(report_path);
@@ -4779,6 +4799,104 @@ void test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_st
     run_deleted_group_footer_expression_json(temp_root / "stable_deleted_group_footer.lbx",
                                              "stable_deleted_group_footer.lbx",
                                              "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_report_title_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_title_section_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_title_section_json = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_stable_title_section_json(asset_path);
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "title-section-guid", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable title section stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable title section stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1674: stable selected report/label title section JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1674: stable selected title section JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1674: stable selected title label section JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1674: stable selected title sections should advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1674: stable selected title sections should advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1674: stable selected title sections should preserve section selection classification");
+        expect_contains(process.stdout_text, "\"sectionCount\": 3",
+                        "#1674: stable selected title section JSON should preserve live sibling section counts");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1674: stable selected title section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1674: stable selected title sections should not advertise selected-object availability");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1674: stable selected title sections should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1674: stable selected title sections should not advertise selected object-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1674: stable selected title sections should serialize null selected object sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1674: stable selected title sections should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1674: stable selected title sections should serialize null selected settings");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"title\"",
+                "\"recordIndex\": 1",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"page_footer\"",
+                "\"recordIndex\": 3"
+            },
+            "#1674: stable selected title section JSON should expose sibling section metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"title_1\"",
+                "\"bandKind\": \"title\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 3",
+                "\"top\": 0",
+                "\"height\": 700",
+                "\"bottom\": 700"
+            },
+            "#1674: stable selected title sections should expose selected section metadata");
+    };
+
+    run_title_section_json(temp_root / "stable_title_sections.frx",
+                           "stable_title_sections.frx",
+                           "report");
+    run_title_section_json(temp_root / "stable_title_sections.lbx",
+                           "stable_title_sections.lbx",
+                           "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -65746,6 +65864,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_report_title_sections_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_group_footer_expressions_by_record_selection(argv[1]);
