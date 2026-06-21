@@ -3658,6 +3658,21 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
     expect(delete_result.ok, "#1452: synthetic FRX table should mark deleted layout objects");
 }
 
+void write_synthetic_report_table_for_stable_deleted_layout_json(const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_layout_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 6U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "deleted-label-guid"
+    });
+    expect(unique_id_result.ok, "#1644: stable deleted layout fixture should seed a deleted object unique id");
+    expect(dbf_record_deleted(report_path, 6U),
+           "#1644: stable deleted layout fixture should preserve the deleted object state");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -10852,6 +10867,118 @@ void test_studio_host_json_clears_deleted_report_layout_object_width_by_record_s
     run_deleted_width_clear(temp_root / "deleted_width_clear.lbx",
                             "deleted_width_clear.lbx",
                             "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_layout_object_width_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_layout_width_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_width_update = [&](const fs::path& asset_path,
+                                              const std::string& title,
+                                              const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_layout_json(asset_path);
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1644: deleted report/label layout object stable width fixture should start deleted");
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-label-guid",
+                "--property-name", "WIDTH",
+                "--property-value", "2400",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted layout width update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted layout width update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1644: deleted report/label layout object stable width update should exit successfully");
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1644: deleted report/label layout object stable width update should preserve deleted state");
+        const auto width_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 6U,
+            .object_name = {},
+            .unique_id = "deleted-label-guid",
+            .property_name = "WIDTH"
+        });
+        expect(width_property.ok && width_property.exists && width_property.record_deleted &&
+                   width_property.value == "2400",
+               "#1644: deleted report/label layout object stable width update should persist the WIDTH field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1644: deleted report/label layout object stable width update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1644: label deleted layout object stable width update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1644: deleted report/label layout object stable width update should preserve deleted object counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1644: deleted report/label layout object stable width update should preserve selected deleted-object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1644: deleted report/label layout object stable width update should preserve object selection kind");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1644: deleted report/label layout object stable width update should not fabricate containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1644: deleted report/label layout object stable width update should serialize null containing-section metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"objectKind\": \"label\"",
+                "\"width\": 2400",
+                "\"right\": 3400"
+            },
+            "#1644: deleted report/label layout object stable width update should refresh deleted-object geometry metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"objectKind\": \"label\"",
+                "\"width\": 2400",
+                "\"right\": 3400"
+            },
+            "#1644: deleted report/label layout object stable width update should refresh selected deleted-object geometry metadata");
+        expect_not_contains(update_process.stdout_text, "\"width\": 1200",
+                            "#1644: deleted report/label layout object stable width update should not leak stale deleted-object widths");
+        expect_not_contains(update_process.stdout_text, "\"right\": 2200",
+                            "#1644: deleted report/label layout object stable width update should not leak stale deleted-object right bounds");
+    };
+
+    run_deleted_width_update(temp_root / "deleted_width_update_stable.frx",
+                             "deleted_width_update_stable.frx",
+                             "report");
+    run_deleted_width_update(temp_root / "deleted_width_update_stable.lbx",
+                             "deleted_width_update_stable.lbx",
+                             "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -62099,6 +62226,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_width_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_width_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_layout_object_width_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_left_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_left_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_height_by_record_selection(argv[1]);
