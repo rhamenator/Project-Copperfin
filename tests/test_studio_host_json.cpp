@@ -12940,6 +12940,99 @@ void test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_rec
     }
 }
 
+void test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_top_bounds_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_top_update = [&](const fs::path& asset_path,
+                                    const std::string& title,
+                                    const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "field-guid",
+                "--property-name", "VPOS",
+                "--property-value", "-1000",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable layout top update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable layout top update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1642: report/label layout object stable top update should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = "field-guid",
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.value == "-1000",
+               "#1642: report/label layout object stable top update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1642: report/label layout object stable top update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1642: label layout object stable top update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1642: report/label layout object stable top update should preserve preview bounds availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": -1000",
+                        "#1642: report/label layout object stable top update should refresh preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1642: report/label layout object stable top update should preserve preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 9100",
+                        "#1642: report/label layout object stable top update should refresh preview heights");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 1",
+                        "#1642: report/label layout object stable top update should decrement placed counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 2",
+                        "#1642: report/label layout object stable top update should increment unplaced counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1642: report/label layout object stable top update should clear selected containing-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"\"",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"objectKind\": \"field\"",
+                "\"top\": -1000",
+                "\"height\": 450",
+                "\"bottom\": -550"
+            },
+            "#1642: report/label layout object stable top update should refresh selected object top bounds and unplaced metadata");
+    };
+
+    run_top_update(temp_root / "top_bounds_stable.frx",
+                   "top_bounds_stable.frx",
+                   "report");
+    run_top_update(temp_root / "top_bounds_stable.lbx",
+                   "top_bounds_stable.lbx",
+                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -61935,6 +62028,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_section_heights_by_record_selection(argv[1]);
