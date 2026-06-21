@@ -3990,6 +3990,37 @@ void write_synthetic_report_table_for_deep_stable_object_json(
     expect(create_result.ok, "#1705: synthetic report table for deep stable object JSON should be created");
 }
 
+void write_synthetic_report_table_for_deep_ambiguous_stable_object_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview duplicate\"", "100", "500", "1000", "200", "deep-duplicate-guid"},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"5", "", "\"Deep duplicate\"", "400", "2600", "1500", "250", "DEEP-DUPLICATE-GUID"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1706: synthetic report table for deep ambiguous stable object JSON should be created");
+}
+
 void write_synthetic_report_table_for_stable_group_header_object_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -23610,6 +23641,86 @@ void test_studio_host_json_selects_deep_report_records_by_stable_selector(
     run_deep_object_selection(temp_root / "deep_selector.lbx",
                               "deep_selector.lbx",
                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_selection_for_deep_ambiguous_stable_selector(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deep_ambiguous_report_selector_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deep_ambiguous_selection = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_deep_ambiguous_stable_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "deep-duplicate-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deep ambiguous stable selector stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deep ambiguous stable selector stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1706: deep ambiguous stable report/label selectors should keep JSON inspection non-failing");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1706: deep ambiguous stable selectors should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1706: deep ambiguous stable label selectors should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        "#1706: deep ambiguous stable selectors should not advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1706: deep ambiguous stable selectors should expose explicit no-selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1706: deep ambiguous stable selectors should not advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1706: deep ambiguous stable selectors should serialize null selected objects");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1706: deep ambiguous stable selectors should not advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1706: deep ambiguous stable selectors should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1706: deep ambiguous stable selectors should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1706: deep ambiguous stable selectors should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1706: deep ambiguous stable selectors should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1706: deep ambiguous stable selectors should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 1",
+                        "#1706: deep ambiguous stable selectors should preserve live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1706: deep ambiguous stable selectors should preserve deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 9",
+                        "#1706: deep ambiguous stable selectors should parse objects beyond the default preview record limit");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1706: deep ambiguous stable selectors should preserve deleted object counts");
+        expect_not_contains(object_process.stdout_text, "\"selectedReportObject\": {",
+                            "#1706: deep ambiguous stable selectors should not select the preview-window duplicate");
+    };
+
+    run_deep_ambiguous_selection(temp_root / "deep_ambiguous_selector.frx",
+                                 "deep_ambiguous_selector.frx",
+                                 "report");
+    run_deep_ambiguous_selection(temp_root / "deep_ambiguous_selector.lbx",
+                                 "deep_ambiguous_selector.lbx",
+                                 "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -69855,6 +69966,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selector(argv[1]);
     test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(argv[1]);
     test_studio_host_json_selects_deep_report_records_by_stable_selector(argv[1]);
+    test_studio_host_json_clears_report_selection_for_deep_ambiguous_stable_selector(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_objects_by_stable_selection(argv[1]);
