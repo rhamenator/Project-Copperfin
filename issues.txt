@@ -93,36 +93,7 @@
 1316	OPEN	E2/#23 slice: Add toolbox palette launch catalog planning		2026-06-19T04:26:13Z
 1315	OPEN	E2/#23 slice: Expose toolbox object batch creation from admitted palette dispatch through host JSON		2026-06-19T04:13:51Z
 1314	OPEN	E2/#23 slice: Expose toolbox object creation from admitted palette dispatch through host JSON		2026-06-19T04:00:10Z
-1168	OPEN	E2/#23 slice: Expose host window-state-object command		2026-06-18T09:54:14Z
-1167	OPEN	E2/#23 slice: Expose host scroll-bars-object command		2026-06-18T09:43:03Z
-1166	OPEN	E2/#23 slice: Expose host special-effect-object command		2026-06-18T09:31:37Z
-1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
-1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
-1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
-1110	OPEN	E2/#23 slice: Expose host button-count-object command		2026-06-18T02:09:58Z
-1109	OPEN	E2/#23 slice: Expose host hide-selection-object command		2026-06-18T02:03:18Z
-1108	OPEN	E2/#23 slice: Expose host ole-drop-text-insertion-object command		2026-06-18T01:57:21Z
-1107	OPEN	E2/#23 slice: Expose host ole-drop-effects-object command		2026-06-18T01:51:10Z
-1106	OPEN	E2/#23 slice: Expose host ole-drop-mode-object command		2026-06-18T01:43:49Z
-1105	OPEN	E2/#23 slice: Expose host ole-drag-mode-object command		2026-06-18T01:36:25Z
-1104	OPEN	E2/#23 slice: Expose host drag-mode-object command		2026-06-18T01:29:42Z
-1103	OPEN	E2/#23 slice: Expose host drag-icon-object command		2026-06-18T01:23:39Z
-1102	OPEN	E2/#23 slice: Expose host mouse-icon-object command		2026-06-18T01:17:55Z
-1101	OPEN	E2/#23 slice: Expose host ole-drag-picture-object command		2026-06-18T01:11:47Z
-1100	OPEN	E2/#23 slice: Expose host disabled-picture-object command		2026-06-18T01:04:36Z
-1099	OPEN	E2/#23 slice: Expose host down-picture-object command		2026-06-18T00:57:53Z
 1098	OPEN	E2/#23 slice: Expose host picture-object command		2026-06-18T00:51:07Z
-1097	OPEN	E2/#23 slice: Expose host always-on-bottom-object command		2026-06-18T00:46:06Z
-1096	OPEN	E2/#23 slice: Expose host always-on-top-object command		2026-06-18T00:40:56Z
-1095	OPEN	E2/#23 slice: Expose host add-line-feeds-object command		2026-06-18T00:36:07Z
-1094	OPEN	E2/#23 slice: Expose host resizable-object command		2026-06-18T00:31:13Z
-1093	OPEN	E2/#23 slice: Expose host allow-row-sizing-object command		2026-06-18T00:26:16Z
-1092	OPEN	E2/#23 slice: Expose host allow-header-sizing-object command		2026-06-18T00:18:44Z
-1091	OPEN	E2/#23 slice: Expose host panel-link-object command		2026-06-18T00:14:11Z
-1090	OPEN	E2/#23 slice: Expose host highlight-row-object command		2026-06-18T00:10:19Z
-1089	OPEN	E2/#23 slice: Expose host split-bar-object command		2026-06-18T00:06:28Z
-1088	OPEN	E2/#23 slice: Expose host record-mark-object command		2026-06-18T00:02:58Z
-1087	OPEN	E2/#23 slice: Expose host delete-mark-object command		2026-06-17T23:57:56Z
 1086	OPEN	E2/#23 slice: Expose host allow-cell-selection-object command		2026-06-17T23:54:28Z
 1085	OPEN	E2/#23 slice: Expose host lock-screen-object command		2026-06-17T23:50:53Z
 1084	OPEN	E2/#23 slice: Expose host sparse-object command		2026-06-17T23:47:46Z
