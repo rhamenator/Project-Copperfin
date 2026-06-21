@@ -9863,6 +9863,91 @@ void test_studio_host_json_updates_report_layout_object_font_metadata_by_record_
     }
 }
 
+void test_studio_host_json_updates_report_layout_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_font_update_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_font_update = [&](const fs::path& asset_path,
+                                     const std::string& title,
+                                     const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "field-guid",
+                "--property-name", "FONTFACE",
+                "--property-value", "Consolas",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable layout font update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable layout font update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1632: report/label layout object stable font update should exit successfully");
+        const auto font_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = "field-guid",
+            .property_name = "FONTFACE"
+        });
+        expect(font_property.ok && font_property.exists && font_property.value == "Consolas",
+               "#1632: report/label layout object stable font update should persist the FONTFACE memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1632: report/label layout object stable font update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1632: label layout object stable font update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1632: report/label layout object stable font update should preserve selected object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1632: report/label layout object stable font update should preserve object selection kind");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1632: report/label layout object stable font update should preserve containing-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"sectionRelativeTop\": 600",
+                "\"objectKind\": \"field\"",
+                "\"highlightCount\": 2",
+                "\"name\": \"EXPR\", \"recordIndex\": 3",
+                "\"name\": \"FONTFACE\", \"recordIndex\": 3",
+                "\"value\": \"Consolas\""
+            },
+            "#1632: report/label layout object stable font update should refresh selected object highlight metadata");
+    };
+
+    run_font_update(temp_root / "font_update_stable.frx",
+                    "font_update_stable.frx",
+                    "report");
+    run_font_update(temp_root / "font_update_stable.lbx",
+                    "font_update_stable.lbx",
+                    "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_deleted_report_layout_object_font_metadata_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -61008,6 +61093,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_layout_object_expression_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_layout_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_font_metadata_by_record_selection(argv[1]);
