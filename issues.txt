@@ -26,22 +26,6 @@
 180	OPEN	G2/#28 slice: Tighten definition/reference navigation fidelity		2026-05-01T02:13:14Z
 179	OPEN	G1/#27 slice: Tighten signature-help and completion fidelity		2026-05-01T02:13:12Z
 178	OPEN	G1/#27 slice: Tighten symbol resolution fidelity		2026-05-01T02:13:09Z
-177	OPEN	F2/#26 slice: Tighten standalone build/debug workflow parity		2026-05-01T02:13:07Z
-176	OPEN	F2/#26 slice: Tighten standalone workspace and project-shell parity		2026-05-01T02:13:05Z
-175	OPEN	F1/#25 slice: Tighten editor/designer integration parity		2026-05-01T02:13:02Z
-174	OPEN	F1/#25 slice: Tighten Visual Studio pane and tool-window parity		2026-05-01T02:12:57Z
-173	OPEN	E3/#24 slice: Tighten report/label property editing fidelity		2026-05-01T02:12:52Z
-172	OPEN	E3/#24 slice: Tighten report/label layout fidelity		2026-05-01T02:12:49Z
-171	OPEN	E2/#23 slice: Tighten builder and context-editor fidelity		2026-05-01T02:12:47Z
-170	OPEN	E2/#23 slice: Tighten designer interaction fidelity		2026-05-01T02:12:44Z
-169	OPEN	E1/#22 slice: Tighten memo-heavy round-trip preservation		2026-05-01T02:12:41Z
-168	OPEN	E1/#22 slice: Tighten normalized design-model fidelity		2026-05-01T02:12:39Z
-167	OPEN	D3/#21 slice: Tighten deploy and migration-report fidelity		2026-05-01T02:07:23Z
-166	OPEN	D3/#21 slice: Tighten build/run orchestration fidelity		2026-05-01T02:07:20Z
-165	OPEN	D2/#20 slice: Breakpoint and stepping fidelity		2026-05-01T02:07:17Z
-164	OPEN	D2/#20 slice: Watches and locals evaluation fidelity		2026-05-01T02:07:15Z
-163	OPEN	D1/#19 slice: Tighten semantic manifest and asset contract fidelity		2026-05-01T02:07:12Z
-162	OPEN	D1/#19 slice: Tighten compiler/runtime package contract		2026-05-01T02:07:09Z
 161	OPEN	C4/#18 slice: Project build inclusion and dependency fidelity		2026-05-01T02:07:07Z
 160	OPEN	C4/#18 slice: Project startup resolution fidelity		2026-05-01T02:07:04Z
 159	OPEN	C3/#17 slice: Menu lifecycle and cleanup fidelity		2026-05-01T02:07:02Z
