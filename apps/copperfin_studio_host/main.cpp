@@ -25783,6 +25783,8 @@ int main(int argc, char** argv) {
             std::cout << "error: " << nudge_result.error << "\n";
             return 4;
         }
+
+        select_open_request_visual_object();
     }
 
     if (parse_result.request.tab_order_object) {
