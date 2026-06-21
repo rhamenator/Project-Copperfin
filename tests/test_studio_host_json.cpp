@@ -20285,6 +20285,112 @@ void test_studio_host_json_exposes_selected_page_header_report_sections_by_stabl
     }
 }
 
+void test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_deleted_page_header_report_sections_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_page_header_section_selection = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto seed_identity = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "UNIQUEID",
+            .property_value = "deleted-page-header-guid"
+        });
+        expect(seed_identity.ok,
+               "#1665: report/label deleted page-header section stable selection fixture should seed a stable id");
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
+        expect(delete_result.ok && dbf_record_deleted(asset_path, 1U),
+               "#1665: report/label deleted page-header section stable selection fixture should mark the section deleted");
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "deleted-page-header-guid", "--json"},
+            temp_root);
+
+        if (section_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted page-header section stdout:\n"
+                      << section_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted page-header section stderr:\n"
+                      << section_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(section_process.exit_code == 0,
+               "#1665: stable selected deleted page-header report/label section JSON should exit successfully");
+        expect_contains(section_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1665: stable selected deleted page-header report/label section JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(section_process.stdout_text, "\"isLabel\": true",
+                            "#1665: stable selected deleted page-header label section JSON should retain label identity");
+        }
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1665: stable deleted page-header section selections should advertise selected-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1665: stable deleted page-header section selections should advertise report-selection availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1665: stable deleted page-header section selections should expose section selection kind");
+        expect_contains(section_process.stdout_text, "\"sectionCount\": 1",
+                        "#1665: stable deleted page-header section selections should preserve live section counts");
+        expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1665: stable deleted page-header section selections should expose deleted section counts");
+        expect_contains(section_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1665: stable deleted page-header section selections should preserve live object counts");
+        expect_contains(section_process.stdout_text, "\"unplacedObjectCount\": 2",
+                        "#1665: stable deleted page-header section selections should move former section members to unplaced accounting");
+        expect_contains(section_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1665: stable deleted page-header section selections should preserve deleted object counts");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1665: stable deleted page-header section selections should not advertise selected-object availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1665: stable deleted page-header section selections should serialize null selected objects");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1665: stable deleted page-header section selections should not advertise selected object-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1665: stable deleted page-header section selections should serialize null selected object sections");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1665: stable deleted page-header section selections should not advertise selected-settings availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1665: stable deleted page-header section selections should serialize null selected settings");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"page_header_1\"",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 0",
+                "\"height\": 2000",
+                "\"bottom\": 2000"
+            },
+            "#1665: stable deleted page-header section selections should expose selected deleted-section metadata");
+    };
+
+    run_deleted_page_header_section_selection(temp_root / "selected_deleted_page_header_section_stable.frx",
+                                              "selected_deleted_page_header_section_stable.frx",
+                                              "report");
+    run_deleted_page_header_section_selection(temp_root / "selected_deleted_page_header_section_stable.lbx",
+                                              "selected_deleted_page_header_section_stable.lbx",
+                                              "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -64854,6 +64960,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_report_sections_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_unplaced_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_unplaced_report_objects_by_stable_selection(argv[1]);
