@@ -56,6 +56,7 @@ Current local CHM snapshot from the installed VFP help set:
 
 The native runtime/parser currently has first-pass support for these command families:
 
+- E3 designer/tooling stable-selector deleted report-layout height update note — Studio host JSON now has regression coverage proving deleted FRX/LBX layout object HEIGHT fields can be updated by stable unique id through generic property edits with the DBF deleted flag preserved and deleted-object/selected-object height/bottom metadata refreshed.
 - E3 designer/tooling stable-selector deleted report-layout left-position clear note — Studio host JSON now has regression coverage proving deleted FRX/LBX layout object HPOS fields can be cleared by stable unique id through generic property clears with the DBF deleted flag preserved and stale deleted-object/selected-object left/right metadata removed.
 - E3 designer/tooling stable-selector deleted report-layout left-position update note — Studio host JSON now has regression coverage proving deleted FRX/LBX layout object HPOS fields can be updated by stable unique id through generic property edits with the DBF deleted flag preserved and deleted-object/selected-object left/right metadata refreshed.
 - E3 designer/tooling stable-selector deleted report-layout width clear note — Studio host JSON now has regression coverage proving deleted FRX/LBX layout object WIDTH fields can be cleared by stable unique id through generic property clears with the DBF deleted flag preserved and stale deleted-object/selected-object width/right metadata removed.
