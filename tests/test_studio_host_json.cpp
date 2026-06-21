@@ -5119,6 +5119,104 @@ void test_studio_host_json_exposes_report_column_header_sections_by_stable_selec
     }
 }
 
+void test_studio_host_json_exposes_report_column_footer_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_column_footer_section_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_column_footer_section_json = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_stable_column_section_json(asset_path);
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "column-footer-section-guid", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable column-footer section stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable column-footer section stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1677: stable selected report/label column-footer section JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1677: stable selected column-footer section JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1677: stable selected column-footer label section JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1677: stable selected column-footer sections should advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1677: stable selected column-footer sections should advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1677: stable selected column-footer sections should preserve section selection classification");
+        expect_contains(process.stdout_text, "\"sectionCount\": 3",
+                        "#1677: stable selected column-footer section JSON should preserve live sibling section counts");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1677: stable selected column-footer section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1677: stable selected column-footer sections should not advertise selected-object availability");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1677: stable selected column-footer sections should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1677: stable selected column-footer sections should not advertise selected object-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1677: stable selected column-footer sections should serialize null selected object sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1677: stable selected column-footer sections should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1677: stable selected column-footer sections should serialize null selected settings");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"column_header\"",
+                "\"recordIndex\": 1",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"column_footer\"",
+                "\"recordIndex\": 3"
+            },
+            "#1677: stable selected column-footer section JSON should expose sibling section metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"column_footer_3\"",
+                "\"bandKind\": \"column_footer\"",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"sectionIndex\": 2",
+                "\"sectionCount\": 3",
+                "\"top\": 3050",
+                "\"height\": 400",
+                "\"bottom\": 3450"
+            },
+            "#1677: stable selected column-footer sections should expose selected section metadata");
+    };
+
+    run_column_footer_section_json(temp_root / "stable_column_footer_sections.frx",
+                                   "stable_column_footer_sections.frx",
+                                   "report");
+    run_column_footer_section_json(temp_root / "stable_column_footer_sections.lbx",
+                                   "stable_column_footer_sections.lbx",
+                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_group_section_expressions_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -66083,6 +66181,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_title_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_page_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_column_header_sections_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_report_column_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_group_footer_expressions_by_record_selection(argv[1]);
