@@ -117,13 +117,6 @@
 1292	OPEN	E2/#23 slice: Add selection-context toolbox object create-plan catalog planning		2026-06-19T01:50:01Z
 1291	OPEN	E2/#23 slice: Expose selection-context toolbox dispatch catalog through host JSON		2026-06-19T01:44:24Z
 1290	OPEN	E2/#23 slice: Add selection-context toolbox dispatch catalog planning		2026-06-19T01:41:59Z
-1289	OPEN	E2/#23 slice: Expose selection-context toolbox invocation admission catalog through host JSON		2026-06-19T01:36:46Z
-1288	OPEN	E2/#23 slice: Add selection-context toolbox invocation admission catalog planning		2026-06-19T01:33:26Z
-1287	OPEN	E2/#23 slice: Route toolbox dispatch catalogs through invocation admission catalog planning		2026-06-19T01:28:53Z
-1286	OPEN	E2/#23 slice: Expose toolbox palette invocation admission catalog through host JSON		2026-06-19T01:23:55Z
-1285	OPEN	E2/#23 slice: Add toolbox palette invocation admission catalog planning		2026-06-19T01:20:07Z
-1284	OPEN	E2/#23 slice: Route designer dispatch catalogs through invocation admission catalog planning		2026-06-19T01:16:57Z
-1283	OPEN	E2/#23 slice: Route editor action dispatch catalogs through invocation admission catalog planning		2026-06-19T01:13:34Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
