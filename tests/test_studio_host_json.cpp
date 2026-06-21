@@ -12598,6 +12598,95 @@ void test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_
     }
 }
 
+void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_height_bounds_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_height_update = [&](const fs::path& asset_path,
+                                       const std::string& title,
+                                       const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "field-guid",
+                "--property-name", "HEIGHT",
+                "--property-value", "7000",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable layout height update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable layout height update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1640: report/label layout object stable height update should exit successfully");
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = "field-guid",
+            .property_name = "HEIGHT"
+        });
+        expect(height_property.ok && height_property.exists && height_property.value == "7000",
+               "#1640: report/label layout object stable height update should persist the HEIGHT field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1640: report/label layout object stable height update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1640: label layout object stable height update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1640: report/label layout object stable height update should preserve preview bounds availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 9600",
+                        "#1640: report/label layout object stable height update should refresh preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 9600",
+                        "#1640: report/label layout object stable height update should refresh preview heights");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1640: report/label layout object stable height update should preserve placed counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1640: report/label layout object stable height update should preserve selected containing-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"top\": 2600",
+                "\"height\": 7000",
+                "\"bottom\": 9600",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 7600",
+                "\"objectKind\": \"field\""
+            },
+            "#1640: report/label layout object stable height update should refresh selected object bounds and preserve section membership");
+    };
+
+    run_height_update(temp_root / "height_bounds_stable.frx",
+                      "height_bounds_stable.frx",
+                      "report");
+    run_height_update(temp_root / "height_bounds_stable.lbx",
+                      "height_bounds_stable.lbx",
+                      "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -61749,6 +61838,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
