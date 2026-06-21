@@ -12347,6 +12347,101 @@ void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_re
     }
 }
 
+void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_left_clear_bounds_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_left_clear = [&](const fs::path& asset_path,
+                                    const std::string& title,
+                                    const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "label-guid",
+                "--property-name", "HPOS",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable layout left clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable layout left clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1639: report/label layout object stable left clear should exit successfully");
+        const auto left_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 4U,
+            .object_name = {},
+            .unique_id = "label-guid",
+            .property_name = "HPOS"
+        });
+        expect(left_property.ok && left_property.exists && left_property.direct_field &&
+                   left_property.value.empty(),
+               "#1639: report/label layout object stable left clear should blank the HPOS field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1639: report/label layout object stable left clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1639: label layout object stable left clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1639: report/label layout object stable left clear should preserve preview bounds availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1639: report/label layout object stable left clear should refresh preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1639: report/label layout object stable left clear should preserve preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1639: report/label layout object stable left clear should refresh preview widths");
+        expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1639: report/label layout object stable left clear should preserve placed counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1639: report/label layout object stable left clear should preserve selected containing-section availability");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 4",
+                "\"containingSectionId\": \"page_header_1\"",
+                "\"left\": 0",
+                "\"width\": 1800",
+                "\"right\": 1800",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 450",
+                "\"objectKind\": \"label\""
+            },
+            "#1639: report/label layout object stable left clear should refresh selected object bounds and preserve section membership");
+        expect_not_contains(clear_process.stdout_text, "\"left\": 900",
+                            "#1639: report/label layout object stable left clear should not leak stale selected-object left positions");
+        expect_not_contains(clear_process.stdout_text, "\"right\": 2700",
+                            "#1639: report/label layout object stable left clear should not leak stale selected-object right bounds");
+    };
+
+    run_left_clear(temp_root / "left_clear_bounds_stable.frx",
+                   "left_clear_bounds_stable.frx",
+                   "report");
+    run_left_clear(temp_root / "left_clear_bounds_stable.lbx",
+                   "left_clear_bounds_stable.lbx",
+                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -61651,6 +61746,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_height_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
