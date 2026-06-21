@@ -21632,6 +21632,134 @@ void test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_
     }
 }
 
+void test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_deleted_sections(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_orphaned_detail_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_orphaned_detail_object_selection = [&](const fs::path& asset_path,
+                                                          const std::string& title,
+                                                          const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto delete_section_result =
+            copperfin::vfp::set_record_deleted_flag(asset_path.string(), 2U, true);
+        expect(delete_section_result.ok && dbf_record_deleted(asset_path, 2U),
+               "#1672: report/label orphaned detail object fixture should mark the containing section deleted");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "field-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected orphaned detail object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected orphaned detail object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1672: stable selected orphaned detail report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1672: stable selected orphaned detail report/label object JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1672: stable selected orphaned detail label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1672: stable orphaned detail object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1672: stable orphaned detail object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1672: stable orphaned detail object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 1",
+                        "#1672: stable orphaned detail object selections should update live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1672: stable orphaned detail object selections should expose deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1672: stable orphaned detail object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"placedObjectCount\": 1",
+                        "#1672: stable orphaned detail object selections should update placed object counts");
+        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 2",
+                        "#1672: stable orphaned detail object selections should count former section members as unplaced");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1672: stable orphaned detail object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1672: stable orphaned detail object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1672: stable orphaned detail object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1672: stable orphaned detail object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1672: stable orphaned detail object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1672: stable orphaned detail object selections should not advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1672: stable orphaned detail object selections should serialize null containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"customer.company\"",
+                "\"expressionFieldIndex\": 2",
+                "\"highlightCount\": 2"
+            },
+            "#1672: stable orphaned detail object selections should expose selected object metadata without section membership");
+        expect_contains(object_process.stdout_text, "\"left\": 1200",
+                        "#1672: stable orphaned detail object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 2600",
+                        "#1672: stable orphaned detail object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 4000",
+                        "#1672: stable orphaned detail object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 5200",
+                        "#1672: stable orphaned detail object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 450",
+                        "#1672: stable orphaned detail object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 3050",
+                        "#1672: stable orphaned detail object selections should expose selected-object bottom bounds");
+        expect_contains(object_process.stdout_text,
+                        "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",
+                        "#1672: stable orphaned detail object selections should expose selected-object field provenance");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"page_header_1\"",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false"
+            },
+            "#1672: stable orphaned detail object selections should preserve sibling page-header metadata");
+    };
+
+    run_orphaned_detail_object_selection(temp_root / "selected_orphaned_detail_object_stable.frx",
+                                         "selected_orphaned_detail_object_stable.frx",
+                                         "report");
+    run_orphaned_detail_object_selection(temp_root / "selected_orphaned_detail_object_stable.lbx",
+                                         "selected_orphaned_detail_object_stable.lbx",
+                                         "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -65666,6 +65794,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_page_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_page_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_report_objects_orphaned_by_deleted_sections(argv[1]);
+    test_studio_host_json_exposes_selected_detail_report_objects_orphaned_by_deleted_sections(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_selected_label_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
