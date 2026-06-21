@@ -3764,6 +3764,30 @@ void write_synthetic_report_table_for_deleted_summary_object_json(
     expect(delete_result.ok, "#1697: synthetic report table should mark summary object deleted");
 }
 
+void write_synthetic_report_table_for_ambiguous_summary_object_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"9", "8", "", "", "3200", "", "700", "summary-section-guid"},
+        {"5", "", "\"Summary label one\"", "400", "3300", "1500", "250", "duplicate-summary-guid"},
+        {"5", "", "\"Summary label two\"", "2100", "3350", "1500", "250", "DUPLICATE-SUMMARY-GUID"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1699: synthetic report table for ambiguous stable summary object JSON should be created");
+}
+
 void write_synthetic_report_table_for_stable_group_header_object_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -22668,6 +22692,84 @@ void test_studio_host_json_clears_report_selection_for_missing_stable_selector(
     run_missing_selector(temp_root / "missing_summary_selector.lbx",
                          "missing_summary_selector.lbx",
                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_selection_for_ambiguous_stable_selector(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_ambiguous_report_selection_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_ambiguous_selector = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_ambiguous_summary_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "duplicate-summary-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " ambiguous stable report selector stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " ambiguous stable report selector stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1699: ambiguous stable report/label selectors should keep JSON inspection non-failing");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1699: ambiguous stable report selectors should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1699: ambiguous stable label selectors should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        "#1699: ambiguous stable selectors should not advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1699: ambiguous stable selectors should expose explicit no-selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1699: ambiguous stable selectors should not advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1699: ambiguous stable selectors should serialize null selected objects");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1699: ambiguous stable selectors should not advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1699: ambiguous stable selectors should serialize null containing sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1699: ambiguous stable selectors should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1699: ambiguous stable selectors should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1699: ambiguous stable selectors should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1699: ambiguous stable selectors should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                        "#1699: ambiguous stable selectors should preserve live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1699: ambiguous stable selectors should preserve deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 2",
+                        "#1699: ambiguous stable selectors should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1699: ambiguous stable selectors should preserve deleted object counts");
+    };
+
+    run_ambiguous_selector(temp_root / "ambiguous_summary_selector.frx",
+                           "ambiguous_summary_selector.frx",
+                           "report");
+    run_ambiguous_selector(temp_root / "ambiguous_summary_selector.lbx",
+                           "ambiguous_summary_selector.lbx",
+                           "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -68907,6 +69009,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_selection_for_missing_stable_selector(argv[1]);
+    test_studio_host_json_clears_report_selection_for_ambiguous_stable_selector(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_objects_by_stable_selection(argv[1]);

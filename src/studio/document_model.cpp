@@ -203,14 +203,18 @@ std::optional<std::size_t> find_preview_record_index_by_unique_id(
         return std::nullopt;
     }
 
+    std::optional<std::size_t> matched_record_index;
     for (const auto& record : document.table_preview.records) {
         const std::string candidate_unique_id = lowercase_ascii(trim_copy(value_or_empty(record, "UNIQUEID")));
         if (candidate_unique_id == requested_unique_id) {
-            return record.record_index;
+            if (matched_record_index.has_value()) {
+                return std::nullopt;
+            }
+            matched_record_index = record.record_index;
         }
     }
 
-    return std::nullopt;
+    return matched_record_index;
 }
 
 template <typename Predicate>
