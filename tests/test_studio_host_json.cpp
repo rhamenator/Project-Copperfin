@@ -12793,6 +12793,80 @@ void test_studio_host_json_clears_report_column_setup_by_record_selection(const 
     }
 }
 
+void test_studio_host_json_clears_deleted_report_column_setup_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_setup_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_setup_clear = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_deleted_column_setup_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted column setup clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted column setup clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1600: deleted report/label column setup clear should exit successfully");
+        expect_contains(clear_process.stdout_text,
+                        "\"name\": \"EXPR\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 2",
+                        "#1600: deleted report/label column setup clear should preserve and blank the EXPR field carrier");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1600: deleted report/label column setup clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1600: deleted report/label column setup clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1600: deleted report/label column setup clear should not fabricate live column setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1600: deleted report/label column setup clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#1600: deleted report/label column setup clear should remove deleted settings");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1600: deleted report/label column setup clear should clear selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1600: deleted report/label column setup clear should clear selected deleted settings");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1600: deleted report/label column setup clear should clear settings selection kind");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLS\"",
+                            "#1600: deleted report/label column setup clear should remove deleted column-count settings");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLWIDTH\"",
+                            "#1600: deleted report/label column setup clear should remove deleted column-width settings");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLSPACING\"",
+                            "#1600: deleted report/label column setup clear should remove deleted column-spacing settings");
+    };
+
+    run_deleted_column_setup_clear(temp_root / "deleted_column_setup_clear.frx",
+                                   "deleted_column_setup_clear.frx",
+                                   "report");
+    run_deleted_column_setup_clear(temp_root / "deleted_column_setup_clear.lbx",
+                                   "deleted_column_setup_clear.lbx",
+                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_label_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -57223,6 +57297,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_setup_by_record_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
