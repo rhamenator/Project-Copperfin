@@ -4669,6 +4669,122 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_s
     }
 }
 
+void test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_group_footer_expression_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_group_footer_expression_json = [&](const fs::path& asset_path,
+                                                              const std::string& title,
+                                                              const std::string& label) {
+        write_synthetic_report_table_for_stable_group_section_expression_json(asset_path);
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+        expect(delete_result.ok && dbf_record_deleted(asset_path, 3U),
+               "#1669: stable deleted group-footer fixture should mark the group-footer section deleted");
+
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "group-footer-guid", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted group footer expression stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted group footer expression stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1669: stable selected deleted report/label group-footer section JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1669: stable selected deleted group-footer section JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1669: stable selected deleted label group-footer section JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1669: stable selected deleted group-footer sections should advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1669: stable selected deleted group-footer sections should advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1669: stable selected deleted group-footer sections should preserve section selection classification");
+        expect_contains(process.stdout_text, "\"sectionCount\": 2",
+                        "#1669: stable selected deleted group-footer section JSON should preserve live sibling section counts");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1669: stable selected deleted group-footer section JSON should expose deleted section counts");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1669: stable selected deleted group-footer sections should not advertise selected-object availability");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1669: stable selected deleted group-footer sections should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1669: stable selected deleted group-footer sections should not advertise selected object-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1669: stable selected deleted group-footer sections should serialize null selected object sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1669: stable selected deleted group-footer sections should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1669: stable selected deleted group-footer sections should serialize null selected settings");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"group_footer_3\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"recordIndex\": 3",
+                "\"deleted\": true"
+            },
+            "#1669: stable selected deleted group-footer section JSON should expose deleted section metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_footer_3\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 3600",
+                "\"height\": 500",
+                "\"bottom\": 4100"
+            },
+            "#1669: stable selected deleted group-footer sections should expose selected expression metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"group_header\"",
+                "\"recordIndex\": 1",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2"
+            },
+            "#1669: stable selected deleted group-footer section JSON should preserve live sibling metadata");
+    };
+
+    run_deleted_group_footer_expression_json(temp_root / "stable_deleted_group_footer.frx",
+                                             "stable_deleted_group_footer.frx",
+                                             "report");
+    run_deleted_group_footer_expression_json(temp_root / "stable_deleted_group_footer.lbx",
+                                             "stable_deleted_group_footer.lbx",
+                                             "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_group_section_expressions_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -65143,6 +65259,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_group_footer_expressions_by_record_selection(argv[1]);

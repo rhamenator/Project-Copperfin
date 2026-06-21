@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1669 stable-selector deleted group-footer report/label section selection coverage shipped: Studio host regression coverage now proves deleted group-footer FRX/LBX sections can be selected for JSON inspection by `--unique-id group-footer-guid`, with selected-section availability/kind preserved, deleted group-footer band metadata and expression provenance exposed, live/deleted section counts verified, sibling group-header/detail metadata retained, selected object/settings metadata kept null, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1668 stable-selector deleted group-header report/label section selection coverage shipped: Studio host regression coverage now proves deleted group-header FRX/LBX sections can be selected for JSON inspection by `--unique-id group-header-guid`, with selected-section availability/kind preserved, deleted group-header band metadata and expression provenance exposed, live/deleted section counts verified, sibling detail/footer metadata retained, selected object/settings metadata kept null, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1667 stable-selector group-footer report/label section selection coverage shipped: Studio host regression coverage now proves live group-footer FRX/LBX sections can be seeded with `UNIQUEID=group-footer-guid` and selected for JSON inspection by `--unique-id`, with selected-section availability/kind preserved, group-footer band metadata and expression provenance exposed, sibling group-header/detail section counts verified, selected object/settings metadata kept null, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1666 stable-selector group-header report/label section selection coverage shipped: Studio host regression coverage now proves live group-header FRX/LBX sections can be seeded with `UNIQUEID=group-header-guid` and selected for JSON inspection by `--unique-id`, with selected-section availability/kind preserved, group-header band metadata and expression provenance exposed, sibling detail/footer section counts verified, selected object/settings metadata kept null, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1683,7 +1684,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1668 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1669 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1754,7 +1755,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1668 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1669 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
