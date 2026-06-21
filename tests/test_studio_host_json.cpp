@@ -4897,6 +4897,114 @@ void test_studio_host_json_exposes_selected_summary_report_sections_by_stable_se
     }
 }
 
+void test_studio_host_json_exposes_selected_deleted_summary_report_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_deleted_summary_report_sections_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_summary_section_selection = [&](const fs::path& asset_path,
+                                                           const std::string& title,
+                                                           const std::string& label) {
+        write_synthetic_report_table_for_stable_summary_section_json(asset_path);
+        const auto delete_result = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 2U, true);
+        expect(delete_result.ok && dbf_record_deleted(asset_path, 2U),
+               "#1695: stable deleted summary fixture should mark the summary section deleted");
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "summary-section-guid", "--json"},
+            temp_root);
+
+        if (section_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted summary section stdout:\n"
+                      << section_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted summary section stderr:\n"
+                      << section_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(section_process.exit_code == 0,
+               "#1695: stable selected deleted summary report/label section JSON should exit successfully");
+        expect_contains(section_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1695: stable selected deleted summary section JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(section_process.stdout_text, "\"isLabel\": true",
+                            "#1695: stable selected deleted summary label section JSON should retain label identity");
+        }
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1695: stable selected deleted summary sections should advertise selected-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1695: stable selected deleted summary sections should advertise report-selection availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1695: stable selected deleted summary sections should expose section selection kind");
+        expect_contains(section_process.stdout_text, "\"sectionCount\": 1",
+                        "#1695: stable selected deleted summary sections should preserve live sibling counts");
+        expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1695: stable selected deleted summary sections should expose deleted section counts");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1695: stable selected deleted summary sections should not advertise selected-object availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1695: stable selected deleted summary sections should serialize null selected objects");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1695: stable selected deleted summary sections should not advertise selected object-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1695: stable selected deleted summary sections should serialize null selected object sections");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1695: stable selected deleted summary sections should not advertise selected-settings availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1695: stable selected deleted summary sections should serialize null selected settings");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"summary_2\"",
+                "\"bandKind\": \"summary\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": true"
+            },
+            "#1695: stable selected deleted summary section JSON should expose deleted summary metadata");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"summary_2\"",
+                "\"bandKind\": \"summary\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 3200",
+                "\"height\": 700",
+                "\"bottom\": 3900"
+            },
+            "#1695: stable selected deleted summary sections should expose selected deleted summary metadata");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1"
+            },
+            "#1695: stable selected deleted summary section JSON should preserve live detail metadata");
+    };
+
+    run_deleted_summary_section_selection(temp_root / "selected_deleted_summary_section_stable.frx",
+                                          "selected_deleted_summary_section_stable.frx",
+                                          "report");
+    run_deleted_summary_section_selection(temp_root / "selected_deleted_summary_section_stable.lbx",
+                                          "selected_deleted_summary_section_stable.lbx",
+                                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -68281,6 +68389,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_summary_report_sections_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_deleted_summary_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_footer_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_title_sections_by_stable_selection(argv[1]);
