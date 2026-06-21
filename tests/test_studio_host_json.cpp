@@ -8218,6 +8218,131 @@ void test_studio_host_json_renames_live_edited_report_layout_object_geometry_by_
     }
 }
 
+void test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_rename_live_edited_unplaced_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_live_edited_unplaced_rename = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        const std::size_t before_count = visual_object_count(asset_path);
+
+        const auto set_live_geometry = [&](const std::string& property_name,
+                                           const std::string& property_value) {
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "middle-field-guid",
+                    "--property-name", property_name,
+                    "--property-value", property_value,
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " rename unplaced live " << property_name
+                          << " update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " rename unplaced live " << property_name
+                          << " update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1622: live unplaced report/label layout object rename geometry update should exit successfully");
+            expect(!visual_object_deleted(asset_path, "middle-field-guid"),
+                   "#1622: live unplaced report/label layout object rename geometry update should preserve live state");
+        };
+
+        set_live_geometry("HPOS", "-300");
+        set_live_geometry("VPOS", "9000");
+        set_live_geometry("HEIGHT", "700");
+
+        const auto rename_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--rename-object",
+                "--unique-id", "middle-field-guid",
+                "--new-unique-id", "middle-offband-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (rename_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " edited unplaced layout rename stdout:\n"
+                      << rename_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " edited unplaced layout rename stderr:\n"
+                      << rename_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(rename_process.exit_code == 0,
+               "#1622: live edited unplaced report/label layout object rename should exit successfully");
+        expect(visual_object_count(asset_path) == before_count,
+               "#1622: live edited unplaced report/label layout object rename should preserve object count");
+        expect(!visual_object_exists(asset_path, "middle-field-guid"),
+               "#1622: live edited unplaced report/label layout object rename should remove the old unique id");
+        expect(visual_object_exists(asset_path, "middle-offband-guid"),
+               "#1622: live edited unplaced report/label layout object rename should persist replacement unique ids");
+        expect(visual_object_property(asset_path, "middle-offband-guid", "HPOS") == "-300" &&
+                   visual_object_property(asset_path, "middle-offband-guid", "VPOS") == "9000" &&
+                   visual_object_property(asset_path, "middle-offband-guid", "HEIGHT") == "700",
+               "#1622: live edited unplaced report/label layout object rename should preserve edited geometry fields");
+        expect_contains(rename_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1622: live edited unplaced report/label layout object rename should return refreshed report-layout JSON");
+        expect_contains(rename_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1622: live edited unplaced report/label layout object rename should preserve selected-object availability");
+        expect_contains(rename_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1622: live edited unplaced report/label layout object rename should keep containing-section unavailable");
+        expect_contains(rename_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1622: live edited unplaced report/label layout object rename should serialize null containing section");
+        expect_contains_in_order(
+            rename_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"left\": -300",
+                "\"top\": 9000",
+                "\"width\": 50",
+                "\"right\": -250",
+                "\"height\": 700",
+                "\"bottom\": 9700"
+            },
+            "#1622: live edited unplaced report/label layout object rename should refresh selected renamed geometry without fabricated section metadata");
+    };
+
+    run_live_edited_unplaced_rename(temp_root / "rename_live_edited_unplaced.frx",
+                                    "rename_live_edited_unplaced.frx",
+                                    "report");
+    run_live_edited_unplaced_rename(temp_root / "rename_live_edited_unplaced.lbx",
+                                    "rename_live_edited_unplaced.lbx",
+                                    "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_deletes_report_sections_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -59824,6 +59949,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_live_edited_report_layout_object_geometry_by_record_selection(argv[1]);
+    test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geometry_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(argv[1]);
