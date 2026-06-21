@@ -56,6 +56,7 @@ Current local CHM snapshot from the installed VFP help set:
 
 The native runtime/parser currently has first-pass support for these command families:
 
+- E3 designer/tooling stable-selector report root-settings selection note — Studio host JSON now has regression coverage proving live and deleted root FRX/LBX settings can be selected by stable unique id with selected-settings availability/kind, live/deleted setting counts, page setup state, null section/object selections, and setting provenance preserved.
 - E3 designer/tooling stable-selector deleted report root-settings restore note — Studio host JSON now has regression coverage proving deleted root FRX/LBX settings can be restored by stable unique id with the DBF deleted flag cleared, live setting/page setup summaries restored, deleted setting counts cleared, and selected-settings metadata rehydrated.
 - E3 designer/tooling stable-selector report root-settings delete note — Studio host JSON now has regression coverage proving root FRX/LBX settings can be deleted by stable unique id with the DBF deleted flag set, live setting/page setup summaries cleared, and deleted plus selected deleted-settings metadata exposed.
 - E3 designer/tooling stable-selector report-section delete note — Studio host JSON now has regression coverage proving live FRX/LBX sections can be deleted by stable unique id with the DBF deleted flag set, live/deleted section counts refreshed, former section objects moved to unplaced membership, and selected deleted-section metadata exposed.

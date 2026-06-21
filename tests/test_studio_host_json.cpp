@@ -19854,6 +19854,165 @@ void test_studio_host_json_restores_report_settings_by_stable_selection(const st
     }
 }
 
+void test_studio_host_json_exposes_selected_report_settings_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_report_settings_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_live_settings_selection = [&](const fs::path& asset_path,
+                                                 const std::string& title,
+                                                 const std::string& label) {
+        write_synthetic_report_table_for_stable_settings_json(asset_path);
+
+        const auto settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "settings-guid", "--json"},
+            temp_root);
+
+        if (settings_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected settings stdout:\n"
+                      << settings_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected settings stderr:\n"
+                      << settings_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(settings_process.exit_code == 0,
+               "#1658: stable selected report/label settings JSON should exit successfully");
+        expect_contains(settings_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1658: stable selected report/label settings JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(settings_process.stdout_text, "\"isLabel\": true",
+                            "#1658: stable selected label settings JSON should retain label identity");
+        }
+        expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1658: stable live settings selections should advertise selected-settings availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1658: stable live settings selections should advertise report-selection availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1658: stable live settings selections should expose settings selection kind");
+        expect_contains(settings_process.stdout_text, "\"settingCount\": 6",
+                        "#1658: stable live settings selections should preserve live setting counts");
+        expect_contains(settings_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#1658: stable live settings selections should preserve deleted setting counts");
+        expect_contains(settings_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1658: stable live settings selections should preserve page setup availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1658: stable live settings selections should not advertise selected-section availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1658: stable live settings selections should serialize null selected sections");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1658: stable live settings selections should not advertise selected-object availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1658: stable live settings selections should serialize null selected objects");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1658: stable live settings selections should not advertise containing-object-section availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1658: stable live settings selections should serialize null containing-object sections");
+        expect_contains(settings_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"0\"",
+                        "#1658: stable live settings selections should expose memo-line setting provenance");
+        expect_contains(settings_process.stdout_text,
+                        "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                        "#1658: stable live settings selections should expose later memo-line setting provenance");
+        expect_contains(settings_process.stdout_text,
+                        "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"10\"",
+                        "#1658: stable live settings selections should expose direct setting provenance");
+    };
+
+    const auto run_deleted_settings_selection = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_settings_json(asset_path);
+
+        const auto settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "deleted-settings-guid", "--json"},
+            temp_root);
+
+        if (settings_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted settings stdout:\n"
+                      << settings_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted settings stderr:\n"
+                      << settings_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(settings_process.exit_code == 0,
+               "#1658: stable selected deleted report/label settings JSON should exit successfully");
+        expect_contains(settings_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1658: stable selected deleted report/label settings JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(settings_process.stdout_text, "\"isLabel\": true",
+                            "#1658: stable selected deleted label settings JSON should retain label identity");
+        }
+        expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1658: stable deleted settings selections should advertise selected-settings availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1658: stable deleted settings selections should advertise report-selection availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1658: stable deleted settings selections should expose settings selection kind");
+        expect_contains(settings_process.stdout_text, "\"settingCount\": 0",
+                        "#1658: stable deleted settings selections should not expose live settings");
+        expect_contains(settings_process.stdout_text, "\"deletedSettingCount\": 6",
+                        "#1658: stable deleted settings selections should expose deleted setting counts");
+        expect_contains(settings_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1658: stable deleted settings selections should clear live page setup availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1658: stable deleted settings selections should not advertise selected-section availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1658: stable deleted settings selections should serialize null selected sections");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1658: stable deleted settings selections should not advertise selected-object availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1658: stable deleted settings selections should serialize null selected objects");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1658: stable deleted settings selections should not advertise containing-object-section availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1658: stable deleted settings selections should serialize null containing-object sections");
+        expect_contains_in_order(
+            settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"BOTMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0"
+            },
+            "#1658: stable deleted settings selections should expose selected deleted-setting provenance");
+    };
+
+    run_live_settings_selection(temp_root / "selected_settings_stable.frx",
+                                "selected_settings_stable.frx",
+                                "report");
+    run_live_settings_selection(temp_root / "selected_settings_stable.lbx",
+                                "selected_settings_stable.lbx",
+                                "label");
+    run_deleted_settings_selection(temp_root / "selected_deleted_settings_stable.frx",
+                                   "selected_deleted_settings_stable.frx",
+                                   "report");
+    run_deleted_settings_selection(temp_root / "selected_deleted_settings_stable.lbx",
+                                   "selected_deleted_settings_stable.lbx",
+                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -63874,6 +64033,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_selected_label_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
