@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1616 edited unplaced report/label layout-object delete geometry coverage shipped: Studio host regression coverage now proves live FRX/LBX layout objects edited into an out-of-section geometry can then be deleted, preserve edited HPOS/VPOS/HEIGHT fields on the deleted DBF record, expand deleted preview bounds, refresh deleted placed/unplaced counts, preserve `reportLayout.deletedObjects` and `selectedReportObject` geometry, and keep selected containing-section metadata unavailable/null instead of fabricating section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1615 edited report/label layout-object delete geometry coverage shipped: Studio host regression coverage now proves live FRX/LBX layout objects edited through host geometry properties can then be deleted, preserve edited HPOS/WIDTH/HEIGHT fields on the deleted DBF record, refresh `reportLayout.deletedObjects` and `selectedReportObject` left/top/right/bottom geometry, and keep selected containing-section metadata unavailable/null instead of fabricating section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1614 edited deleted report/label layout-object unplaced restore coverage shipped: Studio host regression coverage now proves deleted FRX/LBX layout objects edited outside live section bands restore as live unplaced objects, preserve edited geometry, expand preview left/bottom/width/height bounds, leave `reportLayout.deletedObjects`, update unplaced accounting, and keep `selectedReportObject` containing-section metadata unavailable/null instead of fabricating section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1613 edited deleted report/label layout-object restore coverage shipped: Studio host regression coverage now proves deleted FRX/LBX layout objects can receive host-level geometry edits while deleted, restore to live DBF state with the edited geometry preserved, leave `reportLayout.deletedObjects`, and rehydrate `selectedReportObject` containing-section availability, section object index/count, and section-relative geometry. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1630,7 +1631,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1615 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1616 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1701,7 +1702,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1615 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1616 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
