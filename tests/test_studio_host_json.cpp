@@ -9390,7 +9390,7 @@ void test_studio_host_json_updates_report_layout_object_expression_by_stable_sel
                "#1630: report/label layout object stable expression update should exit successfully");
         const auto expr_property = copperfin::vfp::query_visual_object_property({
             .path = asset_path.string(),
-            .record_index = 0U,
+            .record_index = 3U,
             .object_name = {},
             .unique_id = "field-guid",
             .property_name = "EXPR"
@@ -9604,6 +9604,88 @@ void test_studio_host_json_clears_report_layout_object_expressions_by_record_sel
 
     run_expression_clear(temp_root / "expression_clear.frx", "expression_clear.frx", "report");
     run_expression_clear(temp_root / "expression_clear.lbx", "expression_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_layout_object_expression_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_expression_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_expression_clear = [&](const fs::path& asset_path,
+                                          const std::string& title,
+                                          const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "field-guid",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable layout expression clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable layout expression clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1631: report/label layout object stable expression clear should exit successfully");
+        expect_contains(clear_process.stdout_text,
+                        "{\"name\": \"EXPR\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 2",
+                        "#1631: report/label layout object stable expression clear should blank the EXPR memo field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1631: report/label layout object stable expression clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1631: label layout object stable expression clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1631: report/label layout object stable expression clear should preserve selected object availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1631: report/label layout object stable expression clear should preserve object selection kind");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1631: report/label layout object stable expression clear should preserve containing-section availability");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectIndex\": 0",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"field-guid\"",
+                "\"titleFieldIndex\": 9",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#1631: report/label layout object stable expression clear should refresh selected object expression metadata");
+        expect_not_contains(clear_process.stdout_text, "\"expression\": \"customer.company\"",
+                            "#1631: report/label layout object stable expression clear should not leak stale expression values");
+    };
+
+    run_expression_clear(temp_root / "expression_clear_stable.frx",
+                         "expression_clear_stable.frx",
+                         "report");
+    run_expression_clear(temp_root / "expression_clear_stable.lbx",
+                         "expression_clear_stable.lbx",
+                         "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -60923,6 +61005,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_layout_object_expression_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_clears_report_layout_object_expression_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_font_metadata_by_record_selection(argv[1]);
