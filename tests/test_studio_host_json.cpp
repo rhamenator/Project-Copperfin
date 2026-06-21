@@ -20013,6 +20013,161 @@ void test_studio_host_json_exposes_selected_report_settings_by_stable_selection(
     }
 }
 
+void test_studio_host_json_exposes_selected_report_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_report_sections_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_live_section_selection = [&](const fs::path& asset_path,
+                                                const std::string& title,
+                                                const std::string& label) {
+        write_synthetic_report_table_for_stable_section_json(asset_path);
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "section-guid", "--json"},
+            temp_root);
+
+        if (section_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected section stdout:\n"
+                      << section_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected section stderr:\n"
+                      << section_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(section_process.exit_code == 0,
+               "#1659: stable selected report/label section JSON should exit successfully");
+        expect_contains(section_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1659: stable selected report/label section JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(section_process.stdout_text, "\"isLabel\": true",
+                            "#1659: stable selected label section JSON should retain label identity");
+        }
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1659: stable live section selections should advertise selected-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1659: stable live section selections should advertise report-selection availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1659: stable live section selections should expose section selection kind");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1659: stable live section selections should not advertise selected-settings availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1659: stable live section selections should serialize null selected settings");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1659: stable live section selections should not advertise selected-object availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1659: stable live section selections should serialize null selected objects");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1659: stable live section selections should not advertise selected object-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1659: stable live section selections should serialize null selected object sections");
+        expect_contains(section_process.stdout_text, "\"sectionCount\": 1",
+                        "#1659: stable live section selections should preserve live section counts");
+        expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1659: stable live section selections should preserve deleted section counts");
+        expect_contains(section_process.stdout_text, "\"unplacedObjectCount\": 0",
+                        "#1659: stable live section selections should preserve section object membership");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 3"
+            },
+            "#1659: stable live section selections should expose selected live-section metadata");
+    };
+
+    const auto run_deleted_section_selection = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_section_json(asset_path);
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "deleted-section-guid", "--json"},
+            temp_root);
+
+        if (section_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted section stdout:\n"
+                      << section_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted section stderr:\n"
+                      << section_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(section_process.exit_code == 0,
+               "#1659: stable selected deleted report/label section JSON should exit successfully");
+        expect_contains(section_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1659: stable selected deleted report/label section JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(section_process.stdout_text, "\"isLabel\": true",
+                            "#1659: stable selected deleted label section JSON should retain label identity");
+        }
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1659: stable deleted section selections should advertise selected-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1659: stable deleted section selections should advertise report-selection availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1659: stable deleted section selections should expose section selection kind");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1659: stable deleted section selections should not advertise selected-settings availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1659: stable deleted section selections should serialize null selected settings");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1659: stable deleted section selections should not advertise selected-object availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1659: stable deleted section selections should serialize null selected objects");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1659: stable deleted section selections should not advertise selected object-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1659: stable deleted section selections should serialize null selected object sections");
+        expect_contains(section_process.stdout_text, "\"sectionCount\": 0",
+                        "#1659: stable deleted section selections should not expose live section counts");
+        expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1659: stable deleted section selections should expose deleted section counts");
+        expect_contains(section_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1659: stable deleted section selections should move former section objects to unplaced membership");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0"
+            },
+            "#1659: stable deleted section selections should expose selected deleted-section metadata");
+    };
+
+    run_live_section_selection(temp_root / "selected_section_stable.frx",
+                               "selected_section_stable.frx",
+                               "report");
+    run_live_section_selection(temp_root / "selected_section_stable.lbx",
+                               "selected_section_stable.lbx",
+                               "label");
+    run_deleted_section_selection(temp_root / "selected_deleted_section_stable.frx",
+                                  "selected_deleted_section_stable.frx",
+                                  "report");
+    run_deleted_section_selection(temp_root / "selected_deleted_section_stable.lbx",
+                                  "selected_deleted_section_stable.lbx",
+                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -64034,6 +64189,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_selected_label_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);

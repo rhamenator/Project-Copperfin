@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1659 stable-selector report/label section selection coverage shipped: Studio host regression coverage now proves live and deleted FRX/LBX sections can be seeded with `UNIQUEID=section-guid` / `UNIQUEID=deleted-section-guid` and selected for JSON inspection by `--unique-id`, with selected-section availability/kind preserved, live/deleted section counts matching live vs deleted state, former deleted-section objects counted as unplaced, label identity retained, settings/object selections kept null, and selected section metadata verified without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1658 stable-selector report/label root-settings selection coverage shipped: Studio host regression coverage now proves live and deleted root FRX/LBX settings can be seeded with `UNIQUEID=settings-guid` / `UNIQUEID=deleted-settings-guid` and selected for JSON inspection by `--unique-id`, with selected-settings availability/kind preserved, live/deleted setting counts and page setup availability matching live vs deleted state, label identity retained, section/object selections kept null, and ORIENTATION/PAPERSIZE/TOPMARGIN provenance verified without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1657 stable-selector deleted report/label root-settings restore coverage shipped: Studio host regression coverage now proves deleted root FRX/LBX settings can be seeded with `UNIQUEID=deleted-settings-guid` and restored by `--restore-object --unique-id deleted-settings-guid`, with the DBF deleted flag cleared, label identity retained, live setting/page setup summaries restored, deleted setting counts cleared, selected settings rehydrated for ORIENTATION/PAPERSIZE/BOTMARGIN/GRIDV/GRIDH/TOPMARGIN, and section/deleted-object state preserved. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1656 stable-selector report/label root-settings delete coverage shipped: Studio host regression coverage now proves root FRX/LBX settings can be seeded with `UNIQUEID=settings-guid` and deleted by `--delete-object --unique-id settings-guid`, with the DBF deleted flag set, label identity retained, live setting/page setup summaries cleared, deleted and selected deleted-settings metadata exposed for ORIENTATION/PAPERSIZE/BOTMARGIN/GRIDV/GRIDH/TOPMARGIN, and section/deleted-object state preserved. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1673,7 +1674,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1658 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1659 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1744,7 +1745,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1658 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1659 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
