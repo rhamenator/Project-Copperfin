@@ -23077,6 +23077,78 @@ void test_studio_host_json_clears_report_selection_for_missing_stable_selector(
     }
 }
 
+void test_studio_host_json_clears_report_selection_for_blank_stable_selector(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_blank_report_selection_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_blank_selector = [&](const fs::path& asset_path,
+                                        const std::string& title,
+                                        const std::string& label) {
+        write_synthetic_report_table_for_deep_stable_object_json(asset_path);
+
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "   \t  ", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " blank stable selector stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " blank stable selector stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1710: blank stable report/label selectors should keep JSON inspection non-failing");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1710: blank stable selectors should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1710: blank stable label selectors should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        "#1710: blank stable selectors should not advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1710: blank stable selectors should expose explicit no-selection kind");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1710: blank stable selectors should not advertise selected-object availability");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1710: blank stable selectors should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1710: blank stable selectors should not advertise containing-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1710: blank stable selectors should serialize null containing sections");
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1710: blank stable selectors should not advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSection\": null",
+                        "#1710: blank stable selectors should serialize null selected sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1710: blank stable selectors should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1710: blank stable selectors should serialize null selected settings");
+        expect_not_contains(process.stdout_text, "\"selectedReportObject\": {",
+                            "#1710: blank stable selectors should not match blank stored UNIQUEID rows");
+    };
+
+    run_blank_selector(temp_root / "blank_selector.frx",
+                       "blank_selector.frx",
+                       "report");
+    run_blank_selector(temp_root / "blank_selector.lbx",
+                       "blank_selector.lbx",
+                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_report_selection_for_ambiguous_stable_selector(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -70487,6 +70559,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_selection_for_missing_stable_selector(argv[1]);
+    test_studio_host_json_clears_report_selection_for_blank_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_ambiguous_stable_selector(argv[1]);
     test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_clears_report_selection_for_live_deleted_ambiguous_stable_selectors(argv[1]);
