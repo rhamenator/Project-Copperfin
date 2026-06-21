@@ -3823,6 +3823,13 @@ void write_synthetic_report_table_for_bottom_margin_field_json(const std::filesy
     expect(create_result.ok, "#1541: synthetic report table for bottom margin field JSON should be created");
 }
 
+void write_synthetic_report_table_for_deleted_bottom_margin_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_bottom_margin_field_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#1583: synthetic report table should mark bottom-margin settings deleted");
+}
+
 void write_synthetic_report_table_for_grid_vertical_field_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -9808,6 +9815,102 @@ void test_studio_host_json_clears_report_bottom_margin_fields_by_record_selectio
 
     run_bottom_margin_clear(temp_root / "bottom_margin_clear.frx", "bottom_margin_clear.frx", "report");
     run_bottom_margin_clear(temp_root / "bottom_margin_clear.lbx", "bottom_margin_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_bottom_margin_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_bottom_margin_update = [&](const fs::path& asset_path,
+                                                      const std::string& title,
+                                                      const std::string& updated_margin,
+                                                      const std::string& label) {
+        write_synthetic_report_table_for_deleted_bottom_margin_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "BOTMARGIN",
+                "--property-value", updated_margin,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted bottom margin field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted bottom margin field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1583: deleted report/label bottom-margin field update should exit successfully");
+        const auto margin_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "BOTMARGIN"
+        });
+        expect(margin_property.ok && margin_property.exists && margin_property.value == updated_margin,
+               "#1583: deleted report/label bottom-margin field update should persist the BOTMARGIN field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1583: deleted report/label bottom-margin field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1583: deleted report/label bottom-margin field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1583: deleted report/label bottom-margin field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
+                        "#1583: deleted report/label bottom-margin field update should refresh deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1583: deleted report/label bottom-margin field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1583: deleted report/label bottom-margin field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_margin + "\""
+            },
+            "#1583: deleted report/label bottom-margin field update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_margin + "\""
+            },
+            "#1583: deleted report/label bottom-margin field update should refresh selected deleted settings");
+    };
+
+    run_deleted_bottom_margin_update(temp_root / "deleted_bottom_margin.frx",
+                                     "deleted_bottom_margin.frx",
+                                     "34",
+                                     "report");
+    run_deleted_bottom_margin_update(temp_root / "deleted_bottom_margin.lbx",
+                                     "deleted_bottom_margin.lbx",
+                                     "36",
+                                     "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -55504,6 +55607,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_bottom_margin_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_bottom_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_grid_vertical_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_grid_vertical_fields_by_record_selection(argv[1]);

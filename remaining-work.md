@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1583 deleted report/label bottom-margin field edit coverage shipped: Studio host regression coverage now proves `--set-property` on deleted FRX/LBX root settings `BOTMARGIN` fields persists the updated direct-field value, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` provenance/value JSON, keeps live page setup/settings unavailable, and preserves memo-derived deleted settings. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1582 deleted report/label top-margin field clear coverage shipped: Studio host regression coverage now proves `--clear-property` on deleted FRX/LBX root settings `TOPMARGIN` fields blanks the direct-field value, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` by removing the direct top-margin entry while preserving memo-derived deleted settings, keeps live page setup/settings unavailable, and preserves section/object metadata. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1581 deleted report/label top-margin field edit coverage shipped: Studio host regression coverage now proves `--set-property` on deleted FRX/LBX root settings `TOPMARGIN` fields persists the updated direct-field value, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` provenance/value JSON, keeps live page setup/settings unavailable, and preserves section/object metadata. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1580 deleted report/label settings memo clear coverage shipped: Studio host regression coverage now proves `--clear-property` on deleted FRX/LBX root settings `EXPR` records clears memo-derived deleted settings, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` down to the remaining direct-field setting, keeps live page setup/settings unavailable, and preserves section/object metadata. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1597,7 +1598,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1582 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1583 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1668,7 +1669,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1582 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1583 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
