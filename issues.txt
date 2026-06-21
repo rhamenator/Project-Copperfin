@@ -191,11 +191,6 @@
 1218	OPEN	E2/#23 slice: Expose editor action invocation admission through host JSON		2026-06-18T20:00:11Z
 1217	OPEN	E2/#23 slice: Add editor action invocation admission planning		2026-06-18T19:57:04Z
 1216	OPEN	E2/#23 slice: Expose builder invocation admission through host JSON		2026-06-18T19:50:54Z
-1215	OPEN	E2/#23 slice: Add builder invocation admission planning		2026-06-18T19:46:39Z
-1214	OPEN	E2/#23 slice: Expose designer launch-surface catalog through host JSON		2026-06-18T19:42:15Z
-1213	OPEN	E2/#23 slice: Add designer launch-surface catalog planning		2026-06-18T19:38:54Z
-1212	OPEN	E2/#23 slice: Expose combined designer launch surfaces through host JSON		2026-06-18T19:33:18Z
-1211	OPEN	E2/#23 slice: Add combined designer launch surface planning		2026-06-18T19:16:23Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
