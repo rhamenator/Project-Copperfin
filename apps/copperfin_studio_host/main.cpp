@@ -25371,6 +25371,28 @@ int main(int argc, char** argv) {
     }
 
     auto open_request = parse_result.request;
+    const auto select_open_request_visual_object = [&]() {
+        const auto objects = copperfin::vfp::list_visual_objects(parse_result.request.path);
+        if (!objects.ok) {
+            return;
+        }
+        const auto object = std::find_if(
+            objects.objects.begin(),
+            objects.objects.end(),
+            [&](const copperfin::vfp::VisualObjectSnapshot& candidate) {
+                if (!open_request.unique_id.empty()) {
+                    return candidate.unique_id == open_request.unique_id;
+                }
+                if (!open_request.object_name.empty()) {
+                    return candidate.object_name == open_request.object_name;
+                }
+                return candidate.record_index == open_request.record_index;
+            });
+        if (object != objects.objects.end()) {
+            open_request.record_index = object->record_index;
+            open_request.selection_record_available = true;
+        }
+    };
 
     if (parse_result.request.undo_mode == copperfin::studio::StudioUndoMode::command) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(parse_result.request.path);
@@ -25553,25 +25575,7 @@ int main(int argc, char** argv) {
         if (!parse_result.request.new_unique_id.empty()) {
             open_request.unique_id = parse_result.request.new_unique_id;
         }
-        const auto renamed_objects = copperfin::vfp::list_visual_objects(parse_result.request.path);
-        if (renamed_objects.ok) {
-            const auto renamed_object = std::find_if(
-                renamed_objects.objects.begin(),
-                renamed_objects.objects.end(),
-                [&](const copperfin::vfp::VisualObjectSnapshot& object) {
-                    if (!open_request.unique_id.empty()) {
-                        return object.unique_id == open_request.unique_id;
-                    }
-                    if (!open_request.object_name.empty()) {
-                        return object.object_name == open_request.object_name;
-                    }
-                    return object.record_index == open_request.record_index;
-                });
-            if (renamed_object != renamed_objects.objects.end()) {
-                open_request.record_index = renamed_object->record_index;
-                open_request.selection_record_available = true;
-            }
-        }
+        select_open_request_visual_object();
     }
 
     if (parse_result.request.reparent_object) {
@@ -25608,6 +25612,8 @@ int main(int argc, char** argv) {
             std::cout << "error: " << reorder_result.error << "\n";
             return 4;
         }
+
+        select_open_request_visual_object();
     }
 
     if (parse_result.request.group_object) {
