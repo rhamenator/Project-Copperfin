@@ -3778,6 +3778,13 @@ void write_synthetic_report_table_for_column_setup_field_json(const std::filesys
     expect(create_result.ok, "#1538: synthetic report table for column setup field JSON should be created");
 }
 
+void write_synthetic_report_table_for_deleted_column_setup_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_column_setup_field_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#1593: synthetic report table should mark column-count settings deleted");
+}
+
 void write_synthetic_report_table_for_column_width_field_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -11538,6 +11545,103 @@ void test_studio_host_json_updates_report_column_count_fields_by_record_selectio
 
     run_column_count_update(temp_root / "column_count.frx", "column_count.frx", "4", "report");
     run_column_count_update(temp_root / "column_count.lbx", "column_count.lbx", "5", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_column_count_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_count_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_count_update = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& updated_count,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_deleted_column_setup_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "COLS",
+                "--property-value", updated_count,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted column-count field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted column-count field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1593: deleted report/label column-count field update should exit successfully");
+        const auto column_count_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "COLS"
+        });
+        expect(column_count_property.ok && column_count_property.exists &&
+                   column_count_property.value == updated_count,
+               "#1593: deleted report/label column-count field update should persist the COLS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1593: deleted report/label column-count field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1593: deleted report/label column-count field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1593: deleted report/label column-count field update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1593: deleted report/label column-count field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1593: deleted report/label column-count field update should refresh deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1593: deleted report/label column-count field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1593: deleted report/label column-count field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_count + "\""
+            },
+            "#1593: deleted report/label column-count field update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_count + "\""
+            },
+            "#1593: deleted report/label column-count field update should refresh selected deleted settings");
+    };
+
+    run_deleted_column_count_update(temp_root / "deleted_column_count.frx",
+                                    "deleted_column_count.frx",
+                                    "4",
+                                    "report");
+    run_deleted_column_count_update(temp_root / "deleted_column_count.lbx",
+                                    "deleted_column_count.lbx",
+                                    "5",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -56512,6 +56616,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_count_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_width_fields_by_record_selection(argv[1]);
