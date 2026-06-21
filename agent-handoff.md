@@ -32,7 +32,7 @@ Current E3 update: latest implemented slice is `#1565`, proving report/label sec
 
 E2 evidence-audit update: `#1078`-`#1086`, `#1087`-`#1101`, `#1102`-`#1202`, `#1203`-`#1447` were closed through 2026-06-21 with issue-specific evidence after focused validation passed for `test_studio_host`, `test_studio_host_json`, `test_context_editor_actions`, `test_designer_context`, `test_toolbox_palette`, `test_toolbox_creation`, `test_builder_registry`, and `test_visual_asset_editor`. Parent `#23` remains open; continue closing completed children only with specific evidence.
 
-Snapshot alignment update: live GitHub verification shows `#162`-`#177` are already closed; `issues.txt` now omits those stale open rows while the existing changelog, remaining-work, and dependency-breakdown notes preserve their focused regression-test evidence.
+Snapshot alignment update: live GitHub verification shows `#162`-`#193` and `#200`-`#203` are already closed; `issues.txt` now omits those stale open rows while preserving still-open portability rows `#194`-`#199` and the existing shipped-evidence notes in changelog, remaining-work, and dependency-breakdown docs.
 
 CI update: latest polled pushed head `7a8eb441` records the final E2 `#1203`-`#1447` evidence-audit range closure plus the follow-up CI-poll note. At last poll, Native CMake Validation, Build Standalone Installers, Build Visual Studio VSIX, and Security Supply Chain Gate were all queued for that head; no new completed failure was visible in the latest `main` run list. Repoll before drawing hosted-CI conclusions.
 

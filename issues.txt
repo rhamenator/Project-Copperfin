@@ -1,31 +1,11 @@
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
 1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
-203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
-202	OPEN	H3/#91 slice: Tighten runtime interop bridge contract fidelity		2026-05-01T02:14:17Z
-201	OPEN	H3/#57 slice: Tighten LINQ projection/materialization fidelity		2026-05-01T02:14:14Z
-200	OPEN	H3/#57 slice: Tighten LINQ-oriented query translation fidelity		2026-05-01T02:14:10Z
 199	OPEN	J3/#37 slice: Tighten Linux portable-core integration fidelity		2026-05-01T02:14:07Z
 198	OPEN	J3/#37 slice: Tighten Linux shell/host parity		2026-05-01T02:14:04Z
 197	OPEN	J2/#36 slice: Tighten macOS portable-core integration fidelity		2026-05-01T02:14:02Z
 196	OPEN	J2/#36 slice: Tighten macOS shell/host parity		2026-05-01T02:13:59Z
 195	OPEN	J1/#35 slice: Tighten portable runtime contract boundaries		2026-05-01T02:13:56Z
 194	OPEN	J1/#35 slice: Isolate Windows-dependent runtime seams		2026-05-01T02:13:54Z
-193	OPEN	I2/#34 slice: Tighten AI/MCP permission-boundary fidelity		2026-05-01T02:13:52Z
-192	OPEN	I2/#34 slice: Tighten extension/host boundary fidelity		2026-05-01T02:13:49Z
-191	OPEN	I1/#33 slice: Tighten generated-app control and audit fidelity		2026-05-01T02:13:46Z
-190	OPEN	I1/#33 slice: Tighten runtime/project policy and secret-handling fidelity		2026-05-01T02:13:44Z
-189	OPEN	H3/#32 slice: Tighten MCP/AI and sidecar workflow fidelity		2026-05-01T02:13:41Z
-188	OPEN	H3/#32 slice: Tighten .NET output and host-integration fidelity		2026-05-01T02:13:36Z
-187	OPEN	H2/#31 slice: Tighten AI planning-policy integration fidelity		2026-05-01T02:13:34Z
-186	OPEN	H2/#31 slice: Tighten document/vector mapping fidelity		2026-05-01T02:13:32Z
-185	OPEN	H1/#30 slice: Tighten relational migration compatibility fidelity		2026-05-01T02:13:30Z
-184	OPEN	H1/#30 slice: Tighten relational query translation fidelity		2026-05-01T02:13:26Z
-183	OPEN	G3/#29 slice: Tighten completion-ranking and context metadata fidelity		2026-05-01T02:13:23Z
-182	OPEN	G3/#29 slice: Tighten metadata ingestion fidelity		2026-05-01T02:13:20Z
-181	OPEN	G2/#28 slice: Tighten rename/refactoring fidelity		2026-05-01T02:13:17Z
-180	OPEN	G2/#28 slice: Tighten definition/reference navigation fidelity		2026-05-01T02:13:14Z
-179	OPEN	G1/#27 slice: Tighten signature-help and completion fidelity		2026-05-01T02:13:12Z
-178	OPEN	G1/#27 slice: Tighten symbol resolution fidelity		2026-05-01T02:13:09Z
 161	OPEN	C4/#18 slice: Project build inclusion and dependency fidelity		2026-05-01T02:07:07Z
 160	OPEN	C4/#18 slice: Project startup resolution fidelity		2026-05-01T02:07:04Z
 159	OPEN	C3/#17 slice: Menu lifecycle and cleanup fidelity		2026-05-01T02:07:02Z
