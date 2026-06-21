@@ -6556,6 +6556,167 @@ void test_studio_host_json_deletes_label_layout_objects_by_stable_selectors(cons
     }
 }
 
+void test_studio_host_json_deletes_edited_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_delete_edited_geometry_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_edited_geometry_delete = [&](const fs::path& asset_path,
+                                                const std::string& title,
+                                                const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        expect(!visual_object_deleted(asset_path, "field-guid"),
+               "#1615: edited report/label layout object delete fixture should start live");
+
+        const auto set_live_geometry = [&](const std::string& property_name,
+                                           const std::string& property_value) {
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--record", "3",
+                    "--property-name", property_name,
+                    "--property-value", property_value,
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " live " << property_name
+                          << " pre-delete update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " live " << property_name
+                          << " pre-delete update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1615: report/label layout object geometry pre-delete update should exit successfully");
+            expect(!visual_object_deleted(asset_path, "field-guid"),
+                   "#1615: report/label layout object geometry pre-delete update should preserve live state");
+        };
+
+        set_live_geometry("HPOS", "1400");
+        set_live_geometry("WIDTH", "2400");
+        set_live_geometry("HEIGHT", "900");
+
+        const auto delete_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--record", "3",
+                "--delete-object",
+                "--unique-id", "field-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (delete_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " edited layout delete stdout:\n"
+                      << delete_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " edited layout delete stderr:\n"
+                      << delete_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(delete_process.exit_code == 0,
+               "#1615: edited report/label layout object delete should exit successfully");
+        expect(visual_object_deleted(asset_path, "field-guid"),
+               "#1615: edited report/label layout object delete should mark the DBF record deleted");
+        const auto left_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HPOS"
+        });
+        const auto width_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "WIDTH"
+        });
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 3U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HEIGHT"
+        });
+        expect(left_property.ok && left_property.exists && left_property.value == "1400" &&
+                   width_property.ok && width_property.exists && width_property.value == "2400" &&
+                   height_property.ok && height_property.exists && height_property.value == "900",
+               "#1615: edited report/label layout object delete should preserve edited geometry fields");
+        expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1615: edited report/label layout object delete should return refreshed report-layout JSON");
+        expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 2",
+                        "#1615: edited report/label layout object delete should add the edited object to deleted-object counts");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1615: edited report/label layout object delete should preserve selected deleted-object availability");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1615: edited report/label layout object delete should preserve object selection kind");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1615: edited report/label layout object delete should not fabricate containing-section availability");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1615: edited report/label layout object delete should serialize null containing-section metadata");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"objectKind\": \"field\"",
+                "\"left\": 1400",
+                "\"top\": 2600",
+                "\"width\": 2400",
+                "\"right\": 3800",
+                "\"height\": 900",
+                "\"bottom\": 3500"
+            },
+            "#1615: edited report/label layout object delete should preserve edited deleted-object geometry metadata");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"objectKind\": \"field\"",
+                "\"left\": 1400",
+                "\"top\": 2600",
+                "\"width\": 2400",
+                "\"right\": 3800",
+                "\"height\": 900",
+                "\"bottom\": 3500"
+            },
+            "#1615: edited report/label layout object delete should preserve selected deleted-object geometry metadata");
+    };
+
+    run_edited_geometry_delete(temp_root / "delete_edited_geometry.frx",
+                               "delete_edited_geometry.frx",
+                               "report");
+    run_edited_geometry_delete(temp_root / "delete_edited_geometry.lbx",
+                               "delete_edited_geometry.lbx",
+                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_restores_report_layout_objects_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -58746,6 +58907,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_snaps_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_deletes_label_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_deletes_edited_report_layout_object_geometry_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_restores_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_distributes_report_layout_objects_by_stable_selectors(argv[1]);
