@@ -263,11 +263,6 @@
 1146	OPEN	E2/#23 slice: Expose host bind-controls-object command		2026-06-18T06:24:51Z
 1145	OPEN	E2/#23 slice: Expose host auto-verb-menu-object command		2026-06-18T06:13:35Z
 1144	OPEN	E2/#23 slice: Expose host whats-this-button-object command		2026-06-18T06:05:13Z
-1143	OPEN	E2/#23 slice: Expose host whats-this-help-object command		2026-06-18T05:56:56Z
-1142	OPEN	E2/#23 slice: Expose host whats-this-help-id-object command		2026-06-18T05:49:27Z
-1141	OPEN	E2/#23 slice: Expose host help-context-id-object command		2026-06-18T05:41:25Z
-1140	OPEN	E2/#23 slice: Expose host display-orientation-object command		2026-06-18T05:34:16Z
-1139	OPEN	E2/#23 slice: Expose host tab-orientation-object command		2026-06-18T05:27:06Z
 1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
 1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
 1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
