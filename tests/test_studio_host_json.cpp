@@ -3758,6 +3758,21 @@ void write_synthetic_report_table_for_deleted_section_json(const std::filesystem
     expect(delete_result.ok, "#1474: synthetic FRX table should mark report section deleted");
 }
 
+void write_synthetic_report_table_for_stable_deleted_section_json(const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_deleted_section_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 1U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "deleted-section-guid"
+    });
+    expect(unique_id_result.ok, "#1654: stable deleted section fixture should seed a deleted section unique id");
+    expect(dbf_record_deleted(report_path, 1U),
+           "#1654: stable deleted section fixture should preserve the deleted section state");
+}
+
 void write_synthetic_report_table_for_deleted_settings_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
@@ -19114,6 +19129,100 @@ void test_studio_host_json_restores_label_sections_by_record_selection(const std
                     "#1493: restored label section selections should advertise selected-section availability");
     expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                     "#1493: restored label section selections should expose section selection kind");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_restores_report_sections_by_stable_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_section_restore_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_section_restore = [&](const fs::path& asset_path,
+                                         const std::string& title,
+                                         const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_section_json(asset_path);
+        expect(dbf_record_deleted(asset_path, 1U),
+               "#1654: stable report/label section restore fixture should start with a deleted section");
+
+        const auto restore_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--restore-object",
+                "--unique-id", "deleted-section-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (restore_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable section restore stdout:\n"
+                      << restore_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable section restore stderr:\n"
+                      << restore_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(restore_process.exit_code == 0,
+               "#1654: stable report/label section restore should exit successfully");
+        expect(!dbf_record_deleted(asset_path, 1U),
+               "#1654: stable report/label section restore should clear the section record delete flag");
+        expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1654: stable report/label section restore should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                            "#1654: stable label section restore should retain label identity");
+        }
+        expect_contains(restore_process.stdout_text, "\"sectionCount\": 1",
+                        "#1654: stable report/label section restore should restore live section counts");
+        expect_contains(restore_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1654: stable report/label section restore should clear deleted section counts");
+        expect_contains_in_order(
+            restore_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 3"
+            },
+            "#1654: stable report/label section restore should move the section back into live-section metadata");
+        expect_contains(restore_process.stdout_text, "\"unplacedObjectCount\": 0",
+                        "#1654: stable report/label section restore should move formerly unplaced objects back into section membership");
+        expect_contains(restore_process.stdout_text, "\"containingSectionId\": \"detail_1\"",
+                        "#1654: stable report/label section restore should expose containing-section ids again");
+        expect_contains(restore_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1654: stable report/label section restore should advertise selected-section availability");
+        expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1654: stable report/label section restore should expose section selection kind");
+        expect_contains_in_order(
+            restore_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 3"
+            },
+            "#1654: stable report/label section restore should rehydrate selected-section metadata");
+    };
+
+    run_section_restore(temp_root / "section_restore_stable.frx",
+                        "section_restore_stable.frx",
+                        "report");
+    run_section_restore(temp_root / "section_restore_stable.lbx",
+                        "section_restore_stable.lbx",
+                        "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -63408,6 +63517,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_sections_by_record_selection(argv[1]);
+    test_studio_host_json_restores_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
