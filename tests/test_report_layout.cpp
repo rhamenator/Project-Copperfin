@@ -443,6 +443,79 @@ void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
     }
 }
 
+void test_build_report_layout_carries_group_section_expressions() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "grouped.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "1"),
+                value("OBJCODE", "53")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "3"),
+                value("EXPR", "customer.country", 71U),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "600.000")
+            }
+        },
+        {
+            .record_index = 2U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "4"),
+                value("VPOS", "600.000"),
+                value("HEIGHT", "3000.000")
+            }
+        },
+        {
+            .record_index = 3U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "5"),
+                value("EXPR", "customer.country", 72U),
+                value("VPOS", "3600.000"),
+                value("HEIGHT", "500.000")
+            }
+        }
+    };
+
+    const auto layout = copperfin::studio::build_report_layout(document);
+    expect(layout.sections.size() == 3U, "#1566: report layout should preserve grouped section rows");
+    if (layout.sections.size() == 3U) {
+        expect(layout.sections[0].band_kind == "group_header", "#1566: first group section should decode as a group header");
+        expect(layout.sections[0].expression == "customer.country",
+            "#1566: group header sections should expose the grouping expression");
+        expect(layout.sections[0].expression_field_index == 2U,
+            "#1566: group header expressions should retain EXPR field provenance");
+        expect(layout.sections[0].expression_memo_block_number == 71U,
+            "#1566: group header expressions should retain EXPR memo block provenance");
+        expect(layout.sections[1].band_kind == "detail", "#1566: detail sections should remain ordered between group bands");
+        expect(layout.sections[1].expression.empty(), "#1566: detail sections should not fabricate group expressions");
+        expect(layout.sections[1].expression_field_index == copperfin::studio::StudioReportMissingFieldIndex,
+            "#1566: expression-less sections should expose missing field provenance");
+        expect(layout.sections[2].band_kind == "group_footer", "#1566: final group section should decode as a group footer");
+        expect(layout.sections[2].expression == "customer.country",
+            "#1566: group footer sections should expose the grouping expression");
+        expect(layout.sections[2].expression_field_index == 2U,
+            "#1566: group footer expressions should retain EXPR field provenance");
+        expect(layout.sections[2].expression_memo_block_number == 72U,
+            "#1566: group footer expressions should retain EXPR memo block provenance");
+    }
+}
+
 void test_build_report_layout_reports_missing_title_provenance_when_unavailable() {
     copperfin::studio::StudioDocumentModel label_document;
     label_document.display_name = "mailing.lbx";
@@ -579,6 +652,7 @@ void test_build_report_layout_includes_direct_paper_size_settings() {
 int main() {
     test_build_report_layout_groups_band_objects();
     test_build_report_layout_suppresses_unresolved_memo_placeholders();
+    test_build_report_layout_carries_group_section_expressions();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
     test_build_report_layout_includes_direct_orientation_settings();
     test_build_report_layout_includes_direct_paper_size_settings();

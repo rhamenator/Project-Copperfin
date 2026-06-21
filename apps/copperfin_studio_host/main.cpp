@@ -20260,6 +20260,13 @@ void print_json_report_layout_section(
     print_json_report_field_index_or_null(section.band_kind_field_index);
     std::cout << ",\n";
     std::cout << indent << "  \"bandKindMemoBlockNumber\": " << section.band_kind_memo_block_number << ",\n";
+    std::cout << indent << "  \"expression\": ";
+    print_json_string(section.expression);
+    std::cout << ",\n";
+    std::cout << indent << "  \"expressionFieldIndex\": ";
+    print_json_report_field_index_or_null(section.expression_field_index);
+    std::cout << ",\n";
+    std::cout << indent << "  \"expressionMemoBlockNumber\": " << section.expression_memo_block_number << ",\n";
     std::cout << indent << "  \"recordIndex\": " << section.record_index << ",\n";
     std::cout << indent << "  \"deleted\": " << (section.deleted ? "true" : "false") << ",\n";
     std::cout << indent << "  \"sectionIndex\": ";

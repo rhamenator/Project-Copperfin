@@ -547,6 +547,7 @@ StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
     const std::uint32_t objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
+    const FieldSelection expression = first_non_empty_selection(record, {"EXPR"});
     const int top = parse_scaled_int_or_default(record, "VPOS");
     const int height = std::max(0, parse_scaled_int_or_default(record, "HEIGHT"));
     return {
@@ -559,6 +560,9 @@ StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
         .band_kind = band_kind_name(objcode),
         .band_kind_field_index = objcode_field_index,
         .band_kind_memo_block_number = objcode_memo_block_number,
+        .expression = expression.value,
+        .expression_field_index = expression.field_index,
+        .expression_memo_block_number = expression.memo_block_number,
         .record_index = record.record_index,
         .deleted = record.deleted,
         .objcode_code = objcode,

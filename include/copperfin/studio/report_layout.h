@@ -73,6 +73,9 @@ struct StudioReportSectionSnapshot {
     std::string band_kind{};
     std::size_t band_kind_field_index = StudioReportMissingFieldIndex;
     std::uint32_t band_kind_memo_block_number = 0;
+    std::string expression{};
+    std::size_t expression_field_index = StudioReportMissingFieldIndex;
+    std::uint32_t expression_memo_block_number = 0;
     std::size_t record_index = 0;
     bool deleted = false;
     std::size_t section_index = StudioReportMissingRecordIndex;

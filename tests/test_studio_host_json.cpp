@@ -3658,6 +3658,25 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
     expect(delete_result.ok, "#1452: synthetic FRX table should mark deleted layout objects");
 }
 
+void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", ""},
+        {"9", "3", "customer.country", "0", "600"},
+        {"9", "4", "", "600", "3000"},
+        {"9", "5", "customer.country", "3600", "500"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1566: synthetic report table for group section expression JSON should be created");
+}
+
 void write_synthetic_report_table_for_layout_distribution_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -4069,6 +4088,81 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1459: unplaced/deleted report object JSON should expose null section object indexes");
     expect_contains(process.stdout_text, "\"title\": \"Record 5\"",
                     "#1452: report layout JSON should preserve synthesized unplaced-object titles");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_report_group_section_expressions(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_group_section_expression_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_group_expression_json = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_group_section_expression_json(asset_path);
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " group section expression stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " group section expression stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1566: report/label group section expression JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1566: report/label group section expression JSON should preserve document titles");
+        expect_contains(process.stdout_text, "\"sectionCount\": 3",
+                        "#1566: report/label group section expression JSON should preserve group/detail/footer sections");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1",
+                "\"bandKind\": \"detail\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"recordIndex\": 3"
+            },
+            "#1566: report/label group section expression JSON should expose full section expression metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1"
+            },
+            "#1566: selected report/label group sections should expose expression metadata");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1566: selected group sections should preserve section selection classification");
+    };
+
+    run_group_expression_json(temp_root / "group_sections.frx", "group_sections.frx", "report");
+    run_group_expression_json(temp_root / "group_sections.lbx", "group_sections.lbx", "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -53639,6 +53733,7 @@ int main(int argc, char** argv) {
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
+    test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_layout_column_setup(argv[1]);
     test_studio_host_json_exposes_label_layout_parity(argv[1]);
     test_studio_host_json_exposes_selected_report_sections(argv[1]);
