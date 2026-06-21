@@ -211,10 +211,6 @@
 1198	OPEN	E2/#23 slice: Expose host integral-height-object command		2026-06-18T16:33:17Z
 1197	OPEN	E2/#23 slice: Expose host column-lines-object command		2026-06-18T16:16:43Z
 1196	OPEN	E2/#23 slice: Expose host column-widths-object command		2026-06-18T15:59:27Z
-1195	OPEN	E2/#23 slice: Expose host dynamic-font-shadow-object command		2026-06-18T15:43:01Z
-1194	OPEN	E2/#23 slice: Expose host dynamic-font-outline-object command		2026-06-18T15:27:18Z
-1193	OPEN	E2/#23 slice: Expose host dynamic-font-strikethru-object command		2026-06-18T15:12:02Z
-1192	OPEN	E2/#23 slice: Expose host dynamic-font-underline-object command		2026-06-18T14:57:07Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
