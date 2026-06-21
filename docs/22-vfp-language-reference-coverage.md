@@ -56,6 +56,7 @@ Current local CHM snapshot from the installed VFP help set:
 
 The native runtime/parser currently has first-pass support for these command families:
 
+- E3 designer/tooling stable-selector report-layout top-position clear note — Studio host JSON now has regression coverage proving live FRX/LBX layout object VPOS fields can be cleared by stable unique id through generic property clears with blanked direct fields, refreshed selected-object top/bottom metadata, and restored containing-section metadata.
 - E3 designer/tooling stable-selector report-layout top-position update note — Studio host JSON now has regression coverage proving live FRX/LBX layout object VPOS fields can be updated by stable unique id through generic property edits with refreshed preview top/height bounds, selected-object top/bottom metadata, and placed/unplaced counts.
 - E3 designer/tooling stable-selector report-layout height clear note — Studio host JSON now has regression coverage proving live FRX/LBX layout object HEIGHT fields can be cleared by stable unique id through generic property clears with blanked direct fields and selected-object height/bottom metadata while removing stale geometry.
 - E3 designer/tooling stable-selector report-layout height update note — Studio host JSON now has regression coverage proving live FRX/LBX layout object HEIGHT fields can be updated by stable unique id through generic property edits with refreshed preview bottom/height bounds and selected-object height/bottom metadata while preserving containing-section metadata.
