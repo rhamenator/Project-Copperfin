@@ -10382,6 +10382,105 @@ void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections
     }
 }
 
+void test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_placement_update_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_placement_update = [&](const fs::path& asset_path,
+                                          const std::string& title,
+                                          const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto seed_identity = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 5U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "UNIQUEID",
+            .property_value = "unplaced-line-guid"
+        });
+        expect(seed_identity.ok,
+               "#1634: report/label layout object stable placement fixture should seed a stable id");
+
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "unplaced-line-guid",
+                "--property-name", "VPOS",
+                "--property-value", "2600",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable layout placement update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable layout placement update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1634: report/label layout object stable placement update should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 5U,
+            .object_name = {},
+            .unique_id = "unplaced-line-guid",
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.value == "2600",
+               "#1634: report/label layout object stable placement update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1634: report/label layout object stable placement update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1634: label layout object stable placement update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 3",
+                        "#1634: report/label layout object stable placement update should increment placed counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 0",
+                        "#1634: report/label layout object stable placement update should clear unplaced counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1634: report/label layout object stable placement update should preserve selected object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1634: report/label layout object stable placement update should expose selected containing-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 5",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 700",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 2",
+                "\"objectKind\": \"line\"",
+                "\"title\": \"unplaced-line-guid\""
+            },
+            "#1634: report/label layout object stable placement update should refresh selected object section metadata");
+    };
+
+    run_placement_update(temp_root / "placement_update_stable.frx",
+                         "placement_update_stable.frx",
+                         "report");
+    run_placement_update(temp_root / "placement_update_stable.lbx",
+                         "placement_update_stable.lbx",
+                         "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -61177,6 +61276,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_layout_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
+    test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_stable_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_sections_to_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_width_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_width_by_record_selection(argv[1]);
