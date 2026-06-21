@@ -20369,6 +20369,121 @@ void test_studio_host_json_exposes_selected_report_objects_by_stable_selection(
     }
 }
 
+void test_studio_host_json_exposes_selected_unplaced_report_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_unplaced_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_unplaced_object_selection = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto seed_identity = copperfin::vfp::update_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 5U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "UNIQUEID",
+            .property_value = "unplaced-line-guid"
+        });
+        expect(seed_identity.ok,
+               "#1661: report/label unplaced object stable selection fixture should seed a stable id");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "unplaced-line-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected unplaced object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected unplaced object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1661: stable selected unplaced report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1661: stable selected unplaced report/label object JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1661: stable selected unplaced label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1661: stable unplaced object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1661: stable unplaced object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1661: stable unplaced object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1661: stable unplaced object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#1661: stable unplaced object selections should preserve unplaced object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1661: stable unplaced object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1661: stable unplaced object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1661: stable unplaced object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1661: stable unplaced object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1661: stable unplaced object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1661: stable unplaced object selections should not advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1661: stable unplaced object selections should serialize null containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 5",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectTypeCode\": 6",
+                "\"objectKind\": \"line\"",
+                "\"title\": \"unplaced-line-guid\"",
+                "\"expression\": \"\"",
+                "\"highlightCount\": 0"
+            },
+            "#1661: stable unplaced object selections should expose selected object metadata without section membership");
+        expect_contains(object_process.stdout_text, "\"left\": 50",
+                        "#1661: stable unplaced object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 8000",
+                        "#1661: stable unplaced object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 100",
+                        "#1661: stable unplaced object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 150",
+                        "#1661: stable unplaced object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 100",
+                        "#1661: stable unplaced object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 8100",
+                        "#1661: stable unplaced object selections should expose selected-object bottom bounds");
+    };
+
+    run_unplaced_object_selection(temp_root / "selected_unplaced_object_stable.frx",
+                                  "selected_unplaced_object_stable.frx",
+                                  "report");
+    run_unplaced_object_selection(temp_root / "selected_unplaced_object_stable.lbx",
+                                  "selected_unplaced_object_stable.lbx",
+                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -64392,6 +64507,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_unplaced_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_selected_label_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
