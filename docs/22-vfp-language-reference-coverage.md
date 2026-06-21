@@ -56,6 +56,7 @@ Current local CHM snapshot from the installed VFP help set:
 
 The native runtime/parser currently has first-pass support for these command families:
 
+- E3 designer/tooling stable-selector report-layout width clear note — Studio host JSON now has regression coverage proving live FRX/LBX layout object WIDTH fields can be cleared by stable unique id through generic property clears with refreshed preview bounds and selected-object width/right-edge metadata while removing stale geometry.
 - E3 designer/tooling stable-selector report-layout width update note — Studio host JSON now has regression coverage proving live FRX/LBX layout object WIDTH fields can be updated by stable unique id through generic property edits with refreshed preview bounds and selected-object width/right-edge metadata while preserving containing-section metadata.
 - E3 designer/tooling stable-selector report-layout unplacement-transition note — Studio host JSON now has regression coverage proving section-contained live FRX/LBX layout objects can move out of all live sections by stable unique id through generic VPOS edits with placed/unplaced counts refreshed and selected-object containing-section metadata cleared/null.
 - E3 designer/tooling stable-selector report-layout placement-transition note — Studio host JSON now has regression coverage proving initially unplaced live FRX/LBX layout objects can move into live sections by stable unique id through generic VPOS edits with placed/unplaced counts refreshed and selected-object containing-section metadata pointing at the moved object.
