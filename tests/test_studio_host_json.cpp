@@ -3802,6 +3802,30 @@ void write_synthetic_report_table_for_stable_column_section_json(
     expect(create_result.ok, "#1676: synthetic report table for stable column section JSON should be created");
 }
 
+void write_synthetic_report_table_for_stable_column_header_object_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "", "", "", "", "", ""},
+        {"9", "2", "", "", "0", "", "450", "column-header-section-guid"},
+        {"9", "4", "", "", "450", "", "2600", ""},
+        {"9", "6", "", "", "3050", "", "400", "column-footer-section-guid"},
+        {"5", "", "\"Column header label\"", "200", "100", "1700", "250", "column-header-label-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1684: synthetic report table for stable column-header object JSON should be created");
+}
+
 void write_synthetic_report_table_for_deleted_group_section_expression_json(
     const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_group_section_expression_json(report_path);
@@ -22212,6 +22236,127 @@ void test_studio_host_json_exposes_selected_page_footer_report_objects_by_stable
     run_page_footer_object_selection(temp_root / "selected_page_footer_object_stable.lbx",
                                      "selected_page_footer_object_stable.lbx",
                                      "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_column_header_report_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_column_header_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_column_header_object_selection = [&](const fs::path& asset_path,
+                                                        const std::string& title,
+                                                        const std::string& label) {
+        write_synthetic_report_table_for_stable_column_header_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "column-header-label-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected column-header object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected column-header object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1684: stable selected column-header report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1684: stable selected column-header object JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1684: stable selected column-header label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1684: stable column-header object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1684: stable column-header object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1684: stable column-header object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1684: stable column-header object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1684: stable column-header object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1684: stable column-header object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1684: stable column-header object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 3",
+                        "#1684: stable column-header object selections should preserve live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1684: stable column-header object selections should preserve deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1684: stable column-header object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1684: stable column-header object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1684: stable column-header object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1684: stable column-header object selections should expose containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 4",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"column_header_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 350",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"expression\": \"\\\"Column header label\\\"\""
+            },
+            "#1684: stable column-header object selections should expose selected object metadata");
+        expect_contains(object_process.stdout_text, "\"left\": 200",
+                        "#1684: stable column-header object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 100",
+                        "#1684: stable column-header object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 1700",
+                        "#1684: stable column-header object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 1900",
+                        "#1684: stable column-header object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 250",
+                        "#1684: stable column-header object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 350",
+                        "#1684: stable column-header object selections should expose selected-object bottom bounds");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"column_header_1\"",
+                "\"bandKind\": \"column_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 3",
+                "\"top\": 0",
+                "\"height\": 450",
+                "\"bottom\": 450",
+                "\"objectCount\": 1"
+            },
+            "#1684: stable column-header object selections should expose the containing column-header metadata");
+    };
+
+    run_column_header_object_selection(temp_root / "selected_column_header_object_stable.frx",
+                                       "selected_column_header_object_stable.frx",
+                                       "report");
+    run_column_header_object_selection(temp_root / "selected_column_header_object_stable.lbx",
+                                       "selected_column_header_object_stable.lbx",
+                                       "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -67088,6 +67233,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_title_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_footer_report_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_column_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_unplaced_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_unplaced_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_report_objects_by_stable_selection(argv[1]);
