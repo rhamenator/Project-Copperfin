@@ -241,8 +241,6 @@
 1168	OPEN	E2/#23 slice: Expose host window-state-object command		2026-06-18T09:54:14Z
 1167	OPEN	E2/#23 slice: Expose host scroll-bars-object command		2026-06-18T09:43:03Z
 1166	OPEN	E2/#23 slice: Expose host special-effect-object command		2026-06-18T09:31:37Z
-1165	OPEN	E2/#23 slice: Expose host link-master-object command		2026-06-18T09:21:31Z
-1164	OPEN	E2/#23 slice: Expose host border-color-object command		2026-06-18T09:10:32Z
 1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
 1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
 1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
