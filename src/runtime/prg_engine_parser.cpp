@@ -275,6 +275,284 @@ void assign_dialog_positional_if_empty(std::string& field, const std::vector<std
     field = trim_copy(arguments[index]);
 }
 
+bool parse_file_storage_statement(const std::string& line, Statement& statement) {
+    if (starts_with_insensitive(line, "ERASE ") || starts_with_insensitive(line, "DELETE FILE ")) {
+        statement.kind = StatementKind::erase_command;
+        const bool starts_delete = starts_with_insensitive(line, "DELETE FILE ");
+        statement.expression = trim_copy(line.substr(starts_delete ? 12U : 6U));
+        return true;
+    }
+    if (starts_with_insensitive(line, "COPY FILE ")) {
+        statement.kind = StatementKind::copy_file_command;
+        const std::string body = trim_copy(line.substr(10U));
+        const std::size_t to_pos = find_keyword_top_level(body, "TO");
+        if (to_pos != std::string::npos) {
+            statement.expression = trim_copy(body.substr(0U, to_pos));
+            statement.secondary_expression = trim_copy(body.substr(to_pos + 2U));
+        } else {
+            statement.expression = body;
+        }
+        return true;
+    }
+    if (starts_with_insensitive(line, "RENAME ")) {
+        statement.kind = StatementKind::rename_file_command;
+        const std::string body = trim_copy(line.substr(7U));
+        const std::size_t to_pos = find_keyword_top_level(body, "TO");
+        if (to_pos != std::string::npos) {
+            statement.expression = trim_copy(body.substr(0U, to_pos));
+            statement.secondary_expression = trim_copy(body.substr(to_pos + 2U));
+        } else {
+            statement.expression = body;
+        }
+        return true;
+    }
+    if (!line.empty() && (line[0] == '?' || (line.size() >= 2U && line[0] == '?' && line[1] == '?'))) {
+        statement.kind = StatementKind::print_command;
+        std::size_t start = 1U;
+        while (start < line.size() && line[start] == '?') {
+            ++start;
+        }
+        statement.expression = trim_copy(line.substr(start));
+        return true;
+    }
+    return false;
+}
+
+bool parse_table_definition_statement(const std::string& line, Statement& statement) {
+    if (starts_with_insensitive(line, "ALTER TABLE ")) {
+        statement.kind = StatementKind::alter_table_command;
+        const std::string body = trim_copy(line.substr(12U));
+        const std::size_t action_position = find_first_keyword_top_level(body, {"ADD", "DROP", "ALTER"});
+        if (action_position == std::string::npos) {
+            statement.identifier = body;
+        } else {
+            statement.identifier = trim_copy(body.substr(0U, action_position));
+            std::string action_clause = trim_copy(body.substr(action_position));
+            const auto [action, remainder] = split_first_word(action_clause);
+            action_clause = trim_copy(remainder);
+            if (starts_with_insensitive(action_clause, "COLUMN ")) {
+                action_clause = trim_copy(action_clause.substr(7U));
+            }
+            statement.expression = action_clause;
+            statement.secondary_expression = lowercase_copy(action);
+        }
+        return true;
+    }
+    if (starts_with_insensitive(line, "CREATE TABLE ")) {
+        statement.kind = StatementKind::create_table_command;
+        const std::string body = trim_copy(line.substr(13U));
+        const auto paren_open = body.find('(');
+        if (paren_open != std::string::npos && body.back() == ')') {
+            statement.identifier = trim_copy(body.substr(0U, paren_open));
+            statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
+        } else {
+            statement.identifier = body;
+        }
+        return true;
+    }
+    if (starts_with_insensitive(line, "CREATE CURSOR ")) {
+        statement.kind = StatementKind::create_cursor_command;
+        const std::string body = trim_copy(line.substr(14U));
+        const auto paren_open = body.find('(');
+        if (paren_open != std::string::npos && body.back() == ')') {
+            statement.identifier = trim_copy(body.substr(0U, paren_open));
+            statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
+        } else {
+            statement.identifier = body;
+        }
+        return true;
+    }
+    return false;
+}
+
+bool parse_memory_transfer_statement(const std::string& line, Statement& statement) {
+    if (starts_with_insensitive(line, "SAVE SCREEN")) {
+        statement.kind = StatementKind::no_op;
+        return true;
+    }
+    if (starts_with_insensitive(line, "SAVE TO ")) {
+        statement.kind = StatementKind::save_memvars_command;
+        const std::string body = trim_copy(line.substr(8U));
+        const auto tail_start = find_first_keyword_top_level(body, {"ALL", "LIKE", "EXCEPT"});
+        statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+        const std::string like_pattern = extract_command_clause(body, "LIKE", {"EXCEPT"});
+        const std::string except_pattern = extract_command_clause(body, "EXCEPT", {"LIKE"});
+        if (!like_pattern.empty()) {
+            statement.identifier = "LIKE:" + like_pattern;
+        } else if (!except_pattern.empty()) {
+            statement.identifier = "EXCEPT:" + except_pattern;
+        }
+        return true;
+    }
+    if (starts_with_insensitive(line, "RESTORE FROM ")) {
+        statement.kind = StatementKind::restore_memvars_command;
+        const std::string body = trim_copy(line.substr(13U));
+        const auto tail_start = find_first_keyword_top_level(body, {"ADDITIVE"});
+        statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+        if (has_keyword(body, "ADDITIVE")) {
+            statement.identifier = "ADDITIVE";
+        }
+        return true;
+    }
+    return false;
+}
+
+bool parse_table_transfer_statement(const std::string& line, Statement& statement) {
+    if (starts_with_insensitive(line, "COPY TO ARRAY ")) {
+        statement.kind = StatementKind::copy_to_command;
+        statement.identifier = "array";
+        const std::string body = trim_copy(line.substr(14U));
+        const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
+        statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+        statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE"});
+        statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
+        return true;
+    }
+    if (starts_with_insensitive(line, "COPY TO ") || starts_with_insensitive(line, "COPY STRUCTURE TO ")) {
+        statement.kind = StatementKind::copy_to_command;
+        const bool is_structure = starts_with_insensitive(line, "COPY STRUCTURE TO ");
+        const std::string body = trim_copy(line.substr(is_structure ? 18U : 8U));
+        statement.identifier = is_structure ? "structure" : std::string{};
+        const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "DELIMITED", "FIELDS", "FOR", "WHILE", "IN"});
+        statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+        statement.secondary_expression = extract_command_clause(body, "TYPE", {"WITH", "FIELDS", "FOR", "WHILE", "IN"});
+        if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
+            statement.secondary_expression = "DELIMITED";
+        }
+        statement.tertiary_expression = extract_fields_command_clause(body, {"TYPE", "FOR", "WHILE", "IN"});
+        statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
+        const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE", "IN"});
+        if (!with_clause.empty()) {
+            statement.names.push_back(with_clause);
+        }
+        return true;
+    }
+    if (starts_with_insensitive(line, "APPEND FROM ARRAY ")) {
+        statement.kind = StatementKind::append_from_command;
+        statement.identifier = "array";
+        const std::string body = trim_copy(line.substr(18U));
+        const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
+        statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+        statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE"});
+        statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
+        return true;
+    }
+    if (starts_with_insensitive(line, "APPEND FROM ")) {
+        statement.kind = StatementKind::append_from_command;
+        const std::string body = trim_copy(line.substr(12U));
+        const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "DELIMITED", "FIELDS", "FOR", "WHILE"});
+        statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
+        statement.secondary_expression = extract_command_clause(body, "TYPE", {"WITH", "FIELDS", "FOR", "WHILE"});
+        if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
+            statement.secondary_expression = "DELIMITED";
+        }
+        statement.tertiary_expression = extract_fields_command_clause(body, {"TYPE", "FOR", "WHILE"});
+        statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
+        const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE"});
+        if (!with_clause.empty()) {
+            statement.names.push_back(with_clause);
+        }
+        return true;
+    }
+    if (starts_with_insensitive(line, "SCATTER ")) {
+        statement.kind = StatementKind::scatter_command;
+        const std::string body = trim_copy(line.substr(8U));
+        statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
+        statement.secondary_expression = extract_fields_command_clause(body, {"TO", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
+        const std::string name_target = extract_scatter_name_target_clause(body);
+        if (!name_target.empty()) {
+            statement.identifier = "name";
+            statement.expression = name_target;
+        } else {
+            statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
+        }
+        statement.tertiary_expression = has_keyword(body, "BLANK") ? "blank" : std::string{};
+        statement.quaternary_expression = has_keyword(body, "MEMO") ? "memo" : std::string{};
+        if (has_keyword(body, "ADDITIVE")) {
+            statement.names.push_back("additive");
+        }
+        return true;
+    }
+    return false;
+}
+
+bool parse_storage_statement(const std::string& line, Statement& statement) {
+    return parse_file_storage_statement(line, statement) ||
+        parse_table_definition_statement(line, statement) ||
+        parse_memory_transfer_statement(line, statement) ||
+        parse_table_transfer_statement(line, statement);
+}
+
+void parse_default_statement(const std::string& line, Statement& statement) {
+    if (starts_with_insensitive(line, "DECLARE ") &&
+        !looks_like_array_declaration_body(line.substr(8U))) {
+        statement.kind = StatementKind::declare_dll;
+        const std::string body = trim_copy(line.substr(8U));
+        const std::size_t in_pos = find_keyword_top_level(body, "IN");
+        if (in_pos != std::string::npos) {
+            const std::string lhs = trim_copy(body.substr(0U, in_pos));
+            const std::string rhs = trim_copy(body.substr(in_pos + 2U));
+            const auto space_pos = lhs.find(' ');
+            if (space_pos != std::string::npos) {
+                statement.secondary_expression = trim_copy(lhs.substr(0U, space_pos));
+                const std::string fn_part = trim_copy(lhs.substr(space_pos + 1U));
+                const auto paren_pos = fn_part.find('(');
+                if (paren_pos != std::string::npos) {
+                    statement.identifier = trim_copy(fn_part.substr(0U, paren_pos));
+                    const auto close_paren = fn_part.rfind(')');
+                    if (close_paren != std::string::npos && close_paren > paren_pos) {
+                        statement.tertiary_expression = fn_part.substr(paren_pos + 1U, close_paren - paren_pos - 1U);
+                    }
+                } else {
+                    statement.identifier = fn_part;
+                }
+            } else {
+                statement.identifier = lhs;
+            }
+            const std::size_t as_pos = find_keyword_top_level(rhs, "AS");
+            if (as_pos != std::string::npos) {
+                statement.expression = trim_copy(rhs.substr(0U, as_pos));
+                statement.quaternary_expression = trim_copy(rhs.substr(as_pos + 2U));
+            } else {
+                statement.expression = rhs;
+            }
+        } else {
+            statement.kind = StatementKind::no_op;
+            statement.expression = body;
+        }
+        return;
+    }
+    if (starts_with_insensitive(line, "GATHER FROM ") || starts_with_insensitive(line, "GATHER MEMVAR") ||
+        starts_with_insensitive(line, "GATHER NAME ")) {
+        statement.kind = StatementKind::gather_command;
+        const std::string body = trim_copy(line.substr(7U));
+        statement.expression = extract_command_clause(body, "FROM", {"FIELDS", "MEMVAR", "NAME", "FOR"});
+        statement.secondary_expression = extract_fields_command_clause(body, {"FROM", "MEMVAR", "NAME", "FOR"});
+        const std::string name_source = extract_command_clause(body, "NAME", {"FROM", "FIELDS", "MEMVAR", "FOR"});
+        if (!name_source.empty()) {
+            statement.identifier = "name";
+            statement.expression = name_source;
+        } else {
+            statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
+        }
+        statement.quaternary_expression = extract_command_clause(body, "FOR", {"FROM", "FIELDS", "MEMVAR", "NAME"});
+        return;
+    }
+
+    const auto equals = line.find('=');
+    if (!line.empty() && line[0] == '=') {
+        statement.kind = StatementKind::expression;
+        statement.expression = trim_copy(line.substr(1U));
+    } else if (equals != std::string::npos) {
+        statement.kind = StatementKind::assignment;
+        statement.identifier = trim_copy(line.substr(0U, equals));
+        statement.expression = trim_copy(line.substr(equals + 1U));
+    } else {
+        statement.kind = StatementKind::expression;
+        statement.expression = line;
+    }
+}
+
 }  // namespace
 
 Program parse_program(const std::string& path) {
@@ -1100,253 +1378,19 @@ Program parse_program(const std::string& path) {
             // Store just the scope keyword (ALL, TABLES, DATABASES) as detail
             const std::size_t space_pos = upper.find(' ');
             statement.expression = space_pos != std::string::npos ? trim_copy(upper.substr(space_pos + 1U)) : "ALL";
-        } else if (starts_with_insensitive(line, "ERASE ") || starts_with_insensitive(line, "DELETE FILE ")) {
-            statement.kind = StatementKind::erase_command;
-            const bool starts_delete = starts_with_insensitive(line, "DELETE FILE ");
-            statement.expression = trim_copy(line.substr(starts_delete ? 12U : 6U));
-        } else if (starts_with_insensitive(line, "COPY FILE ")) {
-            // COPY FILE <src> TO <dest>
-            statement.kind = StatementKind::copy_file_command;
-            const std::string body = trim_copy(line.substr(10U));
-            const std::size_t to_pos = find_keyword_top_level(body, "TO");
-            if (to_pos != std::string::npos) {
-                statement.expression = trim_copy(body.substr(0U, to_pos));
-                statement.secondary_expression = trim_copy(body.substr(to_pos + 2U));
-            } else {
-                statement.expression = body;
-            }
-        } else if (starts_with_insensitive(line, "RENAME ")) {
-            // RENAME <old> TO <new>
-            statement.kind = StatementKind::rename_file_command;
-            const std::string body = trim_copy(line.substr(7U));
-            const std::size_t to_pos = find_keyword_top_level(body, "TO");
-            if (to_pos != std::string::npos) {
-                statement.expression = trim_copy(body.substr(0U, to_pos));
-                statement.secondary_expression = trim_copy(body.substr(to_pos + 2U));
-            } else {
-                statement.expression = body;
-            }
-        } else if (!line.empty() && (line[0] == '?' || (line.size() >= 2U && line[0] == '?' && line[1] == '?'))) {
-            statement.kind = StatementKind::print_command;
-            // ??, ??? all treat what follows as expression
-            std::size_t start = 1U;
-            while (start < line.size() && line[start] == '?') ++start;
-            statement.expression = trim_copy(line.substr(start));
-        } else if (starts_with_insensitive(line, "ALTER TABLE ")) {
-            statement.kind = StatementKind::alter_table_command;
-            const std::string body = trim_copy(line.substr(12U));
-            const std::size_t action_position = find_first_keyword_top_level(body, {"ADD", "DROP", "ALTER"});
-            if (action_position == std::string::npos) {
-                statement.identifier = body;
-            } else {
-                statement.identifier = trim_copy(body.substr(0U, action_position));
-                std::string action_clause = trim_copy(body.substr(action_position));
-                const auto [action, remainder] = split_first_word(action_clause);
-                action_clause = trim_copy(remainder);
-                if (starts_with_insensitive(action_clause, "COLUMN ")) {
-                    action_clause = trim_copy(action_clause.substr(7U));
-                }
-                statement.expression = action_clause;
-                statement.secondary_expression = lowercase_copy(action);
-            }
-        } else if (starts_with_insensitive(line, "CREATE TABLE ")) {
-            statement.kind = StatementKind::create_table_command;
-            const std::string body = trim_copy(line.substr(13U));
-            const auto paren_open = body.find('(');
-            if (paren_open != std::string::npos && body.back() == ')') {
-                statement.identifier = trim_copy(body.substr(0U, paren_open));
-                statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
-            } else {
-                statement.identifier = body;
-            }
-        } else if (starts_with_insensitive(line, "CREATE CURSOR ")) {
-            // CREATE CURSOR <alias> (<field_list>)
-            statement.kind = StatementKind::create_cursor_command;
-            const std::string body = trim_copy(line.substr(14U));
-            const auto paren_open = body.find('(');
-            if (paren_open != std::string::npos && body.back() == ')') {
-                statement.identifier = trim_copy(body.substr(0U, paren_open));
-                statement.expression = body.substr(paren_open + 1U, body.size() - paren_open - 2U);
-            } else {
-                statement.identifier = body;
-            }
-        } else if (starts_with_insensitive(line, "SAVE SCREEN")) {
-            // SAVE SCREEN is a UI/surface command and is not part of memory-variable persistence.
-            statement.kind = StatementKind::no_op;
-        } else if (starts_with_insensitive(line, "SAVE TO ")) {
-            // SAVE TO <filename> [ALL LIKE <pattern> | ALL EXCEPT <pattern>]
-            statement.kind = StatementKind::save_memvars_command;
-            const std::string body = trim_copy(line.substr(8U));
-            const auto tail_start = find_first_keyword_top_level(body, {"ALL", "LIKE", "EXCEPT"});
-            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            const std::string like_pattern = extract_command_clause(body, "LIKE", {"EXCEPT"});
-            const std::string except_pattern = extract_command_clause(body, "EXCEPT", {"LIKE"});
-            if (!like_pattern.empty()) {
-                statement.identifier = "LIKE:" + like_pattern;
-            } else if (!except_pattern.empty()) {
-                statement.identifier = "EXCEPT:" + except_pattern;
-            }
-        } else if (starts_with_insensitive(line, "RESTORE FROM ")) {
-            // RESTORE FROM <filename> [ADDITIVE]
-            statement.kind = StatementKind::restore_memvars_command;
-            const std::string body = trim_copy(line.substr(13U));
-            const auto tail_start = find_first_keyword_top_level(body, {"ADDITIVE"});
-            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            if (has_keyword(body, "ADDITIVE")) {
-                statement.identifier = "ADDITIVE";
-            }
-        } else if (starts_with_insensitive(line, "COPY TO ARRAY ")) {
-            // COPY TO ARRAY <array> [FIELDS <list>] [FOR <expr>]
-            statement.kind = StatementKind::copy_to_command;
-            statement.identifier = "array";
-            const std::string body = trim_copy(line.substr(14U));
-            const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
-            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE"});
-            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
-        } else if (starts_with_insensitive(line, "COPY TO ") || starts_with_insensitive(line, "COPY STRUCTURE TO ")) {
-            statement.kind = StatementKind::copy_to_command;
-            const bool is_structure = starts_with_insensitive(line, "COPY STRUCTURE TO ");
-            const std::string body = trim_copy(line.substr(is_structure ? 18U : 8U));
-            statement.identifier = is_structure ? "structure" : std::string{};
-            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "DELIMITED", "FIELDS", "FOR", "WHILE", "IN"});
-            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "TYPE", {"WITH", "FIELDS", "FOR", "WHILE", "IN"});
-            if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
-                statement.secondary_expression = "DELIMITED";
-            }
-            statement.tertiary_expression = extract_fields_command_clause(body, {"TYPE", "FOR", "WHILE", "IN"});
-            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE", "IN"});
-            const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE", "IN"});
-            if (!with_clause.empty()) {
-                statement.names.push_back(with_clause);
-            }
-        } else if (starts_with_insensitive(line, "APPEND FROM ARRAY ")) {
-            // APPEND FROM ARRAY <array> [FIELDS <list>]
-            statement.kind = StatementKind::append_from_command;
-            statement.identifier = "array";
-            const std::string body = trim_copy(line.substr(18U));
-            const auto tail_start = find_first_keyword_top_level(body, {"FIELDS", "FOR", "WHILE"});
-            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.tertiary_expression = extract_fields_command_clause(body, {"FOR", "WHILE"});
-            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
-        } else if (starts_with_insensitive(line, "APPEND FROM ")) {
-            statement.kind = StatementKind::append_from_command;
-            const std::string body = trim_copy(line.substr(12U));
-            const auto tail_start = find_first_keyword_top_level(body, {"TYPE", "DELIMITED", "FIELDS", "FOR", "WHILE"});
-            statement.expression = tail_start == std::string::npos ? body : trim_copy(body.substr(0U, tail_start));
-            statement.secondary_expression = extract_command_clause(body, "TYPE", {"WITH", "FIELDS", "FOR", "WHILE"});
-            if (statement.secondary_expression.empty() && has_keyword(body, "DELIMITED")) {
-                statement.secondary_expression = "DELIMITED";
-            }
-            statement.tertiary_expression = extract_fields_command_clause(body, {"TYPE", "FOR", "WHILE"});
-            statement.quaternary_expression = extract_command_clause(body, "FOR", {"WHILE"});
-            const std::string with_clause = extract_command_clause(body, "WITH", {"FIELDS", "FOR", "WHILE"});
-            if (!with_clause.empty()) {
-                statement.names.push_back(with_clause);
-            }
-        } else if (starts_with_insensitive(line, "SCATTER ")) {
-            statement.kind = StatementKind::scatter_command;
-            const std::string body = trim_copy(line.substr(8U));
-            // SCATTER [FIELDS <list>] TO <array>|MEMVAR|NAME <object> [BLANK] [MEMO] [ADDITIVE]
-            statement.expression = extract_command_clause(body, "TO", {"FIELDS", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
-            statement.secondary_expression = extract_fields_command_clause(body, {"TO", "MEMVAR", "NAME", "BLANK", "MEMO", "ADDITIVE"});
-            const std::string name_target = extract_scatter_name_target_clause(body);
-            if (!name_target.empty()) {
-                statement.identifier = "name";
-                statement.expression = name_target;
-            } else {
-                statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
-            }
-            statement.tertiary_expression = has_keyword(body, "BLANK") ? "blank" : std::string{};
-            statement.quaternary_expression = has_keyword(body, "MEMO") ? "memo" : std::string{};
-            if (has_keyword(body, "ADDITIVE")) {
-                statement.names.push_back("additive");
-            }
+        } else if (parse_storage_statement(line, statement)) {
         } else if (upper == "RETRY") {
             statement.kind = StatementKind::retry_statement;
         } else if (upper == "RESUME" || starts_with_insensitive(line, "RESUME ")) {
             statement.kind = StatementKind::resume_statement;
-            // RESUME [NEXT | <line>] — store optional qualifier in expression
             if (starts_with_insensitive(line, "RESUME ")) {
                 statement.expression = trim_copy(line.substr(7U));
             }
-        } 
-        
-        if (statement.kind == StatementKind::no_op) {
-            if (starts_with_insensitive(line, "DECLARE ") &&
-                   !looks_like_array_declaration_body(line.substr(8U))) {
-            // DECLARE <rettype> <funcname> IN <dll> [AS <alias>] [(<params>)]
-            // Fields: identifier=alias(funcname), expression=dll_path,
-            //   secondary_expression=rettype, tertiary_expression=param_types
-            statement.kind = StatementKind::declare_dll;
-            const std::string body = trim_copy(line.substr(8U));
-            // Parse: <rettype> <funcname> IN <dll> ...
-            const std::size_t in_pos = find_keyword_top_level(body, "IN");
-            if (in_pos != std::string::npos) {
-                const std::string lhs = trim_copy(body.substr(0U, in_pos));
-                const std::string rhs = trim_copy(body.substr(in_pos + 2U));
-                // lhs = "<rettype> <funcname>"
-                const auto space_pos = lhs.find(' ');
-                if (space_pos != std::string::npos) {
-                    statement.secondary_expression = trim_copy(lhs.substr(0U, space_pos)); // rettype
-                    const std::string fn_part = trim_copy(lhs.substr(space_pos + 1U));
-                    // Strip parameter list if present: funcname [(params)]
-                    const auto paren_pos = fn_part.find('(');
-                    if (paren_pos != std::string::npos) {
-                        statement.identifier = trim_copy(fn_part.substr(0U, paren_pos));
-                        const auto close_paren = fn_part.rfind(')');
-                        if (close_paren != std::string::npos && close_paren > paren_pos) {
-                            statement.tertiary_expression = fn_part.substr(paren_pos + 1U, close_paren - paren_pos - 1U);
-                        }
-                    } else {
-                        statement.identifier = fn_part;
-                    }
-                } else {
-                    statement.identifier = lhs; // No rettype, just funcname
-                }
-                // rhs may include AS <alias>
-                const std::size_t as_pos = find_keyword_top_level(rhs, "AS");
-                if (as_pos != std::string::npos) {
-                    statement.expression = trim_copy(rhs.substr(0U, as_pos));
-                    statement.quaternary_expression = trim_copy(rhs.substr(as_pos + 2U)); // alias
-                } else {
-                    statement.expression = rhs; // dll_path
-                }
-            } else {
-                // Malformed — keep as no_op
-                statement.kind = StatementKind::no_op;
-                statement.expression = body;
-            }
-        } else if (starts_with_insensitive(line, "GATHER FROM ") || starts_with_insensitive(line, "GATHER MEMVAR") ||
-                   starts_with_insensitive(line, "GATHER NAME ")) {
-            statement.kind = StatementKind::gather_command;
-            const std::string body = trim_copy(line.substr(7U));
-            statement.expression = extract_command_clause(body, "FROM", {"FIELDS", "MEMVAR", "NAME", "FOR"});
-            statement.secondary_expression = extract_fields_command_clause(body, {"FROM", "MEMVAR", "NAME", "FOR"});
-            const std::string name_source = extract_command_clause(body, "NAME", {"FROM", "FIELDS", "MEMVAR", "FOR"});
-            if (!name_source.empty()) {
-                statement.identifier = "name";
-                statement.expression = name_source;
-            } else {
-                statement.identifier = has_keyword(body, "MEMVAR") ? "memvar" : std::string{};
-            }
-            statement.quaternary_expression = extract_command_clause(body, "FOR", {"FROM", "FIELDS", "MEMVAR", "NAME"});
-        } else {
-            const auto equals = line.find('=');
-            if (!line.empty() && line[0] == '=') {
-                statement.kind = StatementKind::expression;
-                statement.expression = trim_copy(line.substr(1U));
-            } else if (equals != std::string::npos) {
-                statement.kind = StatementKind::assignment;
-                statement.identifier = trim_copy(line.substr(0U, equals));
-                statement.expression = trim_copy(line.substr(equals + 1U));
-            } else {
-                statement.kind = StatementKind::expression;
-                statement.expression = line;
-            }
         }
-        } // End of if (statement.kind == StatementKind::no_op)
+
+        if (statement.kind == StatementKind::no_op) {
+            parse_default_statement(line, statement);
+        }
 
         current->statements.push_back(std::move(statement));
     }
