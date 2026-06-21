@@ -268,11 +268,6 @@
 1141	OPEN	E2/#23 slice: Expose host help-context-id-object command		2026-06-18T05:41:25Z
 1140	OPEN	E2/#23 slice: Expose host display-orientation-object command		2026-06-18T05:34:16Z
 1139	OPEN	E2/#23 slice: Expose host tab-orientation-object command		2026-06-18T05:27:06Z
-1138	OPEN	E2/#23 slice: Expose host initial-selected-alias-object command		2026-06-18T05:19:37Z
-1137	OPEN	E2/#23 slice: Expose host default-file-path-object command		2026-06-18T05:11:54Z
-1136	OPEN	E2/#23 slice: Expose host form-set-class-object command		2026-06-18T04:47:34Z
-1135	OPEN	E2/#23 slice: Expose host list-item-id-object command		2026-06-18T04:41:11Z
-1134	OPEN	E2/#23 slice: Expose host fill-color-object command		2026-06-18T04:34:57Z
 1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
 1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
 1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
