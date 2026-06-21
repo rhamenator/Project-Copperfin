@@ -3734,6 +3734,29 @@ void write_synthetic_report_table_for_stable_summary_section_json(
     expect(create_result.ok, "#1694: synthetic report table for stable summary section JSON should be created");
 }
 
+void write_synthetic_report_table_for_stable_summary_object_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"9", "8", "", "", "3200", "", "700", "summary-section-guid"},
+        {"5", "", "\"Summary label\"", "400", "3300", "1500", "250", "summary-label-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1696: synthetic report table for stable summary object JSON should be created");
+}
+
 void write_synthetic_report_table_for_stable_group_header_object_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -22333,6 +22356,127 @@ void test_studio_host_json_exposes_selected_report_objects_by_stable_selection(
                                  "report");
     run_deleted_object_selection(temp_root / "selected_deleted_object_stable.lbx",
                                  "selected_deleted_object_stable.lbx",
+                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_summary_report_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_summary_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_summary_object_selection = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_stable_summary_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "summary-label-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected summary object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected summary object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1696: stable selected summary report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1696: stable selected summary object JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1696: stable selected summary label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1696: stable summary object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1696: stable summary object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1696: stable summary object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1696: stable summary object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1696: stable summary object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1696: stable summary object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1696: stable summary object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                        "#1696: stable summary object selections should preserve live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1696: stable summary object selections should preserve deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1696: stable summary object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1696: stable summary object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1696: stable summary object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1696: stable summary object selections should expose containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"summary_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 350",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"expression\": \"\\\"Summary label\\\"\""
+            },
+            "#1696: stable summary object selections should expose selected object metadata");
+        expect_contains(object_process.stdout_text, "\"left\": 400",
+                        "#1696: stable summary object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 3300",
+                        "#1696: stable summary object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 1500",
+                        "#1696: stable summary object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 1900",
+                        "#1696: stable summary object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 250",
+                        "#1696: stable summary object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 3550",
+                        "#1696: stable summary object selections should expose selected-object bottom bounds");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"summary_2\"",
+                "\"bandKind\": \"summary\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"sectionIndex\": 1",
+                "\"sectionCount\": 2",
+                "\"top\": 3200",
+                "\"height\": 700",
+                "\"bottom\": 3900",
+                "\"objectCount\": 1"
+            },
+            "#1696: stable summary object selections should expose the containing summary metadata");
+    };
+
+    run_summary_object_selection(temp_root / "selected_summary_object_stable.frx",
+                                 "selected_summary_object_stable.frx",
+                                 "report");
+    run_summary_object_selection(temp_root / "selected_summary_object_stable.lbx",
+                                 "selected_summary_object_stable.lbx",
                                  "label");
 
     if (failures == 0) {
@@ -68570,6 +68714,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_page_header_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_objects_by_stable_selection(argv[1]);
