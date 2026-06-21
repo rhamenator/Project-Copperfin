@@ -8300,6 +8300,107 @@ void test_studio_host_json_updates_report_section_heights_by_record_selection(co
     }
 }
 
+void test_studio_host_json_updates_deleted_report_section_heights_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_section_height_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_section_height_update = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_deleted_section_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "1",
+                "--property-name", "HEIGHT",
+                "--property-value", "2400",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted section height update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted section height update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1575: deleted report/label section height update should exit successfully");
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "HEIGHT"
+        });
+        expect(height_property.ok && height_property.exists && height_property.value == "2400",
+               "#1575: deleted report/label section height update should persist the HEIGHT field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1575: deleted report/label section height update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"sectionCount\": 0",
+                        "#1575: deleted report/label section height update should not fabricate live sections");
+        expect_contains(update_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1575: deleted report/label section height update should preserve deleted section counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1575: deleted report/label section height update should preserve selected section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1575: deleted report/label section height update should preserve selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 2000",
+                "\"height\": 2400",
+                "\"bottom\": 4400"
+            },
+            "#1575: deleted report/label section height update should refresh deleted-section geometry");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 2000",
+                "\"height\": 2400",
+                "\"bottom\": 4400"
+            },
+            "#1575: deleted report/label section height update should refresh selected-section geometry");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1575: deleted report/label section height update should preserve unplaced object accounting");
+        expect_contains(update_process.stdout_text, "\"containingSectionId\": \"\"",
+                        "#1575: deleted report/label section height update should not fabricate containing sections");
+    };
+
+    run_deleted_section_height_update(temp_root / "deleted_section_height.frx",
+                                      "deleted_section_height.frx",
+                                      "report");
+    run_deleted_section_height_update(temp_root / "deleted_section_height.lbx",
+                                      "deleted_section_height.lbx",
+                                      "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_report_section_heights_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -54689,6 +54790,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_top_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_section_heights_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_section_tops_by_record_selection(argv[1]);
