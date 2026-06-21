@@ -3822,6 +3822,13 @@ void write_synthetic_report_table_for_column_spacing_field_json(const std::files
     expect(create_result.ok, "#1540: synthetic report table for column spacing field JSON should be created");
 }
 
+void write_synthetic_report_table_for_deleted_column_spacing_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_column_spacing_field_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#1597: synthetic report table should mark column-spacing settings deleted");
+}
+
 void write_synthetic_report_table_for_bottom_margin_field_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -12168,6 +12175,103 @@ void test_studio_host_json_clears_report_column_width_fields_by_record_selection
 
     run_column_width_clear(temp_root / "column_width_clear.frx", "column_width_clear.frx", "report");
     run_column_width_clear(temp_root / "column_width_clear.lbx", "column_width_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_column_spacing_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_spacing_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_spacing_update = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& updated_spacing,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_deleted_column_spacing_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "COLSPACING",
+                "--property-value", updated_spacing,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted column-spacing field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted column-spacing field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1597: deleted report/label column-spacing field update should exit successfully");
+        const auto column_spacing_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "COLSPACING"
+        });
+        expect(column_spacing_property.ok && column_spacing_property.exists &&
+                   column_spacing_property.value == updated_spacing,
+               "#1597: deleted report/label column-spacing field update should persist the COLSPACING field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1597: deleted report/label column-spacing field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1597: deleted report/label column-spacing field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1597: deleted report/label column-spacing field update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1597: deleted report/label column-spacing field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1597: deleted report/label column-spacing field update should refresh deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1597: deleted report/label column-spacing field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1597: deleted report/label column-spacing field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_spacing + "\""
+            },
+            "#1597: deleted report/label column-spacing field update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_spacing + "\""
+            },
+            "#1597: deleted report/label column-spacing field update should refresh selected deleted settings");
+    };
+
+    run_deleted_column_spacing_update(temp_root / "deleted_column_spacing.frx",
+                                      "deleted_column_spacing.frx",
+                                      "180",
+                                      "report");
+    run_deleted_column_spacing_update(temp_root / "deleted_column_spacing.lbx",
+                                      "deleted_column_spacing.lbx",
+                                      "90",
+                                      "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -56912,6 +57016,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_setup_by_record_selection(argv[1]);
