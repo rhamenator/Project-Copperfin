@@ -3757,6 +3757,13 @@ void write_synthetic_report_table_for_stable_summary_object_json(
     expect(create_result.ok, "#1696: synthetic report table for stable summary object JSON should be created");
 }
 
+void write_synthetic_report_table_for_deleted_summary_object_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_stable_summary_object_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1697: synthetic report table should mark summary object deleted");
+}
+
 void write_synthetic_report_table_for_stable_group_header_object_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -22478,6 +22485,111 @@ void test_studio_host_json_exposes_selected_summary_report_objects_by_stable_sel
     run_summary_object_selection(temp_root / "selected_summary_object_stable.lbx",
                                  "selected_summary_object_stable.lbx",
                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_deleted_summary_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_summary_object_selection = [&](const fs::path& asset_path,
+                                                          const std::string& title,
+                                                          const std::string& label) {
+        write_synthetic_report_table_for_deleted_summary_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "summary-label-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted summary object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted summary object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1697: stable selected deleted summary report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1697: stable selected deleted summary object JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1697: stable selected deleted summary label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1697: stable deleted summary object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1697: stable deleted summary object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1697: stable deleted summary object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1697: stable deleted summary object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1697: stable deleted summary object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1697: stable deleted summary object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1697: stable deleted summary object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                        "#1697: stable deleted summary object selections should preserve live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1697: stable deleted summary object selections should preserve deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 0",
+                        "#1697: stable deleted summary object selections should clear live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1697: stable deleted summary object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1697: stable deleted summary object selections should not advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1697: stable deleted summary object selections should serialize null containing sections");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"expression\": \"\\\"Summary label\\\"\""
+            },
+            "#1697: stable deleted summary object selections should expose selected deleted-object metadata");
+        expect_contains(object_process.stdout_text, "\"left\": 400",
+                        "#1697: stable deleted summary object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 3300",
+                        "#1697: stable deleted summary object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 1500",
+                        "#1697: stable deleted summary object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 1900",
+                        "#1697: stable deleted summary object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 250",
+                        "#1697: stable deleted summary object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 3550",
+                        "#1697: stable deleted summary object selections should expose selected-object bottom bounds");
+    };
+
+    run_deleted_summary_object_selection(temp_root / "selected_deleted_summary_object_stable.frx",
+                                         "selected_deleted_summary_object_stable.frx",
+                                         "report");
+    run_deleted_summary_object_selection(temp_root / "selected_deleted_summary_object_stable.lbx",
+                                         "selected_deleted_summary_object_stable.lbx",
+                                         "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -68715,6 +68827,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_summary_report_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_objects_by_stable_selection(argv[1]);
