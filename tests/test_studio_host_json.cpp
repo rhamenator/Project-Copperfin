@@ -3698,6 +3698,31 @@ void write_synthetic_report_table_for_negative_dimension_layout_json(
     expect(delete_result.ok, "#1715: synthetic report table should mark the negative-dimension object deleted");
 }
 
+void write_synthetic_report_table_for_malformed_numeric_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'C', .length = 16U},
+        {.name = "VPOS", .type = 'C', .length = 16U},
+        {.name = "WIDTH", .type = 'C', .length = 16U},
+        {.name = "HEIGHT", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "not-top", "", "not-height", ""},
+        {"5", "", "\"Malformed live\"", "left?", "top?", "wide?", "tall?", "malformed-live-guid"},
+        {"5", "", "\"Malformed deleted\"", "left!", "top!", "wide!", "tall!", "malformed-deleted-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1716: synthetic report table for malformed layout numerics should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1716: synthetic report table should mark the malformed-numeric object deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -5116,6 +5141,134 @@ void test_studio_host_json_clamps_negative_report_layout_dimensions(
     run_negative_dimension_layout(temp_root / "negative_dimensions.lbx",
                                   "negative_dimensions.lbx",
                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_defaults_malformed_report_layout_numerics(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_malformed_report_layout_numeric_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_malformed_numeric_layout = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_malformed_numeric_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " malformed numeric layout summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " malformed numeric layout summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1716: malformed report/label layout numerics should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1716: malformed layout numerics should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1716: malformed numeric label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1716: malformed live layouts should expose preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1716: malformed live layout left bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1716: malformed live layout top bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1716: malformed live layout right bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 0",
+                        "#1716: malformed live layout bottom bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1716: malformed live layout width should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsHeight\": 0",
+                        "#1716: malformed live layout height should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1716: malformed deleted layouts should expose deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1716: malformed deleted layout left bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#1716: malformed deleted layout top bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#1716: malformed deleted layout right bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#1716: malformed deleted layout bottom bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1716: malformed deleted layout width should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#1716: malformed deleted layout height should default to zero");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1716: malformed layout numerics should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1716: malformed layout numerics should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
+                        "#1716: malformed section heights should default to zero in summaries");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1716: malformed live object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"left\": 0",
+                "\"top\": 0",
+                "\"width\": 0",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"bottom\": 0"
+            },
+            "#1716: malformed live object numerics should default selected geometry to zero");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1716: malformed deleted object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"left\": 0",
+                "\"top\": 0",
+                "\"width\": 0",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"bottom\": 0"
+            },
+            "#1716: malformed deleted object numerics should default selected geometry to zero");
+    };
+
+    run_malformed_numeric_layout(temp_root / "malformed_numerics.frx",
+                                 "malformed_numerics.frx",
+                                 "report");
+    run_malformed_numeric_layout(temp_root / "malformed_numerics.lbx",
+                                 "malformed_numerics.lbx",
+                                 "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -70878,6 +71031,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
+    test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
