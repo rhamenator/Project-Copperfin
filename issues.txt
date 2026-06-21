@@ -6,18 +6,6 @@
 196	OPEN	J2/#36 slice: Tighten macOS shell/host parity		2026-05-01T02:13:59Z
 195	OPEN	J1/#35 slice: Tighten portable runtime contract boundaries		2026-05-01T02:13:56Z
 194	OPEN	J1/#35 slice: Isolate Windows-dependent runtime seams		2026-05-01T02:13:54Z
-161	OPEN	C4/#18 slice: Project build inclusion and dependency fidelity		2026-05-01T02:07:07Z
-160	OPEN	C4/#18 slice: Project startup resolution fidelity		2026-05-01T02:07:04Z
-159	OPEN	C3/#17 slice: Menu lifecycle and cleanup fidelity		2026-05-01T02:07:02Z
-158	OPEN	C3/#17 slice: Menu dispatch and action fidelity		2026-05-01T02:07:00Z
-157	OPEN	C2/#16 slice: Label execution and preview fidelity		2026-05-01T02:06:57Z
-156	OPEN	C2/#16 slice: Report expression and output pipeline fidelity		2026-05-01T02:06:55Z
-155	OPEN	C1/#15 slice: Form data environment and object-graph fidelity		2026-05-01T02:06:53Z
-154	OPEN	C1/#15 slice: Form/class lifecycle and event-order fidelity		2026-05-01T02:06:48Z
-153	OPEN	B2/#14 slice: Tighten developer-facing diagnostic normalization		2026-05-01T02:06:46Z
-152	OPEN	B2/#14 slice: Tighten pause metadata and stack-frame fidelity		2026-05-01T02:06:43Z
-151	OPEN	B1/#13 slice: Preserve repeated-continue stability after runtime faults		2026-05-01T02:06:41Z
-150	OPEN	B1/#13 slice: Preserve session and cursor state after runtime faults		2026-05-01T02:06:38Z
 141	OPEN	Wishlist: IMPORT/EXPORT DATABASE ... TYPE ACCESS		2026-05-01T00:56:59Z
 140	OPEN	Wishlist: IMPORT/EXPORT DATABASE ... TYPE JSON or SQL		2026-05-01T00:56:59Z
 138	OPEN	Wishlist: Access forms, reports, queries, and VBA migration bridge		2026-05-01T00:56:59Z
