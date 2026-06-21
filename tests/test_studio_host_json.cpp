@@ -8982,6 +8982,127 @@ void test_studio_host_json_updates_report_settings_memos_by_record_selection(con
     }
 }
 
+void test_studio_host_json_updates_deleted_report_settings_memos_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_settings_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::string updated_settings =
+        "ORIENTATION=1\n"
+        "PAPERSIZE=9\n"
+        "BOTMARGIN=32\n"
+        "GRIDV=6\n"
+        "GRIDH=10\n"
+        "TOPMARGIN=14";
+
+    const auto run_deleted_settings_update = [&](const fs::path& asset_path,
+                                                 const std::string& title,
+                                                 const std::string& label) {
+        write_synthetic_report_table_for_deleted_settings_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "EXPR",
+                "--property-value", updated_settings,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted settings memo update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted settings memo update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1579: deleted report/label settings memo update should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.value == updated_settings,
+               "#1579: deleted report/label settings memo update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1579: deleted report/label settings memo update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1579: deleted report/label settings memo update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1579: deleted report/label settings memo update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 7",
+                        "#1579: deleted report/label settings memo update should refresh deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1579: deleted report/label settings memo update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1579: deleted report/label settings memo update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"value\": \"9\"",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"value\": \"32\"",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"value\": \"6\"",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"value\": \"10\"",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"14\"",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            "#1579: deleted report/label settings memo update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"value\": \"9\"",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"value\": \"32\"",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"value\": \"6\"",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"value\": \"10\"",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 5",
+                "\"value\": \"14\"",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            "#1579: deleted report/label settings memo update should refresh selected deleted settings");
+        expect_contains(update_process.stdout_text, "\"sectionCount\": 2",
+                        "#1579: deleted report/label settings memo update should preserve live section metadata");
+        expect_contains(update_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1579: deleted report/label settings memo update should preserve deleted object metadata");
+    };
+
+    run_deleted_settings_update(temp_root / "deleted_settings_memo.frx",
+                                "deleted_settings_memo.frx",
+                                "report");
+    run_deleted_settings_update(temp_root / "deleted_settings_memo.lbx",
+                                "deleted_settings_memo.lbx",
+                                "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_report_settings_memos_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -55081,6 +55202,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_page_margin_fields_by_record_selection(argv[1]);
