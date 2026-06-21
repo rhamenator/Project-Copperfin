@@ -93,10 +93,6 @@
 1316	OPEN	E2/#23 slice: Add toolbox palette launch catalog planning		2026-06-19T04:26:13Z
 1315	OPEN	E2/#23 slice: Expose toolbox object batch creation from admitted palette dispatch through host JSON		2026-06-19T04:13:51Z
 1314	OPEN	E2/#23 slice: Expose toolbox object creation from admitted palette dispatch through host JSON		2026-06-19T04:00:10Z
-1311	OPEN	E2/#23 slice: Expose selection-context toolbox object batch creation through host JSON		2026-06-19T03:38:38Z
-1309	OPEN	E2/#23 slice: Expose selection-context toolbox object creation through host JSON		2026-06-19T03:26:37Z
-1307	OPEN	E2/#23 slice: Expose selection-context toolbox object batch create-dispatch planning through host JSON		2026-06-19T03:14:26Z
-1305	OPEN	E2/#23 slice: Expose selection-context toolbox object batch create planning through host JSON		2026-06-19T03:02:21Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
