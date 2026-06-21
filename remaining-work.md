@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1676 stable-selector column-header report/label section selection coverage shipped: Studio host regression coverage now proves column-header FRX/LBX sections can be seeded with `UNIQUEID=column-header-section-guid` and selected for JSON inspection by `--unique-id`, with selected-section availability/kind preserved, column-header band metadata exposed, live sibling detail/column-footer metadata retained, live/deleted section counts verified, selected object/settings metadata kept null, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1675 stable-selector page-footer report/label section selection coverage shipped: Studio host regression coverage now proves page-footer FRX/LBX sections can be seeded with `UNIQUEID=page-footer-section-guid` and selected for JSON inspection by `--unique-id`, with selected-section availability/kind preserved, page-footer band metadata exposed, live sibling title/detail metadata retained, live/deleted section counts verified, selected object/settings metadata kept null, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1674 stable-selector title report/label section selection coverage shipped: Studio host regression coverage now proves title FRX/LBX sections can be seeded with `UNIQUEID=title-section-guid` and selected for JSON inspection by `--unique-id`, with selected-section availability/kind preserved, title band metadata exposed, live sibling detail/page-footer metadata retained, live/deleted section counts verified, selected object/settings metadata kept null, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1673 stable-selector deleted orphaned detail report/label object selection coverage shipped: Studio host regression coverage now proves deleted detail FRX/LBX label objects whose containing detail section is also deleted can be selected for JSON inspection by `--unique-id deleted-label-guid`, with selected-object availability/kind preserved, expression provenance and geometry exposed, live/deleted section and object counts verified, selected section/settings metadata kept null, containing-section metadata kept null for the deleted orphaned selection, sibling page-header metadata retained, and label identity retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1690,7 +1691,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1675 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1676 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1761,7 +1762,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1675 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1676 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
