@@ -93,21 +93,6 @@
 1316	OPEN	E2/#23 slice: Add toolbox palette launch catalog planning		2026-06-19T04:26:13Z
 1315	OPEN	E2/#23 slice: Expose toolbox object batch creation from admitted palette dispatch through host JSON		2026-06-19T04:13:51Z
 1314	OPEN	E2/#23 slice: Expose toolbox object creation from admitted palette dispatch through host JSON		2026-06-19T04:00:10Z
-1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
-1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
-1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
-1183	OPEN	E2/#23 slice: Expose host font-strikethru-object command		2026-06-18T12:54:23Z
-1182	OPEN	E2/#23 slice: Expose host font-underline-object command		2026-06-18T12:42:25Z
-1181	OPEN	E2/#23 slice: Expose host font-italic-object command		2026-06-18T12:30:24Z
-1180	OPEN	E2/#23 slice: Expose host font-bold-object command		2026-06-18T12:17:54Z
-1179	OPEN	E2/#23 slice: Expose host font-size-object command		2026-06-18T12:05:52Z
-1178	OPEN	E2/#23 slice: Expose host font-name-object command		2026-06-18T11:53:55Z
-1174	OPEN	E2/#23 slice: Expose host picture-spacing-object command		2026-06-18T11:03:08Z
-1173	OPEN	E2/#23 slice: Expose host picture-position-object command		2026-06-18T10:51:58Z
-1172	OPEN	E2/#23 slice: Expose host picture-margin-object command		2026-06-18T10:41:01Z
-1171	OPEN	E2/#23 slice: Expose host mouse-pointer-object command		2026-06-18T10:30:20Z
-1170	OPEN	E2/#23 slice: Expose host title-bar-object command		2026-06-18T10:19:04Z
-1169	OPEN	E2/#23 slice: Expose host show-window-object command		2026-06-18T10:06:11Z
 1168	OPEN	E2/#23 slice: Expose host window-state-object command		2026-06-18T09:54:14Z
 1167	OPEN	E2/#23 slice: Expose host scroll-bars-object command		2026-06-18T09:43:03Z
 1166	OPEN	E2/#23 slice: Expose host special-effect-object command		2026-06-18T09:31:37Z
