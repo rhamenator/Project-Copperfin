@@ -93,20 +93,10 @@
 1316	OPEN	E2/#23 slice: Add toolbox palette launch catalog planning		2026-06-19T04:26:13Z
 1315	OPEN	E2/#23 slice: Expose toolbox object batch creation from admitted palette dispatch through host JSON		2026-06-19T04:13:51Z
 1314	OPEN	E2/#23 slice: Expose toolbox object creation from admitted palette dispatch through host JSON		2026-06-19T04:00:10Z
-1313	OPEN	E2/#23 slice: Add toolbox object batch creation execution from admitted palette dispatch		2026-06-19T03:54:19Z
-1312	OPEN	E2/#23 slice: Add toolbox object creation execution from admitted palette dispatch		2026-06-19T03:49:22Z
 1311	OPEN	E2/#23 slice: Expose selection-context toolbox object batch creation through host JSON		2026-06-19T03:38:38Z
-1310	OPEN	E2/#23 slice: Add selection-context toolbox object batch creation execution		2026-06-19T03:33:34Z
 1309	OPEN	E2/#23 slice: Expose selection-context toolbox object creation through host JSON		2026-06-19T03:26:37Z
-1308	OPEN	E2/#23 slice: Add selection-context toolbox object creation execution		2026-06-19T03:21:28Z
 1307	OPEN	E2/#23 slice: Expose selection-context toolbox object batch create-dispatch planning through host JSON		2026-06-19T03:14:26Z
-1306	OPEN	E2/#23 slice: Add selection-context toolbox object batch create-dispatch planning		2026-06-19T03:08:27Z
 1305	OPEN	E2/#23 slice: Expose selection-context toolbox object batch create planning through host JSON		2026-06-19T03:02:21Z
-1304	OPEN	E2/#23 slice: Add selection-context toolbox object batch create planning		2026-06-19T02:58:06Z
-1303	OPEN	E2/#23 slice: Expose selection-context toolbox object create-dispatch planning through host JSON		2026-06-19T02:47:27Z
-1302	OPEN	E2/#23 slice: Add selection-context toolbox object create-dispatch planning		2026-06-19T02:40:52Z
-1301	OPEN	E2/#23 slice: Expose selection-context toolbox object create planning through host JSON		2026-06-19T02:33:33Z
-1300	OPEN	E2/#23 slice: Add selection-context toolbox object create planning		2026-06-19T02:28:55Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
