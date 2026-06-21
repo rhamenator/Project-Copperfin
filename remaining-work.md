@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1574 deleted report/label group footer expression edit coverage shipped: Studio host regression coverage now proves `--set-property` on deleted FRX/LBX group-footer `EXPR` records persists the updated memo-backed expression, refreshes both `reportLayout.deletedSections` and `selectedReportSection` expression/provenance JSON, preserves deleted section selection metadata, and leaves live group-header/detail section metadata intact. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E2/#1403-#1405 were closed in GitHub after current-head evidence review confirmed shipped toolbox palette launch-plan, toolbox create-batch plan, and toolbox create-plan summaries. Error management coverage includes unsupported toolbox selections, unknown or missing selection contexts, invalid toolbox context tokens, unknown toolbox items, unavailable selected-context items, blocked batch-plan diagnostics without fabricated item ids, dry-run/non-mutating planning, and no asset mutation on rejected planning paths. Fresh focused validation passed with `git diff --check` and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#23` remains open; the `#1203`-`#1447` evidence-audit range is now contiguous and closed after already-closed `#1406`-`#1447`.
 - 2026-06-21: E2/#1399-#1402 were closed in GitHub after current-head evidence review confirmed shipped designer launch-surface, invocation-admission, dispatch, and execution selected-context summaries. Error management coverage includes unknown or missing selection contexts, invalid admission booleans, unsupported toolbox contexts surfaced as blocked selected-context summaries, dry-run/unadmitted child dispatch errors, failed child process diagnostics, non-executing dispatch planning, and non-mutating summaries. Fresh focused validation passed with `git diff --check` and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#23` remains open; the `#1203`-`#1402` evidence-audit range is now contiguous and closed.
 - 2026-06-21: E2/#1395-#1398 were closed in GitHub after current-head evidence review confirmed shipped editor-action launch-plan, invocation-admission, dispatch, and execution summaries. Error management coverage includes wrong-context and unavailable actions, unknown or missing selection contexts, missing action ids, invalid boolean/numeric values, dry-run and unadmitted dispatch/execution rejection, missing launch-command parser failures, nonzero child process exit reporting, non-executing dispatch planning, and non-mutating summaries. Fresh focused validation passed with `git diff --check` and `./build/tests/test_studio_host_json /tmp/copperfin_studio_host_1545`. Parent `#23` remains open; the `#1203`-`#1398` evidence-audit range is now contiguous and closed.
@@ -1588,7 +1589,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1573 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1574 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1659,7 +1660,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1573 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1574 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
