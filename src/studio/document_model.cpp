@@ -796,9 +796,17 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     if (inspection.header_available) {
         const bool unique_id_selection_requested =
             supports_unique_id_record_selection(document.kind) && !trim_copy(request.unique_id).empty();
-        const std::size_t max_records = request.load_full_table || unique_id_selection_requested
-            ? inspection.header.record_count
-            : 8U;
+        const std::size_t record_count = inspection.header.record_count;
+        std::size_t max_records = 8U;
+        if (request.load_full_table || unique_id_selection_requested) {
+            max_records = record_count;
+        } else if (request.selection_record_available) {
+            const std::size_t requested_record_count =
+                request.record_index >= record_count
+                    ? record_count
+                    : request.record_index + 1U;
+            max_records = std::min(record_count, std::max<std::size_t>(8U, requested_record_count));
+        }
         const auto table_result = vfp::parse_dbf_table_from_file(request.path, max_records);
         if (table_result.ok) {
             document.table_preview_available = true;

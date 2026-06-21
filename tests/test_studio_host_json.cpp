@@ -23882,6 +23882,170 @@ void test_studio_host_json_record_selection_takes_precedence_over_stable_report_
     }
 }
 
+void test_studio_host_json_selects_deep_report_records_by_record_selector(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deep_report_record_selector_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto expect_common_record_selection = [&](const ProcessResult& process,
+                                                    const std::string& label,
+                                                    const std::string& title,
+                                                    const std::string& selection_kind) {
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deep record selector stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deep record selector stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1712: deep report/label record selectors should keep JSON inspection non-failing");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1712: deep record selectors should preserve document titles");
+        if (title.find(".lbx") != std::string::npos) {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1712: deep record selectors should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1712: deep record selectors should advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"" + selection_kind + "\"",
+                        "#1712: deep record selectors should expose the selected category");
+    };
+
+    const auto run_deep_object_record_selection = [&](const fs::path& asset_path,
+                                                      const std::string& title,
+                                                      const std::string& label) {
+        write_synthetic_report_table_for_deep_stable_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "10", "--json"},
+            temp_root);
+
+        expect_common_record_selection(object_process, label, title, "object");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1712: deep object record selectors should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1712: deep object record selectors should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1712: deep object record selectors should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 9",
+                        "#1712: deep object record selectors should parse beyond the default preview record limit");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 10",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"\\\"Deep label\\\"\"",
+                "\"deleted\": false"
+            },
+            "#1712: deep object record selectors should expose the selected deep object");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"objectCount\": 9"
+            },
+            "#1712: deep object record selectors should preserve containing-section metadata");
+    };
+
+    const auto run_deep_section_record_selection = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_deep_stable_section_json(asset_path);
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "10", "--json"},
+            temp_root);
+
+        expect_common_record_selection(section_process, label, title, "section");
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1712: deep section record selectors should advertise selected-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1712: deep section record selectors should not advertise selected-object availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1712: deep section record selectors should not advertise selected-settings availability");
+        expect_contains(section_process.stdout_text, "\"liveObjectCount\": 8",
+                        "#1712: deep section record selectors should parse beyond the default preview record limit");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"summary\"",
+                "\"recordIndex\": 10",
+                "\"deleted\": false",
+                "\"sectionIndex\": 1",
+                "\"sectionCount\": 2"
+            },
+            "#1712: deep section record selectors should expose the selected deep section");
+    };
+
+    const auto run_deep_settings_record_selection = [&](const fs::path& asset_path,
+                                                        const std::string& title,
+                                                        const std::string& label) {
+        write_synthetic_report_table_for_deep_stable_settings_json(asset_path);
+
+        const auto settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "10", "--json"},
+            temp_root);
+
+        expect_common_record_selection(settings_process, label, title, "settings");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1712: deep settings record selectors should advertise selected-settings availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1712: deep settings record selectors should not advertise selected-section availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1712: deep settings record selectors should not advertise selected-object availability");
+        expect_contains(settings_process.stdout_text, "\"liveObjectCount\": 8",
+                        "#1712: deep settings record selectors should parse beyond the default preview record limit");
+        expect_contains(settings_process.stdout_text, "\"settingCount\": 2",
+                        "#1712: deep settings record selectors should preserve all root settings rows");
+        expect_contains_in_order(
+            settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 10",
+                "\"value\": \"9\""
+            },
+            "#1712: deep settings record selectors should expose the selected deep root settings");
+    };
+
+    run_deep_object_record_selection(temp_root / "deep_record_object.frx",
+                                     "deep_record_object.frx",
+                                     "report object");
+    run_deep_object_record_selection(temp_root / "deep_record_object.lbx",
+                                     "deep_record_object.lbx",
+                                     "label object");
+    run_deep_section_record_selection(temp_root / "deep_record_section.frx",
+                                      "deep_record_section.frx",
+                                      "report section");
+    run_deep_section_record_selection(temp_root / "deep_record_section.lbx",
+                                      "deep_record_section.lbx",
+                                      "label section");
+    run_deep_settings_record_selection(temp_root / "deep_record_settings.frx",
+                                       "deep_record_settings.frx",
+                                       "report settings");
+    run_deep_settings_record_selection(temp_root / "deep_record_settings.lbx",
+                                       "deep_record_settings.lbx",
+                                       "label settings");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_selects_deep_report_records_by_stable_selector(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -70664,6 +70828,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_selection_for_live_deleted_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selector(argv[1]);
     test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(argv[1]);
+    test_studio_host_json_selects_deep_report_records_by_record_selector(argv[1]);
     test_studio_host_json_selects_deep_report_records_by_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_deep_ambiguous_stable_selector(argv[1]);
     test_studio_host_json_selects_deep_report_sections_and_settings_by_stable_selector(argv[1]);
