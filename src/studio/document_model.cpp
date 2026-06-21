@@ -187,6 +187,32 @@ const vfp::DbfRecord* find_preview_record(const StudioDocumentModel& document, s
     return record == document.table_preview.records.end() ? nullptr : &*record;
 }
 
+bool supports_unique_id_record_selection(StudioAssetKind kind) {
+    return kind == StudioAssetKind::report || kind == StudioAssetKind::label;
+}
+
+std::optional<std::size_t> find_preview_record_index_by_unique_id(
+    const StudioDocumentModel& document,
+    std::string_view unique_id) {
+    if (!document.table_preview_available) {
+        return std::nullopt;
+    }
+
+    const std::string requested_unique_id = lowercase_ascii(trim_copy(std::string(unique_id)));
+    if (requested_unique_id.empty()) {
+        return std::nullopt;
+    }
+
+    for (const auto& record : document.table_preview.records) {
+        const std::string candidate_unique_id = lowercase_ascii(trim_copy(value_or_empty(record, "UNIQUEID")));
+        if (candidate_unique_id == requested_unique_id) {
+            return record.record_index;
+        }
+    }
+
+    return std::nullopt;
+}
+
 template <typename Predicate>
 bool selected_record_matches_visual_token(
     const StudioDocumentModel& document,
@@ -774,10 +800,18 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
         }
     }
 
+    if (!document.selection_record_available && supports_unique_id_record_selection(document.kind)) {
+        const auto selection_record_index = find_preview_record_index_by_unique_id(document, request.unique_id);
+        if (selection_record_index.has_value()) {
+            document.selection_record_available = true;
+            document.selection_record_index = *selection_record_index;
+        }
+    }
+
     document.designer_contexts = request.designer_selection_contexts.empty()
         ? default_designer_contexts_for_request(
             document,
-            request.selection_record_available ? request.record_index : StudioObjectMissingFieldIndex,
+            document.selection_record_available ? document.selection_record_index : StudioObjectMissingFieldIndex,
             request.symbol)
         : requested_designer_contexts(request.designer_selection_contexts);
 
