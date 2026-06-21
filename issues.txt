@@ -76,23 +76,10 @@
 1333	OPEN	E2/#23 slice: Expose aggregate designer dispatch execution catalog through host JSON		2026-06-19T06:16:31Z
 1332	OPEN	E2/#23 slice: Add aggregate designer dispatch execution catalog planning		2026-06-19T06:11:22Z
 1331	OPEN	E2/#23 slice: Expose toolbox dispatch execution catalog through host JSON		2026-06-19T05:48:09Z
-1330	OPEN	E2/#23 slice: Add toolbox dispatch execution catalog planning		2026-06-19T05:44:01Z
 1329	OPEN	E2/#23 slice: Expose editor action dispatch execution catalog through host JSON		2026-06-19T05:38:32Z
 1328	OPEN	E2/#23 slice: Add editor action dispatch execution catalog planning		2026-06-19T05:34:49Z
 1327	OPEN	E2/#23 slice: Expose builder dispatch execution catalog through host JSON		2026-06-19T05:30:02Z
-1326	OPEN	E2/#23 slice: Add builder dispatch execution catalog planning		2026-06-19T05:26:15Z
 1325	OPEN	E2/#23 slice: Expose aggregate designer dispatch execution through host JSON		2026-06-19T05:17:47Z
-1324	OPEN	E2/#23 slice: Add aggregate designer dispatch execution seam		2026-06-19T05:13:30Z
-1323	OPEN	E2/#23 slice: Expose toolbox dispatch execution through host JSON		2026-06-19T05:06:23Z
-1322	OPEN	E2/#23 slice: Add toolbox dispatch execution seam		2026-06-19T05:02:36Z
-1321	OPEN	E2/#23 slice: Expose editor action dispatch execution through host JSON		2026-06-19T04:56:50Z
-1320	OPEN	E2/#23 slice: Add editor action dispatch execution seam		2026-06-19T04:48:37Z
-1319	OPEN	E2/#23 slice: Expose builder dispatch execution through host JSON		2026-06-19T04:40:42Z
-1318	OPEN	E2/#23 slice: Add builder dispatch execution seam		2026-06-19T04:37:10Z
-1317	OPEN	E2/#23 slice: Expose toolbox palette launch catalog through host JSON		2026-06-19T04:30:34Z
-1316	OPEN	E2/#23 slice: Add toolbox palette launch catalog planning		2026-06-19T04:26:13Z
-1315	OPEN	E2/#23 slice: Expose toolbox object batch creation from admitted palette dispatch through host JSON		2026-06-19T04:13:51Z
-1314	OPEN	E2/#23 slice: Expose toolbox object creation from admitted palette dispatch through host JSON		2026-06-19T04:00:10Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
 1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
 203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
