@@ -29,23 +29,30 @@ void print_usage() {
     std::cout << "Usage: copperfin_build_host build --project <path-to-pjx> --output-dir <directory> [--configuration debug|release] [--enable-security] [--emit-dotnet-launcher] [--runtime-host <path>]\n";
 }
 
+std::string environment_value(const char* name) {
+#ifdef _WIN32
+    char* raw = nullptr;
+    std::size_t length = 0;
+    if (_dupenv_s(&raw, &length, name) != 0 || raw == nullptr) {
+        return {};
+    }
+    std::string value(raw);
+    std::free(raw);
+    return value;
+#else
+    if (const char* raw = std::getenv(name); raw != nullptr) {
+        return raw;
+    }
+    return {};
+#endif
+}
+
 std::string resolve_runtime_host_path(const std::string& override_path, const std::string& executable_path) {
     if (!override_path.empty()) {
         return override_path;
     }
 
-    std::string resolved;
-#ifdef _WIN32
-    const char* configured = std::getenv("COPPERFIN_RUNTIME_HOST_PATH");
-    if (configured != nullptr) {
-        resolved = configured;
-    }
-#else
-    if (const char* configured = std::getenv("COPPERFIN_RUNTIME_HOST_PATH"); configured != nullptr) {
-        resolved = configured;
-    }
-#endif
-
+    const std::string resolved = environment_value("COPPERFIN_RUNTIME_HOST_PATH");
     if (!resolved.empty()) {
         return resolved;
     }
@@ -71,7 +78,7 @@ std::string resolve_runtime_host_path(const std::string& override_path, const st
         }
     }
 
-    return host_root / host_name;
+    return (host_root / host_name).string();
 }
 
 bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std::string& error) {
