@@ -1,3 +1,4 @@
+- 2026-06-21: E2/#1159-#1163 evidence-backed closure batch completed: half-height-caption, mdi-form, back-style, border-style, and border-width Studio host wrappers were closed after current-head code/test evidence review and focused local validation.
 - 2026-06-21: E2/#1154-#1158 evidence-backed closure batch completed: max-top, min-button, min-height, min-width, and movable Studio host wrappers were closed after current-head code/test evidence review and focused local validation.
 - 2026-06-21: E2/#1149-#1153 evidence-backed closure batch completed: mac-desktop, max-button, max-height, max-width, and max-left Studio host wrappers were closed after current-head code/test evidence review and focused local validation.
 - 2026-06-21: E2/#1144-#1148 evidence-backed closure batch completed: whats-this-button, auto-verb-menu, bind-controls, desktop, and key-preview Studio host wrappers were closed after current-head code/test evidence review and focused local validation.

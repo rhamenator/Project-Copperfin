@@ -243,11 +243,6 @@
 1166	OPEN	E2/#23 slice: Expose host special-effect-object command		2026-06-18T09:31:37Z
 1165	OPEN	E2/#23 slice: Expose host link-master-object command		2026-06-18T09:21:31Z
 1164	OPEN	E2/#23 slice: Expose host border-color-object command		2026-06-18T09:10:32Z
-1163	OPEN	E2/#23 slice: Expose host border-width-object command		2026-06-18T08:59:40Z
-1162	OPEN	E2/#23 slice: Expose host border-style-object command		2026-06-18T08:50:50Z
-1161	OPEN	E2/#23 slice: Expose host back-style-object command		2026-06-18T08:41:50Z
-1160	OPEN	E2/#23 slice: Expose host mdi-form-object command		2026-06-18T08:31:44Z
-1159	OPEN	E2/#23 slice: Expose host half-height-caption-object command		2026-06-18T08:22:24Z
 1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
 1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
 1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
