@@ -258,11 +258,6 @@
 1151	OPEN	E2/#23 slice: Expose host max-height-object command		2026-06-18T07:05:38Z
 1150	OPEN	E2/#23 slice: Expose host max-button-object command		2026-06-18T06:57:20Z
 1149	OPEN	E2/#23 slice: Expose host mac-desktop-object command		2026-06-18T06:49:23Z
-1148	OPEN	E2/#23 slice: Expose host key-preview-object command		2026-06-18T06:41:34Z
-1147	OPEN	E2/#23 slice: Expose host desktop-object command		2026-06-18T06:33:02Z
-1146	OPEN	E2/#23 slice: Expose host bind-controls-object command		2026-06-18T06:24:51Z
-1145	OPEN	E2/#23 slice: Expose host auto-verb-menu-object command		2026-06-18T06:13:35Z
-1144	OPEN	E2/#23 slice: Expose host whats-this-button-object command		2026-06-18T06:05:13Z
 1113	OPEN	E2/#23 slice: Expose host draw-style-object command		2026-06-18T02:30:45Z
 1112	OPEN	E2/#23 slice: Expose host draw-mode-object command		2026-06-18T02:24:40Z
 1111	OPEN	E2/#23 slice: Expose host curvature-object command		2026-06-18T02:18:22Z
