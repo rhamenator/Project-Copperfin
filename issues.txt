@@ -107,12 +107,6 @@
 1302	OPEN	E2/#23 slice: Add selection-context toolbox object create-dispatch planning		2026-06-19T02:40:52Z
 1301	OPEN	E2/#23 slice: Expose selection-context toolbox object create planning through host JSON		2026-06-19T02:33:33Z
 1300	OPEN	E2/#23 slice: Add selection-context toolbox object create planning		2026-06-19T02:28:55Z
-1299	OPEN	E2/#23 slice: Expose selection-context toolbox object batch create-dispatch catalog through host JSON		2026-06-19T02:18:50Z
-1298	OPEN	E2/#23 slice: Add selection-context toolbox object batch create-dispatch catalog planning		2026-06-19T02:15:57Z
-1297	OPEN	E2/#23 slice: Expose selection-context toolbox object batch create-plan catalog through host JSON		2026-06-19T02:11:07Z
-1296	OPEN	E2/#23 slice: Add selection-context toolbox object batch create-plan catalog planning		2026-06-19T02:08:24Z
-1295	OPEN	E2/#23 slice: Expose selection-context toolbox object create dispatch catalog through host JSON		2026-06-19T02:03:07Z
-1294	OPEN	E2/#23 slice: Add selection-context toolbox object create dispatch catalog planning		2026-06-19T02:00:06Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
