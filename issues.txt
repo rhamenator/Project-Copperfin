@@ -196,17 +196,6 @@
 1213	OPEN	E2/#23 slice: Add designer launch-surface catalog planning		2026-06-18T19:38:54Z
 1212	OPEN	E2/#23 slice: Expose combined designer launch surfaces through host JSON		2026-06-18T19:33:18Z
 1211	OPEN	E2/#23 slice: Add combined designer launch surface planning		2026-06-18T19:16:23Z
-1209	OPEN	E2/#23 slice: Add selection-context toolbox palette launch planning		2026-06-18T18:56:01Z
-1207	OPEN	E2/#23 slice: Add selection-context editor action launch planning		2026-06-18T18:37:32Z
-1205	OPEN	E2/#23 slice: Add selection-context builder launch planning		2026-06-18T18:19:28Z
-1203	OPEN	E2/#23 slice: Add validated Studio builder launch plans		2026-06-18T17:59:47Z
-1202	OPEN	E2/#23 slice: Expose host subtree-deleted-state command		2026-06-18T17:41:10Z
-1201	OPEN	E2/#23 slice: Expose host deleted-states command		2026-06-18T17:23:32Z
-1200	OPEN	E2/#23 slice: Expose host multi-select-object command		2026-06-18T17:06:17Z
-1199	OPEN	E2/#23 slice: Expose host incremental-search-object command		2026-06-18T16:49:54Z
-1198	OPEN	E2/#23 slice: Expose host integral-height-object command		2026-06-18T16:33:17Z
-1197	OPEN	E2/#23 slice: Expose host column-lines-object command		2026-06-18T16:16:43Z
-1196	OPEN	E2/#23 slice: Expose host column-widths-object command		2026-06-18T15:59:27Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
