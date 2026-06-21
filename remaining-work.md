@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1656 stable-selector report/label root-settings delete coverage shipped: Studio host regression coverage now proves root FRX/LBX settings can be seeded with `UNIQUEID=settings-guid` and deleted by `--delete-object --unique-id settings-guid`, with the DBF deleted flag set, label identity retained, live setting/page setup summaries cleared, deleted and selected deleted-settings metadata exposed for ORIENTATION/PAPERSIZE/BOTMARGIN/GRIDV/GRIDH/TOPMARGIN, and section/deleted-object state preserved. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1655 stable-selector report/label section delete coverage shipped: Studio host regression coverage now proves live FRX/LBX sections can be seeded with `UNIQUEID=section-guid` and deleted by `--delete-object --unique-id section-guid`, with the DBF deleted flag set, label identity retained, live/deleted section counts refreshed to 0/1, former section objects moved to unplaced membership without fabricated containing-section ids, and selected deleted-section JSON exposed without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1654 stable-selector deleted report/label section restore coverage shipped: Studio host regression coverage now proves deleted FRX/LBX sections can be seeded with `UNIQUEID=deleted-section-guid` and restored by `--restore-object --unique-id deleted-section-guid`, with the DBF deleted flag cleared, label identity retained, live/deleted section counts refreshed to 1/0, formerly unplaced objects moved back into `detail_1` section membership, and selected-section JSON rehydrated without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1653 stable-selector edited deleted report/label layout-object unplaced restore coverage shipped: Studio host regression coverage now proves a deleted FRX/LBX layout object can be edited by stable id for out-of-section HPOS/VPOS/HEIGHT values and restored by `--restore-object --unique-id deleted-label-guid`, with the DBF deleted flag cleared, edited unplaced geometry preserved at -300/9000/1200/700, label identity retained, live preview bounds expanded to -300/5200/9700, placed/unplaced counts refreshed to 2/2, and selected-object containing-section metadata kept unavailable/null. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1670,7 +1671,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1655 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1656 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1741,7 +1742,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1655 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1656 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]

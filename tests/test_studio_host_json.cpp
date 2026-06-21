@@ -3794,6 +3794,21 @@ void write_synthetic_report_table_for_deleted_settings_json(const std::filesyste
     expect(delete_result.ok, "#1476: synthetic FRX table should mark report settings deleted");
 }
 
+void write_synthetic_report_table_for_stable_settings_json(const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_layout_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "settings-guid"
+    });
+    expect(unique_id_result.ok, "#1656: stable settings fixture should seed a settings unique id");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#1656: stable settings fixture should preserve the live settings state");
+}
+
 void write_synthetic_report_table_for_column_setup_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -19466,6 +19481,112 @@ void test_studio_host_json_deletes_label_settings_by_record_selection(const std:
                     "#1494: deleting label settings should preserve live section metadata");
     expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
                     "#1494: deleting label settings should preserve deleted object metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_deletes_report_settings_by_stable_selection(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_settings_delete_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_settings_delete = [&](const fs::path& asset_path,
+                                         const std::string& title,
+                                         const std::string& label) {
+        write_synthetic_report_table_for_stable_settings_json(asset_path);
+
+        const auto delete_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--delete-object",
+                "--unique-id", "settings-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (delete_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable settings delete stdout:\n"
+                      << delete_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable settings delete stderr:\n"
+                      << delete_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(delete_process.exit_code == 0,
+               "#1656: stable report/label settings delete should exit successfully");
+        expect(dbf_record_deleted(asset_path, 0U),
+               "#1656: stable report/label settings delete should mark the settings record deleted");
+        expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1656: stable report/label settings delete should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(delete_process.stdout_text, "\"isLabel\": true",
+                            "#1656: stable label settings delete should retain label identity");
+        }
+        expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
+                        "#1656: stable report/label settings delete should remove settings from live counts");
+        expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1656: stable report/label settings delete should clear live page setup summaries");
+        expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
+                        "#1656: stable report/label settings delete should expose deleted setting counts");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"BOTMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0"
+            },
+            "#1656: stable report/label settings delete should move root settings into deleted-setting metadata");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1656: stable report/label settings delete should advertise selected-settings availability");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1656: stable report/label settings delete should expose settings selection kind");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"BOTMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0"
+            },
+            "#1656: stable report/label settings delete should expose selected deleted-settings metadata");
+        expect_contains(delete_process.stdout_text, "\"sectionCount\": 2",
+                        "#1656: stable report/label settings delete should preserve live section metadata");
+        expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1656: stable report/label settings delete should preserve deleted object metadata");
+    };
+
+    run_settings_delete(temp_root / "settings_delete_stable.frx",
+                        "settings_delete_stable.frx",
+                        "report");
+    run_settings_delete(temp_root / "settings_delete_stable.lbx",
+                        "settings_delete_stable.lbx",
+                        "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -63626,6 +63747,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_deletes_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_settings_by_record_selection(argv[1]);
+    test_studio_host_json_deletes_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
