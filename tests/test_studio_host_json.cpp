@@ -12169,6 +12169,116 @@ void test_studio_host_json_clears_deleted_report_layout_object_top_by_record_sel
     }
 }
 
+void test_studio_host_json_updates_deleted_report_layout_object_top_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_layout_top_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_top_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_layout_json(asset_path);
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1650: deleted report/label layout object stable top fixture should start deleted");
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-label-guid",
+                "--property-name", "VPOS",
+                "--property-value", "3100",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted layout top update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted layout top update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1650: deleted report/label layout object stable top update should exit successfully");
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1650: deleted report/label layout object stable top update should preserve deleted state");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 6U,
+            .object_name = {},
+            .unique_id = "deleted-label-guid",
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.record_deleted &&
+                   top_property.value == "3100",
+               "#1650: deleted report/label layout object stable top update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1650: deleted report/label layout object stable top update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1650: label deleted layout object stable top update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1650: deleted report/label layout object stable top update should preserve deleted object counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1650: deleted report/label layout object stable top update should preserve selected deleted-object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1650: deleted report/label layout object stable top update should preserve object selection kind");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1650: deleted report/label layout object stable top update should not fabricate containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1650: deleted report/label layout object stable top update should serialize null containing-section metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"objectKind\": \"label\"",
+                "\"top\": 3100",
+                "\"height\": 300",
+                "\"bottom\": 3400"
+            },
+            "#1650: deleted report/label layout object stable top update should refresh deleted-object geometry metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"objectKind\": \"label\"",
+                "\"top\": 3100",
+                "\"height\": 300",
+                "\"bottom\": 3400"
+            },
+            "#1650: deleted report/label layout object stable top update should refresh selected deleted-object geometry metadata");
+    };
+
+    run_deleted_top_update(temp_root / "deleted_top_update_stable.frx",
+                           "deleted_top_update_stable.frx",
+                           "report");
+    run_deleted_top_update(temp_root / "deleted_top_update_stable.lbx",
+                           "deleted_top_update_stable.lbx",
+                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_restores_edited_deleted_report_layout_object_geometry_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -62791,6 +62901,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_layout_object_height_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_top_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_top_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_layout_object_top_by_stable_selection(argv[1]);
     test_studio_host_json_restores_edited_deleted_report_layout_object_geometry_by_record_selection(argv[1]);
     test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
