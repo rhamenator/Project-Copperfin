@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1645 stable-selector deleted report/label layout-object width clear coverage shipped: Studio host regression coverage now proves a deleted FRX/LBX layout object WIDTH can be cleared by `--clear-property --unique-id deleted-label-guid --property-name WIDTH`, with WIDTH blanked through the direct-field path, the DBF deleted flag preserved, label identity retained, deleted-object and selected-object width/right metadata cleared to 0/1000, and containing-section metadata kept null without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1644 stable-selector deleted report/label layout-object width update coverage shipped: Studio host regression coverage now proves a deleted FRX/LBX layout object WIDTH can be updated by `--set-property --unique-id deleted-label-guid --property-name WIDTH --property-value 2400`, with WIDTH persisted, the DBF deleted flag preserved, label identity retained, deleted-object and selected-object width/right metadata refreshed to 2400/3400, and containing-section metadata kept null without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1643 stable-selector report/label layout-object top-position clear coverage shipped: Studio host regression coverage now proves a live FRX/LBX layout object VPOS can be cleared by `--clear-property --unique-id field-guid --property-name VPOS`, with VPOS blanked through the direct-field path, preview top/bottom/height bounds preserved at 0/8100/8100, label identity preserved, selected-object containing-section metadata refreshed to `page_header_1`, and placed/unplaced counts retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1642 stable-selector report/label layout-object top-position update coverage shipped: Studio host regression coverage now proves a live FRX/LBX layout object VPOS can be updated by `--set-property --unique-id field-guid --property-name VPOS --property-value -1000`, with VPOS persisted, preview top/height bounds refreshed to -1000/9100, label identity preserved, selected-object containing-section metadata cleared, and placed/unplaced counts refreshed without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1659,7 +1660,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1644 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1645 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1730,7 +1731,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1644 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1645 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
