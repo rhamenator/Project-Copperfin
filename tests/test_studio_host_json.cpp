@@ -4785,6 +4785,98 @@ void test_studio_host_json_updates_deleted_report_group_section_expressions(
     }
 }
 
+void test_studio_host_json_clears_deleted_report_group_section_expressions(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_group_section_expression_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_group_expression_clear = [&](const fs::path& asset_path,
+                                                        const std::string& title,
+                                                        const std::string& label) {
+        write_synthetic_report_table_for_deleted_group_section_expression_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "1",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted group section expression clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted group section expression clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1572: deleted report/label group section expression clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1572: deleted report/label group section expression clear should return refreshed layout JSON");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1572: deleted group section expression clears should preserve selected-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1572: deleted group section expression clears should preserve selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0"
+            },
+            "#1572: deleted report/label group section clear should refresh deleted-section expression metadata");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0"
+            },
+            "#1572: deleted report/label group section clear should refresh selected-section expression metadata");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"recordIndex\": 3"
+            },
+            "#1572: deleted group section expression clear should preserve live sibling section metadata");
+    };
+
+    run_deleted_group_expression_clear(temp_root / "deleted_group_clear.frx", "deleted_group_clear.frx", "report");
+    run_deleted_group_expression_clear(temp_root / "deleted_group_clear.lbx", "deleted_group_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_report_layout_column_setup(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -54357,6 +54449,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_deleted_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_footer_expressions(argv[1]);
     test_studio_host_json_updates_deleted_report_group_section_expressions(argv[1]);
+    test_studio_host_json_clears_deleted_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_layout_column_setup(argv[1]);
     test_studio_host_json_exposes_label_layout_parity(argv[1]);
     test_studio_host_json_exposes_selected_report_sections(argv[1]);
