@@ -5,10 +5,6 @@
 1401	OPEN	E2/#23 slice: Expose designer dispatch summaries in host JSON		2026-06-19T10:54:36Z
 1400	OPEN	E2/#23 slice: Expose designer invocation-admission summaries in host JSON		2026-06-19T10:51:31Z
 1399	OPEN	E2/#23 slice: Expose designer launch-surface summaries in host JSON		2026-06-19T10:46:28Z
-1398	OPEN	E2/#23 slice: Expose editor action execution summaries in host JSON		2026-06-19T10:40:51Z
-1397	OPEN	E2/#23 slice: Expose editor action dispatch summaries in host JSON		2026-06-19T10:37:35Z
-1396	OPEN	E2/#23 slice: Expose editor action invocation-admission summaries in host JSON		2026-06-19T10:33:53Z
-1395	OPEN	E2/#23 slice: Expose editor action launch-plan summaries in host JSON		2026-06-19T10:30:49Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
 1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
 203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
