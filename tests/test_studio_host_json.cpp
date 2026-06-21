@@ -4167,6 +4167,28 @@ void write_synthetic_report_table_for_deep_live_deleted_ambiguous_stable_setting
            "#1709: synthetic report table should mark the deep duplicate settings row deleted");
 }
 
+void write_synthetic_report_table_without_unique_id_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200"},
+        {"5", "", "\"No unique id label\"", "400", "1200", "1500", "250"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1711: synthetic report table without UNIQUEID field should be created");
+}
+
 void write_synthetic_report_table_for_stable_group_header_object_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -23143,6 +23165,82 @@ void test_studio_host_json_clears_report_selection_for_blank_stable_selector(
     run_blank_selector(temp_root / "blank_selector.lbx",
                        "blank_selector.lbx",
                        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_selection_when_unique_id_field_is_missing(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_unique_id_report_selection_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_unique_id_field_selector = [&](const fs::path& asset_path,
+                                                          const std::string& title,
+                                                          const std::string& label) {
+        write_synthetic_report_table_without_unique_id_json(asset_path);
+
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "missing-field-guid", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing UNIQUEID selector stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing UNIQUEID selector stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1711: missing UNIQUEID stable report/label selectors should keep JSON inspection non-failing");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1711: missing UNIQUEID stable selectors should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1711: missing UNIQUEID stable label selectors should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        "#1711: missing UNIQUEID stable selectors should not advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1711: missing UNIQUEID stable selectors should expose explicit no-selection kind");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1711: missing UNIQUEID stable selectors should not advertise selected-object availability");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1711: missing UNIQUEID stable selectors should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1711: missing UNIQUEID stable selectors should not advertise containing-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1711: missing UNIQUEID stable selectors should serialize null containing sections");
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1711: missing UNIQUEID stable selectors should not advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSection\": null",
+                        "#1711: missing UNIQUEID stable selectors should serialize null selected sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1711: missing UNIQUEID stable selectors should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1711: missing UNIQUEID stable selectors should serialize null selected settings");
+        expect_contains(process.stdout_text, "\"sectionCount\": 1",
+                        "#1711: missing UNIQUEID stable selectors should preserve live section counts");
+        expect_contains(process.stdout_text, "\"settingCount\": 1",
+                        "#1711: missing UNIQUEID stable selectors should preserve live settings counts");
+        expect_contains(process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1711: missing UNIQUEID stable selectors should preserve live object counts");
+    };
+
+    run_missing_unique_id_field_selector(temp_root / "missing_unique_id.frx",
+                                         "missing_unique_id.frx",
+                                         "report");
+    run_missing_unique_id_field_selector(temp_root / "missing_unique_id.lbx",
+                                         "missing_unique_id.lbx",
+                                         "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -70560,6 +70658,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_selection_for_missing_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_blank_stable_selector(argv[1]);
+    test_studio_host_json_clears_report_selection_when_unique_id_field_is_missing(argv[1]);
     test_studio_host_json_clears_report_selection_for_ambiguous_stable_selector(argv[1]);
     test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_clears_report_selection_for_live_deleted_ambiguous_stable_selectors(argv[1]);
