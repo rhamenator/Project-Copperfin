@@ -9103,6 +9103,97 @@ void test_studio_host_json_updates_deleted_report_settings_memos_by_record_selec
     }
 }
 
+void test_studio_host_json_clears_deleted_report_settings_memos_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_settings_memo_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_settings_clear = [&](const fs::path& asset_path,
+                                                const std::string& title,
+                                                const std::string& label) {
+        write_synthetic_report_table_for_deleted_settings_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted settings memo clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted settings memo clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1580: deleted report/label settings memo clear should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.direct_field,
+               "#1580: deleted report/label settings memo clear should preserve the direct EXPR field carrier");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1580: deleted report/label settings memo clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1580: deleted report/label settings memo clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1580: deleted report/label settings memo clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 1",
+                        "#1580: deleted report/label settings memo clear should refresh deleted setting counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1580: deleted report/label settings memo clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1580: deleted report/label settings memo clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            "#1580: deleted report/label settings memo clear should preserve remaining deleted direct-field provenance");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 8, \"sourceLineIndex\": null"
+            },
+            "#1580: deleted report/label settings memo clear should refresh selected deleted settings");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"ORIENTATION\", \"recordIndex\": 0",
+                            "#1580: deleted report/label settings memo clear should remove memo-derived orientation settings");
+        expect_contains(clear_process.stdout_text, "\"sectionCount\": 2",
+                        "#1580: deleted report/label settings memo clear should preserve live section metadata");
+        expect_contains(clear_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1580: deleted report/label settings memo clear should preserve deleted object metadata");
+    };
+
+    run_deleted_settings_clear(temp_root / "deleted_settings_memo_clear.frx",
+                               "deleted_settings_memo_clear.frx",
+                               "report");
+    run_deleted_settings_clear(temp_root / "deleted_settings_memo_clear.lbx",
+                               "deleted_settings_memo_clear.lbx",
+                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_report_settings_memos_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -55203,6 +55294,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_settings_memos_by_record_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_page_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_page_margin_fields_by_record_selection(argv[1]);
