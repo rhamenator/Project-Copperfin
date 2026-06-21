@@ -7731,6 +7731,129 @@ void test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(c
     }
 }
 
+void test_studio_host_json_duplicates_live_edited_report_layout_object_geometry_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_layout_duplicate_live_edited_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_live_edited_duplicate = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        const std::size_t before_count = visual_object_count(asset_path);
+
+        const auto set_live_geometry = [&](const std::string& property_name,
+                                           const std::string& property_value) {
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "middle-field-guid",
+                    "--property-name", property_name,
+                    "--property-value", property_value,
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " duplicate live " << property_name
+                          << " update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " duplicate live " << property_name
+                          << " update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1619: live report/label layout object duplicate geometry update should exit successfully");
+            expect(!visual_object_deleted(asset_path, "middle-field-guid"),
+                   "#1619: live report/label layout object duplicate geometry update should preserve live state");
+        };
+
+        set_live_geometry("HPOS", "300");
+        set_live_geometry("WIDTH", "250");
+        set_live_geometry("HEIGHT", "500");
+
+        const auto duplicate_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--duplicate-object",
+                "--unique-id", "middle-field-guid",
+                "--new-unique-id", "middle-edited-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (duplicate_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " edited layout duplicate stdout:\n"
+                      << duplicate_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " edited layout duplicate stderr:\n"
+                      << duplicate_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(duplicate_process.exit_code == 0,
+               "#1619: live edited report/label layout object duplicate should exit successfully");
+        expect(visual_object_count(asset_path) == before_count + 1U,
+               "#1619: live edited report/label layout object duplicate should append one object record");
+        expect(visual_object_exists(asset_path, "middle-edited-copy-guid"),
+               "#1619: live edited report/label layout object duplicate should persist replacement unique ids");
+        expect(visual_object_property(asset_path, "middle-edited-copy-guid", "HPOS") == "300" &&
+                   visual_object_property(asset_path, "middle-edited-copy-guid", "WIDTH") == "250" &&
+                   visual_object_property(asset_path, "middle-edited-copy-guid", "HEIGHT") == "500",
+               "#1619: live edited report/label layout object duplicate should preserve edited geometry fields");
+        expect_contains(duplicate_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1619: live edited report/label layout object duplicate should return refreshed report-layout JSON");
+        expect_contains(duplicate_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1619: live edited report/label layout object duplicate should preserve selected-object availability");
+        expect_contains(duplicate_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1619: live edited report/label layout object duplicate should preserve containing-section availability");
+        expect_contains(duplicate_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1619: live edited report/label layout object duplicate should serialize containing-section metadata");
+        expect_contains_in_order(
+            duplicate_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 5",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_1\"",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1100",
+                "\"sectionObjectIndex\": 3",
+                "\"sectionObjectCount\": 4",
+                "\"objectKind\": \"field\"",
+                "\"left\": 300",
+                "\"top\": 2600",
+                "\"width\": 250",
+                "\"right\": 550",
+                "\"height\": 500",
+                "\"bottom\": 3100",
+                "\"expression\": \"middle.value\""
+            },
+            "#1619: live edited report/label layout object duplicate should refresh selected duplicate geometry and section metadata");
+    };
+
+    run_live_edited_duplicate(temp_root / "duplicate_live_edited.frx",
+                              "duplicate_live_edited.frx",
+                              "report");
+    run_live_edited_duplicate(temp_root / "duplicate_live_edited.lbx",
+                              "duplicate_live_edited.lbx",
+                              "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -59448,6 +59571,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_reorders_label_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_report_layout_objects_by_stable_selectors(argv[1]);
     test_studio_host_json_duplicates_label_layout_objects_by_stable_selectors(argv[1]);
+    test_studio_host_json_duplicates_live_edited_report_layout_object_geometry_by_record_selection(argv[1]);
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);

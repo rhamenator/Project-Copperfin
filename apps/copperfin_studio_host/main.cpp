@@ -25370,6 +25370,8 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    auto open_request = parse_result.request;
+
     if (parse_result.request.undo_mode == copperfin::studio::StudioUndoMode::command) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(parse_result.request.path);
         if (!undo_result.ok) {
@@ -25517,6 +25519,11 @@ int main(int argc, char** argv) {
             std::cout << "error: " << duplicate_result.error << "\n";
             return 4;
         }
+
+        open_request.record_index = duplicate_result.record_index;
+        open_request.object_name = duplicate_result.object_name;
+        open_request.unique_id = duplicate_result.unique_id;
+        open_request.selection_record_available = true;
     }
 
     if (parse_result.request.rename_object) {
@@ -29666,7 +29673,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    const auto open_result = copperfin::studio::open_document(parse_result.request);
+    const auto open_result = copperfin::studio::open_document(open_request);
     if (!open_result.ok) {
         std::cout << "status: error\n";
         std::cout << "error: " << open_result.error << "\n";

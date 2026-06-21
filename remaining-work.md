@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1619 live-edited report/label layout-object duplicate coverage shipped: Studio host now reopens duplicated FRX/LBX layout objects with the duplicate selected, and regression coverage proves a live object edited through host HPOS/WIDTH/HEIGHT properties can be duplicated with edited geometry persisted, object counts incremented, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the duplicate instead of dropping selection state. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1618 live-edited unplaced deleted report/label layout-object restore coverage shipped: Studio host regression coverage now proves live FRX/LBX layout objects edited outside section bands, deleted, and then restored come back as live unplaced objects, preserve edited HPOS/VPOS/HEIGHT fields, expand live preview bounds, refresh unplaced accounting, remove the restored object from `reportLayout.deletedObjects`, and keep selected containing-section metadata unavailable/null instead of fabricating section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1617 live-edited deleted report/label layout-object restore coverage shipped: Studio host regression coverage now proves live FRX/LBX layout objects edited through host geometry properties, deleted, and then restored preserve edited HPOS/WIDTH/HEIGHT fields, remove the restored object from `reportLayout.deletedObjects`, preserve `selectedReportObject` geometry, and rehydrate live containing-section metadata plus section-relative geometry. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1616 edited unplaced report/label layout-object delete geometry coverage shipped: Studio host regression coverage now proves live FRX/LBX layout objects edited into an out-of-section geometry can then be deleted, preserve edited HPOS/VPOS/HEIGHT fields on the deleted DBF record, expand deleted preview bounds, refresh deleted placed/unplaced counts, preserve `reportLayout.deletedObjects` and `selectedReportObject` geometry, and keep selected containing-section metadata unavailable/null instead of fabricating section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1633,7 +1634,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1618 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1619 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1704,7 +1705,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1618 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1619 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
