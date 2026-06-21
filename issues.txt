@@ -60,13 +60,6 @@
 1349	OPEN	E2/#23 slice: Expose aggregate designer child target metadata in host JSON		2026-06-19T07:34:24Z
 1348	OPEN	E2/#23 slice: Expose aggregate designer child launch commands in host JSON		2026-06-19T07:31:08Z
 1347	OPEN	E2/#23 slice: Normalize Studio host observed process exit codes		2026-06-19T07:25:58Z
-1346	OPEN	E2/#23 slice: Expose aggregate designer execution failed-child error summaries in host JSON		2026-06-19T07:21:39Z
-1345	OPEN	E2/#23 slice: Expose aggregate designer execution failed-child summaries in host JSON		2026-06-19T07:17:47Z
-1344	OPEN	E2/#23 slice: Expose aggregate designer execution child success counts in host JSON		2026-06-19T07:14:28Z
-1343	OPEN	E2/#23 slice: Expose aggregate designer execution child error counts in host JSON		2026-06-19T07:11:23Z
-1342	OPEN	E2/#23 slice: Expose aggregate designer execution child counts in host JSON		2026-06-19T07:07:43Z
-1341	OPEN	E2/#23 slice: Prove failed aggregate editor and toolbox metadata in execution JSON		2026-06-19T07:03:48Z
-1340	OPEN	E2/#23 slice: Preserve aggregate designer child metadata on failed execution JSON		2026-06-19T06:57:34Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
 1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
 203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
