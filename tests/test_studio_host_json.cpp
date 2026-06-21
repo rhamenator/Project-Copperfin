@@ -3911,6 +3911,13 @@ void write_synthetic_report_table_for_paper_size_field_json(const std::filesyste
     expect(create_result.ok, "#1545: synthetic report table for paper-size field JSON should be created");
 }
 
+void write_synthetic_report_table_for_deleted_paper_size_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_paper_size_field_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#1591: synthetic report table should mark paper-size settings deleted");
+}
+
 void test_studio_host_json_exposes_report_layout_provenance(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -11255,6 +11262,107 @@ void test_studio_host_json_clears_report_paper_size_fields_by_record_selection(
 
     run_paper_size_clear(temp_root / "paper-size-clear.frx", "paper-size-clear.frx", "report");
     run_paper_size_clear(temp_root / "paper-size-clear.lbx", "paper-size-clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_paper_size_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_paper_size_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_paper_size_update = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& updated_paper_size,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_deleted_paper_size_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "PAPERSIZE",
+                "--property-value", updated_paper_size,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted paper-size field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted paper-size field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1591: deleted report/label paper-size field update should exit successfully");
+        const auto paper_size_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "PAPERSIZE"
+        });
+        expect(paper_size_property.ok && paper_size_property.exists &&
+                   paper_size_property.value == updated_paper_size,
+               "#1591: deleted report/label paper-size field update should persist the PAPERSIZE field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1591: deleted report/label paper-size field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1591: deleted report/label paper-size field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1591: deleted report/label paper-size field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 6",
+                        "#1591: deleted report/label paper-size field update should refresh deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1591: deleted report/label paper-size field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1591: deleted report/label paper-size field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_paper_size + "\""
+            },
+            "#1591: deleted report/label paper-size field update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_paper_size + "\""
+            },
+            "#1591: deleted report/label paper-size field update should refresh selected deleted settings");
+    };
+
+    run_deleted_paper_size_update(temp_root / "deleted_paper_size.frx",
+                                  "deleted_paper_size.frx",
+                                  "9",
+                                  "report");
+    run_deleted_paper_size_update(temp_root / "deleted_paper_size.lbx",
+                                  "deleted_paper_size.lbx",
+                                  "5",
+                                  "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -56305,6 +56413,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_orientation_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_orientation_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_paper_size_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_count_fields_by_record_selection(argv[1]);
