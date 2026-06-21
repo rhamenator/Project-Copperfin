@@ -909,7 +909,7 @@ void test_varchar_and_varbinary_field_round_trip() {
 }
 
 void test_dbf_header_record_count_exceeds_file_size_is_rejected() {
-    // GAP-02 #259: a DBF file whose header claims more records than the file
+    // GAP-02: a DBF file whose header claims more records than the file
     // can physically contain must be rejected or clamped — not cause an
     // out-of-bounds read or host crash.
     namespace fs = std::filesystem;
@@ -951,7 +951,7 @@ void test_dbf_header_record_count_exceeds_file_size_is_rejected() {
     const auto result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1100U);
     if (result.ok) {
         expect(result.table.records.size() <= 2U,
-               "GAP-02/#259: parser must clamp record count to physically available records");
+               "GAP-02: parser must clamp record count to physically available records");
     }
     // If !result.ok that is an acceptable safe rejection — the host is still alive.
 
@@ -959,7 +959,7 @@ void test_dbf_header_record_count_exceeds_file_size_is_rejected() {
 }
 
 void test_dbf_field_descriptor_count_exceeds_header_size_is_rejected() {
-    // GAP-02 #262: descriptor parsing must honor header_length and not consume
+    // GAP-02: descriptor parsing must honor header_length and not consume
     // descriptor-shaped bytes beyond the declared header boundary.
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -988,15 +988,15 @@ void test_dbf_field_descriptor_count_exceeds_header_size_is_rejected() {
     }
 
     const auto result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
-    expect(result.ok, "GAP-02/#262: parser should safely parse adversarial descriptor/header mismatch input");
+    expect(result.ok, "GAP-02: parser should safely parse adversarial descriptor/header mismatch input");
     expect(result.table.fields.size() <= 1U,
-           "GAP-02/#262: parser must not consume descriptor bytes beyond the declared header length");
+           "GAP-02: parser must not consume descriptor bytes beyond the declared header length");
 
     fs::remove_all(temp_dir, ignored);
 }
 
 void test_dbf_record_width_mismatch_field_sum_is_rejected() {
-    // GAP-02 #263: table mutation paths must reject schemas whose declared
+    // GAP-02: table mutation paths must reject schemas whose declared
     // record width is smaller than the field layout requires.
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1026,15 +1026,15 @@ void test_dbf_record_width_mismatch_field_sum_is_rejected() {
 
     const auto append_result = copperfin::vfp::append_blank_record_to_file(table_path.string());
     expect(!append_result.ok,
-           "GAP-02/#263: append should reject mismatched record-width/field-layout tables");
+           "GAP-02: append should reject mismatched record-width/field-layout tables");
     expect(append_result.error == "Table field layout exceeds the record size.",
-           "GAP-02/#263: mismatch rejection should report the expected layout error");
+           "GAP-02: mismatch rejection should report the expected layout error");
 
     fs::remove_all(temp_dir, ignored);
 }
 
 void test_memo_sidecar_version_mismatch_is_diagnosed() {
-    // GAP-02 #264: malformed memo sidecar headers must not crash parsing.
+    // GAP-02: malformed memo sidecar headers must not crash parsing.
     // If payload decoding fails, the reader should surface a stable placeholder.
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1077,10 +1077,10 @@ void test_memo_sidecar_version_mismatch_is_diagnosed() {
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
     expect(parse_result.ok,
-           "GAP-02/#264: malformed memo sidecar metadata should not crash DBF parsing");
+           "GAP-02: malformed memo sidecar metadata should not crash DBF parsing");
     if (parse_result.ok && !parse_result.table.records.empty() && !parse_result.table.records[0].values.empty()) {
         expect(parse_result.table.records[0].values[0].display_value.find("<memo block 1>") != std::string::npos,
-               "GAP-02/#264: unreadable memo payload should surface a stable placeholder diagnostic");
+               "GAP-02: unreadable memo payload should surface a stable placeholder diagnostic");
         expect(parse_result.table.records[0].values[0].memo_block_number == 1U,
                "#711: malformed memo payloads should retain structured block provenance");
     }
@@ -1089,7 +1089,7 @@ void test_memo_sidecar_version_mismatch_is_diagnosed() {
 }
 
 void test_dbf_field_name_without_null_terminator_is_tolerated() {
-    // GAP-02 #265: DBF descriptors with full 11-byte field names and no null
+    // GAP-02: DBF descriptors with full 11-byte field names and no null
     // terminator should parse without crashing or truncating record access.
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1119,23 +1119,23 @@ void test_dbf_field_name_without_null_terminator_is_tolerated() {
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
     expect(parse_result.ok,
-           "GAP-02/#265: full-width field names without null terminator should parse safely");
+           "GAP-02: full-width field names without null terminator should parse safely");
     expect(parse_result.table.fields.size() == 1U,
-           "GAP-02/#265: parser should preserve the descriptor when no null terminator exists");
+           "GAP-02: parser should preserve the descriptor when no null terminator exists");
     if (parse_result.ok && parse_result.table.fields.size() == 1U) {
         expect(!parse_result.table.fields[0].name.empty(),
-               "GAP-02/#265: parsed field name should remain non-empty");
+               "GAP-02: parsed field name should remain non-empty");
     }
     if (parse_result.ok && parse_result.table.records.size() == 1U && !parse_result.table.records[0].values.empty()) {
         expect(parse_result.table.records[0].values[0].display_value == "ALPHA",
-               "GAP-02/#265: record values should remain readable with full-width field names");
+               "GAP-02: record values should remain readable with full-width field names");
     }
 
     fs::remove_all(temp_dir, ignored);
 }
 
 void test_currency_field_boundary_values() {
-    // GAP-01 #260: currency fields should accept and round-trip near int64
+    // GAP-01: currency fields should accept and round-trip near int64
     // scaled bounds used by Visual FoxPro storage.
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1152,34 +1152,34 @@ void test_currency_field_boundary_values() {
     const std::vector<std::vector<std::string>> records{{"1", "0"}, {"2", "0"}};
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
-    expect(create_result.ok, "GAP-01/#260: setup should create a currency-backed table");
+    expect(create_result.ok, "GAP-01: setup should create a currency-backed table");
 
     const auto replace_max = copperfin::vfp::replace_record_field_value(
         table_path.string(), 0U, "BALANCE", "922337203685477.5807");
     expect(replace_max.ok,
-           "GAP-01/#260: max positive currency boundary should be accepted");
+           "GAP-01: max positive currency boundary should be accepted");
 
     const auto replace_min = copperfin::vfp::replace_record_field_value(
         table_path.string(), 1U, "BALANCE", "-922337203685477.5807");
     expect(replace_min.ok,
-           "GAP-01/#260: max negative currency boundary should be accepted");
+           "GAP-01: max negative currency boundary should be accepted");
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
-    expect(parse_result.ok, "GAP-01/#260: currency boundary table should remain readable");
+    expect(parse_result.ok, "GAP-01: currency boundary table should remain readable");
     if (parse_result.ok && parse_result.table.records.size() == 2U &&
         parse_result.table.records[0].values.size() >= 2U &&
         parse_result.table.records[1].values.size() >= 2U) {
         expect(parse_result.table.records[0].values[1].display_value == "922337203685477.5807",
-               "GAP-01/#260: positive currency boundary should round-trip exactly");
+               "GAP-01: positive currency boundary should round-trip exactly");
         expect(parse_result.table.records[1].values[1].display_value == "-922337203685477.5807",
-               "GAP-01/#260: negative currency boundary should round-trip exactly");
+               "GAP-01: negative currency boundary should round-trip exactly");
     }
 
     fs::remove_all(temp_dir, ignored);
 }
 
 void test_nan_inf_in_double_field_round_trip_behavior() {
-    // GAP-01 #261: double-field special values should never crash the parser
+    // GAP-01: double-field special values should never crash the parser
     // and should produce deterministic display output after write/read.
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() /
@@ -1196,35 +1196,35 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
     const std::vector<std::vector<std::string>> records{{"1", "0"}, {"2", "0"}, {"3", "0"}};
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records);
-    expect(create_result.ok, "GAP-01/#261: setup should create a double-backed table");
+    expect(create_result.ok, "GAP-01: setup should create a double-backed table");
 
     const auto write_nan = copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "VALUE", "nan");
     const auto write_pos_inf = copperfin::vfp::replace_record_field_value(table_path.string(), 1U, "VALUE", "inf");
     const auto write_neg_inf = copperfin::vfp::replace_record_field_value(table_path.string(), 2U, "VALUE", "-inf");
-    expect(write_nan.ok, "GAP-01/#261: writing NaN into a double field should be accepted");
-    expect(write_pos_inf.ok, "GAP-01/#261: writing +INF into a double field should be accepted");
-    expect(write_neg_inf.ok, "GAP-01/#261: writing -INF into a double field should be accepted");
+    expect(write_nan.ok, "GAP-01: writing NaN into a double field should be accepted");
+    expect(write_pos_inf.ok, "GAP-01: writing +INF into a double field should be accepted");
+    expect(write_neg_inf.ok, "GAP-01: writing -INF into a double field should be accepted");
 
     const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
     expect(parse_result.ok,
-           "GAP-01/#261: table with NaN/INF double payloads should parse without crashing");
+           "GAP-01: table with NaN/INF double payloads should parse without crashing");
     if (parse_result.ok && parse_result.table.records.size() == 3U &&
         parse_result.table.records[0].values.size() >= 2U &&
         parse_result.table.records[1].values.size() >= 2U &&
         parse_result.table.records[2].values.size() >= 2U) {
         expect(!parse_result.table.records[0].values[1].display_value.empty(),
-               "GAP-01/#261: NaN display output should be non-empty");
+               "GAP-01: NaN display output should be non-empty");
         expect(!parse_result.table.records[1].values[1].display_value.empty(),
-               "GAP-01/#261: +INF display output should be non-empty");
+               "GAP-01: +INF display output should be non-empty");
         expect(!parse_result.table.records[2].values[1].display_value.empty(),
-               "GAP-01/#261: -INF display output should be non-empty");
+               "GAP-01: -INF display output should be non-empty");
     }
 
     fs::remove_all(temp_dir, ignored);
 }
 
     void test_replace_write_failure_leaves_original_dbf_intact() {
-        // #266: staged DBF write failures must preserve the original table bytes.
+        // GAP-03: staged DBF write failures must preserve the original table bytes.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
          ("copperfin_dbf_replace_write_failure_tests_" + std::to_string(_getpid()));
@@ -1239,7 +1239,7 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         };
         const std::vector<std::vector<std::string>> records{{"ALPHA", "10"}};
         expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
-            "#266: setup should create a DBF table for staged-write rollback validation");
+            "GAP-03: setup should create a DBF table for staged-write rollback validation");
 
         const auto original_bytes = read_binary_file(table_path);
 
@@ -1250,23 +1250,23 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
 
         expect(!replace_result.ok,
-            "#266: injected DBF write failure should surface as a failed replace operation");
+            "GAP-03: injected DBF write failure should surface as a failed replace operation");
         expect(replace_result.error == "Unable to write table file.",
-            "#266: injected DBF write failure should report the table write error");
+            "GAP-03: injected DBF write failure should report the table write error");
 
         const auto final_bytes = read_binary_file(table_path);
         expect(final_bytes == original_bytes,
-            "#266: table bytes should be preserved when staged DBF promote fails");
+            "GAP-03: table bytes should be preserved when staged DBF promote fails");
         expect(!fs::exists(table_path.string() + ".cptmp"),
-            "#266: staged failure should not leak DBF temp files");
+            "GAP-03: staged failure should not leak DBF temp files");
         expect(!fs::exists(table_path.string() + ".cpbak"),
-            "#266: staged failure should not leak DBF backup files");
+            "GAP-03: staged failure should not leak DBF backup files");
 
         fs::remove_all(temp_dir, ignored);
     }
 
     void test_memo_sidecar_write_failure_leaves_dbf_header_consistent() {
-        // #267: if memo sidecar write fails after DBF write, rollback must restore
+        // GAP-03: if memo sidecar write fails after DBF write, rollback must restore
         // both table content and sidecar consistency.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
@@ -1283,7 +1283,7 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         };
         const std::vector<std::vector<std::string>> records{{"ONE", "Original payload"}};
         expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
-            "#267: setup should create memo-backed DBF for rollback validation");
+            "GAP-03: setup should create memo-backed DBF for rollback validation");
 
         set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", ".fpt");
         set_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE", "temp-open");
@@ -1292,27 +1292,27 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
 
         expect(!replace_result.ok,
-            "#267: injected memo write failure should surface as a failed replace operation");
+            "GAP-03: injected memo write failure should surface as a failed replace operation");
         expect(replace_result.error == "Unable to write memo sidecar.",
-            "#267: injected memo write failure should report the memo-sidecar write error");
+            "GAP-03: injected memo write failure should report the memo-sidecar write error");
 
         const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 5U);
         expect(parse_result.ok,
-            "#267: table should remain readable after memo sidecar write rollback");
+            "GAP-03: table should remain readable after memo sidecar write rollback");
         if (parse_result.ok && parse_result.table.records.size() == 1U && parse_result.table.records[0].values.size() >= 2U) {
          expect(parse_result.table.records[0].values[1].display_value == "Original payload",
-             "#267: memo rollback should preserve original payload content");
+             "GAP-03: memo rollback should preserve original payload content");
         }
         expect(!fs::exists(memo_path.string() + ".cptmp"),
-            "#267: failed memo write should not leak memo temp files");
+            "GAP-03: failed memo write should not leak memo temp files");
         expect(!fs::exists(memo_path.string() + ".cpbak"),
-            "#267: failed memo write should not leak memo backup files");
+            "GAP-03: failed memo write should not leak memo backup files");
 
         fs::remove_all(temp_dir, ignored);
     }
 
     void test_staged_write_rollback_removes_temp_and_preserves_original() {
-        // #268: staged-write rollback should preserve original on-disk state and
+        // GAP-03: staged-write rollback should preserve original on-disk state and
         // clean temp/backup artifacts.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
@@ -1328,7 +1328,7 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         };
         const std::vector<std::vector<std::string>> records{{"ALPHA", "10"}, {"BRAVO", "20"}};
         expect(copperfin::vfp::create_dbf_table_file(table_path.string(), fields, records).ok,
-            "#268: setup should create table for staged-write rollback checks");
+            "GAP-03: setup should create table for staged-write rollback checks");
 
         const auto before = read_binary_file(table_path);
         set_env_var("COPPERFIN_TEST_FAIL_WRITE_PATH_CONTAINS", "rollback.dbf");
@@ -1338,21 +1338,21 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
         clear_env_var("COPPERFIN_TEST_FAIL_WRITE_STAGE");
 
         expect(!result.ok,
-            "#268: injected staged promote failure should return a failed write result");
+            "GAP-03: injected staged promote failure should return a failed write result");
 
         const auto after = read_binary_file(table_path);
         expect(after == before,
-            "#268: staged rollback should preserve original table bytes exactly");
+            "GAP-03: staged rollback should preserve original table bytes exactly");
         expect(!fs::exists(table_path.string() + ".cptmp"),
-            "#268: staged rollback should remove DBF temp artifacts");
+            "GAP-03: staged rollback should remove DBF temp artifacts");
         expect(!fs::exists(table_path.string() + ".cpbak"),
-            "#268: staged rollback should remove DBF backup artifacts");
+            "GAP-03: staged rollback should remove DBF backup artifacts");
 
         fs::remove_all(temp_dir, ignored);
     }
 
     void test_dbf_with_zero_record_length_is_rejected() {
-        // #269: header-level record_length==0 must be rejected.
+        // DBF header validation: record_length==0 must be rejected.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
          ("copperfin_dbf_zero_record_length_tests_" + std::to_string(_getpid()));
@@ -1372,13 +1372,13 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
 
         const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
         expect(!parse_result.ok,
-            "#269: DBF with zero record length should be rejected");
+            "DBF header validation should reject zero record length");
 
         fs::remove_all(temp_dir, ignored);
     }
 
     void test_dbf_with_header_shorter_than_minimum_is_rejected() {
-        // #270: header_length<32 must fail DBF-family header validation.
+        // DBF header validation: header_length<32 must fail DBF-family header validation.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
          ("copperfin_dbf_short_header_tests_" + std::to_string(_getpid()));
@@ -1398,13 +1398,13 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
 
         const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
         expect(!parse_result.ok,
-            "#270: DBF with header length < 32 should be rejected");
+            "DBF header validation should reject header length below 32 bytes");
 
         fs::remove_all(temp_dir, ignored);
     }
 
     void test_dbf_header_claim_beyond_file_size_is_rejected() {
-        // #271: header_length claims beyond physical file bytes must be rejected.
+        // DBF header validation: header_length claims beyond physical file bytes must be rejected.
         namespace fs = std::filesystem;
         const fs::path temp_dir = fs::temp_directory_path() /
          ("copperfin_dbf_header_claim_beyond_file_tests_" + std::to_string(_getpid()));
@@ -1424,9 +1424,9 @@ void test_nan_inf_in_double_field_round_trip_behavior() {
 
         const auto parse_result = copperfin::vfp::parse_dbf_table_from_file(table_path.string(), 1U);
         expect(!parse_result.ok,
-            "#271: DBF whose header claims bytes beyond file size should be rejected");
+            "DBF header validation should reject header claims beyond file size");
         expect(parse_result.error == "Table file is shorter than its header length.",
-            "#271: oversized header claim should report header-length truncation error");
+            "DBF header validation should report header-length truncation errors");
 
         fs::remove_all(temp_dir, ignored);
     }

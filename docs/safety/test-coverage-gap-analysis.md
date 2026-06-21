@@ -10,9 +10,9 @@
 
 ## 1. Executive Summary
 
-The current test suite has broad functional coverage of the happy path and several important robustness cases (runtime guardrails, truncated DBF rejection, ON ERROR/TRY/CATCH semantics, call-depth limits). However, several categories of edge case relevant to DO-178C structural coverage and hazard containment are absent or thin. This document enumerates those gaps, maps them to the hazard register, and proposes the minimal additional tests that would most meaningfully reduce certification risk.
+The current test suite has broad functional coverage of the happy path and several important robustness cases (runtime guardrails, DBF malformed-input rejection, staged-write rollback, ON ERROR/TRY/CATCH semantics, call-depth limits). Several categories of edge case relevant to DO-178C structural coverage and hazard containment remain absent or thin. This document enumerates those gaps, maps them to the hazard register, and proposes the minimal additional tests that would most meaningfully reduce certification risk.
 
-**Overall assessment:** Functional coverage is strong. Boundary-value, fault-injection, and concurrency coverage are weak. Security subsystem coverage is shallow.
+**Overall assessment:** Functional coverage is strong. DBF parser/write error management now has focused coverage for the highest-risk malformed-header and rollback cases. Remaining boundary-value, fault-injection, concurrency, and security-subsystem coverage is still uneven.
 
 ---
 
@@ -24,6 +24,8 @@ These areas are well-covered and must not be broken by future slices:
 | --- | --- |
 | DBF field type round-trips | `test_create_dbf_table_file_round_trips`, `test_integer_field_*`, `test_currency_and_datetime_*`, `test_double_field_*`, `test_varchar_and_varbinary_*`, `test_memo_field_*` |
 | DBF truncation rejection | `test_parse_dbf_table_rejects_truncated_visual_asset` |
+| DBF malformed-header rejection | `test_dbf_header_record_count_exceeds_file_size_is_rejected`, `test_dbf_field_descriptor_count_exceeds_header_size_is_rejected`, `test_dbf_record_width_mismatch_field_sum_is_rejected`, `test_dbf_with_zero_record_length_is_rejected`, `test_dbf_with_header_shorter_than_minimum_is_rejected`, `test_dbf_header_claim_beyond_file_size_is_rejected` |
+| DBF write failure rollback | `test_replace_write_failure_leaves_original_dbf_intact`, `test_memo_sidecar_write_failure_leaves_dbf_header_consistent`, `test_staged_write_rollback_removes_temp_and_preserves_original` |
 | Staged write cleanup | `test_staged_write_temp_artifacts_are_cleaned_up` |
 | Runtime guardrails | `test_runtime_guardrail_limits_call_depth_without_crashing_host`, `test_runtime_guardrail_limits_statement_budget_without_crashing_host`, `test_static_diagnostic_flags_likely_infinite_do_while_loop` |
 | Error recovery semantics | `test_on_error_do_handler_dispatches_routine`, `test_try_catch_finally_handles_runtime_errors`, `test_retry_reexecutes_faulting_statement`, `test_resume_next_continues_after_fault` |
@@ -42,21 +44,19 @@ These areas are well-covered and must not be broken by future slices:
 
 **What is missing:**
 
-- No test for integer overflow when the result of a REPLACE or CALCULATE expression exceeds the field's declared width (e.g., writing 100 to a 2-digit N field).
-- No test for floating-point NaN or INF propagation through a chain of numeric expressions. VFP's behavior on NaN is documented but not exercised.
-- No test for division by zero in a PRG expression (`x = 1 / 0`). The guardrail should produce a runtime error, not a crash.
-- No test for CURRENCY field at maximum and minimum representable values (±$922,337,203,685,477.5807).
-- No test for DOUBLE field with +INF, -INF, or denormalized input when writing and re-reading from a DBF.
+- DBF currency max/min boundary values are covered by `test_currency_field_boundary_values`.
+- DBF double NaN/+INF/-INF write/read survivability is covered by `test_nan_inf_in_double_field_round_trip_behavior`.
+- Division by zero in a PRG expression is covered by `test_prg_engine_control_flow` regression coverage and dispatches a runtime error rather than crashing.
+- Numeric field overflow via `REPLACE` is covered by runtime diagnostics/regression coverage proving the write is diagnosed or safely bounded.
+- Remaining thin spot: floating-point NaN/INF propagation through longer PRG expression chains and denormalized DBF double inputs are not separately exercised.
 
 **Priority:** High. A silently truncated field value is a data corruption scenario (HZ-data-corruption-01). Division by zero crashing the host is a runtime crash scenario (HZ-runtime-crash-01).
 
 **Suggested new tests:**
 
 ```text
-test_numeric_field_overflow_is_diagnosed_not_silently_truncated
-test_division_by_zero_dispatches_runtime_error
-test_nan_inf_in_double_field_round_trip_behavior
-test_currency_field_boundary_values
+test_denormal_double_field_round_trip_behavior
+test_nan_inf_prg_expression_chain_behavior
 ```
 
 ---
@@ -67,22 +67,21 @@ test_currency_field_boundary_values
 
 **What is missing:**
 
-- `test_parse_dbf_table_rejects_truncated_visual_asset` covers one truncation scenario, but only for visual asset (.scx) files. There is no test for a raw `.dbf` file whose header claims N records but the file is too small to contain them (could cause an out-of-bounds read).
-- No test for a header where the field descriptor count (computed from header size) exceeds the actual byte length.
-- No test for mismatched `.dbf`/`.fpt` (memo sidecar) version bytes — the sidecar claims a different block size than the header expects.
-- No test for a DBF where record size in the header does not match the sum of field widths.
-- No test for a field descriptor with a name that is not null-terminated within its 11-byte slot.
+- Raw `.dbf` record-count claims beyond available record storage are covered by `test_dbf_header_record_count_exceeds_file_size_is_rejected`.
+- Declared header bounds for descriptor parsing are covered by `test_dbf_field_descriptor_count_exceeds_header_size_is_rejected`.
+- Malformed memo sidecar block metadata is covered by `test_memo_sidecar_version_mismatch_is_diagnosed`.
+- Record-size/field-layout mismatches are covered by `test_dbf_record_width_mismatch_field_sum_is_rejected`.
+- Full-width field names without null terminators are covered by `test_dbf_field_name_without_null_terminator_is_tolerated`.
+- Additional malformed header bounds are covered by `test_dbf_with_zero_record_length_is_rejected`, `test_dbf_with_header_shorter_than_minimum_is_rejected`, and `test_dbf_header_claim_beyond_file_size_is_rejected`.
+- Remaining thin spot: asset inspection reports validation findings for some malformed DBF/memo sidecar inputs, but parser-level coverage does not yet assert structured validation issue codes for every malformed raw DBF case.
 
 **Priority:** High. Any of these could produce an out-of-bounds memory read if the parser trusts header metadata without validation. `test_visual_asset_memo_sidecar_repair_round_trip` and `test_memo_replace_recovers_directory_sidecar_path` show that repair paths exist, but they are exercised only in the "recoverable" case, not the "unrecoverable malformed input" case.
 
 **Suggested new tests:**
 
 ```text
-test_dbf_header_record_count_exceeds_file_size_is_rejected
-test_dbf_field_descriptor_count_exceeds_header_size_is_rejected
-test_dbf_record_width_mismatch_field_sum_is_rejected
-test_memo_sidecar_version_mismatch_is_diagnosed
-test_dbf_field_name_without_null_terminator_is_tolerated
+test_inspect_asset_reports_record_width_mismatch_issue_code
+test_inspect_asset_reports_descriptor_header_bounds_issue_code
 ```
 
 ---
@@ -93,9 +92,10 @@ test_dbf_field_name_without_null_terminator_is_tolerated
 
 **What is missing:**
 
-- No test for write failure mid-REPLACE (simulated by writing to a read-only path or a file that becomes unwritable after the staged temp file is created). The critical question is whether the original `.dbf` is left intact if the temp-to-final rename fails.
-- No test for partial memo sidecar write. If the DBF header write succeeds but the memo `.fpt` write fails, the table should not be left in a state where the DBF header points to a memo block that does not exist.
-- `test_staged_write_temp_artifacts_are_cleaned_up` verifies that temp files do not leak on success, but does not test the abort/failure case.
+- Injected DBF staged-promote failures are covered by `test_replace_write_failure_leaves_original_dbf_intact`.
+- Injected memo sidecar write failures are covered by `test_memo_sidecar_write_failure_leaves_dbf_header_consistent`.
+- Generic staged rollback artifact cleanup is covered by `test_staged_write_rollback_removes_temp_and_preserves_original`.
+- Remaining thin spot: tests use deterministic test-only write failure checkpoints, not an OS-level disk-full or permission-denied integration environment.
 
 **Priority:** High (S0 for HZ-data-corruption-01). These are exactly the scenarios that cause real data loss in production environments with power interruptions or full disks.
 
@@ -104,9 +104,8 @@ test_dbf_field_name_without_null_terminator_is_tolerated
 **Suggested new tests:**
 
 ```text
-test_replace_write_failure_leaves_original_dbf_intact
-test_memo_sidecar_write_failure_leaves_dbf_header_consistent
-test_staged_write_rollback_removes_temp_and_preserves_original
+test_replace_permission_denied_leaves_original_dbf_intact
+test_memo_sidecar_os_write_error_preserves_consistency
 ```
 
 ---
