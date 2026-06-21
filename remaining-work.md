@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1606 deleted report/label layout-object width clear coverage shipped: Studio host regression coverage now proves `--clear-property` on deleted FRX/LBX layout-object `WIDTH` fields clears the width to zero, keeps the DBF record deleted, refreshes both `reportLayout.deletedObjects` and `selectedReportObject` width/right-edge JSON, and keeps containing-section metadata unavailable/null instead of fabricating live section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1605 deleted report/label layout-object width edit coverage shipped: Studio host regression coverage now proves `--set-property` on deleted FRX/LBX layout-object `WIDTH` fields persists the updated width, keeps the DBF record deleted, refreshes both `reportLayout.deletedObjects` and `selectedReportObject` width/right-edge JSON, and keeps containing-section metadata unavailable/null instead of fabricating live section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1604 deleted report/label layout-object font clear coverage shipped: Studio host regression coverage now proves `--clear-property` on deleted FRX/LBX layout-object `FONTFACE` memos blanks seeded deleted font metadata, keeps the DBF record deleted, refreshes both `reportLayout.deletedObjects` and `selectedReportObject` highlight/provenance JSON down to the remaining expression highlight, and keeps containing-section metadata unavailable/null instead of fabricating live section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1603 deleted report/label layout-object font edit coverage shipped: Studio host regression coverage now proves `--set-property` on deleted FRX/LBX layout-object `FONTFACE` memos persists the updated font metadata, keeps the DBF record deleted, refreshes both `reportLayout.deletedObjects` and `selectedReportObject` highlight/provenance JSON, and keeps containing-section metadata unavailable/null instead of fabricating live section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1620,7 +1621,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1605 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1606 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1691,7 +1692,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1605 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1606 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
