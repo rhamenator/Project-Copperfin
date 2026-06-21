@@ -73,8 +73,6 @@
 1336	OPEN	E2/#23 slice: Preserve aggregate designer dispatch catalog dispatch arguments in host JSON		2026-06-19T06:37:51Z
 1335	OPEN	E2/#23 slice: Expose aggregate designer execution child commands in host JSON		2026-06-19T06:33:30Z
 1334	OPEN	E2/#23 slice: Preserve aggregate designer execution catalog dispatch arguments in host JSON		2026-06-19T06:25:06Z
-1333	OPEN	E2/#23 slice: Expose aggregate designer dispatch execution catalog through host JSON		2026-06-19T06:16:31Z
-1332	OPEN	E2/#23 slice: Add aggregate designer dispatch execution catalog planning		2026-06-19T06:11:22Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
 1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
 203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
