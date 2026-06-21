@@ -3673,6 +3673,31 @@ void write_synthetic_report_table_for_stable_deleted_layout_json(const std::file
            "#1644: stable deleted layout fixture should preserve the deleted object state");
 }
 
+void write_synthetic_report_table_for_negative_dimension_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "-500", ""},
+        {"5", "", "\"Negative live\"", "300", "0", "-100", "-200", "negative-live-guid"},
+        {"5", "", "\"Negative deleted\"", "700", "50", "-400", "-300", "negative-deleted-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1715: synthetic report table for negative layout dimensions should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1715: synthetic report table should mark the negative-dimension object deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -4963,6 +4988,134 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1459: unplaced/deleted report object JSON should expose null section object indexes");
     expect_contains(process.stdout_text, "\"title\": \"Record 5\"",
                     "#1452: report layout JSON should preserve synthesized unplaced-object titles");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clamps_negative_report_layout_dimensions(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_negative_report_layout_dimension_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_negative_dimension_layout = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_negative_dimension_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " negative layout summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " negative layout summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1715: negative-dimension report/label layout JSON should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1715: negative-dimension layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1715: negative-dimension label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1715: negative-dimension live layouts should expose preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1715: negative-dimension live layouts should keep section-origin left bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1715: negative-dimension live layouts should keep section-origin top bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsRight\": 300",
+                        "#1715: negative-dimension live layouts should clamp object right bounds to left plus zero width");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 0",
+                        "#1715: negative-dimension live layouts should not invert bottom bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsWidth\": 300",
+                        "#1715: negative-dimension live layouts should compute non-negative preview widths");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsHeight\": 0",
+                        "#1715: negative-dimension live layouts should compute zero preview height");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1715: negative-dimension deleted layouts should expose deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsLeft\": 700",
+                        "#1715: negative-dimension deleted layouts should preserve deleted left bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                        "#1715: negative-dimension deleted layouts should preserve deleted top bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsRight\": 700",
+                        "#1715: negative-dimension deleted layouts should clamp deleted right bounds to left plus zero width");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 50",
+                        "#1715: negative-dimension deleted layouts should clamp deleted bottom bounds to top plus zero height");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1715: negative-dimension deleted layouts should compute zero deleted preview width");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#1715: negative-dimension deleted layouts should compute zero deleted preview height");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1715: negative-dimension layouts should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1715: negative-dimension layouts should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
+                        "#1715: negative section heights should be clamped to zero in summaries");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1715: negative-dimension live object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"left\": 300",
+                "\"top\": 0",
+                "\"width\": 0",
+                "\"right\": 300",
+                "\"height\": 0",
+                "\"bottom\": 0"
+            },
+            "#1715: negative live object dimensions should clamp selected geometry to zero width and height");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1715: negative-dimension deleted object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"left\": 700",
+                "\"top\": 50",
+                "\"width\": 0",
+                "\"right\": 700",
+                "\"height\": 0",
+                "\"bottom\": 50"
+            },
+            "#1715: negative deleted object dimensions should clamp selected geometry to zero width and height");
+    };
+
+    run_negative_dimension_layout(temp_root / "negative_dimensions.frx",
+                                  "negative_dimensions.frx",
+                                  "report");
+    run_negative_dimension_layout(temp_root / "negative_dimensions.lbx",
+                                  "negative_dimensions.lbx",
+                                  "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -70724,6 +70877,7 @@ int main(int argc, char** argv) {
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
+    test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
