@@ -154,9 +154,6 @@
 1255	OPEN	E2/#23 slice: Add toolbox object batch creation dispatch catalog planning		2026-06-18T22:37:03Z
 1254	OPEN	E2/#23 slice: Expose toolbox object creation dispatch catalog through host JSON		2026-06-18T22:30:56Z
 1253	OPEN	E2/#23 slice: Add toolbox object creation dispatch catalog planning		2026-06-18T22:27:24Z
-1252	OPEN	E2/#23 slice: Expose toolbox object batch creation dispatch planning through host JSON		2026-06-18T22:22:07Z
-1251	OPEN	E2/#23 slice: Add toolbox object batch creation dispatch planning		2026-06-18T22:18:22Z
-1250	OPEN	E2/#23 slice: Expose toolbox object creation dispatch planning through host JSON		2026-06-18T22:13:30Z
 1186	OPEN	E2/#23 slice: Expose host dynamic-alignment-object command		2026-06-18T13:33:04Z
 1185	OPEN	E2/#23 slice: Expose host font-shadow-object command		2026-06-18T13:20:11Z
 1184	OPEN	E2/#23 slice: Expose host font-outline-object command		2026-06-18T13:07:37Z
