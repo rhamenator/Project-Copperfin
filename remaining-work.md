@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1599 deleted report/label column setup memo edit coverage shipped: Studio host regression coverage now proves `--set-property` on deleted FRX/LBX root column setup `EXPR` memos persists the updated memo payload, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` provenance/value JSON, keeps live page setup/column setup/settings unavailable, and preserves deleted column setup provenance. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1598 deleted report/label column-spacing field clear coverage shipped: Studio host regression coverage now proves `--clear-property` on deleted FRX/LBX root column setup `COLSPACING` fields blanks the direct-field value, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` by removing the direct column-spacing entry while preserving memo-derived deleted column settings, and keeps live page setup/column setup/settings unavailable. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1597 deleted report/label column-spacing field edit coverage shipped: Studio host regression coverage now proves `--set-property` on deleted FRX/LBX root column setup `COLSPACING` fields persists the updated direct-field value, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` provenance/value JSON, keeps live page setup/column setup/settings unavailable, and preserves memo-derived deleted column settings. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1596 deleted report/label column-width field clear coverage shipped: Studio host regression coverage now proves `--clear-property` on deleted FRX/LBX root column setup `COLWIDTH` fields blanks the direct-field value, refreshes both `reportLayout.deletedSettings` and `selectedReportSettings` by removing the direct column-width entry while preserving memo-derived deleted column settings, and keeps live page setup/column setup/settings unavailable. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1613,7 +1614,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1598 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1599 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1684,7 +1685,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1598 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1599 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
