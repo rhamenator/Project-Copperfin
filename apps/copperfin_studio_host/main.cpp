@@ -25429,6 +25429,7 @@ int main(int argc, char** argv) {
             std::cout << "error: " << rename_result.error << "\n";
             return 4;
         }
+
     }
 
     if (parse_result.request.delete_object) {
@@ -25544,6 +25545,32 @@ int main(int argc, char** argv) {
             std::cout << "status: error\n";
             std::cout << "error: " << rename_result.error << "\n";
             return 4;
+        }
+
+        if (!parse_result.request.new_object_name.empty()) {
+            open_request.object_name = parse_result.request.new_object_name;
+        }
+        if (!parse_result.request.new_unique_id.empty()) {
+            open_request.unique_id = parse_result.request.new_unique_id;
+        }
+        const auto renamed_objects = copperfin::vfp::list_visual_objects(parse_result.request.path);
+        if (renamed_objects.ok) {
+            const auto renamed_object = std::find_if(
+                renamed_objects.objects.begin(),
+                renamed_objects.objects.end(),
+                [&](const copperfin::vfp::VisualObjectSnapshot& object) {
+                    if (!open_request.unique_id.empty()) {
+                        return object.unique_id == open_request.unique_id;
+                    }
+                    if (!open_request.object_name.empty()) {
+                        return object.object_name == open_request.object_name;
+                    }
+                    return object.record_index == open_request.record_index;
+                });
+            if (renamed_object != renamed_objects.objects.end()) {
+                open_request.record_index = renamed_object->record_index;
+                open_request.selection_record_available = true;
+            }
         }
     }
 
