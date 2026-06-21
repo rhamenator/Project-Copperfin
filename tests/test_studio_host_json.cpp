@@ -7462,6 +7462,102 @@ void test_studio_host_json_clears_report_layout_object_expressions_by_record_sel
     }
 }
 
+void test_studio_host_json_clears_deleted_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_layout_expression_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_expression_clear = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1602: deleted report/label layout object expression clear fixture should start deleted");
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "6",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted layout expression clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted layout expression clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1602: deleted report/label layout object expression clear should exit successfully");
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1602: deleted report/label layout object expression clear should preserve deleted state");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1602: deleted report/label layout object expression clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1602: deleted report/label layout object expression clear should preserve deleted object counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1602: deleted report/label layout object expression clear should preserve selected deleted-object availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1602: deleted report/label layout object expression clear should preserve object selection kind");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1602: deleted report/label layout object expression clear should not fabricate containing-section availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1602: deleted report/label layout object expression clear should serialize null containing-section metadata");
+        expect_contains(clear_process.stdout_text,
+                        "{\"name\": \"EXPR\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 2",
+                        "#1602: deleted report/label layout object expression clear should blank the EXPR memo property");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"Record 6\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#1602: deleted report/label layout object expression clear should refresh deleted-object expression metadata");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"Record 6\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#1602: deleted report/label layout object expression clear should refresh selected deleted-object metadata");
+        expect_not_contains(clear_process.stdout_text, "\"expression\": \"\\\"Deleted label\\\"\"",
+                            "#1602: deleted report/label layout object expression clear should not leak stale expression values");
+    };
+
+    run_deleted_expression_clear(temp_root / "deleted_expression_clear.frx",
+                                 "deleted_expression_clear.frx",
+                                 "report");
+    run_deleted_expression_clear(temp_root / "deleted_expression_clear.lbx",
+                                 "deleted_expression_clear.lbx",
+                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -57338,6 +57434,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_moves_report_layout_objects_from_unplaced_to_sections_by_record_selection(argv[1]);
