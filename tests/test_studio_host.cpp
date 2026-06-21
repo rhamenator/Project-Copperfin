@@ -731,6 +731,62 @@ void test_parse_launch_arguments() {
     expect(result.request.undo_label == "Bulk Undo", "launch contract should parse the undo label");
 }
 
+void test_parse_launch_arguments_rejects_numeric_selector_errors() {
+    const auto invalid_record_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--record", "-1"
+    });
+    expect(!invalid_record_result.ok,
+        "#1714: launch contract should reject negative record selectors");
+    expect(invalid_record_result.error == "The --record value must be an unsigned integer.",
+        "#1714: launch contract should report invalid record selector values");
+
+    const auto missing_record_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--record"
+    });
+    expect(!missing_record_result.ok,
+        "#1714: launch contract should reject missing record selector values");
+    expect(missing_record_result.error == "Missing value after --record.",
+        "#1714: launch contract should report missing record selector values");
+
+    const auto invalid_line_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--line", "-1"
+    });
+    expect(!invalid_line_result.ok,
+        "#1714: launch contract should reject negative line selectors");
+    expect(invalid_line_result.error == "The --line value must be an unsigned integer.",
+        "#1714: launch contract should report invalid line selector values");
+
+    const auto missing_line_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--line"
+    });
+    expect(!missing_line_result.ok,
+        "#1714: launch contract should reject missing line selector values");
+    expect(missing_line_result.error == "Missing value after --line.",
+        "#1714: launch contract should report missing line selector values");
+
+    const auto invalid_column_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column", "-1"
+    });
+    expect(!invalid_column_result.ok,
+        "#1714: launch contract should reject negative column selectors");
+    expect(invalid_column_result.error == "The --column value must be an unsigned integer.",
+        "#1714: launch contract should report invalid column selector values");
+
+    const auto missing_column_result = copperfin::studio::parse_launch_arguments({
+        "--path", "E:\\Forms\\customer.scx",
+        "--column"
+    });
+    expect(!missing_column_result.ok,
+        "#1714: launch contract should reject missing column selector values");
+    expect(missing_column_result.error == "Missing value after --column.",
+        "#1714: launch contract should report missing column selector values");
+}
+
 void test_parse_launch_arguments_for_clear_property() {
     const auto result = copperfin::studio::parse_launch_arguments({
         "--path", "E:\\Forms\\customer.scx",
@@ -17445,6 +17501,7 @@ void test_open_document_includes_prg_static_diagnostics() {
 
 int main() {
     test_parse_launch_arguments();
+    test_parse_launch_arguments_rejects_numeric_selector_errors();
     test_parse_launch_arguments_for_clear_property();
     test_parse_launch_arguments_rejects_ambiguous_property_command();
     test_parse_launch_arguments_for_rename_property();
