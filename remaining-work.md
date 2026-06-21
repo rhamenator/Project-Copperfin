@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1636 stable-selector report/label layout-object width update coverage shipped: Studio host regression coverage now proves a live FRX/LBX layout object WIDTH can be updated by `--set-property --unique-id field-guid --property-name WIDTH --property-value 6000`, with WIDTH persisted, preview right/width bounds refreshed to 7200, label identity preserved, and selected-object containing-section metadata retained without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1635 stable-selector report/label layout-object unplacement coverage shipped: Studio host regression coverage now proves a section-contained FRX/LBX layout object can be moved out of live sections by `--set-property --unique-id field-guid --property-name VPOS --property-value 9000`, with VPOS persisted, placed/unplaced counts refreshed, label identity preserved, and selected-object containing-section metadata cleared/null without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1634 stable-selector report/label layout-object placement coverage shipped: Studio host regression coverage now proves an initially unplaced FRX/LBX layout object can be assigned a stable id and moved into a live section by `--set-property --unique-id unplaced-line-guid --property-name VPOS --property-value 2600`, with VPOS persisted, placed/unplaced counts refreshed, label identity preserved, and selected-object containing-section metadata rehydrated without a record selector. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1633 stable-selector report/label layout-object font metadata clear coverage shipped: Studio host regression coverage now proves a live object `FONTFACE` memo can be cleared by stable unique id without a record selector with stale font highlights removed, containing-section metadata rehydrated, and refreshed `selectedReportObject` highlight JSON pointing at the edited object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1650,7 +1651,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1635 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1636 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1721,7 +1722,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1635 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1636 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
