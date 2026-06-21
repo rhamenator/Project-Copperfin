@@ -3960,6 +3960,36 @@ void write_synthetic_report_table_for_padded_stable_settings_json(
     expect(create_result.ok, "#1703: synthetic report table for padded stable settings JSON should be created");
 }
 
+void write_synthetic_report_table_for_deep_stable_object_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "0", "", "3200", ""},
+        {"5", "", "\"Preview object 2\"", "100", "200", "1000", "200", ""},
+        {"5", "", "\"Preview object 3\"", "100", "500", "1000", "200", ""},
+        {"5", "", "\"Preview object 4\"", "100", "800", "1000", "200", ""},
+        {"5", "", "\"Preview object 5\"", "100", "1100", "1000", "200", ""},
+        {"5", "", "\"Preview object 6\"", "100", "1400", "1000", "200", ""},
+        {"5", "", "\"Preview object 7\"", "100", "1700", "1000", "200", ""},
+        {"5", "", "\"Preview object 8\"", "100", "2000", "1000", "200", ""},
+        {"5", "", "\"Preview object 9\"", "100", "2300", "1000", "200", ""},
+        {"5", "", "\"Deep label\"", "400", "2600", "1500", "250", "deep-object-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1705: synthetic report table for deep stable object JSON should be created");
+}
+
 void write_synthetic_report_table_for_stable_group_header_object_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -23499,6 +23529,87 @@ void test_studio_host_json_record_selection_takes_precedence_over_stable_report_
     run_settings_record_precedence(temp_root / "record_settings_precedence.lbx",
                                    "record_settings_precedence.lbx",
                                    "label settings");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_selects_deep_report_records_by_stable_selector(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deep_report_selector_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deep_object_selection = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_deep_stable_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "deep-object-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deep stable selector stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deep stable selector stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1705: deep stable report/label selectors should keep JSON inspection non-failing");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1705: deep stable selectors should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1705: deep stable label selectors should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1705: deep stable selectors should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1705: deep stable selectors should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1705: deep stable selectors should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1705: deep stable object selectors should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1705: deep stable object selectors should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 9",
+                        "#1705: deep stable selectors should parse beyond the default preview record limit");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 10",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"\\\"Deep label\\\"\"",
+                "\"deleted\": false"
+            },
+            "#1705: deep stable selectors should expose the selected deep report object");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"objectCount\": 9"
+            },
+            "#1705: deep stable selectors should preserve containing-section metadata for deep objects");
+    };
+
+    run_deep_object_selection(temp_root / "deep_selector.frx",
+                              "deep_selector.frx",
+                              "report");
+    run_deep_object_selection(temp_root / "deep_selector.lbx",
+                              "deep_selector.lbx",
+                              "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -69743,6 +69854,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_selection_for_live_deleted_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selector(argv[1]);
     test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(argv[1]);
+    test_studio_host_json_selects_deep_report_records_by_stable_selector(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_objects_by_stable_selection(argv[1]);

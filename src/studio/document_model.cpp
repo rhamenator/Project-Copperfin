@@ -794,7 +794,9 @@ StudioOpenResult open_document(const StudioOpenRequest& request) {
     }
 
     if (inspection.header_available) {
-        const std::size_t max_records = request.load_full_table
+        const bool unique_id_selection_requested =
+            supports_unique_id_record_selection(document.kind) && !trim_copy(request.unique_id).empty();
+        const std::size_t max_records = request.load_full_table || unique_id_selection_requested
             ? inspection.header.record_count
             : 8U;
         const auto table_result = vfp::parse_dbf_table_from_file(request.path, max_records);
