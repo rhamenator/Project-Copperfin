@@ -20168,6 +20168,207 @@ void test_studio_host_json_exposes_selected_report_sections_by_stable_selection(
     }
 }
 
+void test_studio_host_json_exposes_selected_report_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_live_object_selection = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "field-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1660: stable selected report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1660: stable selected report/label object JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1660: stable selected label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1660: stable live object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1660: stable live object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1660: stable live object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1660: stable live object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1660: stable live object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1660: stable live object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1660: stable live object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1660: stable live object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1660: stable live object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1660: stable live object selections should advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                        "#1660: stable live object selections should expose containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_2\"",
+                "\"containingSectionRecordIndex\": 2",
+                "\"sectionRelativeTop\": 600",
+                "\"sectionRelativeBottom\": 1050",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"customer.company\"",
+                "\"expressionFieldIndex\": 2",
+                "\"highlightCount\": 2"
+            },
+            "#1660: stable live object selections should expose selected object geometry and provenance");
+        expect_contains(object_process.stdout_text, "\"left\": 1200",
+                        "#1660: stable live object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 2600",
+                        "#1660: stable live object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 4000",
+                        "#1660: stable live object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 5200",
+                        "#1660: stable live object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 450",
+                        "#1660: stable live object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 3050",
+                        "#1660: stable live object selections should expose selected-object bottom bounds");
+        expect_contains(object_process.stdout_text,
+                        "\"name\": \"FONTFACE\", \"recordIndex\": 3, \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": 3, \"value\": \"Segoe UI\"",
+                        "#1660: stable live object selections should expose selected-object field provenance");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_2\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": false"
+            },
+            "#1660: stable live object selections should expose the containing live-section metadata");
+    };
+
+    const auto run_deleted_object_selection = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_layout_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "deleted-label-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1660: stable selected deleted report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1660: stable selected deleted report/label object JSON should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1660: stable selected deleted label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1660: stable deleted object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1660: stable deleted object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1660: stable deleted object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1660: stable deleted object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1660: stable deleted object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1660: stable deleted object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1660: stable deleted object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1660: stable deleted object selections should preserve live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1660: stable deleted object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1660: stable deleted object selections should not advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1660: stable deleted object selections should serialize null containing-section JSON");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"expression\": \"\\\"Deleted label\\\"\""
+            },
+            "#1660: stable deleted object selections should expose selected object geometry without section metadata");
+        expect_contains(object_process.stdout_text, "\"left\": 1000",
+                        "#1660: stable deleted object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 2600",
+                        "#1660: stable deleted object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 1200",
+                        "#1660: stable deleted object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 2200",
+                        "#1660: stable deleted object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 300",
+                        "#1660: stable deleted object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 2900",
+                        "#1660: stable deleted object selections should expose selected-object bottom bounds");
+    };
+
+    run_live_object_selection(temp_root / "selected_object_stable.frx",
+                              "selected_object_stable.frx",
+                              "report");
+    run_live_object_selection(temp_root / "selected_object_stable.lbx",
+                              "selected_object_stable.lbx",
+                              "label");
+    run_deleted_object_selection(temp_root / "selected_deleted_object_stable.frx",
+                                 "selected_deleted_object_stable.frx",
+                                 "report");
+    run_deleted_object_selection(temp_root / "selected_deleted_object_stable.lbx",
+                                 "selected_deleted_object_stable.lbx",
+                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -64190,6 +64391,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_sections_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings(argv[1]);
     test_studio_host_json_exposes_selected_label_settings(argv[1]);
     test_studio_host_json_exposes_builder_launch_plans(argv[1]);
