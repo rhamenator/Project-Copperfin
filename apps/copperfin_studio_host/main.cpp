@@ -25755,6 +25755,8 @@ int main(int argc, char** argv) {
             std::cout << "error: " << snap_result.error << "\n";
             return 4;
         }
+
+        select_open_request_visual_object();
     }
 
     if (parse_result.request.nudge_object) {

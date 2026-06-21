@@ -1,3 +1,4 @@
+- 2026-06-21: E3/#1627 live-edited report/label layout-object snap coverage shipped: Studio host now resolves the snapped FRX/LBX source object for the final document refresh, and regression coverage proves a live object edited through host HPOS/VPOS/WIDTH/HEIGHT properties can be snapped to grid by stable ids without a record selector with rounded position persisted, edited size preserved, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the snapped object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1626 live-edited report/label layout-object resize coverage shipped: Studio host now resolves the resized FRX/LBX source object for the final document refresh, and regression coverage proves a live object edited through host HPOS/WIDTH/HEIGHT properties can be resized by stable ids without a record selector with edited left position persisted, anchor dimensions applied, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the resized object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1625 live-edited report/label layout-object align coverage shipped: Studio host now resolves the aligned FRX/LBX source object for the final document refresh, and regression coverage proves a live object edited through host HPOS/WIDTH/HEIGHT properties can be aligned by stable ids without a record selector with edited geometry persisted, containing-section metadata rehydrated, and refreshed `selectedReportObject` JSON pointing at the aligned object. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only apps/copperfin_studio_host/main.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-21: E3/#1624 live-edited unplaced report/label layout-object reorder coverage shipped: Studio host regression coverage now proves a live FRX/LBX layout object edited through host HPOS/VPOS/HEIGHT properties into out-of-section geometry can be physically reordered with edited geometry persisted, refreshed `selectedReportObject` JSON pointing at the reordered object, and selected containing-section availability/object JSON kept false/null instead of fabricating section membership. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1641,7 +1642,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1626 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1627 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1712,7 +1713,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1626 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1627 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
