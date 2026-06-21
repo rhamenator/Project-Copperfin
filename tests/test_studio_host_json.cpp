@@ -12278,6 +12278,98 @@ void test_studio_host_json_updates_deleted_report_column_spacing_fields_by_recor
     }
 }
 
+void test_studio_host_json_clears_deleted_report_column_spacing_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_spacing_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_spacing_clear = [&](const fs::path& asset_path,
+                                                      const std::string& title,
+                                                      const std::string& label) {
+        write_synthetic_report_table_for_deleted_column_spacing_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "0",
+                "--property-name", "COLSPACING",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted column-spacing field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted column-spacing field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1598: deleted report/label column-spacing field clear should exit successfully");
+        const auto column_spacing_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "COLSPACING"
+        });
+        expect(column_spacing_property.ok && column_spacing_property.exists &&
+                   column_spacing_property.value.empty(),
+               "#1598: deleted report/label column-spacing field clear should blank the COLSPACING field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1598: deleted report/label column-spacing field clear should return refreshed report-layout JSON");
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1598: deleted report/label column-spacing field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1598: deleted report/label column-spacing field clear should not fabricate live column setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1598: deleted report/label column-spacing field clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 2",
+                        "#1598: deleted report/label column-spacing field clear should refresh deleted setting counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1598: deleted report/label column-spacing field clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1598: deleted report/label column-spacing field clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1"
+            },
+            "#1598: deleted report/label column-spacing field clear should preserve remaining deleted setting provenance");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1"
+            },
+            "#1598: deleted report/label column-spacing field clear should refresh selected deleted settings");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#1598: deleted report/label column-spacing field clear should remove direct column-spacing settings");
+    };
+
+    run_deleted_column_spacing_clear(temp_root / "deleted_column_spacing_clear.frx",
+                                     "deleted_column_spacing_clear.frx",
+                                     "report");
+    run_deleted_column_spacing_clear(temp_root / "deleted_column_spacing_clear.lbx",
+                                     "deleted_column_spacing_clear.lbx",
+                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -57017,6 +57109,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_spacing_fields_by_record_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_setup_by_record_selection(argv[1]);
