@@ -7290,6 +7290,109 @@ void test_studio_host_json_updates_report_layout_object_expressions_by_record_se
     }
 }
 
+void test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_layout_expression_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_expression_update = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1601: deleted report/label layout object expression fixture should start deleted");
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "6",
+                "--property-name", "EXPR",
+                "--property-value", "customer.deleted_contact",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted layout expression update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted layout expression update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1601: deleted report/label layout object expression update should exit successfully");
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1601: deleted report/label layout object expression update should preserve deleted state");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 6U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.value == "customer.deleted_contact",
+               "#1601: deleted report/label layout object expression update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1601: deleted report/label layout object expression update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1601: deleted report/label layout object expression update should preserve deleted object counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1601: deleted report/label layout object expression update should preserve selected deleted-object availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1601: deleted report/label layout object expression update should preserve object selection kind");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1601: deleted report/label layout object expression update should not fabricate containing-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1601: deleted report/label layout object expression update should serialize null containing-section metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"customer.deleted_contact\"",
+                "\"expression\": \"customer.deleted_contact\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#1601: deleted report/label layout object expression update should refresh deleted-object expression metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 6",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"customer.deleted_contact\"",
+                "\"expression\": \"customer.deleted_contact\"",
+                "\"expressionFieldIndex\": 2"
+            },
+            "#1601: deleted report/label layout object expression update should refresh selected deleted-object metadata");
+        expect_not_contains(update_process.stdout_text, "\"expression\": \"\\\"Deleted label\\\"\"",
+                            "#1601: deleted report/label layout object expression update should not leak stale expression values");
+    };
+
+    run_deleted_expression_update(temp_root / "deleted_expression_update.frx",
+                                  "deleted_expression_update.frx",
+                                  "report");
+    run_deleted_expression_update(temp_root / "deleted_expression_update.lbx",
+                                  "deleted_expression_update.lbx",
+                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -57233,6 +57336,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_report_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_label_layout_object_identity_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_report_layout_object_expressions_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_font_metadata_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_font_metadata_by_record_selection(argv[1]);
