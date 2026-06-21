@@ -39,13 +39,6 @@
 1370	OPEN	E2/#23 slice: Expose toolbox dispatch catalog status summaries in host JSON		2026-06-19T08:54:45Z
 1369	OPEN	E2/#23 slice: Expose toolbox invocation admission catalog status summaries in host JSON		2026-06-19T08:50:40Z
 1368	OPEN	E2/#23 slice: Expose toolbox palette launch catalog status summaries in host JSON		2026-06-19T08:46:31Z
-1367	OPEN	E2/#23 slice: Expose editor action dispatch execution catalog readiness summaries in host JSON		2026-06-19T08:42:25Z
-1366	OPEN	E2/#23 slice: Expose editor action dispatch catalog status summaries in host JSON		2026-06-19T08:38:28Z
-1365	OPEN	E2/#23 slice: Expose editor action invocation admission catalog status summaries in host JSON		2026-06-19T08:33:32Z
-1364	OPEN	E2/#23 slice: Expose editor action launch catalog status summaries in host JSON		2026-06-19T08:29:50Z
-1363	OPEN	E2/#23 slice: Expose builder dispatch execution catalog readiness summaries in host JSON		2026-06-19T08:26:26Z
-1362	OPEN	E2/#23 slice: Expose builder dispatch catalog status summaries in host JSON		2026-06-19T08:23:15Z
-1361	OPEN	E2/#23 slice: Expose builder invocation admission catalog status summaries in host JSON		2026-06-19T08:19:42Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
 1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
 203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
