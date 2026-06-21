@@ -94,15 +94,6 @@
 1315	OPEN	E2/#23 slice: Expose toolbox object batch creation from admitted palette dispatch through host JSON		2026-06-19T04:13:51Z
 1314	OPEN	E2/#23 slice: Expose toolbox object creation from admitted palette dispatch through host JSON		2026-06-19T04:00:10Z
 1098	OPEN	E2/#23 slice: Expose host picture-object command		2026-06-18T00:51:07Z
-1086	OPEN	E2/#23 slice: Expose host allow-cell-selection-object command		2026-06-17T23:54:28Z
-1085	OPEN	E2/#23 slice: Expose host lock-screen-object command		2026-06-17T23:50:53Z
-1084	OPEN	E2/#23 slice: Expose host sparse-object command		2026-06-17T23:47:46Z
-1083	OPEN	E2/#23 slice: Expose host clip-controls-object command		2026-06-17T23:44:37Z
-1082	OPEN	E2/#23 slice: Expose host dockable-object command		2026-06-17T23:40:56Z
-1081	OPEN	E2/#23 slice: Expose host continuous-scroll-object command		2026-06-17T23:37:26Z
-1080	OPEN	E2/#23 slice: Expose host auto-release-object command		2026-06-17T23:31:21Z
-1079	OPEN	E2/#23 slice: Expose host auto-size-object command		2026-06-17T23:26:59Z
-1078	OPEN	E2/#23 slice: Expose host auto-center-object command		2026-06-17T23:20:52Z
 1077	OPEN	Wishlist: Produce binaries for legacy xBase and Fox Software products		2026-06-17T23:16:38Z
 1076	OPEN	Wishlist: Interpret legacy xBase and Fox Software assets outside VFP 9		2026-06-17T23:16:14Z
 203	OPEN	H3/#91 slice: Tighten runtime interop data/state marshaling fidelity		2026-05-01T02:14:20Z
