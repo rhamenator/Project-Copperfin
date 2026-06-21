@@ -9050,6 +9050,140 @@ void test_studio_host_json_restores_edited_deleted_report_layout_object_geometry
     }
 }
 
+void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_layout_restore_unplaced_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_unplaced_restore = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        expect(dbf_record_deleted(asset_path, 6U),
+               "#1614: restore edited deleted layout object as unplaced fixture should start deleted");
+
+        const auto set_deleted_geometry = [&](const std::string& property_name,
+                                              const std::string& property_value) {
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--record", "6",
+                    "--property-name", property_name,
+                    "--property-value", property_value,
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted unplaced " << property_name
+                          << " pre-restore update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted unplaced " << property_name
+                          << " pre-restore update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1614: deleted report/label layout object unplaced pre-restore update should exit successfully");
+            expect(dbf_record_deleted(asset_path, 6U),
+                   "#1614: deleted report/label layout object unplaced pre-restore update should preserve deleted state");
+        };
+
+        set_deleted_geometry("HPOS", "-300");
+        set_deleted_geometry("VPOS", "9000");
+        set_deleted_geometry("HEIGHT", "700");
+
+        const auto restore_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--record", "6",
+                "--restore-object",
+                "--json"
+            },
+            temp_root);
+
+        if (restore_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " edited deleted layout unplaced restore stdout:\n"
+                      << restore_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " edited deleted layout unplaced restore stderr:\n"
+                      << restore_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(restore_process.exit_code == 0,
+               "#1614: edited deleted report/label layout object unplaced restore should exit successfully");
+        expect(!dbf_record_deleted(asset_path, 6U),
+               "#1614: edited deleted report/label layout object unplaced restore should clear deleted state");
+        expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1614: edited deleted report/label layout object unplaced restore should return refreshed report-layout JSON");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1614: edited deleted report/label layout object unplaced restore should keep preview bounds available");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsLeft\": -300",
+                        "#1614: edited deleted report/label layout object unplaced restore should expand preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1614: edited deleted report/label layout object unplaced restore should preserve preview right bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 9700",
+                        "#1614: edited deleted report/label layout object unplaced restore should expand preview bottom bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsWidth\": 5500",
+                        "#1614: edited deleted report/label layout object unplaced restore should expand preview widths");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 9700",
+                        "#1614: edited deleted report/label layout object unplaced restore should expand preview heights");
+        expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1614: edited deleted report/label layout object unplaced restore should remove restored objects from deleted-object counts");
+        expect_contains(restore_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1614: edited deleted report/label layout object unplaced restore should not count out-of-band restored objects as placed");
+        expect_contains(restore_process.stdout_text, "\"unplacedObjectCount\": 2",
+                        "#1614: edited deleted report/label layout object unplaced restore should add restored objects to unplaced counts");
+        expect_contains(restore_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1614: edited deleted report/label layout object unplaced restore should preserve selected-object availability");
+        expect_contains(restore_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1614: edited deleted report/label layout object unplaced restore should not fabricate containing-section availability");
+        expect_contains(restore_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1614: edited deleted report/label layout object unplaced restore should serialize null containing-section metadata");
+        expect_contains_in_order(
+            restore_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 6",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectKind\": \"label\"",
+                "\"left\": -300",
+                "\"top\": 9000",
+                "\"width\": 1200",
+                "\"right\": 900",
+                "\"height\": 700",
+                "\"bottom\": 9700"
+            },
+            "#1614: edited deleted report/label layout object unplaced restore should refresh selected unplaced geometry without section metadata");
+    };
+
+    run_deleted_unplaced_restore(temp_root / "deleted_restore_unplaced.frx",
+                                 "deleted_restore_unplaced.frx",
+                                 "report");
+    run_deleted_unplaced_restore(temp_root / "deleted_restore_unplaced.lbx",
+                                 "deleted_restore_unplaced.lbx",
+                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -58641,6 +58775,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_report_layout_object_top_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_layout_object_top_by_record_selection(argv[1]);
     test_studio_host_json_restores_edited_deleted_report_layout_object_geometry_by_record_selection(argv[1]);
+    test_studio_host_json_restores_edited_deleted_report_layout_object_as_unplaced_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_layout_object_width_preview_bounds_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_record_selection(argv[1]);
