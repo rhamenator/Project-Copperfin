@@ -23374,6 +23374,137 @@ void test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selec
     }
 }
 
+void test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_record_selector_precedence_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto expect_common_record_selection = [&](const ProcessResult& process,
+                                                    const std::string& label,
+                                                    const std::string& title,
+                                                    const std::string& selection_kind) {
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " record selector precedence stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " record selector precedence stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1704: report/label record selectors should keep JSON inspection non-failing");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1704: record selector precedence should preserve document titles");
+        if (title.find(".lbx") != std::string::npos) {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1704: record selector precedence should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1704: record selector precedence should advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"" + selection_kind + "\"",
+                        "#1704: record selector precedence should expose the record-selected category");
+    };
+
+    const auto run_section_record_precedence = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_padded_stable_object_json(asset_path);
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--record", "1",
+                "--unique-id", "padded-object-guid",
+                "--json"
+            },
+            temp_root);
+
+        expect_common_record_selection(section_process, label, title, "section");
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1704: section record selectors should advertise selected-section availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1704: section record selectors should not switch to conflicting selected objects");
+        expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1704: section record selectors should serialize null selected objects");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1704: section record selectors should not advertise selected-settings availability");
+        expect_contains(section_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1704: section record selectors should serialize null selected settings");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"objectCount\": 1"
+            },
+            "#1704: section record selectors should preserve selected-section metadata despite conflicting unique-id");
+    };
+
+    const auto run_settings_record_precedence = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_padded_stable_object_json(asset_path);
+
+        const auto settings_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--record", "0",
+                "--unique-id", "padded-object-guid",
+                "--json"
+            },
+            temp_root);
+
+        expect_common_record_selection(settings_process, label, title, "settings");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1704: settings record selectors should advertise selected-settings availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1704: settings record selectors should not switch to conflicting selected objects");
+        expect_contains(settings_process.stdout_text, "\"selectedReportObject\": null",
+                        "#1704: settings record selectors should serialize null selected objects");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1704: settings record selectors should not advertise selected-section availability");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1704: settings record selectors should serialize null selected sections");
+        expect_contains_in_order(
+            settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"value\": \"0\""
+            },
+            "#1704: settings record selectors should preserve selected-settings metadata despite conflicting unique-id");
+    };
+
+    run_section_record_precedence(temp_root / "record_section_precedence.frx",
+                                  "record_section_precedence.frx",
+                                  "report section");
+    run_section_record_precedence(temp_root / "record_section_precedence.lbx",
+                                  "record_section_precedence.lbx",
+                                  "label section");
+    run_settings_record_precedence(temp_root / "record_settings_precedence.frx",
+                                   "record_settings_precedence.frx",
+                                   "report settings");
+    run_settings_record_precedence(temp_root / "record_settings_precedence.lbx",
+                                   "record_settings_precedence.lbx",
+                                   "label settings");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -69611,6 +69742,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_section_and_settings_selection_for_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_clears_report_selection_for_live_deleted_ambiguous_stable_selectors(argv[1]);
     test_studio_host_json_selects_padded_report_records_by_trimmed_stable_selector(argv[1]);
+    test_studio_host_json_record_selection_takes_precedence_over_stable_report_selector(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_objects_by_stable_selection(argv[1]);
