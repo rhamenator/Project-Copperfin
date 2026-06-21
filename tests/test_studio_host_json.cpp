@@ -3692,6 +3692,28 @@ void write_synthetic_report_table_for_group_section_expression_json(const std::f
     expect(create_result.ok, "#1566: synthetic report table for group section expression JSON should be created");
 }
 
+void write_synthetic_report_table_for_stable_group_section_expression_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", ""},
+        {"9", "3", "customer.country", "0", "600", "group-header-guid"},
+        {"9", "4", "", "600", "3000", ""},
+        {"9", "5", "customer.country", "3600", "500", "group-footer-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1666: synthetic report table for stable group section expression JSON should be created");
+}
+
 void write_synthetic_report_table_for_deleted_group_section_expression_json(
     const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_group_section_expression_json(report_path);
@@ -4315,6 +4337,111 @@ void test_studio_host_json_exposes_report_group_section_expressions(const std::s
 
     run_group_expression_json(temp_root / "group_sections.frx", "group_sections.frx", "report");
     run_group_expression_json(temp_root / "group_sections.lbx", "group_sections.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_group_section_expression_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_group_expression_json = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_stable_group_section_expression_json(asset_path);
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "group-header-guid", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable group section expression stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable group section expression stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1666: stable selected report/label group-header section JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1666: stable selected group-header section JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1666: stable selected label group-header section JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1666: stable selected group-header sections should advertise selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1666: stable selected group-header sections should advertise report-selection availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1666: stable selected group-header sections should preserve section selection classification");
+        expect_contains(process.stdout_text, "\"sectionCount\": 3",
+                        "#1666: stable selected group-header section JSON should preserve sibling section counts");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1666: stable selected group-header section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1666: stable selected group-header sections should not advertise selected-object availability");
+        expect_contains(process.stdout_text, "\"selectedReportObject\": null",
+                        "#1666: stable selected group-header sections should serialize null selected objects");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1666: stable selected group-header sections should not advertise selected object-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1666: stable selected group-header sections should serialize null selected object sections");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1666: stable selected group-header sections should not advertise selected-settings availability");
+        expect_contains(process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1666: stable selected group-header sections should serialize null selected settings");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"customer.country\"",
+                "\"recordIndex\": 3"
+            },
+            "#1666: stable selected group-header section JSON should expose sibling section metadata");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_header_1\"",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 3",
+                "\"top\": 0",
+                "\"height\": 600",
+                "\"bottom\": 600"
+            },
+            "#1666: stable selected group-header sections should expose selected expression metadata");
+    };
+
+    run_group_expression_json(temp_root / "stable_group_sections.frx",
+                              "stable_group_sections.frx",
+                              "report");
+    run_group_expression_json(temp_root / "stable_group_sections.lbx",
+                              "stable_group_sections.lbx",
+                              "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -64792,6 +64919,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
+    test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_group_section_expressions_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_group_footer_expressions_by_record_selection(argv[1]);
