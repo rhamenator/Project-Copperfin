@@ -3800,6 +3800,13 @@ void write_synthetic_report_table_for_column_width_field_json(const std::filesys
     expect(create_result.ok, "#1539: synthetic report table for column width field JSON should be created");
 }
 
+void write_synthetic_report_table_for_deleted_column_width_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_column_width_field_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(delete_result.ok, "#1595: synthetic report table should mark column-width settings deleted");
+}
+
 void write_synthetic_report_table_for_column_spacing_field_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -11734,6 +11741,103 @@ void test_studio_host_json_clears_deleted_report_column_count_fields_by_record_s
     run_deleted_column_count_clear(temp_root / "deleted_column_count_clear.lbx",
                                    "deleted_column_count_clear.lbx",
                                    "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_column_width_fields_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_width_field_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_width_update = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& updated_width,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_deleted_column_width_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "COLWIDTH",
+                "--property-value", updated_width,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " deleted column-width field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " deleted column-width field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1595: deleted report/label column-width field update should exit successfully");
+        const auto column_width_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "COLWIDTH"
+        });
+        expect(column_width_property.ok && column_width_property.exists &&
+                   column_width_property.value == updated_width,
+               "#1595: deleted report/label column-width field update should persist the COLWIDTH field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1595: deleted report/label column-width field update should return refreshed report-layout JSON");
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1595: deleted report/label column-width field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1595: deleted report/label column-width field update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1595: deleted report/label column-width field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1595: deleted report/label column-width field update should refresh deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1595: deleted report/label column-width field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1595: deleted report/label column-width field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_width + "\""
+            },
+            "#1595: deleted report/label column-width field update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_width + "\""
+            },
+            "#1595: deleted report/label column-width field update should refresh selected deleted settings");
+    };
+
+    run_deleted_column_width_update(temp_root / "deleted_column_width.frx",
+                                    "deleted_column_width.frx",
+                                    "4800",
+                                    "report");
+    run_deleted_column_width_update(temp_root / "deleted_column_width.lbx",
+                                    "deleted_column_width.lbx",
+                                    "2400",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -56712,6 +56816,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_column_spacing_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_spacing_fields_by_record_selection(argv[1]);
