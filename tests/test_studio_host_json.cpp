@@ -3738,6 +3738,13 @@ void write_synthetic_report_table_for_stable_group_header_object_json(
     expect(create_result.ok, "#1690: synthetic report table for stable group-header object JSON should be created");
 }
 
+void write_synthetic_report_table_for_deleted_group_header_object_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_stable_group_header_object_json(report_path);
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 4U, true);
+    expect(delete_result.ok, "#1692: synthetic report table should mark group-header object deleted");
+}
+
 void write_synthetic_report_table_for_stable_group_footer_object_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -22217,6 +22224,111 @@ void test_studio_host_json_exposes_selected_group_header_report_objects_by_stabl
     run_group_header_object_selection(temp_root / "selected_group_header_object_stable.lbx",
                                       "selected_group_header_object_stable.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_deleted_group_header_report_objects_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_group_header_object_selection = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_deleted_group_header_object_json(asset_path);
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "group-header-label-guid", "--json"},
+            temp_root);
+
+        if (object_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable selected deleted group-header object stdout:\n"
+                      << object_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable selected deleted group-header object stderr:\n"
+                      << object_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(object_process.exit_code == 0,
+               "#1692: stable selected deleted group-header report/label object JSON should exit successfully");
+        expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1692: stable selected deleted group-header object JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                            "#1692: stable selected deleted group-header label object JSON should retain label identity");
+        }
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1692: stable deleted group-header object selections should advertise selected-object availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#1692: stable deleted group-header object selections should advertise report-selection availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1692: stable deleted group-header object selections should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1692: stable deleted group-header object selections should not advertise selected-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                        "#1692: stable deleted group-header object selections should serialize null selected sections");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1692: stable deleted group-header object selections should not advertise selected-settings availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1692: stable deleted group-header object selections should serialize null selected settings");
+        expect_contains(object_process.stdout_text, "\"sectionCount\": 3",
+                        "#1692: stable deleted group-header object selections should preserve live section counts");
+        expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1692: stable deleted group-header object selections should preserve deleted section counts");
+        expect_contains(object_process.stdout_text, "\"liveObjectCount\": 0",
+                        "#1692: stable deleted group-header object selections should clear live object counts");
+        expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1692: stable deleted group-header object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1692: stable deleted group-header object selections should not advertise containing-section availability");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1692: stable deleted group-header object selections should serialize null containing sections");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 4",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionRelativeTop\": 0",
+                "\"sectionRelativeBottom\": 0",
+                "\"sectionObjectIndex\": null",
+                "\"sectionObjectCount\": 0",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"expression\": \"\\\"Group header label\\\"\""
+            },
+            "#1692: stable deleted group-header object selections should expose selected deleted-object metadata");
+        expect_contains(object_process.stdout_text, "\"left\": 300",
+                        "#1692: stable deleted group-header object selections should expose selected-object left bounds");
+        expect_contains(object_process.stdout_text, "\"top\": 100",
+                        "#1692: stable deleted group-header object selections should expose selected-object top bounds");
+        expect_contains(object_process.stdout_text, "\"width\": 1400",
+                        "#1692: stable deleted group-header object selections should expose selected-object widths");
+        expect_contains(object_process.stdout_text, "\"right\": 1700",
+                        "#1692: stable deleted group-header object selections should expose selected-object right bounds");
+        expect_contains(object_process.stdout_text, "\"height\": 250",
+                        "#1692: stable deleted group-header object selections should expose selected-object heights");
+        expect_contains(object_process.stdout_text, "\"bottom\": 350",
+                        "#1692: stable deleted group-header object selections should expose selected-object bottom bounds");
+    };
+
+    run_deleted_group_header_object_selection(temp_root / "selected_deleted_group_header_object_stable.frx",
+                                              "selected_deleted_group_header_object_stable.frx",
+                                              "report");
+    run_deleted_group_header_object_selection(temp_root / "selected_deleted_group_header_object_stable.lbx",
+                                              "selected_deleted_group_header_object_stable.lbx",
+                                              "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -68119,6 +68231,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_deleted_group_header_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_title_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_title_report_objects_by_stable_selection(argv[1]);
