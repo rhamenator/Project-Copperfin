@@ -8816,6 +8816,178 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_st
     }
 }
 
+void test_studio_host_json_renames_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_rename_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_rename =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+            const std::size_t before_count = visual_object_count(asset_path);
+
+            const auto rename_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--rename-object",
+                    "--unique-id", "detail-header-label-guid",
+                    "--new-unique-id", "detail-header-label-renamed-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (rename_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object rename stdout:\n"
+                          << rename_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object rename stderr:\n"
+                          << rename_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(rename_header_process.exit_code == 0,
+                   "#1785: detail-header object rename should exit successfully");
+            expect(visual_object_count(asset_path) == before_count,
+                   "#1785: detail-header object rename should preserve object count");
+            expect(!visual_object_exists(asset_path, "detail-header-label-guid"),
+                   "#1785: detail-header object rename should remove the old unique id");
+            expect(visual_object_exists(asset_path, "detail-header-label-renamed-guid"),
+                   "#1785: detail-header object rename should persist replacement unique ids");
+            expect_contains(rename_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1785: detail-header object rename should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(rename_header_process.stdout_text, "\"isLabel\": true",
+                                "#1785: detail-header label object rename should retain label identity");
+            }
+            expect_contains(rename_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1785: detail-header object rename should preserve selected object availability");
+            expect_contains(rename_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1785: detail-header object rename should preserve object selection kind");
+            expect_contains(rename_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1785: detail-header object rename should preserve containing-section availability");
+            expect_contains_in_order(
+                rename_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 100",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 170",
+                    "\"expression\": \"\\\"Header label\\\"\""
+                },
+                "#1785: detail-header object rename should preserve selected-object section metadata");
+            expect_contains_in_order(
+                rename_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1785: detail-header object rename should preserve containing-section object metadata");
+
+            const auto rename_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--rename-object",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--new-unique-id", "detail-footer-field-renamed-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (rename_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object rename stdout:\n"
+                          << rename_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object rename stderr:\n"
+                          << rename_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(rename_footer_process.exit_code == 0,
+                   "#1785: detail-footer object rename should exit successfully");
+            expect(visual_object_count(asset_path) == before_count,
+                   "#1785: detail-footer object rename should preserve object count");
+            expect(!visual_object_exists(asset_path, "detail-footer-field-guid"),
+                   "#1785: detail-footer object rename should remove the old unique id");
+            expect(visual_object_exists(asset_path, "detail-footer-field-renamed-guid"),
+                   "#1785: detail-footer object rename should persist replacement unique ids");
+            expect_contains(rename_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1785: detail-footer object rename should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(rename_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1785: detail-footer label object rename should retain label identity");
+            }
+            expect_contains(rename_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1785: detail-footer object rename should preserve selected object availability");
+            expect_contains(rename_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1785: detail-footer object rename should preserve object selection kind");
+            expect_contains(rename_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1785: detail-footer object rename should preserve containing-section availability");
+            expect_contains_in_order(
+                rename_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 140",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1040",
+                    "\"height\": 100",
+                    "\"bottom\": 460",
+                    "\"expression\": \"footer.total\""
+                },
+                "#1785: detail-footer object rename should preserve selected-object section metadata");
+            expect_contains_in_order(
+                rename_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1785: detail-footer object rename should preserve containing-section object metadata");
+        };
+
+    run_detail_header_footer_object_rename(temp_root / "detail_header_footer_object_rename.frx",
+                                           "detail_header_footer_object_rename.frx",
+                                           "report");
+    run_detail_header_footer_object_rename(temp_root / "detail_header_footer_object_rename.lbx",
+                                           "detail_header_footer_object_rename.lbx",
+                                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -82585,6 +82757,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_renames_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
