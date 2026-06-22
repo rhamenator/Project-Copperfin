@@ -7009,6 +7009,161 @@ void test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_
     }
 }
 
+void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_font_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_fonts =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_font_json(asset_path);
+            const auto delete_header_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
+            expect(delete_header_object.ok && dbf_record_deleted(asset_path, 1U),
+                   "#1774: detail-header object font fixture should mark the header object deleted");
+            const auto delete_footer_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+            expect(delete_footer_object.ok && dbf_record_deleted(asset_path, 3U),
+                   "#1774: detail-footer object font fixture should mark the footer object deleted");
+
+            const auto expect_deleted_selected_object_font =
+                [&](const std::string& unique_id,
+                    const std::string& record_index,
+                    const std::string& object_kind,
+                    const std::string& expression,
+                    const std::string& expression_memo_block,
+                    const std::string& fontface,
+                    const std::string& fontface_memo_block,
+                    const std::string& fontsize,
+                    const std::string& mode,
+                    const std::string& selection_label) {
+                    const auto object_process = run_process_capture(
+                        studio_host_path,
+                        {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
+                        temp_root);
+
+                    if (object_process.exit_code != 0) {
+                        std::cerr << "studio host " << label << " stable selected deleted " << selection_label
+                                  << " font metadata stdout:\n" << object_process.stdout_text << "\n";
+                        std::cerr << "studio host " << label << " stable selected deleted " << selection_label
+                                  << " font metadata stderr:\n" << object_process.stderr_text << "\n";
+                        std::cerr << "fixture root: " << temp_root << "\n";
+                    }
+
+                    expect(object_process.exit_code == 0,
+                           "#1774: selected deleted detail header/footer object font JSON should exit successfully");
+                    expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                                    "#1774: selected deleted detail header/footer object font JSON should preserve titles");
+                    if (asset_path.extension() == ".lbx") {
+                        expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                                        "#1774: selected deleted detail header/footer label object font JSON should retain identity");
+                    }
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                                    "#1774: selected deleted detail header/footer object fonts should select report objects");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                                    "#1774: selected deleted detail header/footer object fonts should advertise report selection");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                                    "#1774: selected deleted detail header/footer object fonts should expose object selection kind");
+                    expect_contains(object_process.stdout_text, "\"liveObjectCount\": 0",
+                                    "#1774: selected deleted detail header/footer object fonts should remove live object counts");
+                    expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 2",
+                                    "#1774: selected deleted detail header/footer object fonts should preserve deleted object counts");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                                    "#1774: selected deleted detail header/footer object fonts should not fabricate containing sections");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                                    "#1774: selected deleted detail header/footer object fonts should serialize null containing-section JSON");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"deletedObjects\": [",
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": true",
+                            "\"containingSectionId\": \"\"",
+                            "\"objectKind\": \"" + object_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": 2",
+                            "\"expressionMemoBlockNumber\": " + expression_memo_block,
+                            "\"highlightCount\": 4"
+                        },
+                        "#1774: stable selected deleted " + selection_label +
+                            " should expose deleted-object font metadata");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObject\": {",
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": true",
+                            "\"containingSectionId\": \"\"",
+                            "\"containingSectionRecordIndex\": null",
+                            "\"sectionRelativeTop\": 0",
+                            "\"sectionRelativeBottom\": 0",
+                            "\"sectionObjectIndex\": null",
+                            "\"sectionObjectCount\": 0",
+                            "\"objectKind\": \"" + object_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": 2",
+                            "\"expressionMemoBlockNumber\": " + expression_memo_block,
+                            "\"highlightCount\": 4"
+                        },
+                        "#1774: stable selected deleted " + selection_label +
+                            " should expose selected-object font metadata");
+                    expect_contains(object_process.stdout_text,
+                                    "\"name\": \"FONTFACE\", \"recordIndex\": " + record_index +
+                                        ", \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": " +
+                                        fontface_memo_block + ", \"value\": \"" + fontface + "\"",
+                                    "#1774: stable selected deleted " + selection_label +
+                                        " should expose selected-object FONTFACE provenance");
+                    expect_contains(object_process.stdout_text,
+                                    "\"name\": \"FONTSIZE\", \"recordIndex\": " + record_index +
+                                        ", \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"" +
+                                        fontsize + "\"",
+                                    "#1774: stable selected deleted " + selection_label +
+                                        " should expose selected-object FONTSIZE provenance");
+                    expect_contains(object_process.stdout_text,
+                                    "\"name\": \"MODE\", \"recordIndex\": " + record_index +
+                                        ", \"fieldIndex\": 9, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"" +
+                                        mode + "\"",
+                                    "#1774: stable selected deleted " + selection_label +
+                                        " should expose selected-object MODE provenance");
+                };
+
+            expect_deleted_selected_object_font("detail-header-label-guid",
+                                                "1",
+                                                "label",
+                                                "\\\"Header label\\\"",
+                                                "2",
+                                                "Courier New",
+                                                "3",
+                                                "12",
+                                                "1",
+                                                "detail-header label");
+            expect_deleted_selected_object_font("detail-footer-field-guid",
+                                                "3",
+                                                "field",
+                                                "footer.total",
+                                                "5",
+                                                "Segoe UI",
+                                                "6",
+                                                "10",
+                                                "2",
+                                                "detail-footer field");
+        };
+
+    run_deleted_detail_header_footer_object_fonts(temp_root / "deleted_detail_header_footer_object_fonts.frx",
+                                                  "deleted_detail_header_footer_object_fonts.frx",
+                                                  "report");
+    run_deleted_detail_header_footer_object_fonts(temp_root / "deleted_detail_header_footer_object_fonts.lbx",
+                                                  "deleted_detail_header_footer_object_fonts.lbx",
+                                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -80768,6 +80923,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
