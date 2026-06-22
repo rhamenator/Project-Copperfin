@@ -11,19 +11,22 @@ internal sealed class StudioMainForm : Form
 {
     private readonly TabControl documentTabs;
     private readonly ToolStripStatusLabel statusLabel;
+    private readonly CopperfinLocalization localization;
     private readonly Dictionary<string, TabPage> openDocuments = new(StringComparer.OrdinalIgnoreCase);
 
-    public StudioMainForm()
+    public StudioMainForm(CopperfinLocalization? localization = null)
     {
-        Text = "Copperfin Studio";
+        this.localization = localization ?? CopperfinLocalization.FromEnvironment();
+
+        Text = this.localization.Text("Studio.AppTitle");
         Width = 1480;
         Height = 980;
         StartPosition = FormStartPosition.CenterScreen;
 
         var menuStrip = new MenuStrip();
-        var fileMenu = new ToolStripMenuItem("&File");
-        var openItem = new ToolStripMenuItem("&Open...", null, (_, _) => OpenFromPicker());
-        var exitItem = new ToolStripMenuItem("E&xit", null, (_, _) => Close());
+        var fileMenu = new ToolStripMenuItem(this.localization.Text("Studio.FileMenu"));
+        var openItem = new ToolStripMenuItem(this.localization.Text("Studio.OpenMenu"), null, (_, _) => OpenFromPicker());
+        var exitItem = new ToolStripMenuItem(this.localization.Text("Studio.ExitMenu"), null, (_, _) => Close());
         fileMenu.DropDownItems.Add(openItem);
         fileMenu.DropDownItems.Add(new ToolStripSeparator());
         fileMenu.DropDownItems.Add(exitItem);
@@ -40,7 +43,7 @@ internal sealed class StudioMainForm : Form
         {
             if (documentTabs.SelectedTab is null)
             {
-                UpdateStatus("Open one or more VFP assets to inspect and edit them in Copperfin Studio.");
+                UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
                 return;
             }
 
@@ -50,7 +53,7 @@ internal sealed class StudioMainForm : Form
         var statusStrip = new StatusStrip();
         statusLabel = new ToolStripStatusLabel
         {
-            Text = "Open a VFP asset to inspect and edit it in Copperfin Studio."
+            Text = this.localization.Text("Studio.InitialStatus")
         };
         statusStrip.Items.Add(statusLabel);
 
@@ -58,14 +61,19 @@ internal sealed class StudioMainForm : Form
         Controls.Add(statusStrip);
         Controls.Add(menuStrip);
 
-        UpdateStatus("Open one or more VFP assets to inspect and edit them in Copperfin Studio.");
+        UpdateStatus(this.localization.Text("Studio.EmptyDocumentStatus"));
     }
 
     public void OpenDocument(string path)
     {
         if (!File.Exists(path))
         {
-            MessageBox.Show(this, "The selected asset does not exist.", "Copperfin Studio", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(
+                this,
+                localization.Text("Studio.MissingAssetMessage"),
+                localization.Text("Studio.AppTitle"),
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
             return;
         }
 
@@ -93,16 +101,20 @@ internal sealed class StudioMainForm : Form
         openDocuments[normalizedPath] = page;
         editorControl.LoadDocument(normalizedPath);
 
-        Text = $"Copperfin Studio - {CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath)}";
-        UpdateStatus($"{normalizedPath}   |   {CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath)}   |   Open tabs: {documentTabs.TabPages.Count}");
+        Text = localization.Format("Studio.WindowTitleWithAssetKind", CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath));
+        UpdateStatus(localization.Format(
+            "Studio.OpenDocumentStatus",
+            normalizedPath,
+            CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath),
+            documentTabs.TabPages.Count));
     }
 
     private void OpenFromPicker()
     {
         using var dialog = new OpenFileDialog
         {
-            Title = "Open Copperfin Asset",
-            Filter = "Copperfin/VFP assets|*.pjx;*.scx;*.vcx;*.frx;*.lbx;*.mnx|All files|*.*",
+            Title = localization.Text("Studio.OpenDialogTitle"),
+            Filter = localization.Text("Studio.OpenDialogFilter"),
             Multiselect = false,
             RestoreDirectory = true
         };

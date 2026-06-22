@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace Copperfin.VisualStudio;
@@ -11,8 +12,9 @@ internal static class Program
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
-        using var form = new StudioMainForm();
-        foreach (var candidate in args)
+        var localization = new CopperfinLocalization(ReadLocaleArgument(args));
+        using var form = new StudioMainForm(localization);
+        foreach (var candidate in ReadAssetArguments(args))
         {
             if (string.IsNullOrWhiteSpace(candidate))
             {
@@ -23,5 +25,33 @@ internal static class Program
         }
 
         Application.Run(form);
+    }
+
+    private static string? ReadLocaleArgument(string[] args)
+    {
+        for (var index = 0; index < args.Length; ++index)
+        {
+            if (string.Equals(args[index], "--locale", StringComparison.OrdinalIgnoreCase) &&
+                index + 1 < args.Length)
+            {
+                return args[index + 1];
+            }
+        }
+
+        return Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE");
+    }
+
+    private static IEnumerable<string> ReadAssetArguments(string[] args)
+    {
+        for (var index = 0; index < args.Length; ++index)
+        {
+            if (string.Equals(args[index], "--locale", StringComparison.OrdinalIgnoreCase))
+            {
+                ++index;
+                continue;
+            }
+
+            yield return args[index];
+        }
     }
 }

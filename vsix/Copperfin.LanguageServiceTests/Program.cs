@@ -10,6 +10,9 @@ internal static class Program
 
     private static int Main()
     {
+        TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales();
+        TestLocalizationCatalogFallsBackToEnglish();
+        TestLocalizationCatalogFormatsWithInvariantCulture();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
@@ -37,6 +40,50 @@ internal static class Program
 
         Console.WriteLine("All language-service tests passed.");
         return 0;
+    }
+
+    private static void TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales()
+    {
+        var spanish = new CopperfinLocalization("es-MX");
+        Expect(spanish.Locale == CopperfinLocalization.SpanishLatinAmericaLocale,
+            "Spanish regional locales should normalize to the Latin America catalog");
+        Expect(spanish.Text("Studio.OpenDialogTitle") == "Abrir activo de Copperfin",
+            "Spanish catalog should localize the standalone Studio open dialog title");
+        Expect(spanish.Text("Studio.OpenDocumentStatus").Contains("Pestañas abiertas", StringComparison.Ordinal),
+            "Spanish catalog should localize standalone Studio tab status text");
+
+        var portuguese = new CopperfinLocalization("pt");
+        Expect(portuguese.Locale == CopperfinLocalization.PortugueseBrazilLocale,
+            "Portuguese neutral locale should normalize to the Brazilian Portuguese catalog");
+        Expect(portuguese.Text("Studio.OpenDialogTitle") == "Abrir ativo do Copperfin",
+            "Portuguese catalog should localize the standalone Studio open dialog title");
+        Expect(portuguese.Text("Studio.OpenDocumentStatus").Contains("Abas abertas", StringComparison.Ordinal),
+            "Portuguese catalog should localize standalone Studio tab status text");
+    }
+
+    private static void TestLocalizationCatalogFallsBackToEnglish()
+    {
+        var unsupported = new CopperfinLocalization("de-DE");
+        Expect(unsupported.Locale == CopperfinLocalization.DefaultLocale,
+            "unsupported locales should normalize to English");
+        Expect(unsupported.Text("Studio.OpenDialogTitle") == "Open Copperfin Asset",
+            "unsupported locales should use the English catalog");
+
+        var spanish = new CopperfinLocalization("es-419");
+        Expect(spanish.Text("Missing.Key") == "Missing.Key",
+            "missing localization keys should fall back to the stable key instead of returning blank text");
+    }
+
+    private static void TestLocalizationCatalogFormatsWithInvariantCulture()
+    {
+        var portuguese = new CopperfinLocalization("pt-BR");
+        var status = portuguese.Format("Studio.OpenDocumentStatus", @"C:\demo\orders.scx", "Visual form", 3);
+        Expect(status.Contains(@"C:\demo\orders.scx", StringComparison.Ordinal),
+            "localized formatting should preserve path arguments");
+        Expect(status.Contains("Visual form", StringComparison.Ordinal),
+            "localized formatting should preserve asset kind arguments");
+        Expect(status.Contains("Abas abertas: 3", StringComparison.Ordinal),
+            "localized formatting should preserve numeric arguments with invariant formatting");
     }
 
     private static void TestDottedClassMemberResolvesToLongestProjectSymbolPrefix()
