@@ -8030,6 +8030,206 @@ void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stabl
     }
 }
 
+void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_geometry_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_geometry =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+            const auto delete_header_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
+            expect(delete_header_object.ok && dbf_record_deleted(asset_path, 1U),
+                   "#1781: deleted detail-header object geometry fixture should mark the header object deleted");
+            const auto delete_footer_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+            expect(delete_footer_object.ok && dbf_record_deleted(asset_path, 3U),
+                   "#1781: deleted detail-footer object geometry fixture should mark the footer object deleted");
+
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-header-label-guid",
+                    "--property-name", "VPOS",
+                    "--property-value", "90",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header object geometry update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header object geometry update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1781: deleted detail-header object geometry update should exit successfully");
+            expect(dbf_record_deleted(asset_path, 1U),
+                   "#1781: deleted detail-header object geometry update should preserve deleted state");
+            const auto updated_vpos = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "detail-header-label-guid",
+                .property_name = "VPOS"
+            });
+            expect(updated_vpos.ok && updated_vpos.exists && updated_vpos.value == "90",
+                   "#1781: deleted detail-header object geometry update should persist the VPOS field");
+            expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1781: deleted detail-header object geometry update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                                "#1781: deleted detail-header label object geometry update should retain label identity");
+            }
+            expect_contains(update_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1781: deleted detail-header object geometry update should preserve deleted object counts");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1781: deleted detail-header object geometry update should preserve selected object availability");
+            expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1781: deleted detail-header object geometry update should preserve object selection kind");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1781: deleted detail-header object geometry update should not fabricate containing sections");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1781: deleted detail-header object geometry update should serialize null containing-section JSON");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"deletedObjects\": [",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 100",
+                    "\"top\": 90",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 210"
+                },
+                "#1781: deleted detail-header object geometry update should refresh deleted-object geometry metadata");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 100",
+                    "\"top\": 90",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 210"
+                },
+                "#1781: deleted detail-header object geometry update should refresh selected-object geometry metadata");
+
+            const auto clear_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--property-name", "HEIGHT",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer object geometry clear stdout:\n"
+                          << clear_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer object geometry clear stderr:\n"
+                          << clear_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_process.exit_code == 0,
+                   "#1781: deleted detail-footer object geometry clear should exit successfully");
+            expect(dbf_record_deleted(asset_path, 3U),
+                   "#1781: deleted detail-footer object geometry clear should preserve deleted state");
+            expect_contains(clear_process.stdout_text,
+                            "{\"name\": \"HEIGHT\", \"type\": \"N\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 6",
+                            "#1781: deleted detail-footer object geometry clear should blank the HEIGHT field");
+            expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1781: deleted detail-footer object geometry clear should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                                "#1781: deleted detail-footer label object geometry clear should retain label identity");
+            }
+            expect_contains(clear_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1781: deleted detail-footer object geometry clear should preserve deleted object counts");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1781: deleted detail-footer object geometry clear should preserve selected object availability");
+            expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1781: deleted detail-footer object geometry clear should preserve object selection kind");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1781: deleted detail-footer object geometry clear should not fabricate containing sections");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1781: deleted detail-footer object geometry clear should serialize null containing-section JSON");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"deletedObjects\": [",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 140",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1040",
+                    "\"height\": 0",
+                    "\"bottom\": 360"
+                },
+                "#1781: deleted detail-footer object geometry clear should refresh deleted-object geometry metadata");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 140",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1040",
+                    "\"height\": 0",
+                    "\"bottom\": 360"
+                },
+                "#1781: deleted detail-footer object geometry clear should refresh selected-object geometry metadata");
+        };
+
+    run_deleted_detail_header_footer_object_geometry(temp_root / "deleted_detail_header_footer_object_geometry.frx",
+                                                     "deleted_detail_header_footer_object_geometry.frx",
+                                                     "report");
+    run_deleted_detail_header_footer_object_geometry(temp_root / "deleted_detail_header_footer_object_geometry.lbx",
+                                                     "deleted_detail_header_footer_object_geometry.lbx",
+                                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -81795,6 +81995,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_detail_header_footer_object_font_options_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_font_options_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_geometry_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
