@@ -3937,6 +3937,28 @@ void write_synthetic_report_table_for_missing_object_expr_layout_json(
     expect(delete_result.ok, "#1725: synthetic report table should mark the no-EXPR object deleted");
 }
 
+void write_synthetic_report_table_for_missing_object_title_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "4", "", "100", "", "800"},
+        {"8", "0", "140", "220", "420", "80"},
+        {"5", "", "360", "500", "380", "110"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1726: synthetic report table without object title schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
+    expect(delete_result.ok, "#1726: synthetic report table should mark the no-title object deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -6732,6 +6754,190 @@ void test_studio_host_json_preserves_report_objects_without_expr_schema(
     run_missing_object_expr_layout(temp_root / "missing_object_expr.lbx",
                                    "missing_object_expr.lbx",
                                    "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_synthesizes_report_object_titles_without_title_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_report_object_title_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_object_title_layout = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_missing_object_title_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing object title summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing object title summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1726: missing object title schema should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1726: missing object title layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1726: missing object title label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1726: missing object title layouts should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1726: missing object title layouts should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"placedObjectCount\": 1",
+                        "#1726: missing object title layouts should keep live object section membership");
+        expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                        "#1726: missing object title layouts should preserve deleted placed-object counts");
+        expect_contains(summary_process.stdout_text, "\"objectKindCounts\": [\n        {\"kind\": \"field\", \"count\": 1}\n      ]",
+                        "#1726: missing live object title layouts should preserve object-kind counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
+                        "#1726: missing deleted object title layouts should preserve object-kind counts");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"objects\": [",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_0\"",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"Record 1\"",
+                "\"titleFieldIndex\": null",
+                "\"titleMemoBlockNumber\": 0",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"left\": 140",
+                "\"top\": 220",
+                "\"width\": 420",
+                "\"right\": 560",
+                "\"height\": 80",
+                "\"bottom\": 300"
+            },
+            "#1726: missing live object title layouts should synthesize titles with null provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"Record 2\"",
+                "\"titleFieldIndex\": null",
+                "\"titleMemoBlockNumber\": 0",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"left\": 360",
+                "\"top\": 500",
+                "\"width\": 380",
+                "\"right\": 740",
+                "\"height\": 110",
+                "\"bottom\": 610"
+            },
+            "#1726: missing deleted object title layouts should synthesize titles with null provenance");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1726: missing object title live selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1726: missing object title live selection should advertise selected objects");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1726: missing object title live selection should expose object selection kind");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1726: missing object title live selection should expose containing-section metadata");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_0\"",
+                "\"containingSectionRecordIndex\": 0",
+                "\"sectionRelativeTop\": 120",
+                "\"sectionRelativeBottom\": 200",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"Record 1\"",
+                "\"titleFieldIndex\": null",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"left\": 140",
+                "\"top\": 220",
+                "\"width\": 420",
+                "\"right\": 560",
+                "\"height\": 80",
+                "\"bottom\": 300"
+            },
+            "#1726: missing live object title selection should expose synthesized title metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1726: missing object title deleted selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1726: missing object title deleted selection should advertise selected objects");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1726: missing object title deleted selection should expose object selection kind");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1726: missing object title deleted selection should not fabricate containing sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1726: missing object title deleted selection should serialize null containing sections");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"Record 2\"",
+                "\"titleFieldIndex\": null",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"left\": 360",
+                "\"top\": 500",
+                "\"width\": 380",
+                "\"right\": 740",
+                "\"height\": 110",
+                "\"bottom\": 610"
+            },
+            "#1726: missing deleted object title selection should expose synthesized title metadata");
+    };
+
+    run_missing_object_title_layout(temp_root / "missing_object_title.frx",
+                                    "missing_object_title.frx",
+                                    "report");
+    run_missing_object_title_layout(temp_root / "missing_object_title.lbx",
+                                    "missing_object_title.lbx",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -72504,6 +72710,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_objects_without_expr_schema(argv[1]);
+    test_studio_host_json_synthesizes_report_object_titles_without_title_schema(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
