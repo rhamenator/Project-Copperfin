@@ -9807,6 +9807,22 @@ void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selec
                                 "#1814: " + operation_label + " should preserve deleted section counts");
                 expect_contains(rename_process.stdout_text, "\"sectionHeightTotal\": 550",
                                 "#1814: " + operation_label + " should preserve live section height totals");
+                expect_contains(rename_process.stdout_text, "\"previewBoundsAvailable\": true",
+                                "#1878: " + operation_label + " should preserve live preview availability");
+                expect_contains(rename_process.stdout_text, "\"previewBoundsTop\": 0",
+                                "#1878: " + operation_label + " should preserve live preview top bounds");
+                expect_contains(rename_process.stdout_text, "\"previewBoundsBottom\": 550",
+                                "#1878: " + operation_label + " should preserve live preview bottom bounds");
+                expect_contains(rename_process.stdout_text, "\"previewBoundsHeight\": 550",
+                                "#1878: " + operation_label + " should preserve live preview height");
+                expect_contains(rename_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                                "#1878: " + operation_label + " should preserve deleted preview availability");
+                expect_contains(rename_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                                "#1878: " + operation_label + " should preserve deleted preview top bounds");
+                expect_contains(rename_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                                "#1878: " + operation_label + " should preserve deleted preview bottom bounds");
+                expect_contains(rename_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                                "#1878: " + operation_label + " should preserve deleted preview height");
                 expect_contains(rename_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                                 "#1814: " + operation_label + " should advertise selected sections");
                 expect_contains(rename_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
