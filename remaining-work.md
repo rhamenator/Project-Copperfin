@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1839 report/label deleted-state batch stable-selector coverage shipped. Studio host regressions now prove `--deleted-states --deleted-state-target-unique-id settings-guid/section-guid --deleted-state true/false --json` batches delete and restore FRX/LBX settings plus section rows, refresh report-layout setting/section counts and page setup summaries, retain label identity, avoid fabricated selected report metadata, and roll back earlier batch mutations when a later stable selector is missing. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1838 report/label column-setup memo stable-selector coverage shipped. Studio host regressions now prove stable-selected live and deleted FRX/LBX settings records mutate the `EXPR` memo through `--set-property/--clear-property --unique-id settings-guid/deleted-settings-guid --property-name EXPR --json`, persist/clear the backing memo, refresh column setup summaries plus live/deleted and selected settings provenance, preserve column setup or deleted settings as appropriate, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1837 report/label column-spacing stable-selector coverage shipped. Studio host regressions now prove stable-selected live and deleted FRX/LBX settings records mutate direct `COLSPACING` through `--set-property/--clear-property --unique-id settings-guid/deleted-settings-guid --property-name COLSPACING --json`, persist/clear the backing field, refresh column setup summaries and selected settings provenance plus live/deleted setting counts, preserve column setup or deleted settings as appropriate, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1836 report/label column-width stable-selector coverage shipped. Studio host regressions now prove stable-selected live and deleted FRX/LBX settings records mutate direct `COLWIDTH` through `--set-property/--clear-property --unique-id settings-guid/deleted-settings-guid --property-name COLWIDTH --json`, persist/clear the backing field, refresh column setup summaries and selected settings provenance plus live/deleted setting counts, preserve column setup or deleted settings as appropriate, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1852,7 +1853,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1838 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1839 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1923,7 +1924,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1838 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1839 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]

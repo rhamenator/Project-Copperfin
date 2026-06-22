@@ -5997,6 +5997,48 @@ void write_synthetic_report_table_for_stable_deleted_settings_json(const std::fi
            "#1657: stable deleted settings fixture should preserve the deleted settings state");
 }
 
+void write_synthetic_report_table_for_stable_settings_and_section_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_layout_json(report_path);
+    const auto settings_unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "settings-guid"
+    });
+    expect(settings_unique_id_result.ok,
+           "#1839: stable deleted-state batch fixture should seed a settings unique id");
+    const auto section_unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 1U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "section-guid"
+    });
+    expect(section_unique_id_result.ok,
+           "#1839: stable deleted-state batch fixture should seed a section unique id");
+    expect(!dbf_record_deleted(report_path, 0U) && !dbf_record_deleted(report_path, 1U),
+           "#1839: stable deleted-state batch fixture should preserve live settings and section rows");
+}
+
+void write_synthetic_report_table_for_stable_deleted_settings_and_section_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_stable_settings_and_section_json(report_path);
+    const auto settings_delete_result =
+        copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
+    expect(settings_delete_result.ok,
+           "#1839: stable deleted-state restore fixture should mark settings deleted");
+    const auto section_delete_result =
+        copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(section_delete_result.ok,
+           "#1839: stable deleted-state restore fixture should mark section deleted");
+    expect(dbf_record_deleted(report_path, 0U) && dbf_record_deleted(report_path, 1U),
+           "#1839: stable deleted-state restore fixture should preserve deleted settings and section rows");
+}
+
 void write_synthetic_report_table_for_column_setup_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -45732,6 +45774,213 @@ void test_studio_host_json_restores_report_settings_by_stable_selection(const st
     run_settings_restore(temp_root / "settings_restore_stable.lbx",
                          "settings_restore_stable.lbx",
                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_deleted_states_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_batch_delete = [&](const fs::path& asset_path,
+                                      const std::string& title,
+                                      const std::string& label) {
+        write_synthetic_report_table_for_stable_settings_and_section_json(asset_path);
+        const auto delete_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--deleted-states",
+                "--deleted-state-target-unique-id", "settings-guid",
+                "--deleted-state", "true",
+                "--deleted-state-target-unique-id", "section-guid",
+                "--deleted-state", "true",
+                "--json"
+            },
+            temp_root);
+
+        if (delete_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted-states batch delete stdout:\n"
+                      << delete_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted-states batch delete stderr:\n"
+                      << delete_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(delete_process.exit_code == 0,
+               "#1839: report/label stable deleted-states batch delete should exit successfully");
+        expect(dbf_record_deleted(asset_path, 0U) && dbf_record_deleted(asset_path, 1U),
+               "#1839: report/label stable deleted-states batch delete should mark settings and section rows deleted");
+        expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1839: report/label stable deleted-states batch delete should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(delete_process.stdout_text, "\"isLabel\": true",
+                            "#1839: label stable deleted-states batch delete should retain label identity");
+        }
+        expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
+                        "#1839: report/label stable deleted-states batch delete should remove live settings");
+        expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted settings");
+        expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1839: report/label stable deleted-states batch delete should clear live page setup");
+        expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
+                        "#1839: report/label stable deleted-states batch delete should remove the section from live counts");
+        expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1839: report/label stable deleted-states batch delete should expose deleted section counts");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0"
+            },
+            "#1839: report/label stable deleted-states batch delete should move settings into deleted metadata");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true"
+            },
+            "#1839: report/label stable deleted-states batch delete should move the section into deleted metadata");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1839: report/label stable deleted-states batch delete should not fabricate selected settings");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1839: report/label stable deleted-states batch delete should not fabricate selected sections");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1839: report/label stable deleted-states batch delete should not fabricate a report selection");
+    };
+
+    const auto run_batch_restore = [&](const fs::path& asset_path,
+                                       const std::string& title,
+                                       const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_settings_and_section_json(asset_path);
+        const auto restore_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--deleted-states",
+                "--deleted-state-target-unique-id", "settings-guid",
+                "--deleted-state", "false",
+                "--deleted-state-target-unique-id", "section-guid",
+                "--deleted-state", "false",
+                "--json"
+            },
+            temp_root);
+
+        if (restore_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted-states batch restore stdout:\n"
+                      << restore_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted-states batch restore stderr:\n"
+                      << restore_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(restore_process.exit_code == 0,
+               "#1839: report/label stable deleted-states batch restore should exit successfully");
+        expect(!dbf_record_deleted(asset_path, 0U) && !dbf_record_deleted(asset_path, 1U),
+               "#1839: report/label stable deleted-states batch restore should restore settings and section rows");
+        expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1839: report/label stable deleted-states batch restore should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                            "#1839: label stable deleted-states batch restore should retain label identity");
+        }
+        expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
+                        "#1839: report/label stable deleted-states batch restore should restore live settings");
+        expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#1839: report/label stable deleted-states batch restore should clear deleted settings");
+        expect_contains(restore_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1839: report/label stable deleted-states batch restore should restore live page setup");
+        expect_contains(restore_process.stdout_text, "\"sectionCount\": 2",
+                        "#1839: report/label stable deleted-states batch restore should restore live section counts");
+        expect_contains(restore_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1839: report/label stable deleted-states batch restore should clear deleted section counts");
+        expect_contains_in_order(
+            restore_process.stdout_text,
+            {
+                "\"settings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0"
+            },
+            "#1839: report/label stable deleted-states batch restore should move settings into live metadata");
+        expect_contains_in_order(
+            restore_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"bandKind\": \"page_header\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false"
+            },
+            "#1839: report/label stable deleted-states batch restore should move the section into live metadata");
+        expect_contains(restore_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1839: report/label stable deleted-states batch restore should not fabricate selected settings");
+        expect_contains(restore_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                        "#1839: report/label stable deleted-states batch restore should not fabricate selected sections");
+        expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1839: report/label stable deleted-states batch restore should not fabricate a report selection");
+    };
+
+    const auto run_batch_rollback = [&](const fs::path& asset_path,
+                                        const std::string& label) {
+        write_synthetic_report_table_for_stable_settings_and_section_json(asset_path);
+        const auto rollback_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--deleted-states",
+                "--deleted-state-target-unique-id", "settings-guid",
+                "--deleted-state", "true",
+                "--deleted-state-target-unique-id", "missing-guid",
+                "--deleted-state", "true",
+                "--json"
+            },
+            temp_root);
+
+        expect(rollback_process.exit_code == 4,
+               "#1839: report/label stable deleted-states missing-target batch should fail");
+        expect(!dbf_record_deleted(asset_path, 0U) && !dbf_record_deleted(asset_path, 1U),
+               "#1839: failed report/label stable deleted-states batch should roll back earlier mutations");
+        expect_contains(rollback_process.stdout_text, "status: error",
+                        "#1839: failed report/label stable deleted-states batch should report JSON error status");
+        expect_contains(rollback_process.stdout_text, "error",
+                        "#1839: failed report/label stable deleted-states batch should report an error message");
+        if (asset_path.extension() == ".lbx") {
+            expect(!dbf_record_deleted(asset_path, 0U) && !dbf_record_deleted(asset_path, 1U),
+                   "#1839: failed label stable deleted-states batch should preserve label settings and section rows");
+        }
+        (void)label;
+    };
+
+    run_batch_delete(temp_root / "deleted_states_delete_stable.frx",
+                     "deleted_states_delete_stable.frx",
+                     "report");
+    run_batch_delete(temp_root / "deleted_states_delete_stable.lbx",
+                     "deleted_states_delete_stable.lbx",
+                     "label");
+    run_batch_restore(temp_root / "deleted_states_restore_stable.frx",
+                      "deleted_states_restore_stable.frx",
+                      "report");
+    run_batch_restore(temp_root / "deleted_states_restore_stable.lbx",
+                      "deleted_states_restore_stable.lbx",
+                      "label");
+    run_batch_rollback(temp_root / "deleted_states_rollback_stable.frx",
+                       "report");
+    run_batch_rollback(temp_root / "deleted_states_rollback_stable.lbx",
+                       "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -94864,6 +95113,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_report_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_stable_selection(argv[1]);
+    test_studio_host_json_applies_report_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_report_sections_by_stable_selection(argv[1]);
