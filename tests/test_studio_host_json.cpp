@@ -3914,6 +3914,29 @@ void write_synthetic_report_table_for_missing_section_expr_layout_json(
     expect(delete_result.ok, "#1724: synthetic report table should mark the no-EXPR section deleted");
 }
 
+void write_synthetic_report_table_for_missing_object_expr_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "4", "", "200", "", "1000", "missing-expr-detail-section-guid"},
+        {"8", "0", "120", "300", "700", "90", "missing-expr-live-object-guid"},
+        {"5", "", "260", "620", "500", "120", "missing-expr-deleted-object-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1725: synthetic report table without object EXPR schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
+    expect(delete_result.ok, "#1725: synthetic report table should mark the no-EXPR object deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -6492,6 +6515,223 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
     run_missing_section_expr_layout(temp_root / "missing_section_expr.lbx",
                                     "missing_section_expr.lbx",
                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_report_objects_without_expr_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_report_object_expr_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_object_expr_layout = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_missing_object_expr_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing object EXPR summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing object EXPR summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1725: missing object EXPR schema should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1725: missing object EXPR layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1725: missing object EXPR label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1725: missing object EXPR live layouts should expose preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 200",
+                        "#1725: missing object EXPR live preview top should include the section band");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 1200",
+                        "#1725: missing object EXPR live preview bottom should include the section band");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1725: missing object EXPR deleted layouts should expose deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsLeft\": 260",
+                        "#1725: missing object EXPR deleted preview left should come from the deleted object");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 740",
+                        "#1725: missing object EXPR deleted preview bottom should come from the deleted object");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1725: missing object EXPR layouts should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1725: missing object EXPR layouts should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"placedObjectCount\": 1",
+                        "#1725: missing object EXPR layouts should keep live object section membership");
+        expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                        "#1725: missing object EXPR layouts should preserve deleted placed-object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedUnplacedObjectCount\": 0",
+                        "#1725: missing object EXPR layouts should not fabricate deleted unplaced objects");
+        expect_contains(summary_process.stdout_text, "\"objectKindCounts\": [\n        {\"kind\": \"field\", \"count\": 1}\n      ]",
+                        "#1725: missing live object EXPR layouts should preserve object-kind counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
+                        "#1725: missing deleted object EXPR layouts should preserve object-kind counts");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"objects\": [",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_0\"",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"missing-expr-live-object-guid\"",
+                "\"titleFieldIndex\": 6",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"left\": 120",
+                "\"top\": 300",
+                "\"width\": 700",
+                "\"right\": 820",
+                "\"height\": 90",
+                "\"bottom\": 390",
+                "\"highlightCount\": 0"
+            },
+            "#1725: missing live object EXPR layouts should serialize null expression provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"missing-expr-deleted-object-guid\"",
+                "\"titleFieldIndex\": 6",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"left\": 260",
+                "\"top\": 620",
+                "\"width\": 500",
+                "\"right\": 760",
+                "\"height\": 120",
+                "\"bottom\": 740",
+                "\"highlightCount\": 0"
+            },
+            "#1725: missing deleted object EXPR layouts should serialize null expression provenance");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1725: missing object EXPR live selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1725: missing object EXPR live selection should advertise selected objects");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1725: missing object EXPR live selection should expose object selection kind");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1725: missing object EXPR live selection should expose containing-section metadata");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"detail_0\"",
+                "\"containingSectionRecordIndex\": 0",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 190",
+                "\"sectionObjectIndex\": 0",
+                "\"sectionObjectCount\": 1",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"missing-expr-live-object-guid\"",
+                "\"titleFieldIndex\": 6",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"left\": 120",
+                "\"top\": 300",
+                "\"width\": 700",
+                "\"right\": 820",
+                "\"height\": 90",
+                "\"bottom\": 390",
+                "\"highlightCount\": 0"
+            },
+            "#1725: missing live object EXPR selection should expose object metadata with null expression provenance");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObjectSection\": {",
+                "\"id\": \"detail_0\"",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 0",
+                "\"top\": 200",
+                "\"height\": 1000",
+                "\"bottom\": 1200"
+            },
+            "#1725: missing live object EXPR selection should expose containing section metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1725: missing object EXPR deleted selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1725: missing object EXPR deleted selection should advertise selected objects");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1725: missing object EXPR deleted selection should expose object selection kind");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1725: missing object EXPR deleted selection should not fabricate containing sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1725: missing object EXPR deleted selection should serialize null containing sections");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionObjectIndex\": null",
+                "\"objectTypeCode\": 5",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"missing-expr-deleted-object-guid\"",
+                "\"titleFieldIndex\": 6",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"left\": 260",
+                "\"top\": 620",
+                "\"width\": 500",
+                "\"right\": 760",
+                "\"height\": 120",
+                "\"bottom\": 740",
+                "\"highlightCount\": 0"
+            },
+            "#1725: missing deleted object EXPR selection should expose object metadata with null expression provenance");
+    };
+
+    run_missing_object_expr_layout(temp_root / "missing_object_expr.frx",
+                                   "missing_object_expr.frx",
+                                   "report");
+    run_missing_object_expr_layout(temp_root / "missing_object_expr.lbx",
+                                   "missing_object_expr.lbx",
+                                   "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -72263,6 +72503,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
+    test_studio_host_json_preserves_report_objects_without_expr_schema(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
