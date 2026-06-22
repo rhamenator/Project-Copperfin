@@ -71638,6 +71638,182 @@ void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_sel
     }
 }
 
+void test_studio_host_json_duplicates_deleted_report_visual_object_batches_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_visual_object_duplicate_batch_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
+        const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .deleted = true
+        });
+        expect(delete_result.ok && visual_object_deleted(asset_path, unique_id),
+               "#1860: deleted report/label duplicate-batch fixture should start with deleted target rows");
+    };
+
+    const auto run_deleted_report_object_duplicate_batch = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        mark_deleted(asset_path, "middle-field-guid");
+        mark_deleted(asset_path, "right-field-guid");
+        const std::size_t before_count = visual_object_count(asset_path);
+
+        const auto duplicate_batch_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-duplicate-batch",
+                "--path", asset_path.string(),
+                "--selected-unique-id", "middle-field-guid",
+                "--new-unique-id", "middle-deleted-copy-guid",
+                "--selected-unique-id", "right-field-guid",
+                "--new-unique-id", "right-deleted-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (duplicate_batch_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report object duplicate-batch stdout:\n"
+                      << duplicate_batch_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report object duplicate-batch stderr:\n"
+                      << duplicate_batch_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(duplicate_batch_process.exit_code == 0,
+               "#1860: deleted report/label stable visual-object duplicate-batch JSON should exit successfully");
+        expect_contains(duplicate_batch_process.stdout_text, "\"visualObjectDuplicateBatch\": {",
+                        "#1860: deleted report/label stable visual-object duplicate-batch JSON should expose a batch object");
+        expect_contains(duplicate_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+                        "#1860: deleted report/label stable visual-object duplicate-batch JSON should expose affected object counts");
+        expect_contains(duplicate_batch_process.stdout_text, "\"dryRun\": false",
+                        "#1860: deleted report/label stable visual-object duplicate-batch JSON should expose committed state");
+        expect_contains(duplicate_batch_process.stdout_text, "\"mutatesAsset\": true",
+                        "#1860: deleted report/label stable visual-object duplicate-batch JSON should expose mutation state");
+        expect_contains(duplicate_batch_process.stdout_text, "\"undoAvailable\": false",
+                        "#1860: deleted report/label stable visual-object duplicate-batch JSON should expose undo availability");
+        expect(visual_object_count(asset_path) == before_count + 2U &&
+                   visual_object_exists(asset_path, "middle-field-guid") &&
+                   visual_object_exists(asset_path, "right-field-guid") &&
+                   visual_object_exists(asset_path, "middle-deleted-copy-guid") &&
+                   visual_object_exists(asset_path, "right-deleted-copy-guid") &&
+                   visual_object_deleted(asset_path, "middle-field-guid") &&
+                   visual_object_deleted(asset_path, "right-field-guid") &&
+                   visual_object_deleted(asset_path, "middle-deleted-copy-guid") &&
+                   visual_object_deleted(asset_path, "right-deleted-copy-guid") &&
+                   !visual_object_deleted(asset_path, "left-field-guid") &&
+                   visual_object_order(asset_path) ==
+                       "left-field-guid,middle-field-guid,right-field-guid,middle-deleted-copy-guid,right-deleted-copy-guid",
+               "#1860: deleted report/label stable visual-object duplicate-batch should append deleted duplicate rows");
+
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "middle-deleted-copy-guid", "--json"},
+            temp_root);
+
+        if (reopen_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report object duplicate-batch reopen stdout:\n"
+                      << reopen_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report object duplicate-batch reopen stderr:\n"
+                      << reopen_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(reopen_process.exit_code == 0,
+               "#1860: deleted report/label stable visual-object duplicate-batch reopen should exit successfully");
+        expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should leave report-layout JSON readable");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                            "#1860: deleted label stable visual-object duplicate-batch should retain label identity");
+        }
+        expect_contains(reopen_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should preserve live sibling counts");
+        expect_contains(reopen_process.stdout_text, "\"deletedObjectCount\": 4",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should expose original and copied deleted rows");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should select the copied deleted row");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should not fabricate containing sections");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should preserve report object selection kind");
+        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 5",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should expose copied record indexes");
+        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should preserve copied deleted state");
+        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should preserve copied object kind");
+        expect_contains(reopen_process.stdout_text, "\"expression\": \"middle.value\"",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should preserve copied expressions");
+        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-deleted-copy-guid\"",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should preserve copied stable identities");
+        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
+                        "#1860: deleted report/label stable visual-object duplicate-batch should keep deleted copies uncontained");
+    };
+
+    const auto run_deleted_report_object_duplicate_batch_rollback = [&](const fs::path& asset_path,
+                                                                        const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        mark_deleted(asset_path, "middle-field-guid");
+        mark_deleted(asset_path, "right-field-guid");
+        const std::size_t before_count = visual_object_count(asset_path);
+
+        const auto rollback_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-duplicate-batch",
+                "--path", asset_path.string(),
+                "--selected-unique-id", "middle-field-guid",
+                "--new-unique-id", "mid-rb-copy-guid",
+                "--selected-unique-id", "right-field-guid",
+                "--new-unique-id", "mid-rb-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        expect(rollback_process.exit_code == 4,
+               "#1860: deleted report/label stable visual-object duplicate-batch identity collision should fail");
+        expect_contains(rollback_process.stdout_text, "\"visualObjectDuplicateBatch\": null",
+                        "#1860: failed deleted report/label stable visual-object duplicate-batch JSON should not expose stale batch objects");
+        expect_contains(rollback_process.stdout_text, "The requested replacement identity already exists in the asset.",
+                        "#1860: failed deleted report/label stable visual-object duplicate-batch JSON should report collision errors");
+        expect(visual_object_count(asset_path) == before_count &&
+                   visual_object_deleted(asset_path, "middle-field-guid") &&
+                   visual_object_deleted(asset_path, "right-field-guid") &&
+                   !visual_object_deleted(asset_path, "left-field-guid") &&
+                   !visual_object_exists(asset_path, "mid-rb-copy-guid") &&
+                   visual_object_order(asset_path) == "left-field-guid,middle-field-guid,right-field-guid",
+               "#1860: failed deleted report/label stable visual-object duplicate-batch should roll back earlier duplicates");
+        (void)label;
+    };
+
+    run_deleted_report_object_duplicate_batch(temp_root / "deleted_report_object_duplicate_batch.frx",
+                                              "deleted_report_object_duplicate_batch.frx",
+                                              "report");
+    run_deleted_report_object_duplicate_batch(temp_root / "deleted_report_object_duplicate_batch.lbx",
+                                              "deleted_report_object_duplicate_batch.lbx",
+                                              "label");
+    run_deleted_report_object_duplicate_batch_rollback(temp_root / "deleted_report_object_duplicate_batch_rollback.frx",
+                                                       "report");
+    run_deleted_report_object_duplicate_batch_rollback(temp_root / "deleted_report_object_duplicate_batch_rollback.lbx",
+                                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_reorders_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -96821,6 +96997,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(argv[1]);
+    test_studio_host_json_duplicates_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
