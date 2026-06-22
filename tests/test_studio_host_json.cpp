@@ -6089,10 +6089,11 @@ void write_synthetic_report_table_for_bottom_margin_field_json(const std::filesy
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "BOTMARGIN", .type = 'N', .length = 10U}
+        {.name = "BOTMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "TOPMARGIN=10\nGRIDV=4\nGRIDH=8", "20"}
+        {"1", "53", "TOPMARGIN=10\nGRIDV=4\nGRIDH=8", "20", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -6104,6 +6105,38 @@ void write_synthetic_report_table_for_deleted_bottom_margin_field_json(
     write_synthetic_report_table_for_bottom_margin_field_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
     expect(delete_result.ok, "#1583: synthetic report table should mark bottom-margin settings deleted");
+}
+
+void write_synthetic_report_table_for_stable_bottom_margin_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_bottom_margin_field_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "settings-guid"
+    });
+    expect(unique_id_result.ok, "#1830: stable bottom-margin fixture should seed a settings unique id");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#1830: stable bottom-margin fixture should preserve the live settings state");
+}
+
+void write_synthetic_report_table_for_stable_deleted_bottom_margin_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_deleted_bottom_margin_field_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "deleted-settings-guid"
+    });
+    expect(unique_id_result.ok, "#1830: stable deleted bottom-margin fixture should seed a settings unique id");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#1830: stable deleted bottom-margin fixture should preserve the deleted settings state");
 }
 
 void write_synthetic_report_table_for_grid_vertical_field_json(const std::filesystem::path& report_path) {
@@ -38022,6 +38055,370 @@ void test_studio_host_json_clears_deleted_report_page_margin_fields_by_stable_se
     run_deleted_page_margin_clear(temp_root / "deleted_page_margin_clear_stable.lbx",
                                   "deleted_page_margin_clear_stable.lbx",
                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_bottom_margin_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_bottom_margin_field_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_bottom_margin_update = [&](const fs::path& asset_path,
+                                              const std::string& title,
+                                              const std::string& updated_margin,
+                                              const std::string& label) {
+        write_synthetic_report_table_for_stable_bottom_margin_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "BOTMARGIN",
+                "--property-value", updated_margin,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable bottom margin field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable bottom margin field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1830: report/label stable bottom-margin field update should exit successfully");
+        const auto margin_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "BOTMARGIN"
+        });
+        expect(margin_property.ok && margin_property.exists && margin_property.value == updated_margin,
+               "#1830: report/label stable bottom-margin field update should persist the BOTMARGIN field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1830: report/label stable bottom-margin field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1830: label stable bottom-margin field update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1830: report/label stable bottom-margin field update should preserve page setup availability");
+        expect_contains(update_process.stdout_text, "\"topMargin\": 10",
+                        "#1830: report/label stable bottom-margin field update should preserve memo-derived top margins");
+        expect_contains(update_process.stdout_text, "\"bottomMargin\": " + updated_margin,
+                        "#1830: report/label stable bottom-margin field update should refresh bottom margins");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": 4",
+                        "#1830: report/label stable bottom-margin field update should preserve vertical grid spacing");
+        expect_contains(update_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1830: report/label stable bottom-margin field update should preserve horizontal grid spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 4",
+                        "#1830: report/label stable bottom-margin field update should preserve setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1830: report/label stable bottom-margin field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1830: report/label stable bottom-margin field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_margin + "\""
+            },
+            "#1830: report/label stable bottom-margin field update should refresh selected direct-field provenance");
+    };
+
+    run_bottom_margin_update(temp_root / "bottom_margin_stable.frx",
+                             "bottom_margin_stable.frx",
+                             "34",
+                             "report");
+    run_bottom_margin_update(temp_root / "bottom_margin_stable.lbx",
+                             "bottom_margin_stable.lbx",
+                             "36",
+                             "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_bottom_margin_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_bottom_margin_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_bottom_margin_clear = [&](const fs::path& asset_path,
+                                             const std::string& title,
+                                             const std::string& label) {
+        write_synthetic_report_table_for_stable_bottom_margin_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "BOTMARGIN",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable bottom margin field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable bottom margin field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1830: report/label stable bottom-margin field clear should exit successfully");
+        const auto margin_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "BOTMARGIN"
+        });
+        expect(margin_property.ok && margin_property.exists && margin_property.value.empty(),
+               "#1830: report/label stable bottom-margin field clear should blank the BOTMARGIN field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1830: report/label stable bottom-margin field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1830: label stable bottom-margin field clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1830: report/label stable bottom-margin field clear should preserve page setup availability");
+        expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
+                        "#1830: report/label stable bottom-margin field clear should preserve memo-derived top margins");
+        expect_contains(clear_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1830: report/label stable bottom-margin field clear should clear bottom-margin availability");
+        expect_contains(clear_process.stdout_text, "\"bottomMargin\": 0",
+                        "#1830: report/label stable bottom-margin field clear should clear bottom margins");
+        expect_contains(clear_process.stdout_text, "\"gridVertical\": 4",
+                        "#1830: report/label stable bottom-margin field clear should preserve vertical grid spacing");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1830: report/label stable bottom-margin field clear should preserve horizontal grid spacing");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 3",
+                        "#1830: report/label stable bottom-margin field clear should remove the direct setting from counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1830: report/label stable bottom-margin field clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1830: report/label stable bottom-margin field clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2"
+            },
+            "#1830: report/label stable bottom-margin field clear should preserve remaining selected setting provenance");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#1830: report/label stable bottom-margin field clear should remove direct BOTMARGIN provenance");
+    };
+
+    run_bottom_margin_clear(temp_root / "bottom_margin_clear_stable.frx",
+                            "bottom_margin_clear_stable.frx",
+                            "report");
+    run_bottom_margin_clear(temp_root / "bottom_margin_clear_stable.lbx",
+                            "bottom_margin_clear_stable.lbx",
+                            "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_bottom_margin_field_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_bottom_margin_update = [&](const fs::path& asset_path,
+                                                      const std::string& title,
+                                                      const std::string& updated_margin,
+                                                      const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_bottom_margin_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "BOTMARGIN",
+                "--property-value", updated_margin,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted bottom margin field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted bottom margin field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1830: report/label stable deleted bottom-margin field update should exit successfully");
+        const auto margin_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "BOTMARGIN"
+        });
+        expect(margin_property.ok && margin_property.exists && margin_property.value == updated_margin,
+               "#1830: report/label stable deleted bottom-margin field update should persist the BOTMARGIN field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1830: report/label stable deleted bottom-margin field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1830: label stable deleted bottom-margin field update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1830: report/label stable deleted bottom-margin field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1830: report/label stable deleted bottom-margin field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 4",
+                        "#1830: report/label stable deleted bottom-margin field update should preserve deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1830: report/label stable deleted bottom-margin field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1830: report/label stable deleted bottom-margin field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_margin + "\""
+            },
+            "#1830: report/label stable deleted bottom-margin field update should refresh selected deleted settings");
+    };
+
+    run_deleted_bottom_margin_update(temp_root / "deleted_bottom_margin_stable.frx",
+                                     "deleted_bottom_margin_stable.frx",
+                                     "34",
+                                     "report");
+    run_deleted_bottom_margin_update(temp_root / "deleted_bottom_margin_stable.lbx",
+                                     "deleted_bottom_margin_stable.lbx",
+                                     "36",
+                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_deleted_report_bottom_margin_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_bottom_margin_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_bottom_margin_clear = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_bottom_margin_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "BOTMARGIN",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted bottom margin field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted bottom margin field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1830: report/label stable deleted bottom-margin field clear should exit successfully");
+        const auto margin_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "BOTMARGIN"
+        });
+        expect(margin_property.ok && margin_property.exists && margin_property.value.empty(),
+               "#1830: report/label stable deleted bottom-margin field clear should blank the BOTMARGIN field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1830: report/label stable deleted bottom-margin field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1830: label stable deleted bottom-margin field clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1830: report/label stable deleted bottom-margin field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1830: report/label stable deleted bottom-margin field clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1830: report/label stable deleted bottom-margin field clear should remove the deleted direct setting from counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1830: report/label stable deleted bottom-margin field clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1830: report/label stable deleted bottom-margin field clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2"
+            },
+            "#1830: report/label stable deleted bottom-margin field clear should preserve remaining selected deleted settings");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#1830: report/label stable deleted bottom-margin field clear should remove direct BOTMARGIN provenance");
+    };
+
+    run_deleted_bottom_margin_clear(temp_root / "deleted_bottom_margin_clear_stable.frx",
+                                    "deleted_bottom_margin_clear_stable.frx",
+                                    "report");
+    run_deleted_bottom_margin_clear(temp_root / "deleted_bottom_margin_clear_stable.lbx",
+                                    "deleted_bottom_margin_clear_stable.lbx",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -91093,6 +91490,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_page_margin_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_page_margin_fields_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_page_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_report_bottom_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_report_bottom_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_bottom_margin_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_bottom_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_bottom_margin_fields_by_record_selection(argv[1]);
