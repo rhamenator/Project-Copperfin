@@ -36172,6 +36172,332 @@ void test_studio_host_json_clears_report_section_heights_and_tops_by_stable_sele
     }
 }
 
+void test_studio_host_json_updates_deleted_report_section_heights_and_tops_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_section_stable_geometry_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_section_height_update = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_section_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-section-guid",
+                "--property-name", "HEIGHT",
+                "--property-value", "2400",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted section height update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted section height update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1825: report/label stable deleted section height update should exit successfully");
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "deleted-section-guid",
+            .property_name = "HEIGHT"
+        });
+        expect(height_property.ok && height_property.exists && height_property.value == "2400",
+               "#1825: report/label stable deleted section height update should persist the HEIGHT field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1825: report/label stable deleted section height update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1825: label stable deleted section height update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"sectionCount\": 0",
+                        "#1825: report/label stable deleted section height update should not fabricate live sections");
+        expect_contains(update_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1825: report/label stable deleted section height update should preserve deleted section counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1825: report/label stable deleted section height update should preserve unplaced object counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1825: report/label stable deleted section height update should preserve selected-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1825: report/label stable deleted section height update should preserve section selection kind");
+        expect_contains(update_process.stdout_text, "\"containingSectionId\": \"\"",
+                        "#1825: report/label stable deleted section height update should not fabricate containing sections");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 2000",
+                "\"height\": 2400",
+                "\"bottom\": 4400"
+            },
+            "#1825: report/label stable deleted section height update should refresh selected deleted-section geometry");
+    };
+
+    const auto run_deleted_section_top_update = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_section_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-section-guid",
+                "--property-name", "VPOS",
+                "--property-value", "2500",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted section top update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted section top update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1825: report/label stable deleted section top update should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "deleted-section-guid",
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.value == "2500",
+               "#1825: report/label stable deleted section top update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1825: report/label stable deleted section top update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1825: label stable deleted section top update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"sectionCount\": 0",
+                        "#1825: report/label stable deleted section top update should not fabricate live sections");
+        expect_contains(update_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1825: report/label stable deleted section top update should preserve deleted section counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1825: report/label stable deleted section top update should preserve unplaced object counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1825: report/label stable deleted section top update should preserve selected-section availability");
+        expect_contains(update_process.stdout_text, "\"containingSectionId\": \"\"",
+                        "#1825: report/label stable deleted section top update should not fabricate containing sections");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 2500",
+                "\"height\": 5000",
+                "\"bottom\": 7500"
+            },
+            "#1825: report/label stable deleted section top update should refresh selected deleted-section geometry");
+    };
+
+    run_deleted_section_height_update(temp_root / "deleted_section_height_stable.frx",
+                                      "deleted_section_height_stable.frx",
+                                      "report");
+    run_deleted_section_height_update(temp_root / "deleted_section_height_stable.lbx",
+                                      "deleted_section_height_stable.lbx",
+                                      "label");
+    run_deleted_section_top_update(temp_root / "deleted_section_top_stable.frx",
+                                   "deleted_section_top_stable.frx",
+                                   "report");
+    run_deleted_section_top_update(temp_root / "deleted_section_top_stable.lbx",
+                                   "deleted_section_top_stable.lbx",
+                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_deleted_report_section_heights_and_tops_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_section_stable_geometry_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_section_height_clear = [&](const fs::path& asset_path,
+                                                      const std::string& title,
+                                                      const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_section_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "deleted-section-guid",
+                "--property-name", "HEIGHT",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted section height clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted section height clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1825: report/label stable deleted section height clear should exit successfully");
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "deleted-section-guid",
+            .property_name = "HEIGHT"
+        });
+        expect(height_property.ok && height_property.exists && height_property.direct_field &&
+                   height_property.value.empty(),
+               "#1825: report/label stable deleted section height clear should blank the HEIGHT field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1825: report/label stable deleted section height clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1825: label stable deleted section height clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"sectionCount\": 0",
+                        "#1825: report/label stable deleted section height clear should not fabricate live sections");
+        expect_contains(clear_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1825: report/label stable deleted section height clear should preserve deleted section counts");
+        expect_contains(clear_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1825: report/label stable deleted section height clear should preserve unplaced object counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1825: report/label stable deleted section height clear should preserve selected-section availability");
+        expect_contains(clear_process.stdout_text, "\"containingSectionId\": \"\"",
+                        "#1825: report/label stable deleted section height clear should not fabricate containing sections");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 2000",
+                "\"height\": 0",
+                "\"bottom\": 2000"
+            },
+            "#1825: report/label stable deleted section height clear should refresh selected deleted-section geometry");
+    };
+
+    const auto run_deleted_section_top_clear = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_section_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "deleted-section-guid",
+                "--property-name", "VPOS",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted section top clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted section top clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1825: report/label stable deleted section top clear should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "deleted-section-guid",
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.direct_field &&
+                   top_property.value.empty(),
+               "#1825: report/label stable deleted section top clear should blank the VPOS field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1825: report/label stable deleted section top clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1825: label stable deleted section top clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"sectionCount\": 0",
+                        "#1825: report/label stable deleted section top clear should not fabricate live sections");
+        expect_contains(clear_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1825: report/label stable deleted section top clear should preserve deleted section counts");
+        expect_contains(clear_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1825: report/label stable deleted section top clear should preserve unplaced object counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1825: report/label stable deleted section top clear should preserve selected-section availability");
+        expect_contains(clear_process.stdout_text, "\"containingSectionId\": \"\"",
+                        "#1825: report/label stable deleted section top clear should not fabricate containing sections");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"sectionIndex\": null",
+                "\"sectionCount\": 0",
+                "\"top\": 0",
+                "\"height\": 5000",
+                "\"bottom\": 5000"
+            },
+            "#1825: report/label stable deleted section top clear should refresh selected deleted-section geometry");
+    };
+
+    run_deleted_section_height_clear(temp_root / "deleted_section_height_clear_stable.frx",
+                                     "deleted_section_height_clear_stable.frx",
+                                     "report");
+    run_deleted_section_height_clear(temp_root / "deleted_section_height_clear_stable.lbx",
+                                     "deleted_section_height_clear_stable.lbx",
+                                     "label");
+    run_deleted_section_top_clear(temp_root / "deleted_section_top_clear_stable.frx",
+                                  "deleted_section_top_clear_stable.frx",
+                                  "report");
+    run_deleted_section_top_clear(temp_root / "deleted_section_top_clear_stable.lbx",
+                                  "deleted_section_top_clear_stable.lbx",
+                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_settings_memos_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -89985,6 +90311,8 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_updates_report_section_heights_and_tops_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_section_heights_and_tops_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_section_heights_and_tops_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_section_heights_and_tops_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_settings_memos_by_record_selection(argv[1]);
