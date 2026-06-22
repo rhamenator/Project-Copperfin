@@ -21,6 +21,7 @@ internal static class Program
         SmokeDesignSurfaceWithSyntheticReportLayout();
         SmokeLocalizedAssetEditorChrome();
         SmokeLocalizedProjectWorkspaceChrome();
+        SmokeLocalizedProjectCommandDebuggerChrome();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -164,6 +165,41 @@ internal static class Program
             "Portuguese project workspace chrome should localize tab labels");
         Expect(HasCheckBoxText(portugueseControl, "Ocultar registros do projeto"),
             "Portuguese object-browser chrome should localize the hide-project option");
+    }
+
+    private static void SmokeLocalizedProjectCommandDebuggerChrome()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(HasButtonText(spanishControl, "Compilar proyecto Copperfin") &&
+               HasButtonText(spanishControl, "Ejecutar proyecto Copperfin") &&
+               HasButtonText(spanishControl, "Depurar proyecto Copperfin") &&
+               HasButtonText(spanishControl, "Iniciar sesión") &&
+               HasButtonText(spanishControl, "Continuar") &&
+               HasButtonText(spanishControl, "Paso") &&
+               HasButtonText(spanishControl, "Siguiente") &&
+               HasButtonText(spanishControl, "Salir"),
+            "Spanish project command and debugger chrome should localize buttons");
+        Expect(HasLabelText(spanishControl, "Cargando instantánea de Copperfin Studio...") &&
+               HasLabelText(spanishControl, "Depurador listo."),
+            "Spanish project command and debugger chrome should localize status labels");
+        Expect(HasRichTextBoxTextContaining(spanishControl, "sesión de depuración de Copperfin"),
+            "Spanish debugger chrome should localize initial debugger guidance");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(HasButtonText(portugueseControl, "Compilar projeto Copperfin") &&
+               HasButtonText(portugueseControl, "Executar projeto Copperfin") &&
+               HasButtonText(portugueseControl, "Depurar projeto Copperfin") &&
+               HasButtonText(portugueseControl, "Iniciar sessão") &&
+               HasButtonText(portugueseControl, "Continuar") &&
+               HasButtonText(portugueseControl, "Passo") &&
+               HasButtonText(portugueseControl, "Próximo") &&
+               HasButtonText(portugueseControl, "Sair"),
+            "Portuguese project command and debugger chrome should localize buttons");
+        Expect(HasLabelText(portugueseControl, "Carregando instantâneo do Copperfin Studio...") &&
+               HasLabelText(portugueseControl, "Depurador pronto."),
+            "Portuguese project command and debugger chrome should localize status labels");
+        Expect(HasRichTextBoxTextContaining(portugueseControl, "sessão de depuração do Copperfin"),
+            "Portuguese debugger chrome should localize initial debugger guidance");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
@@ -542,6 +578,19 @@ internal static class Program
                 yield return nested;
             }
         }
+    }
+
+    private static bool HasRichTextBoxTextContaining(Control root, string text)
+    {
+        foreach (var textBox in FindRichTextBoxes(root))
+        {
+            if (textBox.Text.IndexOf(text, StringComparison.Ordinal) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static IEnumerable<TabControl> FindTabControls(Control root)

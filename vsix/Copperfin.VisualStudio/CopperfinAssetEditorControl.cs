@@ -144,7 +144,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         buildButton = new Button
         {
             AutoSize = true,
-            Text = "Build Copperfin Project",
+            Text = this.localization.Text("AssetEditor.Project.BuildButton"),
             Visible = false
         };
         buildButton.Click += (_, _) => QueueUiAction(() => RunProjectWorkflowAsync(CopperfinProjectOperation.Build));
@@ -152,7 +152,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         runButton = new Button
         {
             AutoSize = true,
-            Text = "Run Copperfin Project",
+            Text = this.localization.Text("AssetEditor.Project.RunButton"),
             Visible = false
         };
         runButton.Click += (_, _) => QueueUiAction(() => RunProjectWorkflowAsync(CopperfinProjectOperation.Run));
@@ -160,7 +160,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debugButton = new Button
         {
             AutoSize = true,
-            Text = "Debug Copperfin Project",
+            Text = this.localization.Text("AssetEditor.Project.DebugButton"),
             Visible = false
         };
         debugButton.Click += (_, _) => QueueUiAction(() => RunProjectWorkflowAsync(CopperfinProjectOperation.Debug));
@@ -168,35 +168,35 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         debugRestartButton = new Button
         {
             AutoSize = true,
-            Text = "Start Session"
+            Text = this.localization.Text("AssetEditor.Debugger.StartSessionButton")
         };
         debugRestartButton.Click += (_, _) => QueueUiAction(StartDebugSessionAsync);
 
         debugContinueButton = new Button
         {
             AutoSize = true,
-            Text = "Continue"
+            Text = this.localization.Text("AssetEditor.Debugger.ContinueButton")
         };
         debugContinueButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.ContinueAsync));
 
         debugStepButton = new Button
         {
             AutoSize = true,
-            Text = "Step"
+            Text = this.localization.Text("AssetEditor.Debugger.StepButton")
         };
         debugStepButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepIntoAsync));
 
         debugNextButton = new Button
         {
             AutoSize = true,
-            Text = "Next"
+            Text = this.localization.Text("AssetEditor.Debugger.NextButton")
         };
         debugNextButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOverAsync));
 
         debugOutButton = new Button
         {
             AutoSize = true,
-            Text = "Out"
+            Text = this.localization.Text("AssetEditor.Debugger.OutButton")
         };
         debugOutButton.Click += (_, _) => QueueUiAction(() => AdvanceDebugSessionAsync(CopperfinRuntimeDebugClient.StepOutAsync));
 
@@ -205,7 +205,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             AutoSize = true,
             MaximumSize = new Size(960, 0),
             Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Loading Copperfin Studio snapshot..."
+            Text = this.localization.Text("AssetEditor.Snapshot.LoadingStatus")
         };
 
         objectListView = new ListView
@@ -272,7 +272,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Start a Copperfin debug session to inspect call stack, locals, globals, and runtime events."
+            Text = this.localization.Text("AssetEditor.Debugger.InitialSummary")
         };
 
         taskListSummaryBox = new RichTextBox
@@ -380,7 +380,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             AutoSize = true,
             MaximumSize = new Size(960, 0),
             Font = new Font("Segoe UI", 9.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Debugger ready."
+            Text = this.localization.Text("AssetEditor.Debugger.ReadyStatus")
         };
 
         var debuggerButtonPanel = new FlowLayoutPanel
@@ -645,7 +645,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         workspaceSummaryBox.Text = string.Empty;
         workspaceSummaryBox.Visible = false;
         projectWorkspaceTabs.Visible = false;
-        debuggerSummaryBox.Text = "Start a Copperfin debug session to inspect call stack, locals, globals, and runtime events.";
+        debuggerSummaryBox.Text = this.localization.Text("AssetEditor.Debugger.InitialSummary");
         taskListSummaryBox.Text = "Copperfin task list insights will appear here when a project is loaded.";
         codeReferencesSummaryBox.Text = "Copperfin code-reference insights will appear here when a project is loaded.";
         dataExplorerSummaryBox.Text = "Copperfin data-explorer insights will appear here when a project is loaded.";
@@ -657,10 +657,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         dataExplorerFilterBox.Text = string.Empty;
         objectBrowserFilterBox.Text = string.Empty;
         objectBrowserHideProjectCheckBox.Checked = false;
-        debuggerStatusLabel.Text = "Debugger ready.";
+        debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.ReadyStatus");
         SetDebuggerButtonsEnabled(false);
         designSurface.Visible = true;
-        snapshotStatusLabel.Text = "Loading Copperfin Studio snapshot...";
+        snapshotStatusLabel.Text = this.localization.Text("AssetEditor.Snapshot.LoadingStatus");
         UpdateProjectCommandVisibility();
         _ = LoadSnapshotAsync(path);
     }
@@ -1165,7 +1165,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        debuggerStatusLabel.Text = "Building project and starting Copperfin debugger...";
+        debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.StartingStatus");
         SetDebuggerButtonsEnabled(false);
         var session = await CopperfinRuntimeDebugClient.StartSessionAsync(currentPath!);
         if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
@@ -1179,11 +1179,11 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (currentDebugSession is null || !currentDebugSession.Success)
         {
-            MessageBox.Show(this, "Start a Copperfin debug session first.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, this.localization.Text("AssetEditor.Debugger.StartSessionFirstMessage"), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
-        debuggerStatusLabel.Text = "Updating debugger state...";
+        debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.UpdatingStatus");
         SetDebuggerButtonsEnabled(false);
         var session = await action(currentDebugSession);
         if (IsDisposed || Disposing || projectWorkspaceTabs.IsDisposed)
@@ -1205,7 +1205,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             currentDebugSession = session;
             if (!session.Success)
             {
-                debuggerStatusLabel.Text = "Debugger unavailable.";
+                debuggerStatusLabel.Text = this.localization.Text("AssetEditor.Debugger.UnavailableStatus");
                 debuggerSummaryBox.Text = session.Error;
                 SetDebuggerButtonsEnabled(false);
                 MessageBox.Show(this, session.Error, "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);

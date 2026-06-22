@@ -56,7 +56,22 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Tab.Builders"] = "Builders",
                 ["AssetEditor.Tab.Coverage"] = "Coverage",
                 ["AssetEditor.Tab.Database"] = "Database",
-                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Hide project records"
+                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Hide project records",
+                ["AssetEditor.Project.BuildButton"] = "Build Copperfin Project",
+                ["AssetEditor.Project.RunButton"] = "Run Copperfin Project",
+                ["AssetEditor.Project.DebugButton"] = "Debug Copperfin Project",
+                ["AssetEditor.Debugger.StartSessionButton"] = "Start Session",
+                ["AssetEditor.Debugger.ContinueButton"] = "Continue",
+                ["AssetEditor.Debugger.StepButton"] = "Step",
+                ["AssetEditor.Debugger.NextButton"] = "Next",
+                ["AssetEditor.Debugger.OutButton"] = "Out",
+                ["AssetEditor.Snapshot.LoadingStatus"] = "Loading Copperfin Studio snapshot...",
+                ["AssetEditor.Debugger.InitialSummary"] = "Start a Copperfin debug session to inspect call stack, locals, globals, and runtime events.",
+                ["AssetEditor.Debugger.ReadyStatus"] = "Debugger ready.",
+                ["AssetEditor.Debugger.StartingStatus"] = "Building project and starting Copperfin debugger...",
+                ["AssetEditor.Debugger.UpdatingStatus"] = "Updating debugger state...",
+                ["AssetEditor.Debugger.UnavailableStatus"] = "Debugger unavailable.",
+                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Start a Copperfin debug session first."
             },
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -94,7 +109,22 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Tab.Builders"] = "Constructores",
                 ["AssetEditor.Tab.Coverage"] = "Cobertura",
                 ["AssetEditor.Tab.Database"] = "Base de datos",
-                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Ocultar registros del proyecto"
+                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Ocultar registros del proyecto",
+                ["AssetEditor.Project.BuildButton"] = "Compilar proyecto Copperfin",
+                ["AssetEditor.Project.RunButton"] = "Ejecutar proyecto Copperfin",
+                ["AssetEditor.Project.DebugButton"] = "Depurar proyecto Copperfin",
+                ["AssetEditor.Debugger.StartSessionButton"] = "Iniciar sesión",
+                ["AssetEditor.Debugger.ContinueButton"] = "Continuar",
+                ["AssetEditor.Debugger.StepButton"] = "Paso",
+                ["AssetEditor.Debugger.NextButton"] = "Siguiente",
+                ["AssetEditor.Debugger.OutButton"] = "Salir",
+                ["AssetEditor.Snapshot.LoadingStatus"] = "Cargando instantánea de Copperfin Studio...",
+                ["AssetEditor.Debugger.InitialSummary"] = "Inicie una sesión de depuración de Copperfin para inspeccionar la pila de llamadas, locales, globales y eventos en tiempo de ejecución.",
+                ["AssetEditor.Debugger.ReadyStatus"] = "Depurador listo.",
+                ["AssetEditor.Debugger.StartingStatus"] = "Compilando el proyecto e iniciando el depurador de Copperfin...",
+                ["AssetEditor.Debugger.UpdatingStatus"] = "Actualizando estado del depurador...",
+                ["AssetEditor.Debugger.UnavailableStatus"] = "Depurador no disponible.",
+                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Inicie primero una sesión de depuración de Copperfin."
             },
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -132,7 +162,22 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Tab.Builders"] = "Construtores",
                 ["AssetEditor.Tab.Coverage"] = "Cobertura",
                 ["AssetEditor.Tab.Database"] = "Banco de dados",
-                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Ocultar registros do projeto"
+                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Ocultar registros do projeto",
+                ["AssetEditor.Project.BuildButton"] = "Compilar projeto Copperfin",
+                ["AssetEditor.Project.RunButton"] = "Executar projeto Copperfin",
+                ["AssetEditor.Project.DebugButton"] = "Depurar projeto Copperfin",
+                ["AssetEditor.Debugger.StartSessionButton"] = "Iniciar sessão",
+                ["AssetEditor.Debugger.ContinueButton"] = "Continuar",
+                ["AssetEditor.Debugger.StepButton"] = "Passo",
+                ["AssetEditor.Debugger.NextButton"] = "Próximo",
+                ["AssetEditor.Debugger.OutButton"] = "Sair",
+                ["AssetEditor.Snapshot.LoadingStatus"] = "Carregando instantâneo do Copperfin Studio...",
+                ["AssetEditor.Debugger.InitialSummary"] = "Inicie uma sessão de depuração do Copperfin para inspecionar pilha de chamadas, locais, globais e eventos de runtime.",
+                ["AssetEditor.Debugger.ReadyStatus"] = "Depurador pronto.",
+                ["AssetEditor.Debugger.StartingStatus"] = "Compilando o projeto e iniciando o depurador do Copperfin...",
+                ["AssetEditor.Debugger.UpdatingStatus"] = "Atualizando estado do depurador...",
+                ["AssetEditor.Debugger.UnavailableStatus"] = "Depurador indisponível.",
+                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Inicie primeiro uma sessão de depuração do Copperfin."
             }
         };
 
