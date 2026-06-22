@@ -8507,6 +8507,167 @@ void test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_se
     }
 }
 
+void test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_section_duplicate_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_section_duplicate =
+        [&](const fs::path& header_asset_path,
+            const fs::path& footer_asset_path,
+            const std::string& label) {
+            const auto duplicate_deleted_section = [&](const fs::path& asset_path,
+                                                       const std::string& unique_id,
+                                                       const std::string& new_unique_id,
+                                                       const std::string& section_title,
+                                                       const std::string& band_kind,
+                                                       const std::string& expression,
+                                                       const std::string& object_code,
+                                                       const std::string& top,
+                                                       const std::string& height,
+                                                       const std::string& bottom,
+                                                       const std::string& deleted_height_total,
+                                                       const std::string& operation_label) {
+                write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(asset_path);
+                const std::size_t before_count = visual_object_count(asset_path);
+
+                const auto duplicate_process = run_process_capture(
+                    studio_host_path,
+                    {
+                        "--path", asset_path.string(),
+                        "--duplicate-object",
+                        "--unique-id", unique_id,
+                        "--new-unique-id", new_unique_id,
+                        "--json"
+                    },
+                    temp_root);
+
+                if (duplicate_process.exit_code != 0) {
+                    std::cerr << "studio host " << label << " " << operation_label << " stdout:\n"
+                              << duplicate_process.stdout_text << "\n";
+                    std::cerr << "studio host " << label << " " << operation_label << " stderr:\n"
+                              << duplicate_process.stderr_text << "\n";
+                    std::cerr << "fixture root: " << temp_root << "\n";
+                }
+
+                expect(duplicate_process.exit_code == 0,
+                       "#1816: " + operation_label + " should exit successfully");
+                expect(visual_object_count(asset_path) == before_count + 1U,
+                       "#1816: " + operation_label + " should append one section record");
+                expect(visual_object_exists(asset_path, new_unique_id),
+                       "#1816: " + operation_label + " should persist the replacement unique id");
+                expect(dbf_record_deleted(asset_path, before_count),
+                       "#1816: " + operation_label + " should append a deleted section duplicate");
+                const auto duplicated_expression = copperfin::vfp::query_visual_object_property({
+                    .path = asset_path.string(),
+                    .record_index = before_count,
+                    .object_name = {},
+                    .unique_id = new_unique_id,
+                    .property_name = "EXPR"
+                });
+                expect(duplicated_expression.ok && duplicated_expression.exists &&
+                           duplicated_expression.value == expression,
+                       "#1816: " + operation_label + " should preserve section expression data");
+
+                expect_contains(duplicate_process.stdout_text,
+                                "\"documentTitle\": \"" + asset_path.filename().string() + "\"",
+                                "#1816: " + operation_label + " should return refreshed layout JSON");
+                if (asset_path.extension() == ".lbx") {
+                    expect_contains(duplicate_process.stdout_text, "\"isLabel\": true",
+                                    "#1816: " + operation_label + " should retain label identity");
+                }
+                expect_contains(duplicate_process.stdout_text, "\"sectionCount\": 1",
+                                "#1816: " + operation_label + " should preserve live section counts");
+                expect_contains(duplicate_process.stdout_text, "\"deletedSectionCount\": 3",
+                                "#1816: " + operation_label + " should refresh deleted section counts");
+                expect_contains(duplicate_process.stdout_text,
+                                "\"deletedSectionHeightTotal\": " + deleted_height_total,
+                                "#1816: " + operation_label + " should refresh deleted section height totals");
+                expect_contains(duplicate_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                                "#1816: " + operation_label + " should advertise selected sections");
+                expect_contains(duplicate_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                                "#1816: " + operation_label + " should expose section selection kind");
+                expect_contains(duplicate_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                                "#1816: " + operation_label + " should not select report objects");
+                expect_contains(duplicate_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                                "#1816: " + operation_label + " should not fabricate object sections");
+                expect_contains(duplicate_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                "#1816: " + operation_label + " should not select settings");
+                expect_contains_in_order(
+                    duplicate_process.stdout_text,
+                    {
+                        "\"selectedReportSection\": {",
+                        "\"title\": \"" + section_title + "\"",
+                        "\"bandKind\": \"" + band_kind + "\"",
+                        "\"expression\": \"" + expression + "\"",
+                        "\"expressionFieldIndex\": 2",
+                        "\"recordIndex\": " + std::to_string(before_count),
+                        "\"deleted\": true",
+                        "\"sectionIndex\": null",
+                        "\"sectionCount\": 0",
+                        "\"objectCode\": " + object_code,
+                        "\"top\": " + top,
+                        "\"height\": " + height,
+                        "\"bottom\": " + bottom
+                    },
+                    "#1816: " + operation_label + " should select the duplicated deleted-section metadata");
+                expect_contains_in_order(
+                    duplicate_process.stdout_text,
+                    {
+                        "\"sections\": [",
+                        "\"title\": \"Detail\"",
+                        "\"bandKind\": \"detail\"",
+                        "\"recordIndex\": 0",
+                        "\"deleted\": false"
+                    },
+                    "#1816: " + operation_label + " should preserve live Detail section metadata");
+            };
+
+            duplicate_deleted_section(header_asset_path,
+                                      "deleted-detail-header-guid",
+                                      "deleted-detail-header-copy-guid",
+                                      "Detail Header",
+                                      "detail_header",
+                                      "deleted detail header expression",
+                                      "9",
+                                      "500",
+                                      "300",
+                                      "800",
+                                      "850",
+                                      "stable deleted detail-header section duplicate");
+            duplicate_deleted_section(footer_asset_path,
+                                      "deleted-detail-footer-guid",
+                                      "deleted-detail-footer-copy-guid",
+                                      "Detail Footer",
+                                      "detail_footer",
+                                      "deleted detail footer expression",
+                                      "10",
+                                      "800",
+                                      "250",
+                                      "1050",
+                                      "800",
+                                      "stable deleted detail-footer section duplicate");
+        };
+
+    run_deleted_detail_header_footer_section_duplicate(
+        temp_root / "deleted_detail_header_section_duplicate.frx",
+        temp_root / "deleted_detail_footer_section_duplicate.frx",
+        "report");
+    run_deleted_detail_header_footer_section_duplicate(
+        temp_root / "deleted_detail_header_section_duplicate.lbx",
+        temp_root / "deleted_detail_footer_section_duplicate.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -88297,6 +88458,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_selection(argv[1]);
+    test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_renames_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
