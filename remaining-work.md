@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1761 negative report/label layout classification coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with negative `OBJTYPE` values for root-like, section-like, live object-like, and deleted object-like rows, proving those rows do not fabricate root settings, live/deleted bands, layout objects, preview bounds, or selected report metadata while inspection stays non-failing and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1760 dot-leading report/label layout classification coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with dot-leading `OBJTYPE`/`OBJCODE` values for root-like, section-like, live object-like, and deleted object-like rows, proving those rows do not fabricate root settings, live/deleted bands, layout objects, preview bounds, or selected report metadata while inspection stays non-failing and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1759 trimmed report/label layout classification coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with whitespace-padded `OBJTYPE`/`OBJCODE` values for root settings, live/deleted bands, and live/deleted layout objects, proving trimmed values drive settings, band, object, kind-count, and selected settings/section/object JSON while inspection stays non-failing and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1758 fractional report/label layout classification coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with fractional `OBJTYPE`/`OBJCODE` values for root settings, live/deleted bands, and live/deleted layout objects, proving integer portions drive settings, band, object, kind-count, and selected settings/section/object JSON while inspection stays non-failing and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1775,7 +1776,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1760 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1761 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1846,7 +1847,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1760 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1761 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
