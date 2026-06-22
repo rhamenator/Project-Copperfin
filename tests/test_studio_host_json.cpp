@@ -3723,6 +3723,35 @@ void write_synthetic_report_table_for_malformed_numeric_layout_json(
     expect(delete_result.ok, "#1716: synthetic report table should mark the malformed-numeric object deleted");
 }
 
+void write_synthetic_report_table_for_oversized_numeric_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'C', .length = 48U},
+        {.name = "VPOS", .type = 'C', .length = 48U},
+        {.name = "WIDTH", .type = 'C', .length = 48U},
+        {.name = "HEIGHT", .type = 'C', .length = 48U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::string huge_positive = "999999999999999999999999999999";
+    const std::string huge_negative = "-999999999999999999999999999999";
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", huge_positive, "", huge_negative, ""},
+        {"5", "", "\"Oversized live\"", huge_positive, huge_positive, huge_positive, huge_positive,
+         "oversized-live-guid"},
+        {"5", "", "\"Oversized deleted\"", huge_negative, huge_negative, huge_negative, huge_negative,
+         "oversized-deleted-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1717: synthetic report table for oversized layout numerics should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1717: synthetic report table should mark the oversized-numeric object deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -5268,6 +5297,134 @@ void test_studio_host_json_defaults_malformed_report_layout_numerics(
                                  "report");
     run_malformed_numeric_layout(temp_root / "malformed_numerics.lbx",
                                  "malformed_numerics.lbx",
+                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_defaults_oversized_report_layout_numerics(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_oversized_report_layout_numeric_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_oversized_numeric_layout = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_oversized_numeric_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " oversized numeric layout summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " oversized numeric layout summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1717: oversized report/label layout numerics should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1717: oversized layout numerics should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1717: oversized numeric label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1717: oversized live layouts should expose preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1717: oversized live layout left bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1717: oversized live layout top bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1717: oversized live layout right bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 0",
+                        "#1717: oversized live layout bottom bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1717: oversized live layout width should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsHeight\": 0",
+                        "#1717: oversized live layout height should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1717: oversized deleted layouts should expose deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1717: oversized deleted layout left bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#1717: oversized deleted layout top bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#1717: oversized deleted layout right bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#1717: oversized deleted layout bottom bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1717: oversized deleted layout width should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#1717: oversized deleted layout height should default to zero");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1717: oversized layout numerics should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1717: oversized layout numerics should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
+                        "#1717: oversized section heights should default to zero in summaries");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1717: oversized live object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"left\": 0",
+                "\"top\": 0",
+                "\"width\": 0",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"bottom\": 0"
+            },
+            "#1717: oversized live object numerics should default selected geometry to zero");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1717: oversized deleted object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"left\": 0",
+                "\"top\": 0",
+                "\"width\": 0",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"bottom\": 0"
+            },
+            "#1717: oversized deleted object numerics should default selected geometry to zero");
+    };
+
+    run_oversized_numeric_layout(temp_root / "oversized_numerics.frx",
+                                 "oversized_numerics.frx",
+                                 "report");
+    run_oversized_numeric_layout(temp_root / "oversized_numerics.lbx",
+                                 "oversized_numerics.lbx",
                                  "label");
 
     if (failures == 0) {
@@ -71032,6 +71189,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
+    test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
