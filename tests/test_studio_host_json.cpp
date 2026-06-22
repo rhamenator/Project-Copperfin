@@ -6254,10 +6254,11 @@ void write_synthetic_report_table_for_orientation_field_json(const std::filesyst
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "ORIENTATION", .type = 'N', .length = 8U}
+        {.name = "ORIENTATION", .type = 'N', .length = 8U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "PAPERSIZE=1\nTOPMARGIN=10\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "0"}
+        {"1", "53", "PAPERSIZE=1\nTOPMARGIN=10\nBOTMARGIN=20\nGRIDV=4\nGRIDH=8", "0", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -6269,6 +6270,38 @@ void write_synthetic_report_table_for_deleted_orientation_field_json(
     write_synthetic_report_table_for_orientation_field_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
     expect(delete_result.ok, "#1589: synthetic report table should mark orientation settings deleted");
+}
+
+void write_synthetic_report_table_for_stable_orientation_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_orientation_field_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "settings-guid"
+    });
+    expect(unique_id_result.ok, "#1833: stable orientation fixture should seed a settings unique id");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#1833: stable orientation fixture should preserve the live settings state");
+}
+
+void write_synthetic_report_table_for_stable_deleted_orientation_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_deleted_orientation_field_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "deleted-settings-guid"
+    });
+    expect(unique_id_result.ok, "#1833: stable deleted orientation fixture should seed a settings unique id");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#1833: stable deleted orientation fixture should preserve the deleted settings state");
 }
 
 void write_synthetic_report_table_for_paper_size_field_json(const std::filesystem::path& report_path) {
@@ -40618,6 +40651,388 @@ void test_studio_host_json_clears_deleted_report_orientation_fields_by_record_se
                                   "report");
     run_deleted_orientation_clear(temp_root / "deleted_orientation_clear.lbx",
                                   "deleted_orientation_clear.lbx",
+                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_orientation_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_orientation_field_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_orientation_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& updated_orientation,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_stable_orientation_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "ORIENTATION",
+                "--property-value", updated_orientation,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable orientation field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable orientation field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1833: report/label stable orientation field update should exit successfully");
+        const auto orientation_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "ORIENTATION"
+        });
+        expect(orientation_property.ok && orientation_property.exists &&
+                   orientation_property.value == updated_orientation,
+               "#1833: report/label stable orientation field update should persist the ORIENTATION field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1833: report/label stable orientation field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1833: label stable orientation field update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1833: report/label stable orientation field update should preserve page setup availability");
+        expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
+                        "#1833: report/label stable orientation field update should refresh orientation codes");
+        expect_contains(update_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1833: report/label stable orientation field update should preserve paper-size codes");
+        expect_contains(update_process.stdout_text, "\"topMargin\": 10",
+                        "#1833: report/label stable orientation field update should preserve top margins");
+        expect_contains(update_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1833: report/label stable orientation field update should preserve bottom margins");
+        expect_contains(update_process.stdout_text, "\"gridVertical\": 4",
+                        "#1833: report/label stable orientation field update should preserve vertical grid spacing");
+        expect_contains(update_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1833: report/label stable orientation field update should preserve horizontal grid spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 6",
+                        "#1833: report/label stable orientation field update should preserve setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1833: report/label stable orientation field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1833: report/label stable orientation field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_orientation + "\""
+            },
+            "#1833: report/label stable orientation field update should refresh selected direct-field provenance");
+    };
+
+    run_orientation_update(temp_root / "orientation_stable.frx",
+                           "orientation_stable.frx",
+                           "1",
+                           "report");
+    run_orientation_update(temp_root / "orientation_stable.lbx",
+                           "orientation_stable.lbx",
+                           "2",
+                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_orientation_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_orientation_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_orientation_clear = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_stable_orientation_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "ORIENTATION",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable orientation field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable orientation field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1833: report/label stable orientation field clear should exit successfully");
+        const auto orientation_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "ORIENTATION"
+        });
+        expect(orientation_property.ok && orientation_property.exists && orientation_property.value.empty(),
+               "#1833: report/label stable orientation field clear should blank the ORIENTATION field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1833: report/label stable orientation field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1833: label stable orientation field clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1833: report/label stable orientation field clear should preserve page setup availability");
+        expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
+                        "#1833: report/label stable orientation field clear should clear orientation availability");
+        expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
+                        "#1833: report/label stable orientation field clear should clear orientation codes");
+        expect_contains(clear_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1833: report/label stable orientation field clear should preserve paper-size codes");
+        expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
+                        "#1833: report/label stable orientation field clear should preserve top margins");
+        expect_contains(clear_process.stdout_text, "\"bottomMargin\": 20",
+                        "#1833: report/label stable orientation field clear should preserve bottom margins");
+        expect_contains(clear_process.stdout_text, "\"gridVertical\": 4",
+                        "#1833: report/label stable orientation field clear should preserve vertical grid spacing");
+        expect_contains(clear_process.stdout_text, "\"gridHorizontal\": 8",
+                        "#1833: report/label stable orientation field clear should preserve horizontal grid spacing");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 5",
+                        "#1833: report/label stable orientation field clear should remove the direct setting from counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1833: report/label stable orientation field clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1833: report/label stable orientation field clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            "#1833: report/label stable orientation field clear should preserve remaining selected setting provenance");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#1833: report/label stable orientation field clear should remove direct ORIENTATION provenance");
+    };
+
+    run_orientation_clear(temp_root / "orientation_clear_stable.frx",
+                          "orientation_clear_stable.frx",
+                          "report");
+    run_orientation_clear(temp_root / "orientation_clear_stable.lbx",
+                          "orientation_clear_stable.lbx",
+                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_orientation_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_orientation_field_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_orientation_update = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& updated_orientation,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_orientation_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "ORIENTATION",
+                "--property-value", updated_orientation,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted orientation field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted orientation field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1833: report/label stable deleted orientation field update should exit successfully");
+        const auto orientation_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "ORIENTATION"
+        });
+        expect(orientation_property.ok && orientation_property.exists &&
+                   orientation_property.value == updated_orientation,
+               "#1833: report/label stable deleted orientation field update should persist the ORIENTATION field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1833: report/label stable deleted orientation field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1833: label stable deleted orientation field update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1833: report/label stable deleted orientation field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1833: report/label stable deleted orientation field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 6",
+                        "#1833: report/label stable deleted orientation field update should preserve deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1833: report/label stable deleted orientation field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1833: report/label stable deleted orientation field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_orientation + "\""
+            },
+            "#1833: report/label stable deleted orientation field update should refresh selected deleted settings");
+    };
+
+    run_deleted_orientation_update(temp_root / "deleted_orientation_stable.frx",
+                                   "deleted_orientation_stable.frx",
+                                   "1",
+                                   "report");
+    run_deleted_orientation_update(temp_root / "deleted_orientation_stable.lbx",
+                                   "deleted_orientation_stable.lbx",
+                                   "2",
+                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_deleted_report_orientation_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_orientation_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_orientation_clear = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_orientation_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "ORIENTATION",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted orientation field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted orientation field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1833: report/label stable deleted orientation field clear should exit successfully");
+        const auto orientation_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "ORIENTATION"
+        });
+        expect(orientation_property.ok && orientation_property.exists && orientation_property.value.empty(),
+               "#1833: report/label stable deleted orientation field clear should blank the ORIENTATION field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1833: report/label stable deleted orientation field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1833: label stable deleted orientation field clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1833: report/label stable deleted orientation field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1833: report/label stable deleted orientation field clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 5",
+                        "#1833: report/label stable deleted orientation field clear should remove the deleted direct setting from counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1833: report/label stable deleted orientation field clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1833: report/label stable deleted orientation field clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3",
+                "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4"
+            },
+            "#1833: report/label stable deleted orientation field clear should preserve remaining selected deleted settings");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#1833: report/label stable deleted orientation field clear should remove direct ORIENTATION provenance");
+    };
+
+    run_deleted_orientation_clear(temp_root / "deleted_orientation_clear_stable.frx",
+                                  "deleted_orientation_clear_stable.frx",
+                                  "report");
+    run_deleted_orientation_clear(temp_root / "deleted_orientation_clear_stable.lbx",
+                                  "deleted_orientation_clear_stable.lbx",
                                   "label");
 
     if (failures == 0) {
@@ -92312,6 +92727,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_report_orientation_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_orientation_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_orientation_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_orientation_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_report_orientation_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_orientation_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_orientation_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_paper_size_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_paper_size_fields_by_record_selection(argv[1]);
