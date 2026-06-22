@@ -3807,6 +3807,27 @@ void write_synthetic_report_table_for_fractional_layout_json(
     expect(delete_result.ok, "#1719: synthetic report table should mark the fractional object deleted");
 }
 
+void write_synthetic_report_table_for_missing_geometry_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", ""},
+        {"9", "4", "", ""},
+        {"5", "", "\"Missing geometry live\"", "missing-geometry-live-guid"},
+        {"5", "", "\"Missing geometry deleted\"", "missing-geometry-deleted-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1720: synthetic report table without geometry fields should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1720: synthetic report table should mark the missing-geometry object deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -5711,6 +5732,146 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_ge
     run_fractional_layout(temp_root / "fractional_geometry.lbx",
                           "fractional_geometry.lbx",
                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_defaults_missing_report_layout_geometry_fields(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_report_layout_geometry_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_geometry_layout = [&](const fs::path& asset_path,
+                                                 const std::string& title,
+                                                 const std::string& label) {
+        write_synthetic_report_table_for_missing_geometry_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing geometry summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing geometry summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1720: missing report/label layout geometry fields should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1720: missing geometry layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1720: missing geometry label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1720: missing geometry live layouts should expose preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1720: missing geometry live layout left bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1720: missing geometry live layout top bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1720: missing geometry live layout right bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 0",
+                        "#1720: missing geometry live layout bottom bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1720: missing geometry live layout width should default to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsHeight\": 0",
+                        "#1720: missing geometry live layout height should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1720: missing geometry deleted layouts should expose deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1720: missing geometry deleted layout left bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#1720: missing geometry deleted layout top bounds should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#1720: missing geometry deleted layout right bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#1720: missing geometry deleted layout bottom bounds should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1720: missing geometry deleted layout width should default to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#1720: missing geometry deleted layout height should default to zero");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1720: missing geometry layouts should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1720: missing geometry layouts should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1720: missing geometry layouts should preserve section rows");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
+                        "#1720: missing section geometry should default to zero in summaries");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1720: missing geometry live object selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1720: missing geometry live object should still resolve the zero-height section");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"left\": 0",
+                "\"leftFieldIndex\": null",
+                "\"top\": 0",
+                "\"topFieldIndex\": null",
+                "\"width\": 0",
+                "\"widthFieldIndex\": null",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"heightFieldIndex\": null",
+                "\"bottom\": 0"
+            },
+            "#1720: missing live object geometry should default to zero with null field provenance");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1720: missing geometry deleted object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"left\": 0",
+                "\"leftFieldIndex\": null",
+                "\"top\": 0",
+                "\"topFieldIndex\": null",
+                "\"width\": 0",
+                "\"widthFieldIndex\": null",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"heightFieldIndex\": null",
+                "\"bottom\": 0"
+            },
+            "#1720: missing deleted object geometry should default to zero with null field provenance");
+    };
+
+    run_missing_geometry_layout(temp_root / "missing_geometry.frx",
+                                "missing_geometry.frx",
+                                "report");
+    run_missing_geometry_layout(temp_root / "missing_geometry.lbx",
+                                "missing_geometry.lbx",
+                                "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -71477,6 +71638,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
     test_studio_host_json_ignores_invalid_report_layout_classifications(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
+    test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
