@@ -6829,6 +6829,167 @@ void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_st
     }
 }
 
+void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_expression_edit_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_expression_edits =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-header-label-guid",
+                    "--property-name", "EXPR",
+                    "--property-value", "\"Updated header label\"",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object expression update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object expression update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1770: detail-header object expression update should exit successfully");
+            const auto updated_expr = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "detail-header-label-guid",
+                .property_name = "EXPR"
+            });
+            expect(updated_expr.ok && updated_expr.exists && updated_expr.value == "\"Updated header label\"",
+                   "#1770: detail-header object expression update should persist the EXPR memo field");
+            expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1770: detail-header object expression update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                                "#1770: detail-header label object expression update should retain label identity");
+            }
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1770: detail-header object expression update should preserve selected object availability");
+            expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1770: detail-header object expression update should preserve object selection kind");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1770: detail-header object expression update should preserve containing-section availability");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"expression\": \"\\\"Updated header label\\\"\"",
+                    "\"expressionFieldIndex\": 2",
+                    "\"expressionMemoBlockNumber\": 5"
+                },
+                "#1770: detail-header object expression update should refresh selected-object expression metadata");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1770: detail-header object expression update should preserve containing-section metadata");
+
+            const auto clear_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--property-name", "EXPR",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object expression clear stdout:\n"
+                          << clear_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object expression clear stderr:\n"
+                          << clear_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_process.exit_code == 0,
+                   "#1770: detail-footer object expression clear should exit successfully");
+            expect_contains(clear_process.stdout_text,
+                            "{\"name\": \"EXPR\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 2",
+                            "#1770: detail-footer object expression clear should blank the EXPR memo field");
+            expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1770: detail-footer object expression clear should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                                "#1770: detail-footer label object expression clear should retain label identity");
+            }
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1770: detail-footer object expression clear should preserve selected object availability");
+            expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1770: detail-footer object expression clear should preserve object selection kind");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1770: detail-footer object expression clear should preserve containing-section availability");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"expression\": \"\"",
+                    "\"expressionFieldIndex\": 2"
+                },
+                "#1770: detail-footer object expression clear should refresh selected-object expression metadata");
+            expect_not_contains(clear_process.stdout_text, "\"expression\": \"footer.total\"",
+                                "#1770: detail-footer object expression clear should not leak stale expressions");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1770: detail-footer object expression clear should preserve containing-section metadata");
+        };
+
+    run_detail_header_footer_object_expression_edits(temp_root / "detail_header_footer_object_expression_edits.frx",
+                                                     "detail_header_footer_object_expression_edits.frx",
+                                                     "report");
+    run_detail_header_footer_object_expression_edits(temp_root / "detail_header_footer_object_expression_edits.lbx",
+                                                     "detail_header_footer_object_expression_edits.lbx",
+                                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_section_expressions(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -80070,6 +80231,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_expressions(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(argv[1]);
