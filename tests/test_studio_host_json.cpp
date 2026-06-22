@@ -35752,6 +35752,20 @@ void test_studio_host_json_clears_report_layout_object_height_preview_bounds_by_
                         "#1641: report/label layout object stable height clear should preserve document preview bottom bounds");
         expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 8100",
                         "#1641: report/label layout object stable height clear should preserve document preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1905: report/label layout object stable height clear should preserve deleted preview availability");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1905: report/label layout object stable height clear should preserve deleted preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1905: report/label layout object stable height clear should preserve deleted preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1905: report/label layout object stable height clear should preserve deleted preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1905: report/label layout object stable height clear should preserve deleted preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1905: report/label layout object stable height clear should preserve deleted preview widths");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1905: report/label layout object stable height clear should preserve deleted preview heights");
         expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 2",
                         "#1641: report/label layout object stable height clear should preserve placed counts");
         expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
