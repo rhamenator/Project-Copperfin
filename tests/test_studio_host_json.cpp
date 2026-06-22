@@ -6023,10 +6023,11 @@ void write_synthetic_report_table_for_column_setup_field_json(const std::filesys
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
         {.name = "EXPR", .type = 'M', .length = 4U},
-        {.name = "COLS", .type = 'N', .length = 8U}
+        {.name = "COLS", .type = 'N', .length = 8U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "COLWIDTH=3600\nCOLSPACING=120", "2"}
+        {"1", "53", "COLWIDTH=3600\nCOLSPACING=120", "2", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -6038,6 +6039,38 @@ void write_synthetic_report_table_for_deleted_column_setup_field_json(
     write_synthetic_report_table_for_column_setup_field_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
     expect(delete_result.ok, "#1593: synthetic report table should mark column-count settings deleted");
+}
+
+void write_synthetic_report_table_for_stable_column_setup_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_column_setup_field_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "settings-guid"
+    });
+    expect(unique_id_result.ok, "#1835: stable column-count fixture should seed a settings unique id");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#1835: stable column-count fixture should preserve the live settings state");
+}
+
+void write_synthetic_report_table_for_stable_deleted_column_setup_field_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_deleted_column_setup_field_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "deleted-settings-guid"
+    });
+    expect(unique_id_result.ok, "#1835: stable deleted column-count fixture should seed a settings unique id");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#1835: stable deleted column-count fixture should preserve the deleted settings state");
 }
 
 void write_synthetic_report_table_for_column_width_field_json(const std::filesystem::path& report_path) {
@@ -42354,6 +42387,392 @@ void test_studio_host_json_clears_report_column_count_fields_by_record_selection
 
     run_column_count_clear(temp_root / "column_count_clear.frx", "column_count_clear.frx", "report");
     run_column_count_clear(temp_root / "column_count_clear.lbx", "column_count_clear.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_column_count_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_column_count_field_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_column_count_update = [&](const fs::path& asset_path,
+                                             const std::string& title,
+                                             const std::string& updated_count,
+                                             const std::string& label) {
+        write_synthetic_report_table_for_stable_column_setup_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "COLS",
+                "--property-value", updated_count,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable column-count field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable column-count field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1835: report/label stable column-count field update should exit successfully");
+        const auto column_count_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "COLS"
+        });
+        expect(column_count_property.ok && column_count_property.exists &&
+                   column_count_property.value == updated_count,
+               "#1835: report/label stable column-count field update should persist the COLS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1835: report/label stable column-count field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1835: label stable column-count field update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1835: report/label stable column-count field update should not fabricate page setup availability");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1835: report/label stable column-count field update should preserve column setup availability");
+        expect_contains(update_process.stdout_text, "\"columnCount\": " + updated_count,
+                        "#1835: report/label stable column-count field update should refresh column counts");
+        expect_contains(update_process.stdout_text, "\"columnWidth\": 3600",
+                        "#1835: report/label stable column-count field update should preserve memo-derived column widths");
+        expect_contains(update_process.stdout_text, "\"columnSpacing\": 120",
+                        "#1835: report/label stable column-count field update should preserve memo-derived column spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 3",
+                        "#1835: report/label stable column-count field update should preserve setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1835: report/label stable column-count field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1835: report/label stable column-count field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_count + "\""
+            },
+            "#1835: report/label stable column-count field update should refresh selected direct-field provenance");
+    };
+
+    run_column_count_update(temp_root / "column_count_stable.frx",
+                            "column_count_stable.frx",
+                            "4",
+                            "report");
+    run_column_count_update(temp_root / "column_count_stable.lbx",
+                            "column_count_stable.lbx",
+                            "5",
+                            "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_column_count_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_column_count_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_column_count_clear = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_stable_column_setup_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "COLS",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable column-count field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable column-count field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1835: report/label stable column-count field clear should exit successfully");
+        const auto column_count_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "COLS"
+        });
+        expect(column_count_property.ok && column_count_property.exists &&
+                   column_count_property.value.empty(),
+               "#1835: report/label stable column-count field clear should blank the COLS field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1835: report/label stable column-count field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1835: label stable column-count field clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1835: report/label stable column-count field clear should not fabricate page setup availability");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1835: report/label stable column-count field clear should preserve column setup availability");
+        expect_contains(clear_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1835: report/label stable column-count field clear should clear column-count availability");
+        expect_contains(clear_process.stdout_text, "\"columnCount\": 0",
+                        "#1835: report/label stable column-count field clear should clear column counts");
+        expect_contains(clear_process.stdout_text, "\"columnWidth\": 3600",
+                        "#1835: report/label stable column-count field clear should preserve memo-derived column widths");
+        expect_contains(clear_process.stdout_text, "\"columnSpacing\": 120",
+                        "#1835: report/label stable column-count field clear should preserve memo-derived column spacing");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 2",
+                        "#1835: report/label stable column-count field clear should remove the direct setting from counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1835: report/label stable column-count field clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1835: report/label stable column-count field clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1"
+            },
+            "#1835: report/label stable column-count field clear should preserve remaining selected setting provenance");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#1835: report/label stable column-count field clear should remove direct COLS provenance");
+    };
+
+    run_column_count_clear(temp_root / "column_count_clear_stable.frx",
+                           "column_count_clear_stable.frx",
+                           "report");
+    run_column_count_clear(temp_root / "column_count_clear_stable.lbx",
+                           "column_count_clear_stable.lbx",
+                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_column_count_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_count_field_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_count_update = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& updated_count,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_column_setup_field_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "COLS",
+                "--property-value", updated_count,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted column-count field update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted column-count field update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1835: report/label stable deleted column-count field update should exit successfully");
+        const auto column_count_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "COLS"
+        });
+        expect(column_count_property.ok && column_count_property.exists &&
+                   column_count_property.value == updated_count,
+               "#1835: report/label stable deleted column-count field update should persist the COLS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1835: report/label stable deleted column-count field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1835: label stable deleted column-count field update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1835: report/label stable deleted column-count field update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1835: report/label stable deleted column-count field update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1835: report/label stable deleted column-count field update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1835: report/label stable deleted column-count field update should preserve deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1835: report/label stable deleted column-count field update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1835: report/label stable deleted column-count field update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_count + "\""
+            },
+            "#1835: report/label stable deleted column-count field update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null",
+                "\"value\": \"" + updated_count + "\""
+            },
+            "#1835: report/label stable deleted column-count field update should refresh selected deleted settings");
+    };
+
+    run_deleted_column_count_update(temp_root / "deleted_column_count_stable.frx",
+                                    "deleted_column_count_stable.frx",
+                                    "4",
+                                    "report");
+    run_deleted_column_count_update(temp_root / "deleted_column_count_stable.lbx",
+                                    "deleted_column_count_stable.lbx",
+                                    "5",
+                                    "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_deleted_report_column_count_fields_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_count_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_count_clear = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_column_setup_field_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "COLS",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted column-count field clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted column-count field clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1835: report/label stable deleted column-count field clear should exit successfully");
+        const auto column_count_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "COLS"
+        });
+        expect(column_count_property.ok && column_count_property.exists &&
+                   column_count_property.value.empty(),
+               "#1835: report/label stable deleted column-count field clear should blank the COLS field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1835: report/label stable deleted column-count field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1835: label stable deleted column-count field clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1835: report/label stable deleted column-count field clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1835: report/label stable deleted column-count field clear should not fabricate live column setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1835: report/label stable deleted column-count field clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 2",
+                        "#1835: report/label stable deleted column-count field clear should remove the deleted direct setting from counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1835: report/label stable deleted column-count field clear should preserve selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1835: report/label stable deleted column-count field clear should preserve settings selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1"
+            },
+            "#1835: report/label stable deleted column-count field clear should preserve remaining deleted setting provenance");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1"
+            },
+            "#1835: report/label stable deleted column-count field clear should preserve remaining selected deleted settings");
+        expect_not_contains(clear_process.stdout_text,
+                            "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 3",
+                            "#1835: report/label stable deleted column-count field clear should remove direct COLS provenance");
+    };
+
+    run_deleted_column_count_clear(temp_root / "deleted_column_count_clear_stable.frx",
+                                   "deleted_column_count_clear_stable.frx",
+                                   "report");
+    run_deleted_column_count_clear(temp_root / "deleted_column_count_clear_stable.lbx",
+                                   "deleted_column_count_clear_stable.lbx",
+                                   "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -93158,6 +93577,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_count_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_count_fields_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_column_count_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_report_column_count_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_column_count_fields_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_column_count_fields_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_column_width_fields_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_width_fields_by_record_selection(argv[1]);
