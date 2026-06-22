@@ -30535,6 +30535,24 @@ void test_studio_host_json_renames_live_edited_unplaced_report_layout_object_geo
                "#1622: live edited unplaced report/label layout object rename should preserve edited geometry fields");
         expect_contains(rename_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1622: live edited unplaced report/label layout object rename should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(rename_process.stdout_text, "\"isLabel\": true",
+                            "#1882: live edited unplaced label layout object rename should retain label identity");
+        }
+        expect_contains(rename_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1882: live edited unplaced report/label layout object rename should keep preview bounds available");
+        expect_contains(rename_process.stdout_text, "\"previewBoundsLeft\": -300",
+                        "#1882: live edited unplaced report/label layout object rename should expand preview left bounds");
+        expect_contains(rename_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#1882: live edited unplaced report/label layout object rename should preserve section-origin preview top bounds");
+        expect_contains(rename_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1882: live edited unplaced report/label layout object rename should preserve preview right bounds");
+        expect_contains(rename_process.stdout_text, "\"previewBoundsBottom\": 9700",
+                        "#1882: live edited unplaced report/label layout object rename should expand preview bottom bounds");
+        expect_contains(rename_process.stdout_text, "\"previewBoundsWidth\": 450",
+                        "#1882: live edited unplaced report/label layout object rename should refresh preview widths");
+        expect_contains(rename_process.stdout_text, "\"previewBoundsHeight\": 7700",
+                        "#1882: live edited unplaced report/label layout object rename should refresh preview heights");
         expect_contains(rename_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1622: live edited unplaced report/label layout object rename should preserve selected-object availability");
         expect_contains(rename_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
