@@ -14432,6 +14432,332 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_expressi
     }
 }
 
+void test_studio_host_json_updates_deleted_detail_header_footer_section_expressions_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        "copperfin_studio_host_deleted_detail_header_footer_section_stable_expression_edit_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_section_expression_stable_edits =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(asset_path);
+
+            const auto expect_selected_deleted_section_expression =
+                [&](const ProcessResult& process,
+                    const std::string& section_title,
+                    const std::string& band_kind,
+                    const std::string& expression,
+                    const std::string& field_index,
+                    const std::string& memo_block,
+                    const std::string& record_index,
+                    const std::string& object_code,
+                    const std::string& top,
+                    const std::string& height,
+                    const std::string& bottom,
+                    const std::string& operation_label) {
+                    expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                                    "#1811: " + operation_label + " should return refreshed layout JSON");
+                    if (asset_path.extension() == ".lbx") {
+                        expect_contains(process.stdout_text, "\"isLabel\": true",
+                                        "#1811: " + operation_label + " should retain label identity");
+                    }
+                    expect_contains(process.stdout_text, "\"sectionCount\": 1",
+                                    "#1811: " + operation_label + " should preserve live section count");
+                    expect_contains(process.stdout_text, "\"deletedSectionCount\": 2",
+                                    "#1811: " + operation_label + " should preserve deleted section count");
+                    expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                                    "#1811: " + operation_label + " should preserve deleted section selection");
+                    expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                                    "#1811: " + operation_label + " should preserve section selection kind");
+                    expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                                    "#1811: " + operation_label + " should not select report objects");
+                    expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                    "#1811: " + operation_label + " should not select settings");
+                    expect_contains_in_order(
+                        process.stdout_text,
+                        {
+                            "\"selectedReportSection\": {",
+                            "\"title\": \"" + section_title + "\"",
+                            "\"bandKind\": \"" + band_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": " + field_index,
+                            "\"expressionMemoBlockNumber\": " + memo_block,
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": true",
+                            "\"sectionIndex\": null",
+                            "\"sectionCount\": 0",
+                            "\"objectCode\": " + object_code,
+                            "\"top\": " + top,
+                            "\"height\": " + height,
+                            "\"bottom\": " + bottom
+                        },
+                        "#1811: " + operation_label + " should refresh selected deleted-section expression metadata");
+                    expect_contains_in_order(
+                        process.stdout_text,
+                        {
+                            "\"sections\": [",
+                            "\"title\": \"Detail\"",
+                            "\"bandKind\": \"detail\"",
+                            "\"expression\": \"live detail expression\"",
+                            "\"expressionFieldIndex\": 2",
+                            "\"expressionMemoBlockNumber\": 1",
+                            "\"recordIndex\": 0"
+                        },
+                        "#1811: " + operation_label + " should preserve live detail metadata");
+                };
+
+            const auto update_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "deleted-detail-header-guid",
+                    "--property-name", "EXPR",
+                    "--property-value", "deleted detail header stable updated",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable deleted detail-header expression update stdout:\n"
+                          << update_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable deleted detail-header expression update stderr:\n"
+                          << update_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_header_process.exit_code == 0,
+                   "#1811: stable-selected deleted detail-header expression update should exit successfully");
+            expect(dbf_record_deleted(asset_path, 1U),
+                   "#1811: stable-selected deleted detail-header expression update should preserve deleted state");
+            const auto updated_header_expr = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "deleted-detail-header-guid",
+                .property_name = "EXPR"
+            });
+            expect(updated_header_expr.ok && updated_header_expr.exists &&
+                       updated_header_expr.value == "deleted detail header stable updated",
+                   "#1811: stable-selected deleted detail-header expression update should persist the EXPR memo field");
+            expect_selected_deleted_section_expression(update_header_process,
+                                                       "Detail Header",
+                                                       "detail_header",
+                                                       "deleted detail header stable updated",
+                                                       "2",
+                                                       "4",
+                                                       "1",
+                                                       "9",
+                                                       "500",
+                                                       "300",
+                                                       "800",
+                                                       "stable-selected deleted detail-header expression update");
+            expect_contains_in_order(
+                update_header_process.stdout_text,
+                {
+                    "\"deletedSections\": [",
+                    "\"title\": \"Detail Header\"",
+                    "\"expression\": \"deleted detail header stable updated\"",
+                    "\"recordIndex\": 1",
+                    "\"title\": \"Detail Footer\"",
+                    "\"expression\": \"deleted detail footer expression\"",
+                    "\"expressionFieldIndex\": 2",
+                    "\"expressionMemoBlockNumber\": 3",
+                    "\"recordIndex\": 2"
+                },
+                "#1811: stable-selected deleted detail-header update should preserve deleted footer metadata");
+
+            const auto update_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "deleted-detail-footer-guid",
+                    "--property-name", "EXPR",
+                    "--property-value", "deleted detail footer stable updated",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable deleted detail-footer expression update stdout:\n"
+                          << update_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable deleted detail-footer expression update stderr:\n"
+                          << update_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_footer_process.exit_code == 0,
+                   "#1811: stable-selected deleted detail-footer expression update should exit successfully");
+            expect(dbf_record_deleted(asset_path, 2U),
+                   "#1811: stable-selected deleted detail-footer expression update should preserve deleted state");
+            const auto updated_footer_expr = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = "deleted-detail-footer-guid",
+                .property_name = "EXPR"
+            });
+            expect(updated_footer_expr.ok && updated_footer_expr.exists &&
+                       updated_footer_expr.value == "deleted detail footer stable updated",
+                   "#1811: stable-selected deleted detail-footer expression update should persist the EXPR memo field");
+            expect_selected_deleted_section_expression(update_footer_process,
+                                                       "Detail Footer",
+                                                       "detail_footer",
+                                                       "deleted detail footer stable updated",
+                                                       "2",
+                                                       "5",
+                                                       "2",
+                                                       "10",
+                                                       "800",
+                                                       "250",
+                                                       "1050",
+                                                       "stable-selected deleted detail-footer expression update");
+            expect_contains_in_order(
+                update_footer_process.stdout_text,
+                {
+                    "\"deletedSections\": [",
+                    "\"title\": \"Detail Header\"",
+                    "\"expression\": \"deleted detail header stable updated\"",
+                    "\"expressionFieldIndex\": 2",
+                    "\"expressionMemoBlockNumber\": 4",
+                    "\"recordIndex\": 1",
+                    "\"title\": \"Detail Footer\"",
+                    "\"expression\": \"deleted detail footer stable updated\"",
+                    "\"recordIndex\": 2"
+                },
+                "#1811: stable-selected deleted detail-footer update should preserve deleted header metadata");
+
+            const auto clear_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "deleted-detail-header-guid",
+                    "--property-name", "EXPR",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable deleted detail-header expression clear stdout:\n"
+                          << clear_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable deleted detail-header expression clear stderr:\n"
+                          << clear_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_header_process.exit_code == 0,
+                   "#1811: stable-selected deleted detail-header expression clear should exit successfully");
+            expect(dbf_record_deleted(asset_path, 1U),
+                   "#1811: stable-selected deleted detail-header expression clear should preserve deleted state");
+            expect_selected_deleted_section_expression(clear_header_process,
+                                                       "Detail Header",
+                                                       "detail_header",
+                                                       "",
+                                                       "null",
+                                                       "0",
+                                                       "1",
+                                                       "9",
+                                                       "500",
+                                                       "300",
+                                                       "800",
+                                                       "stable-selected deleted detail-header expression clear");
+            expect_contains_in_order(
+                clear_header_process.stdout_text,
+                {
+                    "\"deletedSections\": [",
+                    "\"title\": \"Detail Header\"",
+                    "\"expression\": \"\"",
+                    "\"expressionFieldIndex\": null",
+                    "\"expressionMemoBlockNumber\": 0",
+                    "\"recordIndex\": 1",
+                    "\"title\": \"Detail Footer\"",
+                    "\"expression\": \"deleted detail footer stable updated\"",
+                    "\"expressionFieldIndex\": 2",
+                    "\"expressionMemoBlockNumber\": 5",
+                    "\"recordIndex\": 2"
+                },
+                "#1811: stable-selected deleted detail-header clear should preserve deleted footer metadata");
+            expect_not_contains(clear_header_process.stdout_text,
+                                "\"expression\": \"deleted detail header stable updated\"",
+                                "#1811: stable-selected deleted detail-header clear should not leak stale selected expressions");
+
+            const auto clear_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "deleted-detail-footer-guid",
+                    "--property-name", "EXPR",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable deleted detail-footer expression clear stdout:\n"
+                          << clear_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable deleted detail-footer expression clear stderr:\n"
+                          << clear_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_footer_process.exit_code == 0,
+                   "#1811: stable-selected deleted detail-footer expression clear should exit successfully");
+            expect(dbf_record_deleted(asset_path, 2U),
+                   "#1811: stable-selected deleted detail-footer expression clear should preserve deleted state");
+            expect_selected_deleted_section_expression(clear_footer_process,
+                                                       "Detail Footer",
+                                                       "detail_footer",
+                                                       "",
+                                                       "null",
+                                                       "0",
+                                                       "2",
+                                                       "10",
+                                                       "800",
+                                                       "250",
+                                                       "1050",
+                                                       "stable-selected deleted detail-footer expression clear");
+            expect_contains_in_order(
+                clear_footer_process.stdout_text,
+                {
+                    "\"deletedSections\": [",
+                    "\"title\": \"Detail Header\"",
+                    "\"expression\": \"\"",
+                    "\"expressionFieldIndex\": null",
+                    "\"expressionMemoBlockNumber\": 0",
+                    "\"recordIndex\": 1",
+                    "\"title\": \"Detail Footer\"",
+                    "\"expression\": \"\"",
+                    "\"expressionFieldIndex\": null",
+                    "\"expressionMemoBlockNumber\": 0",
+                    "\"recordIndex\": 2"
+                },
+                "#1811: stable-selected deleted detail-footer clear should preserve deleted header metadata");
+            expect_not_contains(clear_footer_process.stdout_text,
+                                "\"expression\": \"deleted detail footer stable updated\"",
+                                "#1811: stable-selected deleted detail-footer clear should not leak stale selected expressions");
+        };
+
+    run_deleted_detail_header_footer_section_expression_stable_edits(
+        temp_root / "deleted_detail_header_footer_section_stable_expression_edits.frx",
+        "deleted_detail_header_footer_section_stable_expression_edits.frx",
+        "report");
+    run_deleted_detail_header_footer_section_expression_stable_edits(
+        temp_root / "deleted_detail_header_footer_section_stable_expression_edits.lbx",
+        "deleted_detail_header_footer_section_stable_expression_edits.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -87207,6 +87533,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(argv[1]);
+    test_studio_host_json_updates_deleted_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
