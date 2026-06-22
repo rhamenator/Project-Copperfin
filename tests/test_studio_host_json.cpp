@@ -46395,6 +46395,200 @@ void test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable
     }
 }
 
+void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_visual_object_subtree_duplicate_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_subtree_duplicate = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_layout_subtree_deleted_state_json(asset_path);
+        const std::size_t before_count = visual_object_count(asset_path);
+        const auto duplicate_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-duplicate-subtree",
+                "--path", asset_path.string(),
+                "--unique-id", "middle-field-guid",
+                "--replacement-source-unique-id", "middle-field-guid",
+                "--new-object-name", "MiddleFieldCopy",
+                "--new-name", "MiddleFieldCopy",
+                "--new-unique-id", "middle-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (duplicate_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable report object subtree duplicate stdout:\n"
+                      << duplicate_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable report object subtree duplicate stderr:\n"
+                      << duplicate_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(duplicate_process.exit_code == 0,
+               "#1858: report/label stable visual-object duplicate-subtree JSON should exit successfully");
+        expect_contains(duplicate_process.stdout_text, "\"visualObjectDuplicateSubtree\": {",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose a result object");
+        expect_contains(duplicate_process.stdout_text, "\"rootRecordIndex\": 5",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose appended root indexes");
+        expect_contains(duplicate_process.stdout_text, "\"copiedCount\": 1",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose copied counts");
+        expect_contains(duplicate_process.stdout_text, "\"affectedObjectCount\": 1",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose affected object counts");
+        expect_contains(duplicate_process.stdout_text, "\"rootObjectName\": \"MiddleFieldCopy\"",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose copied root object names");
+        expect_contains(duplicate_process.stdout_text, "\"rootUniqueId\": \"middle-copy-guid\"",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose copied root unique ids");
+        expect_contains(duplicate_process.stdout_text, "\"rootParentName\": \"\"",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose copied root parent names");
+        expect_contains(duplicate_process.stdout_text, "\"dryRun\": false",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose committed state");
+        expect_contains(duplicate_process.stdout_text, "\"mutatesAsset\": true",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose mutation state");
+        expect_contains(duplicate_process.stdout_text, "\"undoAvailable\": false",
+                        "#1858: report/label stable visual-object duplicate-subtree JSON should expose undo availability");
+        expect(visual_object_count(asset_path) == before_count + 1U &&
+                   visual_object_exists(asset_path, "left-field-guid") &&
+                   visual_object_exists(asset_path, "middle-field-guid") &&
+                   visual_object_exists(asset_path, "right-field-guid") &&
+                   visual_object_exists(asset_path, "middle-copy-guid") &&
+                   visual_object_order(asset_path) ==
+                       "left-field-guid,middle-field-guid,right-field-guid,middle-copy-guid",
+               "#1858: report/label stable visual-object duplicate-subtree should append one copied flat layout row");
+
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "middle-copy-guid", "--json"},
+            temp_root);
+
+        if (reopen_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable report object subtree duplicate reopen stdout:\n"
+                      << reopen_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable report object subtree duplicate reopen stderr:\n"
+                      << reopen_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(reopen_process.exit_code == 0,
+               "#1858: report/label stable visual-object duplicate-subtree reopen should exit successfully");
+        expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1858: report/label stable visual-object duplicate-subtree should leave report-layout JSON readable");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                            "#1858: label stable visual-object duplicate-subtree should retain label identity");
+        }
+        expect_contains(reopen_process.stdout_text, "\"liveObjectCount\": 4",
+                        "#1858: report/label stable visual-object duplicate-subtree should refresh live object counts");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1858: report/label stable visual-object duplicate-subtree should expose copied-object section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1858: report/label stable visual-object duplicate-subtree should preserve report object selection kind");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 5",
+                "\"deleted\": false",
+                "\"containingSectionRecordIndex\": 1",
+                "\"sectionObjectIndex\": 3",
+                "\"sectionObjectCount\": 4",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"middle.value\"",
+                "\"uniqueId\": \"middle-copy-guid\""
+            },
+            "#1858: report/label stable visual-object duplicate-subtree should refresh selected copied-object metadata");
+    };
+
+    const auto run_subtree_duplicate_collision = [&](const fs::path& asset_path,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_layout_subtree_deleted_state_json(asset_path);
+        const std::size_t before_count = visual_object_count(asset_path);
+        const auto collision_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-duplicate-subtree",
+                "--path", asset_path.string(),
+                "--unique-id", "middle-field-guid",
+                "--replacement-source-unique-id", "middle-field-guid",
+                "--new-object-name", "RightField",
+                "--new-name", "MiddleFieldCopy",
+                "--new-unique-id", "middle-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        expect(collision_process.exit_code == 4,
+               "#1858: report/label stable visual-object duplicate-subtree should reject replacement collisions");
+        expect_contains(collision_process.stdout_text, "\"visualObjectDuplicateSubtree\": null",
+                        "#1858: failed report/label stable visual-object duplicate-subtree JSON should not expose stale result objects");
+        expect_contains(collision_process.stdout_text, "The requested replacement identity already exists in the asset.",
+                        "#1858: failed report/label stable visual-object duplicate-subtree JSON should report collision errors");
+        expect(visual_object_count(asset_path) == before_count &&
+                   visual_object_exists(asset_path, "left-field-guid") &&
+                   visual_object_exists(asset_path, "middle-field-guid") &&
+                   visual_object_exists(asset_path, "right-field-guid") &&
+                   !visual_object_exists(asset_path, "middle-copy-guid") &&
+                   visual_object_order(asset_path) == "left-field-guid,middle-field-guid,right-field-guid",
+               "#1858: failed report/label stable visual-object duplicate-subtree should not mutate layout rows");
+        (void)label;
+    };
+
+    const auto run_subtree_duplicate_missing_selector = [&](const fs::path& asset_path,
+                                                            const std::string& label) {
+        write_synthetic_report_table_for_layout_subtree_deleted_state_json(asset_path);
+        const auto missing_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-duplicate-subtree",
+                "--path", asset_path.string(),
+                "--unique-id", "missing-guid",
+                "--replacement-source-unique-id", "middle-field-guid",
+                "--new-object-name", "MiddleFieldCopy",
+                "--new-name", "MiddleFieldCopy",
+                "--new-unique-id", "middle-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        expect(missing_process.exit_code == 4,
+               "#1858: report/label stable visual-object duplicate-subtree should reject missing stable selectors");
+        expect_contains(missing_process.stdout_text, "\"visualObjectDuplicateSubtree\": null",
+                        "#1858: missing-selector report/label stable visual-object duplicate-subtree JSON should not expose stale result objects");
+        expect_contains(missing_process.stdout_text, "No visual object with the requested unique id was found.",
+                        "#1858: missing-selector report/label stable visual-object duplicate-subtree JSON should report selector errors");
+        expect(visual_object_order(asset_path) == "left-field-guid,middle-field-guid,right-field-guid" &&
+                   !visual_object_exists(asset_path, "middle-copy-guid"),
+               "#1858: missing-selector report/label stable visual-object duplicate-subtree should not mutate layout rows");
+        (void)label;
+    };
+
+    run_subtree_duplicate(temp_root / "object_subtree_duplicate.frx",
+                          "object_subtree_duplicate.frx",
+                          "report");
+    run_subtree_duplicate(temp_root / "object_subtree_duplicate.lbx",
+                          "object_subtree_duplicate.lbx",
+                          "label");
+    run_subtree_duplicate_collision(temp_root / "object_subtree_duplicate_collision.frx",
+                                    "report");
+    run_subtree_duplicate_collision(temp_root / "object_subtree_duplicate_collision.lbx",
+                                    "label");
+    run_subtree_duplicate_missing_selector(temp_root / "object_subtree_duplicate_missing.frx",
+                                           "report");
+    run_subtree_duplicate_missing_selector(temp_root / "object_subtree_duplicate_missing.lbx",
+                                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -96308,6 +96502,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_applies_report_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_object_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable_selection(argv[1]);
+    test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_selection(argv[1]);
     test_studio_host_json_applies_mixed_report_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_sections_by_stable_selection(argv[1]);
