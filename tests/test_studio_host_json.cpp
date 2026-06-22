@@ -34359,10 +34359,16 @@ void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unpla
                "#1614: edited deleted report/label layout object unplaced restore should clear deleted state");
         expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1614: edited deleted report/label layout object unplaced restore should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                            "#1892: label edited deleted layout object unplaced restore should retain label identity");
+        }
         expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
                         "#1614: edited deleted report/label layout object unplaced restore should keep preview bounds available");
         expect_contains(restore_process.stdout_text, "\"previewBoundsLeft\": -300",
                         "#1614: edited deleted report/label layout object unplaced restore should expand preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1892: edited deleted report/label layout object unplaced restore should preserve preview top bounds");
         expect_contains(restore_process.stdout_text, "\"previewBoundsRight\": 5200",
                         "#1614: edited deleted report/label layout object unplaced restore should preserve preview right bounds");
         expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 9700",
@@ -34371,6 +34377,8 @@ void test_studio_host_json_restores_edited_deleted_report_layout_object_as_unpla
                         "#1614: edited deleted report/label layout object unplaced restore should expand preview widths");
         expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 9700",
                         "#1614: edited deleted report/label layout object unplaced restore should expand preview heights");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1892: edited deleted report/label layout object unplaced restore should clear deleted preview availability");
         expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 0",
                         "#1614: edited deleted report/label layout object unplaced restore should remove restored objects from deleted-object counts");
         expect_contains(restore_process.stdout_text, "\"placedObjectCount\": 2",
