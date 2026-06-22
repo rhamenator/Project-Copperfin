@@ -8668,6 +8668,173 @@ void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selec
     }
 }
 
+void test_studio_host_json_reorders_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_reorder_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_section_reorder =
+        [&](const fs::path& header_asset_path,
+            const fs::path& footer_asset_path,
+            const std::string& label) {
+            const auto reorder_section = [&](const fs::path& asset_path,
+                                             const std::string& unique_id,
+                                             const std::string& target_unique_id,
+                                             const std::string& placement,
+                                             const std::string& section_title,
+                                             const std::string& band_kind,
+                                             const std::string& expression,
+                                             const std::string& record_index,
+                                             const std::string& section_index,
+                                             const std::string& object_code,
+                                             const std::string& top,
+                                             const std::string& height,
+                                             const std::string& bottom,
+                                             const std::string& operation_label) {
+                write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
+                const std::size_t before_count = visual_object_count(asset_path);
+
+                const auto reorder_process = run_process_capture(
+                    studio_host_path,
+                    {
+                        "--path", asset_path.string(),
+                        "--reorder-object",
+                        "--unique-id", unique_id,
+                        "--placement", placement,
+                        "--target-unique-id", target_unique_id,
+                        "--json"
+                    },
+                    temp_root);
+
+                if (reorder_process.exit_code != 0) {
+                    std::cerr << "studio host " << label << " " << operation_label << " stdout:\n"
+                              << reorder_process.stdout_text << "\n";
+                    std::cerr << "studio host " << label << " " << operation_label << " stderr:\n"
+                              << reorder_process.stderr_text << "\n";
+                    std::cerr << "fixture root: " << temp_root << "\n";
+                }
+
+                expect(reorder_process.exit_code == 0,
+                       "#1815: " + operation_label + " should exit successfully");
+                expect(visual_object_count(asset_path) == before_count,
+                       "#1815: " + operation_label + " should preserve section record count");
+                expect(visual_object_exists(asset_path, unique_id),
+                       "#1815: " + operation_label + " should preserve the moved section unique id");
+                expect(dbf_record_deleted(asset_path, 2U),
+                       "#1815: " + operation_label + " should preserve deleted-section state");
+                const auto moved_expression = copperfin::vfp::query_visual_object_property({
+                    .path = asset_path.string(),
+                    .record_index = static_cast<std::size_t>(std::stoul(record_index)),
+                    .object_name = {},
+                    .unique_id = unique_id,
+                    .property_name = "EXPR"
+                });
+                expect(moved_expression.ok && moved_expression.exists &&
+                           moved_expression.value == expression,
+                       "#1815: " + operation_label + " should preserve section expression data");
+
+                expect_contains(reorder_process.stdout_text,
+                                "\"documentTitle\": \"" + asset_path.filename().string() + "\"",
+                                "#1815: " + operation_label + " should return refreshed layout JSON");
+                if (asset_path.extension() == ".lbx") {
+                    expect_contains(reorder_process.stdout_text, "\"isLabel\": true",
+                                    "#1815: " + operation_label + " should retain label identity");
+                }
+                expect_contains(reorder_process.stdout_text, "\"sectionCount\": 2",
+                                "#1815: " + operation_label + " should preserve live section counts");
+                expect_contains(reorder_process.stdout_text, "\"deletedSectionCount\": 1",
+                                "#1815: " + operation_label + " should preserve deleted section counts");
+                expect_contains(reorder_process.stdout_text, "\"sectionHeightTotal\": 550",
+                                "#1815: " + operation_label + " should preserve live section height totals");
+                expect_contains(reorder_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                                "#1815: " + operation_label + " should advertise selected sections");
+                expect_contains(reorder_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                                "#1815: " + operation_label + " should expose section selection kind");
+                expect_contains(reorder_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                                "#1815: " + operation_label + " should not select report objects");
+                expect_contains(reorder_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                                "#1815: " + operation_label + " should not fabricate object sections");
+                expect_contains(reorder_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                "#1815: " + operation_label + " should not select settings");
+                expect_contains_in_order(
+                    reorder_process.stdout_text,
+                    {
+                        "\"selectedReportSection\": {",
+                        "\"title\": \"" + section_title + "\"",
+                        "\"bandKind\": \"" + band_kind + "\"",
+                        "\"expression\": \"" + expression + "\"",
+                        "\"expressionFieldIndex\": 2",
+                        "\"recordIndex\": " + record_index,
+                        "\"deleted\": false",
+                        "\"sectionIndex\": " + section_index,
+                        "\"sectionCount\": 2",
+                        "\"objectCode\": " + object_code,
+                        "\"top\": " + top,
+                        "\"height\": " + height,
+                        "\"bottom\": " + bottom
+                    },
+                    "#1815: " + operation_label + " should select the moved section metadata");
+                expect_contains_in_order(
+                    reorder_process.stdout_text,
+                    {
+                        "\"deletedSections\": [",
+                        "\"title\": \"Detail Footer\"",
+                        "\"bandKind\": \"detail_footer\"",
+                        "\"recordIndex\": 2",
+                        "\"deleted\": true"
+                    },
+                    "#1815: " + operation_label + " should preserve existing deleted-section metadata");
+            };
+
+            reorder_section(header_asset_path,
+                            "detail-header-guid",
+                            "detail-footer-guid",
+                            "after",
+                            "Detail Header",
+                            "detail_header",
+                            "detail header expression",
+                            "1",
+                            "0",
+                            "9",
+                            "0",
+                            "300",
+                            "300",
+                            "stable detail-header section reorder");
+            reorder_section(footer_asset_path,
+                            "detail-footer-guid",
+                            "detail-header-guid",
+                            "before",
+                            "Detail Footer",
+                            "detail_footer",
+                            "detail footer expression",
+                            "0",
+                            "1",
+                            "10",
+                            "300",
+                            "250",
+                            "550",
+                            "stable detail-footer section reorder");
+        };
+
+    run_detail_header_footer_section_reorder(
+        temp_root / "detail_header_section_reorder.frx",
+        temp_root / "detail_footer_section_reorder.frx",
+        "report");
+    run_detail_header_footer_section_reorder(
+        temp_root / "detail_header_section_reorder.lbx",
+        temp_root / "detail_footer_section_reorder.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -88131,6 +88298,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_renames_detail_header_footer_sections_by_stable_selection(argv[1]);
+    test_studio_host_json_reorders_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
