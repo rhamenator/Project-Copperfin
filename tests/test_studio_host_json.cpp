@@ -171,6 +171,36 @@ void write_synthetic_form_table_with_objects(const std::filesystem::path& form_p
     expect(create_result.ok, "#967: synthetic SCX table with selectable objects should be created");
 }
 
+void write_synthetic_form_table_with_invalid_raw_codes(const std::filesystem::path& form_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'C', .length = 48U},
+        {.name = "OBJCODE", .type = 'C', .length = 48U},
+        {.name = "PLATFORM", .type = 'C', .length = 12U},
+        {.name = "OBJNAME", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U},
+        {.name = "PARENT", .type = 'C', .length = 24U},
+        {.name = "CLASS", .type = 'C', .length = 24U},
+        {.name = "BASECLASS", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"type?", "code?", "WINDOWS", "cmdMalformed", "malformed-guid", "", "commandbutton", "commandbutton"},
+        {
+            "999999999999999999999999999999",
+            "-999999999999999999999999999999",
+            "WINDOWS",
+            "cmdOversized",
+            "oversized-guid",
+            "",
+            "commandbutton",
+            "commandbutton"
+        },
+        {".5", ".7", "WINDOWS", "cmdDotLeading", "dot-leading-guid", "", "commandbutton", "commandbutton"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(form_path.string(), fields, records);
+    expect(create_result.ok, "#1749: synthetic SCX table with invalid raw codes should be created");
+}
+
 void test_studio_host_usage_exposes_selected_execution_catalogs(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -33334,6 +33364,133 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                             "#984: second child object entries should expose sibling order");
             expect_contains(sibling_object_json, "\"siblingCount\": 2",
                             "#984: second child object entries should expose sibling count");
+        }
+    }
+
+    const fs::path invalid_codes_path = temp_root / "invalid_raw_codes.scx";
+    write_synthetic_form_table_with_invalid_raw_codes(invalid_codes_path);
+    const auto invalid_codes_process = run_process_capture(
+        studio_host_path,
+        {"--path", invalid_codes_path.string(), "--record", "0", "--json"},
+        temp_root);
+
+    if (invalid_codes_process.exit_code != 0) {
+        std::cerr << "studio host invalid selected object raw-code stdout:\n"
+                  << invalid_codes_process.stdout_text << "\n";
+        std::cerr << "studio host invalid selected object raw-code stderr:\n"
+                  << invalid_codes_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(invalid_codes_process.exit_code == 0,
+           "#1749: invalid selected-object raw codes should keep Studio host inspection non-failing");
+    expect_contains(invalid_codes_process.stdout_text, "\"selectedObjectAvailable\": true",
+                    "#1749: invalid raw-code selected records should still resolve selected objects");
+    expect_contains(invalid_codes_process.stdout_text, "\"objectCount\": 3",
+                    "#1749: invalid raw-code documents should still expose parsed object counts");
+
+    const auto invalid_selected_begin = invalid_codes_process.stdout_text.find("\"selectedObject\": {");
+    const auto invalid_selected_end =
+        invalid_selected_begin == std::string::npos
+            ? std::string::npos
+            : invalid_codes_process.stdout_text.find("\"hasSidecar\"", invalid_selected_begin);
+    expect(invalid_selected_begin != std::string::npos &&
+               invalid_selected_end != std::string::npos &&
+               invalid_selected_end > invalid_selected_begin,
+           "#1749: invalid raw-code JSON should delimit selected-object metadata");
+    if (invalid_selected_begin != std::string::npos &&
+        invalid_selected_end != std::string::npos &&
+        invalid_selected_end > invalid_selected_begin) {
+        const auto selected_json =
+            invalid_codes_process.stdout_text.substr(invalid_selected_begin, invalid_selected_end - invalid_selected_begin);
+        expect_contains(selected_json, "\"objectName\": \"cmdMalformed\"",
+                        "#1749: invalid raw-code selected-object JSON should preserve object identity");
+        expect_contains(selected_json, "\"objectTypeCode\": 0",
+                        "#1749: malformed selected OBJTYPE text should not fabricate parsed type codes");
+        expect_contains(selected_json, "\"objectCode\": 0",
+                        "#1749: malformed selected OBJCODE text should not fabricate parsed object codes");
+        expect_contains_in_order(
+            selected_json,
+            {
+                "\"name\": \"OBJTYPE\"",
+                "\"type\": \"C\"",
+                "\"value\": \"type?\"",
+                "\"fieldIndex\": 0",
+                "\"memoBlockNumber\": 0"
+            },
+            "#1749: malformed selected OBJTYPE source text should remain inspectable");
+        expect_contains_in_order(
+            selected_json,
+            {
+                "\"name\": \"OBJCODE\"",
+                "\"type\": \"C\"",
+                "\"value\": \"code?\"",
+                "\"fieldIndex\": 1",
+                "\"memoBlockNumber\": 0"
+            },
+            "#1749: malformed selected OBJCODE source text should remain inspectable");
+    }
+
+    const auto invalid_objects_begin = invalid_codes_process.stdout_text.find("\"objects\": [");
+    expect(invalid_objects_begin != std::string::npos,
+           "#1749: invalid raw-code JSON should expose the full object array");
+    if (invalid_objects_begin != std::string::npos) {
+        const auto invalid_objects_json = invalid_codes_process.stdout_text.substr(invalid_objects_begin);
+        const auto malformed_begin = invalid_objects_json.find("\"objectName\": \"cmdMalformed\"");
+        const auto oversized_begin = invalid_objects_json.find("\"objectName\": \"cmdOversized\"");
+        const auto dot_leading_begin = invalid_objects_json.find("\"objectName\": \"cmdDotLeading\"");
+        expect(malformed_begin != std::string::npos &&
+                   oversized_begin != std::string::npos &&
+                   dot_leading_begin != std::string::npos,
+               "#1749: invalid raw-code object array should include malformed, oversized, and dot-leading rows");
+        if (malformed_begin != std::string::npos) {
+            const auto malformed_entry_begin = invalid_objects_json.rfind("{", malformed_begin);
+            const auto malformed_json_begin = malformed_entry_begin == std::string::npos
+                ? malformed_begin
+                : malformed_entry_begin;
+            const auto malformed_json = oversized_begin == std::string::npos
+                ? invalid_objects_json.substr(malformed_json_begin)
+                : invalid_objects_json.substr(malformed_json_begin, oversized_begin - malformed_json_begin);
+            expect_contains(malformed_json, "\"objectTypeCode\": 0",
+                            "#1749: malformed object-array OBJTYPE text should default parsed codes to zero");
+            expect_contains(malformed_json, "\"objectCode\": 0",
+                            "#1749: malformed object-array OBJCODE text should default parsed codes to zero");
+            expect_contains(malformed_json, "\"value\": \"type?\"",
+                            "#1749: malformed object-array OBJTYPE source text should remain inspectable");
+            expect_contains(malformed_json, "\"value\": \"code?\"",
+                            "#1749: malformed object-array OBJCODE source text should remain inspectable");
+        }
+        if (oversized_begin != std::string::npos) {
+            const auto oversized_entry_begin = invalid_objects_json.rfind("{", oversized_begin);
+            const auto oversized_json_begin = oversized_entry_begin == std::string::npos
+                ? oversized_begin
+                : oversized_entry_begin;
+            const auto oversized_json = dot_leading_begin == std::string::npos
+                ? invalid_objects_json.substr(oversized_json_begin)
+                : invalid_objects_json.substr(oversized_json_begin, dot_leading_begin - oversized_json_begin);
+            expect_contains(oversized_json, "\"objectTypeCode\": 0",
+                            "#1749: oversized object-array OBJTYPE text should default parsed codes to zero");
+            expect_contains(oversized_json, "\"objectCode\": 0",
+                            "#1749: oversized object-array OBJCODE text should default parsed codes to zero");
+            expect_contains(oversized_json, "\"value\": \"999999999999999999999999999999\"",
+                            "#1749: oversized object-array OBJTYPE source text should remain inspectable");
+            expect_contains(oversized_json, "\"value\": \"-999999999999999999999999999999\"",
+                            "#1749: oversized object-array OBJCODE source text should remain inspectable");
+        }
+        if (dot_leading_begin != std::string::npos) {
+            const auto dot_leading_entry_begin = invalid_objects_json.rfind("{", dot_leading_begin);
+            const auto dot_leading_json_begin = dot_leading_entry_begin == std::string::npos
+                ? dot_leading_begin
+                : dot_leading_entry_begin;
+            const auto dot_leading_json = invalid_objects_json.substr(dot_leading_json_begin);
+            expect_contains(dot_leading_json, "\"objectTypeCode\": 0",
+                            "#1749: dot-leading object-array OBJTYPE text should default parsed codes to zero");
+            expect_contains(dot_leading_json, "\"objectCode\": 0",
+                            "#1749: dot-leading object-array OBJCODE text should default parsed codes to zero");
+            expect_contains(dot_leading_json, "\"value\": \".5\"",
+                            "#1749: dot-leading object-array OBJTYPE source text should remain inspectable");
+            expect_contains(dot_leading_json, "\"value\": \".7\"",
+                            "#1749: dot-leading object-array OBJCODE source text should remain inspectable");
         }
     }
 
