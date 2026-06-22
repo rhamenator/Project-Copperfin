@@ -20,6 +20,7 @@ internal static class Program
 
         SmokeDesignSurfaceWithSyntheticReportLayout();
         SmokeLocalizedAssetEditorChrome();
+        SmokeLocalizedProjectWorkspaceChrome();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -130,6 +131,39 @@ internal static class Program
                HasButtonText(portugueseControl, "Revelar no Explorer") &&
                HasButtonText(portugueseControl, "Atualizar"),
             "Portuguese editor chrome should localize shell command buttons");
+    }
+
+    private static void SmokeLocalizedProjectWorkspaceChrome()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(HasTabPageText(spanishControl, "Resumen") &&
+               HasTabPageText(spanishControl, "Depurador") &&
+               HasTabPageText(spanishControl, "Lista de tareas") &&
+               HasTabPageText(spanishControl, "Referencias de código") &&
+               HasTabPageText(spanishControl, "Explorador de datos") &&
+               HasTabPageText(spanishControl, "Explorador de objetos") &&
+               HasTabPageText(spanishControl, "Herramientas") &&
+               HasTabPageText(spanishControl, "Constructores") &&
+               HasTabPageText(spanishControl, "Cobertura") &&
+               HasTabPageText(spanishControl, "Base de datos"),
+            "Spanish project workspace chrome should localize tab labels");
+        Expect(HasCheckBoxText(spanishControl, "Ocultar registros del proyecto"),
+            "Spanish object-browser chrome should localize the hide-project option");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(HasTabPageText(portugueseControl, "Resumo") &&
+               HasTabPageText(portugueseControl, "Depurador") &&
+               HasTabPageText(portugueseControl, "Lista de tarefas") &&
+               HasTabPageText(portugueseControl, "Referências de código") &&
+               HasTabPageText(portugueseControl, "Explorador de dados") &&
+               HasTabPageText(portugueseControl, "Navegador de objetos") &&
+               HasTabPageText(portugueseControl, "Ferramentas") &&
+               HasTabPageText(portugueseControl, "Construtores") &&
+               HasTabPageText(portugueseControl, "Cobertura") &&
+               HasTabPageText(portugueseControl, "Banco de dados"),
+            "Portuguese project workspace chrome should localize tab labels");
+        Expect(HasCheckBoxText(portugueseControl, "Ocultar registros do projeto"),
+            "Portuguese object-browser chrome should localize the hide-project option");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
@@ -526,6 +560,22 @@ internal static class Program
         }
     }
 
+    private static bool HasTabPageText(Control root, string text)
+    {
+        foreach (var tabControl in FindTabControls(root))
+        {
+            foreach (TabPage tabPage in tabControl.TabPages)
+            {
+                if (string.Equals(tabPage.Text, text, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static int CountNonWhitePixels(Bitmap bitmap)
     {
         var count = 0;
@@ -541,6 +591,35 @@ internal static class Program
         }
 
         return count;
+    }
+
+    private static IEnumerable<CheckBox> FindCheckBoxes(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is CheckBox checkBox)
+            {
+                yield return checkBox;
+            }
+
+            foreach (var nested in FindCheckBoxes(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
+    private static bool HasCheckBoxText(Control root, string text)
+    {
+        foreach (var checkBox in FindCheckBoxes(root))
+        {
+            if (string.Equals(checkBox.Text, text, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static IEnumerable<Button> FindButtons(Control root)

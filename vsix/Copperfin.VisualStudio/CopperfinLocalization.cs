@@ -45,7 +45,18 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Guidance"] = "This shell now pulls a structured snapshot from the native Copperfin Studio host. For VFP visual assets, that gives us a real object/property view while we work toward high-fidelity inline designers.",
                 ["AssetEditor.OpenNativeStudioButton"] = "Open In Native Studio",
                 ["AssetEditor.RevealInExplorerButton"] = "Reveal In Explorer",
-                ["AssetEditor.RefreshButton"] = "Refresh"
+                ["AssetEditor.RefreshButton"] = "Refresh",
+                ["AssetEditor.Tab.Summary"] = "Summary",
+                ["AssetEditor.Tab.Debugger"] = "Debugger",
+                ["AssetEditor.Tab.TaskList"] = "Task List",
+                ["AssetEditor.Tab.CodeReferences"] = "Code References",
+                ["AssetEditor.Tab.DataExplorer"] = "Data Explorer",
+                ["AssetEditor.Tab.ObjectBrowser"] = "Object Browser",
+                ["AssetEditor.Tab.Toolbox"] = "Toolbox",
+                ["AssetEditor.Tab.Builders"] = "Builders",
+                ["AssetEditor.Tab.Coverage"] = "Coverage",
+                ["AssetEditor.Tab.Database"] = "Database",
+                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Hide project records"
             },
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -72,7 +83,18 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Guidance"] = "Este shell ahora obtiene una instantánea estructurada desde el host nativo de Copperfin Studio. Para activos visuales VFP, eso nos da una vista real de objetos y propiedades mientras avanzamos hacia diseñadores integrados de alta fidelidad.",
                 ["AssetEditor.OpenNativeStudioButton"] = "Abrir en Studio nativo",
                 ["AssetEditor.RevealInExplorerButton"] = "Mostrar en Explorer",
-                ["AssetEditor.RefreshButton"] = "Actualizar"
+                ["AssetEditor.RefreshButton"] = "Actualizar",
+                ["AssetEditor.Tab.Summary"] = "Resumen",
+                ["AssetEditor.Tab.Debugger"] = "Depurador",
+                ["AssetEditor.Tab.TaskList"] = "Lista de tareas",
+                ["AssetEditor.Tab.CodeReferences"] = "Referencias de código",
+                ["AssetEditor.Tab.DataExplorer"] = "Explorador de datos",
+                ["AssetEditor.Tab.ObjectBrowser"] = "Explorador de objetos",
+                ["AssetEditor.Tab.Toolbox"] = "Herramientas",
+                ["AssetEditor.Tab.Builders"] = "Constructores",
+                ["AssetEditor.Tab.Coverage"] = "Cobertura",
+                ["AssetEditor.Tab.Database"] = "Base de datos",
+                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Ocultar registros del proyecto"
             },
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -99,7 +121,18 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Guidance"] = "Este shell agora obtém um instantâneo estruturado do host nativo do Copperfin Studio. Para ativos visuais VFP, isso oferece uma visão real de objetos e propriedades enquanto avançamos para designers integrados de alta fidelidade.",
                 ["AssetEditor.OpenNativeStudioButton"] = "Abrir no Studio nativo",
                 ["AssetEditor.RevealInExplorerButton"] = "Revelar no Explorer",
-                ["AssetEditor.RefreshButton"] = "Atualizar"
+                ["AssetEditor.RefreshButton"] = "Atualizar",
+                ["AssetEditor.Tab.Summary"] = "Resumo",
+                ["AssetEditor.Tab.Debugger"] = "Depurador",
+                ["AssetEditor.Tab.TaskList"] = "Lista de tarefas",
+                ["AssetEditor.Tab.CodeReferences"] = "Referências de código",
+                ["AssetEditor.Tab.DataExplorer"] = "Explorador de dados",
+                ["AssetEditor.Tab.ObjectBrowser"] = "Navegador de objetos",
+                ["AssetEditor.Tab.Toolbox"] = "Ferramentas",
+                ["AssetEditor.Tab.Builders"] = "Construtores",
+                ["AssetEditor.Tab.Coverage"] = "Cobertura",
+                ["AssetEditor.Tab.Database"] = "Banco de dados",
+                ["AssetEditor.ObjectBrowser.HideProjectRecords"] = "Ocultar registros do projeto"
             }
         };
 

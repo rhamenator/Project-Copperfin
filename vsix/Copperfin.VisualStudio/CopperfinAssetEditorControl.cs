@@ -370,7 +370,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectBrowserHideProjectCheckBox = new CheckBox
         {
             AutoSize = true,
-            Text = "Hide project records",
+            Text = this.localization.Text("AssetEditor.ObjectBrowser.HideProjectRecords"),
             Padding = new Padding(8, 6, 8, 6)
         };
         objectBrowserHideProjectCheckBox.CheckedChanged += (_, _) => RefreshProjectWorkspaceInsightViews();
@@ -418,13 +418,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             Dock = DockStyle.Fill,
             Visible = false
         };
-        var summaryPage = new TabPage("Summary");
+        var summaryPage = new TabPage(this.localization.Text("AssetEditor.Tab.Summary"));
         summaryPage.Controls.Add(workspaceSummaryBox);
-        var debuggerPage = new TabPage("Debugger");
+        var debuggerPage = new TabPage(this.localization.Text("AssetEditor.Tab.Debugger"));
         debuggerPage.Controls.Add(debuggerPageHost);
-        var taskListPage = new TabPage("Task List");
+        var taskListPage = new TabPage(this.localization.Text("AssetEditor.Tab.TaskList"));
         taskListPage.Controls.Add(taskListSummaryBox);
-        var codeReferencesPage = new TabPage("Code References");
+        var codeReferencesPage = new TabPage(this.localization.Text("AssetEditor.Tab.CodeReferences"));
         codeReferencesPage.Controls.Add(codeReferencesSummaryBox);
         var dataExplorerPageHost = new Panel
         {
@@ -432,7 +432,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         };
         dataExplorerPageHost.Controls.Add(dataExplorerSummaryBox);
         dataExplorerPageHost.Controls.Add(dataExplorerFilterBox);
-        var dataExplorerPage = new TabPage("Data Explorer");
+        var dataExplorerPage = new TabPage(this.localization.Text("AssetEditor.Tab.DataExplorer"));
         dataExplorerPage.Controls.Add(dataExplorerPageHost);
         var objectBrowserOptionsPanel = new FlowLayoutPanel
         {
@@ -449,15 +449,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         objectBrowserPageHost.Controls.Add(objectBrowserSummaryBox);
         objectBrowserPageHost.Controls.Add(objectBrowserOptionsPanel);
         objectBrowserPageHost.Controls.Add(objectBrowserFilterBox);
-        var objectBrowserPage = new TabPage("Object Browser");
+        var objectBrowserPage = new TabPage(this.localization.Text("AssetEditor.Tab.ObjectBrowser"));
         objectBrowserPage.Controls.Add(objectBrowserPageHost);
-        var toolboxPage = new TabPage("Toolbox");
+        var toolboxPage = new TabPage(this.localization.Text("AssetEditor.Tab.Toolbox"));
         toolboxPage.Controls.Add(toolboxSummaryBox);
-        var buildersPage = new TabPage("Builders");
+        var buildersPage = new TabPage(this.localization.Text("AssetEditor.Tab.Builders"));
         buildersPage.Controls.Add(buildersSummaryBox);
-        var coveragePage = new TabPage("Coverage");
+        var coveragePage = new TabPage(this.localization.Text("AssetEditor.Tab.Coverage"));
         coveragePage.Controls.Add(coverageSummaryBox);
-        var databasePage = new TabPage("Database");
+        var databasePage = new TabPage(this.localization.Text("AssetEditor.Tab.Database"));
         databasePage.Controls.Add(databaseSummaryBox);
         projectWorkspaceTabs.TabPages.Add(summaryPage);
         projectWorkspaceTabs.TabPages.Add(debuggerPage);
