@@ -3,5 +3,8 @@
     "*.inl": "cpp",
     "prg_engine_index_seek.inl": "plaintext",
     "prg_engine_flow.inl": "plaintext"
+  },
+  "terminal.integrated.env.linux": {
+    "TMPDIR": "/home/rich/dev/Project-Copperfin/.tmp"
   }
 }
