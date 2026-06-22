@@ -4033,6 +4033,28 @@ void write_synthetic_report_table_for_invalid_direct_column_setup_layout_json(
     expect(delete_result.ok, "#1734: synthetic report table should mark invalid direct column settings deleted");
 }
 
+void write_synthetic_report_table_for_invalid_direct_margin_grid_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "BOTMARGIN", .type = 'C', .length = 24U},
+        {.name = "GRIDV", .type = 'C', .length = 24U},
+        {.name = "GRIDH", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "bottom?", "vertical?", "horizontal?", "invalid-direct-live-grid-settings-guid"},
+        {"1", "53", "deleted-bottom?", "deleted-vertical?", "deleted-horizontal?",
+         "invalid-direct-deleted-grid-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1735: synthetic report table with invalid direct margin/grid fields should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1735: synthetic report table should mark invalid direct margin/grid settings deleted");
+}
+
 void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -7445,6 +7467,143 @@ void test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(
     run_invalid_direct_column_setup_layout(temp_root / "invalid_direct_column_setup.lbx",
                                            "invalid_direct_column_setup.lbx",
                                            "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_invalid_direct_report_margin_grid_fields(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_invalid_direct_margin_grid_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_invalid_direct_margin_grid_layout = [&](const fs::path& asset_path,
+                                                           const std::string& title,
+                                                           const std::string& label) {
+        write_synthetic_report_table_for_invalid_direct_margin_grid_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " invalid direct margin/grid summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " invalid direct margin/grid summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1735: invalid direct margin/grid fields should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1735: invalid direct margin/grid layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1735: invalid direct margin/grid label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1735: invalid direct margin/grid fields should not fabricate page setup availability");
+        expect_contains(summary_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1735: invalid direct bottom margin should not advertise bottom-margin availability");
+        expect_contains(summary_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        "#1735: invalid direct vertical grid should not advertise vertical-grid availability");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#1735: invalid direct horizontal grid should not advertise horizontal-grid availability");
+        expect_contains(summary_process.stdout_text, "\"bottomMargin\": 0",
+                        "#1735: invalid direct bottom margin should keep the default bottom-margin value inert");
+        expect_contains(summary_process.stdout_text, "\"gridVertical\": 0",
+                        "#1735: invalid direct vertical grid should keep the default vertical-grid value inert");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontal\": 0",
+                        "#1735: invalid direct horizontal grid should keep the default horizontal-grid value inert");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
+                        "#1735: invalid direct margin/grid settings should still be counted as live raw settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1735: invalid direct margin/grid settings should still be counted as deleted raw settings");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"BOTMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"bottom?\"",
+                        "#1735: invalid direct bottom-margin provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"vertical?\"",
+                        "#1735: invalid direct vertical-grid provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"horizontal?\"",
+                        "#1735: invalid direct horizontal-grid provenance should remain inspectable");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1735: invalid direct live margin/grid settings selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1735: invalid direct live margin/grid settings should advertise selected-settings availability");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1735: invalid direct live margin/grid settings should expose settings selection kind");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"BOTMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"value\": \"bottom?\"",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 3",
+                "\"value\": \"vertical?\"",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 4",
+                "\"value\": \"horizontal?\""
+            },
+            "#1735: invalid direct live margin/grid selection should expose raw selected-settings metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1735: invalid direct deleted margin/grid settings selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1735: invalid direct deleted margin/grid settings should advertise selected-settings availability");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1735: invalid direct deleted margin/grid settings should expose settings selection kind");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"BOTMARGIN\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"value\": \"deleted-bottom?\"",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 3",
+                "\"value\": \"deleted-vertical?\"",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 4",
+                "\"value\": \"deleted-horizontal?\""
+            },
+            "#1735: invalid direct deleted margin/grid selection should expose raw selected-settings metadata");
+    };
+
+    run_invalid_direct_margin_grid_layout(temp_root / "invalid_direct_margin_grid.frx",
+                                          "invalid_direct_margin_grid.frx",
+                                          "report");
+    run_invalid_direct_margin_grid_layout(temp_root / "invalid_direct_margin_grid.lbx",
+                                          "invalid_direct_margin_grid.lbx",
+                                          "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -74096,6 +74255,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_preserves_report_settings_without_root_objcode_schema(argv[1]);
     test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(argv[1]);
     test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(argv[1]);
+    test_studio_host_json_ignores_invalid_direct_report_margin_grid_fields(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
