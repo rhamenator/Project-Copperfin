@@ -3790,6 +3790,35 @@ void write_synthetic_report_table_for_detail_header_footer_object_json(
     expect(create_result.ok, "#1764: synthetic report table for detail header/footer object JSON should be created");
 }
 
+void write_synthetic_report_table_for_detail_header_footer_object_font_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "FONTSIZE", .type = 'C', .length = 16U},
+        {.name = "MODE", .type = 'C', .length = 16U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "9", "detail header expression", "", "0", "", "300", "", "", "", "detail-header-guid"},
+        {"5", "", "\"Header label\"", "100", "50", "700", "120", "Courier New", "12", "1",
+         "detail-header-label-guid"},
+        {"9", "10", "detail footer expression", "", "300", "", "250", "", "", "", "detail-footer-guid"},
+        {"8", "", "footer.total", "140", "360", "900", "100", "Segoe UI", "10", "2",
+         "detail-footer-field-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1773: synthetic report table for detail header/footer object font JSON should be created");
+}
+
 void write_synthetic_report_table_for_stable_deleted_layout_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_json(report_path);
     const auto unique_id_result = copperfin::vfp::update_visual_object_property({
@@ -6823,6 +6852,157 @@ void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_st
     run_detail_header_footer_object_expressions(temp_root / "detail_header_footer_object_expressions.lbx",
                                                 "detail_header_footer_object_expressions.lbx",
                                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_font_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_fonts =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_font_json(asset_path);
+
+            const auto expect_selected_object_font =
+                [&](const std::string& unique_id,
+                    const std::string& record_index,
+                    const std::string& object_kind,
+                    const std::string& containing_section_id,
+                    const std::string& containing_section_record_index,
+                    const std::string& relative_top,
+                    const std::string& relative_bottom,
+                    const std::string& expression,
+                    const std::string& expression_memo_block,
+                    const std::string& fontface,
+                    const std::string& fontface_memo_block,
+                    const std::string& fontsize,
+                    const std::string& mode,
+                    const std::string& selection_label) {
+                    const auto object_process = run_process_capture(
+                        studio_host_path,
+                        {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
+                        temp_root);
+
+                    if (object_process.exit_code != 0) {
+                        std::cerr << "studio host " << label << " stable selected " << selection_label
+                                  << " font metadata stdout:\n" << object_process.stdout_text << "\n";
+                        std::cerr << "studio host " << label << " stable selected " << selection_label
+                                  << " font metadata stderr:\n" << object_process.stderr_text << "\n";
+                        std::cerr << "fixture root: " << temp_root << "\n";
+                    }
+
+                    expect(object_process.exit_code == 0,
+                           "#1773: selected detail header/footer object font JSON should exit successfully");
+                    expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                                    "#1773: selected detail header/footer object font JSON should preserve titles");
+                    if (asset_path.extension() == ".lbx") {
+                        expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                                        "#1773: selected detail header/footer label object font JSON should retain identity");
+                    }
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                                    "#1773: selected detail header/footer object fonts should select report objects");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                                    "#1773: selected detail header/footer object fonts should expose object selection kind");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                                    "#1773: selected detail header/footer object fonts should expose containing sections");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                                    "#1773: selected detail header/footer object fonts should not select sections");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                    "#1773: selected detail header/footer object fonts should not select settings");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObject\": {",
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": false",
+                            "\"containingSectionId\": \"" + containing_section_id + "\"",
+                            "\"containingSectionRecordIndex\": " + containing_section_record_index,
+                            "\"sectionRelativeTop\": " + relative_top,
+                            "\"sectionRelativeBottom\": " + relative_bottom,
+                            "\"sectionObjectIndex\": 0",
+                            "\"sectionObjectCount\": 1",
+                            "\"objectKind\": \"" + object_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": 2",
+                            "\"expressionMemoBlockNumber\": " + expression_memo_block,
+                            "\"highlightCount\": 4"
+                        },
+                        "#1773: stable selected " + selection_label + " should expose selected-object font metadata");
+                    expect_contains(object_process.stdout_text,
+                                    "\"name\": \"FONTFACE\", \"recordIndex\": " + record_index +
+                                        ", \"fieldIndex\": 7, \"sourceLineIndex\": null, \"memoBlockNumber\": " +
+                                        fontface_memo_block + ", \"value\": \"" + fontface + "\"",
+                                    "#1773: stable selected " + selection_label +
+                                        " should expose selected-object FONTFACE provenance");
+                    expect_contains(object_process.stdout_text,
+                                    "\"name\": \"FONTSIZE\", \"recordIndex\": " + record_index +
+                                        ", \"fieldIndex\": 8, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"" +
+                                        fontsize + "\"",
+                                    "#1773: stable selected " + selection_label +
+                                        " should expose selected-object FONTSIZE provenance");
+                    expect_contains(object_process.stdout_text,
+                                    "\"name\": \"MODE\", \"recordIndex\": " + record_index +
+                                        ", \"fieldIndex\": 9, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"" +
+                                        mode + "\"",
+                                    "#1773: stable selected " + selection_label +
+                                        " should expose selected-object MODE provenance");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObjectSection\": {",
+                            "\"id\": \"" + containing_section_id + "\"",
+                            "\"recordIndex\": " + containing_section_record_index,
+                            "\"sectionCount\": 2",
+                            "\"objectCount\": 1"
+                        },
+                        "#1773: stable selected " + selection_label + " should expose containing-section metadata");
+                };
+
+            expect_selected_object_font("detail-header-label-guid",
+                                        "1",
+                                        "label",
+                                        "detail_header_0",
+                                        "0",
+                                        "50",
+                                        "170",
+                                        "\\\"Header label\\\"",
+                                        "2",
+                                        "Courier New",
+                                        "3",
+                                        "12",
+                                        "1",
+                                        "detail-header label");
+            expect_selected_object_font("detail-footer-field-guid",
+                                        "3",
+                                        "field",
+                                        "detail_footer_2",
+                                        "2",
+                                        "60",
+                                        "160",
+                                        "footer.total",
+                                        "5",
+                                        "Segoe UI",
+                                        "6",
+                                        "10",
+                                        "2",
+                                        "detail-footer field");
+        };
+
+    run_detail_header_footer_object_fonts(temp_root / "detail_header_footer_object_fonts.frx",
+                                          "detail_header_footer_object_fonts.frx",
+                                          "report");
+    run_detail_header_footer_object_fonts(temp_root / "detail_header_footer_object_fonts.lbx",
+                                          "detail_header_footer_object_fonts.lbx",
+                                          "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -80587,6 +80767,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
