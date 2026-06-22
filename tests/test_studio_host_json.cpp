@@ -7032,6 +7032,20 @@ void test_studio_host_json_clears_detail_header_footer_section_heights_by_stable
                             "#1803: detail-header section height clear should refresh live section height totals");
             expect_contains(clear_header_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
                             "#1803: detail-header section height clear should preserve deleted section height totals");
+            expect_contains(clear_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#1822: detail-header section height clear should preserve live preview availability");
+            expect_contains(clear_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#1822: detail-header section height clear should preserve live preview top bounds");
+            expect_contains(clear_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#1822: detail-header section height clear should preserve live preview bottom bounds");
+            expect_contains(clear_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#1822: detail-header section height clear should preserve live preview heights");
+            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#1822: detail-header section height clear should preserve deleted preview availability");
+            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                            "#1822: detail-header section height clear should preserve deleted preview top bounds");
+            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                            "#1822: detail-header section height clear should preserve deleted preview bottom bounds");
             expect_contains(clear_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1803: detail-header section height clear should preserve selected section availability");
             expect_contains(clear_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
@@ -7091,6 +7105,20 @@ void test_studio_host_json_clears_detail_header_footer_section_heights_by_stable
                             "#1803: detail-footer section height clear should refresh live section height totals");
             expect_contains(clear_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
                             "#1803: detail-footer section height clear should preserve deleted section height totals");
+            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#1822: detail-footer section height clear should preserve live preview availability");
+            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#1822: detail-footer section height clear should preserve live preview top bounds");
+            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsBottom\": 300",
+                            "#1822: detail-footer section height clear should shrink live preview bottom bounds");
+            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsHeight\": 300",
+                            "#1822: detail-footer section height clear should shrink live preview heights");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#1822: detail-footer section height clear should preserve deleted preview availability");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                            "#1822: detail-footer section height clear should preserve deleted preview top bounds");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                            "#1822: detail-footer section height clear should preserve deleted preview bottom bounds");
             expect_contains(clear_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1803: detail-footer section height clear should preserve selected section availability");
             expect_contains(clear_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
@@ -7534,6 +7562,20 @@ void test_studio_host_json_clears_deleted_detail_header_footer_section_heights_b
                             "#1805: deleted detail-header section height clear should preserve live section heights");
             expect_contains(clear_header_process.stdout_text, "\"deletedSectionHeightTotal\": 250",
                             "#1805: deleted detail-header section height clear should refresh deleted section heights");
+            expect_contains(clear_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#1822: deleted detail-header section height clear should preserve live preview availability");
+            expect_contains(clear_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#1822: deleted detail-header section height clear should preserve live preview top bounds");
+            expect_contains(clear_header_process.stdout_text, "\"previewBoundsBottom\": 500",
+                            "#1822: deleted detail-header section height clear should preserve live preview bottom bounds");
+            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#1822: deleted detail-header section height clear should preserve deleted preview availability");
+            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
+                            "#1822: deleted detail-header section height clear should preserve deleted preview top bounds");
+            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1050",
+                            "#1822: deleted detail-header section height clear should preserve deleted preview bottom bounds");
+            expect_contains(clear_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 550",
+                            "#1822: deleted detail-header section height clear should refresh deleted preview heights");
             expect_contains(clear_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1805: deleted detail-header section height clear should preserve selected section availability");
             expect_contains(clear_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
@@ -7600,6 +7642,20 @@ void test_studio_host_json_clears_deleted_detail_header_footer_section_heights_b
                             "#1805: deleted detail-footer section height clear should preserve live section heights");
             expect_contains(clear_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 0",
                             "#1805: deleted detail-footer section height clear should refresh deleted section heights");
+            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#1822: deleted detail-footer section height clear should preserve live preview availability");
+            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#1822: deleted detail-footer section height clear should preserve live preview top bounds");
+            expect_contains(clear_footer_process.stdout_text, "\"previewBoundsBottom\": 500",
+                            "#1822: deleted detail-footer section height clear should preserve live preview bottom bounds");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#1822: deleted detail-footer section height clear should preserve deleted preview availability");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
+                            "#1822: deleted detail-footer section height clear should preserve deleted preview top bounds");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 800",
+                            "#1822: deleted detail-footer section height clear should shrink deleted preview bottom bounds");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                            "#1822: deleted detail-footer section height clear should shrink deleted preview heights");
             expect_contains(clear_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1805: deleted detail-footer section height clear should preserve selected section availability");
             expect_contains(clear_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
