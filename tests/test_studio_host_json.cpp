@@ -4055,6 +4055,39 @@ void write_synthetic_report_table_for_invalid_direct_margin_grid_layout_json(
     expect(delete_result.ok, "#1735: synthetic report table should mark invalid direct margin/grid settings deleted");
 }
 
+void write_synthetic_report_table_for_unresolved_direct_setting_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "PAPERSIZE", .type = 'C', .length = 24U},
+        {.name = "TOPMARGIN", .type = 'C', .length = 24U},
+        {.name = "BOTMARGIN", .type = 'C', .length = 24U},
+        {.name = "GRIDV", .type = 'C', .length = 24U},
+        {.name = "GRIDH", .type = 'C', .length = 24U},
+        {.name = "COLS", .type = 'C', .length = 24U},
+        {.name = "COLWIDTH", .type = 'C', .length = 24U},
+        {.name = "COLSPACING", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "<memo block 80>", "<memo block 81>", "<memo block 82>", "<memo block 83>",
+         "<memo block 84>", "<memo block 85>", "<memo block 86>", "<memo block 87>",
+         "<memo block 88>", "unresolved-direct-live-settings-guid"},
+        {"1", "53", "<memo block 89>", "<memo block 90>", "<memo block 91>", "<memo block 92>",
+         "<memo block 93>", "<memo block 94>", "<memo block 95>", "<memo block 96>",
+         "<memo block 97>", "unresolved-direct-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1741: synthetic report table with unresolved direct-setting memo placeholders should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok,
+           "#1741: synthetic report table should mark unresolved direct-setting memo settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -7727,6 +7760,112 @@ void test_studio_host_json_ignores_invalid_direct_report_margin_grid_fields(
     run_invalid_direct_margin_grid_layout(temp_root / "invalid_direct_margin_grid.lbx",
                                           "invalid_direct_margin_grid.lbx",
                                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_suppresses_unresolved_report_direct_setting_memo_placeholders(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_unresolved_direct_setting_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_unresolved_direct_setting_memo_layout = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_unresolved_direct_setting_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " unresolved direct setting memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " unresolved direct setting memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1741: unresolved direct-setting memo placeholders should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1741: unresolved direct-setting memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1741: unresolved direct-setting memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 0",
+                        "#1741: unresolved direct-setting memo placeholders should not become live settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#1741: unresolved direct-setting memo placeholders should not become deleted settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1741: unresolved direct-setting memo placeholders should not fabricate page setup");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1741: unresolved direct-setting memo placeholders should not fabricate column setup");
+        expect_contains(summary_process.stdout_text, "\"orientationAvailable\": false",
+                        "#1741: unresolved orientation placeholders should not advertise orientation availability");
+        expect_contains(summary_process.stdout_text, "\"paperSizeAvailable\": false",
+                        "#1741: unresolved paper-size placeholders should not advertise paper-size availability");
+        expect_contains(summary_process.stdout_text, "\"topMarginAvailable\": false",
+                        "#1741: unresolved top-margin placeholders should not advertise top-margin availability");
+        expect_contains(summary_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1741: unresolved bottom-margin placeholders should not advertise bottom-margin availability");
+        expect_contains(summary_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        "#1741: unresolved vertical-grid placeholders should not advertise vertical-grid availability");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#1741: unresolved horizontal-grid placeholders should not advertise horizontal-grid availability");
+        expect_contains(summary_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1741: unresolved column-count placeholders should not advertise column-count availability");
+        expect_contains(summary_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1741: unresolved column-width placeholders should not advertise column-width availability");
+        expect_contains(summary_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        "#1741: unresolved column-spacing placeholders should not advertise column-spacing availability");
+        expect_not_contains(summary_process.stdout_text, "<memo block",
+                            "#1741: unresolved direct-setting memo placeholders should not leak into summary JSON");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1741: unresolved live direct-setting memo selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1741: unresolved live direct-setting memo placeholders should not expose selected settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1741: unresolved live direct-setting memo selected settings should be null");
+        expect_not_contains(live_settings_process.stdout_text, "<memo block",
+                            "#1741: unresolved live direct-setting memo placeholders should not leak into selection JSON");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1741: unresolved deleted direct-setting memo selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1741: unresolved deleted direct-setting memo placeholders should not expose selected settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1741: unresolved deleted direct-setting memo selected settings should be null");
+        expect_not_contains(deleted_settings_process.stdout_text, "<memo block",
+                            "#1741: unresolved deleted direct-setting memo placeholders should not leak into selection JSON");
+    };
+
+    run_unresolved_direct_setting_memo_layout(temp_root / "unresolved_direct_setting_memo.frx",
+                                              "unresolved_direct_setting_memo.frx",
+                                              "report");
+    run_unresolved_direct_setting_memo_layout(temp_root / "unresolved_direct_setting_memo.lbx",
+                                              "unresolved_direct_setting_memo.lbx",
+                                              "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -75048,6 +75187,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(argv[1]);
     test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(argv[1]);
     test_studio_host_json_ignores_invalid_direct_report_margin_grid_fields(argv[1]);
+    test_studio_host_json_suppresses_unresolved_report_direct_setting_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
