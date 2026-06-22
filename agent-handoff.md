@@ -9,6 +9,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 - Pick or create one open prompt-sized child issue before implementation. Do not execute directly from an umbrella or parent/lane issue when child slices exist or can be created.
 - Current active implementation lane is E3/#24, report/label designer fidelity, unless live GitHub state shows a higher-weight blocker.
 - Phase A, D1/#19, E1/#22, and old numbered runtime/planning sequences are historical/closed unless live regression evidence reopens them.
+- Preserve deferred modernization and wishlist work as roadmap intent, not noise; do not close, ignore, or discard future-facing issues merely because they are not current blockers.
 - Keep changes narrow, implementation-first, and validated. Update durable docs only when behavior or active guidance changes.
 
 ## Current State

@@ -15,6 +15,12 @@ Use these sources in order:
 
 `remaining-work.md` is intentionally deprecated as an active planning source. `issues.txt` is a local snapshot only; never use it instead of live GitHub state.
 
+## Product And Roadmap Intent
+
+Copperfin is not only a VFP 9 compatibility clone. The foundation is maintaining existing FoxPro/VFP codebases without forced rewrites, then enabling gradual modernization through .NET-facing commands, interop paths, safer host behavior, modern runtime capabilities, richer tooling, portability, generated outputs, host integration, and eventually the rapid application-building feel FoxPro/VFP provided.
+
+Treat wishlist and future-facing issues as deferred roadmap work, not noise. Do not ignore, close, demote, or discard them merely because they are not current blockers. Work them after important/basic compatibility, usability, release-readiness, and prerequisite architecture are stable enough for that lane.
+
 ## Active Execution Rule
 
 Choose work from live GitHub issue state and current repo guidance, not from old numbered ledgers.

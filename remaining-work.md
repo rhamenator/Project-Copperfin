@@ -14,4 +14,6 @@ Use this hierarchy instead:
 
 Current active implementation lane remains E3/#24 unless live GitHub state shows a higher-weight blocker. Phase A, D1/#19, E1/#22, and old historical issue sequences remain closed/historical unless live regression evidence reopens them.
 
+Wishlist and future-facing modernization issues remain valid deferred roadmap work. They should wait behind important/basic compatibility, usability, release-readiness, and prerequisite architecture unless live GitHub state shows they have become the highest-weight blocker.
+
 `issues.txt` is only a local snapshot of open issue rows at the time it was exported. It is not a planning authority.
