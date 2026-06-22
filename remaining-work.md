@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1744 mixed invalid report/label direct-setting field coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with mixed valid and malformed non-numeric direct page setup, margin/grid, and column setup fields, proving summary JSON keeps valid live setup availability while malformed siblings remain unparsed, live/deleted selected-settings metadata preserves both valid and malformed raw values with field provenance, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1743 blank report/label direct-setting field coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with blank and whitespace-only direct page setup, margin/grid, and column setup fields, proving summary JSON and live/deleted selected-settings inspection stay non-failing, blank fields are skipped instead of becoming settings, page and column setup availability are not fabricated, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1742 mixed report/label direct-setting memo placeholder coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with mixed valid direct page setup, margin/grid, and column setup fields plus unresolved memo placeholder siblings, proving summary JSON keeps valid live setup availability, live/deleted selected-settings metadata preserves only valid settings with field provenance, placeholder fields stay suppressed, placeholder text does not leak, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1741 unresolved report/label direct-setting memo placeholder coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with unresolved memo placeholder text in direct page setup, margin/grid, and column setup fields, proving summary and live/deleted settings selection JSON stay non-failing, live/deleted settings are suppressed, page and column setup availability are not fabricated, placeholder text does not leak, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1758,7 +1759,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1743 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1744 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1829,7 +1830,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1743 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1744 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]

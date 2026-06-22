@@ -4148,6 +4148,35 @@ void write_synthetic_report_table_for_blank_direct_setting_layout_json(
     expect(delete_result.ok, "#1743: synthetic report table should mark blank direct settings deleted");
 }
 
+void write_synthetic_report_table_for_mixed_invalid_direct_setting_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "PAPERSIZE", .type = 'C', .length = 24U},
+        {.name = "TOPMARGIN", .type = 'C', .length = 24U},
+        {.name = "BOTMARGIN", .type = 'C', .length = 24U},
+        {.name = "GRIDV", .type = 'C', .length = 24U},
+        {.name = "GRIDH", .type = 'C', .length = 24U},
+        {.name = "COLS", .type = 'C', .length = 24U},
+        {.name = "COLWIDTH", .type = 'C', .length = 24U},
+        {.name = "COLSPACING", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "1", "paper?", "120", "bottom?", "1", "wide-grid?", "3", "wide?", "42",
+         "mixed-invalid-live-settings-guid"},
+        {"1", "53", "deleted-sideways", "9", "deleted-top?", "240", "deleted-grid?", "0",
+         "deleted-many?", "5000", "deleted-spacing?", "mixed-invalid-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1744: synthetic report table with mixed invalid direct settings should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1744: synthetic report table should mark mixed invalid direct settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -8190,6 +8219,200 @@ void test_studio_host_json_skips_blank_report_direct_setting_fields(
     run_blank_direct_setting_layout(temp_root / "blank_direct_setting.lbx",
                                     "blank_direct_setting.lbx",
                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_mixed_invalid_report_direct_setting_fields(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_mixed_invalid_direct_setting_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_mixed_invalid_direct_setting_layout = [&](const fs::path& asset_path,
+                                                             const std::string& title,
+                                                             const std::string& label) {
+        write_synthetic_report_table_for_mixed_invalid_direct_setting_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " mixed invalid direct setting summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " mixed invalid direct setting summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1744: mixed invalid direct settings should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1744: mixed invalid direct-setting layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1744: mixed invalid direct-setting label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 9",
+                        "#1744: mixed invalid direct settings should preserve live raw settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 9",
+                        "#1744: mixed invalid direct settings should preserve deleted raw settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1744: mixed invalid direct settings should keep valid live page setup available");
+        expect_contains(summary_process.stdout_text, "\"orientationAvailable\": true",
+                        "#1744: mixed invalid direct settings should keep valid live orientation available");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1744: mixed invalid direct settings should keep valid live orientation code");
+        expect_contains(summary_process.stdout_text, "\"paperSizeAvailable\": false",
+                        "#1744: mixed invalid direct settings should not parse invalid live paper size");
+        expect_contains(summary_process.stdout_text, "\"topMarginAvailable\": true",
+                        "#1744: mixed invalid direct settings should keep valid live top margin available");
+        expect_contains(summary_process.stdout_text, "\"topMargin\": 120",
+                        "#1744: mixed invalid direct settings should keep valid live top margin");
+        expect_contains(summary_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1744: mixed invalid direct settings should not parse invalid live bottom margin");
+        expect_contains(summary_process.stdout_text, "\"gridVerticalAvailable\": true",
+                        "#1744: mixed invalid direct settings should keep valid live vertical grid available");
+        expect_contains(summary_process.stdout_text, "\"gridVertical\": 1",
+                        "#1744: mixed invalid direct settings should keep valid live vertical grid");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#1744: mixed invalid direct settings should not parse invalid live horizontal grid");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1744: mixed invalid direct settings should keep valid live column setup available");
+        expect_contains(summary_process.stdout_text, "\"columnCountAvailable\": true",
+                        "#1744: mixed invalid direct settings should keep valid live column count available");
+        expect_contains(summary_process.stdout_text, "\"columnCount\": 3",
+                        "#1744: mixed invalid direct settings should keep valid live column count");
+        expect_contains(summary_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1744: mixed invalid direct settings should not parse invalid live column width");
+        expect_contains(summary_process.stdout_text, "\"columnSpacingAvailable\": true",
+                        "#1744: mixed invalid direct settings should keep valid live column spacing available");
+        expect_contains(summary_process.stdout_text, "\"columnSpacing\": 42",
+                        "#1744: mixed invalid direct settings should keep valid live column spacing");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1744: mixed invalid live direct-setting selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1744: mixed invalid live direct-setting selection should expose raw settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1744: mixed invalid live direct-setting selection should expose settings kind");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 3",
+                "\"value\": \"paper?\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 4",
+                "\"value\": \"120\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 5",
+                "\"value\": \"bottom?\"",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 6",
+                "\"value\": \"1\"",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 7",
+                "\"value\": \"wide-grid?\"",
+                "\"name\": \"COLS\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 8",
+                "\"value\": \"3\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 9",
+                "\"value\": \"wide?\"",
+                "\"name\": \"COLSPACING\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 10",
+                "\"value\": \"42\""
+            },
+            "#1744: mixed invalid live direct-setting selection should expose valid and invalid raw settings");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1744: mixed invalid deleted direct-setting selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1744: mixed invalid deleted direct-setting selection should expose raw settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1744: mixed invalid deleted direct-setting selection should expose settings kind");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"value\": \"deleted-sideways\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 3",
+                "\"value\": \"9\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 4",
+                "\"value\": \"deleted-top?\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 5",
+                "\"value\": \"240\"",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 6",
+                "\"value\": \"deleted-grid?\"",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 7",
+                "\"value\": \"0\"",
+                "\"name\": \"COLS\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 8",
+                "\"value\": \"deleted-many?\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 9",
+                "\"value\": \"5000\"",
+                "\"name\": \"COLSPACING\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 10",
+                "\"value\": \"deleted-spacing?\""
+            },
+            "#1744: mixed invalid deleted direct-setting selection should expose valid and invalid raw settings");
+    };
+
+    run_mixed_invalid_direct_setting_layout(temp_root / "mixed_invalid_direct_setting.frx",
+                                            "mixed_invalid_direct_setting.frx",
+                                            "report");
+    run_mixed_invalid_direct_setting_layout(temp_root / "mixed_invalid_direct_setting.lbx",
+                                            "mixed_invalid_direct_setting.lbx",
+                                            "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -75514,6 +75737,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_suppresses_unresolved_report_direct_setting_memo_placeholders(argv[1]);
     test_studio_host_json_preserves_mixed_report_direct_setting_memo_placeholders(argv[1]);
     test_studio_host_json_skips_blank_report_direct_setting_fields(argv[1]);
+    test_studio_host_json_preserves_mixed_invalid_report_direct_setting_fields(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
