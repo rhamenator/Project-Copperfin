@@ -9769,6 +9769,192 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
     }
 }
 
+void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_align_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_align =
+        [&](const fs::path& header_asset_path,
+            const fs::path& footer_asset_path,
+            const std::string& title_prefix,
+            const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(header_asset_path);
+            write_synthetic_report_table_for_detail_header_footer_object_json(footer_asset_path);
+
+            for (const auto& asset_path : {header_asset_path, footer_asset_path}) {
+                for (const std::size_t record_index : {1U, 3U}) {
+                    const auto delete_result =
+                        copperfin::vfp::set_record_deleted_flag(asset_path.string(), record_index, true);
+                    expect(delete_result.ok && dbf_record_deleted(asset_path, record_index),
+                           "#1790: deleted detail header/footer object align fixture should mark object records deleted");
+                }
+            }
+
+            const auto align_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", header_asset_path.string(),
+                    "--unique-id", "detail-header-label-guid",
+                    "--align-object",
+                    "--alignment-mode", "left",
+                    "--anchor-unique-id", "detail-footer-field-guid",
+                    "--align-target-unique-id", "detail-header-label-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (align_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header object align stdout:\n"
+                          << align_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header object align stderr:\n"
+                          << align_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(align_header_process.exit_code == 0,
+                   "#1790: deleted detail-header object align should exit successfully");
+            expect(visual_object_deleted(header_asset_path, "detail-header-label-guid"),
+                   "#1790: deleted detail-header object align should preserve deleted state");
+            expect(visual_object_property(header_asset_path, "detail-header-label-guid", "HPOS") == "140" &&
+                       visual_object_property(header_asset_path, "detail-header-label-guid", "VPOS") == "50",
+                   "#1790: deleted detail-header object align should mutate HPOS and preserve VPOS");
+            expect_contains(align_header_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_deleted_header." +
+                                header_asset_path.extension().string().substr(1) + "\"",
+                            "#1790: deleted detail-header object align should return refreshed layout JSON");
+            if (header_asset_path.extension() == ".lbx") {
+                expect_contains(align_header_process.stdout_text, "\"isLabel\": true",
+                                "#1790: deleted detail-header label object align should retain label identity");
+            }
+            expect_contains(align_header_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1790: deleted detail-header object align should leave live object counts unchanged");
+            expect_contains(align_header_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1790: deleted detail-header object align should preserve deleted object counts");
+            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1790: deleted detail-header object align should preserve selected object availability");
+            expect_contains(align_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1790: deleted detail-header object align should preserve object selection kind");
+            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1790: deleted detail-header object align should not fabricate containing sections");
+            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1790: deleted detail-header object align should serialize null containing-section JSON");
+            expect_contains_in_order(
+                align_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"expression\": \"\\\"Header label\\\"\"",
+                    "\"left\": 140",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 840",
+                    "\"height\": 120",
+                    "\"bottom\": 170"
+                },
+                "#1790: deleted detail-header object align should refresh selected deleted-object metadata");
+
+            const auto align_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", footer_asset_path.string(),
+                    "--unique-id", "detail-footer-field-guid",
+                    "--align-object",
+                    "--alignment-mode", "left",
+                    "--anchor-unique-id", "detail-header-label-guid",
+                    "--align-target-unique-id", "detail-footer-field-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (align_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer object align stdout:\n"
+                          << align_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer object align stderr:\n"
+                          << align_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(align_footer_process.exit_code == 0,
+                   "#1790: deleted detail-footer object align should exit successfully");
+            expect(visual_object_deleted(footer_asset_path, "detail-footer-field-guid"),
+                   "#1790: deleted detail-footer object align should preserve deleted state");
+            expect(visual_object_property(footer_asset_path, "detail-footer-field-guid", "HPOS") == "100" &&
+                       visual_object_property(footer_asset_path, "detail-footer-field-guid", "VPOS") == "360",
+                   "#1790: deleted detail-footer object align should mutate HPOS and preserve VPOS");
+            expect_contains(align_footer_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_deleted_footer." +
+                                footer_asset_path.extension().string().substr(1) + "\"",
+                            "#1790: deleted detail-footer object align should return refreshed layout JSON");
+            if (footer_asset_path.extension() == ".lbx") {
+                expect_contains(align_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1790: deleted detail-footer label object align should retain label identity");
+            }
+            expect_contains(align_footer_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1790: deleted detail-footer object align should leave live object counts unchanged");
+            expect_contains(align_footer_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1790: deleted detail-footer object align should preserve deleted object counts");
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1790: deleted detail-footer object align should preserve selected object availability");
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1790: deleted detail-footer object align should preserve object selection kind");
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1790: deleted detail-footer object align should not fabricate containing sections");
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1790: deleted detail-footer object align should serialize null containing-section JSON");
+            expect_contains_in_order(
+                align_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"expression\": \"footer.total\"",
+                    "\"left\": 100",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1000",
+                    "\"height\": 100",
+                    "\"bottom\": 460"
+                },
+                "#1790: deleted detail-footer object align should refresh selected deleted-object metadata");
+        };
+
+    run_deleted_detail_header_footer_object_align(
+        temp_root / "detail_header_footer_object_align_deleted_header.frx",
+        temp_root / "detail_header_footer_object_align_deleted_footer.frx",
+        "detail_header_footer_object_align",
+        "report");
+    run_deleted_detail_header_footer_object_align(
+        temp_root / "detail_header_footer_object_align_deleted_header.lbx",
+        temp_root / "detail_header_footer_object_align_deleted_footer.lbx",
+        "detail_header_footer_object_align",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -83543,6 +83729,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
