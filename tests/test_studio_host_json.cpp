@@ -8230,6 +8230,196 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_
     }
 }
 
+void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_delete_restore_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_delete_restore =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+
+            const auto delete_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--delete-object",
+                    "--unique-id", "detail-header-label-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (delete_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object delete stdout:\n"
+                          << delete_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object delete stderr:\n"
+                          << delete_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(delete_process.exit_code == 0,
+                   "#1782: detail-header object delete should exit successfully");
+            expect(visual_object_deleted(asset_path, "detail-header-label-guid"),
+                   "#1782: detail-header object delete should mark the selected object deleted");
+            expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1782: detail-header object delete should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(delete_process.stdout_text, "\"isLabel\": true",
+                                "#1782: detail-header label object delete should retain label identity");
+            }
+            expect_contains(delete_process.stdout_text, "\"liveObjectCount\": 1",
+                            "#1782: detail-header object delete should reduce live object counts");
+            expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 1",
+                            "#1782: detail-header object delete should reduce placed object counts");
+            expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
+                            "#1782: detail-header object delete should add deleted object counts");
+            expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1782: detail-header object delete should preserve selected object availability");
+            expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1782: detail-header object delete should preserve object selection kind");
+            expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1782: detail-header object delete should not fabricate containing-section availability");
+            expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1782: detail-header object delete should serialize null containing-section JSON");
+            expect_contains_in_order(
+                delete_process.stdout_text,
+                {
+                    "\"deletedObjects\": [",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 100",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 170"
+                },
+                "#1782: detail-header object delete should move the object into deleted-object JSON");
+            expect_contains_in_order(
+                delete_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 100",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 170"
+                },
+                "#1782: detail-header object delete should refresh selected deleted-object JSON");
+
+            const auto seed_footer_delete =
+                copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+            expect(seed_footer_delete.ok && visual_object_deleted(asset_path, "detail-footer-field-guid"),
+                   "#1782: detail-footer object restore fixture should mark the footer object deleted");
+
+            const auto restore_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--restore-object",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (restore_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object restore stdout:\n"
+                          << restore_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object restore stderr:\n"
+                          << restore_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(restore_process.exit_code == 0,
+                   "#1782: detail-footer object restore should exit successfully");
+            expect(!visual_object_deleted(asset_path, "detail-footer-field-guid"),
+                   "#1782: detail-footer object restore should clear the selected object's deleted state");
+            expect(visual_object_deleted(asset_path, "detail-header-label-guid"),
+                   "#1782: detail-footer object restore should preserve unrelated deleted header state");
+            expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1782: detail-footer object restore should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                                "#1782: detail-footer label object restore should retain label identity");
+            }
+            expect_contains(restore_process.stdout_text, "\"liveObjectCount\": 1",
+                            "#1782: detail-footer object restore should restore one live object while header remains deleted");
+            expect_contains(restore_process.stdout_text, "\"placedObjectCount\": 1",
+                            "#1782: detail-footer object restore should restore placed object counts");
+            expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
+                            "#1782: detail-footer object restore should leave the header object deleted");
+            expect_contains(restore_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1782: detail-footer object restore should preserve selected object availability");
+            expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1782: detail-footer object restore should preserve object selection kind");
+            expect_contains(restore_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1782: detail-footer object restore should rehydrate containing-section availability");
+            expect_contains(restore_process.stdout_text, "\"selectedReportObjectSection\": {",
+                            "#1782: detail-footer object restore should serialize containing-section JSON");
+            expect_contains_in_order(
+                restore_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 140",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1040",
+                    "\"height\": 100",
+                    "\"bottom\": 460"
+                },
+                "#1782: detail-footer object restore should refresh selected live-object JSON");
+            expect_contains_in_order(
+                restore_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1782: detail-footer object restore should preserve containing-section object metadata");
+        };
+
+    run_detail_header_footer_object_delete_restore(temp_root / "detail_header_footer_object_delete_restore.frx",
+                                                   "detail_header_footer_object_delete_restore.frx",
+                                                   "report");
+    run_detail_header_footer_object_delete_restore(temp_root / "detail_header_footer_object_delete_restore.lbx",
+                                                   "detail_header_footer_object_delete_restore.lbx",
+                                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -81996,6 +82186,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_detail_header_footer_object_font_options_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_geometry_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_by_stable_selection(argv[1]);
+    test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
