@@ -357,6 +357,15 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
 | `#113` | `#1801` closed | Standalone Studio has a documented Spanish/Portuguese localization contract, shared .NET catalog, locale fallback tests, and localized shell strings |
+| `#24` | `#1838` closed | Studio host regressions prove stable-selected live and deleted report/label column-setup memo updates and clears refresh column setup plus live/deleted selected-settings JSON |
+| `#24` | `#1837` closed | Studio host regressions prove stable-selected live and deleted report/label column-spacing field updates and clears refresh column setup and selected-settings JSON |
+| `#24` | `#1836` closed | Studio host regressions prove stable-selected live and deleted report/label column-width field updates and clears refresh column setup and selected-settings JSON |
+| `#24` | `#1835` closed | Studio host regressions prove stable-selected live and deleted report/label column-count field updates and clears refresh column setup and selected-settings JSON |
+| `#24` | `#1834` closed | Studio host regressions prove stable-selected live and deleted report/label paper-size field updates and clears refresh page setup and selected-settings JSON |
+| `#24` | `#1833` closed | Studio host regressions prove stable-selected live and deleted report/label orientation field updates and clears refresh page setup and selected-settings JSON |
+| `#24` | `#1832` closed | Studio host regressions prove stable-selected live and deleted report/label horizontal-grid field updates and clears refresh page setup and selected-settings JSON |
+| `#24` | `#1831` closed | Studio host regressions prove stable-selected live and deleted report/label vertical-grid field updates and clears refresh page setup and selected-settings JSON |
+| `#24` | `#1830` closed | Studio host regressions prove stable-selected live and deleted report/label bottom-margin field updates and clears refresh selected-settings JSON |
 | `#24` | `#1829` closed | Studio host regressions prove stable-selected deleted report/label page-margin field updates and clears refresh deleted and selected-settings JSON |
 | `#24` | `#1828` closed | Studio host regressions prove stable-selected live report/label page-margin field updates and clears refresh page setup and selected-settings JSON |
 | `#24` | `#1827` closed | Studio host regressions prove stable-selected deleted report/label settings memo updates and clears refresh deleted and selected-settings JSON |
