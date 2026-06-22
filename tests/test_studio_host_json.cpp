@@ -6805,6 +6805,178 @@ void test_studio_host_json_updates_detail_header_footer_section_heights_by_stabl
     }
 }
 
+void test_studio_host_json_refreshes_detail_header_footer_section_preview_bounds_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        "copperfin_studio_host_detail_header_footer_section_preview_bounds_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_section_preview_bounds =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
+
+            const auto update_footer_height_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-footer-guid",
+                    "--property-name", "HEIGHT",
+                    "--property-value", "900",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_footer_height_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer section preview height stdout:\n"
+                          << update_footer_height_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer section preview height stderr:\n"
+                          << update_footer_height_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_footer_height_process.exit_code == 0,
+                   "#1819: detail-footer section preview height update by stable selection should exit successfully");
+            const auto footer_height_property = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "detail-footer-guid",
+                .property_name = "HEIGHT"
+            });
+            expect(footer_height_property.ok && footer_height_property.exists &&
+                       footer_height_property.value == "900",
+                   "#1819: detail-footer section preview height update should persist the HEIGHT field");
+            expect_contains(update_footer_height_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1819: detail-footer section preview height update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_footer_height_process.stdout_text, "\"isLabel\": true",
+                                "#1819: detail-footer label section preview height update should retain label identity");
+            }
+            expect_contains(update_footer_height_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#1819: detail-footer section preview height update should preserve preview availability");
+            expect_contains(update_footer_height_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#1819: detail-footer section preview height update should preserve preview top bounds");
+            expect_contains(update_footer_height_process.stdout_text, "\"previewBoundsBottom\": 1200",
+                            "#1819: detail-footer section preview height update should refresh preview bottom bounds");
+            expect_contains(update_footer_height_process.stdout_text, "\"previewBoundsHeight\": 1200",
+                            "#1819: detail-footer section preview height update should refresh preview heights");
+            expect_contains(update_footer_height_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#1819: detail-footer section preview height update should preserve deleted preview availability");
+            expect_contains(update_footer_height_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                            "#1819: detail-footer section preview height update should preserve deleted preview top bounds");
+            expect_contains(update_footer_height_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                            "#1819: detail-footer section preview height update should preserve deleted preview bottom bounds");
+            expect_contains(update_footer_height_process.stdout_text, "\"sectionHeightTotal\": 1200",
+                            "#1819: detail-footer section preview height update should refresh live section height totals");
+            expect_contains(update_footer_height_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#1819: detail-footer section preview height update should preserve selected section availability");
+            expect_contains(update_footer_height_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#1819: detail-footer section preview height update should preserve selection kind");
+            expect_contains_in_order(
+                update_footer_height_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Footer\"",
+                    "\"bandKind\": \"detail_footer\"",
+                    "\"recordIndex\": 1",
+                    "\"top\": 300",
+                    "\"height\": 900",
+                    "\"bottom\": 1200"
+                },
+                "#1819: detail-footer section preview height update should refresh selected-section geometry");
+
+            const auto update_header_top_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-header-guid",
+                    "--property-name", "VPOS",
+                    "--property-value", "-150",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_header_top_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header section preview top stdout:\n"
+                          << update_header_top_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header section preview top stderr:\n"
+                          << update_header_top_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_header_top_process.exit_code == 0,
+                   "#1819: detail-header section preview top update by stable selection should exit successfully");
+            const auto header_top_property = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "detail-header-guid",
+                .property_name = "VPOS"
+            });
+            expect(header_top_property.ok && header_top_property.exists &&
+                       header_top_property.value == "-150",
+                   "#1819: detail-header section preview top update should persist the VPOS field");
+            expect_contains(update_header_top_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1819: detail-header section preview top update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_header_top_process.stdout_text, "\"isLabel\": true",
+                                "#1819: detail-header label section preview top update should retain label identity");
+            }
+            expect_contains(update_header_top_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#1819: detail-header section preview top update should preserve preview availability");
+            expect_contains(update_header_top_process.stdout_text, "\"previewBoundsTop\": -150",
+                            "#1819: detail-header section preview top update should refresh preview top bounds");
+            expect_contains(update_header_top_process.stdout_text, "\"previewBoundsBottom\": 1200",
+                            "#1819: detail-header section preview top update should preserve expanded preview bottom bounds");
+            expect_contains(update_header_top_process.stdout_text, "\"previewBoundsHeight\": 1350",
+                            "#1819: detail-header section preview top update should refresh preview heights");
+            expect_contains(update_header_top_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#1819: detail-header section preview top update should preserve deleted preview availability");
+            expect_contains(update_header_top_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                            "#1819: detail-header section preview top update should preserve deleted preview top bounds");
+            expect_contains(update_header_top_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                            "#1819: detail-header section preview top update should preserve deleted preview bottom bounds");
+            expect_contains(update_header_top_process.stdout_text, "\"sectionHeightTotal\": 1200",
+                            "#1819: detail-header section preview top update should preserve live section height totals");
+            expect_contains(update_header_top_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#1819: detail-header section preview top update should preserve selected section availability");
+            expect_contains(update_header_top_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#1819: detail-header section preview top update should preserve selection kind");
+            expect_contains_in_order(
+                update_header_top_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Header\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"recordIndex\": 0",
+                    "\"top\": -150",
+                    "\"height\": 300",
+                    "\"bottom\": 150"
+                },
+                "#1819: detail-header section preview top update should refresh selected-section geometry");
+        };
+
+    run_detail_header_footer_section_preview_bounds(
+        temp_root / "detail_header_footer_section_preview_bounds_stable.frx",
+        "detail_header_footer_section_preview_bounds_stable.frx",
+        "report");
+    run_detail_header_footer_section_preview_bounds(
+        temp_root / "detail_header_footer_section_preview_bounds_stable.lbx",
+        "detail_header_footer_section_preview_bounds_stable.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_detail_header_footer_section_heights_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -88774,6 +88946,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_heights_by_stable_selection(argv[1]);
+    test_studio_host_json_refreshes_detail_header_footer_section_preview_bounds_by_stable_selection(argv[1]);
     test_studio_host_json_clears_detail_header_footer_section_heights_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_heights_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_detail_header_footer_section_heights_by_stable_selection(argv[1]);
