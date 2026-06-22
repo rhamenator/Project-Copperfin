@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1777 detail header/footer report/label object font-option edit coverage shipped. Studio host regression coverage now proves stable-selected live Detail Header/Footer FRX/LBX label/field objects support `--set-property --unique-id ... --property-name FONTSIZE --property-value 14 --json` and `--clear-property --unique-id ... --property-name MODE --json`, persist refreshed field values or blank clears, refresh selected-object highlight provenance, preserve containing-section ids/record indexes, section-relative coordinates, containing-section object counts, remove stale cleared-option highlights, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1776 deleted detail header/footer report/label object-font edit coverage shipped. Studio host regression coverage now proves stable-selected deleted Detail Header/Footer FRX/LBX label/field objects support `--set-property --unique-id ... --property-name FONTFACE --property-value ... --json` and `--clear-property --unique-id ... --property-name FONTFACE --json`, preserve deleted state, persist refreshed or blank FONTFACE memo data, refresh deleted-object and selected-object highlight provenance, keep selected containing-section availability false/null instead of fabricating live section membership, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1775 detail header/footer report/label object-font edit coverage shipped. Studio host regression coverage now proves stable-selected live Detail Header/Footer FRX/LBX label/field objects support `--set-property --unique-id ... --property-name FONTFACE --property-value ... --json` and `--clear-property --unique-id ... --property-name FONTFACE --json`, persist refreshed or blank FONTFACE memo data, refresh selected-object highlight provenance, preserve containing-section ids/record indexes, section-relative coordinates, containing-section object counts, non-failing inspection, and label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1774 deleted detail header/footer report/label object-font selection coverage shipped. Studio host regression coverage now proves stable-selected deleted Detail Header/Footer FRX/LBX label/field objects expose deleted-object and selected-object highlight counts plus `FONTFACE`, `FONTSIZE`, and `MODE` provenance while preserving deleted state, expression metadata, unavailable/null containing-section metadata, non-failing inspection, and label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1791,7 +1792,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1776 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1777 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1862,7 +1863,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1776 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1777 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]

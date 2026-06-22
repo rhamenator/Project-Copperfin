@@ -7513,6 +7513,166 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_font_meta
     }
 }
 
+void test_studio_host_json_updates_detail_header_footer_object_font_options_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_font_option_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_font_options =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_font_json(asset_path);
+
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-header-label-guid",
+                    "--property-name", "FONTSIZE",
+                    "--property-value", "14",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object fontsize update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object fontsize update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1777: detail-header object fontsize update should exit successfully");
+            const auto updated_fontsize = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "detail-header-label-guid",
+                .property_name = "FONTSIZE"
+            });
+            expect(updated_fontsize.ok && updated_fontsize.exists && updated_fontsize.value == "14",
+                   "#1777: detail-header object fontsize update should persist the FONTSIZE field");
+            expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1777: detail-header object fontsize update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                                "#1777: detail-header label object fontsize update should retain label identity");
+            }
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1777: detail-header object fontsize update should preserve selected object availability");
+            expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1777: detail-header object fontsize update should preserve object selection kind");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1777: detail-header object fontsize update should preserve containing-section availability");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"highlightCount\": 4",
+                    "\"name\": \"FONTSIZE\", \"recordIndex\": 1",
+                    "\"value\": \"14\""
+                },
+                "#1777: detail-header object fontsize update should refresh selected-object highlight metadata");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1777: detail-header object fontsize update should preserve containing-section metadata");
+
+            const auto clear_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--property-name", "MODE",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object mode clear stdout:\n"
+                          << clear_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object mode clear stderr:\n"
+                          << clear_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_process.exit_code == 0,
+                   "#1777: detail-footer object mode clear should exit successfully");
+            expect_contains(clear_process.stdout_text,
+                            "{\"name\": \"MODE\", \"type\": \"C\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 9",
+                            "#1777: detail-footer object mode clear should blank the MODE field");
+            expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1777: detail-footer object mode clear should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                                "#1777: detail-footer label object mode clear should retain label identity");
+            }
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1777: detail-footer object mode clear should preserve selected object availability");
+            expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1777: detail-footer object mode clear should preserve object selection kind");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1777: detail-footer object mode clear should preserve containing-section availability");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"highlightCount\": 3"
+                },
+                "#1777: detail-footer object mode clear should refresh selected-object highlight metadata");
+            expect_not_contains(clear_process.stdout_text, "\"name\": \"MODE\", \"recordIndex\": 3",
+                                "#1777: detail-footer object mode clear should remove stale mode highlights");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1777: detail-footer object mode clear should preserve containing-section metadata");
+        };
+
+    run_detail_header_footer_object_font_options(temp_root / "detail_header_footer_object_font_options.frx",
+                                                 "detail_header_footer_object_font_options.frx",
+                                                 "report");
+    run_detail_header_footer_object_font_options(temp_root / "detail_header_footer_object_font_options.lbx",
+                                                 "detail_header_footer_object_font_options.lbx",
+                                                 "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -81275,6 +81435,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_detail_header_footer_object_font_options_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
