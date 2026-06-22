@@ -35150,6 +35150,20 @@ void test_studio_host_json_updates_report_layout_object_left_preview_bounds_by_s
                         "#1638: report/label layout object stable left update should preserve preview right bounds");
         expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 5400",
                         "#1638: report/label layout object stable left update should refresh preview widths");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1899: report/label layout object stable left update should preserve deleted preview availability");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1899: report/label layout object stable left update should preserve deleted preview left bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1899: report/label layout object stable left update should preserve deleted preview top bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1899: report/label layout object stable left update should preserve deleted preview right bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1899: report/label layout object stable left update should preserve deleted preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1899: report/label layout object stable left update should preserve deleted preview widths");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1899: report/label layout object stable left update should preserve deleted preview heights");
         expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
                         "#1638: report/label layout object stable left update should preserve placed counts");
         expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
