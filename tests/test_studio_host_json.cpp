@@ -4403,6 +4403,45 @@ void write_synthetic_report_table_for_fractional_setting_memo_layout_json(
     expect(delete_result.ok, "#1751: synthetic report table should mark fractional memo settings deleted");
 }
 
+void write_synthetic_report_table_for_blank_setting_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53",
+         "ORIENTATION=\n"
+         "PAPERSIZE=   \n"
+         "TOPMARGIN=\t\n"
+         "BOTMARGIN= \t \n"
+         "GRIDV=\n"
+         "GRIDH=  \n"
+         "COLS=\t \n"
+         "COLWIDTH=\n"
+         "COLSPACING=   ",
+         "blank-memo-live-settings-guid"},
+        {"1", "53",
+         "ORIENTATION= \n"
+         "PAPERSIZE=\n"
+         "TOPMARGIN=  \n"
+         "BOTMARGIN=\t\t\n"
+         "GRIDV= \t\n"
+         "GRIDH=\n"
+         "COLS= \n"
+         "COLWIDTH=\t\n"
+         "COLSPACING=",
+         "blank-memo-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1752: synthetic report table with blank settings memo values should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1752: synthetic report table should mark blank memo settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -9601,6 +9640,184 @@ void test_studio_host_json_preserves_fractional_report_setting_memo_values(
     run_fractional_setting_memo_layout(temp_root / "fractional_setting_memo.lbx",
                                        "fractional_setting_memo.lbx",
                                        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_blank_report_setting_memo_values(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_blank_setting_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_blank_setting_memo_layout = [&](const fs::path& asset_path,
+                                                   const std::string& title,
+                                                   const std::string& label) {
+        write_synthetic_report_table_for_blank_setting_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " blank setting memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " blank setting memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1752: blank settings memo values should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1752: blank settings memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1752: blank settings memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 9",
+                        "#1752: blank settings memo values should preserve live raw settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 9",
+                        "#1752: blank settings memo values should preserve deleted raw settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1752: blank settings memo values should not fabricate page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationAvailable\": false",
+                        "#1752: blank memo orientation should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"paperSizeAvailable\": false",
+                        "#1752: blank memo paper size should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"topMarginAvailable\": false",
+                        "#1752: blank memo top margin should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1752: blank memo bottom margin should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        "#1752: blank memo vertical grid should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#1752: blank memo horizontal grid should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1752: blank settings memo values should not fabricate column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1752: blank memo column count should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1752: blank memo column width should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        "#1752: blank memo column spacing should not advertise availability");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"\"",
+                        "#1752: live blank memo orientation provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLSPACING\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 8, \"memoBlockNumber\": 2, \"value\": \"\"",
+                        "#1752: deleted blank memo column-spacing provenance should remain inspectable");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1752: blank live settings memo selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1752: blank live settings memo selection should expose raw settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1752: blank live settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 1",
+                "\"value\": \"\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"\"",
+                "\"name\": \"GRIDV\"",
+                "\"sourceLineIndex\": 4",
+                "\"value\": \"\"",
+                "\"name\": \"GRIDH\"",
+                "\"sourceLineIndex\": 5",
+                "\"value\": \"\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 6",
+                "\"value\": \"\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"sourceLineIndex\": 7",
+                "\"value\": \"\"",
+                "\"name\": \"COLSPACING\"",
+                "\"sourceLineIndex\": 8",
+                "\"value\": \"\""
+            },
+            "#1752: blank live settings memo selection should expose blank source values");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1752: blank deleted settings memo selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1752: blank deleted settings memo selection should expose raw settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1752: blank deleted settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 2",
+                "\"value\": \"\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"\"",
+                "\"name\": \"GRIDV\"",
+                "\"sourceLineIndex\": 4",
+                "\"value\": \"\"",
+                "\"name\": \"GRIDH\"",
+                "\"sourceLineIndex\": 5",
+                "\"value\": \"\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 6",
+                "\"value\": \"\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"sourceLineIndex\": 7",
+                "\"value\": \"\"",
+                "\"name\": \"COLSPACING\"",
+                "\"sourceLineIndex\": 8",
+                "\"value\": \"\""
+            },
+            "#1752: blank deleted settings memo selection should expose blank source values");
+    };
+
+    run_blank_setting_memo_layout(temp_root / "blank_setting_memo.frx",
+                                  "blank_setting_memo.frx",
+                                  "report");
+    run_blank_setting_memo_layout(temp_root / "blank_setting_memo.lbx",
+                                  "blank_setting_memo.lbx",
+                                  "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -77059,6 +77276,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(argv[1]);
     test_studio_host_json_ignores_invalid_report_setting_memo_values(argv[1]);
     test_studio_host_json_preserves_fractional_report_setting_memo_values(argv[1]);
+    test_studio_host_json_ignores_blank_report_setting_memo_values(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);

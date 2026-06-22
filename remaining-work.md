@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1752 blank report/label settings memo coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with blank and whitespace-only root `EXPR` memo values for every page setup, margin/grid, and column setup setting, proving summary JSON keeps page and column setup availability false, live/deleted selected-settings metadata preserves blank values with field, memo-block, and source-line provenance, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1751 fractional report/label settings memo coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with whitespace-trimmed fractional root `EXPR` memo values for every page setup, margin/grid, and column setup setting, proving summary JSON derives live setup values from integer portions, live/deleted selected-settings metadata preserves fractional source values with field, memo-block, and source-line provenance, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1750 invalid report/label settings memo coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with malformed, oversized, and dot-leading root `EXPR` memo values for every page setup, margin/grid, and column setup setting, proving summary JSON keeps page and column setup availability false, live/deleted selected-settings metadata preserves raw values with field, memo-block, and source-line provenance, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E2/#1749 invalid selected-object raw-code coverage shipped. Studio host document JSON now creates synthetic SCX assets with malformed, oversized, and dot-leading `OBJTYPE`/`OBJCODE` source text, proving inspection stays non-failing, selected records still resolve selected-object metadata, parsed `objectTypeCode`/`objectCode` values default to zero instead of being fabricated, and the raw source values remain inspectable through selected-object and full object-list property JSON. Fresh validation passed with `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#23` remains open.
@@ -1766,7 +1767,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1751 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1752 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1837,7 +1838,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1751 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1752 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
