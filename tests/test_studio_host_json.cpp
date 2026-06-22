@@ -3873,6 +3873,26 @@ void write_synthetic_report_table_for_unknown_band_layout_json(
     expect(delete_result.ok, "#1722: synthetic report table should mark the unknown deleted band");
 }
 
+void write_synthetic_report_table_for_missing_section_objcode_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "missing.objcode.live", "150", "450", "missing-objcode-live-section-guid"},
+        {"9", "missing.objcode.deleted", "900", "250", "missing-objcode-deleted-section-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1728: synthetic report table without section OBJCODE schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1728: synthetic report table should mark the no-OBJCODE section deleted");
+}
+
 void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -6256,6 +6276,172 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
     run_unknown_band_layout(temp_root / "unknown_band.lbx",
                             "unknown_band.lbx",
                             "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_defaults_missing_report_section_objcode_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_report_section_objcode_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_section_objcode_layout = [&](const fs::path& asset_path,
+                                                        const std::string& title,
+                                                        const std::string& label) {
+        write_synthetic_report_table_for_missing_section_objcode_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing section OBJCODE summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing section OBJCODE summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1728: missing section OBJCODE schema should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1728: missing section OBJCODE layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1728: missing section OBJCODE label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1728: missing section OBJCODE layouts should preserve live section counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1728: missing section OBJCODE layouts should preserve deleted section counts");
+        expect_contains(summary_process.stdout_text, "\"sectionKindCounts\": [\n        {\"kind\": \"title\", \"count\": 1}\n      ]",
+                        "#1728: missing live section OBJCODE should summarize through the default title band");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionKindCounts\": [\n        {\"kind\": \"title\", \"count\": 1}\n      ]",
+                        "#1728: missing deleted section OBJCODE should summarize through the default title band");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 450",
+                        "#1728: missing live section OBJCODE should preserve live section heights");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionHeightTotal\": 250",
+                        "#1728: missing deleted section OBJCODE should preserve deleted section heights");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"title_0\"",
+                "\"title\": \"Title\"",
+                "\"titleFieldIndex\": null",
+                "\"bandKind\": \"title\"",
+                "\"bandKindFieldIndex\": null",
+                "\"expression\": \"missing.objcode.live\"",
+                "\"expressionFieldIndex\": 1",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"top\": 150",
+                "\"height\": 450",
+                "\"bottom\": 600"
+            },
+            "#1728: missing live section OBJCODE should serialize default band metadata with null provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"title_1\"",
+                "\"title\": \"Title\"",
+                "\"titleFieldIndex\": null",
+                "\"bandKind\": \"title\"",
+                "\"bandKindFieldIndex\": null",
+                "\"expression\": \"missing.objcode.deleted\"",
+                "\"expressionFieldIndex\": 1",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"top\": 900",
+                "\"height\": 250",
+                "\"bottom\": 1150"
+            },
+            "#1728: missing deleted section OBJCODE should serialize default band metadata with null provenance");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1728: missing section OBJCODE live selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1728: missing section OBJCODE live selection should advertise selected sections");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1728: missing section OBJCODE live selection should expose section selection kind");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"title_0\"",
+                "\"title\": \"Title\"",
+                "\"titleFieldIndex\": null",
+                "\"bandKind\": \"title\"",
+                "\"bandKindFieldIndex\": null",
+                "\"expression\": \"missing.objcode.live\"",
+                "\"expressionFieldIndex\": 1",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"top\": 150",
+                "\"height\": 450",
+                "\"bottom\": 600"
+            },
+            "#1728: missing live section OBJCODE selection should expose default band metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1728: missing section OBJCODE deleted selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1728: missing section OBJCODE deleted selection should advertise selected sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1728: missing section OBJCODE deleted selection should expose section selection kind");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"title_1\"",
+                "\"title\": \"Title\"",
+                "\"titleFieldIndex\": null",
+                "\"bandKind\": \"title\"",
+                "\"bandKindFieldIndex\": null",
+                "\"expression\": \"missing.objcode.deleted\"",
+                "\"expressionFieldIndex\": 1",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"top\": 900",
+                "\"height\": 250",
+                "\"bottom\": 1150"
+            },
+            "#1728: missing deleted section OBJCODE selection should expose default band metadata");
+    };
+
+    run_missing_section_objcode_layout(temp_root / "missing_section_objcode.frx",
+                                       "missing_section_objcode.frx",
+                                       "report");
+    run_missing_section_objcode_layout(temp_root / "missing_section_objcode.lbx",
+                                       "missing_section_objcode.lbx",
+                                       "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -72900,6 +73086,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
     test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
+    test_studio_host_json_defaults_missing_report_section_objcode_schema(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
