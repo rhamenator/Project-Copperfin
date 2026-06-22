@@ -4442,6 +4442,42 @@ void write_synthetic_report_table_for_blank_setting_memo_layout_json(
     expect(delete_result.ok, "#1752: synthetic report table should mark blank memo settings deleted");
 }
 
+void write_synthetic_report_table_for_malformed_setting_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53",
+         "orphan live memo text\n"
+         " = ignored-live-name\n"
+         "ORIENTATION=1\r\n"
+         "live no equals\r\n"
+         "PAPERSIZE=9\n"
+         " = \n"
+         "COLS=3",
+         "malformed-memo-live-settings-guid"},
+        {"1", "53",
+         "deleted orphan text\n"
+         " = ignored-deleted-name\r\n"
+         "TOPMARGIN=120\n"
+         "deleted no equals\n"
+         "BOTMARGIN=240\r\n"
+         " =\n"
+         "COLWIDTH=5000\r\n"
+         "COLSPACING=42",
+         "malformed-memo-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1753: synthetic report table with malformed settings memo lines should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1753: synthetic report table should mark malformed memo settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -9818,6 +9854,145 @@ void test_studio_host_json_ignores_blank_report_setting_memo_values(
     run_blank_setting_memo_layout(temp_root / "blank_setting_memo.lbx",
                                   "blank_setting_memo.lbx",
                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_malformed_report_setting_memo_lines(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_malformed_setting_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_malformed_setting_memo_layout = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_malformed_setting_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " malformed setting memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " malformed setting memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1753: malformed settings memo lines should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1753: malformed settings memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1753: malformed settings memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
+                        "#1753: malformed settings memo lines should preserve only valid live settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 4",
+                        "#1753: malformed settings memo lines should preserve only valid deleted settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1753: valid live memo page settings should still expose page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1753: valid live memo orientation should still parse");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 9",
+                        "#1753: valid live memo paper size should still parse");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1753: valid live memo column settings should still expose column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCount\": 3",
+                        "#1753: valid live memo column count should still parse");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                        "#1753: live orientation should retain original source-line index after skipped lines");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 4, \"memoBlockNumber\": 1, \"value\": \"9\"",
+                        "#1753: live paper-size should retain original source-line index after skipped lines");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 6, \"memoBlockNumber\": 1, \"value\": \"3\"",
+                        "#1753: live column-count should retain original source-line index after skipped lines");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLSPACING\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 7, \"memoBlockNumber\": 2, \"value\": \"42\"",
+                        "#1753: deleted column-spacing should retain original source-line index after skipped lines");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1753: malformed live settings memo selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1753: malformed live settings memo selection should expose valid settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1753: malformed live settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 2",
+                "\"memoBlockNumber\": 1",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"sourceLineIndex\": 4",
+                "\"value\": \"9\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 6",
+                "\"value\": \"3\""
+            },
+            "#1753: malformed live settings memo selection should expose only valid memo settings");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1753: malformed deleted settings memo selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1753: malformed deleted settings memo selection should expose valid settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1753: malformed deleted settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 2",
+                "\"memoBlockNumber\": 2",
+                "\"value\": \"120\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"sourceLineIndex\": 4",
+                "\"value\": \"240\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"sourceLineIndex\": 6",
+                "\"value\": \"5000\"",
+                "\"name\": \"COLSPACING\"",
+                "\"sourceLineIndex\": 7",
+                "\"value\": \"42\""
+            },
+            "#1753: malformed deleted settings memo selection should expose only valid memo settings");
+    };
+
+    run_malformed_setting_memo_layout(temp_root / "malformed_setting_memo.frx",
+                                      "malformed_setting_memo.frx",
+                                      "report");
+    run_malformed_setting_memo_layout(temp_root / "malformed_setting_memo.lbx",
+                                      "malformed_setting_memo.lbx",
+                                      "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -77277,6 +77452,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_invalid_report_setting_memo_values(argv[1]);
     test_studio_host_json_preserves_fractional_report_setting_memo_values(argv[1]);
     test_studio_host_json_ignores_blank_report_setting_memo_values(argv[1]);
+    test_studio_host_json_ignores_malformed_report_setting_memo_lines(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
