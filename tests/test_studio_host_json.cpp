@@ -4478,6 +4478,37 @@ void write_synthetic_report_table_for_malformed_setting_memo_layout_json(
     expect(delete_result.ok, "#1753: synthetic report table should mark malformed memo settings deleted");
 }
 
+void write_synthetic_report_table_for_duplicate_setting_precedence_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "COLS", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53",
+         "ORIENTATION=1\n"
+         "ORIENTATION=2\n"
+         "COLS=3\n"
+         "COLS=4",
+         "9", "8", "duplicate-precedence-live-settings-guid"},
+        {"1", "53",
+         "ORIENTATION=5\n"
+         "ORIENTATION=6\n"
+         "COLS=7\n"
+         "COLS=8",
+         "10", "11", "duplicate-precedence-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1754: synthetic report table with duplicate settings should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1754: synthetic report table should mark duplicate settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -9993,6 +10024,162 @@ void test_studio_host_json_ignores_malformed_report_setting_memo_lines(
     run_malformed_setting_memo_layout(temp_root / "malformed_setting_memo.lbx",
                                       "malformed_setting_memo.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_duplicate_report_setting_precedence(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_duplicate_setting_precedence_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_duplicate_setting_precedence_layout = [&](const fs::path& asset_path,
+                                                             const std::string& title,
+                                                             const std::string& label) {
+        write_synthetic_report_table_for_duplicate_setting_precedence_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " duplicate setting precedence summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " duplicate setting precedence summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1754: duplicate settings should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1754: duplicate setting layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1754: duplicate setting label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 6",
+                        "#1754: duplicate settings should keep all live setting entries inspectable");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 6",
+                        "#1754: duplicate settings should keep all deleted setting entries inspectable");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1754: first live memo orientation should expose page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1754: first live memo orientation should beat later duplicates");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1754: first live memo column setting should expose column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCount\": 3",
+                        "#1754: first live memo column count should beat later duplicates");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                        "#1754: first live memo orientation should retain provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"2\"",
+                        "#1754: later live memo orientation should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"9\"",
+                        "#1754: direct live orientation duplicate should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLS\", \"recordIndex\": 1, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"11\"",
+                        "#1754: direct deleted column duplicate should remain inspectable");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1754: duplicate live settings selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1754: duplicate live settings selection should expose settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1754: duplicate live settings selection should expose settings kind");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 1",
+                "\"value\": \"1\"",
+                "\"name\": \"ORIENTATION\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"2\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"3\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"4\"",
+                "\"name\": \"ORIENTATION\"",
+                "\"fieldIndex\": 3",
+                "\"sourceLineIndex\": null",
+                "\"value\": \"9\"",
+                "\"name\": \"COLS\"",
+                "\"fieldIndex\": 4",
+                "\"sourceLineIndex\": null",
+                "\"value\": \"8\""
+            },
+            "#1754: duplicate live settings selection should expose memo entries before direct entries");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1754: duplicate deleted settings selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1754: duplicate deleted settings selection should expose settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1754: duplicate deleted settings selection should expose settings kind");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 2",
+                "\"value\": \"5\"",
+                "\"name\": \"ORIENTATION\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"6\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"7\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"8\"",
+                "\"name\": \"ORIENTATION\"",
+                "\"fieldIndex\": 3",
+                "\"sourceLineIndex\": null",
+                "\"value\": \"10\"",
+                "\"name\": \"COLS\"",
+                "\"fieldIndex\": 4",
+                "\"sourceLineIndex\": null",
+                "\"value\": \"11\""
+            },
+            "#1754: duplicate deleted settings selection should expose memo entries before direct entries");
+    };
+
+    run_duplicate_setting_precedence_layout(temp_root / "duplicate_setting_precedence.frx",
+                                            "duplicate_setting_precedence.frx",
+                                            "report");
+    run_duplicate_setting_precedence_layout(temp_root / "duplicate_setting_precedence.lbx",
+                                            "duplicate_setting_precedence.lbx",
+                                            "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -77453,6 +77640,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_preserves_fractional_report_setting_memo_values(argv[1]);
     test_studio_host_json_ignores_blank_report_setting_memo_values(argv[1]);
     test_studio_host_json_ignores_malformed_report_setting_memo_lines(argv[1]);
+    test_studio_host_json_preserves_duplicate_report_setting_precedence(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
