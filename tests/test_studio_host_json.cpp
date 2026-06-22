@@ -9588,6 +9588,187 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
     }
 }
 
+void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_align_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_align =
+        [&](const fs::path& header_asset_path,
+            const fs::path& footer_asset_path,
+            const std::string& title_prefix,
+            const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(header_asset_path);
+            write_synthetic_report_table_for_detail_header_footer_object_json(footer_asset_path);
+
+            const auto align_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", header_asset_path.string(),
+                    "--unique-id", "detail-header-label-guid",
+                    "--align-object",
+                    "--alignment-mode", "left",
+                    "--anchor-unique-id", "detail-footer-field-guid",
+                    "--align-target-unique-id", "detail-header-label-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (align_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object align stdout:\n"
+                          << align_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object align stderr:\n"
+                          << align_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(align_header_process.exit_code == 0,
+                   "#1789: detail-header object align should exit successfully");
+            expect(visual_object_property(header_asset_path, "detail-header-label-guid", "HPOS") == "140" &&
+                       visual_object_property(header_asset_path, "detail-header-label-guid", "VPOS") == "50",
+                   "#1789: detail-header object align should mutate HPOS and preserve VPOS");
+            expect_contains(align_header_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_header." +
+                                header_asset_path.extension().string().substr(1) + "\"",
+                            "#1789: detail-header object align should return refreshed layout JSON");
+            if (header_asset_path.extension() == ".lbx") {
+                expect_contains(align_header_process.stdout_text, "\"isLabel\": true",
+                                "#1789: detail-header label object align should retain label identity");
+            }
+            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1789: detail-header object align should preserve selected object availability");
+            expect_contains(align_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1789: detail-header object align should preserve object selection kind");
+            expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1789: detail-header object align should preserve containing-section availability");
+            expect_contains_in_order(
+                align_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 140",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 840",
+                    "\"height\": 120",
+                    "\"bottom\": 170",
+                    "\"expression\": \"\\\"Header label\\\"\""
+                },
+                "#1789: detail-header object align should refresh selected-object section metadata");
+            expect_contains_in_order(
+                align_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1789: detail-header object align should preserve containing-section metadata");
+
+            const auto align_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", footer_asset_path.string(),
+                    "--unique-id", "detail-footer-field-guid",
+                    "--align-object",
+                    "--alignment-mode", "left",
+                    "--anchor-unique-id", "detail-header-label-guid",
+                    "--align-target-unique-id", "detail-footer-field-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (align_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object align stdout:\n"
+                          << align_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object align stderr:\n"
+                          << align_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(align_footer_process.exit_code == 0,
+                   "#1789: detail-footer object align should exit successfully");
+            expect(visual_object_property(footer_asset_path, "detail-footer-field-guid", "HPOS") == "100" &&
+                       visual_object_property(footer_asset_path, "detail-footer-field-guid", "VPOS") == "360",
+                   "#1789: detail-footer object align should mutate HPOS and preserve VPOS");
+            expect_contains(align_footer_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_footer." +
+                                footer_asset_path.extension().string().substr(1) + "\"",
+                            "#1789: detail-footer object align should return refreshed layout JSON");
+            if (footer_asset_path.extension() == ".lbx") {
+                expect_contains(align_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1789: detail-footer label object align should retain label identity");
+            }
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1789: detail-footer object align should preserve selected object availability");
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1789: detail-footer object align should preserve object selection kind");
+            expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1789: detail-footer object align should preserve containing-section availability");
+            expect_contains_in_order(
+                align_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 100",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1000",
+                    "\"height\": 100",
+                    "\"bottom\": 460",
+                    "\"expression\": \"footer.total\""
+                },
+                "#1789: detail-footer object align should refresh selected-object section metadata");
+            expect_contains_in_order(
+                align_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1789: detail-footer object align should preserve containing-section metadata");
+        };
+
+    run_detail_header_footer_object_align(
+        temp_root / "detail_header_footer_object_align_header.frx",
+        temp_root / "detail_header_footer_object_align_footer.frx",
+        "detail_header_footer_object_align",
+        "report");
+    run_detail_header_footer_object_align(
+        temp_root / "detail_header_footer_object_align_header.lbx",
+        temp_root / "detail_header_footer_object_align_footer.lbx",
+        "detail_header_footer_object_align",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -83361,6 +83542,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
