@@ -4203,7 +4203,7 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
     std::vector<std::vector<std::string>> records;
     records.reserve(table.records.size() + 1U);
     std::vector<bool> deleted_flags;
-    deleted_flags.reserve(table.records.size());
+    deleted_flags.reserve(table.records.size() + 1U);
     for (const auto& record : table.records) {
         std::vector<std::string> values;
         values.reserve(table.fields.size());
@@ -4233,6 +4233,7 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
 
     const std::size_t duplicate_record_index = records.size();
     records.push_back(std::move(duplicate_values));
+    deleted_flags.push_back(table.records[source_record_index].deleted);
 
     const auto create_result = create_dbf_table_file(request.path, table.fields, records);
     if (!create_result.ok) {

@@ -8596,6 +8596,226 @@ void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_sel
     }
 }
 
+void test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_duplicate_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_duplicate =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+            const auto delete_header_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
+            expect(delete_header_object.ok && dbf_record_deleted(asset_path, 1U),
+                   "#1784: deleted detail-header object duplicate fixture should mark the header object deleted");
+            const auto delete_footer_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+            expect(delete_footer_object.ok && dbf_record_deleted(asset_path, 3U),
+                   "#1784: deleted detail-footer object duplicate fixture should mark the footer object deleted");
+            const std::size_t before_count = visual_object_count(asset_path);
+
+            const auto duplicate_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--duplicate-object",
+                    "--unique-id", "detail-header-label-guid",
+                    "--new-unique-id", "detail-header-label-copy-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (duplicate_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header object duplicate stdout:\n"
+                          << duplicate_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header object duplicate stderr:\n"
+                          << duplicate_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(duplicate_header_process.exit_code == 0,
+                   "#1784: deleted detail-header object duplicate should exit successfully");
+            expect(visual_object_count(asset_path) == before_count + 1U,
+                   "#1784: deleted detail-header object duplicate should append one object record");
+            expect(visual_object_exists(asset_path, "detail-header-label-copy-guid"),
+                   "#1784: deleted detail-header object duplicate should persist replacement unique ids");
+            expect(visual_object_deleted(asset_path, "detail-header-label-copy-guid"),
+                   "#1784: deleted detail-header object duplicate should preserve deleted state");
+            expect_contains(duplicate_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1784: deleted detail-header object duplicate should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(duplicate_header_process.stdout_text, "\"isLabel\": true",
+                                "#1784: deleted detail-header label object duplicate should retain label identity");
+            }
+            expect_contains(duplicate_header_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1784: deleted detail-header object duplicate should leave live object counts unchanged");
+            expect_contains(duplicate_header_process.stdout_text, "\"deletedObjectCount\": 3",
+                            "#1784: deleted detail-header object duplicate should refresh deleted object counts");
+            expect_contains(duplicate_header_process.stdout_text, "\"deletedPlacedObjectCount\": 3",
+                            "#1784: deleted detail-header object duplicate should refresh deleted placed object counts");
+            expect_contains(duplicate_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1784: deleted detail-header object duplicate should preserve selected object availability");
+            expect_contains(duplicate_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1784: deleted detail-header object duplicate should preserve object selection kind");
+            expect_contains(duplicate_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1784: deleted detail-header object duplicate should not fabricate containing sections");
+            expect_contains(duplicate_header_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1784: deleted detail-header object duplicate should serialize null containing-section JSON");
+            expect_contains_in_order(
+                duplicate_header_process.stdout_text,
+                {
+                    "\"deletedObjects\": [",
+                    "\"recordIndex\": 4",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 100",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 170",
+                    "\"expression\": \"\\\"Header label\\\"\""
+                },
+                "#1784: deleted detail-header object duplicate should refresh deleted-object metadata");
+            expect_contains_in_order(
+                duplicate_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 4",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"expression\": \"\\\"Header label\\\"\"",
+                    "\"left\": 100",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 170"
+                },
+                "#1784: deleted detail-header object duplicate should refresh selected duplicate metadata");
+
+            const auto duplicate_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--duplicate-object",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--new-unique-id", "detail-footer-field-copy-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (duplicate_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer object duplicate stdout:\n"
+                          << duplicate_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer object duplicate stderr:\n"
+                          << duplicate_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(duplicate_footer_process.exit_code == 0,
+                   "#1784: deleted detail-footer object duplicate should exit successfully");
+            expect(visual_object_count(asset_path) == before_count + 2U,
+                   "#1784: deleted detail-footer object duplicate should append a second object record");
+            expect(visual_object_exists(asset_path, "detail-footer-field-copy-guid"),
+                   "#1784: deleted detail-footer object duplicate should persist replacement unique ids");
+            expect(visual_object_deleted(asset_path, "detail-footer-field-copy-guid"),
+                   "#1784: deleted detail-footer object duplicate should preserve deleted state");
+            expect_contains(duplicate_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1784: deleted detail-footer object duplicate should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(duplicate_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1784: deleted detail-footer label object duplicate should retain label identity");
+            }
+            expect_contains(duplicate_footer_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1784: deleted detail-footer object duplicate should leave live object counts unchanged");
+            expect_contains(duplicate_footer_process.stdout_text, "\"deletedObjectCount\": 4",
+                            "#1784: deleted detail-footer object duplicate should refresh deleted object counts");
+            expect_contains(duplicate_footer_process.stdout_text, "\"deletedPlacedObjectCount\": 4",
+                            "#1784: deleted detail-footer object duplicate should refresh deleted placed object counts");
+            expect_contains(duplicate_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1784: deleted detail-footer object duplicate should preserve selected object availability");
+            expect_contains(duplicate_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1784: deleted detail-footer object duplicate should preserve object selection kind");
+            expect_contains(duplicate_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1784: deleted detail-footer object duplicate should not fabricate containing sections");
+            expect_contains(duplicate_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1784: deleted detail-footer object duplicate should serialize null containing-section JSON");
+            expect_contains_in_order(
+                duplicate_footer_process.stdout_text,
+                {
+                    "\"deletedObjects\": [",
+                    "\"recordIndex\": 5",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 140",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1040",
+                    "\"height\": 100",
+                    "\"bottom\": 460",
+                    "\"expression\": \"footer.total\""
+                },
+                "#1784: deleted detail-footer object duplicate should refresh deleted-object metadata");
+            expect_contains_in_order(
+                duplicate_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 5",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"expression\": \"footer.total\"",
+                    "\"left\": 140",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1040",
+                    "\"height\": 100",
+                    "\"bottom\": 460"
+                },
+                "#1784: deleted detail-footer object duplicate should refresh selected duplicate metadata");
+        };
+
+    run_deleted_detail_header_footer_object_duplicate(
+        temp_root / "deleted_detail_header_footer_object_duplicate.frx",
+        "deleted_detail_header_footer_object_duplicate.frx",
+        "report");
+    run_deleted_detail_header_footer_object_duplicate(
+        temp_root / "deleted_detail_header_footer_object_duplicate.lbx",
+        "deleted_detail_header_footer_object_duplicate.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -82364,6 +82584,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_detail_header_footer_object_geometry_by_stable_selection(argv[1]);
     test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_duplicates_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);

@@ -6800,6 +6800,29 @@ void test_duplicate_visual_object_appends_identity_safe_copy() {
     expect(list_result.ok && list_result.objects.size() == 3U && list_result.objects[1].deleted,
         "#749: failed duplicate requests should not mutate object count or deleted flags");
 
+    duplicate_result = copperfin::vfp::duplicate_visual_object({
+        .path = table_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "name-guid",
+        .new_object_name = "txtNameCopy",
+        .new_name = "nameBoxCopy",
+        .new_unique_id = "name-copy-guid"
+    });
+    expect(duplicate_result.ok && duplicate_result.record_index == 3U,
+        "#1784: duplicating a deleted visual object should append the copied record");
+    expect(duplicate_result.object_name == "txtNameCopy" &&
+            duplicate_result.unique_id == "name-copy-guid" &&
+            duplicate_result.parent_name == "frmMain",
+        "#1784: deleted visual object duplicate should report replacement identity metadata");
+
+    list_result = copperfin::vfp::list_visual_objects(table_path.string());
+    expect(list_result.ok && list_result.objects.size() == 4U &&
+            list_result.objects[3].deleted &&
+            list_result.objects[3].object_name == "txtNameCopy" &&
+            list_result.objects[3].unique_id == "name-copy-guid",
+        "#1784: deleted visual object duplicate should preserve deleted state and replacement identity");
+
     fs::remove_all(temp_dir, ignored);
 }
 
