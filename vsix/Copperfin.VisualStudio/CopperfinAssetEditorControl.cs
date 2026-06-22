@@ -49,6 +49,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     private readonly TextBox objectBrowserFilterBox;
     private readonly CheckBox objectBrowserHideProjectCheckBox;
     private readonly Label debuggerStatusLabel;
+    private readonly CopperfinLocalization localization;
 
     private string? currentPath;
     private CopperfinStudioSnapshotDocument? currentSnapshot;
@@ -68,8 +69,10 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         }
     }
 
-    public CopperfinAssetEditorControl()
+    public CopperfinAssetEditorControl(CopperfinLocalization? localization = null)
     {
+        this.localization = localization ?? CopperfinLocalization.FromEnvironment();
+
         BackColor = Color.FromArgb(248, 249, 252);
         ForeColor = Color.FromArgb(28, 32, 39);
         Padding = new Padding(24);
@@ -78,7 +81,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             AutoSize = true,
             Font = new Font("Segoe UI Semibold", 16.0F, FontStyle.Bold, GraphicsUnit.Point),
-            Text = "Copperfin Visual Designer"
+            Text = this.localization.Text("AssetEditor.Title")
         };
 
         subtitleLabel = new Label
@@ -86,7 +89,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             AutoSize = true,
             MaximumSize = new Size(960, 0),
             Font = new Font("Segoe UI", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "This Visual Studio editor is the handoff point into Copperfin Studio. It is meant for VFP visual assets such as forms, reports, labels, menus, class libraries, and projects."
+            Text = this.localization.Text("AssetEditor.Subtitle")
         };
 
         pathLabel = new Label
@@ -108,27 +111,27 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             AutoSize = true,
             MaximumSize = new Size(960, 0),
             Font = new Font("Segoe UI", 9.5F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "This shell now pulls a structured snapshot from the native Copperfin Studio host. For VFP visual assets, that gives us a real object/property view while we work toward high-fidelity inline designers."
+            Text = this.localization.Text("AssetEditor.Guidance")
         };
 
         launchButton = new Button
         {
             AutoSize = true,
-            Text = "Open In Native Studio"
+            Text = this.localization.Text("AssetEditor.OpenNativeStudioButton")
         };
         launchButton.Click += (_, _) => LaunchStudio();
 
         revealButton = new Button
         {
             AutoSize = true,
-            Text = "Reveal In Explorer"
+            Text = this.localization.Text("AssetEditor.RevealInExplorerButton")
         };
         revealButton.Click += (_, _) => RevealInExplorer();
 
         refreshButton = new Button
         {
             AutoSize = true,
-            Text = "Refresh"
+            Text = this.localization.Text("AssetEditor.RefreshButton")
         };
         refreshButton.Click += (_, _) =>
         {
@@ -625,7 +628,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         currentPath = path;
 
         var info = new FileInfo(path);
-        titleLabel.Text = CopperfinStudioHostBridge.DescribeAssetKind(path);
+        titleLabel.Text = CopperfinStudioHostBridge.DescribeAssetKind(path, localization);
         pathLabel.Text = path;
         detailsLabel.Text =
             $"Size: {info.Length:N0} bytes   Last write: {info.LastWriteTime:G}   Extension: {info.Extension.ToLowerInvariant()}";

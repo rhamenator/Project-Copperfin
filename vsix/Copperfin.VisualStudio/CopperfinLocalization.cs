@@ -39,7 +39,13 @@ internal sealed class CopperfinLocalization
                 ["Studio.AssetKind.Report"] = "Visual report",
                 ["Studio.AssetKind.Label"] = "Visual label",
                 ["Studio.AssetKind.Menu"] = "Visual menu",
-                ["Studio.AssetKind.Generic"] = "Copperfin asset"
+                ["Studio.AssetKind.Generic"] = "Copperfin asset",
+                ["AssetEditor.Title"] = "Copperfin Visual Designer",
+                ["AssetEditor.Subtitle"] = "This Visual Studio editor is the handoff point into Copperfin Studio. It is meant for VFP visual assets such as forms, reports, labels, menus, class libraries, and projects.",
+                ["AssetEditor.Guidance"] = "This shell now pulls a structured snapshot from the native Copperfin Studio host. For VFP visual assets, that gives us a real object/property view while we work toward high-fidelity inline designers.",
+                ["AssetEditor.OpenNativeStudioButton"] = "Open In Native Studio",
+                ["AssetEditor.RevealInExplorerButton"] = "Reveal In Explorer",
+                ["AssetEditor.RefreshButton"] = "Refresh"
             },
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -60,7 +66,13 @@ internal sealed class CopperfinLocalization
                 ["Studio.AssetKind.Report"] = "Informe visual",
                 ["Studio.AssetKind.Label"] = "Etiqueta visual",
                 ["Studio.AssetKind.Menu"] = "Menú visual",
-                ["Studio.AssetKind.Generic"] = "Activo Copperfin"
+                ["Studio.AssetKind.Generic"] = "Activo Copperfin",
+                ["AssetEditor.Title"] = "Diseñador visual de Copperfin",
+                ["AssetEditor.Subtitle"] = "Este editor de Visual Studio es el punto de entrega hacia Copperfin Studio. Está pensado para activos visuales VFP como formularios, informes, etiquetas, menús, bibliotecas de clases y proyectos.",
+                ["AssetEditor.Guidance"] = "Este shell ahora obtiene una instantánea estructurada desde el host nativo de Copperfin Studio. Para activos visuales VFP, eso nos da una vista real de objetos y propiedades mientras avanzamos hacia diseñadores integrados de alta fidelidad.",
+                ["AssetEditor.OpenNativeStudioButton"] = "Abrir en Studio nativo",
+                ["AssetEditor.RevealInExplorerButton"] = "Mostrar en Explorer",
+                ["AssetEditor.RefreshButton"] = "Actualizar"
             },
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -81,7 +93,13 @@ internal sealed class CopperfinLocalization
                 ["Studio.AssetKind.Report"] = "Relatório visual",
                 ["Studio.AssetKind.Label"] = "Etiqueta visual",
                 ["Studio.AssetKind.Menu"] = "Menu visual",
-                ["Studio.AssetKind.Generic"] = "Ativo Copperfin"
+                ["Studio.AssetKind.Generic"] = "Ativo Copperfin",
+                ["AssetEditor.Title"] = "Designer visual do Copperfin",
+                ["AssetEditor.Subtitle"] = "Este editor do Visual Studio é o ponto de entrega para o Copperfin Studio. Ele foi criado para ativos visuais VFP, como formulários, relatórios, etiquetas, menus, bibliotecas de classes e projetos.",
+                ["AssetEditor.Guidance"] = "Este shell agora obtém um instantâneo estruturado do host nativo do Copperfin Studio. Para ativos visuais VFP, isso oferece uma visão real de objetos e propriedades enquanto avançamos para designers integrados de alta fidelidade.",
+                ["AssetEditor.OpenNativeStudioButton"] = "Abrir no Studio nativo",
+                ["AssetEditor.RevealInExplorerButton"] = "Revelar no Explorer",
+                ["AssetEditor.RefreshButton"] = "Atualizar"
             }
         };
 

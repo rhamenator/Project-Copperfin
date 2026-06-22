@@ -19,6 +19,7 @@ internal static class Program
         Application.SetCompatibleTextRenderingDefault(false);
 
         SmokeDesignSurfaceWithSyntheticReportLayout();
+        SmokeLocalizedAssetEditorChrome();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -102,6 +103,33 @@ internal static class Program
         using var bitmap = new Bitmap(surface.Width, surface.Height);
         surface.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
         Expect(CountNonWhitePixels(bitmap) > 5000, "synthetic report layout should render visible UI content");
+    }
+
+    private static void SmokeLocalizedAssetEditorChrome()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(HasLabelText(spanishControl, "Diseñador visual de Copperfin"),
+            "Spanish editor chrome should localize the asset editor title");
+        Expect(HasLabelTextContaining(spanishControl, "activos visuales VFP"),
+            "Spanish editor chrome should localize the asset editor subtitle");
+        Expect(HasLabelTextContaining(spanishControl, "host nativo de Copperfin Studio"),
+            "Spanish editor chrome should localize the asset editor guidance text");
+        Expect(HasButtonText(spanishControl, "Abrir en Studio nativo") &&
+               HasButtonText(spanishControl, "Mostrar en Explorer") &&
+               HasButtonText(spanishControl, "Actualizar"),
+            "Spanish editor chrome should localize shell command buttons");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(HasLabelText(portugueseControl, "Designer visual do Copperfin"),
+            "Portuguese editor chrome should localize the asset editor title");
+        Expect(HasLabelTextContaining(portugueseControl, "ativos visuais VFP"),
+            "Portuguese editor chrome should localize the asset editor subtitle");
+        Expect(HasLabelTextContaining(portugueseControl, "host nativo do Copperfin Studio"),
+            "Portuguese editor chrome should localize the asset editor guidance text");
+        Expect(HasButtonText(portugueseControl, "Abrir no Studio nativo") &&
+               HasButtonText(portugueseControl, "Revelar no Explorer") &&
+               HasButtonText(portugueseControl, "Atualizar"),
+            "Portuguese editor chrome should localize shell command buttons");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
@@ -424,6 +452,48 @@ internal static class Program
         return null;
     }
 
+    private static IEnumerable<Label> FindLabels(Control root)
+    {
+        foreach (Control child in root.Controls)
+        {
+            if (child is Label label)
+            {
+                yield return label;
+            }
+
+            foreach (var nested in FindLabels(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
+    private static bool HasLabelText(Control root, string text)
+    {
+        foreach (var label in FindLabels(root))
+        {
+            if (string.Equals(label.Text, text, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool HasLabelTextContaining(Control root, string text)
+    {
+        foreach (var label in FindLabels(root))
+        {
+            if (label.Text.IndexOf(text, StringComparison.Ordinal) >= 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static IEnumerable<RichTextBox> FindRichTextBoxes(Control root)
     {
         foreach (Control child in root.Controls)
@@ -487,6 +557,19 @@ internal static class Program
                 yield return nested;
             }
         }
+    }
+
+    private static bool HasButtonText(Control root, string text)
+    {
+        foreach (var button in FindButtons(root))
+        {
+            if (string.Equals(button.Text, text, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void Expect(bool condition, string message)

@@ -19,7 +19,7 @@ Localized text must be separated from stable protocol values:
 
 ## Resource Layout
 
-The initial .NET UI catalog lives in `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs`. It currently covers the standalone Studio shell strings plus catalog-backed asset-kind display labels for project, form, class library, report, label, menu, and generic assets, and is linked into:
+The initial .NET UI catalog lives in `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs`. It currently covers the standalone Studio shell strings, catalog-backed asset-kind display labels for project, form, class library, report, label, menu, and generic assets, plus the embedded VSIX asset editor title/subtitle/guidance/Open/Reveal/Refresh chrome, and is linked into:
 
 - `vsix/Copperfin.Studio`: standalone Studio shell.
 - `vsix/Copperfin.DesignerSmokeTests`: UI smoke test project.
@@ -29,7 +29,7 @@ Future surfaces should either reuse this catalog directly or add equivalent reso
 
 - CLI/native diagnostics: keep command switches and JSON fields stable; localize human summaries behind locale-aware lookup.
 - Studio host JSON: keep JSON contracts stable; localize optional display text only when a consumer requests it.
-- VSIX UI: move command captions, dialogs, pane titles, and status text into shared resources while preserving VS command IDs.
+- VSIX UI: continue moving command captions, dialogs, pane titles, project/debugger panes, and status text into shared resources while preserving VS command IDs.
 - Installer text: ship `en`, `es-419`, and `pt-BR` resources with packaging smoke tests.
 - Docs/help and generated templates: version translated text separately from generated file identifiers and code symbols.
 
