@@ -9616,6 +9616,22 @@ void test_studio_host_json_duplicates_deleted_detail_header_footer_sections_by_s
                 expect_contains(duplicate_process.stdout_text,
                                 "\"deletedSectionHeightTotal\": " + deleted_height_total,
                                 "#1816: " + operation_label + " should refresh deleted section height totals");
+                expect_contains(duplicate_process.stdout_text, "\"previewBoundsAvailable\": true",
+                                "#1874: " + operation_label + " should preserve live preview availability");
+                expect_contains(duplicate_process.stdout_text, "\"previewBoundsTop\": 0",
+                                "#1874: " + operation_label + " should preserve live preview top bounds");
+                expect_contains(duplicate_process.stdout_text, "\"previewBoundsBottom\": 500",
+                                "#1874: " + operation_label + " should preserve live preview bottom bounds");
+                expect_contains(duplicate_process.stdout_text, "\"previewBoundsHeight\": 500",
+                                "#1874: " + operation_label + " should preserve live preview height");
+                expect_contains(duplicate_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                                "#1874: " + operation_label + " should preserve deleted preview availability");
+                expect_contains(duplicate_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
+                                "#1874: " + operation_label + " should preserve deleted preview top bounds");
+                expect_contains(duplicate_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1050",
+                                "#1874: " + operation_label + " should preserve deleted preview bottom bounds");
+                expect_contains(duplicate_process.stdout_text, "\"deletedPreviewBoundsHeight\": 550",
+                                "#1874: " + operation_label + " should preserve deleted preview height");
                 expect_contains(duplicate_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                                 "#1816: " + operation_label + " should advertise selected sections");
                 expect_contains(duplicate_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
