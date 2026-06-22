@@ -28,6 +28,7 @@ internal static class Program
         SmokeLocalizedExplorerColumnHeaders();
         SmokeLocalizedAssetFamilyGuidance();
         SmokeLocalizedSnapshotUndoPropertyStatus();
+        SmokeLocalizedLaunchWorkflowDialogText();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -341,6 +342,25 @@ internal static class Program
                InvokeAssetEditorString(portugueseControl, "BuildPropertyUpdateFailedStatus", "campo protegido").IndexOf("Falha ao atualizar propriedade: campo protegido", StringComparison.Ordinal) >= 0 &&
                InvokeAssetEditorString(portugueseControl, "BuildPropertyUpdatedStatus", "WIDTH", snapshot).IndexOf("WIDTH atualizado. Instantâneo carregado: 2 linhas de objetos, 7 campos. Desfazer disponível: Reordenar.", StringComparison.Ordinal) >= 0,
             "Portuguese snapshot and property status text should localize formatted messages");
+    }
+
+    private static void SmokeLocalizedLaunchWorkflowDialogText()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(InvokeAssetEditorString(spanishControl, "BuildAssetPathUnavailableMessage").IndexOf("ruta del activo", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildStudioHostMissingMessage").IndexOf("No se encontró el host de Copperfin Studio", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildStudioLaunchFailedMessage").IndexOf("no se inició correctamente", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildOpenProjectFirstMessage").IndexOf("Abra primero un proyecto PJX", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildWorkflowLauncherMessage", "Compilación lista.", @"C:\tmp\run.exe").IndexOf("Iniciador: C:\\tmp\\run.exe", StringComparison.Ordinal) >= 0,
+            "Spanish launch and workflow dialog text should localize static messages");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(InvokeAssetEditorString(portugueseControl, "BuildAssetPathUnavailableMessage").IndexOf("caminho do ativo", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildStudioHostMissingMessage").IndexOf("host do Copperfin Studio não foi encontrado", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildStudioLaunchFailedMessage").IndexOf("não iniciou corretamente", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildOpenProjectFirstMessage").IndexOf("Abra primeiro um projeto PJX", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildWorkflowLauncherMessage", "Compilação pronta.", @"C:\tmp\run.exe").IndexOf("Inicializador: C:\\tmp\\run.exe", StringComparison.Ordinal) >= 0,
+            "Portuguese launch and workflow dialog text should localize static messages");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)

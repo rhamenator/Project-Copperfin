@@ -1084,6 +1084,31 @@ internal sealed class CopperfinAssetEditorControl : UserControl
                 : string.Empty);
     }
 
+    private string BuildAssetPathUnavailableMessage()
+    {
+        return this.localization.Text("AssetEditor.Dialog.AssetPathUnavailable");
+    }
+
+    private string BuildStudioHostMissingMessage()
+    {
+        return this.localization.Text("AssetEditor.Dialog.StudioHostMissing");
+    }
+
+    private string BuildStudioLaunchFailedMessage()
+    {
+        return this.localization.Text("AssetEditor.Dialog.StudioLaunchFailed");
+    }
+
+    private string BuildOpenProjectFirstMessage()
+    {
+        return this.localization.Text("AssetEditor.Dialog.OpenProjectFirst");
+    }
+
+    private string BuildWorkflowLauncherMessage(string message, string launcherPath)
+    {
+        return this.localization.Format("AssetEditor.Dialog.WorkflowLauncher", message, launcherPath);
+    }
+
     private void LaunchStudio()
     {
         if (embeddedStudioShell)
@@ -1093,7 +1118,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (string.IsNullOrWhiteSpace(currentPath) || !File.Exists(currentPath))
         {
-            MessageBox.Show(this, "The asset path is no longer available on disk.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, BuildAssetPathUnavailableMessage(), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return;
         }
 
@@ -1102,7 +1127,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             MessageBox.Show(
                 this,
-                "Copperfin Studio host was not found. Set COPPERFIN_STUDIO_HOST_PATH or build E:\\Project-Copperfin\\build\\Release\\copperfin_studio_host.exe.",
+                BuildStudioHostMissingMessage(),
                 "Copperfin",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Warning);
@@ -1111,7 +1136,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         if (!CopperfinStudioHostBridge.Launch(studioHostPath, currentPath!))
         {
-            MessageBox.Show(this, "Copperfin Studio did not start successfully.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            MessageBox.Show(this, BuildStudioLaunchFailedMessage(), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Warning);
         }
     }
 
@@ -1179,7 +1204,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (!CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath))
         {
-            MessageBox.Show(this, "Open a Copperfin PJX project first.", "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show(this, BuildOpenProjectFirstMessage(), "Copperfin", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return;
         }
 
@@ -1201,7 +1226,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             MessageBox.Show(
                 this,
-                result.Message + "\n\nLauncher: " + result.LauncherPath,
+                BuildWorkflowLauncherMessage(result.Message, result.LauncherPath),
                 "Copperfin",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
