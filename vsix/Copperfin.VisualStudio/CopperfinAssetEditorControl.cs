@@ -1089,8 +1089,8 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         runButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         debugButton.Visible = !embeddedStudioShell && CopperfinProjectWorkflow.IsCopperfinProjectPath(currentPath);
         subtitleLabel.Text = embeddedStudioShell
-            ? "This standalone Copperfin Studio shell hosts the same designer surface used inside Visual Studio, so report, label, form, menu, class, and project work can evolve on one shared editor stack."
-            : "This Visual Studio editor is the handoff point into Copperfin Studio. It is meant for VFP visual assets such as forms, reports, labels, menus, class libraries, and projects.";
+            ? this.localization.Text("AssetEditor.StandaloneSubtitle")
+            : this.localization.Text("AssetEditor.Subtitle");
     }
 
     private void QueueUiAction(Func<Task> action)

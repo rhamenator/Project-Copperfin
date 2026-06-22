@@ -21,6 +21,7 @@ internal static class Program
 
         SmokeDesignSurfaceWithSyntheticReportLayout();
         SmokeLocalizedAssetEditorChrome();
+        SmokeLocalizedHostModeSubtitles();
         SmokeLocalizedProjectWorkspaceChrome();
         SmokeLocalizedProjectCommandDebuggerChrome();
         SmokeLocalizedProjectWorkspacePlaceholders();
@@ -136,6 +137,29 @@ internal static class Program
                HasButtonText(portugueseControl, "Revelar no Explorer") &&
                HasButtonText(portugueseControl, "Atualizar"),
             "Portuguese editor chrome should localize shell command buttons");
+    }
+
+    private static void SmokeLocalizedHostModeSubtitles()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(HasLabelTextContaining(spanishControl, "activos visuales VFP"),
+            "Spanish embedded host mode should localize the asset editor subtitle");
+        spanishControl.EmbeddedStudioShell = true;
+        Expect(HasLabelTextContaining(spanishControl, "superficie de diseñador usada dentro de Visual Studio"),
+            "Spanish standalone host mode should localize the asset editor subtitle");
+        spanishControl.EmbeddedStudioShell = false;
+        Expect(HasLabelTextContaining(spanishControl, "punto de entrega hacia Copperfin Studio"),
+            "Spanish embedded host mode should restore the localized asset editor subtitle");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(HasLabelTextContaining(portugueseControl, "ativos visuais VFP"),
+            "Portuguese embedded host mode should localize the asset editor subtitle");
+        portugueseControl.EmbeddedStudioShell = true;
+        Expect(HasLabelTextContaining(portugueseControl, "superfície de designer usada dentro do Visual Studio"),
+            "Portuguese standalone host mode should localize the asset editor subtitle");
+        portugueseControl.EmbeddedStudioShell = false;
+        Expect(HasLabelTextContaining(portugueseControl, "ponto de entrega para o Copperfin Studio"),
+            "Portuguese embedded host mode should restore the localized asset editor subtitle");
     }
 
     private static void SmokeLocalizedProjectWorkspaceChrome()
