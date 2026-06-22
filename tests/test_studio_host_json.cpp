@@ -29773,6 +29773,24 @@ void test_studio_host_json_reorders_live_edited_unplaced_report_layout_object_ge
                "#1624: live edited unplaced report/label layout object reorder should preserve edited geometry fields");
         expect_contains(reorder_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1624: live edited unplaced report/label layout object reorder should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(reorder_process.stdout_text, "\"isLabel\": true",
+                            "#1880: live edited unplaced label layout object reorder should retain label identity");
+        }
+        expect_contains(reorder_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1880: live edited unplaced report/label layout object reorder should keep preview bounds available");
+        expect_contains(reorder_process.stdout_text, "\"previewBoundsLeft\": -300",
+                        "#1880: live edited unplaced report/label layout object reorder should expand preview left bounds");
+        expect_contains(reorder_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#1880: live edited unplaced report/label layout object reorder should preserve section-origin preview top bounds");
+        expect_contains(reorder_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1880: live edited unplaced report/label layout object reorder should preserve preview right bounds");
+        expect_contains(reorder_process.stdout_text, "\"previewBoundsBottom\": 9700",
+                        "#1880: live edited unplaced report/label layout object reorder should expand preview bottom bounds");
+        expect_contains(reorder_process.stdout_text, "\"previewBoundsWidth\": 450",
+                        "#1880: live edited unplaced report/label layout object reorder should refresh preview widths");
+        expect_contains(reorder_process.stdout_text, "\"previewBoundsHeight\": 7700",
+                        "#1880: live edited unplaced report/label layout object reorder should refresh preview heights");
         expect_contains(reorder_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1624: live edited unplaced report/label layout object reorder should preserve selected-object availability");
         expect_contains(reorder_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
