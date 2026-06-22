@@ -3780,6 +3780,33 @@ void write_synthetic_report_table_for_invalid_classification_layout_json(
     expect(delete_result.ok, "#1718: synthetic report table should mark the invalid classification row deleted");
 }
 
+void write_synthetic_report_table_for_unsupported_objtype_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"2", "53", "ORIENTATION=0", "", "", "", "", "unsupported-root-like-guid"},
+        {"10", "4", "\"Unsupported group\"", "", "100", "", "600", "unsupported-section-like-guid"},
+        {"11", "0", "\"Unsupported live object\"", "120", "300", "700", "90",
+         "unsupported-object-like-guid"},
+        {"12", "5", "\"Unsupported deleted object\"", "260", "620", "500", "120",
+         "unsupported-deleted-object-like-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1732: synthetic report table with unsupported OBJTYPE codes should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1732: synthetic report table should mark the unsupported OBJTYPE row deleted");
+}
+
 void write_synthetic_report_table_for_fractional_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -5843,6 +5870,110 @@ void test_studio_host_json_ignores_invalid_report_layout_classifications(
     run_invalid_classification_layout(temp_root / "invalid_classifications.lbx",
                                       "invalid_classifications.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_unsupported_report_layout_objtype_codes(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_unsupported_report_layout_objtype_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto expect_no_report_selection = [](const std::string& stdout_text, const std::string& message_prefix) {
+        expect_contains(stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        message_prefix + " should not expose report-selection availability");
+        expect_contains(stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        message_prefix + " should expose explicit no-selection kind");
+        expect_contains(stdout_text, "\"selectedReportObjectAvailable\": false",
+                        message_prefix + " should not expose selected-object availability");
+        expect_contains(stdout_text, "\"selectedReportObject\": null",
+                        message_prefix + " should serialize null selected objects");
+        expect_contains(stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        message_prefix + " should not expose containing-section availability");
+        expect_contains(stdout_text, "\"selectedReportObjectSection\": null",
+                        message_prefix + " should serialize null containing sections");
+        expect_contains(stdout_text, "\"selectedReportSectionAvailable\": false",
+                        message_prefix + " should not expose selected-section availability");
+        expect_contains(stdout_text, "\"selectedReportSection\": null",
+                        message_prefix + " should serialize null selected sections");
+        expect_contains(stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        message_prefix + " should not expose selected-settings availability");
+        expect_contains(stdout_text, "\"selectedReportSettings\": null",
+                        message_prefix + " should serialize null selected settings");
+    };
+
+    const auto run_unsupported_objtype_layout = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_unsupported_objtype_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " unsupported OBJTYPE summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " unsupported OBJTYPE summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1732: unsupported report/label layout OBJTYPE codes should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1732: unsupported OBJTYPE layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1732: unsupported OBJTYPE label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": false",
+                        "#1732: unsupported OBJTYPE rows should not create live preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1732: unsupported OBJTYPE rows should not create deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1732: unsupported OBJTYPE rows should not infer root settings");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
+                        "#1732: unsupported OBJTYPE rows should not create live layout objects");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1732: unsupported OBJTYPE rows should not create deleted layout objects");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 0",
+                        "#1732: unsupported OBJTYPE rows should not create live sections");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1732: unsupported OBJTYPE rows should not create deleted sections");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 0",
+                        "#1732: unsupported OBJTYPE rows should not create live root settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#1732: unsupported OBJTYPE rows should not create deleted root settings");
+
+        for (const auto record_index : {0, 1, 2, 3}) {
+            const auto selected_process = run_process_capture(
+                studio_host_path,
+                {"--path", asset_path.string(), "--record", std::to_string(record_index), "--json"},
+                temp_root);
+
+            expect(selected_process.exit_code == 0,
+                   "#1732: unsupported OBJTYPE record selection should keep inspection non-failing");
+            expect_no_report_selection(
+                selected_process.stdout_text,
+                "#1732: unsupported OBJTYPE record " + std::to_string(record_index));
+        }
+    };
+
+    run_unsupported_objtype_layout(temp_root / "unsupported_objtype.frx",
+                                   "unsupported_objtype.frx",
+                                   "report");
+    run_unsupported_objtype_layout(temp_root / "unsupported_objtype.lbx",
+                                   "unsupported_objtype.lbx",
+                                   "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -73636,6 +73767,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
     test_studio_host_json_ignores_invalid_report_layout_classifications(argv[1]);
+    test_studio_host_json_ignores_unsupported_report_layout_objtype_codes(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
