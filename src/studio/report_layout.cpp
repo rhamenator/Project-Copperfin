@@ -308,11 +308,8 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
     std::size_t start = 0U;
     std::size_t line_index = 0U;
     while (start <= expr.size()) {
-        const std::size_t end = expr.find('\n', start);
+        const std::size_t end = expr.find_first_of("\r\n", start);
         std::string line = end == std::string::npos ? expr.substr(start) : expr.substr(start, end - start);
-        if (!line.empty() && line.back() == '\r') {
-            line.pop_back();
-        }
 
         const auto equals = line.find('=');
         if (equals != std::string::npos) {
@@ -334,6 +331,10 @@ void append_report_settings(const DbfRecord& record, std::vector<StudioNamedValu
             break;
         }
         start = end + 1U;
+        if (start < expr.size() &&
+            ((expr[end] == '\r' && expr[start] == '\n') || (expr[end] == '\n' && expr[start] == '\r'))) {
+            ++start;
+        }
         ++line_index;
     }
 

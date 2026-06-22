@@ -4540,6 +4540,34 @@ void write_synthetic_report_table_for_invalid_first_duplicate_setting_layout_jso
     expect(delete_result.ok, "#1755: synthetic report table should mark invalid-first duplicate settings deleted");
 }
 
+void write_synthetic_report_table_for_cr_only_setting_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53",
+         "ORIENTATION=1\r"
+         "PAPERSIZE=9\r"
+         "COLS=3\r"
+         "COLWIDTH=5000",
+         "cr-only-memo-live-settings-guid"},
+        {"1", "53",
+         "TOPMARGIN=120\r"
+         "BOTMARGIN=240\r"
+         "COLSPACING=42",
+         "cr-only-memo-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1756: synthetic report table with CR-only settings memo lines should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1756: synthetic report table should mark CR-only memo settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -10367,6 +10395,147 @@ void test_studio_host_json_preserves_invalid_first_duplicate_report_setting_prec
     run_invalid_first_duplicate_setting_layout(temp_root / "invalid_first_duplicate_setting.lbx",
                                                "invalid_first_duplicate_setting.lbx",
                                                "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_parses_cr_only_report_setting_memo_lines(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_cr_only_setting_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_cr_only_setting_memo_layout = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_cr_only_setting_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " CR-only setting memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " CR-only setting memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1756: CR-only settings memo lines should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1756: CR-only settings memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1756: CR-only settings memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 4",
+                        "#1756: CR-only settings memo lines should preserve separate live settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1756: CR-only settings memo lines should preserve separate deleted settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1756: CR-only memo page settings should expose page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1756: CR-only memo orientation should parse");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 9",
+                        "#1756: CR-only memo paper size should parse");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1756: CR-only memo column settings should expose column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCount\": 3",
+                        "#1756: CR-only memo column count should parse");
+        expect_contains(summary_process.stdout_text, "\"columnWidth\": 5000",
+                        "#1756: CR-only memo column width should parse");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                        "#1756: CR-only live orientation should retain line-zero provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"9\"",
+                        "#1756: CR-only live paper-size should retain source-line provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 3, \"memoBlockNumber\": 1, \"value\": \"5000\"",
+                        "#1756: CR-only live column-width should retain source-line provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLSPACING\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 2, \"memoBlockNumber\": 2, \"value\": \"42\"",
+                        "#1756: CR-only deleted column-spacing should retain source-line provenance");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1756: CR-only live settings memo selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1756: CR-only live settings memo selection should expose settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1756: CR-only live settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 1",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"9\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"3\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"5000\""
+            },
+            "#1756: CR-only live settings memo selection should expose separate memo settings");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1756: CR-only deleted settings memo selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1756: CR-only deleted settings memo selection should expose settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1756: CR-only deleted settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 2",
+                "\"value\": \"120\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"240\"",
+                "\"name\": \"COLSPACING\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"42\""
+            },
+            "#1756: CR-only deleted settings memo selection should expose separate memo settings");
+    };
+
+    run_cr_only_setting_memo_layout(temp_root / "cr_only_setting_memo.frx",
+                                    "cr_only_setting_memo.frx",
+                                    "report");
+    run_cr_only_setting_memo_layout(temp_root / "cr_only_setting_memo.lbx",
+                                    "cr_only_setting_memo.lbx",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -77829,6 +77998,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_malformed_report_setting_memo_lines(argv[1]);
     test_studio_host_json_preserves_duplicate_report_setting_precedence(argv[1]);
     test_studio_host_json_preserves_invalid_first_duplicate_report_setting_precedence(argv[1]);
+    test_studio_host_json_parses_cr_only_report_setting_memo_lines(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
