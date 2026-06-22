@@ -4568,6 +4568,36 @@ void write_synthetic_report_table_for_cr_only_setting_memo_layout_json(
     expect(delete_result.ok, "#1756: synthetic report table should mark CR-only memo settings deleted");
 }
 
+void write_synthetic_report_table_for_mixed_case_setting_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53",
+         "orientation=1\n"
+         "PaperSize=9\n"
+         "TopMargin=120\n"
+         "cols=3\n"
+         "ColWidth=5000",
+         "mixed-case-memo-live-settings-guid"},
+        {"1", "53",
+         "bottommargin=240\n"
+         "GridV=1\n"
+         "gridh=0\n"
+         "ColSpacing=42",
+         "mixed-case-memo-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1757: synthetic report table with mixed-case settings memo names should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1757: synthetic report table should mark mixed-case memo settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -10536,6 +10566,152 @@ void test_studio_host_json_parses_cr_only_report_setting_memo_lines(
     run_cr_only_setting_memo_layout(temp_root / "cr_only_setting_memo.lbx",
                                     "cr_only_setting_memo.lbx",
                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_mixed_case_setting_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_mixed_case_setting_memo_layout = [&](const fs::path& asset_path,
+                                                        const std::string& title,
+                                                        const std::string& label) {
+        write_synthetic_report_table_for_mixed_case_setting_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " mixed-case setting memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " mixed-case setting memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1757: mixed-case settings memo names should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1757: mixed-case settings memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1757: mixed-case settings memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 5",
+                        "#1757: mixed-case settings memo names should preserve live settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 4",
+                        "#1757: mixed-case settings memo names should preserve deleted settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1757: mixed-case memo page settings should expose page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1757: lower-case memo orientation should parse case-insensitively");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 9",
+                        "#1757: mixed-case memo paper size should parse case-insensitively");
+        expect_contains(summary_process.stdout_text, "\"topMargin\": 120",
+                        "#1757: mixed-case memo top margin should parse case-insensitively");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1757: mixed-case memo column settings should expose column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCount\": 3",
+                        "#1757: lower-case memo column count should parse case-insensitively");
+        expect_contains(summary_process.stdout_text, "\"columnWidth\": 5000",
+                        "#1757: mixed-case memo column width should parse case-insensitively");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"orientation\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                        "#1757: lower-case live orientation should preserve source spelling and provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"PaperSize\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"9\"",
+                        "#1757: mixed-case live paper-size should preserve source spelling and provenance");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ColSpacing\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 3, \"memoBlockNumber\": 2, \"value\": \"42\"",
+                        "#1757: mixed-case deleted column-spacing should preserve source spelling and provenance");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1757: mixed-case live settings memo selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1757: mixed-case live settings memo selection should expose settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1757: mixed-case live settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"orientation\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 1",
+                "\"value\": \"1\"",
+                "\"name\": \"PaperSize\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"9\"",
+                "\"name\": \"TopMargin\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"120\"",
+                "\"name\": \"cols\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"3\"",
+                "\"name\": \"ColWidth\"",
+                "\"sourceLineIndex\": 4",
+                "\"value\": \"5000\""
+            },
+            "#1757: mixed-case live settings memo selection should preserve source spelling");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1757: mixed-case deleted settings memo selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1757: mixed-case deleted settings memo selection should expose settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1757: mixed-case deleted settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"bottommargin\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 2",
+                "\"value\": \"240\"",
+                "\"name\": \"GridV\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"1\"",
+                "\"name\": \"gridh\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \"0\"",
+                "\"name\": \"ColSpacing\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"42\""
+            },
+            "#1757: mixed-case deleted settings memo selection should preserve source spelling");
+    };
+
+    run_mixed_case_setting_memo_layout(temp_root / "mixed_case_setting_memo.frx",
+                                       "mixed_case_setting_memo.frx",
+                                       "report");
+    run_mixed_case_setting_memo_layout(temp_root / "mixed_case_setting_memo.lbx",
+                                       "mixed_case_setting_memo.lbx",
+                                       "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -77999,6 +78175,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_preserves_duplicate_report_setting_precedence(argv[1]);
     test_studio_host_json_preserves_invalid_first_duplicate_report_setting_precedence(argv[1]);
     test_studio_host_json_parses_cr_only_report_setting_memo_lines(argv[1]);
+    test_studio_host_json_parses_mixed_case_report_setting_memo_names(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);

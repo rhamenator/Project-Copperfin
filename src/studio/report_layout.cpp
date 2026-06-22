@@ -26,6 +26,13 @@ std::string trim_copy(std::string text) {
     return text;
 }
 
+bool equals_ignore_case(std::string_view left, std::string_view right) {
+    return left.size() == right.size() &&
+           std::equal(left.begin(), left.end(), right.begin(), [](unsigned char lhs, unsigned char rhs) {
+               return std::toupper(lhs) == std::toupper(rhs);
+           });
+}
+
 const vfp::DbfRecordValue* find_value(const DbfRecord& record, std::string_view field_name) {
     for (const auto& value : record.values) {
         if (value.field_name == field_name) {
@@ -430,7 +437,7 @@ void finalize_page_setup_summary(StudioReportLayoutSnapshot& snapshot) {
             snapshot.settings.begin(),
             snapshot.settings.end(),
             [&](const StudioNamedValue& named_value) {
-                return named_value.name == setting_name;
+                return equals_ignore_case(named_value.name, setting_name);
             });
         if (setting == snapshot.settings.end()) {
             return;
