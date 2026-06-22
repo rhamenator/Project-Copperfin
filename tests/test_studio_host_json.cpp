@@ -3914,6 +3914,25 @@ void write_synthetic_report_table_for_missing_section_expr_layout_json(
     expect(delete_result.ok, "#1724: synthetic report table should mark the no-EXPR section deleted");
 }
 
+void write_synthetic_report_table_for_missing_section_geometry_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "1", "page.header.missing.geometry", "missing-geometry-live-section-guid"},
+        {"9", "8", "summary.missing.geometry", "missing-geometry-deleted-section-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1727: synthetic report table without section geometry schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1727: synthetic report table should mark the no-geometry section deleted");
+}
+
 void write_synthetic_report_table_for_missing_object_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -6537,6 +6556,180 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
     run_missing_section_expr_layout(temp_root / "missing_section_expr.lbx",
                                     "missing_section_expr.lbx",
                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_defaults_report_sections_without_geometry_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_report_section_geometry_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_section_geometry_layout = [&](const fs::path& asset_path,
+                                                         const std::string& title,
+                                                         const std::string& label) {
+        write_synthetic_report_table_for_missing_section_geometry_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing section geometry summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing section geometry summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1727: missing section geometry schema should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1727: missing section geometry layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1727: missing section geometry label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1727: missing live section geometry should expose zero preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1727: missing live section geometry should default preview top to zero");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 0",
+                        "#1727: missing live section geometry should default preview bottom to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1727: missing deleted section geometry should expose zero deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#1727: missing deleted section geometry should default deleted preview top to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#1727: missing deleted section geometry should default deleted preview bottom to zero");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1727: missing section geometry layouts should preserve live section counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1727: missing section geometry layouts should preserve deleted section counts");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
+                        "#1727: missing live section geometry should default height totals to zero");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionHeightTotal\": 0",
+                        "#1727: missing deleted section geometry should default height totals to zero");
+        expect_contains(summary_process.stdout_text, "\"sectionKindCounts\": [\n        {\"kind\": \"page_header\", \"count\": 1}\n      ]",
+                        "#1727: missing live section geometry should preserve band-kind counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionKindCounts\": [\n        {\"kind\": \"summary\", \"count\": 1}\n      ]",
+                        "#1727: missing deleted section geometry should preserve band-kind counts");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"page_header_0\"",
+                "\"title\": \"Page Header\"",
+                "\"bandKind\": \"page_header\"",
+                "\"expression\": \"page.header.missing.geometry\"",
+                "\"expressionFieldIndex\": 2",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"objectCode\": 1",
+                "\"top\": 0",
+                "\"topFieldIndex\": null",
+                "\"height\": 0",
+                "\"heightFieldIndex\": null",
+                "\"bottom\": 0"
+            },
+            "#1727: missing live section geometry should serialize zero geometry with null provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"summary_1\"",
+                "\"title\": \"Summary\"",
+                "\"bandKind\": \"summary\"",
+                "\"expression\": \"summary.missing.geometry\"",
+                "\"expressionFieldIndex\": 2",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCode\": 8",
+                "\"top\": 0",
+                "\"topFieldIndex\": null",
+                "\"height\": 0",
+                "\"heightFieldIndex\": null",
+                "\"bottom\": 0"
+            },
+            "#1727: missing deleted section geometry should serialize zero geometry with null provenance");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1727: missing section geometry live selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1727: missing section geometry live selection should advertise selected sections");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1727: missing section geometry live selection should expose section selection kind");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"page_header_0\"",
+                "\"title\": \"Page Header\"",
+                "\"bandKind\": \"page_header\"",
+                "\"expression\": \"page.header.missing.geometry\"",
+                "\"expressionFieldIndex\": 2",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"objectCode\": 1",
+                "\"top\": 0",
+                "\"topFieldIndex\": null",
+                "\"height\": 0",
+                "\"heightFieldIndex\": null",
+                "\"bottom\": 0"
+            },
+            "#1727: missing live section geometry selection should expose zero geometry with null provenance");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1727: missing section geometry deleted selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1727: missing section geometry deleted selection should advertise selected sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1727: missing section geometry deleted selection should expose section selection kind");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"summary_1\"",
+                "\"title\": \"Summary\"",
+                "\"bandKind\": \"summary\"",
+                "\"expression\": \"summary.missing.geometry\"",
+                "\"expressionFieldIndex\": 2",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCode\": 8",
+                "\"top\": 0",
+                "\"topFieldIndex\": null",
+                "\"height\": 0",
+                "\"heightFieldIndex\": null",
+                "\"bottom\": 0"
+            },
+            "#1727: missing deleted section geometry selection should expose zero geometry with null provenance");
+    };
+
+    run_missing_section_geometry_layout(temp_root / "missing_section_geometry.frx",
+                                        "missing_section_geometry.frx",
+                                        "report");
+    run_missing_section_geometry_layout(temp_root / "missing_section_geometry.lbx",
+                                        "missing_section_geometry.lbx",
+                                        "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -72709,6 +72902,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
+    test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
     test_studio_host_json_preserves_report_objects_without_expr_schema(argv[1]);
     test_studio_host_json_synthesizes_report_object_titles_without_title_schema(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
