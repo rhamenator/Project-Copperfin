@@ -271,6 +271,15 @@ internal sealed class CopperfinLocalization
         return new CopperfinLocalization(Environment.GetEnvironmentVariable("COPPERFIN_UI_LOCALE"));
     }
 
+    public static IReadOnlyCollection<string> CatalogKeys(string? requestedLocale = null)
+    {
+        var locale = NormalizeLocale(requestedLocale);
+        var catalog = Catalogs.TryGetValue(locale, out var localizedCatalog)
+            ? localizedCatalog
+            : Catalogs[DefaultLocale];
+        return new List<string>(catalog.Keys);
+    }
+
     public static string NormalizeLocale(string? requestedLocale)
     {
         if (string.IsNullOrWhiteSpace(requestedLocale))

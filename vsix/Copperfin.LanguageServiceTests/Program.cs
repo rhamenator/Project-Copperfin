@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -12,6 +13,7 @@ internal static class Program
     {
         TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales();
         TestLocalizationCatalogFallsBackToEnglish();
+        TestLocalizationCatalogKeepsSupportedLocaleKeysAligned();
         TestLocalizationCatalogFormatsWithInvariantCulture();
         TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
@@ -73,6 +75,22 @@ internal static class Program
         var spanish = new CopperfinLocalization("es-419");
         Expect(spanish.Text("Missing.Key") == "Missing.Key",
             "missing localization keys should fall back to the stable key instead of returning blank text");
+    }
+
+    private static void TestLocalizationCatalogKeepsSupportedLocaleKeysAligned()
+    {
+        var englishKeys = new HashSet<string>(CopperfinLocalization.CatalogKeys(CopperfinLocalization.DefaultLocale));
+        foreach (var locale in CopperfinLocalization.SupportedLocales)
+        {
+            var keys = new HashSet<string>(CopperfinLocalization.CatalogKeys(locale));
+            Expect(keys.SetEquals(englishKeys), $"{locale} catalog should expose the same key set as English");
+
+            var localization = new CopperfinLocalization(locale);
+            foreach (var key in englishKeys)
+            {
+                Expect(!string.IsNullOrWhiteSpace(localization.Text(key)), $"{locale} catalog value for {key} should not be blank");
+            }
+        }
     }
 
     private static void TestLocalizationCatalogFormatsWithInvariantCulture()

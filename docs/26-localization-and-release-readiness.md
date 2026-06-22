@@ -37,7 +37,7 @@ Future surfaces should either reuse this catalog directly or add equivalent reso
 
 Before a localized production release:
 
-- Run catalog tests proving English fallback, Spanish lookup, Portuguese lookup, and missing-key fallback.
+- Run catalog tests proving English fallback, Spanish lookup, Portuguese lookup, catalog key parity, nonblank localized values, and missing-key fallback.
 - Smoke the standalone Studio shell with `--locale es-419` and `--locale pt-BR`.
 - Smoke VSIX and installer packaging with localized resources included.
 - Review Spanish and Portuguese terminology for consistency across Studio, VSIX, CLI diagnostics, docs/help, and templates.
