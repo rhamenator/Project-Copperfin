@@ -4104,6 +4104,32 @@ void write_synthetic_report_table_for_unresolved_section_memo_layout_json(
     expect(delete_result.ok, "#1737: synthetic report table should mark unresolved section memo deleted");
 }
 
+void write_synthetic_report_table_for_unresolved_deleted_object_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "FONTSIZE", .type = 'C', .length = 24U},
+        {.name = "MODE", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "4", "", "", "2000", "", "5000", "", "", ""},
+        {"8", "0", "<memo block 50>", "1200", "2600", "4000", "450",
+         "<memo block 51>", "<memo block 52>", "<memo block 53>"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1738: synthetic report table with unresolved deleted object memo placeholders should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1738: synthetic report table should mark unresolved object memo deleted");
+}
+
 void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -7917,6 +7943,120 @@ void test_studio_host_json_suppresses_unresolved_report_section_memo_placeholder
     run_unresolved_section_memo_layout(temp_root / "unresolved_section_memo.lbx",
                                        "unresolved_section_memo.lbx",
                                        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_unresolved_deleted_report_object_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_unresolved_deleted_object_memo_layout = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_unresolved_deleted_object_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " unresolved deleted object memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " unresolved deleted object memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1738: unresolved deleted object memo placeholders should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1738: unresolved deleted object memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1738: unresolved deleted object memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
+                        "#1738: unresolved deleted object memo layouts should not fabricate live objects");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1738: unresolved deleted object memo layouts should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                        "#1738: unresolved deleted object memo layouts should preserve deleted placed-object counts");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"Record 1\"",
+                "\"titleFieldIndex\": null",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": 2",
+                "\"left\": 1200",
+                "\"top\": 2600",
+                "\"width\": 4000",
+                "\"height\": 450",
+                "\"highlightCount\": 0"
+            },
+            "#1738: unresolved deleted object memo summary should suppress expression/highlight text while preserving object metadata");
+        expect_not_contains(summary_process.stdout_text, "<memo block",
+                            "#1738: unresolved deleted object memo placeholders should not leak into summary JSON");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1738: unresolved deleted object memo selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1738: unresolved deleted object memo selection should advertise selected objects");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1738: unresolved deleted object memo selection should expose object selection kind");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1738: unresolved deleted object memo selection should not fabricate containing sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1738: unresolved deleted object memo selection should serialize null containing sections");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectTypeCode\": 8",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"Record 1\"",
+                "\"titleFieldIndex\": null",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": 2",
+                "\"left\": 1200",
+                "\"top\": 2600",
+                "\"width\": 4000",
+                "\"height\": 450",
+                "\"highlightCount\": 0"
+            },
+            "#1738: unresolved deleted object memo selection should suppress expression/highlight text while preserving object metadata");
+        expect_not_contains(deleted_process.stdout_text, "<memo block",
+                            "#1738: unresolved deleted object memo placeholders should not leak into selection JSON");
+    };
+
+    run_unresolved_deleted_object_memo_layout(temp_root / "unresolved_deleted_object_memo.frx",
+                                              "unresolved_deleted_object_memo.frx",
+                                              "report");
+    run_unresolved_deleted_object_memo_layout(temp_root / "unresolved_deleted_object_memo.lbx",
+                                              "unresolved_deleted_object_memo.lbx",
+                                              "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -74571,6 +74711,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_invalid_direct_report_margin_grid_fields(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
+    test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
