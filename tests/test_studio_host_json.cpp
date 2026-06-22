@@ -28597,6 +28597,38 @@ void test_studio_host_json_deletes_edited_report_layout_object_geometry_by_recor
                "#1615: edited report/label layout object delete should preserve edited geometry fields");
         expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1615: edited report/label layout object delete should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(delete_process.stdout_text, "\"isLabel\": true",
+                            "#1887: edited label layout object delete should retain label identity");
+        }
+        expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1887: edited report/label layout object delete should preserve live preview availability");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1887: edited report/label layout object delete should refresh live preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1887: edited report/label layout object delete should refresh live preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 2700",
+                        "#1887: edited report/label layout object delete should refresh live preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1887: edited report/label layout object delete should refresh live preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 2700",
+                        "#1887: edited report/label layout object delete should refresh live preview widths");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1887: edited report/label layout object delete should refresh live preview heights");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1887: edited report/label layout object delete should preserve deleted preview availability");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1887: edited report/label layout object delete should refresh deleted preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1887: edited report/label layout object delete should refresh deleted preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 3800",
+                        "#1887: edited report/label layout object delete should refresh deleted preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3500",
+                        "#1887: edited report/label layout object delete should refresh deleted preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2800",
+                        "#1887: edited report/label layout object delete should refresh deleted preview widths");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 900",
+                        "#1887: edited report/label layout object delete should refresh deleted preview heights");
         expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 2",
                         "#1615: edited report/label layout object delete should add the edited object to deleted-object counts");
         expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": true",
