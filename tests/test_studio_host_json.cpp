@@ -4206,6 +4206,35 @@ void write_synthetic_report_table_for_trimmed_direct_setting_layout_json(
     expect(delete_result.ok, "#1745: synthetic report table should mark trimmed direct settings deleted");
 }
 
+void write_synthetic_report_table_for_fractional_direct_setting_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "ORIENTATION", .type = 'C', .length = 24U},
+        {.name = "PAPERSIZE", .type = 'C', .length = 24U},
+        {.name = "TOPMARGIN", .type = 'C', .length = 24U},
+        {.name = "BOTMARGIN", .type = 'C', .length = 24U},
+        {.name = "GRIDV", .type = 'C', .length = 24U},
+        {.name = "GRIDH", .type = 'C', .length = 24U},
+        {.name = "COLS", .type = 'C', .length = 24U},
+        {.name = "COLWIDTH", .type = 'C', .length = 24U},
+        {.name = "COLSPACING", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "1.9", "9.8", "120.75", "240.25", "1.1", "0.9", "3.5", "5000.99",
+         "42.42", "fractional-direct-live-settings-guid"},
+        {"1", "53", "2.1", "10.9", "360.5", "480.5", "0.1", "1.1", "4.9", "6000.5",
+         "84.9", "fractional-direct-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1746: synthetic report table with fractional direct settings should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1746: synthetic report table should mark fractional direct settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -8604,6 +8633,150 @@ void test_studio_host_json_preserves_trimmed_report_direct_setting_fields(
     run_trimmed_direct_setting_layout(temp_root / "trimmed_direct_setting.lbx",
                                       "trimmed_direct_setting.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_fractional_report_direct_setting_fields(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_fractional_direct_setting_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_fractional_direct_setting_layout = [&](const fs::path& asset_path,
+                                                          const std::string& title,
+                                                          const std::string& label) {
+        write_synthetic_report_table_for_fractional_direct_setting_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " fractional direct setting summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " fractional direct setting summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1746: fractional direct settings should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1746: fractional direct-setting layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1746: fractional direct-setting label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 9",
+                        "#1746: fractional direct settings should preserve live raw settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 9",
+                        "#1746: fractional direct settings should preserve deleted raw settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1746: fractional direct settings should expose page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1746: fractional direct settings should parse orientation integer portion");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 9",
+                        "#1746: fractional direct settings should parse paper-size integer portion");
+        expect_contains(summary_process.stdout_text, "\"topMargin\": 120",
+                        "#1746: fractional direct settings should parse top-margin integer portion");
+        expect_contains(summary_process.stdout_text, "\"bottomMargin\": 240",
+                        "#1746: fractional direct settings should parse bottom-margin integer portion");
+        expect_contains(summary_process.stdout_text, "\"gridVertical\": 1",
+                        "#1746: fractional direct settings should parse vertical-grid integer portion");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontal\": 0",
+                        "#1746: fractional direct settings should parse horizontal-grid integer portion");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1746: fractional direct settings should expose column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCount\": 3",
+                        "#1746: fractional direct settings should parse column-count integer portion");
+        expect_contains(summary_process.stdout_text, "\"columnWidth\": 5000",
+                        "#1746: fractional direct settings should parse column-width integer portion");
+        expect_contains(summary_process.stdout_text, "\"columnSpacing\": 42",
+                        "#1746: fractional direct settings should parse column-spacing integer portion");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1746: fractional live direct-setting selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1746: fractional live direct-setting selection should expose raw settings");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"value\": \"1.9\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"value\": \"9.8\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"value\": \"120.75\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"value\": \"240.25\"",
+                "\"name\": \"GRIDV\"",
+                "\"value\": \"1.1\"",
+                "\"name\": \"GRIDH\"",
+                "\"value\": \"0.9\"",
+                "\"name\": \"COLS\"",
+                "\"value\": \"3.5\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"value\": \"5000.99\"",
+                "\"name\": \"COLSPACING\"",
+                "\"value\": \"42.42\""
+            },
+            "#1746: fractional live direct-setting selection should expose fractional source values");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1746: fractional deleted direct-setting selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1746: fractional deleted direct-setting selection should expose raw settings");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"value\": \"2.1\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"value\": \"10.9\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"value\": \"360.5\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"value\": \"480.5\"",
+                "\"name\": \"GRIDV\"",
+                "\"value\": \"0.1\"",
+                "\"name\": \"GRIDH\"",
+                "\"value\": \"1.1\"",
+                "\"name\": \"COLS\"",
+                "\"value\": \"4.9\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"value\": \"6000.5\"",
+                "\"name\": \"COLSPACING\"",
+                "\"value\": \"84.9\""
+            },
+            "#1746: fractional deleted direct-setting selection should expose fractional source values");
+    };
+
+    run_fractional_direct_setting_layout(temp_root / "fractional_direct_setting.frx",
+                                         "fractional_direct_setting.frx",
+                                         "report");
+    run_fractional_direct_setting_layout(temp_root / "fractional_direct_setting.lbx",
+                                         "fractional_direct_setting.lbx",
+                                         "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -75930,6 +76103,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_skips_blank_report_direct_setting_fields(argv[1]);
     test_studio_host_json_preserves_mixed_invalid_report_direct_setting_fields(argv[1]);
     test_studio_host_json_preserves_trimmed_report_direct_setting_fields(argv[1]);
+    test_studio_host_json_preserves_fractional_report_direct_setting_fields(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
