@@ -35233,6 +35233,10 @@ void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_re
                "#1561: report/label layout object left clear should exit successfully");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1561: report/label layout object left clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1900: label layout object left clear should retain label identity");
+        }
         expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
                         "#1561: report/label layout object left clear should preserve preview bounds availability");
         expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
@@ -35241,6 +35245,20 @@ void test_studio_host_json_clears_report_layout_object_left_preview_bounds_by_re
                         "#1561: report/label layout object left clear should preserve preview right bounds");
         expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 5200",
                         "#1561: report/label layout object left clear should refresh preview widths");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1900: report/label layout object left clear should preserve deleted preview availability");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1900: report/label layout object left clear should preserve deleted preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1900: report/label layout object left clear should preserve deleted preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1900: report/label layout object left clear should preserve deleted preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1900: report/label layout object left clear should preserve deleted preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1900: report/label layout object left clear should preserve deleted preview widths");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1900: report/label layout object left clear should preserve deleted preview heights");
         expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 2",
                         "#1561: report/label layout object left clear should preserve placed counts");
         expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
