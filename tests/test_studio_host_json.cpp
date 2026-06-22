@@ -10517,6 +10517,194 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
     }
 }
 
+void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_snap_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_snap =
+        [&](const fs::path& header_asset_path,
+            const fs::path& footer_asset_path,
+            const std::string& title_prefix,
+            const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(header_asset_path);
+            write_synthetic_report_table_for_detail_header_footer_object_json(footer_asset_path);
+
+            for (const auto& asset_path : {header_asset_path, footer_asset_path}) {
+                for (const std::size_t record_index : {1U, 3U}) {
+                    const auto delete_result =
+                        copperfin::vfp::set_record_deleted_flag(asset_path.string(), record_index, true);
+                    expect(delete_result.ok && dbf_record_deleted(asset_path, record_index),
+                           "#1794: deleted detail header/footer object snap fixture should mark object records deleted");
+                }
+            }
+
+            const auto snap_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", header_asset_path.string(),
+                    "--unique-id", "detail-header-label-guid",
+                    "--snap-object",
+                    "--snap-mode", "both",
+                    "--grid-width", "80",
+                    "--grid-height", "70",
+                    "--snap-target-unique-id", "detail-header-label-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (snap_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header object snap stdout:\n"
+                          << snap_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header object snap stderr:\n"
+                          << snap_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(snap_header_process.exit_code == 0,
+                   "#1794: deleted detail-header object snap should exit successfully");
+            expect(visual_object_deleted(header_asset_path, "detail-header-label-guid"),
+                   "#1794: deleted detail-header object snap should preserve deleted state");
+            expect(visual_object_property(header_asset_path, "detail-header-label-guid", "HPOS") == "80" &&
+                       visual_object_property(header_asset_path, "detail-header-label-guid", "VPOS") == "70",
+                   "#1794: deleted detail-header object snap should round HPOS and VPOS");
+            expect_contains(snap_header_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_deleted_header." +
+                                header_asset_path.extension().string().substr(1) + "\"",
+                            "#1794: deleted detail-header object snap should return refreshed layout JSON");
+            if (header_asset_path.extension() == ".lbx") {
+                expect_contains(snap_header_process.stdout_text, "\"isLabel\": true",
+                                "#1794: deleted detail-header label object snap should retain label identity");
+            }
+            expect_contains(snap_header_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1794: deleted detail-header object snap should leave live object counts unchanged");
+            expect_contains(snap_header_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1794: deleted detail-header object snap should preserve deleted object counts");
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1794: deleted detail-header object snap should preserve selected object availability");
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1794: deleted detail-header object snap should preserve object selection kind");
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1794: deleted detail-header object snap should not fabricate containing sections");
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1794: deleted detail-header object snap should serialize null containing-section JSON");
+            expect_contains_in_order(
+                snap_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"expression\": \"\\\"Header label\\\"\"",
+                    "\"left\": 80",
+                    "\"top\": 70",
+                    "\"width\": 700",
+                    "\"right\": 780",
+                    "\"height\": 120",
+                    "\"bottom\": 190"
+                },
+                "#1794: deleted detail-header object snap should refresh selected deleted-object metadata");
+
+            const auto snap_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", footer_asset_path.string(),
+                    "--unique-id", "detail-footer-field-guid",
+                    "--snap-object",
+                    "--snap-mode", "both",
+                    "--grid-width", "80",
+                    "--grid-height", "70",
+                    "--snap-target-unique-id", "detail-footer-field-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (snap_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer object snap stdout:\n"
+                          << snap_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer object snap stderr:\n"
+                          << snap_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(snap_footer_process.exit_code == 0,
+                   "#1794: deleted detail-footer object snap should exit successfully");
+            expect(visual_object_deleted(footer_asset_path, "detail-footer-field-guid"),
+                   "#1794: deleted detail-footer object snap should preserve deleted state");
+            expect(visual_object_property(footer_asset_path, "detail-footer-field-guid", "HPOS") == "160" &&
+                       visual_object_property(footer_asset_path, "detail-footer-field-guid", "VPOS") == "350",
+                   "#1794: deleted detail-footer object snap should round HPOS and VPOS");
+            expect_contains(snap_footer_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_deleted_footer." +
+                                footer_asset_path.extension().string().substr(1) + "\"",
+                            "#1794: deleted detail-footer object snap should return refreshed layout JSON");
+            if (footer_asset_path.extension() == ".lbx") {
+                expect_contains(snap_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1794: deleted detail-footer label object snap should retain label identity");
+            }
+            expect_contains(snap_footer_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1794: deleted detail-footer object snap should leave live object counts unchanged");
+            expect_contains(snap_footer_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1794: deleted detail-footer object snap should preserve deleted object counts");
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1794: deleted detail-footer object snap should preserve selected object availability");
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1794: deleted detail-footer object snap should preserve object selection kind");
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1794: deleted detail-footer object snap should not fabricate containing sections");
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1794: deleted detail-footer object snap should serialize null containing-section JSON");
+            expect_contains_in_order(
+                snap_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"expression\": \"footer.total\"",
+                    "\"left\": 160",
+                    "\"top\": 350",
+                    "\"width\": 900",
+                    "\"right\": 1060",
+                    "\"height\": 100",
+                    "\"bottom\": 450"
+                },
+                "#1794: deleted detail-footer object snap should refresh selected deleted-object metadata");
+        };
+
+    run_deleted_detail_header_footer_object_snap(
+        temp_root / "detail_header_footer_object_snap_deleted_header.frx",
+        temp_root / "detail_header_footer_object_snap_deleted_footer.frx",
+        "detail_header_footer_object_snap",
+        "report");
+    run_deleted_detail_header_footer_object_snap(
+        temp_root / "detail_header_footer_object_snap_deleted_header.lbx",
+        temp_root / "detail_header_footer_object_snap_deleted_footer.lbx",
+        "detail_header_footer_object_snap",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -84295,6 +84483,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_resizes_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
