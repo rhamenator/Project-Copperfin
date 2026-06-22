@@ -10705,6 +10705,189 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
     }
 }
 
+void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_nudge_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_nudge =
+        [&](const fs::path& header_asset_path,
+            const fs::path& footer_asset_path,
+            const std::string& title_prefix,
+            const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(header_asset_path);
+            write_synthetic_report_table_for_detail_header_footer_object_json(footer_asset_path);
+
+            const auto nudge_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", header_asset_path.string(),
+                    "--unique-id", "detail-header-label-guid",
+                    "--nudge-object",
+                    "--nudge-mode", "both",
+                    "--delta-hpos", "25",
+                    "--delta-vpos", "-20",
+                    "--nudge-target-unique-id", "detail-header-label-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (nudge_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object nudge stdout:\n"
+                          << nudge_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object nudge stderr:\n"
+                          << nudge_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(nudge_header_process.exit_code == 0,
+                   "#1795: detail-header object nudge should exit successfully");
+            expect(visual_object_property(header_asset_path, "detail-header-label-guid", "HPOS") == "125" &&
+                       visual_object_property(header_asset_path, "detail-header-label-guid", "VPOS") == "30",
+                   "#1795: detail-header object nudge should mutate HPOS and VPOS");
+            expect_contains(nudge_header_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_header." +
+                                header_asset_path.extension().string().substr(1) + "\"",
+                            "#1795: detail-header object nudge should return refreshed layout JSON");
+            if (header_asset_path.extension() == ".lbx") {
+                expect_contains(nudge_header_process.stdout_text, "\"isLabel\": true",
+                                "#1795: detail-header label object nudge should retain label identity");
+            }
+            expect_contains(nudge_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1795: detail-header object nudge should preserve selected object availability");
+            expect_contains(nudge_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1795: detail-header object nudge should preserve object selection kind");
+            expect_contains(nudge_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1795: detail-header object nudge should preserve containing-section availability");
+            expect_contains_in_order(
+                nudge_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 30",
+                    "\"sectionRelativeBottom\": 150",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 125",
+                    "\"top\": 30",
+                    "\"width\": 700",
+                    "\"right\": 825",
+                    "\"height\": 120",
+                    "\"bottom\": 150",
+                    "\"expression\": \"\\\"Header label\\\"\""
+                },
+                "#1795: detail-header object nudge should refresh selected-object section metadata");
+            expect_contains_in_order(
+                nudge_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1795: detail-header object nudge should preserve containing-section metadata");
+
+            const auto nudge_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", footer_asset_path.string(),
+                    "--unique-id", "detail-footer-field-guid",
+                    "--nudge-object",
+                    "--nudge-mode", "both",
+                    "--delta-hpos", "25",
+                    "--delta-vpos", "-20",
+                    "--nudge-target-unique-id", "detail-footer-field-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (nudge_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object nudge stdout:\n"
+                          << nudge_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object nudge stderr:\n"
+                          << nudge_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(nudge_footer_process.exit_code == 0,
+                   "#1795: detail-footer object nudge should exit successfully");
+            expect(visual_object_property(footer_asset_path, "detail-footer-field-guid", "HPOS") == "165" &&
+                       visual_object_property(footer_asset_path, "detail-footer-field-guid", "VPOS") == "340",
+                   "#1795: detail-footer object nudge should mutate HPOS and VPOS");
+            expect_contains(nudge_footer_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_footer." +
+                                footer_asset_path.extension().string().substr(1) + "\"",
+                            "#1795: detail-footer object nudge should return refreshed layout JSON");
+            if (footer_asset_path.extension() == ".lbx") {
+                expect_contains(nudge_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1795: detail-footer label object nudge should retain label identity");
+            }
+            expect_contains(nudge_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1795: detail-footer object nudge should preserve selected object availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1795: detail-footer object nudge should preserve object selection kind");
+            expect_contains(nudge_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1795: detail-footer object nudge should preserve containing-section availability");
+            expect_contains_in_order(
+                nudge_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 40",
+                    "\"sectionRelativeBottom\": 140",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 165",
+                    "\"top\": 340",
+                    "\"width\": 900",
+                    "\"right\": 1065",
+                    "\"height\": 100",
+                    "\"bottom\": 440",
+                    "\"expression\": \"footer.total\""
+                },
+                "#1795: detail-footer object nudge should refresh selected-object section metadata");
+            expect_contains_in_order(
+                nudge_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1795: detail-footer object nudge should preserve containing-section metadata");
+        };
+
+    run_detail_header_footer_object_nudge(
+        temp_root / "detail_header_footer_object_nudge_header.frx",
+        temp_root / "detail_header_footer_object_nudge_footer.frx",
+        "detail_header_footer_object_nudge",
+        "report");
+    run_detail_header_footer_object_nudge(
+        temp_root / "detail_header_footer_object_nudge_header.lbx",
+        temp_root / "detail_header_footer_object_nudge_footer.lbx",
+        "detail_header_footer_object_nudge",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -84484,6 +84667,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
