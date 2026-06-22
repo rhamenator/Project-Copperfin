@@ -11682,6 +11682,192 @@ void test_studio_host_json_distributes_detail_header_footer_objects_vertically_b
     }
 }
 
+void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vertically_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() /
+                               "copperfin_studio_host_deleted_detail_header_footer_object_vertical_distribute_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_vertical_distribution =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_vertical_distribution_json(asset_path);
+
+            for (const std::size_t record_index : {1U, 2U, 3U, 5U, 6U, 7U}) {
+                const auto delete_result =
+                    copperfin::vfp::set_record_deleted_flag(asset_path.string(), record_index, true);
+                expect(delete_result.ok && dbf_record_deleted(asset_path, record_index),
+                       "#1800: deleted detail header/footer object vertical distribution fixture should mark object records deleted");
+            }
+
+            const auto distribute_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--unique-id", "detail-header-middle-guid",
+                    "--distribute-object",
+                    "--distribution-mode", "vertical",
+                    "--distribute-target-unique-id", "detail-header-left-guid",
+                    "--distribute-target-unique-id", "detail-header-middle-guid",
+                    "--distribute-target-unique-id", "detail-header-right-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (distribute_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header object vertical distribute stdout:\n"
+                          << distribute_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header object vertical distribute stderr:\n"
+                          << distribute_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(distribute_header_process.exit_code == 0,
+                   "#1800: deleted detail-header object vertical distribution should exit successfully");
+            expect(visual_object_deleted(asset_path, "detail-header-middle-guid"),
+                   "#1800: deleted detail-header object vertical distribution should preserve deleted state");
+            expect(visual_object_property(asset_path, "detail-header-left-guid", "VPOS") == "40" &&
+                       visual_object_property(asset_path, "detail-header-middle-guid", "VPOS") == "65" &&
+                       visual_object_property(asset_path, "detail-header-right-guid", "VPOS") == "90",
+                   "#1800: deleted detail-header object vertical distribution should evenly position the middle object");
+            expect(visual_object_property(asset_path, "detail-header-middle-guid", "HPOS") == "175" &&
+                       visual_object_property(asset_path, "detail-header-middle-guid", "WIDTH") == "50" &&
+                       visual_object_property(asset_path, "detail-header-middle-guid", "HEIGHT") == "100",
+                   "#1800: deleted detail-header object vertical distribution should preserve horizontal geometry and size");
+            expect_contains(distribute_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1800: deleted detail-header object vertical distribution should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(distribute_header_process.stdout_text, "\"isLabel\": true",
+                                "#1800: deleted detail-header label object vertical distribution should retain label identity");
+            }
+            expect_contains(distribute_header_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1800: deleted detail-header object vertical distribution should leave live object counts unchanged");
+            expect_contains(distribute_header_process.stdout_text, "\"deletedObjectCount\": 6",
+                            "#1800: deleted detail-header object vertical distribution should preserve deleted object counts");
+            expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1800: deleted detail-header object vertical distribution should preserve selected object availability");
+            expect_contains(distribute_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1800: deleted detail-header object vertical distribution should preserve object selection kind");
+            expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1800: deleted detail-header object vertical distribution should not fabricate containing sections");
+            expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1800: deleted detail-header object vertical distribution should serialize null containing-section JSON");
+            expect_contains_in_order(
+                distribute_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 2",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"expression\": \"\\\"Header middle\\\"\"",
+                    "\"left\": 175",
+                    "\"top\": 65",
+                    "\"width\": 50",
+                    "\"right\": 225",
+                    "\"height\": 100",
+                    "\"bottom\": 165"
+                },
+                "#1800: deleted detail-header object vertical distribution should refresh selected deleted-object metadata");
+
+            const auto distribute_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--unique-id", "detail-footer-middle-guid",
+                    "--distribute-object",
+                    "--distribution-mode", "vertical",
+                    "--distribute-target-unique-id", "detail-footer-left-guid",
+                    "--distribute-target-unique-id", "detail-footer-middle-guid",
+                    "--distribute-target-unique-id", "detail-footer-right-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (distribute_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer object vertical distribute stdout:\n"
+                          << distribute_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer object vertical distribute stderr:\n"
+                          << distribute_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(distribute_footer_process.exit_code == 0,
+                   "#1800: deleted detail-footer object vertical distribution should exit successfully");
+            expect(visual_object_deleted(asset_path, "detail-footer-middle-guid"),
+                   "#1800: deleted detail-footer object vertical distribution should preserve deleted state");
+            expect(visual_object_property(asset_path, "detail-footer-left-guid", "VPOS") == "330" &&
+                       visual_object_property(asset_path, "detail-footer-middle-guid", "VPOS") == "360" &&
+                       visual_object_property(asset_path, "detail-footer-right-guid", "VPOS") == "390",
+                   "#1800: deleted detail-footer object vertical distribution should evenly position the middle object");
+            expect(visual_object_property(asset_path, "detail-footer-middle-guid", "HPOS") == "200" &&
+                       visual_object_property(asset_path, "detail-footer-middle-guid", "WIDTH") == "50" &&
+                       visual_object_property(asset_path, "detail-footer-middle-guid", "HEIGHT") == "100",
+                   "#1800: deleted detail-footer object vertical distribution should preserve horizontal geometry and size");
+            expect_contains(distribute_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1800: deleted detail-footer object vertical distribution should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(distribute_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1800: deleted detail-footer label object vertical distribution should retain label identity");
+            }
+            expect_contains(distribute_footer_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1800: deleted detail-footer object vertical distribution should leave live object counts unchanged");
+            expect_contains(distribute_footer_process.stdout_text, "\"deletedObjectCount\": 6",
+                            "#1800: deleted detail-footer object vertical distribution should preserve deleted object counts");
+            expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1800: deleted detail-footer object vertical distribution should preserve selected object availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1800: deleted detail-footer object vertical distribution should preserve object selection kind");
+            expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1800: deleted detail-footer object vertical distribution should not fabricate containing sections");
+            expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1800: deleted detail-footer object vertical distribution should serialize null containing-section JSON");
+            expect_contains_in_order(
+                distribute_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 6",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"expression\": \"footer.middle\"",
+                    "\"left\": 200",
+                    "\"top\": 360",
+                    "\"width\": 50",
+                    "\"right\": 250",
+                    "\"height\": 100",
+                    "\"bottom\": 460"
+                },
+                "#1800: deleted detail-footer object vertical distribution should refresh selected deleted-object metadata");
+        };
+
+    run_deleted_detail_header_footer_object_vertical_distribution(
+        temp_root / "deleted_detail_header_footer_object_vertical_distribution.frx",
+        "deleted_detail_header_footer_object_vertical_distribution.frx",
+        "report");
+    run_deleted_detail_header_footer_object_vertical_distribution(
+        temp_root / "deleted_detail_header_footer_object_vertical_distribution.lbx",
+        "deleted_detail_header_footer_object_vertical_distribution.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -85466,6 +85652,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_distributes_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_distributes_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_distributes_detail_header_footer_objects_vertically_by_stable_selection(argv[1]);
+    test_studio_host_json_distributes_deleted_detail_header_footer_objects_vertically_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
