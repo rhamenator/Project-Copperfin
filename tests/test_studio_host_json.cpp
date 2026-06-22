@@ -7427,6 +7427,153 @@ void test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_s
     }
 }
 
+void test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_top_clear_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_section_top_clear =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
+
+            const auto clear_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-header-guid",
+                    "--property-name", "VPOS",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header section top clear stdout:\n"
+                          << clear_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header section top clear stderr:\n"
+                          << clear_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_header_process.exit_code == 0,
+                   "#1807: detail-header section top clear by stable selection should exit successfully");
+            const auto header_top_property = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "detail-header-guid",
+                .property_name = "VPOS"
+            });
+            expect(header_top_property.ok && header_top_property.exists &&
+                       header_top_property.direct_field && header_top_property.value.empty(),
+                   "#1807: detail-header section top clear should blank the VPOS field");
+            expect_contains(clear_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1807: detail-header section top clear should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(clear_header_process.stdout_text, "\"isLabel\": true",
+                                "#1807: detail-header label section top clear should retain label identity");
+            }
+            expect_contains(clear_header_process.stdout_text, "\"sectionHeightTotal\": 550",
+                            "#1807: detail-header section top clear should preserve live section height totals");
+            expect_contains(clear_header_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
+                            "#1807: detail-header section top clear should preserve deleted section height totals");
+            expect_contains(clear_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#1807: detail-header section top clear should preserve selected section availability");
+            expect_contains(clear_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#1807: detail-header section top clear should preserve selection kind");
+            expect_contains_in_order(
+                clear_header_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Header\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"recordIndex\": 0",
+                    "\"objectCode\": 9",
+                    "\"top\": 0",
+                    "\"height\": 300",
+                    "\"bottom\": 300"
+                },
+                "#1807: detail-header section top clear should refresh selected-section geometry");
+
+            const auto clear_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-footer-guid",
+                    "--property-name", "VPOS",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer section top clear stdout:\n"
+                          << clear_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer section top clear stderr:\n"
+                          << clear_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_footer_process.exit_code == 0,
+                   "#1807: detail-footer section top clear by stable selection should exit successfully");
+            const auto footer_top_property = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "detail-footer-guid",
+                .property_name = "VPOS"
+            });
+            expect(footer_top_property.ok && footer_top_property.exists &&
+                       footer_top_property.direct_field && footer_top_property.value.empty(),
+                   "#1807: detail-footer section top clear should blank the VPOS field");
+            expect_contains(clear_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1807: detail-footer section top clear should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(clear_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1807: detail-footer label section top clear should retain label identity");
+            }
+            expect_contains(clear_footer_process.stdout_text, "\"sectionHeightTotal\": 550",
+                            "#1807: detail-footer section top clear should preserve live section height totals");
+            expect_contains(clear_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 200",
+                            "#1807: detail-footer section top clear should preserve deleted section height totals");
+            expect_contains(clear_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#1807: detail-footer section top clear should preserve selected section availability");
+            expect_contains(clear_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#1807: detail-footer section top clear should preserve selection kind");
+            expect_contains_in_order(
+                clear_footer_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Footer\"",
+                    "\"bandKind\": \"detail_footer\"",
+                    "\"recordIndex\": 1",
+                    "\"objectCode\": 10",
+                    "\"top\": 0",
+                    "\"height\": 250",
+                    "\"bottom\": 250"
+                },
+                "#1807: detail-footer section top clear should refresh selected-section geometry");
+        };
+
+    run_detail_header_footer_section_top_clear(
+        temp_root / "detail_header_footer_section_top_clear_stable.frx",
+        "detail_header_footer_section_top_clear_stable.frx",
+        "report");
+    run_detail_header_footer_section_top_clear(
+        temp_root / "detail_header_footer_section_top_clear_stable.lbx",
+        "detail_header_footer_section_top_clear_stable.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_detail_header_footer_object_containment(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -86400,6 +86547,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_detail_header_footer_section_heights_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_detail_header_footer_section_heights_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
