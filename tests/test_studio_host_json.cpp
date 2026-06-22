@@ -34223,6 +34223,22 @@ void test_studio_host_json_restores_edited_deleted_report_layout_object_geometry
             expect_contains(restore_process.stdout_text, "\"isLabel\": true",
                             "#1652: label stable edited deleted layout object restore should retain label identity");
         }
+        expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1891: stable edited deleted report/label layout object restore should preserve live preview availability");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1891: stable edited deleted report/label layout object restore should refresh live preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1891: stable edited deleted report/label layout object restore should refresh live preview top bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1891: stable edited deleted report/label layout object restore should refresh live preview right bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1891: stable edited deleted report/label layout object restore should refresh live preview bottom bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1891: stable edited deleted report/label layout object restore should refresh live preview widths");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1891: stable edited deleted report/label layout object restore should refresh live preview heights");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1891: stable edited deleted report/label layout object restore should clear deleted preview availability");
         expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 0",
                         "#1652: stable edited deleted report/label layout object restore should remove restored objects from deleted-object counts");
         expect_contains(restore_process.stdout_text, "\"selectedReportObjectAvailable\": true",
