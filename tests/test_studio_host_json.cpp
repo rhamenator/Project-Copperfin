@@ -8038,6 +8038,295 @@ void test_studio_host_json_exposes_detail_header_footer_object_containment(
     }
 }
 
+void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_delete_restore_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_section_delete_restore =
+        [&](const fs::path& header_delete_path,
+            const fs::path& footer_delete_path,
+            const fs::path& header_restore_path,
+            const fs::path& footer_restore_path,
+            const std::string& label) {
+            const auto expect_document_identity = [&](const ProcessResult& process,
+                                                      const fs::path& asset_path,
+                                                      const std::string& operation_label) {
+                expect_contains(process.stdout_text, "\"documentTitle\": \"" + asset_path.filename().string() + "\"",
+                                "#1812: " + operation_label + " should return refreshed layout JSON");
+                if (asset_path.extension() == ".lbx") {
+                    expect_contains(process.stdout_text, "\"isLabel\": true",
+                                    "#1812: " + operation_label + " should retain label identity");
+                }
+            };
+
+            const auto expect_selected_section_state =
+                [&](const ProcessResult& process,
+                    const std::string& section_title,
+                    const std::string& band_kind,
+                    const std::string& record_index,
+                    const std::string& deleted,
+                    const std::string& section_index,
+                    const std::string& section_count,
+                    const std::string& object_count,
+                    const std::string& operation_label) {
+                    expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                                    "#1812: " + operation_label + " should advertise selected sections");
+                    expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                                    "#1812: " + operation_label + " should expose section selection kind");
+                    expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                                    "#1812: " + operation_label + " should not select report objects");
+                    expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                    "#1812: " + operation_label + " should not select settings");
+                    expect_contains_in_order(
+                        process.stdout_text,
+                        {
+                            "\"selectedReportSection\": {",
+                            "\"title\": \"" + section_title + "\"",
+                            "\"bandKind\": \"" + band_kind + "\"",
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": " + deleted,
+                            "\"sectionIndex\": " + section_index,
+                            "\"sectionCount\": " + section_count,
+                            "\"objectCount\": " + object_count
+                        },
+                        "#1812: " + operation_label + " should refresh selected-section metadata");
+                };
+
+            const auto delete_section = [&](const fs::path& asset_path,
+                                            const std::string& unique_id,
+                                            std::size_t section_record_index,
+                                            const std::string& section_title,
+                                            const std::string& band_kind,
+                                            const std::string& live_sibling_title,
+                                            const std::string& live_sibling_band_kind,
+                                            const std::string& live_sibling_record_index,
+                                            const std::string& orphan_object_record_index,
+                                            const std::string& operation_label) {
+                write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+
+                const auto delete_process = run_process_capture(
+                    studio_host_path,
+                    {
+                        "--path", asset_path.string(),
+                        "--delete-object",
+                        "--unique-id", unique_id,
+                        "--json"
+                    },
+                    temp_root);
+
+                if (delete_process.exit_code != 0) {
+                    std::cerr << "studio host " << label << " " << operation_label << " stdout:\n"
+                              << delete_process.stdout_text << "\n";
+                    std::cerr << "studio host " << label << " " << operation_label << " stderr:\n"
+                              << delete_process.stderr_text << "\n";
+                    std::cerr << "fixture root: " << temp_root << "\n";
+                }
+
+                expect(delete_process.exit_code == 0,
+                       "#1812: " + operation_label + " should exit successfully");
+                expect(dbf_record_deleted(asset_path, section_record_index),
+                       "#1812: " + operation_label + " should mark the section record deleted");
+                expect_document_identity(delete_process, asset_path, operation_label);
+                expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
+                                "#1812: " + operation_label + " should preserve the remaining live section");
+                expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
+                                "#1812: " + operation_label + " should expose the deleted section count");
+                expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 1",
+                                "#1812: " + operation_label + " should keep sibling section objects placed");
+                expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 1",
+                                "#1812: " + operation_label + " should move former section objects to unplaced");
+                expect_contains_in_order(
+                    delete_process.stdout_text,
+                    {
+                        "\"sections\": [",
+                        "\"title\": \"" + live_sibling_title + "\"",
+                        "\"bandKind\": \"" + live_sibling_band_kind + "\"",
+                        "\"recordIndex\": " + live_sibling_record_index,
+                        "\"deleted\": false",
+                        "\"objectCount\": 1"
+                    },
+                    "#1812: " + operation_label + " should preserve live sibling section metadata");
+                expect_contains_in_order(
+                    delete_process.stdout_text,
+                    {
+                        "\"deletedSections\": [",
+                        "\"title\": \"" + section_title + "\"",
+                        "\"bandKind\": \"" + band_kind + "\"",
+                        "\"recordIndex\": " + std::to_string(section_record_index),
+                        "\"deleted\": true",
+                        "\"sectionIndex\": null",
+                        "\"sectionCount\": 0"
+                    },
+                    "#1812: " + operation_label + " should move the section to deleted-section metadata");
+                expect_contains_in_order(
+                    delete_process.stdout_text,
+                    {
+                        "\"unplacedObjects\": [",
+                        "\"recordIndex\": " + orphan_object_record_index,
+                        "\"deleted\": false",
+                        "\"containingSectionId\": \"\"",
+                        "\"containingSectionRecordIndex\": null",
+                        "\"sectionObjectIndex\": null",
+                        "\"sectionObjectCount\": 0"
+                    },
+                    "#1812: " + operation_label + " should clear former section object containment");
+                expect_selected_section_state(delete_process,
+                                              section_title,
+                                              band_kind,
+                                              std::to_string(section_record_index),
+                                              "true",
+                                              "null",
+                                              "0",
+                                              "0",
+                                              operation_label);
+            };
+
+            const auto restore_section = [&](const fs::path& asset_path,
+                                             const std::string& unique_id,
+                                             std::size_t section_record_index,
+                                             const std::string& section_title,
+                                             const std::string& band_kind,
+                                             const std::string& section_index,
+                                             const std::string& containing_section_id,
+                                             const std::string& placed_object_record_index,
+                                             const std::string& operation_label) {
+                write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+                const auto delete_result =
+                    copperfin::vfp::set_record_deleted_flag(asset_path.string(), section_record_index, true);
+                expect(delete_result.ok && dbf_record_deleted(asset_path, section_record_index),
+                       "#1812: " + operation_label + " fixture should start with a deleted section");
+
+                const auto restore_process = run_process_capture(
+                    studio_host_path,
+                    {
+                        "--path", asset_path.string(),
+                        "--restore-object",
+                        "--unique-id", unique_id,
+                        "--json"
+                    },
+                    temp_root);
+
+                if (restore_process.exit_code != 0) {
+                    std::cerr << "studio host " << label << " " << operation_label << " stdout:\n"
+                              << restore_process.stdout_text << "\n";
+                    std::cerr << "studio host " << label << " " << operation_label << " stderr:\n"
+                              << restore_process.stderr_text << "\n";
+                    std::cerr << "fixture root: " << temp_root << "\n";
+                }
+
+                expect(restore_process.exit_code == 0,
+                       "#1812: " + operation_label + " should exit successfully");
+                expect(!dbf_record_deleted(asset_path, section_record_index),
+                       "#1812: " + operation_label + " should clear the section deleted state");
+                expect_document_identity(restore_process, asset_path, operation_label);
+                expect_contains(restore_process.stdout_text, "\"sectionCount\": 2",
+                                "#1812: " + operation_label + " should restore live section counts");
+                expect_contains(restore_process.stdout_text, "\"deletedSectionCount\": 0",
+                                "#1812: " + operation_label + " should clear deleted section counts");
+                expect_contains(restore_process.stdout_text, "\"placedObjectCount\": 2",
+                                "#1812: " + operation_label + " should restore placed object counts");
+                expect_contains(restore_process.stdout_text, "\"unplacedObjectCount\": 0",
+                                "#1812: " + operation_label + " should clear unplaced object counts");
+                expect_contains_in_order(
+                    restore_process.stdout_text,
+                    {
+                        "\"sections\": [",
+                        "\"title\": \"" + section_title + "\"",
+                        "\"bandKind\": \"" + band_kind + "\"",
+                        "\"recordIndex\": " + std::to_string(section_record_index),
+                        "\"deleted\": false",
+                        "\"sectionIndex\": " + section_index,
+                        "\"sectionCount\": 2",
+                        "\"objectCount\": 1"
+                    },
+                    "#1812: " + operation_label + " should move the section back to live metadata");
+                expect_contains_in_order(
+                    restore_process.stdout_text,
+                    {
+                        "\"objects\": [",
+                        "\"recordIndex\": " + placed_object_record_index,
+                        "\"deleted\": false",
+                        "\"containingSectionId\": \"" + containing_section_id + "\"",
+                        "\"containingSectionRecordIndex\": " + std::to_string(section_record_index),
+                        "\"sectionObjectIndex\": 0",
+                        "\"sectionObjectCount\": 1"
+                    },
+                    "#1812: " + operation_label + " should restore object containing-section metadata");
+                expect_selected_section_state(restore_process,
+                                              section_title,
+                                              band_kind,
+                                              std::to_string(section_record_index),
+                                              "false",
+                                              section_index,
+                                              "2",
+                                              "1",
+                                              operation_label);
+            };
+
+            delete_section(header_delete_path,
+                           "detail-header-guid",
+                           0U,
+                           "Detail Header",
+                           "detail_header",
+                           "Detail Footer",
+                           "detail_footer",
+                           "2",
+                           "1",
+                           "stable detail-header section delete");
+            delete_section(footer_delete_path,
+                           "detail-footer-guid",
+                           2U,
+                           "Detail Footer",
+                           "detail_footer",
+                           "Detail Header",
+                           "detail_header",
+                           "0",
+                           "3",
+                           "stable detail-footer section delete");
+            restore_section(header_restore_path,
+                            "detail-header-guid",
+                            0U,
+                            "Detail Header",
+                            "detail_header",
+                            "0",
+                            "detail_header_0",
+                            "1",
+                            "stable detail-header section restore");
+            restore_section(footer_restore_path,
+                            "detail-footer-guid",
+                            2U,
+                            "Detail Footer",
+                            "detail_footer",
+                            "1",
+                            "detail_footer_2",
+                            "3",
+                            "stable detail-footer section restore");
+        };
+
+    run_detail_header_footer_section_delete_restore(
+        temp_root / "detail_header_section_delete.frx",
+        temp_root / "detail_footer_section_delete.frx",
+        temp_root / "detail_header_section_restore.frx",
+        temp_root / "detail_footer_section_restore.frx",
+        "report");
+    run_detail_header_footer_section_delete_restore(
+        temp_root / "detail_header_section_delete.lbx",
+        temp_root / "detail_footer_section_delete.lbx",
+        temp_root / "detail_header_section_restore.lbx",
+        temp_root / "detail_footer_section_restore.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -87498,6 +87787,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_detail_header_footer_section_tops_by_stable_selection(argv[1]);
     test_studio_host_json_clears_deleted_detail_header_footer_section_tops_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
+    test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
