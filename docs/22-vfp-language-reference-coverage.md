@@ -2,6 +2,8 @@
 
 This document anchors Copperfin's command/runtime backlog to the official Visual FoxPro reference instead of memory.
 
+This is a reference-coverage document, not the active slice-selection authority. Choose active work from live GitHub issue state, `agents.md`, `agent-handoff.md`, and `docs/23-phase-a-dependency-breakdown.md`; use this file when the chosen slice touches VFP/runtime language coverage.
+
 ## Primary Sources
 
 - Microsoft Learn language index:

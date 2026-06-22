@@ -100,9 +100,11 @@ function Get-RepositoryName {
 }
 
 function Get-TrackedText {
-    $remainingWork = Get-Content -LiteralPath (Join-Path $RepoRoot "remaining-work.md") -Raw
+    $handoff = Get-Content -LiteralPath (Join-Path $RepoRoot "agent-handoff.md") -Raw
+    $phaseBreakdown = Get-Content -LiteralPath (Join-Path $RepoRoot "docs\23-phase-a-dependency-breakdown.md") -Raw
     $coverage = Get-Content -LiteralPath (Join-Path $RepoRoot "docs\22-vfp-language-reference-coverage.md") -Raw
-    return "$remainingWork`n$coverage"
+    $changelog = Get-Content -LiteralPath (Join-Path $RepoRoot "CHANGELOG.md") -Raw
+    return "$handoff`n$phaseBreakdown`n$coverage`n$changelog"
 }
 
 function Get-OpenRelatedIssues {
@@ -233,7 +235,7 @@ function Get-TargetedPrompt {
         [object[]]$OpenIssues
     )
 
-    $repoDocsPath = Join-Path $RepoRoot "remaining-work.md"
+    $repoDocsPath = Join-Path $RepoRoot "agent-handoff.md"
     $coverageDocPath = Join-Path $RepoRoot "docs\22-vfp-language-reference-coverage.md"
     $runtimeFiles = @(
         (Join-Path $RepoRoot "src\runtime\prg_engine.cpp"),
@@ -268,7 +270,7 @@ Requirements:
 - Add or update focused regression coverage.
 - Run validation after edits using these commands:
 $(Get-ValidationBlock)
-- Update docs only if shipped behavior changes:
+- Update docs only if shipped behavior or active guidance changes:
   - $repoDocsPath
   - $coverageDocPath
 - Do not work on any other issue in this turn.
@@ -327,7 +329,7 @@ function Close-VerifiedCompletedIssues {
         }
 
         Write-History ("Closing verified completed issue #{0}: {1}" -f $issue.number, $issue.title)
-        gh issue close $issue.number --repo $Repository --reason completed --comment "Verified from the current repo state and backlog docs." | Out-Null
+        gh issue close $issue.number --repo $Repository --reason completed --comment "Verified from the current repo state and tracked guidance/history docs." | Out-Null
         $closedNumbers.Add([int]$issue.number) | Out-Null
     }
 
@@ -363,9 +365,9 @@ function Invoke-CodexPass {
         $automationPrompt = @"
 
 Automation instructions:
-- Continue the highest-priority unfinished runtime/data-engine slice from the current repo state.
+- Continue the highest-priority unfinished slice from live GitHub issue state and the current repo guidance.
 - Keep the repo buildable and run the narrow validation before you stop.
-- Update remaining-work.md and docs/22-vfp-language-reference-coverage.md when shipped behavior changes.
+- Update agent-handoff.md when the last shipped slice, current lane, or next action changes; update docs/22-vfp-language-reference-coverage.md only when runtime-language coverage changes.
 - End your final message with exactly one line in this format: COMPLETED_ISSUES: <comma-separated issue numbers or none>
 
 Currently open related issues:

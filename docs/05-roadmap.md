@@ -4,9 +4,12 @@ The Copperfin roadmap is dependency-first: complete deep runtime and data-engine
 
 Current execution authority is:
 
-- `remaining-work.md`
-- `docs/23-phase-a-dependency-breakdown.md`
+- live GitHub issue state
+- `agents.md`
 - `agent-handoff.md`
+- `docs/23-phase-a-dependency-breakdown.md`
+
+`remaining-work.md` is deprecated as active planning input; use it only for its deprecation notice.
 
 ## Phase A: Core Data And Compatibility Engine
 
@@ -26,7 +29,7 @@ Active issue lanes:
 
 Execution rule:
 
-- do not reopen closed Phase A lanes without a concrete regression; prefer the current active queue in `docs/23-phase-a-dependency-breakdown.md`
+- do not reopen closed Phase A lanes without a concrete regression; prefer the current E3/#24 directive in `docs/23-phase-a-dependency-breakdown.md` unless live GitHub state shows a higher-weight blocker
 
 ## Phase B: Runtime Safety And Diagnostic Fidelity
 
@@ -72,8 +75,8 @@ Current state:
 
 - `#22` is closed; `#23` and `#24` remain open as designer lane parents.
 - `#23` still has many open evidence-audit child rows; close completed children only with specific issue/test/validation evidence, and keep parent `#23` open until root-level closure evidence is explicit.
-- `#24` currently has no open prompt-sized children after `#1452`-`#1565` closed; create the next prompt-sized E3 report/label child before more E3 implementation work unless the live issue tree shows a higher-weight blocker.
-- `#27`-`#29` currently have no active-open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
+- `#24` remains the active E3 report/label lane; latest shipped child is `#1845`, so inspect live GitHub state and create or pick the next prompt-sized E3 child before more report/label implementation unless a higher-weight blocker is open.
+- `#27`-`#29` currently have no downstream open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
 
 ## Phase F: Federation, Interop, And Modern Platform
 
@@ -83,7 +86,7 @@ Goal:
 
 Current state:
 
-- active-open native slice queues under `#30`-`#32`, `#57`, and `#91` are currently listed as exhausted in `remaining-work.md` after `#200`-`#203` shipped; re-audit the parent issues before opening new federation/interop children.
+- historical native slice queues under `#30`-`#32`, `#57`, and `#91` were exhausted after `#200`-`#203` shipped; re-audit live GitHub parent issues before opening new federation/interop children.
 
 ## Phase G: Security And Policy
 
@@ -104,7 +107,7 @@ Goal:
 
 Current state:
 
-- active-open queue under `#35`-`#37` (`#194`-`#199`)
+- downstream open queue under `#35`-`#37` (`#194`-`#199`); do not prioritize it ahead of E3/#24 without live higher-weight blocker evidence
 - remains downstream of Windows-first runtime stabilization priorities
 
 ## Delivery Discipline

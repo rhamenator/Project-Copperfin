@@ -1,76 +1,65 @@
 # Agent Workflow
 
-This repo should not be advanced by chasing whichever adjacent runtime slice looks easiest.
+This is the short operating rulebook for Codex work in Project Copperfin.
 
-Use the dependency model in:
+## Active Guidance Hierarchy
 
-- `remaining-work.md`
-- `docs/22-vfp-language-reference-coverage.md`
-- `docs/23-phase-a-dependency-breakdown.md`
-- `agent-handoff.md`
-- `docs/safety/hazard-register.md`
+Use these sources in order:
 
-## Operating Rule
+1. Live GitHub issue state.
+2. This file for operating rules.
+3. `agent-handoff.md` for the compact continuation brief.
+4. `docs/23-phase-a-dependency-breakdown.md` for current lane status and historical dependency evidence.
+5. `docs/22-vfp-language-reference-coverage.md` when a chosen slice touches VFP/runtime language coverage.
+6. `docs/safety/hazard-register.md` and related safety docs when a change is safety-relevant.
 
-Pick work by dependency weight first, not by local adjacency.
+`remaining-work.md` is intentionally deprecated as an active planning source. `issues.txt` is a local snapshot only; never use it instead of live GitHub state.
 
-Pick a concrete child issue first whenever one exists. Do not treat broad lane issues or umbrella issues as execution units when native slice issues are already open beneath them.
+## Active Execution Rule
 
-That means:
+Choose work from live GitHub issue state and current repo guidance, not from old numbered ledgers.
 
-1. follow the critical path in `docs/23-phase-a-dependency-breakdown.md`
-2. prefer issue blockers with the highest fan-out
-3. close parent-path prerequisites before polishing downstream command surfaces
-4. only leave the critical path when a narrow side slice is nearly free and does not delay it
+- Current active implementation lane is E3/#24, report/label designer fidelity, unless live GitHub state shows a higher-weight blocker.
+- Phase A, D1/#19, E1/#22, and old historical issue sequences are closed/historical unless live regression evidence reopens them.
+- Prefer the open prompt-sized child issue that unblocks the most downstream work.
+- Create the next prompt-sized child under the active lane before coding when no existing child fits.
+- Keep implementation narrow, add focused regression coverage, validate, and update durable docs only when behavior or active guidance changes.
 
-## Current Priority Order
+## Issue Hierarchy
 
-For Phase A, the recommended order is:
+- Umbrella issues are planning and tracking units.
+- Parent/lane issues group related work.
+- Prompt-sized child issues are execution units.
+- Do not treat umbrella or parent/lane issues as execution units when child issues exist or can be created.
+- If a child issue still feels too large for one prompt, split it again before coding.
 
-1. `#150`, then `#151` under `#13`
-2. `#152`, then `#153` under `#14`
-3. only after those open runtime-safety/diagnostics slices are exhausted, take the highest-fan-out next slice under `#93` or `#94`
-4. after the active Phase A runtime/data path is materially quieter, move outward to the already-split later-phase child queues under `#15` and beyond
+## Historical Guidance
 
-## Slice Selection Rules
+- Historical Phase A dependency tables and shipped-slice ledgers explain why old work closed; they are not active queues.
+- Do not redirect to old Phase A/runtime issues such as `#150`-`#153`, `#92`-`#101`, or `#154`-`#203` unless the corresponding live issue has reopened with fresh regression evidence.
+- Preserve evidence needed to understand old closure decisions, but keep recurring handoff text limited to last shipped slice, current lane, and next action.
 
-- Start with the highest-priority open child issue that unblocks later work.
-- Prefer slices that improve shared runtime behavior used by multiple commands.
-- Avoid reopening recently-deepened lanes unless there is a concrete parity bug.
-- Keep implementation narrow, add focused regression coverage, and update the backlog/docs after validation.
+## Safety Documentation Traceability
 
-## Safety Documentation Traceability Rules
-
-Apply these rules whenever a change touches operator-facing or procedure-defining documentation (including README command guidance, runtime debug steps, and recovery procedures).
+Apply these rules whenever a change touches operator-facing or procedure-defining documentation, including README command guidance, runtime debug steps, and recovery procedures.
 
 1. Treat documentation as safety-relevant when misuse could cause critical operator error.
 2. Use issue-level identifiers for documentation traceability:
-
-- `DQ-*` for documentation requirements
-- `DV-*` for documentation verification
-- `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
-
-1. Require a procedural delta map (before/after operator actions) for each safety-relevant documentation change.
-2. Require misuse analysis and severity classification (`none|low|medium|high|catastrophic`).
-3. Require independent verification evidence (a second qualified reviewer).
-4. Require simulation or walkthrough evidence that validates expected operator outcome.
-5. Require rollback and field-notification planning for incorrect documentation.
-6. Do not close a safety-relevant documentation issue without investigation-ready evidence that can be audited by a third party.
-
-## Tree Rules
-
-- Use umbrella issues only for planning, dependency tracking, and closure.
-- Use lane issues for grouping related prompt-sized work.
-- Use child issues as the normal execution unit.
-- If a child issue still feels too large for one prompt, split it again before coding.
-- If a lane has no open child issues, create the next native child issue before starting implementation.
+   - `DQ-*` for documentation requirements
+   - `DV-*` for documentation verification
+   - `HZ-*` for hazard linkage from `docs/safety/hazard-register.md`
+3. Require a procedural delta map for each safety-relevant documentation change.
+4. Require misuse analysis and severity classification: `none`, `low`, `medium`, `high`, or `catastrophic`.
+5. Require independent verification evidence from a second qualified reviewer.
+6. Require simulation or walkthrough evidence that validates the expected operator outcome.
+7. Require rollback and field-notification planning for incorrect documentation.
+8. Do not close a safety-relevant documentation issue without investigation-ready evidence auditable by a third party.
 
 ## Handoff Rules
 
-- `agent-handoff.md` is the canonical continuation brief.
-- Update it whenever a shipped slice changes the recommended next target.
+- `agent-handoff.md` is the canonical continuation brief and should stay compact.
+- Update `agent-handoff.md` only when a shipped slice changes the last shipped slice, current lane, or next action.
 - Update `CHANGELOG.md` whenever a turn ships lasting repo changes or materially updates tracked documentation.
-- For safety-relevant documentation changes, ensure linked `DQ-*`, `DV-*`, and `HZ-*` evidence is present in the closing issue and references `docs/safety/hazard-register.md`.
-- Before cutting or approving a release tag, run `scripts/validate-safety-traceability.ps1` (or the `Safety Traceability Gate` workflow) against the intended release issue set and archive the report artifact.
 - Do not create extra prompt files unless explicitly requested.
-- If a temporary planning note is created, fold any lasting guidance back into the tracked docs and delete the throwaway note.
+- If a temporary planning note is created, fold any lasting guidance back into tracked docs and delete the throwaway note.
+- Before cutting or approving a release tag, run `scripts/validate-safety-traceability.ps1` or the Safety Traceability Gate workflow against the intended release issue set and archive the report artifact.

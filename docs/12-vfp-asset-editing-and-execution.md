@@ -86,7 +86,7 @@ The current repo state is no longer only aspirational in this area:
 - the runtime can execute a substantial first-pass PRG surface, including work areas, local queries/mutations, SQL pass-through / remote cursor behavior, and a growing expression/runtime-helper layer
 - xAsset-backed runtime bootstraps now exist for forms/classes, reports/labels, and menus, but these remain first-pass compatibility lanes rather than full VFP parity
 
-This document stays focused on the execution/editing model. The detailed moving implementation ledger lives in `remaining-work.md` and `docs/22-vfp-language-reference-coverage.md`.
+This document stays focused on the execution/editing model. Active slice selection lives in live GitHub issue state, `agents.md`, `agent-handoff.md`, and `docs/23-phase-a-dependency-breakdown.md`; `docs/22-vfp-language-reference-coverage.md` is reference coverage for runtime-language slices.
 
 ## Editing Strategy
 

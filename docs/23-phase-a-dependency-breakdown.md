@@ -1,6 +1,6 @@
 # Phase A Dependency Breakdown
 
-This document began as a Phase A expansion of [remaining-work.md](../remaining-work.md). Phase A is now closed; the live guidance retained here is the post-D1/E1 continuation queue, while the Phase A content is historical dependency evidence.
+This document began as a Phase A expansion of [remaining-work.md](../remaining-work.md). Phase A is now closed; the live guidance retained here is the post-D1/E1 continuation queue, while the Phase A content is historical dependency evidence. `remaining-work.md` is now deprecated as active planning input.
 
 It is intentionally narrower than the top-level roadmap:
 
@@ -10,11 +10,13 @@ It is intentionally narrower than the top-level roadmap:
 
 ## Current Agent Directive
 
-This is the only actionable queue in this file as of 2026-06-17. If another section in this document appears to name a different next issue, that section is historical unless GitHub shows a reopened, active issue with fresh regression evidence.
+This is the only actionable queue in this file as of 2026-06-22. If another section in this document appears to name a different next issue, that section is historical unless GitHub shows a reopened, active issue with fresh regression evidence.
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 remains open with many prompt-sized children still open in GitHub; treat them as evidence-audit/closure cleanup unless fresh implementation evidence shows a real remaining local miss.
-- Latest implemented E3 slice: `#1845`, which covers stable-selected report/label visual-object reorder batches for FRX/LBX layout object rows. Studio host regressions prove `--visual-object-reorder-batch` can reorder multiple field objects by stable selectors, persist physical object order, refresh selected report-object section metadata after reopen, expose committed batch metadata, roll back earlier order mutations when a later target selector is missing, and retain label identity. `#1844` covered stable-selected report/label visual-object duplicate batches, `#1843` covered stable-selected report/label visual-object rename batches, `#1842` covered stable-selected report/label visual-object update batches, `#1841` covered mixed stable-selected report/label deleted-state batches for settings, section, and layout object rows, `#1840` covered stable-selected report/label object deleted-state batches, `#1839` covered stable-selected report/label deleted-state batches for FRX/LBX settings and section rows, `#1838` covered live and deleted report/label column-setup `EXPR` memo stable-selector edits, `#1837` covered live and deleted report/label column-spacing field stable-selector edits, `#1836` covered live and deleted report/label column-width field stable-selector edits, `#1835` covered live and deleted report/label column-count field stable-selector edits, `#1834` covered live and deleted report/label paper-size field stable-selector edits, `#1833` covered live and deleted report/label orientation field stable-selector edits, `#1832` covered live and deleted report/label horizontal-grid field stable-selector edits, `#1831` covered live and deleted report/label vertical-grid field stable-selector edits, `#1830` covered live and deleted report/label bottom-margin field stable-selector edits, `#1829` covered deleted report/label page-margin field stable-selector edits, `#1828` covered live report/label page-margin field stable-selector edits, `#1827` covered deleted report/label settings memo stable-selector edits, `#1826` covered live report/label settings memo stable-selector edits, `#1825` covered generic deleted report/label section stable-selector geometry edits, `#1824` covered generic live report/label section stable-selector geometry edits, `#1823` covered stable-selected live and deleted Detail Header/Footer section top-clear preview bounds, `#1822` covered stable-selected live and deleted Detail Header/Footer section height-clear preview bounds, `#1821` covered stable-selected Detail Header/Footer section delete/restore preview bounds, `#1820` covered stable-selected deleted Detail Header/Footer section preview bounds, `#1819` covered stable-selected live Detail Header/Footer section preview bounds, `#1818` covered stable-selected deleted Detail Header/Footer section reorder paths, `#1817` covered stable-selected deleted Detail Header/Footer section rename paths, `#1816` covered stable-selected deleted Detail Header/Footer section duplicate paths, `#1815` covered stable-selected Detail Header/Footer section reorder paths, `#1814` covered stable-selected Detail Header/Footer section rename paths, `#1813` covered stable-selected Detail Header/Footer section duplicate paths, `#1812` covered stable-selected Detail Header/Footer section delete/restore paths, `#1811` covered stable-selected deleted Detail Header/Footer section expression edits, `#1810` covered stable-selected live Detail Header/Footer section expression edits, `#1809` covered stable-selected deleted Detail Header/Footer section top clears, `#1808` covered stable-selected deleted Detail Header/Footer section top edits, `#1807` covered stable-selected Detail Header/Footer section top clears, `#1806` covered stable-selected Detail Header/Footer section top edits, `#1805` covered stable-selected deleted Detail Header/Footer section height clears, `#1804` covered stable-selected deleted Detail Header/Footer section height edits, `#1803` covered stable-selected live Detail Header/Footer section height clears, `#1802` covered stable-selected live Detail Header/Footer section height edits, `#1800` covered stable-selected deleted Detail Header/Footer object vertical distribution containment, and `#1799` covered live vertical distribution containment. Interleaved release-readiness localization slices `#1856`, `#1855`, `#1854`, `#1853`, `#1852`, `#1851`, `#1850`, `#1849`, `#1848`, `#1847`, `#1846`, and `#1801` are shipped under `#1779`/`#113`, higher-weight evidence-management slice `#1700` is shipped under `#108`, and F1 error-management slice `#1714` is shipped under `#25`. Latest implemented E2 slice: `#1749`, which covers malformed, oversized, and dot-leading selected-object raw `OBJTYPE`/`OBJCODE` host JSON fallback while preserving raw property metadata. Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
+- Latest implemented E3 slice: `#1845`, stable-selected report/label visual-object reorder batches for FRX/LBX layout object rows. Recent adjacent E3 batch/stable-selector slices through `#1844`-`#1799` are shipped; keep their evidence in the historical tables below instead of repeating it in recurring handoff text.
+- Recent non-E3 shipped context: localization/release-readiness slices through `#1856` under `#1779`/`#113`, evidence-management `#1700` under `#108`, F1 error-management `#1714` under `#25`, and E2 raw-code fallback `#1749` under `#23`.
+- Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
 - Current continuation shape: continue prompt-sized E3/#24 children in report/label designer fidelity, report/label section editing, report/label output preview metadata, and layout/runtime parity seams, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
 - Next work: create the next prompt-sized `#24` child in report/label designer fidelity unless the live issue tree shows a higher-weight blocker. A broader visual-asset editor API scan found remaining unwrapped batch APIs after `#1447`; `#1448` duplicate batches, `#1449` rename batches, `#1450` reorder batches, and `#1451` subtree duplication are now closed with evidence-backed approval. The `#1078`-`#1086`, `#1087`-`#1101`, `#1102`-`#1202`, and `#1203`-`#1447` E2 evidence-audit ranges are closed; only older E2 parent/roadmap rows remain open in the local issue snapshot and must not be orphaned. Do not open more E2 wrapper slices unless new APIs are added or the scanner regresses.
 - Treat every section below this directive as historical evidence unless it explicitly appears in the "Current Issue Tree Status" table.
@@ -26,7 +28,7 @@ This is the only actionable queue in this file as of 2026-06-17. If another sect
 - The Phase A percentages and dependency rows below are historical planning estimates. Do not use them as current completion metrics.
 - The dependency edges are pragmatic engineering dependencies, not strict architectural laws. They explain why the Phase A runtime/storage order was chosen.
 - The CPM section is historical closure evidence. It is not the current execution gate.
-- Current execution guidance is summarized in "Current Agent Directive" and mirrored in the "Current Issue Tree Status" table under "Issue Hierarchy"; create or pick a prompt-sized child there before writing code.
+- Current execution guidance is summarized in "Current Agent Directive" and mirrored in the "Current Issue Tree Status" table under "Issue Hierarchy"; create or pick a prompt-sized child there before writing code. Validate against live GitHub state before acting.
 
 ## Historical Phase A Areas
 
@@ -64,7 +66,7 @@ Phase A is closed. The rows below are retained only to explain the old dependenc
 
 ## Historical Dependency Table By Recommended Work Package
 
-This was the actionable version of the old Phase A graph. It is retained only as closure evidence and must not redirect agents away from the current E2/#23 queue.
+This was the actionable version of the old Phase A graph. It is retained only as closure evidence and must not redirect agents away from the current E3/#24 lane unless live GitHub state shows a higher-weight blocker.
 
 | WP | Work Package | Linked Issues | Duration (Weeks) | Primary Groups | Prerequisites | Expected Output |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -183,7 +185,7 @@ flowchart LR
 
 ## Historical Phase A Recommended Order
 
-This order is retained as closure evidence only. It must not redirect agents away from the current active queue.
+This order is retained as closure evidence only. It must not redirect agents away from the current E3/#24 directive unless live GitHub state shows a higher-weight blocker.
 
 The historical recommended order was not simply "lowest percentage first." It was:
 
@@ -1326,7 +1328,8 @@ For current post-D1/E1 work, the implementation unit should be a prompt-sized is
 
 Use this document together with:
 
-- [remaining-work.md](../remaining-work.md)
+- [agents.md](../agents.md)
+- [agent-handoff.md](../agent-handoff.md)
 - [docs/22-vfp-language-reference-coverage.md](22-vfp-language-reference-coverage.md)
 
 Operationally:
