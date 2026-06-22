@@ -3864,6 +3864,35 @@ void write_synthetic_report_table_for_fractional_layout_json(
     expect(delete_result.ok, "#1719: synthetic report table should mark the fractional object deleted");
 }
 
+void write_synthetic_report_table_for_fractional_classification_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 12U, .decimal_count = 2U},
+        {.name = "OBJCODE", .type = 'N', .length = 12U, .decimal_count = 2U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1.90", "53.75", "ORIENTATION=1\nPAPERSIZE=9", "", "", "", "", "fractional-settings-guid"},
+        {"9.25", "4.90", "fractional.detail", "", "100", "", "300", "fractional-detail-guid"},
+        {"8.80", "0.40", "customer.name", "120", "150", "240", "80", "fractional-field-guid"},
+        {"9.50", "7.10", "fractional.page.footer", "", "600", "", "200", "fractional-footer-guid"},
+        {"5.99", "1.90", "\"Deleted fractional label\"", "30", "650", "120", "40",
+         "fractional-deleted-label-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1758: synthetic report table for fractional layout classifications should be created");
+    const auto delete_section_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_section_result.ok, "#1758: synthetic report table should mark the fractional section deleted");
+    const auto delete_object_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 4U, true);
+    expect(delete_object_result.ok, "#1758: synthetic report table should mark the fractional object deleted");
+}
+
 void write_synthetic_report_table_for_missing_geometry_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -6834,6 +6863,205 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_ge
     run_fractional_layout(temp_root / "fractional_geometry.lbx",
                           "fractional_geometry.lbx",
                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_classifications(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_fractional_report_layout_classification_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_fractional_classification_layout = [&](const fs::path& asset_path,
+                                                          const std::string& title,
+                                                          const std::string& label) {
+        write_synthetic_report_table_for_fractional_classification_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " fractional classification summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " fractional classification summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1758: fractional report/label layout classifications should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1758: fractional layout classifications should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1758: fractional classification label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1758: fractional root OBJTYPE should expose settings summaries");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1758: fractional root classifications should preserve settings values");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 9",
+                        "#1758: fractional root classifications should preserve later settings values");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 2",
+                        "#1758: fractional root classifications should preserve live root settings");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1758: fractional band classifications should create live sections");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1758: fractional deleted band classifications should create deleted sections");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1758: fractional object classifications should create live layout objects");
+        expect_contains(summary_process.stdout_text, "\"placedObjectCount\": 1",
+                        "#1758: fractional object classifications should place live objects in sections");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1758: fractional deleted object classifications should create deleted objects");
+        expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                        "#1758: fractional deleted object classifications should place deleted objects in bands");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"field\", \"count\": 1}",
+                        "#1758: fractional live object OBJTYPE should use integer portions for kind counts");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"label\", \"count\": 1}",
+                        "#1758: fractional deleted object OBJTYPE should use integer portions for kind counts");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"detail\", \"count\": 1}",
+                        "#1758: fractional live band OBJCODE should use integer portions for kind counts");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"page_footer\", \"count\": 1}",
+                        "#1758: fractional deleted band OBJCODE should use integer portions for kind counts");
+
+        const auto settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(settings_process.exit_code == 0,
+               "#1758: fractional root classification selection should keep inspection non-failing");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1758: fractional root classification should resolve selected settings");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1758: fractional root classification should expose settings selection kind");
+        expect_contains_in_order(
+            settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\", \"recordIndex\": 0",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\", \"recordIndex\": 0",
+                "\"value\": \"9\""
+            },
+            "#1758: fractional root classification should preserve selected settings provenance");
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+        expect(section_process.exit_code == 0,
+               "#1758: fractional live section classification selection should keep inspection non-failing");
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1758: fractional band classification should resolve selected sections");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1758: fractional band classification should expose section selection kind");
+        expect_contains_in_order(
+            section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": false"
+            },
+            "#1758: fractional live section classification should use integer portions");
+        expect_contains(section_process.stdout_text, "\"title\": \"Detail\"",
+                        "#1758: fractional live section classification should preserve integer band titles");
+        expect_contains(section_process.stdout_text, "\"bandKind\": \"detail\"",
+                        "#1758: fractional live section classification should preserve integer band kinds");
+        expect_contains(section_process.stdout_text, "\"objectCode\": 4",
+                        "#1758: fractional live section classification should preserve integer band codes");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+        expect(object_process.exit_code == 0,
+               "#1758: fractional live object classification selection should keep inspection non-failing");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1758: fractional object classification should resolve selected objects");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1758: fractional object classification should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                        "#1758: fractional object classification should preserve containing sections");
+        expect_contains_in_order(
+            object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": false"
+            },
+            "#1758: fractional live object classification should use integer portions");
+        expect_contains(object_process.stdout_text, "\"objectTypeCode\": 8",
+                        "#1758: fractional live object classification should preserve integer object type codes");
+        expect_contains(object_process.stdout_text, "\"objectKind\": \"field\"",
+                        "#1758: fractional live object classification should preserve integer object kinds");
+        expect_contains(object_process.stdout_text, "\"objectCode\": 0",
+                        "#1758: fractional live object classification should preserve integer object codes");
+        expect_contains(object_process.stdout_text, "\"containingSectionRecordIndex\": 1",
+                        "#1758: fractional live object classification should preserve containing sections");
+
+        const auto deleted_section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+        expect(deleted_section_process.exit_code == 0,
+               "#1758: fractional deleted section classification selection should keep inspection non-failing");
+        expect_contains(deleted_section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1758: fractional deleted band classification should resolve selected sections");
+        expect_contains_in_order(
+            deleted_section_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true"
+            },
+            "#1758: fractional deleted section classification should use integer portions");
+        expect_contains(deleted_section_process.stdout_text, "\"title\": \"Page Footer\"",
+                        "#1758: fractional deleted section classification should preserve integer band titles");
+        expect_contains(deleted_section_process.stdout_text, "\"bandKind\": \"page_footer\"",
+                        "#1758: fractional deleted section classification should preserve integer band kinds");
+        expect_contains(deleted_section_process.stdout_text, "\"objectCode\": 7",
+                        "#1758: fractional deleted section classification should preserve integer band codes");
+
+        const auto deleted_object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "4", "--json"},
+            temp_root);
+        expect(deleted_object_process.exit_code == 0,
+               "#1758: fractional deleted object classification selection should keep inspection non-failing");
+        expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1758: fractional deleted object classification should resolve selected objects");
+        expect_contains_in_order(
+            deleted_object_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 4",
+                "\"deleted\": true"
+            },
+            "#1758: fractional deleted object classification should use integer portions");
+        expect_contains(deleted_object_process.stdout_text, "\"objectTypeCode\": 5",
+                        "#1758: fractional deleted object classification should preserve integer object type codes");
+        expect_contains(deleted_object_process.stdout_text, "\"objectKind\": \"label\"",
+                        "#1758: fractional deleted object classification should preserve integer object kinds");
+        expect_contains(deleted_object_process.stdout_text, "\"objectCode\": 1",
+                        "#1758: fractional deleted object classification should preserve integer object codes");
+    };
+
+    run_fractional_classification_layout(temp_root / "fractional_classifications.frx",
+                                         "fractional_classifications.frx",
+                                         "report");
+    run_fractional_classification_layout(temp_root / "fractional_classifications.lbx",
+                                         "fractional_classifications.lbx",
+                                         "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -78150,6 +78378,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_invalid_report_layout_classifications(argv[1]);
     test_studio_host_json_ignores_unsupported_report_layout_objtype_codes(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
+    test_studio_host_json_uses_integer_portions_for_fractional_report_layout_classifications(argv[1]);
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_objtype_schema(argv[1]);
