@@ -3688,6 +3688,36 @@ void write_synthetic_report_table_for_layout_json(const std::filesystem::path& r
     expect(delete_result.ok, "#1452: synthetic FRX table should mark deleted layout objects");
 }
 
+void write_synthetic_report_table_for_extended_object_kind_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "FONTFACE", .type = 'M', .length = 4U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0\nPAPERSIZE=1", "", "", "", "", "", "10", ""},
+        {"9", "4", "", "", "0", "", "5000", "", "", ""},
+        {"7", "", "", "100", "500", "1000", "400", "", "", "rectangle-guid"},
+        {"17", "", "images/logo.bmp", "300", "1200", "900", "800", "", "", "picture-guid"},
+        {"18", "", "nTotal", "250", "7000", "800", "200", "", "", "variable-guid"},
+        {"17", "", "images/deleted.bmp", "400", "1500", "700", "300", "", "", "deleted-picture-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1762: synthetic report table for extended object-kind JSON should be created");
+
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 5U, true);
+    expect(delete_result.ok, "#1762: synthetic report table should mark deleted picture object");
+}
+
 void write_synthetic_report_table_for_stable_deleted_layout_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_json(report_path);
     const auto unique_id_result = copperfin::vfp::update_visual_object_property({
@@ -6226,6 +6256,124 @@ void test_studio_host_json_exposes_report_layout_provenance(const std::string& s
                     "#1459: unplaced/deleted report object JSON should expose null section object indexes");
     expect_contains(process.stdout_text, "\"title\": \"Record 5\"",
                     "#1452: report layout JSON should preserve synthesized unplaced-object titles");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_extended_report_object_kinds(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_extended_report_object_kind_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_extended_kind_summary = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_extended_object_kind_json(asset_path);
+
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " extended object-kind summary stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " extended object-kind summary stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1762: extended report/label object-kind JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1762: extended report/label object-kind JSON should return report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1762: extended object-kind label layouts should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1762: extended object-kind JSON should summarize live objects");
+        expect_contains(process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1762: extended object-kind JSON should summarize placed live objects");
+        expect_contains(process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#1762: extended object-kind JSON should summarize unplaced live objects");
+        expect_contains(process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1762: extended object-kind JSON should summarize deleted objects");
+        expect_contains(process.stdout_text, "\"objectKindCount\": 3",
+                        "#1762: extended object-kind JSON should expose live kind bucket count");
+        expect_contains(process.stdout_text,
+                        "\"objectKindCounts\": [\n"
+                        "        {\"kind\": \"picture\", \"count\": 1},\n"
+                        "        {\"kind\": \"rectangle\", \"count\": 1},\n"
+                        "        {\"kind\": \"variable\", \"count\": 1}\n"
+                        "      ]",
+                        "#1762: extended object-kind JSON should count live picture/rectangle/variable buckets");
+        expect_contains(process.stdout_text, "\"unplacedObjectKindCount\": 1",
+                        "#1762: extended object-kind JSON should expose unplaced kind bucket count");
+        expect_contains(process.stdout_text,
+                        "\"unplacedObjectKindCounts\": [\n"
+                        "        {\"kind\": \"variable\", \"count\": 1}\n"
+                        "      ]",
+                        "#1762: extended object-kind JSON should count unplaced variable objects");
+        expect_contains(process.stdout_text, "\"deletedObjectKindCount\": 1",
+                        "#1762: extended object-kind JSON should expose deleted kind bucket count");
+        expect_contains(process.stdout_text,
+                        "\"deletedObjectKindCounts\": [\n"
+                        "        {\"kind\": \"picture\", \"count\": 1}\n"
+                        "      ]",
+                        "#1762: extended object-kind JSON should count deleted picture objects");
+
+        const auto expect_selected_kind = [&](const std::string& unique_id,
+                                              const std::string& object_type_code,
+                                              const std::string& object_kind,
+                                              const std::string& selection_label) {
+            const auto object_process = run_process_capture(
+                studio_host_path,
+                {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
+                temp_root);
+
+            if (object_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " selected " << selection_label
+                          << " stdout:\n" << object_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " selected " << selection_label
+                          << " stderr:\n" << object_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(object_process.exit_code == 0,
+                   "#1762: selected extended report/label object-kind JSON should exit successfully");
+            expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1762: selected extended object-kind JSON should advertise selected objects");
+            expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1762: selected extended object-kind JSON should expose object selection kind");
+            expect_contains_in_order(
+                object_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"objectTypeCode\": " + object_type_code,
+                    "\"objectKind\": \"" + object_kind + "\""
+                },
+                "#1762: selected " + selection_label + " JSON should expose extended object-kind metadata");
+        };
+
+        expect_selected_kind("rectangle-guid", "7", "rectangle", "rectangle");
+        expect_selected_kind("picture-guid", "17", "picture", "picture");
+        expect_selected_kind("variable-guid", "18", "variable", "variable");
+    };
+
+    run_extended_kind_summary(temp_root / "extended_object_kinds.frx",
+                              "extended_object_kinds.frx",
+                              "report");
+    run_extended_kind_summary(temp_root / "extended_object_kinds.lbx",
+                              "extended_object_kinds.lbx",
+                              "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -78812,6 +78960,7 @@ int main(int argc, char** argv) {
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
+    test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
