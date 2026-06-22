@@ -27745,6 +27745,34 @@ void test_studio_host_json_aligns_live_edited_report_layout_object_geometry_by_s
             expect_contains(align_process.stdout_text, "\"isLabel\": true",
                             "#1625: live edited label layout object align should retain label identity");
         }
+        expect_contains(align_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1884: live edited report/label layout object align should preserve preview availability");
+        expect_contains(align_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1884: live edited report/label layout object align should preserve preview left bounds");
+        expect_contains(align_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1884: live edited report/label layout object align should preserve preview top bounds");
+        expect_contains(align_process.stdout_text, "\"previewBoundsRight\": 2700",
+                        "#1884: live edited report/label layout object align should preserve preview right bounds");
+        expect_contains(align_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1884: live edited report/label layout object align should preserve preview bottom bounds");
+        expect_contains(align_process.stdout_text, "\"previewBoundsWidth\": 2700",
+                        "#1884: live edited report/label layout object align should preserve preview widths");
+        expect_contains(align_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1884: live edited report/label layout object align should preserve preview heights");
+        expect_contains(align_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1884: live edited report/label layout object align should preserve deleted preview availability");
+        expect_contains(align_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1884: live edited report/label layout object align should preserve deleted preview left bounds");
+        expect_contains(align_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1884: live edited report/label layout object align should preserve deleted preview top bounds");
+        expect_contains(align_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1884: live edited report/label layout object align should preserve deleted preview right bounds");
+        expect_contains(align_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1884: live edited report/label layout object align should preserve deleted preview bottom bounds");
+        expect_contains(align_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1884: live edited report/label layout object align should preserve deleted preview widths");
+        expect_contains(align_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1884: live edited report/label layout object align should preserve deleted preview heights");
         expect_contains(align_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1625: live edited report/label layout object align should preserve selected-object availability");
         expect_contains(align_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
