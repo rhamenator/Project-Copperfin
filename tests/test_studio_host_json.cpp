@@ -3873,6 +3873,27 @@ void write_synthetic_report_table_for_unknown_band_layout_json(
     expect(delete_result.ok, "#1722: synthetic report table should mark the unknown deleted band");
 }
 
+void write_synthetic_report_table_for_missing_root_expr_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "ORIENTATION", .type = 'N', .length = 8U},
+        {.name = "PAPERSIZE", .type = 'N', .length = 8U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "1", "9", "120", "missing-expr-live-settings-guid"},
+        {"1", "53", "0", "1", "240", "missing-expr-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1723: synthetic report table without root EXPR schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1723: synthetic report table should mark the no-EXPR settings row deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -6151,6 +6172,146 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
     run_unknown_band_layout(temp_root / "unknown_band.lbx",
                             "unknown_band.lbx",
                             "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_root_expr_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_root_expr_layout = [&](const fs::path& asset_path,
+                                                  const std::string& title,
+                                                  const std::string& label) {
+        write_synthetic_report_table_for_missing_root_expr_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing root EXPR summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing root EXPR summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1723: missing root EXPR schema should keep report/label settings inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1723: missing root EXPR layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1723: missing root EXPR label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1723: direct settings should preserve live page setup availability without EXPR");
+        expect_contains(summary_process.stdout_text, "\"orientationAvailable\": true",
+                        "#1723: direct orientation should remain available without EXPR");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1723: direct orientation code should be preserved without EXPR");
+        expect_contains(summary_process.stdout_text, "\"paperSizeAvailable\": true",
+                        "#1723: direct paper size should remain available without EXPR");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 9",
+                        "#1723: direct paper size code should be preserved without EXPR");
+        expect_contains(summary_process.stdout_text, "\"topMarginAvailable\": true",
+                        "#1723: direct top margin should remain available without EXPR");
+        expect_contains(summary_process.stdout_text, "\"topMargin\": 120",
+                        "#1723: direct top margin should be preserved without EXPR");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
+                        "#1723: missing root EXPR layouts should preserve live direct setting counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1723: missing root EXPR layouts should preserve deleted direct setting counts");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"1\"",
+                        "#1723: live direct orientation provenance should use the direct field without EXPR");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"9\"",
+                        "#1723: live direct paper-size provenance should use the direct field without EXPR");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"120\"",
+                        "#1723: live direct top-margin provenance should use the direct field without EXPR");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"0\"",
+                        "#1723: deleted direct orientation provenance should use the direct field without EXPR");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1723: missing root EXPR live settings selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1723: missing root EXPR live settings should advertise selected-settings availability");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1723: missing root EXPR live settings should expose settings selection kind");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 3",
+                "\"value\": \"9\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 4",
+                "\"value\": \"120\""
+            },
+            "#1723: missing root EXPR live selection should expose direct selected-settings metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1723: missing root EXPR deleted settings selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1723: missing root EXPR deleted settings should advertise selected-settings availability");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1723: missing root EXPR deleted settings should expose settings selection kind");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"value\": \"0\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 3",
+                "\"value\": \"1\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 4",
+                "\"value\": \"240\""
+            },
+            "#1723: missing root EXPR deleted selection should expose direct selected-settings metadata");
+    };
+
+    run_missing_root_expr_layout(temp_root / "missing_root_expr.frx",
+                                 "missing_root_expr.frx",
+                                 "report");
+    run_missing_root_expr_layout(temp_root / "missing_root_expr.lbx",
+                                 "missing_root_expr.lbx",
+                                 "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -71920,6 +72081,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
     test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
+    test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
