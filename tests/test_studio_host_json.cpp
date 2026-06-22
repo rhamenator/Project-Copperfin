@@ -6709,6 +6709,126 @@ void test_studio_host_json_exposes_detail_header_footer_object_containment(
     }
 }
 
+void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_expression_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_expressions =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+
+            const auto expect_selected_object_expression =
+                [&](const std::string& unique_id,
+                    const std::string& record_index,
+                    const std::string& object_kind,
+                    const std::string& containing_section_id,
+                    const std::string& containing_section_record_index,
+                    const std::string& relative_top,
+                    const std::string& relative_bottom,
+                    const std::string& expression,
+                    const std::string& memo_block,
+                    const std::string& selection_label) {
+                    const auto object_process = run_process_capture(
+                        studio_host_path,
+                        {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
+                        temp_root);
+
+                    if (object_process.exit_code != 0) {
+                        std::cerr << "studio host " << label << " stable selected " << selection_label
+                                  << " expression stdout:\n" << object_process.stdout_text << "\n";
+                        std::cerr << "studio host " << label << " stable selected " << selection_label
+                                  << " expression stderr:\n" << object_process.stderr_text << "\n";
+                        std::cerr << "fixture root: " << temp_root << "\n";
+                    }
+
+                    expect(object_process.exit_code == 0,
+                           "#1769: selected detail header/footer object expression JSON should exit successfully");
+                    expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                                    "#1769: selected detail header/footer object expression JSON should preserve titles");
+                    if (asset_path.extension() == ".lbx") {
+                        expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                                        "#1769: selected detail header/footer label object expression JSON should retain identity");
+                    }
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                                    "#1769: selected detail header/footer object expressions should select report objects");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                                    "#1769: selected detail header/footer object expressions should expose object selection kind");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                                    "#1769: selected detail header/footer object expressions should expose containing sections");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                                    "#1769: selected detail header/footer object expressions should not select sections");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                    "#1769: selected detail header/footer object expressions should not select settings");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObject\": {",
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": false",
+                            "\"containingSectionId\": \"" + containing_section_id + "\"",
+                            "\"containingSectionRecordIndex\": " + containing_section_record_index,
+                            "\"sectionRelativeTop\": " + relative_top,
+                            "\"sectionRelativeBottom\": " + relative_bottom,
+                            "\"sectionObjectIndex\": 0",
+                            "\"sectionObjectCount\": 1",
+                            "\"objectKind\": \"" + object_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": 2",
+                            "\"expressionMemoBlockNumber\": " + memo_block
+                        },
+                        "#1769: stable selected " + selection_label + " should expose selected-object expression metadata");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObjectSection\": {",
+                            "\"id\": \"" + containing_section_id + "\"",
+                            "\"recordIndex\": " + containing_section_record_index,
+                            "\"sectionCount\": 2",
+                            "\"objectCount\": 1"
+                        },
+                        "#1769: stable selected " + selection_label + " should expose containing-section metadata");
+                };
+
+            expect_selected_object_expression("detail-header-label-guid",
+                                              "1",
+                                              "label",
+                                              "detail_header_0",
+                                              "0",
+                                              "50",
+                                              "170",
+                                              "\\\"Header label\\\"",
+                                              "2",
+                                              "detail-header label");
+            expect_selected_object_expression("detail-footer-field-guid",
+                                              "3",
+                                              "field",
+                                              "detail_footer_2",
+                                              "2",
+                                              "60",
+                                              "160",
+                                              "footer.total",
+                                              "4",
+                                              "detail-footer field");
+        };
+
+    run_detail_header_footer_object_expressions(temp_root / "detail_header_footer_object_expressions.frx",
+                                                "detail_header_footer_object_expressions.frx",
+                                                "report");
+    run_detail_header_footer_object_expressions(temp_root / "detail_header_footer_object_expressions.lbx",
+                                                "detail_header_footer_object_expressions.lbx",
+                                                "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_section_expressions(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -79949,6 +80069,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
+    test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_expressions(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(argv[1]);
