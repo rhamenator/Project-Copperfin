@@ -7324,6 +7324,195 @@ void test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_
     }
 }
 
+void test_studio_host_json_updates_deleted_detail_header_footer_object_font_metadata_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        "copperfin_studio_host_deleted_detail_header_footer_object_font_edit_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_font_edits =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_font_json(asset_path);
+            const auto delete_header_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
+            expect(delete_header_object.ok && dbf_record_deleted(asset_path, 1U),
+                   "#1776: deleted detail-header object font fixture should mark the header object deleted");
+            const auto delete_footer_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+            expect(delete_footer_object.ok && dbf_record_deleted(asset_path, 3U),
+                   "#1776: deleted detail-footer object font fixture should mark the footer object deleted");
+
+            const auto update_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-header-label-guid",
+                    "--property-name", "FONTFACE",
+                    "--property-value", "Consolas",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header object font update stdout:\n"
+                          << update_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header object font update stderr:\n"
+                          << update_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_process.exit_code == 0,
+                   "#1776: deleted detail-header object font update should exit successfully");
+            expect(dbf_record_deleted(asset_path, 1U),
+                   "#1776: deleted detail-header object font update should preserve deleted state");
+            const auto updated_font = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "detail-header-label-guid",
+                .property_name = "FONTFACE"
+            });
+            expect(updated_font.ok && updated_font.exists && updated_font.value == "Consolas",
+                   "#1776: deleted detail-header object font update should persist the FONTFACE memo field");
+            expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1776: deleted detail-header object font update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                                "#1776: deleted detail-header label object font update should retain label identity");
+            }
+            expect_contains(update_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1776: deleted detail-header object font update should preserve deleted object counts");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1776: deleted detail-header object font update should preserve selected object availability");
+            expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1776: deleted detail-header object font update should preserve object selection kind");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1776: deleted detail-header object font update should not fabricate containing sections");
+            expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1776: deleted detail-header object font update should serialize null containing-section JSON");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"deletedObjects\": [",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"objectKind\": \"label\"",
+                    "\"highlightCount\": 4",
+                    "\"name\": \"FONTFACE\", \"recordIndex\": 1",
+                    "\"value\": \"Consolas\""
+                },
+                "#1776: deleted detail-header object font update should refresh deleted-object highlight metadata");
+            expect_contains_in_order(
+                update_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"highlightCount\": 4",
+                    "\"name\": \"FONTFACE\", \"recordIndex\": 1",
+                    "\"value\": \"Consolas\""
+                },
+                "#1776: deleted detail-header object font update should refresh selected-object highlight metadata");
+
+            const auto clear_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--property-name", "FONTFACE",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer object font clear stdout:\n"
+                          << clear_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer object font clear stderr:\n"
+                          << clear_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_process.exit_code == 0,
+                   "#1776: deleted detail-footer object font clear should exit successfully");
+            expect(dbf_record_deleted(asset_path, 3U),
+                   "#1776: deleted detail-footer object font clear should preserve deleted state");
+            expect_contains(clear_process.stdout_text,
+                            "{\"name\": \"FONTFACE\", \"type\": \"M\", \"isNull\": false, \"value\": \"\", \"fieldIndex\": 7",
+                            "#1776: deleted detail-footer object font clear should blank the FONTFACE memo field");
+            expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1776: deleted detail-footer object font clear should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                                "#1776: deleted detail-footer label object font clear should retain label identity");
+            }
+            expect_contains(clear_process.stdout_text, "\"deletedObjectCount\": 2",
+                            "#1776: deleted detail-footer object font clear should preserve deleted object counts");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1776: deleted detail-footer object font clear should preserve selected object availability");
+            expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1776: deleted detail-footer object font clear should preserve object selection kind");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1776: deleted detail-footer object font clear should not fabricate containing sections");
+            expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1776: deleted detail-footer object font clear should serialize null containing-section JSON");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"deletedObjects\": [",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"objectKind\": \"field\"",
+                    "\"highlightCount\": 3"
+                },
+                "#1776: deleted detail-footer object font clear should refresh deleted-object highlight metadata");
+            expect_contains_in_order(
+                clear_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"highlightCount\": 3"
+                },
+                "#1776: deleted detail-footer object font clear should refresh selected-object highlight metadata");
+            expect_not_contains(clear_process.stdout_text, "\"name\": \"FONTFACE\", \"recordIndex\": 3",
+                                "#1776: deleted detail-footer object font clear should remove stale font highlights");
+        };
+
+    run_deleted_detail_header_footer_object_font_edits(
+        temp_root / "deleted_detail_header_footer_object_font_edits.frx",
+        "deleted_detail_header_footer_object_font_edits.frx",
+        "report");
+    run_deleted_detail_header_footer_object_font_edits(
+        temp_root / "deleted_detail_header_footer_object_font_edits.lbx",
+        "deleted_detail_header_footer_object_font_edits.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -81085,6 +81274,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
