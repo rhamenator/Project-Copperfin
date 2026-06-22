@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -23,6 +24,7 @@ internal static class Program
         SmokeLocalizedProjectWorkspaceChrome();
         SmokeLocalizedProjectCommandDebuggerChrome();
         SmokeLocalizedProjectWorkspacePlaceholders();
+        SmokeLocalizedExplorerColumnHeaders();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -226,6 +228,39 @@ internal static class Program
                HasRichTextBoxTextContaining(portugueseControl, "sinais de cobertura") &&
                HasRichTextBoxTextContaining(portugueseControl, "federação de bancos de dados"),
             "Portuguese project workspace placeholders should localize initial pane text");
+    }
+
+    private static void SmokeLocalizedExplorerColumnHeaders()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(HasListViewColumnText(spanishControl, "Objeto") &&
+               HasListViewColumnText(spanishControl, "Tipo") &&
+               HasListViewColumnText(spanishControl, "Registro") &&
+               HasListViewColumnText(spanishControl, "Sección") &&
+               HasListViewColumnText(spanishControl, "Objetos") &&
+               HasListViewColumnText(spanishControl, "Superior"),
+            "Spanish explorer chrome should localize initial list-view column headers");
+        ApplyProjectSnapshotForColumnSmoke(spanishControl);
+        Expect(HasListViewColumnText(spanishControl, "Elemento") &&
+               HasListViewColumnText(spanishControl, "Grupo") &&
+               HasListViewColumnText(spanishControl, "Elementos") &&
+               HasListViewColumnText(spanishControl, "Excluidos"),
+            "Spanish explorer chrome should localize project-mode list-view column headers");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(HasListViewColumnText(portugueseControl, "Objeto") &&
+               HasListViewColumnText(portugueseControl, "Tipo") &&
+               HasListViewColumnText(portugueseControl, "Registro") &&
+               HasListViewColumnText(portugueseControl, "Seção") &&
+               HasListViewColumnText(portugueseControl, "Objetos") &&
+               HasListViewColumnText(portugueseControl, "Topo"),
+            "Portuguese explorer chrome should localize initial list-view column headers");
+        ApplyProjectSnapshotForColumnSmoke(portugueseControl);
+        Expect(HasListViewColumnText(portugueseControl, "Item") &&
+               HasListViewColumnText(portugueseControl, "Grupo") &&
+               HasListViewColumnText(portugueseControl, "Itens") &&
+               HasListViewColumnText(portugueseControl, "Excluídos"),
+            "Portuguese explorer chrome should localize project-mode list-view column headers");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
@@ -527,6 +562,56 @@ internal static class Program
                 yield return nested;
             }
         }
+    }
+
+    private static bool HasListViewColumnText(Control root, string text)
+    {
+        foreach (var listView in FindListViews(root))
+        {
+            foreach (ColumnHeader column in listView.Columns)
+            {
+                if (string.Equals(column.Text, text, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static void ApplyProjectSnapshotForColumnSmoke(CopperfinAssetEditorControl control)
+    {
+        var snapshot = new CopperfinStudioSnapshotDocument
+        {
+            AssetFamily = "project",
+            ProjectWorkspace = new CopperfinStudioProjectWorkspace
+            {
+                Groups = new List<CopperfinStudioProjectGroup>
+                {
+                    new()
+                    {
+                        Id = "forms",
+                        Title = "Forms",
+                        ItemCount = 1,
+                        ExcludedCount = 0
+                    }
+                }
+            }
+        };
+
+        var controlType = typeof(CopperfinAssetEditorControl);
+        var currentSnapshotField = controlType.GetField("currentSnapshot", BindingFlags.Instance | BindingFlags.NonPublic);
+        var populateSectionListMethod = controlType.GetMethod("PopulateSectionList", BindingFlags.Instance | BindingFlags.NonPublic);
+        var configureObjectColumnsMethod = controlType.GetMethod("ConfigureObjectColumns", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (currentSnapshotField is null || populateSectionListMethod is null || configureObjectColumnsMethod is null)
+        {
+            throw new InvalidOperationException("Could not find CopperfinAssetEditorControl project-column smoke hooks.");
+        }
+
+        currentSnapshotField?.SetValue(control, snapshot);
+        populateSectionListMethod.Invoke(control, Array.Empty<object>());
+        configureObjectColumnsMethod.Invoke(control, Array.Empty<object>());
     }
 
     private static CopperfinDesignSurfaceControl? FindDesignSurface(Control root)

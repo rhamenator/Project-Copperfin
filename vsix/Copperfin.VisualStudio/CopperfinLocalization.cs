@@ -79,7 +79,17 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Placeholder.Toolbox"] = "Copperfin toolbox insights will appear here when a project is loaded.",
                 ["AssetEditor.Placeholder.Builders"] = "Copperfin builder insights will appear here when a project is loaded.",
                 ["AssetEditor.Placeholder.Coverage"] = "Start a Copperfin debug session to inspect runtime coverage signals.",
-                ["AssetEditor.Placeholder.Database"] = "Copperfin database-federation guidance will appear here when a project is loaded."
+                ["AssetEditor.Placeholder.Database"] = "Copperfin database-federation guidance will appear here when a project is loaded.",
+                ["AssetEditor.Column.Object"] = "Object",
+                ["AssetEditor.Column.Type"] = "Type",
+                ["AssetEditor.Column.Record"] = "Record",
+                ["AssetEditor.Column.Section"] = "Section",
+                ["AssetEditor.Column.Objects"] = "Objects",
+                ["AssetEditor.Column.Top"] = "Top",
+                ["AssetEditor.Column.Item"] = "Item",
+                ["AssetEditor.Column.Group"] = "Group",
+                ["AssetEditor.Column.Items"] = "Items",
+                ["AssetEditor.Column.Excluded"] = "Excluded"
             },
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -140,7 +150,17 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Placeholder.Toolbox"] = "Las herramientas de Copperfin aparecerán aquí cuando se cargue un proyecto.",
                 ["AssetEditor.Placeholder.Builders"] = "Los constructores de Copperfin aparecerán aquí cuando se cargue un proyecto.",
                 ["AssetEditor.Placeholder.Coverage"] = "Inicie una sesión de depuración de Copperfin para inspeccionar señales de cobertura en tiempo de ejecución.",
-                ["AssetEditor.Placeholder.Database"] = "La guía de federación de bases de datos de Copperfin aparecerá aquí cuando se cargue un proyecto."
+                ["AssetEditor.Placeholder.Database"] = "La guía de federación de bases de datos de Copperfin aparecerá aquí cuando se cargue un proyecto.",
+                ["AssetEditor.Column.Object"] = "Objeto",
+                ["AssetEditor.Column.Type"] = "Tipo",
+                ["AssetEditor.Column.Record"] = "Registro",
+                ["AssetEditor.Column.Section"] = "Sección",
+                ["AssetEditor.Column.Objects"] = "Objetos",
+                ["AssetEditor.Column.Top"] = "Superior",
+                ["AssetEditor.Column.Item"] = "Elemento",
+                ["AssetEditor.Column.Group"] = "Grupo",
+                ["AssetEditor.Column.Items"] = "Elementos",
+                ["AssetEditor.Column.Excluded"] = "Excluidos"
             },
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -201,7 +221,17 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Placeholder.Toolbox"] = "As ferramentas do Copperfin aparecerão aqui quando um projeto for carregado.",
                 ["AssetEditor.Placeholder.Builders"] = "Os construtores do Copperfin aparecerão aqui quando um projeto for carregado.",
                 ["AssetEditor.Placeholder.Coverage"] = "Inicie uma sessão de depuração do Copperfin para inspecionar sinais de cobertura de runtime.",
-                ["AssetEditor.Placeholder.Database"] = "A orientação de federação de bancos de dados do Copperfin aparecerá aqui quando um projeto for carregado."
+                ["AssetEditor.Placeholder.Database"] = "A orientação de federação de bancos de dados do Copperfin aparecerá aqui quando um projeto for carregado.",
+                ["AssetEditor.Column.Object"] = "Objeto",
+                ["AssetEditor.Column.Type"] = "Tipo",
+                ["AssetEditor.Column.Record"] = "Registro",
+                ["AssetEditor.Column.Section"] = "Seção",
+                ["AssetEditor.Column.Objects"] = "Objetos",
+                ["AssetEditor.Column.Top"] = "Topo",
+                ["AssetEditor.Column.Item"] = "Item",
+                ["AssetEditor.Column.Group"] = "Grupo",
+                ["AssetEditor.Column.Items"] = "Itens",
+                ["AssetEditor.Column.Excluded"] = "Excluídos"
             }
         };
 

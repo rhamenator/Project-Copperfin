@@ -216,9 +216,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             MultiSelect = false,
             View = View.Details
         };
-        objectListView.Columns.Add("Object", 240);
-        objectListView.Columns.Add("Type", 180);
-        objectListView.Columns.Add("Record", 70);
+        objectListView.Columns.Add(this.localization.Text("AssetEditor.Column.Object"), 240);
+        objectListView.Columns.Add(this.localization.Text("AssetEditor.Column.Type"), 180);
+        objectListView.Columns.Add(this.localization.Text("AssetEditor.Column.Record"), 70);
         objectListView.SelectedIndexChanged += (_, _) => SyncSelectionFromList();
 
         sectionListView = new ListView
@@ -229,9 +229,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             MultiSelect = false,
             View = View.Details
         };
-        sectionListView.Columns.Add("Section", 200);
-        sectionListView.Columns.Add("Objects", 70);
-        sectionListView.Columns.Add("Top", 80);
+        sectionListView.Columns.Add(this.localization.Text("AssetEditor.Column.Section"), 200);
+        sectionListView.Columns.Add(this.localization.Text("AssetEditor.Column.Objects"), 70);
+        sectionListView.Columns.Add(this.localization.Text("AssetEditor.Column.Top"), 80);
         sectionListView.SelectedIndexChanged += (_, _) => SyncExplorerSelection();
 
         propertyGrid = new PropertyGrid
@@ -741,9 +741,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             sectionListView.Visible = true;
             leftExplorerSplit.Panel1Collapsed = false;
-            sectionListView.Columns[0].Text = "Section";
-            sectionListView.Columns[1].Text = "Objects";
-            sectionListView.Columns[2].Text = "Top";
+            sectionListView.Columns[0].Text = this.localization.Text("AssetEditor.Column.Section");
+            sectionListView.Columns[1].Text = this.localization.Text("AssetEditor.Column.Objects");
+            sectionListView.Columns[2].Text = this.localization.Text("AssetEditor.Column.Top");
             foreach (var section in currentSnapshot.ReportLayout.Sections)
             {
                 var item = new ListViewItem(section.Title);
@@ -766,9 +766,9 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         {
             sectionListView.Visible = true;
             leftExplorerSplit.Panel1Collapsed = false;
-            sectionListView.Columns[0].Text = "Group";
-            sectionListView.Columns[1].Text = "Items";
-            sectionListView.Columns[2].Text = "Excluded";
+            sectionListView.Columns[0].Text = this.localization.Text("AssetEditor.Column.Group");
+            sectionListView.Columns[1].Text = this.localization.Text("AssetEditor.Column.Items");
+            sectionListView.Columns[2].Text = this.localization.Text("AssetEditor.Column.Excluded");
             foreach (var group in currentSnapshot.ProjectWorkspace.Groups)
             {
                 var item = new ListViewItem(group.Title);
@@ -1261,9 +1261,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
     private void ConfigureObjectColumns()
     {
-        objectListView.Columns[0].Text = currentSnapshot?.AssetFamily == "project" ? "Item" : "Object";
-        objectListView.Columns[1].Text = currentSnapshot?.AssetFamily == "project" ? "Group" : "Type";
-        objectListView.Columns[2].Text = "Record";
+        objectListView.Columns[0].Text = currentSnapshot?.AssetFamily == "project"
+            ? this.localization.Text("AssetEditor.Column.Item")
+            : this.localization.Text("AssetEditor.Column.Object");
+        objectListView.Columns[1].Text = currentSnapshot?.AssetFamily == "project"
+            ? this.localization.Text("AssetEditor.Column.Group")
+            : this.localization.Text("AssetEditor.Column.Type");
+        objectListView.Columns[2].Text = this.localization.Text("AssetEditor.Column.Record");
     }
 
     private IEnumerable<CopperfinStudioSnapshotObject> GetVisibleObjects()
