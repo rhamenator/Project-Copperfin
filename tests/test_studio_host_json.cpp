@@ -35850,6 +35850,328 @@ void test_studio_host_json_clears_report_section_tops_by_record_selection(const 
     }
 }
 
+void test_studio_host_json_updates_report_section_heights_and_tops_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_section_stable_geometry_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_section_height_update = [&](const fs::path& asset_path,
+                                               const std::string& title,
+                                               const std::string& updated_height,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_stable_section_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "section-guid",
+                "--property-name", "HEIGHT",
+                "--property-value", updated_height,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable section height update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable section height update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        const std::string updated_bottom = std::to_string(2000 + std::stoi(updated_height));
+        expect(update_process.exit_code == 0,
+               "#1824: report/label stable section height update should exit successfully");
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "section-guid",
+            .property_name = "HEIGHT"
+        });
+        expect(height_property.ok && height_property.exists && height_property.value == updated_height,
+               "#1824: report/label stable section height update should persist the HEIGHT field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1824: report/label stable section height update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1824: label stable section height update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"sectionHeightTotal\": " + updated_height,
+                        "#1824: report/label stable section height update should refresh section height totals");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 3",
+                        "#1824: report/label stable section height update should preserve placed object counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 0",
+                        "#1824: report/label stable section height update should preserve unplaced object counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1824: report/label stable section height update should preserve selected-section availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1824: report/label stable section height update should preserve section selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"top\": 2000",
+                "\"height\": " + updated_height,
+                "\"bottom\": " + updated_bottom,
+                "\"objectCount\": 3"
+            },
+            "#1824: report/label stable section height update should refresh selected-section geometry");
+    };
+
+    const auto run_section_top_update = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_stable_section_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "section-guid",
+                "--property-name", "VPOS",
+                "--property-value", "2500",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable section top update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable section top update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1824: report/label stable section top update should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "section-guid",
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.value == "2500",
+               "#1824: report/label stable section top update should persist the VPOS field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1824: report/label stable section top update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1824: label stable section top update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"sectionHeightTotal\": 5000",
+                        "#1824: report/label stable section top update should preserve section height totals");
+        expect_contains(update_process.stdout_text, "\"placedObjectCount\": 3",
+                        "#1824: report/label stable section top update should preserve placed object counts");
+        expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 0",
+                        "#1824: report/label stable section top update should preserve unplaced object counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1824: report/label stable section top update should preserve selected-section availability");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"top\": 2500",
+                "\"height\": 5000",
+                "\"bottom\": 7500",
+                "\"objectCount\": 3",
+                "\"sectionRelativeTop\": 100",
+                "\"sectionRelativeBottom\": 300"
+            },
+            "#1824: report/label stable section top update should refresh selected-section and relative object geometry");
+    };
+
+    run_section_height_update(temp_root / "section_height_stable.frx",
+                              "section_height_stable.frx",
+                              "2400",
+                              "report");
+    run_section_height_update(temp_root / "section_height_stable.lbx",
+                              "section_height_stable.lbx",
+                              "2600",
+                              "label");
+    run_section_top_update(temp_root / "section_top_stable.frx", "section_top_stable.frx", "report");
+    run_section_top_update(temp_root / "section_top_stable.lbx", "section_top_stable.lbx", "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_section_heights_and_tops_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_section_stable_geometry_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_section_height_clear = [&](const fs::path& asset_path,
+                                              const std::string& title,
+                                              const std::string& label) {
+        write_synthetic_report_table_for_stable_section_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "section-guid",
+                "--property-name", "HEIGHT",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable section height clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable section height clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1824: report/label stable section height clear should exit successfully");
+        const auto height_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "section-guid",
+            .property_name = "HEIGHT"
+        });
+        expect(height_property.ok && height_property.exists && height_property.direct_field &&
+                   height_property.value.empty(),
+               "#1824: report/label stable section height clear should blank the HEIGHT field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1824: report/label stable section height clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1824: label stable section height clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"sectionHeightTotal\": 0",
+                        "#1824: report/label stable section height clear should refresh section height totals");
+        expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 0",
+                        "#1824: report/label stable section height clear should refresh placed object counts");
+        expect_contains(clear_process.stdout_text, "\"unplacedObjectCount\": 3",
+                        "#1824: report/label stable section height clear should refresh unplaced object counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1824: report/label stable section height clear should preserve selected-section availability");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"top\": 2000",
+                "\"height\": 0",
+                "\"bottom\": 2000",
+                "\"objectCount\": 0"
+            },
+            "#1824: report/label stable section height clear should refresh selected-section geometry");
+    };
+
+    const auto run_section_top_clear = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_stable_section_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "section-guid",
+                "--property-name", "VPOS",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable section top clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable section top clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1824: report/label stable section top clear should exit successfully");
+        const auto top_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 1U,
+            .object_name = {},
+            .unique_id = "section-guid",
+            .property_name = "VPOS"
+        });
+        expect(top_property.ok && top_property.exists && top_property.direct_field &&
+                   top_property.value.empty(),
+               "#1824: report/label stable section top clear should blank the VPOS field");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1824: report/label stable section top clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1824: label stable section top clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"sectionHeightTotal\": 5000",
+                        "#1824: report/label stable section top clear should preserve section height totals");
+        expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 3",
+                        "#1824: report/label stable section top clear should preserve placed object counts");
+        expect_contains(clear_process.stdout_text, "\"unplacedObjectCount\": 0",
+                        "#1824: report/label stable section top clear should preserve unplaced object counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1824: report/label stable section top clear should preserve selected-section availability");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"sectionIndex\": 0",
+                "\"sectionCount\": 1",
+                "\"top\": 0",
+                "\"height\": 5000",
+                "\"bottom\": 5000",
+                "\"objectCount\": 3",
+                "\"sectionRelativeTop\": 2600",
+                "\"sectionRelativeBottom\": 2800"
+            },
+            "#1824: report/label stable section top clear should refresh selected-section and relative object geometry");
+    };
+
+    run_section_height_clear(temp_root / "section_height_clear_stable.frx",
+                             "section_height_clear_stable.frx",
+                             "report");
+    run_section_height_clear(temp_root / "section_height_clear_stable.lbx",
+                             "section_height_clear_stable.lbx",
+                             "label");
+    run_section_top_clear(temp_root / "section_top_clear_stable.frx",
+                          "section_top_clear_stable.frx",
+                          "report");
+    run_section_top_clear(temp_root / "section_top_clear_stable.lbx",
+                          "section_top_clear_stable.lbx",
+                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_report_settings_memos_by_record_selection(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -89661,6 +89983,8 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_section_tops_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_section_tops_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_section_heights_and_tops_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_report_section_heights_and_tops_by_stable_selection(argv[1]);
     test_studio_host_json_updates_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_settings_memos_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_settings_memos_by_record_selection(argv[1]);
