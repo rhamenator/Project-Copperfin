@@ -25,6 +25,7 @@ internal static class Program
         SmokeLocalizedProjectCommandDebuggerChrome();
         SmokeLocalizedProjectWorkspacePlaceholders();
         SmokeLocalizedExplorerColumnHeaders();
+        SmokeLocalizedAssetFamilyGuidance();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -261,6 +262,29 @@ internal static class Program
                HasListViewColumnText(portugueseControl, "Itens") &&
                HasListViewColumnText(portugueseControl, "Excluídos"),
             "Portuguese explorer chrome should localize project-mode list-view column headers");
+    }
+
+    private static void SmokeLocalizedAssetFamilyGuidance()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(BuildGuidanceText(spanishControl, "form").IndexOf("objetos de formulario", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(spanishControl, "class_library").IndexOf("biblioteca de clases", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(spanishControl, "report").IndexOf("bandas y objetos de informe", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(spanishControl, "label").IndexOf("objetos de etiqueta", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(spanishControl, "menu").IndexOf("estructuras de menú", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(spanishControl, "project").IndexOf("espacios de trabajo agrupados", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(spanishControl, "unknown").IndexOf("instantánea estructurada", StringComparison.Ordinal) >= 0,
+            "Spanish asset-family guidance should localize all static guidance cases");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(BuildGuidanceText(portugueseControl, "form").IndexOf("objetos de formulário", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(portugueseControl, "class_library").IndexOf("biblioteca de classes", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(portugueseControl, "report").IndexOf("bandas e objetos de relatório", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(portugueseControl, "label").IndexOf("objetos de etiqueta", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(portugueseControl, "menu").IndexOf("estruturas de menu", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(portugueseControl, "project").IndexOf("espaços de trabalho agrupados", StringComparison.Ordinal) >= 0 &&
+               BuildGuidanceText(portugueseControl, "unknown").IndexOf("instantâneo estruturado", StringComparison.Ordinal) >= 0,
+            "Portuguese asset-family guidance should localize all static guidance cases");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
@@ -612,6 +636,17 @@ internal static class Program
         currentSnapshotField?.SetValue(control, snapshot);
         populateSectionListMethod.Invoke(control, Array.Empty<object>());
         configureObjectColumnsMethod.Invoke(control, Array.Empty<object>());
+    }
+
+    private static string BuildGuidanceText(CopperfinAssetEditorControl control, string assetFamily)
+    {
+        var method = typeof(CopperfinAssetEditorControl).GetMethod("BuildGuidanceText", BindingFlags.Instance | BindingFlags.NonPublic);
+        if (method is null)
+        {
+            throw new InvalidOperationException("Could not find CopperfinAssetEditorControl guidance smoke hook.");
+        }
+
+        return (string)(method.Invoke(control, new object[] { assetFamily }) ?? string.Empty);
     }
 
     private static CopperfinDesignSurfaceControl? FindDesignSurface(Control root)

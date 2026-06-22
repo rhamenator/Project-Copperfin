@@ -89,7 +89,14 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Column.Item"] = "Item",
                 ["AssetEditor.Column.Group"] = "Group",
                 ["AssetEditor.Column.Items"] = "Items",
-                ["AssetEditor.Column.Excluded"] = "Excluded"
+                ["AssetEditor.Column.Excluded"] = "Excluded",
+                ["AssetEditor.Guidance.Form"] = "Copperfin is surfacing form objects from SCX/SCT assets and can now round-trip a safe editable subset inside Visual Studio.",
+                ["AssetEditor.Guidance.ClassLibrary"] = "Copperfin is surfacing class-library objects from VCX/VCT assets so you can inspect and edit reusable visual classes in-place.",
+                ["AssetEditor.Guidance.Report"] = "Copperfin is surfacing report bands and objects from FRX/FRT assets in a more modern report-designer shape with section outlines, live layout panes, and inline editing for safe layout fields.",
+                ["AssetEditor.Guidance.Label"] = "Copperfin is surfacing label objects from LBX/LBT assets in the shared report/label designer shell so label layouts feel closer to current Visual Studio tooling than to legacy modal editors.",
+                ["AssetEditor.Guidance.Menu"] = "Copperfin is surfacing menu structures from MNX/MNT assets. Prompt, command, procedure, and message fields can be edited from the property grid.",
+                ["AssetEditor.Guidance.Project"] = "Copperfin is surfacing PJX/PJT files as grouped workspaces with project entries, startup/build settings, and a first Copperfin build summary while the project manager grows toward full VFP parity.",
+                ["AssetEditor.Guidance.Generic"] = "This shell now pulls a structured snapshot from the native Copperfin Studio host so each VFP asset family can grow toward a high-fidelity Visual Studio editor."
             },
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -160,7 +167,14 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Column.Item"] = "Elemento",
                 ["AssetEditor.Column.Group"] = "Grupo",
                 ["AssetEditor.Column.Items"] = "Elementos",
-                ["AssetEditor.Column.Excluded"] = "Excluidos"
+                ["AssetEditor.Column.Excluded"] = "Excluidos",
+                ["AssetEditor.Guidance.Form"] = "Copperfin muestra objetos de formulario desde activos SCX/SCT y ahora puede guardar de ida y vuelta un subconjunto editable seguro dentro de Visual Studio.",
+                ["AssetEditor.Guidance.ClassLibrary"] = "Copperfin muestra objetos de biblioteca de clases desde activos VCX/VCT para que pueda inspeccionar y editar clases visuales reutilizables en su lugar.",
+                ["AssetEditor.Guidance.Report"] = "Copperfin muestra bandas y objetos de informe desde activos FRX/FRT en una forma de diseñador de informes más moderna con esquemas de secciones, paneles de diseño en vivo y edición integrada para campos de diseño seguros.",
+                ["AssetEditor.Guidance.Label"] = "Copperfin muestra objetos de etiqueta desde activos LBX/LBT en el shell compartido del diseñador de informes y etiquetas para que los diseños de etiquetas se sientan más cerca de las herramientas actuales de Visual Studio que de los editores modales heredados.",
+                ["AssetEditor.Guidance.Menu"] = "Copperfin muestra estructuras de menú desde activos MNX/MNT. Los campos de solicitud, comando, procedimiento y mensaje se pueden editar desde la cuadrícula de propiedades.",
+                ["AssetEditor.Guidance.Project"] = "Copperfin muestra archivos PJX/PJT como espacios de trabajo agrupados con entradas de proyecto, configuración de inicio/compilación y un primer resumen de compilación de Copperfin mientras el administrador de proyectos avanza hacia la paridad completa con VFP.",
+                ["AssetEditor.Guidance.Generic"] = "Este shell ahora obtiene una instantánea estructurada desde el host nativo de Copperfin Studio para que cada familia de activos VFP pueda avanzar hacia un editor de Visual Studio de alta fidelidad."
             },
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -231,7 +245,14 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Column.Item"] = "Item",
                 ["AssetEditor.Column.Group"] = "Grupo",
                 ["AssetEditor.Column.Items"] = "Itens",
-                ["AssetEditor.Column.Excluded"] = "Excluídos"
+                ["AssetEditor.Column.Excluded"] = "Excluídos",
+                ["AssetEditor.Guidance.Form"] = "Copperfin apresenta objetos de formulário de ativos SCX/SCT e agora pode salvar de ida e volta um subconjunto editável seguro dentro do Visual Studio.",
+                ["AssetEditor.Guidance.ClassLibrary"] = "Copperfin apresenta objetos de biblioteca de classes de ativos VCX/VCT para que você possa inspecionar e editar classes visuais reutilizáveis no local.",
+                ["AssetEditor.Guidance.Report"] = "Copperfin apresenta bandas e objetos de relatório de ativos FRX/FRT em uma forma de designer de relatórios mais moderna, com contornos de seção, painéis de layout ao vivo e edição integrada para campos de layout seguros.",
+                ["AssetEditor.Guidance.Label"] = "Copperfin apresenta objetos de etiqueta de ativos LBX/LBT no shell compartilhado do designer de relatórios e etiquetas para que layouts de etiqueta pareçam mais próximos das ferramentas atuais do Visual Studio do que dos editores modais legados.",
+                ["AssetEditor.Guidance.Menu"] = "Copperfin apresenta estruturas de menu de ativos MNX/MNT. Campos de prompt, comando, procedimento e mensagem podem ser editados na grade de propriedades.",
+                ["AssetEditor.Guidance.Project"] = "Copperfin apresenta arquivos PJX/PJT como espaços de trabalho agrupados com entradas de projeto, configurações de inicialização/compilação e um primeiro resumo de compilação do Copperfin enquanto o gerenciador de projetos avança para paridade completa com VFP.",
+                ["AssetEditor.Guidance.Generic"] = "Este shell agora obtém um instantâneo estruturado do host nativo do Copperfin Studio para que cada família de ativos VFP possa avançar para um editor de Visual Studio de alta fidelidade."
             }
         };
 

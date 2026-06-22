@@ -1024,13 +1024,13 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         return assetFamily switch
         {
-            "form" => "Copperfin is surfacing form objects from SCX/SCT assets and can now round-trip a safe editable subset inside Visual Studio.",
-            "class_library" => "Copperfin is surfacing class-library objects from VCX/VCT assets so you can inspect and edit reusable visual classes in-place.",
-            "report" => "Copperfin is surfacing report bands and objects from FRX/FRT assets in a more modern report-designer shape with section outlines, live layout panes, and inline editing for safe layout fields.",
-            "label" => "Copperfin is surfacing label objects from LBX/LBT assets in the shared report/label designer shell so label layouts feel closer to current Visual Studio tooling than to legacy modal editors.",
-            "menu" => "Copperfin is surfacing menu structures from MNX/MNT assets. Prompt, command, procedure, and message fields can be edited from the property grid.",
-            "project" => "Copperfin is surfacing PJX/PJT files as grouped workspaces with project entries, startup/build settings, and a first Copperfin build summary while the project manager grows toward full VFP parity.",
-            _ => "This shell now pulls a structured snapshot from the native Copperfin Studio host so each VFP asset family can grow toward a high-fidelity Visual Studio editor."
+            "form" => this.localization.Text("AssetEditor.Guidance.Form"),
+            "class_library" => this.localization.Text("AssetEditor.Guidance.ClassLibrary"),
+            "report" => this.localization.Text("AssetEditor.Guidance.Report"),
+            "label" => this.localization.Text("AssetEditor.Guidance.Label"),
+            "menu" => this.localization.Text("AssetEditor.Guidance.Menu"),
+            "project" => this.localization.Text("AssetEditor.Guidance.Project"),
+            _ => this.localization.Text("AssetEditor.Guidance.Generic")
         };
     }
 
