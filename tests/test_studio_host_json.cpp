@@ -6683,6 +6683,160 @@ void test_studio_host_json_exposes_detail_header_footer_object_containment(
     }
 }
 
+void test_studio_host_json_updates_detail_header_footer_section_expressions(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_expression_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_expression_edits = [&](const fs::path& asset_path,
+                                                               const std::string& title,
+                                                               const std::string& label) {
+        write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
+
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--record", "0",
+                "--property-name", "EXPR",
+                "--property-value", "detail header updated",
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " detail-header expression update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " detail-header expression update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1765: detail-header report/label expression update should exit successfully");
+        const auto updated_expr = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = {},
+            .property_name = "EXPR"
+        });
+        expect(updated_expr.ok && updated_expr.exists && updated_expr.value == "detail header updated",
+               "#1765: detail-header expression update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1765: detail-header expression update should return refreshed layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1765: detail-header expression update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1765: detail-header expression update should preserve section selection");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1765: detail-header expression update should preserve selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"title\": \"Detail Header\"",
+                "\"bandKind\": \"detail_header\"",
+                "\"expression\": \"detail header updated\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 4",
+                "\"recordIndex\": 0",
+                "\"top\": 0",
+                "\"height\": 300",
+                "\"bottom\": 300"
+            },
+            "#1765: detail-header expression update should refresh selected-section expression metadata");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"title\": \"Detail Footer\"",
+                "\"bandKind\": \"detail_footer\"",
+                "\"expression\": \"detail footer expression\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 2",
+                "\"recordIndex\": 1"
+            },
+            "#1765: detail-header expression update should preserve sibling detail-footer expression metadata");
+
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--record", "1",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " detail-footer expression clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " detail-footer expression clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1765: detail-footer report/label expression clear should exit successfully");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1765: detail-footer expression clear should return refreshed layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1765: detail-footer expression clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1765: detail-footer expression clear should preserve section selection");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1765: detail-footer expression clear should preserve selection kind");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"title\": \"Detail Footer\"",
+                "\"bandKind\": \"detail_footer\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 1",
+                "\"top\": 300",
+                "\"height\": 250",
+                "\"bottom\": 550"
+            },
+            "#1765: detail-footer expression clear should refresh selected-section expression metadata");
+        expect_contains_in_order(
+            clear_process.stdout_text,
+            {
+                "\"title\": \"Detail Header\"",
+                "\"bandKind\": \"detail_header\"",
+                "\"expression\": \"detail header updated\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 4",
+                "\"recordIndex\": 0"
+            },
+            "#1765: detail-footer expression clear should preserve sibling detail-header expression metadata");
+    };
+
+    run_detail_header_footer_expression_edits(temp_root / "detail_header_footer_expression.frx",
+                                              "detail_header_footer_expression.frx",
+                                              "report");
+    run_detail_header_footer_expression_edits(temp_root / "detail_header_footer_expression.lbx",
+                                              "detail_header_footer_expression.lbx",
+                                              "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clamps_negative_report_layout_dimensions(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -79266,6 +79420,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
+    test_studio_host_json_updates_detail_header_footer_section_expressions(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
