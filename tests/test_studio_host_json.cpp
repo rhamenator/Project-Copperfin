@@ -28991,6 +28991,38 @@ void test_studio_host_json_restores_live_edited_then_deleted_report_layout_objec
                "#1617: live edited then deleted report/label layout object restore should preserve edited geometry fields");
         expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1617: live edited then deleted report/label layout object restore should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                            "#1888: edited label layout object restore should retain label identity");
+        }
+        expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1888: edited report/label layout object restore should preserve live preview availability");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1888: edited report/label layout object restore should refresh live preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1888: edited report/label layout object restore should refresh live preview top bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsRight\": 3800",
+                        "#1888: edited report/label layout object restore should refresh live preview right bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1888: edited report/label layout object restore should refresh live preview bottom bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsWidth\": 3800",
+                        "#1888: edited report/label layout object restore should refresh live preview widths");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1888: edited report/label layout object restore should refresh live preview heights");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1888: edited report/label layout object restore should preserve deleted preview availability");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1888: edited report/label layout object restore should preserve deleted preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1888: edited report/label layout object restore should preserve deleted preview top bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1888: edited report/label layout object restore should preserve deleted preview right bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1888: edited report/label layout object restore should preserve deleted preview bottom bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1888: edited report/label layout object restore should preserve deleted preview widths");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1888: edited report/label layout object restore should preserve deleted preview heights");
         expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1617: live edited then deleted report/label layout object restore should remove restored objects from deleted-object counts");
         expect_contains(restore_process.stdout_text, "\"selectedReportObjectAvailable\": true",
