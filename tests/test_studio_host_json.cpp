@@ -7076,6 +7076,155 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_expressi
     }
 }
 
+void test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        "copperfin_studio_host_deleted_detail_header_footer_stable_section_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_stable_selection =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(asset_path);
+
+            const auto expect_deleted_section = [&](const std::string& unique_id,
+                                                    const std::string& section_title,
+                                                    const std::string& band_kind,
+                                                    const std::string& expression,
+                                                    const std::string& memo_block,
+                                                    const std::string& record_index,
+                                                    const std::string& object_code,
+                                                    const std::string& top,
+                                                    const std::string& height,
+                                                    const std::string& bottom,
+                                                    const std::string& selection_label) {
+                const auto process = run_process_capture(
+                    studio_host_path,
+                    {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
+                    temp_root);
+
+                if (process.exit_code != 0) {
+                    std::cerr << "studio host " << label << " stable deleted " << selection_label
+                              << " stdout:\n" << process.stdout_text << "\n";
+                    std::cerr << "studio host " << label << " stable deleted " << selection_label
+                              << " stderr:\n" << process.stderr_text << "\n";
+                    std::cerr << "fixture root: " << temp_root << "\n";
+                }
+
+                expect(process.exit_code == 0,
+                       "#1767: stable deleted detail header/footer section selection should exit successfully");
+                expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                                "#1767: stable deleted detail header/footer selection should preserve document titles");
+                if (asset_path.extension() == ".lbx") {
+                    expect_contains(process.stdout_text, "\"isLabel\": true",
+                                    "#1767: stable deleted detail header/footer label selection should retain label identity");
+                }
+                expect_contains(process.stdout_text, "\"sectionCount\": 1",
+                                "#1767: stable deleted detail header/footer selection should preserve live sections");
+                expect_contains(process.stdout_text, "\"deletedSectionCount\": 2",
+                                "#1767: stable deleted detail header/footer selection should expose deleted sections");
+                expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                                "#1767: stable deleted detail header/footer selection should expose selected sections");
+                expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                                "#1767: stable deleted detail header/footer selection should expose section selections");
+                expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                                "#1767: stable deleted detail header/footer selection should not select report objects");
+                expect_contains(process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                                "#1767: stable deleted detail header/footer selection should not fabricate object sections");
+                expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                "#1767: stable deleted detail header/footer selection should not select settings");
+                expect_contains_in_order(
+                    process.stdout_text,
+                    {
+                        "\"deletedSections\": [",
+                        "\"title\": \"" + section_title + "\"",
+                        "\"bandKind\": \"" + band_kind + "\"",
+                        "\"expression\": \"" + expression + "\"",
+                        "\"expressionFieldIndex\": 2",
+                        "\"expressionMemoBlockNumber\": " + memo_block,
+                        "\"recordIndex\": " + record_index,
+                        "\"deleted\": true",
+                        "\"sectionIndex\": null",
+                        "\"sectionCount\": 0",
+                        "\"objectCode\": " + object_code,
+                        "\"top\": " + top,
+                        "\"height\": " + height,
+                        "\"bottom\": " + bottom
+                    },
+                    "#1767: stable deleted " + selection_label + " should expose deleted-section metadata");
+                expect_contains_in_order(
+                    process.stdout_text,
+                    {
+                        "\"selectedReportSection\": {",
+                        "\"title\": \"" + section_title + "\"",
+                        "\"bandKind\": \"" + band_kind + "\"",
+                        "\"expression\": \"" + expression + "\"",
+                        "\"expressionFieldIndex\": 2",
+                        "\"expressionMemoBlockNumber\": " + memo_block,
+                        "\"recordIndex\": " + record_index,
+                        "\"deleted\": true",
+                        "\"sectionIndex\": null",
+                        "\"sectionCount\": 0",
+                        "\"objectCode\": " + object_code,
+                        "\"top\": " + top,
+                        "\"height\": " + height,
+                        "\"bottom\": " + bottom
+                    },
+                    "#1767: stable deleted " + selection_label + " should expose selected-section metadata");
+                expect_contains_in_order(
+                    process.stdout_text,
+                    {
+                        "\"sections\": [",
+                        "\"title\": \"Detail\"",
+                        "\"bandKind\": \"detail\"",
+                        "\"expression\": \"live detail expression\"",
+                        "\"recordIndex\": 0"
+                    },
+                    "#1767: stable deleted " + selection_label + " should preserve live detail metadata");
+            };
+
+            expect_deleted_section("deleted-detail-header-guid",
+                                   "Detail Header",
+                                   "detail_header",
+                                   "deleted detail header expression",
+                                   "2",
+                                   "1",
+                                   "9",
+                                   "500",
+                                   "300",
+                                   "800",
+                                   "detail header");
+            expect_deleted_section("deleted-detail-footer-guid",
+                                   "Detail Footer",
+                                   "detail_footer",
+                                   "deleted detail footer expression",
+                                   "3",
+                                   "2",
+                                   "10",
+                                   "800",
+                                   "250",
+                                   "1050",
+                                   "detail footer");
+        };
+
+    run_deleted_detail_header_footer_stable_selection(
+        temp_root / "deleted_detail_header_footer_stable_sections.frx",
+        "deleted_detail_header_footer_stable_sections.frx",
+        "report");
+    run_deleted_detail_header_footer_stable_selection(
+        temp_root / "deleted_detail_header_footer_stable_sections.lbx",
+        "deleted_detail_header_footer_stable_sections.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clamps_negative_report_layout_dimensions(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -79661,6 +79810,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_expressions(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(argv[1]);
+    test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);

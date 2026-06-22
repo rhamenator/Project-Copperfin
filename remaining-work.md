@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1767 stable deleted detail header/footer report/label section-selection coverage shipped. Studio host regression coverage now proves deleted Detail Header and deleted Detail Footer FRX/LBX sections selected by `--unique-id` expose deleted-section and selected-section title/band-kind/object-code/geometry metadata, expression field/memo provenance, live/deleted section counts, null unrelated selected report object/settings/containing-section surfaces, non-failing inspection, and label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1766 deleted detail header/footer report/label section-expression edit coverage shipped. Studio host regression coverage now proves `--set-property --record 1 --property-name EXPR --property-value ... --json` on deleted Detail Header sections persists refreshed EXPR memo values and updates both deleted-section and selected-section expression provenance, while `--clear-property --record 2 --property-name EXPR --json` on deleted Detail Footer sections clears deleted-section and selected-section expression/provenance metadata. Both paths preserve live Detail sibling metadata, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1765 detail header/footer report/label section-expression edit coverage shipped. Studio host regression coverage now proves `--set-property --record 0 --property-name EXPR --property-value ... --json` on Detail Header sections persists refreshed EXPR memo values and selected-section expression provenance, while `--clear-property --record 1 --property-name EXPR --json` on Detail Footer sections clears selected-section expression/provenance metadata. Both paths preserve sibling section expressions, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1764 detail header/footer report/label object-containment coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with live label/field objects inside Detail Header and Detail Footer bands, proving stable selected-object JSON exposes containing-section ids, containing-section record indexes, section-relative top/bottom coordinates, section object index/count metadata, selected containing-section JSON with object counts, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1781,7 +1782,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1766 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1767 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1852,7 +1853,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1766 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1767 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
