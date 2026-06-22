@@ -1739,7 +1739,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1699 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1724 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1810,7 +1810,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1699 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1724 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
