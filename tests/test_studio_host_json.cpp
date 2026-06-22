@@ -4235,6 +4235,37 @@ void write_synthetic_report_table_for_fractional_direct_setting_layout_json(
     expect(delete_result.ok, "#1746: synthetic report table should mark fractional direct settings deleted");
 }
 
+void write_synthetic_report_table_for_oversized_direct_setting_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "ORIENTATION", .type = 'C', .length = 32U},
+        {.name = "PAPERSIZE", .type = 'C', .length = 32U},
+        {.name = "TOPMARGIN", .type = 'C', .length = 32U},
+        {.name = "BOTMARGIN", .type = 'C', .length = 32U},
+        {.name = "GRIDV", .type = 'C', .length = 32U},
+        {.name = "GRIDH", .type = 'C', .length = 32U},
+        {.name = "COLS", .type = 'C', .length = 32U},
+        {.name = "COLWIDTH", .type = 'C', .length = 32U},
+        {.name = "COLSPACING", .type = 'C', .length = 32U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "999999999999", "999999999998", "999999999997", "999999999996",
+         "999999999995", "999999999994", "999999999993", "999999999992", "999999999991",
+         "oversized-direct-live-settings-guid"},
+        {"1", "53", "888888888888", "888888888887", "888888888886", "888888888885",
+         "888888888884", "888888888883", "888888888882", "888888888881", "888888888880",
+         "oversized-direct-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1747: synthetic report table with oversized direct settings should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1747: synthetic report table should mark oversized direct settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -8777,6 +8808,150 @@ void test_studio_host_json_preserves_fractional_report_direct_setting_fields(
     run_fractional_direct_setting_layout(temp_root / "fractional_direct_setting.lbx",
                                          "fractional_direct_setting.lbx",
                                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_oversized_report_direct_setting_fields(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_oversized_direct_setting_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_oversized_direct_setting_layout = [&](const fs::path& asset_path,
+                                                         const std::string& title,
+                                                         const std::string& label) {
+        write_synthetic_report_table_for_oversized_direct_setting_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " oversized direct setting summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " oversized direct setting summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1747: oversized direct settings should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1747: oversized direct-setting layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1747: oversized direct-setting label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 9",
+                        "#1747: oversized direct settings should preserve live raw settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 9",
+                        "#1747: oversized direct settings should preserve deleted raw settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1747: oversized direct settings should not fabricate page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationAvailable\": false",
+                        "#1747: oversized orientation should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"paperSizeAvailable\": false",
+                        "#1747: oversized paper size should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"topMarginAvailable\": false",
+                        "#1747: oversized top margin should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1747: oversized bottom margin should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        "#1747: oversized vertical grid should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#1747: oversized horizontal grid should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1747: oversized direct settings should not fabricate column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1747: oversized column count should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1747: oversized column width should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        "#1747: oversized column spacing should not advertise availability");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1747: oversized live direct-setting selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1747: oversized live direct-setting selection should expose raw settings");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"value\": \"999999999999\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"value\": \"999999999998\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"value\": \"999999999997\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"value\": \"999999999996\"",
+                "\"name\": \"GRIDV\"",
+                "\"value\": \"999999999995\"",
+                "\"name\": \"GRIDH\"",
+                "\"value\": \"999999999994\"",
+                "\"name\": \"COLS\"",
+                "\"value\": \"999999999993\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"value\": \"999999999992\"",
+                "\"name\": \"COLSPACING\"",
+                "\"value\": \"999999999991\""
+            },
+            "#1747: oversized live direct-setting selection should expose oversized source values");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1747: oversized deleted direct-setting selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1747: oversized deleted direct-setting selection should expose raw settings");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"value\": \"888888888888\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"value\": \"888888888887\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"value\": \"888888888886\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"value\": \"888888888885\"",
+                "\"name\": \"GRIDV\"",
+                "\"value\": \"888888888884\"",
+                "\"name\": \"GRIDH\"",
+                "\"value\": \"888888888883\"",
+                "\"name\": \"COLS\"",
+                "\"value\": \"888888888882\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"value\": \"888888888881\"",
+                "\"name\": \"COLSPACING\"",
+                "\"value\": \"888888888880\""
+            },
+            "#1747: oversized deleted direct-setting selection should expose oversized source values");
+    };
+
+    run_oversized_direct_setting_layout(temp_root / "oversized_direct_setting.frx",
+                                        "oversized_direct_setting.frx",
+                                        "report");
+    run_oversized_direct_setting_layout(temp_root / "oversized_direct_setting.lbx",
+                                        "oversized_direct_setting.lbx",
+                                        "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -76104,6 +76279,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_preserves_mixed_invalid_report_direct_setting_fields(argv[1]);
     test_studio_host_json_preserves_trimmed_report_direct_setting_fields(argv[1]);
     test_studio_host_json_preserves_fractional_report_direct_setting_fields(argv[1]);
+    test_studio_host_json_ignores_oversized_report_direct_setting_fields(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
