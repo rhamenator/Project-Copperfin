@@ -30151,6 +30151,24 @@ void test_studio_host_json_duplicates_live_edited_unplaced_report_layout_object_
                "#1620: live edited unplaced report/label layout object duplicate should preserve edited geometry fields");
         expect_contains(duplicate_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1620: live edited unplaced report/label layout object duplicate should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(duplicate_process.stdout_text, "\"isLabel\": true",
+                            "#1881: live edited unplaced label layout object duplicate should retain label identity");
+        }
+        expect_contains(duplicate_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1881: live edited unplaced report/label layout object duplicate should keep preview bounds available");
+        expect_contains(duplicate_process.stdout_text, "\"previewBoundsLeft\": -300",
+                        "#1881: live edited unplaced report/label layout object duplicate should expand preview left bounds");
+        expect_contains(duplicate_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#1881: live edited unplaced report/label layout object duplicate should preserve section-origin preview top bounds");
+        expect_contains(duplicate_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1881: live edited unplaced report/label layout object duplicate should preserve preview right bounds");
+        expect_contains(duplicate_process.stdout_text, "\"previewBoundsBottom\": 9700",
+                        "#1881: live edited unplaced report/label layout object duplicate should expand preview bottom bounds");
+        expect_contains(duplicate_process.stdout_text, "\"previewBoundsWidth\": 450",
+                        "#1881: live edited unplaced report/label layout object duplicate should refresh preview widths");
+        expect_contains(duplicate_process.stdout_text, "\"previewBoundsHeight\": 7700",
+                        "#1881: live edited unplaced report/label layout object duplicate should refresh preview heights");
         expect_contains(duplicate_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1620: live edited unplaced report/label layout object duplicate should preserve selected-object availability");
         expect_contains(duplicate_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
