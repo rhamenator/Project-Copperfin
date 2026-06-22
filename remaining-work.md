@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1845 report/label visual-object reorder-batch stable-selector coverage shipped. Studio host regressions now prove `--visual-object-reorder-batch --selected-unique-id ... --placement ... --target-unique-id ... --json` batches reorder FRX/LBX layout object rows by stable selectors, persists physical object order, refreshes selected report-object section metadata after reopen, retains label identity, exposes committed batch metadata, and rolls back earlier object order mutations when a later target selector is missing. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1844 report/label visual-object duplicate-batch stable-selector coverage shipped. Studio host regressions now prove `--visual-object-duplicate-batch --selected-unique-id ... --new-unique-id ... --json` batches duplicate FRX/LBX layout object rows by stable selectors, append duplicate identities while preserving original object order, refresh selected duplicate report-object JSON after reopen, retain label identity, expose committed batch metadata, and roll back earlier duplicate appends when a later replacement identity collides. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1843 report/label visual-object rename-batch stable-selector coverage shipped. Studio host regressions now prove `--visual-object-rename-batch --selected-unique-id ... --new-unique-id ... --json` batches rename FRX/LBX layout object rows by stable selectors, preserve object counts and physical order while replacing identities, refresh selected-object/report-object JSON after reopen, retain label identity, expose batch mutation/undo metadata, and roll back earlier object identity mutations when a later replacement collides. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1842 report/label visual-object update-batch stable-selector coverage shipped. Studio host regressions now prove `--visual-object-update-batch --selected-unique-id field-guid/label-guid --property-name ... --property-value ... --json` batches update FRX/LBX layout object rows by stable selectors, persist direct and memo-backed property changes, refresh selected report-object metadata after reopen, retain label identity, expose batch mutation/undo metadata, and roll back earlier object mutations when a later stable selector is missing. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1858,7 +1859,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1844 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1845 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1929,7 +1930,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1844 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1845 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
