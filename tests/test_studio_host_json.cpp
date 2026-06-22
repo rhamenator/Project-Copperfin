@@ -70678,6 +70678,142 @@ void test_studio_host_json_updates_visual_object_batches(const std::string& stud
     }
 }
 
+void test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_visual_object_update_batch_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_report_object_update_batch = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto update_batch_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-update-batch",
+                "--path", asset_path.string(),
+                "--selected-unique-id", "field-guid",
+                "--property-name", "EXPR",
+                "--property-value", "customer.contact",
+                "--property-name", "WIDTH",
+                "--property-value", "4300",
+                "--selected-unique-id", "label-guid",
+                "--property-name", "EXPR",
+                "--property-value", "\"Updated invoice\"",
+                "--property-name", "HPOS",
+                "--property-value", "720",
+                "--json"
+            },
+            temp_root);
+
+        if (update_batch_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable report object update-batch stdout:\n"
+                      << update_batch_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable report object update-batch stderr:\n"
+                      << update_batch_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_batch_process.exit_code == 0,
+               "#1842: report/label stable visual-object update-batch JSON should exit successfully");
+        expect_contains(update_batch_process.stdout_text, "\"visualObjectUpdateBatch\": {",
+                        "#1842: report/label stable visual-object update-batch JSON should expose a batch object");
+        expect_contains(update_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+                        "#1842: report/label stable visual-object update-batch JSON should expose affected object counts");
+        expect_contains(update_batch_process.stdout_text, "\"dryRun\": false",
+                        "#1842: report/label stable visual-object update-batch JSON should expose committed state");
+        expect_contains(update_batch_process.stdout_text, "\"mutatesAsset\": true",
+                        "#1842: report/label stable visual-object update-batch JSON should expose mutation state");
+        expect_contains(update_batch_process.stdout_text, "\"undoAvailable\": true",
+                        "#1842: report/label stable visual-object update-batch JSON should expose undo availability");
+        expect(visual_object_property(asset_path, "field-guid", "EXPR") == "customer.contact" &&
+                   visual_object_property(asset_path, "field-guid", "WIDTH") == "4300" &&
+                   visual_object_property(asset_path, "label-guid", "EXPR") == "\"Updated invoice\"" &&
+                   visual_object_property(asset_path, "label-guid", "HPOS") == "720",
+               "#1842: report/label stable visual-object update-batch should persist direct and memo-backed layout properties");
+
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "field-guid", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#1842: report/label stable visual-object update-batch reopen should exit successfully");
+        expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1842: report/label stable visual-object update-batch should leave report-layout JSON readable");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                            "#1842: label stable visual-object update-batch should retain label identity");
+        }
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"width\": 4300",
+                "\"right\": 5500",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"customer.contact\""
+            },
+            "#1842: report/label stable visual-object update-batch should refresh selected object metadata after reopen");
+    };
+
+    const auto run_report_object_update_batch_rollback = [&](const fs::path& asset_path,
+                                                             const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto rollback_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-update-batch",
+                "--path", asset_path.string(),
+                "--selected-unique-id", "field-guid",
+                "--property-name", "EXPR",
+                "--property-value", "should.rollback",
+                "--property-name", "WIDTH",
+                "--property-value", "4444",
+                "--selected-unique-id", "label-guid",
+                "--property-name", "HPOS",
+                "--property-value", "111",
+                "--selected-unique-id", "missing-guid",
+                "--property-name", "EXPR",
+                "--property-value", "missing",
+                "--json"
+            },
+            temp_root);
+
+        expect(rollback_process.exit_code == 4,
+               "#1842: report/label stable visual-object update-batch missing selector should fail");
+        expect_contains(rollback_process.stdout_text, "\"visualObjectUpdateBatch\": null",
+                        "#1842: failed report/label stable visual-object update-batch JSON should not expose stale batch objects");
+        expect_contains(rollback_process.stdout_text, "No visual object with the requested unique id was found.",
+                        "#1842: failed report/label stable visual-object update-batch JSON should report missing selector errors");
+        expect(visual_object_property(asset_path, "field-guid", "EXPR") == "customer.company" &&
+                   visual_object_property(asset_path, "field-guid", "WIDTH") == "4000" &&
+                   visual_object_property(asset_path, "label-guid", "HPOS") == "900",
+               "#1842: failed report/label stable visual-object update-batch should roll back earlier layout property mutations");
+        (void)label;
+    };
+
+    run_report_object_update_batch(temp_root / "report_object_update_batch.frx",
+                                   "report_object_update_batch.frx",
+                                   "report");
+    run_report_object_update_batch(temp_root / "report_object_update_batch.lbx",
+                                   "report_object_update_batch.lbx",
+                                   "label");
+    run_report_object_update_batch_rollback(temp_root / "report_object_update_batch_rollback.frx",
+                                            "report");
+    run_report_object_update_batch_rollback(temp_root / "report_object_update_batch_rollback.lbx",
+                                            "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_properties_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -95731,6 +95867,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_sets_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_updates_visual_property_batches(argv[1]);
     test_studio_host_json_updates_visual_object_batches(argv[1]);
+    test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_applies_deleted_states_by_stable_selectors(argv[1]);
