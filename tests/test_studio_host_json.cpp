@@ -3752,6 +3752,34 @@ void write_synthetic_report_table_for_oversized_numeric_layout_json(
     expect(delete_result.ok, "#1717: synthetic report table should mark the oversized-numeric object deleted");
 }
 
+void write_synthetic_report_table_for_invalid_classification_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'C', .length = 48U},
+        {.name = "OBJCODE", .type = 'C', .length = 48U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::string huge_type = "999999999999999999999999999999";
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"type?", "band?", "\"Malformed classification\"", "", "0", "", "500", "malformed-class-guid"},
+        {huge_type, huge_type, "\"Oversized classification\"", "250", "100", "800", "300",
+         "oversized-class-guid"},
+        {"deleted?", "deleted?", "\"Deleted classification\"", "400", "700", "900", "350",
+         "deleted-class-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1718: synthetic report table for invalid layout classifications should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1718: synthetic report table should mark the invalid classification row deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -5426,6 +5454,108 @@ void test_studio_host_json_defaults_oversized_report_layout_numerics(
     run_oversized_numeric_layout(temp_root / "oversized_numerics.lbx",
                                  "oversized_numerics.lbx",
                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_invalid_report_layout_classifications(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_invalid_report_layout_classification_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto expect_no_report_selection = [](const std::string& stdout_text, const std::string& message_prefix) {
+        expect_contains(stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        message_prefix + " should not expose report-selection availability");
+        expect_contains(stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        message_prefix + " should expose explicit no-selection kind");
+        expect_contains(stdout_text, "\"selectedReportObjectAvailable\": false",
+                        message_prefix + " should not expose selected-object availability");
+        expect_contains(stdout_text, "\"selectedReportObject\": null",
+                        message_prefix + " should serialize null selected objects");
+        expect_contains(stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        message_prefix + " should not expose containing-section availability");
+        expect_contains(stdout_text, "\"selectedReportObjectSection\": null",
+                        message_prefix + " should serialize null containing sections");
+        expect_contains(stdout_text, "\"selectedReportSectionAvailable\": false",
+                        message_prefix + " should not expose selected-section availability");
+        expect_contains(stdout_text, "\"selectedReportSection\": null",
+                        message_prefix + " should serialize null selected sections");
+        expect_contains(stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        message_prefix + " should not expose selected-settings availability");
+        expect_contains(stdout_text, "\"selectedReportSettings\": null",
+                        message_prefix + " should serialize null selected settings");
+    };
+
+    const auto run_invalid_classification_layout = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_invalid_classification_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " invalid classification summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " invalid classification summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1718: invalid report/label layout classifications should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1718: invalid layout classifications should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1718: invalid classification label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1718: invalid classification rows should preserve root report settings");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": false",
+                        "#1718: invalid classification rows should not create live preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1718: invalid classification rows should not create deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
+                        "#1718: invalid classification rows should not create live layout objects");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1718: invalid classification rows should not create deleted layout objects");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 0",
+                        "#1718: invalid classification rows should not create live sections");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1718: invalid classification rows should not create deleted sections");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 1",
+                        "#1718: invalid classification rows should preserve live root settings");
+
+        for (const auto record_index : {1, 2, 3}) {
+            const auto selected_process = run_process_capture(
+                studio_host_path,
+                {"--path", asset_path.string(), "--record", std::to_string(record_index), "--json"},
+                temp_root);
+
+            expect(selected_process.exit_code == 0,
+                   "#1718: invalid classification record selection should keep inspection non-failing");
+            expect_no_report_selection(
+                selected_process.stdout_text,
+                "#1718: invalid classification record " + std::to_string(record_index));
+        }
+    };
+
+    run_invalid_classification_layout(temp_root / "invalid_classifications.frx",
+                                      "invalid_classifications.frx",
+                                      "report");
+    run_invalid_classification_layout(temp_root / "invalid_classifications.lbx",
+                                      "invalid_classifications.lbx",
+                                      "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -71190,6 +71320,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
+    test_studio_host_json_ignores_invalid_report_layout_classifications(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
