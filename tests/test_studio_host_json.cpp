@@ -3790,6 +3790,34 @@ void write_synthetic_report_table_for_detail_header_footer_object_json(
     expect(create_result.ok, "#1764: synthetic report table for detail header/footer object JSON should be created");
 }
 
+void write_synthetic_report_table_for_detail_header_footer_object_distribution_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "9", "detail header expression", "", "0", "", "300", "detail-header-guid"},
+        {"5", "", "\"Header left\"", "100", "50", "50", "100", "detail-header-left-guid"},
+        {"5", "", "\"Header middle\"", "175", "60", "50", "100", "detail-header-middle-guid"},
+        {"5", "", "\"Header right\"", "700", "70", "50", "100", "detail-header-right-guid"},
+        {"9", "10", "detail footer expression", "", "300", "", "250", "detail-footer-guid"},
+        {"8", "", "footer.left", "140", "360", "50", "100", "detail-footer-left-guid"},
+        {"8", "", "footer.middle", "200", "370", "50", "100", "detail-footer-middle-guid"},
+        {"8", "", "footer.right", "740", "380", "50", "100", "detail-footer-right-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#1797: synthetic report table for detail header/footer object distribution JSON should be created");
+}
+
 void write_synthetic_report_table_for_detail_header_footer_object_font_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -11070,6 +11098,187 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
         temp_root / "detail_header_footer_object_nudge_deleted_footer.lbx",
         "detail_header_footer_object_nudge",
         "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_distribute_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_distribution =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_distribution_json(asset_path);
+
+            const auto distribute_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--unique-id", "detail-header-middle-guid",
+                    "--distribute-object",
+                    "--distribution-mode", "horizontal",
+                    "--distribute-target-unique-id", "detail-header-left-guid",
+                    "--distribute-target-unique-id", "detail-header-middle-guid",
+                    "--distribute-target-unique-id", "detail-header-right-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (distribute_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object distribute stdout:\n"
+                          << distribute_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object distribute stderr:\n"
+                          << distribute_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(distribute_header_process.exit_code == 0,
+                   "#1797: detail-header object distribution should exit successfully");
+            expect(visual_object_property(asset_path, "detail-header-left-guid", "HPOS") == "100" &&
+                       visual_object_property(asset_path, "detail-header-middle-guid", "HPOS") == "400" &&
+                       visual_object_property(asset_path, "detail-header-right-guid", "HPOS") == "700",
+                   "#1797: detail-header object distribution should evenly position the middle object");
+            expect(visual_object_property(asset_path, "detail-header-middle-guid", "VPOS") == "60" &&
+                       visual_object_property(asset_path, "detail-header-middle-guid", "WIDTH") == "50" &&
+                       visual_object_property(asset_path, "detail-header-middle-guid", "HEIGHT") == "100",
+                   "#1797: detail-header object distribution should preserve vertical geometry and size");
+            expect_contains(distribute_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1797: detail-header object distribution should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(distribute_header_process.stdout_text, "\"isLabel\": true",
+                                "#1797: detail-header label object distribution should retain label identity");
+            }
+            expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1797: detail-header object distribution should preserve selected object availability");
+            expect_contains(distribute_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1797: detail-header object distribution should preserve object selection kind");
+            expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1797: detail-header object distribution should preserve containing-section availability");
+            expect_contains_in_order(
+                distribute_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 2",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 60",
+                    "\"sectionRelativeBottom\": 160",
+                    "\"sectionObjectIndex\": 1",
+                    "\"sectionObjectCount\": 3",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 400",
+                    "\"top\": 60",
+                    "\"width\": 50",
+                    "\"right\": 450",
+                    "\"height\": 100",
+                    "\"bottom\": 160",
+                    "\"expression\": \"\\\"Header middle\\\"\""
+                },
+                "#1797: detail-header object distribution should refresh selected-object section metadata");
+            expect_contains_in_order(
+                distribute_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 3"
+                },
+                "#1797: detail-header object distribution should preserve containing-section metadata");
+
+            const auto distribute_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--unique-id", "detail-footer-middle-guid",
+                    "--distribute-object",
+                    "--distribution-mode", "horizontal",
+                    "--distribute-target-unique-id", "detail-footer-left-guid",
+                    "--distribute-target-unique-id", "detail-footer-middle-guid",
+                    "--distribute-target-unique-id", "detail-footer-right-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (distribute_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object distribute stdout:\n"
+                          << distribute_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object distribute stderr:\n"
+                          << distribute_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(distribute_footer_process.exit_code == 0,
+                   "#1797: detail-footer object distribution should exit successfully");
+            expect(visual_object_property(asset_path, "detail-footer-left-guid", "HPOS") == "140" &&
+                       visual_object_property(asset_path, "detail-footer-middle-guid", "HPOS") == "440" &&
+                       visual_object_property(asset_path, "detail-footer-right-guid", "HPOS") == "740",
+                   "#1797: detail-footer object distribution should evenly position the middle object");
+            expect(visual_object_property(asset_path, "detail-footer-middle-guid", "VPOS") == "370" &&
+                       visual_object_property(asset_path, "detail-footer-middle-guid", "WIDTH") == "50" &&
+                       visual_object_property(asset_path, "detail-footer-middle-guid", "HEIGHT") == "100",
+                   "#1797: detail-footer object distribution should preserve vertical geometry and size");
+            expect_contains(distribute_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1797: detail-footer object distribution should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(distribute_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1797: detail-footer label object distribution should retain label identity");
+            }
+            expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1797: detail-footer object distribution should preserve selected object availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1797: detail-footer object distribution should preserve object selection kind");
+            expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1797: detail-footer object distribution should preserve containing-section availability");
+            expect_contains_in_order(
+                distribute_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 6",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_footer_4\"",
+                    "\"containingSectionRecordIndex\": 4",
+                    "\"sectionRelativeTop\": 70",
+                    "\"sectionRelativeBottom\": 170",
+                    "\"sectionObjectIndex\": 1",
+                    "\"sectionObjectCount\": 3",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 440",
+                    "\"top\": 370",
+                    "\"width\": 50",
+                    "\"right\": 490",
+                    "\"height\": 100",
+                    "\"bottom\": 470",
+                    "\"expression\": \"footer.middle\""
+                },
+                "#1797: detail-footer object distribution should refresh selected-object section metadata");
+            expect_contains_in_order(
+                distribute_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_4\"",
+                    "\"recordIndex\": 4",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 3"
+                },
+                "#1797: detail-footer object distribution should preserve containing-section metadata");
+        };
+
+    run_detail_header_footer_object_distribution(temp_root / "detail_header_footer_object_distribution.frx",
+                                                 "detail_header_footer_object_distribution.frx",
+                                                 "report");
+    run_detail_header_footer_object_distribution(temp_root / "detail_header_footer_object_distribution.lbx",
+                                                 "detail_header_footer_object_distribution.lbx",
+                                                 "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -84857,6 +85066,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_distributes_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
