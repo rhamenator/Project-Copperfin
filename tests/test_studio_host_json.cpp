@@ -3780,6 +3780,33 @@ void write_synthetic_report_table_for_invalid_classification_layout_json(
     expect(delete_result.ok, "#1718: synthetic report table should mark the invalid classification row deleted");
 }
 
+void write_synthetic_report_table_for_fractional_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 12U, .decimal_count = 2U},
+        {.name = "VPOS", .type = 'N', .length = 12U, .decimal_count = 2U},
+        {.name = "WIDTH", .type = 'N', .length = 12U, .decimal_count = 2U},
+        {.name = "HEIGHT", .type = 'N', .length = 12U, .decimal_count = 2U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", ""},
+        {"9", "4", "", "", "10.75", "", "1000.90", ""},
+        {"5", "", "\"Fractional live\"", "125.90", "200.50", "300.75", "80.25",
+         "fractional-live-guid"},
+        {"5", "", "\"Fractional deleted\"", "425.80", "700.60", "150.95", "40.70",
+         "fractional-deleted-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1719: synthetic report table for fractional layout numerics should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_result.ok, "#1719: synthetic report table should mark the fractional object deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -5556,6 +5583,134 @@ void test_studio_host_json_ignores_invalid_report_layout_classifications(
     run_invalid_classification_layout(temp_root / "invalid_classifications.lbx",
                                       "invalid_classifications.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_fractional_report_layout_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_fractional_layout = [&](const fs::path& asset_path,
+                                           const std::string& title,
+                                           const std::string& label) {
+        write_synthetic_report_table_for_fractional_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " fractional layout summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " fractional layout summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1719: fractional report/label layout numerics should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1719: fractional layout numerics should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1719: fractional numeric label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1719: fractional live layouts should expose preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1719: fractional live layout left bounds should include the section origin");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 10",
+                        "#1719: fractional section top should use the integer portion");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsRight\": 425",
+                        "#1719: fractional live layout right bounds should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 1010",
+                        "#1719: fractional section bottom should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsWidth\": 425",
+                        "#1719: fractional live layout width should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsHeight\": 1000",
+                        "#1719: fractional live layout height should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1719: fractional deleted layouts should expose deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsLeft\": 425",
+                        "#1719: fractional deleted layout left bounds should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 700",
+                        "#1719: fractional deleted layout top bounds should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsRight\": 575",
+                        "#1719: fractional deleted layout right bounds should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 740",
+                        "#1719: fractional deleted layout bottom bounds should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsWidth\": 150",
+                        "#1719: fractional deleted layout width should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 40",
+                        "#1719: fractional deleted layout height should use integer portions");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1719: fractional layout numerics should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1719: fractional layout numerics should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 1000",
+                        "#1719: fractional section heights should use integer portions in summaries");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1719: fractional live object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": false",
+                "\"left\": 125",
+                "\"top\": 200",
+                "\"width\": 300",
+                "\"right\": 425",
+                "\"height\": 80",
+                "\"bottom\": 280"
+            },
+            "#1719: fractional live object geometry should use integer portions");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1719: fractional deleted object selection should keep inspection non-failing");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"left\": 425",
+                "\"top\": 700",
+                "\"width\": 150",
+                "\"right\": 575",
+                "\"height\": 40",
+                "\"bottom\": 740"
+            },
+            "#1719: fractional deleted object geometry should use integer portions");
+    };
+
+    run_fractional_layout(temp_root / "fractional_geometry.frx",
+                          "fractional_geometry.frx",
+                          "report");
+    run_fractional_layout(temp_root / "fractional_geometry.lbx",
+                          "fractional_geometry.lbx",
+                          "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -71321,6 +71476,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
     test_studio_host_json_ignores_invalid_report_layout_classifications(argv[1]);
+    test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
