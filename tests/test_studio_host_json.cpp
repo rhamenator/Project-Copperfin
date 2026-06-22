@@ -4325,6 +4325,45 @@ void write_synthetic_report_table_for_dot_leading_direct_setting_layout_json(
     expect(delete_result.ok, "#1748: synthetic report table should mark dot-leading direct settings deleted");
 }
 
+void write_synthetic_report_table_for_invalid_setting_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53",
+         "ORIENTATION=sideways\n"
+         "PAPERSIZE=999999999999\n"
+         "TOPMARGIN=.120\n"
+         "BOTMARGIN=bottom?\n"
+         "GRIDV=999999999995\n"
+         "GRIDH=.0\n"
+         "COLS=many\n"
+         "COLWIDTH=999999999992\n"
+         "COLSPACING=.42",
+         "invalid-memo-live-settings-guid"},
+        {"1", "53",
+         "ORIENTATION=deleted-sideways\n"
+         "PAPERSIZE=888888888887\n"
+         "TOPMARGIN=.360\n"
+         "BOTMARGIN=deleted-bottom?\n"
+         "GRIDV=888888888884\n"
+         "GRIDH=.1\n"
+         "COLS=deleted-many\n"
+         "COLWIDTH=888888888881\n"
+         "COLSPACING=.84",
+         "invalid-memo-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1750: synthetic report table with invalid settings memo values should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1750: synthetic report table should mark invalid memo settings deleted");
+}
+
 void write_synthetic_report_table_for_unresolved_memo_placeholder_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -9155,6 +9194,193 @@ void test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(
     run_dot_leading_direct_setting_layout(temp_root / "dot_leading_direct_setting.lbx",
                                           "dot_leading_direct_setting.lbx",
                                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_invalid_report_setting_memo_values(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_invalid_setting_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_invalid_setting_memo_layout = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_invalid_setting_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " invalid setting memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " invalid setting memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1750: invalid settings memo values should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1750: invalid settings memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1750: invalid settings memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 9",
+                        "#1750: invalid settings memo values should preserve live raw settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 9",
+                        "#1750: invalid settings memo values should preserve deleted raw settings");
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1750: invalid settings memo values should not fabricate page setup");
+        expect_contains(summary_process.stdout_text, "\"orientationAvailable\": false",
+                        "#1750: invalid memo orientation should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"paperSizeAvailable\": false",
+                        "#1750: invalid memo paper size should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"topMarginAvailable\": false",
+                        "#1750: invalid memo top margin should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"bottomMarginAvailable\": false",
+                        "#1750: invalid memo bottom margin should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"gridVerticalAvailable\": false",
+                        "#1750: invalid memo vertical grid should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontalAvailable\": false",
+                        "#1750: invalid memo horizontal grid should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1750: invalid settings memo values should not fabricate column setup");
+        expect_contains(summary_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1750: invalid memo column count should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1750: invalid memo column width should not advertise availability");
+        expect_contains(summary_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        "#1750: invalid memo column spacing should not advertise availability");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"sideways\"",
+                        "#1750: live malformed memo orientation provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"PAPERSIZE\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"999999999999\"",
+                        "#1750: live oversized memo paper-size provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"TOPMARGIN\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2, \"memoBlockNumber\": 1, \"value\": \".120\"",
+                        "#1750: live dot-leading memo top-margin provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLWIDTH\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 7, \"memoBlockNumber\": 2, \"value\": \"888888888881\"",
+                        "#1750: deleted oversized memo column-width provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLSPACING\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 8, \"memoBlockNumber\": 2, \"value\": \".84\"",
+                        "#1750: deleted dot-leading memo column-spacing provenance should remain inspectable");
+
+        const auto live_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_settings_process.exit_code == 0,
+               "#1750: invalid live settings memo selection should keep inspection non-failing");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1750: invalid live settings memo selection should expose raw settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1750: invalid live settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            live_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 1",
+                "\"value\": \"sideways\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"999999999999\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \".120\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"bottom?\"",
+                "\"name\": \"GRIDV\"",
+                "\"sourceLineIndex\": 4",
+                "\"value\": \"999999999995\"",
+                "\"name\": \"GRIDH\"",
+                "\"sourceLineIndex\": 5",
+                "\"value\": \".0\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 6",
+                "\"value\": \"many\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"sourceLineIndex\": 7",
+                "\"value\": \"999999999992\"",
+                "\"name\": \"COLSPACING\"",
+                "\"sourceLineIndex\": 8",
+                "\"value\": \".42\""
+            },
+            "#1750: invalid live settings memo selection should expose raw memo source values");
+
+        const auto deleted_settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_settings_process.exit_code == 0,
+               "#1750: invalid deleted settings memo selection should keep inspection non-failing");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1750: invalid deleted settings memo selection should expose raw settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1750: invalid deleted settings memo selection should expose settings kind");
+        expect_contains_in_order(
+            deleted_settings_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"sourceLineIndex\": 0",
+                "\"memoBlockNumber\": 2",
+                "\"value\": \"deleted-sideways\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"888888888887\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"sourceLineIndex\": 2",
+                "\"value\": \".360\"",
+                "\"name\": \"BOTMARGIN\"",
+                "\"sourceLineIndex\": 3",
+                "\"value\": \"deleted-bottom?\"",
+                "\"name\": \"GRIDV\"",
+                "\"sourceLineIndex\": 4",
+                "\"value\": \"888888888884\"",
+                "\"name\": \"GRIDH\"",
+                "\"sourceLineIndex\": 5",
+                "\"value\": \".1\"",
+                "\"name\": \"COLS\"",
+                "\"sourceLineIndex\": 6",
+                "\"value\": \"deleted-many\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"sourceLineIndex\": 7",
+                "\"value\": \"888888888881\"",
+                "\"name\": \"COLSPACING\"",
+                "\"sourceLineIndex\": 8",
+                "\"value\": \".84\""
+            },
+            "#1750: invalid deleted settings memo selection should expose raw memo source values");
+    };
+
+    run_invalid_setting_memo_layout(temp_root / "invalid_setting_memo.frx",
+                                    "invalid_setting_memo.frx",
+                                    "report");
+    run_invalid_setting_memo_layout(temp_root / "invalid_setting_memo.lbx",
+                                    "invalid_setting_memo.lbx",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -76611,6 +76837,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_preserves_fractional_report_direct_setting_fields(argv[1]);
     test_studio_host_json_ignores_oversized_report_direct_setting_fields(argv[1]);
     test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(argv[1]);
+    test_studio_host_json_ignores_invalid_report_setting_memo_values(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
