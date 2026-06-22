@@ -27,6 +27,7 @@ internal static class Program
         SmokeLocalizedProjectWorkspacePlaceholders();
         SmokeLocalizedExplorerColumnHeaders();
         SmokeLocalizedAssetFamilyGuidance();
+        SmokeLocalizedSnapshotUndoPropertyStatus();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -309,6 +310,37 @@ internal static class Program
                BuildGuidanceText(portugueseControl, "project").IndexOf("espaços de trabalho agrupados", StringComparison.Ordinal) >= 0 &&
                BuildGuidanceText(portugueseControl, "unknown").IndexOf("instantâneo estruturado", StringComparison.Ordinal) >= 0,
             "Portuguese asset-family guidance should localize all static guidance cases");
+    }
+
+    private static void SmokeLocalizedSnapshotUndoPropertyStatus()
+    {
+        var snapshot = BuildStatusSmokeSnapshot();
+
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(string.Equals(InvokeAssetEditorString(spanishControl, "BuildUndoCommandText", "Reordenar"), "Deshacer Reordenar", StringComparison.Ordinal) &&
+               InvokeAssetEditorString(spanishControl, "BuildUndoExecutingStatus", "Reordenar").IndexOf("Ejecutando deshacer del comando: Reordenar", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildUndoFailedStatus", "sin pila").IndexOf("Falló el deshacer del comando: sin pila", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildUndoCompletedStatus", "Reordenar", snapshot).IndexOf("Instantánea cargada: 2 filas de objetos, 7 campos", StringComparison.Ordinal) >= 0,
+            "Spanish undo status text should localize command labels and formatted status messages");
+        Expect(InvokeAssetEditorString(spanishControl, "BuildSnapshotUnavailableStatus", "host no disponible").IndexOf("Instantánea no disponible: host no disponible", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildSnapshotLoadedStatus", snapshot).IndexOf("Instantánea cargada: 2 filas de objetos, 7 campos, 3 índices complementarios. Deshacer disponible: Reordenar.", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildPropertyApplyingStatus", "WIDTH").IndexOf("Aplicando cambio de WIDTH", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildPropertyUpdateFailedStatus", "campo protegido").IndexOf("Falló la actualización de propiedad: campo protegido", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(spanishControl, "BuildPropertyUpdatedStatus", "WIDTH", snapshot).IndexOf("Se actualizó WIDTH. Instantánea cargada: 2 filas de objetos, 7 campos. Deshacer disponible: Reordenar.", StringComparison.Ordinal) >= 0,
+            "Spanish snapshot and property status text should localize formatted messages");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(string.Equals(InvokeAssetEditorString(portugueseControl, "BuildUndoCommandText", "Reordenar"), "Desfazer Reordenar", StringComparison.Ordinal) &&
+               InvokeAssetEditorString(portugueseControl, "BuildUndoExecutingStatus", "Reordenar").IndexOf("Executando desfazer do comando: Reordenar", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildUndoFailedStatus", "sem pilha").IndexOf("Falha ao desfazer comando: sem pilha", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildUndoCompletedStatus", "Reordenar", snapshot).IndexOf("Instantâneo carregado: 2 linhas de objetos, 7 campos", StringComparison.Ordinal) >= 0,
+            "Portuguese undo status text should localize command labels and formatted status messages");
+        Expect(InvokeAssetEditorString(portugueseControl, "BuildSnapshotUnavailableStatus", "host indisponível").IndexOf("Instantâneo indisponível: host indisponível", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildSnapshotLoadedStatus", snapshot).IndexOf("Instantâneo carregado: 2 linhas de objetos, 7 campos, 3 índices complementares. Desfazer disponível: Reordenar.", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildPropertyApplyingStatus", "WIDTH").IndexOf("Aplicando alteração de WIDTH", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildPropertyUpdateFailedStatus", "campo protegido").IndexOf("Falha ao atualizar propriedade: campo protegido", StringComparison.Ordinal) >= 0 &&
+               InvokeAssetEditorString(portugueseControl, "BuildPropertyUpdatedStatus", "WIDTH", snapshot).IndexOf("WIDTH atualizado. Instantâneo carregado: 2 linhas de objetos, 7 campos. Desfazer disponível: Reordenar.", StringComparison.Ordinal) >= 0,
+            "Portuguese snapshot and property status text should localize formatted messages");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
@@ -671,6 +703,33 @@ internal static class Program
         }
 
         return (string)(method.Invoke(control, new object[] { assetFamily }) ?? string.Empty);
+    }
+
+    private static CopperfinStudioSnapshotDocument BuildStatusSmokeSnapshot()
+    {
+        return new CopperfinStudioSnapshotDocument
+        {
+            FieldCount = 7,
+            IndexCount = 3,
+            CommandUndoAvailable = true,
+            CommandUndoLabel = "Reordenar",
+            Objects = new List<CopperfinStudioSnapshotObject>
+            {
+                new(),
+                new()
+            }
+        };
+    }
+
+    private static string InvokeAssetEditorString(CopperfinAssetEditorControl control, string methodName, params object[] args)
+    {
+        var method = typeof(CopperfinAssetEditorControl).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (method is null)
+        {
+            throw new InvalidOperationException($"Could not find CopperfinAssetEditorControl smoke hook {methodName}.");
+        }
+
+        return (string)(method.Invoke(control, args) ?? string.Empty);
     }
 
     private static CopperfinDesignSurfaceControl? FindDesignSurface(Control root)

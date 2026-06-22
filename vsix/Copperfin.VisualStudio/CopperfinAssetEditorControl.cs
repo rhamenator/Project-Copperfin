@@ -553,17 +553,15 @@ internal sealed class CopperfinAssetEditorControl : UserControl
     {
         if (TryFindFocusedUndoTextBox() is not null)
         {
-            return "Undo";
+            return this.localization.Text("AssetEditor.Undo.Command");
         }
 
         if (currentSnapshot?.CommandUndoAvailable == true)
         {
-            return string.IsNullOrWhiteSpace(currentSnapshot.CommandUndoLabel)
-                ? "Undo"
-                : "Undo " + currentSnapshot.CommandUndoLabel;
+            return BuildUndoCommandText(currentSnapshot.CommandUndoLabel);
         }
 
-        return "Undo";
+        return this.localization.Text("AssetEditor.Undo.Command");
     }
 
     public bool TryHandleUndoCommand()
@@ -572,7 +570,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         if (focusedUndoTextBox is not null)
         {
             focusedUndoTextBox.Undo();
-            snapshotStatusLabel.Text = "Executed edit undo.";
+            snapshotStatusLabel.Text = this.localization.Text("AssetEditor.Undo.EditExecuted");
             return true;
         }
 
@@ -583,21 +581,17 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
         var priorLabel = currentSnapshot.CommandUndoLabel;
         var selectedRecordIndex = (propertyGrid.SelectedObject as CopperfinDesignerSelection)?.RecordIndex ?? TryReadSelectedRecordIndex();
-        snapshotStatusLabel.Text = string.IsNullOrWhiteSpace(priorLabel)
-            ? "Executing command undo..."
-            : "Executing command undo: " + priorLabel;
+        snapshotStatusLabel.Text = BuildUndoExecutingStatus(priorLabel);
 
         var undoResult = CopperfinStudioSnapshotClient.TryUndoCommand(currentPath!);
         if (!undoResult.Success || undoResult.Document is null)
         {
-            snapshotStatusLabel.Text = "Command undo failed: " + undoResult.Error;
+            snapshotStatusLabel.Text = BuildUndoFailedStatus(undoResult.Error);
             return false;
         }
 
         currentSnapshot = undoResult.Document;
-        snapshotStatusLabel.Text = string.IsNullOrWhiteSpace(priorLabel)
-            ? $"Undid command. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields."
-            : $"Undid {priorLabel}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields.";
+        snapshotStatusLabel.Text = BuildUndoCompletedStatus(priorLabel, currentSnapshot);
         PopulateSectionList();
         PopulateObjectList();
         LoadSurface();
@@ -683,16 +677,12 @@ internal sealed class CopperfinAssetEditorControl : UserControl
 
             if (!snapshotResult.Success || snapshotResult.Document is null)
             {
-                snapshotStatusLabel.Text = "Snapshot unavailable: " + snapshotResult.Error;
+                snapshotStatusLabel.Text = BuildSnapshotUnavailableStatus(snapshotResult.Error);
                 return;
             }
 
             currentSnapshot = snapshotResult.Document;
-            snapshotStatusLabel.Text =
-                $"Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields, {currentSnapshot.IndexCount} companion indexes." +
-                (currentSnapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(currentSnapshot.CommandUndoLabel)
-                    ? $" Undo available: {currentSnapshot.CommandUndoLabel}."
-                    : string.Empty);
+            snapshotStatusLabel.Text = BuildSnapshotLoadedStatus(currentSnapshot);
             guidanceLabel.Text = BuildGuidanceText(currentSnapshot.AssetFamily);
             UpdateProjectCommandVisibility();
             PopulateSectionList();
@@ -919,20 +909,16 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             return;
         }
 
-        snapshotStatusLabel.Text = $"Applying {propertyName} change...";
+        snapshotStatusLabel.Text = BuildPropertyApplyingStatus(propertyName);
         var updateResult = CopperfinStudioSnapshotClient.TryUpdateProperty(currentPath!, recordIndex, propertyName, propertyValue);
         if (!updateResult.Success || updateResult.Document is null)
         {
-            snapshotStatusLabel.Text = "Property update failed: " + updateResult.Error;
+            snapshotStatusLabel.Text = BuildPropertyUpdateFailedStatus(updateResult.Error);
             return;
         }
 
         currentSnapshot = updateResult.Document;
-        snapshotStatusLabel.Text =
-            $"Updated {propertyName}. Snapshot loaded: {currentSnapshot.Objects.Count} object rows, {currentSnapshot.FieldCount} fields." +
-            (currentSnapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(currentSnapshot.CommandUndoLabel)
-                ? $" Undo available: {currentSnapshot.CommandUndoLabel}."
-                : string.Empty);
+        snapshotStatusLabel.Text = BuildPropertyUpdatedStatus(propertyName, currentSnapshot);
         PopulateSectionList();
         PopulateObjectList();
         LoadSurface();
@@ -1032,6 +1018,70 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             "project" => this.localization.Text("AssetEditor.Guidance.Project"),
             _ => this.localization.Text("AssetEditor.Guidance.Generic")
         };
+    }
+
+    private string BuildUndoCommandText(string? commandUndoLabel)
+    {
+        return string.IsNullOrWhiteSpace(commandUndoLabel)
+            ? this.localization.Text("AssetEditor.Undo.Command")
+            : this.localization.Format("AssetEditor.Undo.WithLabel", commandUndoLabel!);
+    }
+
+    private string BuildUndoExecutingStatus(string? commandUndoLabel)
+    {
+        return string.IsNullOrWhiteSpace(commandUndoLabel)
+            ? this.localization.Text("AssetEditor.Undo.Executing")
+            : this.localization.Format("AssetEditor.Undo.ExecutingWithLabel", commandUndoLabel!);
+    }
+
+    private string BuildUndoFailedStatus(string? error)
+    {
+        return this.localization.Format("AssetEditor.Undo.Failed", error ?? string.Empty);
+    }
+
+    private string BuildUndoCompletedStatus(string? commandUndoLabel, CopperfinStudioSnapshotDocument snapshot)
+    {
+        return string.IsNullOrWhiteSpace(commandUndoLabel)
+            ? this.localization.Format("AssetEditor.Undo.Completed", snapshot.Objects.Count, snapshot.FieldCount)
+            : this.localization.Format("AssetEditor.Undo.CompletedWithLabel", commandUndoLabel!, snapshot.Objects.Count, snapshot.FieldCount);
+    }
+
+    private string BuildSnapshotUnavailableStatus(string? error)
+    {
+        return this.localization.Format("AssetEditor.Snapshot.Unavailable", error ?? string.Empty);
+    }
+
+    private string BuildSnapshotLoadedStatus(CopperfinStudioSnapshotDocument snapshot)
+    {
+        var status = this.localization.Format(
+            "AssetEditor.Snapshot.Loaded",
+            snapshot.Objects.Count,
+            snapshot.FieldCount,
+            snapshot.IndexCount);
+        if (snapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(snapshot.CommandUndoLabel))
+        {
+            status += this.localization.Format("AssetEditor.Snapshot.UndoAvailable", snapshot.CommandUndoLabel);
+        }
+
+        return status;
+    }
+
+    private string BuildPropertyApplyingStatus(string propertyName)
+    {
+        return this.localization.Format("AssetEditor.Property.ApplyingChange", propertyName);
+    }
+
+    private string BuildPropertyUpdateFailedStatus(string? error)
+    {
+        return this.localization.Format("AssetEditor.Property.UpdateFailed", error ?? string.Empty);
+    }
+
+    private string BuildPropertyUpdatedStatus(string propertyName, CopperfinStudioSnapshotDocument snapshot)
+    {
+        return this.localization.Format("AssetEditor.Property.Updated", propertyName, snapshot.Objects.Count, snapshot.FieldCount) +
+            (snapshot.CommandUndoAvailable && !string.IsNullOrWhiteSpace(snapshot.CommandUndoLabel)
+                ? this.localization.Format("AssetEditor.Snapshot.UndoAvailable", snapshot.CommandUndoLabel)
+                : string.Empty);
     }
 
     private void LaunchStudio()
