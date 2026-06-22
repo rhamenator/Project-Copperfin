@@ -3810,6 +3810,33 @@ void write_synthetic_report_table_for_invalid_classification_layout_json(
     expect(delete_result.ok, "#1718: synthetic report table should mark the invalid classification row deleted");
 }
 
+void write_synthetic_report_table_for_dot_leading_classification_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'C', .length = 48U},
+        {.name = "OBJCODE", .type = 'C', .length = 48U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", "", "", "dot-leading-valid-settings-guid"},
+        {".1", ".53", "ORIENTATION=1", "", "", "", "", "dot-leading-root-guid"},
+        {".9", ".4", "\"Dot-leading section\"", "", "100", "", "300", "dot-leading-section-guid"},
+        {".8", ".0", "\"Dot-leading object\"", "120", "150", "240", "80", "dot-leading-object-guid"},
+        {".5", ".1", "\"Deleted dot-leading object\"", "30", "650", "120", "40",
+         "dot-leading-deleted-object-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1760: synthetic report table for dot-leading layout classifications should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 4U, true);
+    expect(delete_result.ok, "#1760: synthetic report table should mark the dot-leading object deleted");
+}
+
 void write_synthetic_report_table_for_unsupported_objtype_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -6659,6 +6686,112 @@ void test_studio_host_json_ignores_invalid_report_layout_classifications(
     run_invalid_classification_layout(temp_root / "invalid_classifications.lbx",
                                       "invalid_classifications.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_dot_leading_report_layout_classifications(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_dot_leading_report_layout_classification_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto expect_no_report_selection = [](const std::string& stdout_text, const std::string& message_prefix) {
+        expect_contains(stdout_text, "\"selectedReportSelectionAvailable\": false",
+                        message_prefix + " should not expose report-selection availability");
+        expect_contains(stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        message_prefix + " should expose explicit no-selection kind");
+        expect_contains(stdout_text, "\"selectedReportObjectAvailable\": false",
+                        message_prefix + " should not expose selected-object availability");
+        expect_contains(stdout_text, "\"selectedReportObject\": null",
+                        message_prefix + " should serialize null selected objects");
+        expect_contains(stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        message_prefix + " should not expose containing-section availability");
+        expect_contains(stdout_text, "\"selectedReportObjectSection\": null",
+                        message_prefix + " should serialize null containing sections");
+        expect_contains(stdout_text, "\"selectedReportSectionAvailable\": false",
+                        message_prefix + " should not expose selected-section availability");
+        expect_contains(stdout_text, "\"selectedReportSection\": null",
+                        message_prefix + " should serialize null selected sections");
+        expect_contains(stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        message_prefix + " should not expose selected-settings availability");
+        expect_contains(stdout_text, "\"selectedReportSettings\": null",
+                        message_prefix + " should serialize null selected settings");
+    };
+
+    const auto run_dot_leading_classification_layout = [&](const fs::path& asset_path,
+                                                           const std::string& title,
+                                                           const std::string& label) {
+        write_synthetic_report_table_for_dot_leading_classification_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " dot-leading classification summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " dot-leading classification summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1760: dot-leading report/label layout classifications should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1760: dot-leading layout classifications should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1760: dot-leading classification label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1760: dot-leading classification rows should preserve valid root settings");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 0",
+                        "#1760: dot-leading root-like rows should not override valid settings");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 1",
+                        "#1760: dot-leading root-like rows should not create extra live root settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#1760: dot-leading root-like rows should not create deleted root settings");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": false",
+                        "#1760: dot-leading classification rows should not create live preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1760: dot-leading classification rows should not create deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 0",
+                        "#1760: dot-leading classification rows should not create live sections");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#1760: dot-leading classification rows should not create deleted sections");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
+                        "#1760: dot-leading classification rows should not create live layout objects");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 0",
+                        "#1760: dot-leading classification rows should not create deleted layout objects");
+
+        for (const auto record_index : {1, 2, 3, 4}) {
+            const auto selected_process = run_process_capture(
+                studio_host_path,
+                {"--path", asset_path.string(), "--record", std::to_string(record_index), "--json"},
+                temp_root);
+
+            expect(selected_process.exit_code == 0,
+                   "#1760: dot-leading classification record selection should keep inspection non-failing");
+            expect_no_report_selection(
+                selected_process.stdout_text,
+                "#1760: dot-leading classification record " + std::to_string(record_index));
+        }
+    };
+
+    run_dot_leading_classification_layout(temp_root / "dot_leading_classifications.frx",
+                                          "dot_leading_classifications.frx",
+                                          "report");
+    run_dot_leading_classification_layout(temp_root / "dot_leading_classifications.lbx",
+                                          "dot_leading_classifications.lbx",
+                                          "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -78551,6 +78684,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
     test_studio_host_json_ignores_invalid_report_layout_classifications(argv[1]);
+    test_studio_host_json_ignores_dot_leading_report_layout_classifications(argv[1]);
     test_studio_host_json_ignores_unsupported_report_layout_objtype_codes(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_classifications(argv[1]);
