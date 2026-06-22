@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1739 unresolved unplaced report/label layout-object memo placeholder coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with unresolved memo placeholder text in live unplaced layout-object EXPR/FONTFACE/FONTSIZE/MODE fields, proving JSON inspection stays non-failing, placeholder text does not leak into unplaced-object summary or selected-object metadata, expression/highlight text stays suppressed, object geometry and metadata remain available, containing-section metadata stays unavailable/null instead of being fabricated, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1738 unresolved deleted report/label layout-object memo placeholder coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with unresolved memo placeholder text in deleted layout-object EXPR/FONTFACE/FONTSIZE/MODE fields, proving JSON inspection stays non-failing, placeholder text does not leak into deleted-object summary or selected-object metadata, expression/highlight text stays suppressed, deleted object geometry and metadata remain available, containing-section metadata stays unavailable/null instead of being fabricated, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1737 unresolved report/label section memo placeholder coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with unresolved memo placeholder text in live and deleted section EXPR fields, proving JSON inspection stays non-failing, placeholder text does not leak into summary or selected-section metadata, section expression text/provenance stays suppressed, live/deleted section counts, heights, and band metadata remain available, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1736 unresolved report/label memo placeholder coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with unresolved memo placeholder text in root settings and layout-object EXPR/FONTFACE/FONTSIZE/MODE fields, proving JSON inspection stays non-failing, placeholder text does not leak into summary or selected metadata, root settings and page setup availability stay suppressed, selected object metadata remains available with empty expression/highlight state, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1753,7 +1754,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1738 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1739 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1824,7 +1825,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1738 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1739 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
