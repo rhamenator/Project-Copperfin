@@ -3893,6 +3893,29 @@ void write_synthetic_report_table_for_missing_section_objcode_layout_json(
     expect(delete_result.ok, "#1728: synthetic report table should mark the no-OBJCODE section deleted");
 }
 
+void write_synthetic_report_table_for_missing_object_objcode_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"8", "customer.name", "120", "300", "700", "90", "missing-objcode-live-object-guid"},
+        {"5", "\"Deleted no objcode\"", "260", "620", "500", "120",
+         "missing-objcode-deleted-object-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1729: synthetic report table without object OBJCODE schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1729: synthetic report table should mark the no-OBJCODE object deleted");
+}
+
 void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -6442,6 +6465,216 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
     run_missing_section_objcode_layout(temp_root / "missing_section_objcode.lbx",
                                        "missing_section_objcode.lbx",
                                        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_defaults_missing_report_object_objcode_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_report_object_objcode_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_object_objcode_layout = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_missing_object_objcode_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing object OBJCODE summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing object OBJCODE summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1729: missing object OBJCODE schema should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1729: missing object OBJCODE layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1729: missing object OBJCODE label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1729: missing object OBJCODE live layouts should expose preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 300",
+                        "#1729: missing object OBJCODE live preview top should come from the object");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 390",
+                        "#1729: missing object OBJCODE live preview bottom should come from the object");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1729: missing object OBJCODE deleted layouts should expose deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 620",
+                        "#1729: missing object OBJCODE deleted preview top should come from the deleted object");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 740",
+                        "#1729: missing object OBJCODE deleted preview bottom should come from the deleted object");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1729: missing object OBJCODE layouts should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1729: missing object OBJCODE layouts should preserve deleted object counts");
+        expect_contains(summary_process.stdout_text, "\"placedObjectCount\": 0",
+                        "#1729: missing object OBJCODE layouts should not fabricate live section membership");
+        expect_contains(summary_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#1729: missing object OBJCODE layouts should count sectionless live objects");
+        expect_contains(summary_process.stdout_text, "\"deletedPlacedObjectCount\": 0",
+                        "#1729: missing object OBJCODE layouts should not fabricate deleted section membership");
+        expect_contains(summary_process.stdout_text, "\"deletedUnplacedObjectCount\": 1",
+                        "#1729: missing object OBJCODE layouts should count sectionless deleted objects");
+        expect_contains(summary_process.stdout_text, "\"objectKindCounts\": [\n        {\"kind\": \"field\", \"count\": 1}\n      ]",
+                        "#1729: missing live object OBJCODE layouts should preserve OBJTYPE-derived kinds");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
+                        "#1729: missing deleted object OBJCODE layouts should preserve OBJTYPE-derived kinds");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"unplacedObjects\": [",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"\"",
+                "\"objectTypeCode\": 8",
+                "\"objectTypeFieldIndex\": 0",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"customer.name\"",
+                "\"titleFieldIndex\": 1",
+                "\"expression\": \"customer.name\"",
+                "\"expressionFieldIndex\": 1",
+                "\"left\": 120",
+                "\"top\": 300",
+                "\"width\": 700",
+                "\"right\": 820",
+                "\"height\": 90",
+                "\"bottom\": 390"
+            },
+            "#1729: missing live object OBJCODE should serialize default object-code provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"objectTypeCode\": 5",
+                "\"objectTypeFieldIndex\": 0",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"\\\"Deleted no objcode\\\"\"",
+                "\"titleFieldIndex\": 1",
+                "\"expression\": \"\\\"Deleted no objcode\\\"\"",
+                "\"expressionFieldIndex\": 1",
+                "\"left\": 260",
+                "\"top\": 620",
+                "\"width\": 500",
+                "\"right\": 760",
+                "\"height\": 120",
+                "\"bottom\": 740"
+            },
+            "#1729: missing deleted object OBJCODE should serialize default object-code provenance");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1729: missing object OBJCODE live selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1729: missing object OBJCODE live selection should advertise selected objects");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1729: missing object OBJCODE live selection should expose object selection kind");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1729: missing object OBJCODE live selection should not fabricate containing sections");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1729: missing object OBJCODE live selection should serialize null containing sections");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionObjectIndex\": null",
+                "\"objectTypeCode\": 8",
+                "\"objectTypeFieldIndex\": 0",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"objectKind\": \"field\"",
+                "\"title\": \"customer.name\"",
+                "\"titleFieldIndex\": 1",
+                "\"expression\": \"customer.name\"",
+                "\"expressionFieldIndex\": 1",
+                "\"left\": 120",
+                "\"top\": 300",
+                "\"width\": 700",
+                "\"right\": 820",
+                "\"height\": 90",
+                "\"bottom\": 390"
+            },
+            "#1729: missing live object OBJCODE selection should expose default object-code metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1729: missing object OBJCODE deleted selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1729: missing object OBJCODE deleted selection should advertise selected objects");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1729: missing object OBJCODE deleted selection should expose object selection kind");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1729: missing object OBJCODE deleted selection should not fabricate containing sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1729: missing object OBJCODE deleted selection should serialize null containing sections");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"containingSectionId\": \"\"",
+                "\"containingSectionRecordIndex\": null",
+                "\"sectionObjectIndex\": null",
+                "\"objectTypeCode\": 5",
+                "\"objectTypeFieldIndex\": 0",
+                "\"objectCode\": 0",
+                "\"objectCodeFieldIndex\": null",
+                "\"objectKind\": \"label\"",
+                "\"title\": \"\\\"Deleted no objcode\\\"\"",
+                "\"titleFieldIndex\": 1",
+                "\"expression\": \"\\\"Deleted no objcode\\\"\"",
+                "\"expressionFieldIndex\": 1",
+                "\"left\": 260",
+                "\"top\": 620",
+                "\"width\": 500",
+                "\"right\": 760",
+                "\"height\": 120",
+                "\"bottom\": 740"
+            },
+            "#1729: missing deleted object OBJCODE selection should expose default object-code metadata");
+    };
+
+    run_missing_object_objcode_layout(temp_root / "missing_object_objcode.frx",
+                                      "missing_object_objcode.frx",
+                                      "report");
+    run_missing_object_objcode_layout(temp_root / "missing_object_objcode.lbx",
+                                      "missing_object_objcode.lbx",
+                                      "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -73087,6 +73320,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
     test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
     test_studio_host_json_defaults_missing_report_section_objcode_schema(argv[1]);
+    test_studio_host_json_defaults_missing_report_object_objcode_schema(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);

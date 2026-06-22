@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1729 missing report/label object OBJCODE schema coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with live and deleted layout object rows that keep OBJTYPE classification but omit the OBJCODE field, proving JSON inspection stays non-failing, OBJTYPE-derived field/label kinds are preserved, object-code metadata defaults to zero with null field provenance, unplaced live/deleted object accounting and explicit selected-object metadata remain deterministic, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1728 missing report/label section OBJCODE schema coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with live and deleted section rows that keep OBJTYPE=9 classification but omit the OBJCODE field, proving JSON inspection stays non-failing, live/deleted sections default through the Title band metadata path, title/band-kind/object-code provenance serializes with null field indexes, geometry and selected-section metadata are preserved for explicit record selection, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1727 missing report/label section geometry schema coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with live and deleted section rows that omit VPOS and HEIGHT fields while preserving classification and EXPR metadata, proving JSON inspection stays non-failing, preview/deleted-preview bounds default to zero, live/deleted band title/kind and expression metadata are preserved, selected-section geometry defaults to top/height/bottom zero with null `topFieldIndex` and `heightFieldIndex` provenance, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1726 missing report/label object title schema coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with live and deleted layout object rows that omit NAME, EXPR, and UNIQUEID title/identity fields, proving JSON inspection stays non-failing, synthesized `Record N` titles are used with null title and expression provenance, live/deleted object metadata and geometry are preserved, selected-object metadata is populated for explicit record selection, live containing-section metadata remains available, deleted selected-object containing-section metadata stays false/null, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1743,7 +1744,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1728 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1729 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1814,7 +1815,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1728 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1729 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
