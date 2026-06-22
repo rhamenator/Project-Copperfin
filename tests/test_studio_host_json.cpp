@@ -71563,6 +71563,194 @@ void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stabl
     }
 }
 
+void test_studio_host_json_clears_deleted_report_visual_property_batches_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_visual_property_clear_batch_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto mark_deleted = [](const fs::path& asset_path, const std::string& unique_id) {
+        const auto delete_result = copperfin::vfp::set_visual_object_deleted_state({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = unique_id,
+            .deleted = true
+        });
+        expect(delete_result.ok && visual_object_deleted(asset_path, unique_id),
+               "#1864: deleted report/label clear-batch fixture should start with deleted target rows");
+    };
+
+    const auto run_deleted_report_property_clear_batch = [&](const fs::path& asset_path,
+                                                             const std::string& title,
+                                                             const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        mark_deleted(asset_path, "middle-field-guid");
+        mark_deleted(asset_path, "right-field-guid");
+
+        const auto clear_batch_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-property-clear-batch",
+                "--path", asset_path.string(),
+                "--property-name", "EXPR",
+                "--unique-id", "middle-field-guid",
+                "--property-name", "WIDTH",
+                "--unique-id", "middle-field-guid",
+                "--property-name", "EXPR",
+                "--unique-id", "right-field-guid",
+                "--property-name", "HPOS",
+                "--unique-id", "right-field-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_batch_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report property clear-batch stdout:\n"
+                      << clear_batch_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report property clear-batch stderr:\n"
+                      << clear_batch_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_batch_process.exit_code == 0,
+               "#1864: deleted report/label stable visual-property clear-batch JSON should exit successfully");
+        expect_contains(clear_batch_process.stdout_text, "\"visualPropertyClearBatch\": {",
+                        "#1864: deleted report/label stable visual-property clear-batch JSON should expose a batch object");
+        expect_contains(clear_batch_process.stdout_text, "\"affectedObjectCount\": 4",
+                        "#1864: deleted report/label stable visual-property clear-batch JSON should expose affected property counts");
+        expect_contains(clear_batch_process.stdout_text, "\"dryRun\": false",
+                        "#1864: deleted report/label stable visual-property clear-batch JSON should expose committed state");
+        expect_contains(clear_batch_process.stdout_text, "\"mutatesAsset\": true",
+                        "#1864: deleted report/label stable visual-property clear-batch JSON should expose mutation state");
+        expect_contains(clear_batch_process.stdout_text, "\"undoAvailable\": true",
+                        "#1864: deleted report/label stable visual-property clear-batch JSON should expose undo availability");
+        expect(visual_object_deleted(asset_path, "middle-field-guid") &&
+                   visual_object_deleted(asset_path, "right-field-guid") &&
+                   !visual_object_deleted(asset_path, "left-field-guid"),
+               "#1864: deleted report/label stable visual-property clear-batch should preserve deleted state");
+
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "middle-field-guid", "--json"},
+            temp_root);
+
+        if (reopen_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report property clear-batch reopen stdout:\n"
+                      << reopen_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report property clear-batch reopen stderr:\n"
+                      << reopen_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(reopen_process.exit_code == 0,
+               "#1864: deleted report/label stable visual-property clear-batch reopen should exit successfully");
+        expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1864: deleted report/label stable visual-property clear-batch should leave report-layout JSON readable");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                            "#1864: deleted label stable visual-property clear-batch should retain label identity");
+        }
+        expect_contains(reopen_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve live sibling counts");
+        expect_contains(reopen_process.stdout_text, "\"deletedObjectCount\": 2",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve deleted object counts");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1864: deleted report/label stable visual-property clear-batch should select the cleared deleted row");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1864: deleted report/label stable visual-property clear-batch should not fabricate containing sections");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportObjectSection\": null",
+                        "#1864: deleted report/label stable visual-property clear-batch should serialize null containing-section metadata");
+        expect_contains(reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve report object selection kind");
+        expect_contains(reopen_process.stdout_text, "\"recordIndex\": 3",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve cleared record indexes");
+        expect_contains(reopen_process.stdout_text, "\"deleted\": true",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve cleared deleted state");
+        expect_contains(reopen_process.stdout_text, "\"width\": 0",
+                        "#1864: deleted report/label stable visual-property clear-batch should refresh cleared width metadata");
+        expect_contains(reopen_process.stdout_text, "\"right\": 100",
+                        "#1864: deleted report/label stable visual-property clear-batch should refresh cleared bounds metadata");
+        expect_contains(reopen_process.stdout_text, "\"objectKind\": \"field\"",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve cleared object kind");
+        expect_not_contains(reopen_process.stdout_text, "\"expression\": \"middle.value\"",
+                            "#1864: deleted report/label stable visual-property clear-batch should not expose stale expressions");
+        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"middle-field-guid\"",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve cleared stable identities");
+        expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
+                        "#1864: deleted report/label stable visual-property clear-batch should keep deleted rows uncontained");
+
+        const auto right_reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "right-field-guid", "--json"},
+            temp_root);
+        expect(right_reopen_process.exit_code == 0,
+               "#1864: deleted report/label stable visual-property clear-batch right-row reopen should exit successfully");
+        expect_contains(right_reopen_process.stdout_text, "\"left\": 0",
+                        "#1864: deleted report/label stable visual-property clear-batch should refresh cleared left metadata");
+        expect_not_contains(right_reopen_process.stdout_text, "\"expression\": \"right.value\"",
+                            "#1864: deleted report/label stable visual-property clear-batch should not expose stale right expressions");
+        expect_contains(right_reopen_process.stdout_text, "\"uniqueId\": \"right-field-guid\"",
+                        "#1864: deleted report/label stable visual-property clear-batch should preserve right-row stable identity");
+    };
+
+    const auto run_deleted_report_property_clear_batch_rollback = [&](const fs::path& asset_path,
+                                                                      const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        mark_deleted(asset_path, "middle-field-guid");
+        mark_deleted(asset_path, "right-field-guid");
+
+        const auto rollback_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-property-clear-batch",
+                "--path", asset_path.string(),
+                "--property-name", "EXPR",
+                "--unique-id", "middle-field-guid",
+                "--property-name", "WIDTH",
+                "--unique-id", "middle-field-guid",
+                "--property-name", "EXPR",
+                "--unique-id", "missing-guid",
+                "--json"
+            },
+            temp_root);
+
+        expect(rollback_process.exit_code == 4,
+               "#1864: deleted report/label stable visual-property clear-batch missing selector should fail");
+        expect_contains(rollback_process.stdout_text, "\"visualPropertyClearBatch\": null",
+                        "#1864: failed deleted report/label stable visual-property clear-batch JSON should not expose stale batch objects");
+        expect_contains(rollback_process.stdout_text, "No visual object with the requested unique id was found.",
+                        "#1864: failed deleted report/label stable visual-property clear-batch JSON should report missing selector errors");
+        expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
+                   visual_object_property(asset_path, "middle-field-guid", "WIDTH") == "50" &&
+                   visual_object_property(asset_path, "right-field-guid", "EXPR") == "right.value" &&
+                   visual_object_deleted(asset_path, "middle-field-guid") &&
+                   visual_object_deleted(asset_path, "right-field-guid") &&
+                   !visual_object_deleted(asset_path, "left-field-guid"),
+               "#1864: failed deleted report/label stable visual-property clear-batch should roll back earlier property clears");
+        (void)label;
+    };
+
+    run_deleted_report_property_clear_batch(temp_root / "deleted_report_property_clear_batch.frx",
+                                            "deleted_report_property_clear_batch.frx",
+                                            "report");
+    run_deleted_report_property_clear_batch(temp_root / "deleted_report_property_clear_batch.lbx",
+                                            "deleted_report_property_clear_batch.lbx",
+                                            "label");
+    run_deleted_report_property_clear_batch_rollback(temp_root / "deleted_report_property_clear_batch_rollback.frx",
+                                                     "report");
+    run_deleted_report_property_clear_batch_rollback(temp_root / "deleted_report_property_clear_batch_rollback.lbx",
+                                                     "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -97526,6 +97714,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_visual_object_batches(argv[1]);
     test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_visual_property_batches_by_stable_selection(argv[1]);
     test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_renames_deleted_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(argv[1]);
