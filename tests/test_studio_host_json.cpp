@@ -35447,12 +35447,30 @@ void test_studio_host_json_updates_report_layout_object_height_preview_bounds_by
                "#1535: report/label layout object height update should persist the HEIGHT field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1535: report/label layout object height update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1902: label layout object height update should retain label identity");
+        }
         expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
                         "#1535: report/label layout object height update should preserve preview bounds availability");
         expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 9600",
                         "#1535: report/label layout object height update should refresh preview bottom bounds");
         expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 9600",
                         "#1535: report/label layout object height update should refresh preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1902: report/label layout object height update should preserve deleted preview availability");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1902: report/label layout object height update should preserve deleted preview left bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1902: report/label layout object height update should preserve deleted preview top bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1902: report/label layout object height update should preserve deleted preview right bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1902: report/label layout object height update should preserve deleted preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1902: report/label layout object height update should preserve deleted preview widths");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1902: report/label layout object height update should preserve deleted preview heights");
         expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
                         "#1535: report/label layout object height update should preserve placed counts");
         expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
