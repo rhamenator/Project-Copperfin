@@ -13924,6 +13924,301 @@ void test_studio_host_json_exposes_detail_header_footer_section_expressions_by_s
     }
 }
 
+void test_studio_host_json_updates_detail_header_footer_section_expressions_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        "copperfin_studio_host_detail_header_footer_section_stable_expression_edit_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_section_expression_stable_edits =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
+
+            const auto expect_selected_section_expression =
+                [&](const ProcessResult& process,
+                    const std::string& section_title,
+                    const std::string& band_kind,
+                    const std::string& expression,
+                    const std::string& field_index,
+                    const std::string& memo_block,
+                    const std::string& record_index,
+                    const std::string& section_index,
+                    const std::string& object_code,
+                    const std::string& top,
+                    const std::string& height,
+                    const std::string& bottom,
+                    const std::string& operation_label) {
+                    expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                                    "#1810: " + operation_label + " should return refreshed layout JSON");
+                    if (asset_path.extension() == ".lbx") {
+                        expect_contains(process.stdout_text, "\"isLabel\": true",
+                                        "#1810: " + operation_label + " should retain label identity");
+                    }
+                    expect_contains(process.stdout_text, "\"sectionCount\": 2",
+                                    "#1810: " + operation_label + " should preserve live section count");
+                    expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
+                                    "#1810: " + operation_label + " should preserve deleted section count");
+                    expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                                    "#1810: " + operation_label + " should preserve section selection");
+                    expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                                    "#1810: " + operation_label + " should preserve selection kind");
+                    expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                                    "#1810: " + operation_label + " should not select report objects");
+                    expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                    "#1810: " + operation_label + " should not select settings");
+                    expect_contains_in_order(
+                        process.stdout_text,
+                        {
+                            "\"selectedReportSection\": {",
+                            "\"title\": \"" + section_title + "\"",
+                            "\"bandKind\": \"" + band_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": " + field_index,
+                            "\"expressionMemoBlockNumber\": " + memo_block,
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": false",
+                            "\"sectionIndex\": " + section_index,
+                            "\"sectionCount\": 2",
+                            "\"objectCode\": " + object_code,
+                            "\"top\": " + top,
+                            "\"height\": " + height,
+                            "\"bottom\": " + bottom
+                        },
+                        "#1810: " + operation_label + " should refresh selected-section expression metadata");
+                };
+
+            const auto update_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-header-guid",
+                    "--property-name", "EXPR",
+                    "--property-value", "detail header stable updated",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable detail-header expression update stdout:\n"
+                          << update_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable detail-header expression update stderr:\n"
+                          << update_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_header_process.exit_code == 0,
+                   "#1810: stable-selected detail-header expression update should exit successfully");
+            const auto updated_header_expr = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 0U,
+                .object_name = {},
+                .unique_id = "detail-header-guid",
+                .property_name = "EXPR"
+            });
+            expect(updated_header_expr.ok && updated_header_expr.exists &&
+                       updated_header_expr.value == "detail header stable updated",
+                   "#1810: stable-selected detail-header expression update should persist the EXPR memo field");
+            expect_selected_section_expression(update_header_process,
+                                               "Detail Header",
+                                               "detail_header",
+                                               "detail header stable updated",
+                                               "2",
+                                               "4",
+                                               "0",
+                                               "0",
+                                               "9",
+                                               "0",
+                                               "300",
+                                               "300",
+                                               "stable-selected detail-header expression update");
+            expect_contains_in_order(
+                update_header_process.stdout_text,
+                {
+                    "\"title\": \"Detail Footer\"",
+                    "\"bandKind\": \"detail_footer\"",
+                    "\"expression\": \"detail footer expression\"",
+                    "\"expressionFieldIndex\": 2",
+                    "\"expressionMemoBlockNumber\": 2",
+                    "\"recordIndex\": 1"
+                },
+                "#1810: stable-selected detail-header expression update should preserve sibling footer metadata");
+
+            const auto update_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "detail-footer-guid",
+                    "--property-name", "EXPR",
+                    "--property-value", "detail footer stable updated",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable detail-footer expression update stdout:\n"
+                          << update_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable detail-footer expression update stderr:\n"
+                          << update_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_footer_process.exit_code == 0,
+                   "#1810: stable-selected detail-footer expression update should exit successfully");
+            const auto updated_footer_expr = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "detail-footer-guid",
+                .property_name = "EXPR"
+            });
+            expect(updated_footer_expr.ok && updated_footer_expr.exists &&
+                       updated_footer_expr.value == "detail footer stable updated",
+                   "#1810: stable-selected detail-footer expression update should persist the EXPR memo field");
+            expect_selected_section_expression(update_footer_process,
+                                               "Detail Footer",
+                                               "detail_footer",
+                                               "detail footer stable updated",
+                                               "2",
+                                               "5",
+                                               "1",
+                                               "1",
+                                               "10",
+                                               "300",
+                                               "250",
+                                               "550",
+                                               "stable-selected detail-footer expression update");
+            expect_contains_in_order(
+                update_footer_process.stdout_text,
+                {
+                    "\"title\": \"Detail Header\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"expression\": \"detail header stable updated\"",
+                    "\"expressionFieldIndex\": 2",
+                    "\"expressionMemoBlockNumber\": 4",
+                    "\"recordIndex\": 0"
+                },
+                "#1810: stable-selected detail-footer expression update should preserve sibling header metadata");
+
+            const auto clear_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-header-guid",
+                    "--property-name", "EXPR",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable detail-header expression clear stdout:\n"
+                          << clear_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable detail-header expression clear stderr:\n"
+                          << clear_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_header_process.exit_code == 0,
+                   "#1810: stable-selected detail-header expression clear should exit successfully");
+            expect_selected_section_expression(clear_header_process,
+                                               "Detail Header",
+                                               "detail_header",
+                                               "",
+                                               "null",
+                                               "0",
+                                               "0",
+                                               "0",
+                                               "9",
+                                               "0",
+                                               "300",
+                                               "300",
+                                               "stable-selected detail-header expression clear");
+            expect_contains_in_order(
+                clear_header_process.stdout_text,
+                {
+                    "\"title\": \"Detail Footer\"",
+                    "\"bandKind\": \"detail_footer\"",
+                    "\"expression\": \"detail footer stable updated\"",
+                    "\"expressionFieldIndex\": 2",
+                    "\"expressionMemoBlockNumber\": 5",
+                    "\"recordIndex\": 1"
+                },
+                "#1810: stable-selected detail-header expression clear should preserve sibling footer metadata");
+            expect_not_contains(clear_header_process.stdout_text,
+                                "\"expression\": \"detail header stable updated\"",
+                                "#1810: stable-selected detail-header expression clear should not leak stale selected expressions");
+
+            const auto clear_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--clear-property",
+                    "--unique-id", "detail-footer-guid",
+                    "--property-name", "EXPR",
+                    "--json"
+                },
+                temp_root);
+
+            if (clear_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " stable detail-footer expression clear stdout:\n"
+                          << clear_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " stable detail-footer expression clear stderr:\n"
+                          << clear_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(clear_footer_process.exit_code == 0,
+                   "#1810: stable-selected detail-footer expression clear should exit successfully");
+            expect_selected_section_expression(clear_footer_process,
+                                               "Detail Footer",
+                                               "detail_footer",
+                                               "",
+                                               "null",
+                                               "0",
+                                               "1",
+                                               "1",
+                                               "10",
+                                               "300",
+                                               "250",
+                                               "550",
+                                               "stable-selected detail-footer expression clear");
+            expect_contains_in_order(
+                clear_footer_process.stdout_text,
+                {
+                    "\"title\": \"Detail Header\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"expression\": \"\"",
+                    "\"expressionFieldIndex\": null",
+                    "\"expressionMemoBlockNumber\": 0",
+                    "\"recordIndex\": 0"
+                },
+                "#1810: stable-selected detail-footer expression clear should preserve sibling header metadata");
+            expect_not_contains(clear_footer_process.stdout_text,
+                                "\"expression\": \"detail footer stable updated\"",
+                                "#1810: stable-selected detail-footer expression clear should not leak stale selected expressions");
+        };
+
+    run_detail_header_footer_section_expression_stable_edits(
+        temp_root / "detail_header_footer_section_stable_expression_edits.frx",
+        "detail_header_footer_section_stable_expression_edits.frx",
+        "report");
+    run_detail_header_footer_section_expression_stable_edits(
+        temp_root / "detail_header_footer_section_stable_expression_edits.lbx",
+        "detail_header_footer_section_stable_expression_edits.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -86910,6 +87205,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_expressions(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_sections_by_stable_selection(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
