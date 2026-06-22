@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1788 deleted detail header/footer report/label object reorder containment coverage shipped. Studio host regression coverage now proves stable-selected deleted Detail Header/Footer FRX/LBX label/field objects reordered by `--reorder-object --unique-id ... --placement ... --target-unique-id ... --json` preserve deleted state and object metadata, refresh selected-object JSON after physical record movement, keep selected containing-section availability false/null instead of fabricating live section membership, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1787 detail header/footer report/label object reorder containment coverage shipped. Studio host regression coverage now proves stable-selected live Detail Header/Footer FRX/LBX label/field objects reordered by `--reorder-object --unique-id ... --placement ... --target-unique-id ... --json` preserve containing-section membership, refresh selected-object and selected containing-section JSON, preserve containing-section ids/record indexes plus section-relative geometry, refresh section object indexes/counts according to reordered same-geometry records, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1786 deleted detail header/footer report/label object rename containment coverage shipped. Studio host regression coverage now proves stable-selected deleted Detail Header/Footer FRX/LBX label/field objects renamed by `--rename-object --unique-id ... --new-unique-id ... --json` replace the requested identity without appending records, preserve deleted state and object metadata, refresh deleted-object and selected-object JSON, keep selected containing-section availability false/null instead of fabricating live section membership, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1785 detail header/footer report/label object rename containment coverage shipped. Studio host regression coverage now proves stable-selected live Detail Header/Footer FRX/LBX label/field objects renamed by `--rename-object --unique-id ... --new-unique-id ... --json` replace the requested identity without appending records, preserve object metadata, refresh selected-object and selected containing-section JSON, preserve containing-section ids/record indexes plus section object indexes/counts, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1801,7 +1802,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1787 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1788 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1872,7 +1873,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1787 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1788 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]

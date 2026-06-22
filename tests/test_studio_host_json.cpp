@@ -9394,6 +9394,200 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
     }
 }
 
+void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_reorder_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_reorder =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+
+            const auto duplicate_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--duplicate-object",
+                    "--unique-id", "detail-header-label-guid",
+                    "--new-unique-id", "detail-header-label-copy-guid",
+                    "--json"
+                },
+                temp_root);
+            expect(duplicate_header_process.exit_code == 0 &&
+                       visual_object_exists(asset_path, "detail-header-label-copy-guid"),
+                   "#1788: deleted detail-header object reorder fixture should append a header copy");
+
+            const auto duplicate_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--duplicate-object",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--new-unique-id", "detail-footer-field-copy-guid",
+                    "--json"
+                },
+                temp_root);
+            expect(duplicate_footer_process.exit_code == 0 &&
+                       visual_object_exists(asset_path, "detail-footer-field-copy-guid"),
+                   "#1788: deleted detail-footer object reorder fixture should append a footer copy");
+
+            for (const std::size_t record_index : {1U, 3U, 4U, 5U}) {
+                const auto delete_result =
+                    copperfin::vfp::set_record_deleted_flag(asset_path.string(), record_index, true);
+                expect(delete_result.ok && dbf_record_deleted(asset_path, record_index),
+                       "#1788: deleted detail header/footer object reorder fixture should mark object records deleted");
+            }
+
+            const auto reorder_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--reorder-object",
+                    "--unique-id", "detail-header-label-copy-guid",
+                    "--placement", "before",
+                    "--target-unique-id", "detail-header-label-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (reorder_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header object reorder stdout:\n"
+                          << reorder_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header object reorder stderr:\n"
+                          << reorder_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(reorder_header_process.exit_code == 0,
+                   "#1788: deleted detail-header object reorder should exit successfully");
+            expect(visual_object_deleted(asset_path, "detail-header-label-copy-guid"),
+                   "#1788: deleted detail-header object reorder should preserve deleted state");
+            expect_contains(reorder_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1788: deleted detail-header object reorder should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(reorder_header_process.stdout_text, "\"isLabel\": true",
+                                "#1788: deleted detail-header label object reorder should retain label identity");
+            }
+            expect_contains(reorder_header_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1788: deleted detail-header object reorder should leave live object counts unchanged");
+            expect_contains(reorder_header_process.stdout_text, "\"deletedObjectCount\": 4",
+                            "#1788: deleted detail-header object reorder should preserve deleted object counts");
+            expect_contains(reorder_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1788: deleted detail-header object reorder should preserve selected object availability");
+            expect_contains(reorder_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1788: deleted detail-header object reorder should preserve object selection kind");
+            expect_contains(reorder_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1788: deleted detail-header object reorder should not fabricate containing sections");
+            expect_contains(reorder_header_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1788: deleted detail-header object reorder should serialize null containing-section JSON");
+            expect_contains_in_order(
+                reorder_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"label\"",
+                    "\"expression\": \"\\\"Header label\\\"\"",
+                    "\"left\": 100",
+                    "\"top\": 50",
+                    "\"width\": 700",
+                    "\"right\": 800",
+                    "\"height\": 120",
+                    "\"bottom\": 170"
+                },
+                "#1788: deleted detail-header object reorder should refresh selected deleted-object metadata");
+
+            const auto reorder_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--reorder-object",
+                    "--unique-id", "detail-footer-field-guid",
+                    "--placement", "after",
+                    "--target-unique-id", "detail-footer-field-copy-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (reorder_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer object reorder stdout:\n"
+                          << reorder_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer object reorder stderr:\n"
+                          << reorder_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(reorder_footer_process.exit_code == 0,
+                   "#1788: deleted detail-footer object reorder should exit successfully");
+            expect(visual_object_deleted(asset_path, "detail-footer-field-guid"),
+                   "#1788: deleted detail-footer object reorder should preserve deleted state");
+            expect_contains(reorder_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1788: deleted detail-footer object reorder should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(reorder_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1788: deleted detail-footer label object reorder should retain label identity");
+            }
+            expect_contains(reorder_footer_process.stdout_text, "\"liveObjectCount\": 0",
+                            "#1788: deleted detail-footer object reorder should leave live object counts unchanged");
+            expect_contains(reorder_footer_process.stdout_text, "\"deletedObjectCount\": 4",
+                            "#1788: deleted detail-footer object reorder should preserve deleted object counts");
+            expect_contains(reorder_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1788: deleted detail-footer object reorder should preserve selected object availability");
+            expect_contains(reorder_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1788: deleted detail-footer object reorder should preserve object selection kind");
+            expect_contains(reorder_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                            "#1788: deleted detail-footer object reorder should not fabricate containing sections");
+            expect_contains(reorder_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
+                            "#1788: deleted detail-footer object reorder should serialize null containing-section JSON");
+            expect_contains_in_order(
+                reorder_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 5",
+                    "\"deleted\": true",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionRelativeTop\": 0",
+                    "\"sectionRelativeBottom\": 0",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0",
+                    "\"objectKind\": \"field\"",
+                    "\"expression\": \"footer.total\"",
+                    "\"left\": 140",
+                    "\"top\": 360",
+                    "\"width\": 900",
+                    "\"right\": 1040",
+                    "\"height\": 100",
+                    "\"bottom\": 460"
+                },
+                "#1788: deleted detail-footer object reorder should refresh selected deleted-object metadata");
+        };
+
+    run_deleted_detail_header_footer_object_reorder(
+        temp_root / "deleted_detail_header_footer_object_reorder.frx",
+        "deleted_detail_header_footer_object_reorder.frx",
+        "report");
+    run_deleted_detail_header_footer_object_reorder(
+        temp_root / "deleted_detail_header_footer_object_reorder.lbx",
+        "deleted_detail_header_footer_object_reorder.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -83166,6 +83360,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_renames_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_renames_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
