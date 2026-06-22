@@ -6001,10 +6001,11 @@ void write_synthetic_report_table_for_column_setup_json(const std::filesystem::p
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
         {.name = "OBJCODE", .type = 'N', .length = 8U},
-        {.name = "EXPR", .type = 'M', .length = 4U}
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "UNIQUEID", .type = 'C', .length = 40U}
     };
     const std::vector<std::vector<std::string>> records{
-        {"1", "53", "COLS=2\nCOLWIDTH=3600\nCOLSPACING=120"}
+        {"1", "53", "COLS=2\nCOLWIDTH=3600\nCOLSPACING=120", ""}
     };
 
     const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
@@ -6016,6 +6017,38 @@ void write_synthetic_report_table_for_deleted_column_setup_json(
     write_synthetic_report_table_for_column_setup_json(report_path);
     const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 0U, true);
     expect(delete_result.ok, "#1599: synthetic report table should mark column setup settings deleted");
+}
+
+void write_synthetic_report_table_for_stable_column_setup_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_column_setup_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "settings-guid"
+    });
+    expect(unique_id_result.ok, "#1838: stable column setup fixture should seed a settings unique id");
+    expect(!dbf_record_deleted(report_path, 0U),
+           "#1838: stable column setup fixture should preserve the live settings state");
+}
+
+void write_synthetic_report_table_for_stable_deleted_column_setup_json(
+    const std::filesystem::path& report_path) {
+    write_synthetic_report_table_for_deleted_column_setup_json(report_path);
+    const auto unique_id_result = copperfin::vfp::update_visual_object_property({
+        .path = report_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = {},
+        .property_name = "UNIQUEID",
+        .property_value = "deleted-settings-guid"
+    });
+    expect(unique_id_result.ok, "#1838: stable deleted column setup fixture should seed a settings unique id");
+    expect(dbf_record_deleted(report_path, 0U),
+           "#1838: stable deleted column setup fixture should preserve the deleted settings state");
 }
 
 void write_synthetic_report_table_for_column_setup_field_json(const std::filesystem::path& report_path) {
@@ -44448,6 +44481,382 @@ void test_studio_host_json_clears_deleted_report_column_setup_by_record_selectio
                                    "report");
     run_deleted_column_setup_clear(temp_root / "deleted_column_setup_clear.lbx",
                                    "deleted_column_setup_clear.lbx",
+                                   "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_report_column_setup_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_column_setup_stable_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::string updated_settings =
+        "COLS=3\n"
+        "COLWIDTH=2400\n"
+        "COLSPACING=180";
+
+    const auto run_column_setup_update = [&](const fs::path& asset_path,
+                                             const std::string& title,
+                                             const std::string& label) {
+        write_synthetic_report_table_for_stable_column_setup_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "EXPR",
+                "--property-value", updated_settings,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable column setup update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable column setup update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1838: report/label stable column setup update should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.value == updated_settings,
+               "#1838: report/label stable column setup update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1838: report/label stable column setup update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1838: label stable column setup update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1838: report/label stable column setup update should not fabricate page setup availability");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
+                        "#1838: report/label stable column setup update should preserve column setup availability");
+        expect_contains(update_process.stdout_text, "\"columnCount\": 3",
+                        "#1838: report/label stable column setup update should refresh column counts");
+        expect_contains(update_process.stdout_text, "\"columnWidth\": 2400",
+                        "#1838: report/label stable column setup update should refresh column widths");
+        expect_contains(update_process.stdout_text, "\"columnSpacing\": 180",
+                        "#1838: report/label stable column setup update should refresh column spacing");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 3",
+                        "#1838: report/label stable column setup update should preserve setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1838: report/label stable column setup update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1838: report/label stable column setup update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"value\": \"3\"",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"value\": \"2400\"",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"value\": \"180\""
+            },
+            "#1838: report/label stable column setup update should refresh selected setting provenance");
+    };
+
+    run_column_setup_update(temp_root / "column_setup_stable.frx",
+                            "column_setup_stable.frx",
+                            "report");
+    run_column_setup_update(temp_root / "column_setup_stable.lbx",
+                            "column_setup_stable.lbx",
+                            "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_report_column_setup_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_column_setup_stable_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_column_setup_clear = [&](const fs::path& asset_path,
+                                            const std::string& title,
+                                            const std::string& label) {
+        write_synthetic_report_table_for_stable_column_setup_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "settings-guid",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable column setup clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable column setup clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1838: report/label stable column setup clear should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "settings-guid",
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.direct_field,
+               "#1838: report/label stable column setup clear should preserve the direct EXPR field carrier");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1838: report/label stable column setup clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1838: label stable column setup clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1838: report/label stable column setup clear should not fabricate page setup availability");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1838: report/label stable column setup clear should clear column setup availability");
+        expect_contains(clear_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1838: report/label stable column setup clear should clear column-count availability");
+        expect_contains(clear_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1838: report/label stable column setup clear should clear column-width availability");
+        expect_contains(clear_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        "#1838: report/label stable column setup clear should clear column-spacing availability");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1838: report/label stable column setup clear should remove memo-derived settings from counts");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1838: report/label stable column setup clear should clear selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1838: report/label stable column setup clear should clear selected settings");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1838: report/label stable column setup clear should clear settings selection kind");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLS\"",
+                            "#1838: report/label stable column setup clear should remove column-count settings");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLWIDTH\"",
+                            "#1838: report/label stable column setup clear should remove column-width settings");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLSPACING\"",
+                            "#1838: report/label stable column setup clear should remove column-spacing settings");
+    };
+
+    run_column_setup_clear(temp_root / "column_setup_clear_stable.frx",
+                           "column_setup_clear_stable.frx",
+                           "report");
+    run_column_setup_clear(temp_root / "column_setup_clear_stable.lbx",
+                           "column_setup_clear_stable.lbx",
+                           "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_updates_deleted_report_column_setup_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_setup_stable_update_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const std::string updated_settings =
+        "COLS=4\n"
+        "COLWIDTH=1800\n"
+        "COLSPACING=240";
+
+    const auto run_deleted_column_setup_update = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_column_setup_json(asset_path);
+        const auto update_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--set-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "EXPR",
+                "--property-value", updated_settings,
+                "--json"
+            },
+            temp_root);
+
+        if (update_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted column setup update stdout:\n"
+                      << update_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted column setup update stderr:\n"
+                      << update_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(update_process.exit_code == 0,
+               "#1838: report/label stable deleted column setup update should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.value == updated_settings,
+               "#1838: report/label stable deleted column setup update should persist the EXPR memo field");
+        expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1838: report/label stable deleted column setup update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1838: label stable deleted column setup update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1838: report/label stable deleted column setup update should not fabricate live page setup");
+        expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1838: report/label stable deleted column setup update should not fabricate live column setup");
+        expect_contains(update_process.stdout_text, "\"settingCount\": 0",
+                        "#1838: report/label stable deleted column setup update should not fabricate live settings");
+        expect_contains(update_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1838: report/label stable deleted column setup update should refresh deleted setting counts");
+        expect_contains(update_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1838: report/label stable deleted column setup update should preserve selected-settings availability");
+        expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1838: report/label stable deleted column setup update should preserve settings selection kind");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"deletedSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"value\": \"4\"",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"value\": \"1800\"",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"value\": \"240\""
+            },
+            "#1838: report/label stable deleted column setup update should refresh deleted setting provenance");
+        expect_contains_in_order(
+            update_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0",
+                "\"value\": \"4\"",
+                "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 1",
+                "\"value\": \"1800\"",
+                "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 2",
+                "\"value\": \"240\""
+            },
+            "#1838: report/label stable deleted column setup update should refresh selected deleted settings");
+    };
+
+    run_deleted_column_setup_update(temp_root / "deleted_column_setup_stable.frx",
+                                    "deleted_column_setup_stable.frx",
+                                    "report");
+    run_deleted_column_setup_update(temp_root / "deleted_column_setup_stable.lbx",
+                                    "deleted_column_setup_stable.lbx",
+                                    "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_clears_deleted_report_column_setup_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_report_column_setup_stable_clear_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_column_setup_clear = [&](const fs::path& asset_path,
+                                                    const std::string& title,
+                                                    const std::string& label) {
+        write_synthetic_report_table_for_stable_deleted_column_setup_json(asset_path);
+        const auto clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--clear-property",
+                "--unique-id", "deleted-settings-guid",
+                "--property-name", "EXPR",
+                "--json"
+            },
+            temp_root);
+
+        if (clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted column setup clear stdout:\n"
+                      << clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted column setup clear stderr:\n"
+                      << clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(clear_process.exit_code == 0,
+               "#1838: report/label stable deleted column setup clear should exit successfully");
+        const auto expr_property = copperfin::vfp::query_visual_object_property({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "deleted-settings-guid",
+            .property_name = "EXPR"
+        });
+        expect(expr_property.ok && expr_property.exists && expr_property.direct_field,
+               "#1838: report/label stable deleted column setup clear should preserve the direct EXPR field carrier");
+        expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1838: report/label stable deleted column setup clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1838: label stable deleted column setup clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1838: report/label stable deleted column setup clear should not fabricate live page setup");
+        expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1838: report/label stable deleted column setup clear should not fabricate live column setup");
+        expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
+                        "#1838: report/label stable deleted column setup clear should not fabricate live settings");
+        expect_contains(clear_process.stdout_text, "\"deletedSettingCount\": 0",
+                        "#1838: report/label stable deleted column setup clear should remove deleted settings");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#1838: report/label stable deleted column setup clear should clear selected-settings availability");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSettings\": null",
+                        "#1838: report/label stable deleted column setup clear should clear selected deleted settings");
+        expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1838: report/label stable deleted column setup clear should clear settings selection kind");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLS\"",
+                            "#1838: report/label stable deleted column setup clear should remove deleted column-count settings");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLWIDTH\"",
+                            "#1838: report/label stable deleted column setup clear should remove deleted column-width settings");
+        expect_not_contains(clear_process.stdout_text, "\"name\": \"COLSPACING\"",
+                            "#1838: report/label stable deleted column setup clear should remove deleted column-spacing settings");
+    };
+
+    run_deleted_column_setup_clear(temp_root / "deleted_column_setup_clear_stable.frx",
+                                   "deleted_column_setup_clear_stable.frx",
+                                   "report");
+    run_deleted_column_setup_clear(temp_root / "deleted_column_setup_clear_stable.lbx",
+                                   "deleted_column_setup_clear_stable.lbx",
                                    "label");
 
     if (failures == 0) {
@@ -94439,6 +94848,10 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_deleted_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_clears_report_column_setup_by_record_selection(argv[1]);
     test_studio_host_json_clears_deleted_report_column_setup_by_record_selection(argv[1]);
+    test_studio_host_json_updates_report_column_setup_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_report_column_setup_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_report_column_setup_by_stable_selection(argv[1]);
+    test_studio_host_json_clears_deleted_report_column_setup_by_stable_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_deletes_report_sections_by_stable_selection(argv[1]);
