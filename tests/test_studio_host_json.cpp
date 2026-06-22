@@ -45987,6 +45987,217 @@ void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
     }
 }
 
+void test_studio_host_json_applies_report_object_deleted_states_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_object_deleted_states_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_object_batch_delete = [&](const fs::path& asset_path,
+                                             const std::string& title,
+                                             const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto delete_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--deleted-states",
+                "--deleted-state-target-unique-id", "field-guid",
+                "--deleted-state", "true",
+                "--deleted-state-target-unique-id", "label-guid",
+                "--deleted-state", "true",
+                "--json"
+            },
+            temp_root);
+
+        if (delete_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable object deleted-states batch delete stdout:\n"
+                      << delete_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable object deleted-states batch delete stderr:\n"
+                      << delete_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(delete_process.exit_code == 0,
+               "#1840: report/label stable object deleted-states batch delete should exit successfully");
+        expect(visual_object_deleted(asset_path, "field-guid") &&
+                   visual_object_deleted(asset_path, "label-guid"),
+               "#1840: report/label stable object deleted-states batch delete should mark both object rows deleted");
+        expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1840: report/label stable object deleted-states batch delete should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(delete_process.stdout_text, "\"isLabel\": true",
+                            "#1840: label stable object deleted-states batch delete should retain label identity");
+        }
+        expect_contains(delete_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1840: report/label stable object deleted-states batch delete should remove objects from live counts");
+        expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 0",
+                        "#1840: report/label stable object deleted-states batch delete should remove placed live objects");
+        expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#1840: report/label stable object deleted-states batch delete should preserve unrelated unplaced objects");
+        expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 3",
+                        "#1840: report/label stable object deleted-states batch delete should expose deleted object counts");
+        expect_contains_in_order(
+            delete_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 3",
+                "\"deleted\": true",
+                "\"objectKind\": \"field\"",
+                "\"recordIndex\": 4",
+                "\"deleted\": true",
+                "\"objectKind\": \"label\""
+            },
+            "#1840: report/label stable object deleted-states batch delete should move both objects into deleted metadata");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1840: report/label stable object deleted-states batch delete should not fabricate selected objects");
+        expect_contains(delete_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1840: report/label stable object deleted-states batch delete should not fabricate containing sections");
+        expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1840: report/label stable object deleted-states batch delete should not fabricate a report selection");
+    };
+
+    const auto run_object_batch_restore = [&](const fs::path& asset_path,
+                                              const std::string& title,
+                                              const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto field_delete_result = copperfin::vfp::set_visual_object_deleted_state({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "field-guid",
+            .deleted = true
+        });
+        const auto label_delete_result = copperfin::vfp::set_visual_object_deleted_state({
+            .path = asset_path.string(),
+            .record_index = 0U,
+            .object_name = {},
+            .unique_id = "label-guid",
+            .deleted = true
+        });
+        expect(field_delete_result.ok && label_delete_result.ok &&
+                   visual_object_deleted(asset_path, "field-guid") &&
+                   visual_object_deleted(asset_path, "label-guid"),
+               "#1840: report/label stable object deleted-states restore fixture should start deleted");
+
+        const auto restore_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--deleted-states",
+                "--deleted-state-target-unique-id", "field-guid",
+                "--deleted-state", "false",
+                "--deleted-state-target-unique-id", "label-guid",
+                "--deleted-state", "false",
+                "--json"
+            },
+            temp_root);
+
+        if (restore_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable object deleted-states batch restore stdout:\n"
+                      << restore_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable object deleted-states batch restore stderr:\n"
+                      << restore_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(restore_process.exit_code == 0,
+               "#1840: report/label stable object deleted-states batch restore should exit successfully");
+        expect(!visual_object_deleted(asset_path, "field-guid") &&
+                   !visual_object_deleted(asset_path, "label-guid"),
+               "#1840: report/label stable object deleted-states batch restore should restore both object rows");
+        expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1840: report/label stable object deleted-states batch restore should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                            "#1840: label stable object deleted-states batch restore should retain label identity");
+        }
+        expect_contains(restore_process.stdout_text, "\"liveObjectCount\": 3",
+                        "#1840: report/label stable object deleted-states batch restore should restore live object counts");
+        expect_contains(restore_process.stdout_text, "\"placedObjectCount\": 2",
+                        "#1840: report/label stable object deleted-states batch restore should restore placed object counts");
+        expect_contains(restore_process.stdout_text, "\"unplacedObjectCount\": 1",
+                        "#1840: report/label stable object deleted-states batch restore should preserve unrelated unplaced objects");
+        expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1840: report/label stable object deleted-states batch restore should clear restored deleted objects");
+        expect_contains_in_order(
+            restore_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"recordIndex\": 1",
+                "\"objectCount\": 1",
+                "\"recordIndex\": 4",
+                "\"deleted\": false",
+                "\"objectKind\": \"label\"",
+                "\"recordIndex\": 2",
+                "\"objectCount\": 1",
+                "\"recordIndex\": 3",
+                "\"deleted\": false",
+                "\"objectKind\": \"field\""
+            },
+            "#1840: report/label stable object deleted-states batch restore should move both objects into live section metadata");
+        expect_contains(restore_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#1840: report/label stable object deleted-states batch restore should not fabricate selected objects");
+        expect_contains(restore_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                        "#1840: report/label stable object deleted-states batch restore should not fabricate containing sections");
+        expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"none\"",
+                        "#1840: report/label stable object deleted-states batch restore should not fabricate a report selection");
+    };
+
+    const auto run_object_batch_rollback = [&](const fs::path& asset_path,
+                                               const std::string& label) {
+        write_synthetic_report_table_for_layout_json(asset_path);
+        const auto rollback_process = run_process_capture(
+            studio_host_path,
+            {
+                "--path", asset_path.string(),
+                "--deleted-states",
+                "--deleted-state-target-unique-id", "field-guid",
+                "--deleted-state", "true",
+                "--deleted-state-target-unique-id", "missing-guid",
+                "--deleted-state", "true",
+                "--json"
+            },
+            temp_root);
+
+        expect(rollback_process.exit_code == 4,
+               "#1840: report/label stable object deleted-states missing-target batch should fail");
+        expect(!visual_object_deleted(asset_path, "field-guid") &&
+                   !visual_object_deleted(asset_path, "label-guid"),
+               "#1840: failed report/label stable object deleted-states batch should roll back earlier mutations");
+        expect_contains(rollback_process.stdout_text, "status: error",
+                        "#1840: failed report/label stable object deleted-states batch should report JSON error status");
+        expect_contains(rollback_process.stdout_text, "error",
+                        "#1840: failed report/label stable object deleted-states batch should report an error message");
+        (void)label;
+    };
+
+    run_object_batch_delete(temp_root / "object_deleted_states_delete.frx",
+                            "object_deleted_states_delete.frx",
+                            "report");
+    run_object_batch_delete(temp_root / "object_deleted_states_delete.lbx",
+                            "object_deleted_states_delete.lbx",
+                            "label");
+    run_object_batch_restore(temp_root / "object_deleted_states_restore.frx",
+                             "object_deleted_states_restore.frx",
+                             "report");
+    run_object_batch_restore(temp_root / "object_deleted_states_restore.lbx",
+                             "object_deleted_states_restore.lbx",
+                             "label");
+    run_object_batch_rollback(temp_root / "object_deleted_states_rollback.frx",
+                              "report");
+    run_object_batch_rollback(temp_root / "object_deleted_states_rollback.lbx",
+                              "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_report_settings_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -95114,6 +95325,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_restores_label_settings_by_record_selection(argv[1]);
     test_studio_host_json_restores_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_applies_report_deleted_states_by_stable_selection(argv[1]);
+    test_studio_host_json_applies_report_object_deleted_states_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_settings_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_report_sections_by_stable_selection(argv[1]);
