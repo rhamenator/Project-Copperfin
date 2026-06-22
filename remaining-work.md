@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1841 mixed report/label deleted-state batch stable-selector coverage shipped. Studio host regressions now prove a single `--deleted-states` batch can delete and restore FRX/LBX settings, section, and layout object rows by `settings-guid`/`section-guid`/`field-guid`, refresh live/deleted settings, section, object counts and metadata, retain label identity, avoid fabricated selected report metadata, and roll back earlier mixed-kind mutations when a later stable selector is missing. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1840 report/label object deleted-state batch stable-selector coverage shipped. Studio host regressions now prove `--deleted-states --deleted-state-target-unique-id field-guid/label-guid --deleted-state true/false --json` batches delete and restore FRX/LBX layout object rows by stable selectors, refresh live/placed/unplaced/deleted object counts plus live section and deleted-object metadata, retain label identity, avoid fabricated selected report metadata, and roll back earlier object mutations when a later stable selector is missing. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1839 report/label deleted-state batch stable-selector coverage shipped. Studio host regressions now prove `--deleted-states --deleted-state-target-unique-id settings-guid/section-guid --deleted-state true/false --json` batches delete and restore FRX/LBX settings plus section rows, refresh report-layout setting/section counts and page setup summaries, retain label identity, avoid fabricated selected report metadata, and roll back earlier batch mutations when a later stable selector is missing. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1838 report/label column-setup memo stable-selector coverage shipped. Studio host regressions now prove stable-selected live and deleted FRX/LBX settings records mutate the `EXPR` memo through `--set-property/--clear-property --unique-id settings-guid/deleted-settings-guid --property-name EXPR --json`, persist/clear the backing memo, refresh column setup summaries plus live/deleted and selected settings provenance, preserve column setup or deleted settings as appropriate, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1854,7 +1855,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1840 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1841 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1925,7 +1926,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1840 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1841 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
