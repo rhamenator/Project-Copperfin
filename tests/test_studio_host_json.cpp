@@ -3851,6 +3851,28 @@ void write_synthetic_report_table_for_missing_classification_layout_json(
     expect(delete_result.ok, "#1721: synthetic report table should mark the missing-classification row deleted");
 }
 
+void write_synthetic_report_table_for_unknown_band_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", ""},
+        {"9", "999", "unknown.live", "300", "700", "unknown-live-band-guid"},
+        {"9", "1234", "unknown.deleted", "1200", "400", "unknown-deleted-band-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1722: synthetic report table with unknown band codes should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
+    expect(delete_result.ok, "#1722: synthetic report table should mark the unknown deleted band");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -5999,6 +6021,136 @@ void test_studio_host_json_ignores_missing_report_layout_classification_fields(
     run_missing_classification_layout(temp_root / "missing_classification.lbx",
                                       "missing_classification.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_unknown_report_band_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_unknown_band_layout = [&](const fs::path& asset_path,
+                                             const std::string& title,
+                                             const std::string& label) {
+        write_synthetic_report_table_for_unknown_band_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " unknown band summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " unknown band summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1722: unknown report/label band codes should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1722: unknown band layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1722: unknown band label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1722: unknown live bands should still contribute preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 300",
+                        "#1722: unknown live band top bounds should be preserved");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 1000",
+                        "#1722: unknown live band bottom bounds should be preserved");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1722: unknown deleted bands should still contribute deleted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 1200",
+                        "#1722: unknown deleted band top bounds should be preserved");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1600",
+                        "#1722: unknown deleted band bottom bounds should be preserved");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1722: unknown live bands should remain section rows");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1722: unknown deleted bands should remain deleted-section rows");
+        expect_contains(summary_process.stdout_text, "\"sectionKindCounts\": [\n        {\"kind\": \"other\", \"count\": 1}\n      ]",
+                        "#1722: unknown live bands should summarize under the other kind");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionKindCounts\": [\n        {\"kind\": \"other\", \"count\": 1}\n      ]",
+                        "#1722: unknown deleted bands should summarize under the other kind");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 700",
+                        "#1722: unknown live band heights should be preserved");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionHeightTotal\": 400",
+                        "#1722: unknown deleted band heights should be preserved");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1722: unknown live band record selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1722: unknown live band selections should expose selected sections");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"other_1\"",
+                "\"title\": \"Other Band\"",
+                "\"bandKind\": \"other\"",
+                "\"expression\": \"unknown.live\"",
+                "\"recordIndex\": 1",
+                "\"deleted\": false",
+                "\"objectCode\": 999",
+                "\"top\": 300",
+                "\"height\": 700",
+                "\"bottom\": 1000"
+            },
+            "#1722: unknown live band selections should serialize explicit other-band metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1722: unknown deleted band record selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1722: unknown deleted band selections should expose selected sections");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"other_2\"",
+                "\"title\": \"Other Band\"",
+                "\"bandKind\": \"other\"",
+                "\"expression\": \"unknown.deleted\"",
+                "\"selectedReportSection\": {",
+                "\"id\": \"other_2\"",
+                "\"title\": \"Other Band\"",
+                "\"bandKind\": \"other\"",
+                "\"expression\": \"unknown.deleted\"",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"objectCode\": 1234",
+                "\"top\": 1200",
+                "\"height\": 400",
+                "\"bottom\": 1600"
+            },
+            "#1722: unknown deleted band selections should serialize explicit other-band metadata");
+    };
+
+    run_unknown_band_layout(temp_root / "unknown_band.frx",
+                            "unknown_band.frx",
+                            "report");
+    run_unknown_band_layout(temp_root / "unknown_band.lbx",
+                            "unknown_band.lbx",
+                            "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -71767,6 +71919,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
+    test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
