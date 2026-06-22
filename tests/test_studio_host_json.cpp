@@ -4011,6 +4011,28 @@ void write_synthetic_report_table_for_invalid_direct_page_setup_layout_json(
     expect(delete_result.ok, "#1733: synthetic report table should mark invalid direct settings deleted");
 }
 
+void write_synthetic_report_table_for_invalid_direct_column_setup_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "COLS", .type = 'C', .length = 24U},
+        {.name = "COLWIDTH", .type = 'C', .length = 24U},
+        {.name = "COLSPACING", .type = 'C', .length = 24U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "many", "wide?", "spaced?", "invalid-direct-live-column-settings-guid"},
+        {"1", "53", "deleted-many", "deleted-wide?", "deleted-spaced?",
+         "invalid-direct-deleted-column-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1734: synthetic report table with invalid direct column setup fields should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1734: synthetic report table should mark invalid direct column settings deleted");
+}
+
 void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -7286,6 +7308,143 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
     run_invalid_direct_page_setup_layout(temp_root / "invalid_direct_page_setup.lbx",
                                          "invalid_direct_page_setup.lbx",
                                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_invalid_direct_column_setup_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_invalid_direct_column_setup_layout = [&](const fs::path& asset_path,
+                                                            const std::string& title,
+                                                            const std::string& label) {
+        write_synthetic_report_table_for_invalid_direct_column_setup_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " invalid direct column setup summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " invalid direct column setup summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1734: invalid direct column setup fields should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1734: invalid direct column setup layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1734: invalid direct column setup label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"columnSetupAvailable\": false",
+                        "#1734: invalid direct column setup fields should not fabricate column setup availability");
+        expect_contains(summary_process.stdout_text, "\"columnCountAvailable\": false",
+                        "#1734: invalid direct column count should not advertise column-count availability");
+        expect_contains(summary_process.stdout_text, "\"columnWidthAvailable\": false",
+                        "#1734: invalid direct column width should not advertise column-width availability");
+        expect_contains(summary_process.stdout_text, "\"columnSpacingAvailable\": false",
+                        "#1734: invalid direct column spacing should not advertise column-spacing availability");
+        expect_contains(summary_process.stdout_text, "\"columnCount\": 0",
+                        "#1734: invalid direct column count should keep the default column-count value inert");
+        expect_contains(summary_process.stdout_text, "\"columnWidth\": 0",
+                        "#1734: invalid direct column width should keep the default column-width value inert");
+        expect_contains(summary_process.stdout_text, "\"columnSpacing\": 0",
+                        "#1734: invalid direct column spacing should keep the default column-spacing value inert");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 3",
+                        "#1734: invalid direct column settings should still be counted as live raw settings");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 3",
+                        "#1734: invalid direct column settings should still be counted as deleted raw settings");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"many\"",
+                        "#1734: invalid direct column-count provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLWIDTH\", \"recordIndex\": 0, \"fieldIndex\": 3, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"wide?\"",
+                        "#1734: invalid direct column-width provenance should remain inspectable");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLSPACING\", \"recordIndex\": 0, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"spaced?\"",
+                        "#1734: invalid direct column-spacing provenance should remain inspectable");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1734: invalid direct live column settings selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1734: invalid direct live column settings should advertise selected-settings availability");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1734: invalid direct live column settings should expose settings selection kind");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"value\": \"many\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 3",
+                "\"value\": \"wide?\"",
+                "\"name\": \"COLSPACING\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 4",
+                "\"value\": \"spaced?\""
+            },
+            "#1734: invalid direct live column selection should expose raw selected-settings metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1734: invalid direct deleted column settings selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1734: invalid direct deleted column settings should advertise selected-settings availability");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1734: invalid direct deleted column settings should expose settings selection kind");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"value\": \"deleted-many\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 3",
+                "\"value\": \"deleted-wide?\"",
+                "\"name\": \"COLSPACING\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 4",
+                "\"value\": \"deleted-spaced?\""
+            },
+            "#1734: invalid direct deleted column selection should expose raw selected-settings metadata");
+    };
+
+    run_invalid_direct_column_setup_layout(temp_root / "invalid_direct_column_setup.frx",
+                                           "invalid_direct_column_setup.frx",
+                                           "report");
+    run_invalid_direct_column_setup_layout(temp_root / "invalid_direct_column_setup.lbx",
+                                           "invalid_direct_column_setup.lbx",
+                                           "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -73936,6 +74095,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_defaults_missing_report_object_objcode_schema(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_objcode_schema(argv[1]);
     test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(argv[1]);
+    test_studio_host_json_ignores_invalid_direct_report_column_setup_fields(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
