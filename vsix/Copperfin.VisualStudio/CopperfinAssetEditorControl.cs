@@ -282,7 +282,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Copperfin task list insights will appear here when a project is loaded."
+            Text = this.localization.Text("AssetEditor.Placeholder.TaskList")
         };
 
         codeReferencesSummaryBox = new RichTextBox
@@ -292,7 +292,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Copperfin code-reference insights will appear here when a project is loaded."
+            Text = this.localization.Text("AssetEditor.Placeholder.CodeReferences")
         };
 
         dataExplorerSummaryBox = new RichTextBox
@@ -302,7 +302,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Copperfin data-explorer insights will appear here when a project is loaded."
+            Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer")
         };
 
         objectBrowserSummaryBox = new RichTextBox
@@ -312,7 +312,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Copperfin object-browser insights will appear here when a project is loaded."
+            Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser")
         };
 
         toolboxSummaryBox = new RichTextBox
@@ -322,7 +322,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Copperfin toolbox insights will appear here when a project is loaded."
+            Text = this.localization.Text("AssetEditor.Placeholder.Toolbox")
         };
 
         buildersSummaryBox = new RichTextBox
@@ -332,7 +332,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Copperfin builder insights will appear here when a project is loaded."
+            Text = this.localization.Text("AssetEditor.Placeholder.Builders")
         };
 
         coverageSummaryBox = new RichTextBox
@@ -342,7 +342,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Start a Copperfin debug session to inspect runtime coverage signals."
+            Text = this.localization.Text("AssetEditor.Placeholder.Coverage")
         };
 
         databaseSummaryBox = new RichTextBox
@@ -352,7 +352,7 @@ internal sealed class CopperfinAssetEditorControl : UserControl
             BorderStyle = BorderStyle.None,
             BackColor = Color.White,
             Font = new Font("Consolas", 10.0F, FontStyle.Regular, GraphicsUnit.Point),
-            Text = "Copperfin database-federation guidance will appear here when a project is loaded."
+            Text = this.localization.Text("AssetEditor.Placeholder.Database")
         };
 
         dataExplorerFilterBox = new TextBox
@@ -646,14 +646,14 @@ internal sealed class CopperfinAssetEditorControl : UserControl
         workspaceSummaryBox.Visible = false;
         projectWorkspaceTabs.Visible = false;
         debuggerSummaryBox.Text = this.localization.Text("AssetEditor.Debugger.InitialSummary");
-        taskListSummaryBox.Text = "Copperfin task list insights will appear here when a project is loaded.";
-        codeReferencesSummaryBox.Text = "Copperfin code-reference insights will appear here when a project is loaded.";
-        dataExplorerSummaryBox.Text = "Copperfin data-explorer insights will appear here when a project is loaded.";
-        objectBrowserSummaryBox.Text = "Copperfin object-browser insights will appear here when a project is loaded.";
-        toolboxSummaryBox.Text = "Copperfin toolbox insights will appear here when a project is loaded.";
-        buildersSummaryBox.Text = "Copperfin builder insights will appear here when a project is loaded.";
-        coverageSummaryBox.Text = "Start a Copperfin debug session to inspect runtime coverage signals.";
-        databaseSummaryBox.Text = "Copperfin database-federation guidance will appear here when a project is loaded.";
+        taskListSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.TaskList");
+        codeReferencesSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.CodeReferences");
+        dataExplorerSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.DataExplorer");
+        objectBrowserSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.ObjectBrowser");
+        toolboxSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Toolbox");
+        buildersSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Builders");
+        coverageSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Coverage");
+        databaseSummaryBox.Text = this.localization.Text("AssetEditor.Placeholder.Database");
         dataExplorerFilterBox.Text = string.Empty;
         objectBrowserFilterBox.Text = string.Empty;
         objectBrowserHideProjectCheckBox.Checked = false;

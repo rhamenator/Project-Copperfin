@@ -71,7 +71,15 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Debugger.StartingStatus"] = "Building project and starting Copperfin debugger...",
                 ["AssetEditor.Debugger.UpdatingStatus"] = "Updating debugger state...",
                 ["AssetEditor.Debugger.UnavailableStatus"] = "Debugger unavailable.",
-                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Start a Copperfin debug session first."
+                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Start a Copperfin debug session first.",
+                ["AssetEditor.Placeholder.TaskList"] = "Copperfin task list insights will appear here when a project is loaded.",
+                ["AssetEditor.Placeholder.CodeReferences"] = "Copperfin code-reference insights will appear here when a project is loaded.",
+                ["AssetEditor.Placeholder.DataExplorer"] = "Copperfin data-explorer insights will appear here when a project is loaded.",
+                ["AssetEditor.Placeholder.ObjectBrowser"] = "Copperfin object-browser insights will appear here when a project is loaded.",
+                ["AssetEditor.Placeholder.Toolbox"] = "Copperfin toolbox insights will appear here when a project is loaded.",
+                ["AssetEditor.Placeholder.Builders"] = "Copperfin builder insights will appear here when a project is loaded.",
+                ["AssetEditor.Placeholder.Coverage"] = "Start a Copperfin debug session to inspect runtime coverage signals.",
+                ["AssetEditor.Placeholder.Database"] = "Copperfin database-federation guidance will appear here when a project is loaded."
             },
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -124,7 +132,15 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Debugger.StartingStatus"] = "Compilando el proyecto e iniciando el depurador de Copperfin...",
                 ["AssetEditor.Debugger.UpdatingStatus"] = "Actualizando estado del depurador...",
                 ["AssetEditor.Debugger.UnavailableStatus"] = "Depurador no disponible.",
-                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Inicie primero una sesión de depuración de Copperfin."
+                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Inicie primero una sesión de depuración de Copperfin.",
+                ["AssetEditor.Placeholder.TaskList"] = "Las tareas de Copperfin aparecerán aquí cuando se cargue un proyecto.",
+                ["AssetEditor.Placeholder.CodeReferences"] = "Las referencias de código de Copperfin aparecerán aquí cuando se cargue un proyecto.",
+                ["AssetEditor.Placeholder.DataExplorer"] = "Los hallazgos del explorador de datos de Copperfin aparecerán aquí cuando se cargue un proyecto.",
+                ["AssetEditor.Placeholder.ObjectBrowser"] = "Los hallazgos del explorador de objetos de Copperfin aparecerán aquí cuando se cargue un proyecto.",
+                ["AssetEditor.Placeholder.Toolbox"] = "Las herramientas de Copperfin aparecerán aquí cuando se cargue un proyecto.",
+                ["AssetEditor.Placeholder.Builders"] = "Los constructores de Copperfin aparecerán aquí cuando se cargue un proyecto.",
+                ["AssetEditor.Placeholder.Coverage"] = "Inicie una sesión de depuración de Copperfin para inspeccionar señales de cobertura en tiempo de ejecución.",
+                ["AssetEditor.Placeholder.Database"] = "La guía de federación de bases de datos de Copperfin aparecerá aquí cuando se cargue un proyecto."
             },
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -177,7 +193,15 @@ internal sealed class CopperfinLocalization
                 ["AssetEditor.Debugger.StartingStatus"] = "Compilando o projeto e iniciando o depurador do Copperfin...",
                 ["AssetEditor.Debugger.UpdatingStatus"] = "Atualizando estado do depurador...",
                 ["AssetEditor.Debugger.UnavailableStatus"] = "Depurador indisponível.",
-                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Inicie primeiro uma sessão de depuração do Copperfin."
+                ["AssetEditor.Debugger.StartSessionFirstMessage"] = "Inicie primeiro uma sessão de depuração do Copperfin.",
+                ["AssetEditor.Placeholder.TaskList"] = "Os insights da lista de tarefas do Copperfin aparecerão aqui quando um projeto for carregado.",
+                ["AssetEditor.Placeholder.CodeReferences"] = "As referências de código do Copperfin aparecerão aqui quando um projeto for carregado.",
+                ["AssetEditor.Placeholder.DataExplorer"] = "Os insights do explorador de dados do Copperfin aparecerão aqui quando um projeto for carregado.",
+                ["AssetEditor.Placeholder.ObjectBrowser"] = "Os insights do navegador de objetos do Copperfin aparecerão aqui quando um projeto for carregado.",
+                ["AssetEditor.Placeholder.Toolbox"] = "As ferramentas do Copperfin aparecerão aqui quando um projeto for carregado.",
+                ["AssetEditor.Placeholder.Builders"] = "Os construtores do Copperfin aparecerão aqui quando um projeto for carregado.",
+                ["AssetEditor.Placeholder.Coverage"] = "Inicie uma sessão de depuração do Copperfin para inspecionar sinais de cobertura de runtime.",
+                ["AssetEditor.Placeholder.Database"] = "A orientação de federação de bancos de dados do Copperfin aparecerá aqui quando um projeto for carregado."
             }
         };
 

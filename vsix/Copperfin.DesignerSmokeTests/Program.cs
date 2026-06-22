@@ -22,6 +22,7 @@ internal static class Program
         SmokeLocalizedAssetEditorChrome();
         SmokeLocalizedProjectWorkspaceChrome();
         SmokeLocalizedProjectCommandDebuggerChrome();
+        SmokeLocalizedProjectWorkspacePlaceholders();
         SmokeAssetEditorWithRealAsset(
             @"C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx",
             expectSection: "Detail");
@@ -200,6 +201,31 @@ internal static class Program
             "Portuguese project command and debugger chrome should localize status labels");
         Expect(HasRichTextBoxTextContaining(portugueseControl, "sessão de depuração do Copperfin"),
             "Portuguese debugger chrome should localize initial debugger guidance");
+    }
+
+    private static void SmokeLocalizedProjectWorkspacePlaceholders()
+    {
+        using var spanishControl = new CopperfinAssetEditorControl(new CopperfinLocalization("es-419"));
+        Expect(HasRichTextBoxTextContaining(spanishControl, "tareas de Copperfin") &&
+               HasRichTextBoxTextContaining(spanishControl, "referencias de código de Copperfin") &&
+               HasRichTextBoxTextContaining(spanishControl, "explorador de datos de Copperfin") &&
+               HasRichTextBoxTextContaining(spanishControl, "explorador de objetos de Copperfin") &&
+               HasRichTextBoxTextContaining(spanishControl, "herramientas de Copperfin") &&
+               HasRichTextBoxTextContaining(spanishControl, "constructores de Copperfin") &&
+               HasRichTextBoxTextContaining(spanishControl, "señales de cobertura") &&
+               HasRichTextBoxTextContaining(spanishControl, "federación de bases de datos"),
+            "Spanish project workspace placeholders should localize initial pane text");
+
+        using var portugueseControl = new CopperfinAssetEditorControl(new CopperfinLocalization("pt-BR"));
+        Expect(HasRichTextBoxTextContaining(portugueseControl, "lista de tarefas do Copperfin") &&
+               HasRichTextBoxTextContaining(portugueseControl, "referências de código do Copperfin") &&
+               HasRichTextBoxTextContaining(portugueseControl, "explorador de dados do Copperfin") &&
+               HasRichTextBoxTextContaining(portugueseControl, "navegador de objetos do Copperfin") &&
+               HasRichTextBoxTextContaining(portugueseControl, "ferramentas do Copperfin") &&
+               HasRichTextBoxTextContaining(portugueseControl, "construtores do Copperfin") &&
+               HasRichTextBoxTextContaining(portugueseControl, "sinais de cobertura") &&
+               HasRichTextBoxTextContaining(portugueseControl, "federação de bancos de dados"),
+            "Portuguese project workspace placeholders should localize initial pane text");
     }
 
     private static void SmokeAssetEditorWithRealAsset(string path, string expectSection)
