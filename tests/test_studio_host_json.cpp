@@ -10334,6 +10334,189 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
     }
 }
 
+void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_object_snap_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_object_snap =
+        [&](const fs::path& header_asset_path,
+            const fs::path& footer_asset_path,
+            const std::string& title_prefix,
+            const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(header_asset_path);
+            write_synthetic_report_table_for_detail_header_footer_object_json(footer_asset_path);
+
+            const auto snap_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", header_asset_path.string(),
+                    "--unique-id", "detail-header-label-guid",
+                    "--snap-object",
+                    "--snap-mode", "both",
+                    "--grid-width", "80",
+                    "--grid-height", "70",
+                    "--snap-target-unique-id", "detail-header-label-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (snap_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header object snap stdout:\n"
+                          << snap_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header object snap stderr:\n"
+                          << snap_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(snap_header_process.exit_code == 0,
+                   "#1793: detail-header object snap should exit successfully");
+            expect(visual_object_property(header_asset_path, "detail-header-label-guid", "HPOS") == "80" &&
+                       visual_object_property(header_asset_path, "detail-header-label-guid", "VPOS") == "70",
+                   "#1793: detail-header object snap should round HPOS and VPOS");
+            expect_contains(snap_header_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_header." +
+                                header_asset_path.extension().string().substr(1) + "\"",
+                            "#1793: detail-header object snap should return refreshed layout JSON");
+            if (header_asset_path.extension() == ".lbx") {
+                expect_contains(snap_header_process.stdout_text, "\"isLabel\": true",
+                                "#1793: detail-header label object snap should retain label identity");
+            }
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1793: detail-header object snap should preserve selected object availability");
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1793: detail-header object snap should preserve object selection kind");
+            expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1793: detail-header object snap should preserve containing-section availability");
+            expect_contains_in_order(
+                snap_header_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionRelativeTop\": 70",
+                    "\"sectionRelativeBottom\": 190",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"label\"",
+                    "\"left\": 80",
+                    "\"top\": 70",
+                    "\"width\": 700",
+                    "\"right\": 780",
+                    "\"height\": 120",
+                    "\"bottom\": 190",
+                    "\"expression\": \"\\\"Header label\\\"\""
+                },
+                "#1793: detail-header object snap should refresh selected-object section metadata");
+            expect_contains_in_order(
+                snap_header_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_header_0\"",
+                    "\"recordIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1793: detail-header object snap should preserve containing-section metadata");
+
+            const auto snap_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", footer_asset_path.string(),
+                    "--unique-id", "detail-footer-field-guid",
+                    "--snap-object",
+                    "--snap-mode", "both",
+                    "--grid-width", "80",
+                    "--grid-height", "70",
+                    "--snap-target-unique-id", "detail-footer-field-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (snap_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-footer object snap stdout:\n"
+                          << snap_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-footer object snap stderr:\n"
+                          << snap_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(snap_footer_process.exit_code == 0,
+                   "#1793: detail-footer object snap should exit successfully");
+            expect(visual_object_property(footer_asset_path, "detail-footer-field-guid", "HPOS") == "160" &&
+                       visual_object_property(footer_asset_path, "detail-footer-field-guid", "VPOS") == "350",
+                   "#1793: detail-footer object snap should round HPOS and VPOS");
+            expect_contains(snap_footer_process.stdout_text,
+                            "\"documentTitle\": \"" + title_prefix + "_footer." +
+                                footer_asset_path.extension().string().substr(1) + "\"",
+                            "#1793: detail-footer object snap should return refreshed layout JSON");
+            if (footer_asset_path.extension() == ".lbx") {
+                expect_contains(snap_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1793: detail-footer label object snap should retain label identity");
+            }
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                            "#1793: detail-footer object snap should preserve selected object availability");
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                            "#1793: detail-footer object snap should preserve object selection kind");
+            expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                            "#1793: detail-footer object snap should preserve containing-section availability");
+            expect_contains_in_order(
+                snap_footer_process.stdout_text,
+                {
+                    "\"selectedReportObject\": {",
+                    "\"recordIndex\": 3",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_footer_2\"",
+                    "\"containingSectionRecordIndex\": 2",
+                    "\"sectionRelativeTop\": 50",
+                    "\"sectionRelativeBottom\": 150",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1",
+                    "\"objectKind\": \"field\"",
+                    "\"left\": 160",
+                    "\"top\": 350",
+                    "\"width\": 900",
+                    "\"right\": 1060",
+                    "\"height\": 100",
+                    "\"bottom\": 450",
+                    "\"expression\": \"footer.total\""
+                },
+                "#1793: detail-footer object snap should refresh selected-object section metadata");
+            expect_contains_in_order(
+                snap_footer_process.stdout_text,
+                {
+                    "\"selectedReportObjectSection\": {",
+                    "\"id\": \"detail_footer_2\"",
+                    "\"recordIndex\": 2",
+                    "\"sectionCount\": 2",
+                    "\"objectCount\": 1"
+                },
+                "#1793: detail-footer object snap should preserve containing-section metadata");
+        };
+
+    run_detail_header_footer_object_snap(
+        temp_root / "detail_header_footer_object_snap_header.frx",
+        temp_root / "detail_header_footer_object_snap_footer.frx",
+        "detail_header_footer_object_snap",
+        "report");
+    run_detail_header_footer_object_snap(
+        temp_root / "detail_header_footer_object_snap_header.lbx",
+        temp_root / "detail_header_footer_object_snap_footer.lbx",
+        "detail_header_footer_object_snap",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -84111,6 +84294,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_resizes_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
