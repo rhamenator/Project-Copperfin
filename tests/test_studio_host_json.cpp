@@ -6990,6 +6990,171 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
     }
 }
 
+void test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_deleted_detail_header_footer_object_expression_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_object_expressions =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+            const auto delete_header_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 1U, true);
+            expect(delete_header_object.ok && dbf_record_deleted(asset_path, 1U),
+                   "#1771: detail-header object expression fixture should mark the header object deleted");
+            const auto delete_footer_object = copperfin::vfp::set_record_deleted_flag(asset_path.string(), 3U, true);
+            expect(delete_footer_object.ok && dbf_record_deleted(asset_path, 3U),
+                   "#1771: detail-footer object expression fixture should mark the footer object deleted");
+
+            const auto expect_deleted_selected_object_expression =
+                [&](const std::string& unique_id,
+                    const std::string& record_index,
+                    const std::string& object_kind,
+                    const std::string& expression,
+                    const std::string& memo_block,
+                    const std::string& left,
+                    const std::string& top,
+                    const std::string& width,
+                    const std::string& right,
+                    const std::string& height,
+                    const std::string& bottom,
+                    const std::string& selection_label) {
+                    const auto object_process = run_process_capture(
+                        studio_host_path,
+                        {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
+                        temp_root);
+
+                    if (object_process.exit_code != 0) {
+                        std::cerr << "studio host " << label << " stable selected deleted " << selection_label
+                                  << " expression stdout:\n" << object_process.stdout_text << "\n";
+                        std::cerr << "studio host " << label << " stable selected deleted " << selection_label
+                                  << " expression stderr:\n" << object_process.stderr_text << "\n";
+                        std::cerr << "fixture root: " << temp_root << "\n";
+                    }
+
+                    expect(object_process.exit_code == 0,
+                           "#1771: selected deleted detail header/footer object expression JSON should exit successfully");
+                    expect_contains(object_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                                    "#1771: selected deleted detail header/footer object expression JSON should preserve titles");
+                    if (asset_path.extension() == ".lbx") {
+                        expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                                        "#1771: selected deleted detail header/footer label object expression JSON should retain identity");
+                    }
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                                    "#1771: selected deleted detail header/footer object expressions should select report objects");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                                    "#1771: selected deleted detail header/footer object expressions should advertise report selection");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                                    "#1771: selected deleted detail header/footer object expressions should expose object selection kind");
+                    expect_contains(object_process.stdout_text, "\"liveObjectCount\": 0",
+                                    "#1771: selected deleted detail header/footer object expressions should remove live object counts");
+                    expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 2",
+                                    "#1771: selected deleted detail header/footer object expressions should preserve deleted object counts");
+                    expect_contains(object_process.stdout_text, "\"deletedPlacedObjectCount\": 2",
+                                    "#1771: selected deleted detail header/footer object expressions should expose deleted placed object counts");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                                    "#1771: selected deleted detail header/footer object expressions should not select sections");
+                    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                                    "#1771: selected deleted detail header/footer object expressions should not select settings");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                                    "#1771: selected deleted detail header/footer object expressions should not fabricate containing sections");
+                    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                                    "#1771: selected deleted detail header/footer object expressions should serialize null containing-section JSON");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"deletedObjects\": [",
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": true",
+                            "\"containingSectionId\": \"\"",
+                            "\"objectKind\": \"" + object_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": 2",
+                            "\"expressionMemoBlockNumber\": " + memo_block
+                        },
+                        "#1771: stable selected deleted " + selection_label + " should expose deleted-object expression metadata");
+                    expect_contains_in_order(
+                        object_process.stdout_text,
+                        {
+                            "\"selectedReportObject\": {",
+                            "\"recordIndex\": " + record_index,
+                            "\"deleted\": true",
+                            "\"containingSectionId\": \"\"",
+                            "\"containingSectionRecordIndex\": null",
+                            "\"sectionRelativeTop\": 0",
+                            "\"sectionRelativeBottom\": 0",
+                            "\"sectionObjectIndex\": null",
+                            "\"sectionObjectCount\": 0",
+                            "\"objectKind\": \"" + object_kind + "\"",
+                            "\"expression\": \"" + expression + "\"",
+                            "\"expressionFieldIndex\": 2",
+                            "\"expressionMemoBlockNumber\": " + memo_block
+                        },
+                        "#1771: stable selected deleted " + selection_label + " should expose selected-object expression metadata");
+                    expect_contains(object_process.stdout_text, "\"left\": " + left,
+                                    "#1771: selected deleted detail header/footer object expressions should expose left bounds");
+                    expect_contains(object_process.stdout_text, "\"top\": " + top,
+                                    "#1771: selected deleted detail header/footer object expressions should expose top bounds");
+                    expect_contains(object_process.stdout_text, "\"width\": " + width,
+                                    "#1771: selected deleted detail header/footer object expressions should expose widths");
+                    expect_contains(object_process.stdout_text, "\"right\": " + right,
+                                    "#1771: selected deleted detail header/footer object expressions should expose right bounds");
+                    expect_contains(object_process.stdout_text, "\"height\": " + height,
+                                    "#1771: selected deleted detail header/footer object expressions should expose heights");
+                    expect_contains(object_process.stdout_text, "\"bottom\": " + bottom,
+                                    "#1771: selected deleted detail header/footer object expressions should expose bottom bounds");
+                    expect_contains(object_process.stdout_text,
+                                    "\"name\": \"EXPR\", \"recordIndex\": " + record_index +
+                                        ", \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": " +
+                                        memo_block + ", \"value\": \"" + expression + "\"",
+                                    "#1771: stable selected deleted " + selection_label +
+                                        " should expose selected-object expression provenance");
+                };
+
+            expect_deleted_selected_object_expression("detail-header-label-guid",
+                                                      "1",
+                                                      "label",
+                                                      "\\\"Header label\\\"",
+                                                      "2",
+                                                      "100",
+                                                      "50",
+                                                      "700",
+                                                      "800",
+                                                      "120",
+                                                      "170",
+                                                      "detail-header label");
+            expect_deleted_selected_object_expression("detail-footer-field-guid",
+                                                      "3",
+                                                      "field",
+                                                      "footer.total",
+                                                      "4",
+                                                      "140",
+                                                      "360",
+                                                      "900",
+                                                      "1040",
+                                                      "100",
+                                                      "460",
+                                                      "detail-footer field");
+        };
+
+    run_deleted_detail_header_footer_object_expressions(
+        temp_root / "deleted_detail_header_footer_object_expressions.frx",
+        "deleted_detail_header_footer_object_expressions.frx",
+        "report");
+    run_deleted_detail_header_footer_object_expressions(
+        temp_root / "deleted_detail_header_footer_object_expressions.lbx",
+        "deleted_detail_header_footer_object_expressions.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_updates_detail_header_footer_section_expressions(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -80232,6 +80397,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_deleted_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_expressions(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_updates_deleted_detail_header_footer_section_expressions(argv[1]);
