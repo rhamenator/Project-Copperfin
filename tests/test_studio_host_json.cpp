@@ -3916,6 +3916,27 @@ void write_synthetic_report_table_for_missing_object_objcode_layout_json(
     expect(delete_result.ok, "#1729: synthetic report table should mark the no-OBJCODE object deleted");
 }
 
+void write_synthetic_report_table_for_missing_root_objcode_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "ORIENTATION", .type = 'N', .length = 8U},
+        {.name = "PAPERSIZE", .type = 'N', .length = 8U},
+        {.name = "TOPMARGIN", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "GRIDV=1\nGRIDH=0", "1", "9", "120", "missing-objcode-live-settings-guid"},
+        {"1", "COLS=3\nCOLWIDTH=5000", "0", "1", "240", "missing-objcode-deleted-settings-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1730: synthetic report table without root OBJCODE schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1730: synthetic report table should mark the no-OBJCODE settings row deleted");
+}
+
 void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -6675,6 +6696,177 @@ void test_studio_host_json_defaults_missing_report_object_objcode_schema(
     run_missing_object_objcode_layout(temp_root / "missing_object_objcode.lbx",
                                       "missing_object_objcode.lbx",
                                       "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_report_settings_without_root_objcode_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_report_root_objcode_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_root_objcode_layout = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_missing_root_objcode_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing root OBJCODE summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing root OBJCODE summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1730: missing root OBJCODE schema should keep report/label settings inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1730: missing root OBJCODE layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1730: missing root OBJCODE label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1730: missing root OBJCODE should preserve live page setup availability");
+        expect_contains(summary_process.stdout_text, "\"orientationAvailable\": true",
+                        "#1730: missing root OBJCODE should preserve live orientation availability");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 1",
+                        "#1730: missing root OBJCODE should preserve live orientation codes");
+        expect_contains(summary_process.stdout_text, "\"paperSizeAvailable\": true",
+                        "#1730: missing root OBJCODE should preserve live paper-size availability");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 9",
+                        "#1730: missing root OBJCODE should preserve live paper-size codes");
+        expect_contains(summary_process.stdout_text, "\"topMarginAvailable\": true",
+                        "#1730: missing root OBJCODE should preserve live top-margin availability");
+        expect_contains(summary_process.stdout_text, "\"topMargin\": 120",
+                        "#1730: missing root OBJCODE should preserve live top margins");
+        expect_contains(summary_process.stdout_text, "\"gridVerticalAvailable\": true",
+                        "#1730: missing root OBJCODE should preserve EXPR-derived vertical grid availability");
+        expect_contains(summary_process.stdout_text, "\"gridVertical\": 1",
+                        "#1730: missing root OBJCODE should preserve EXPR-derived vertical grid values");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontalAvailable\": true",
+                        "#1730: missing root OBJCODE should preserve EXPR-derived horizontal grid availability");
+        expect_contains(summary_process.stdout_text, "\"gridHorizontal\": 0",
+                        "#1730: missing root OBJCODE should preserve EXPR-derived horizontal grid values");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 5",
+                        "#1730: missing root OBJCODE layouts should preserve live setting counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSettingCount\": 5",
+                        "#1730: missing root OBJCODE layouts should preserve deleted setting counts");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"GRIDV\", \"recordIndex\": 0, \"fieldIndex\": 1, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"1\"",
+                        "#1730: live EXPR-derived setting provenance should remain available without OBJCODE");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"GRIDH\", \"recordIndex\": 0, \"fieldIndex\": 1, \"sourceLineIndex\": 1, \"memoBlockNumber\": 1, \"value\": \"0\"",
+                        "#1730: live second-line EXPR setting provenance should remain available without OBJCODE");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"ORIENTATION\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"1\"",
+                        "#1730: live direct orientation provenance should remain available without OBJCODE");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"COLS\", \"recordIndex\": 1, \"fieldIndex\": 1, \"sourceLineIndex\": 0, \"memoBlockNumber\": 2, \"value\": \"3\"",
+                        "#1730: deleted EXPR-derived setting provenance should remain available without OBJCODE");
+        expect_contains(summary_process.stdout_text,
+                        "\"name\": \"TOPMARGIN\", \"recordIndex\": 1, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"240\"",
+                        "#1730: deleted direct top-margin provenance should remain available without OBJCODE");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1730: missing root OBJCODE live settings selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1730: missing root OBJCODE live settings should advertise selected-settings availability");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1730: missing root OBJCODE live settings should expose settings selection kind");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"GRIDV\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 1",
+                "\"sourceLineIndex\": 0",
+                "\"value\": \"1\"",
+                "\"name\": \"GRIDH\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 1",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"0\"",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 2",
+                "\"value\": \"1\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 3",
+                "\"value\": \"9\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 0",
+                "\"fieldIndex\": 4",
+                "\"value\": \"120\""
+            },
+            "#1730: missing root OBJCODE live selection should expose selected-settings metadata");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1730: missing root OBJCODE deleted settings selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1730: missing root OBJCODE deleted settings should advertise selected-settings availability");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1730: missing root OBJCODE deleted settings should expose settings selection kind");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportSettings\": [",
+                "\"name\": \"COLS\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 1",
+                "\"sourceLineIndex\": 0",
+                "\"value\": \"3\"",
+                "\"name\": \"COLWIDTH\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 1",
+                "\"sourceLineIndex\": 1",
+                "\"value\": \"5000\"",
+                "\"name\": \"ORIENTATION\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 2",
+                "\"value\": \"0\"",
+                "\"name\": \"PAPERSIZE\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 3",
+                "\"value\": \"1\"",
+                "\"name\": \"TOPMARGIN\"",
+                "\"recordIndex\": 1",
+                "\"fieldIndex\": 4",
+                "\"value\": \"240\""
+            },
+            "#1730: missing root OBJCODE deleted selection should expose selected-settings metadata");
+    };
+
+    run_missing_root_objcode_layout(temp_root / "missing_root_objcode.frx",
+                                    "missing_root_objcode.frx",
+                                    "report");
+    run_missing_root_objcode_layout(temp_root / "missing_root_objcode.lbx",
+                                    "missing_root_objcode.lbx",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -73321,6 +73513,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
     test_studio_host_json_defaults_missing_report_section_objcode_schema(argv[1]);
     test_studio_host_json_defaults_missing_report_object_objcode_schema(argv[1]);
+    test_studio_host_json_preserves_report_settings_without_root_objcode_schema(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
