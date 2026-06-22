@@ -3893,6 +3893,34 @@ void write_synthetic_report_table_for_fractional_classification_layout_json(
     expect(delete_object_result.ok, "#1758: synthetic report table should mark the fractional object deleted");
 }
 
+void write_synthetic_report_table_for_trimmed_classification_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'C', .length = 16U},
+        {.name = "OBJCODE", .type = 'C', .length = 16U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'N', .length = 10U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "WIDTH", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {" 1 ", " 53 ", "ORIENTATION=0\nPAPERSIZE=1", "", "", "", "", "trimmed-settings-guid"},
+        {" 9 ", " 4 ", "trimmed.detail", "", "100", "", "300", "trimmed-detail-guid"},
+        {" 8 ", " 0 ", "customer.total", "120", "150", "240", "80", "trimmed-field-guid"},
+        {" 9 ", " 7 ", "trimmed.page.footer", "", "600", "", "200", "trimmed-footer-guid"},
+        {" 5 ", " 1 ", "\"Deleted trimmed label\"", "30", "650", "120", "40", "trimmed-deleted-label-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1759: synthetic report table for trimmed layout classifications should be created");
+    const auto delete_section_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 3U, true);
+    expect(delete_section_result.ok, "#1759: synthetic report table should mark the trimmed section deleted");
+    const auto delete_object_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 4U, true);
+    expect(delete_object_result.ok, "#1759: synthetic report table should mark the trimmed object deleted");
+}
+
 void write_synthetic_report_table_for_missing_geometry_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -7062,6 +7090,153 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
     run_fractional_classification_layout(temp_root / "fractional_classifications.lbx",
                                          "fractional_classifications.lbx",
                                          "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_trims_report_layout_classifications(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_trimmed_report_layout_classification_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_trimmed_classification_layout = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_trimmed_classification_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " trimmed classification summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " trimmed classification summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1759: trimmed report/label layout classifications should keep inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1759: trimmed layout classifications should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1759: trimmed classification label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": true",
+                        "#1759: trimmed root OBJTYPE should expose settings summaries");
+        expect_contains(summary_process.stdout_text, "\"orientationCode\": 0",
+                        "#1759: trimmed root classifications should preserve settings values");
+        expect_contains(summary_process.stdout_text, "\"paperSizeCode\": 1",
+                        "#1759: trimmed root classifications should preserve later settings values");
+        expect_contains(summary_process.stdout_text, "\"settingCount\": 2",
+                        "#1759: trimmed root classifications should preserve live root settings");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1759: trimmed band classifications should create live sections");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1759: trimmed deleted band classifications should create deleted sections");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1759: trimmed object classifications should create live layout objects");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1759: trimmed deleted object classifications should create deleted objects");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"field\", \"count\": 1}",
+                        "#1759: trimmed live object OBJTYPE should use trimmed values for kind counts");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"label\", \"count\": 1}",
+                        "#1759: trimmed deleted object OBJTYPE should use trimmed values for kind counts");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"detail\", \"count\": 1}",
+                        "#1759: trimmed live band OBJCODE should use trimmed values for kind counts");
+        expect_contains(summary_process.stdout_text, "{\"kind\": \"page_footer\", \"count\": 1}",
+                        "#1759: trimmed deleted band OBJCODE should use trimmed values for kind counts");
+
+        const auto settings_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+        expect(settings_process.exit_code == 0,
+               "#1759: trimmed root classification selection should keep inspection non-failing");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
+                        "#1759: trimmed root classification should resolve selected settings");
+        expect_contains(settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1759: trimmed root classification should expose settings selection kind");
+
+        const auto section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+        expect(section_process.exit_code == 0,
+               "#1759: trimmed live section classification selection should keep inspection non-failing");
+        expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1759: trimmed band classification should resolve selected sections");
+        expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1759: trimmed band classification should expose section selection kind");
+        expect_contains(section_process.stdout_text, "\"bandKind\": \"detail\"",
+                        "#1759: trimmed live section classification should preserve trimmed band kinds");
+        expect_contains(section_process.stdout_text, "\"objectCode\": 4",
+                        "#1759: trimmed live section classification should preserve trimmed band codes");
+
+        const auto object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+        expect(object_process.exit_code == 0,
+               "#1759: trimmed live object classification selection should keep inspection non-failing");
+        expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1759: trimmed object classification should resolve selected objects");
+        expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#1759: trimmed object classification should expose object selection kind");
+        expect_contains(object_process.stdout_text, "\"objectTypeCode\": 8",
+                        "#1759: trimmed live object classification should preserve trimmed object type codes");
+        expect_contains(object_process.stdout_text, "\"objectKind\": \"field\"",
+                        "#1759: trimmed live object classification should preserve trimmed object kinds");
+        expect_contains(object_process.stdout_text, "\"objectCode\": 0",
+                        "#1759: trimmed live object classification should preserve trimmed object codes");
+        expect_contains(object_process.stdout_text, "\"containingSectionRecordIndex\": 1",
+                        "#1759: trimmed live object classification should preserve containing sections");
+
+        const auto deleted_section_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "3", "--json"},
+            temp_root);
+        expect(deleted_section_process.exit_code == 0,
+               "#1759: trimmed deleted section classification selection should keep inspection non-failing");
+        expect_contains(deleted_section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1759: trimmed deleted band classification should resolve selected sections");
+        expect_contains(deleted_section_process.stdout_text, "\"bandKind\": \"page_footer\"",
+                        "#1759: trimmed deleted section classification should preserve trimmed band kinds");
+        expect_contains(deleted_section_process.stdout_text, "\"objectCode\": 7",
+                        "#1759: trimmed deleted section classification should preserve trimmed band codes");
+
+        const auto deleted_object_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "4", "--json"},
+            temp_root);
+        expect(deleted_object_process.exit_code == 0,
+               "#1759: trimmed deleted object classification selection should keep inspection non-failing");
+        expect_contains(deleted_object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1759: trimmed deleted object classification should resolve selected objects");
+        expect_contains(deleted_object_process.stdout_text, "\"objectTypeCode\": 5",
+                        "#1759: trimmed deleted object classification should preserve trimmed object type codes");
+        expect_contains(deleted_object_process.stdout_text, "\"objectKind\": \"label\"",
+                        "#1759: trimmed deleted object classification should preserve trimmed object kinds");
+        expect_contains(deleted_object_process.stdout_text, "\"objectCode\": 1",
+                        "#1759: trimmed deleted object classification should preserve trimmed object codes");
+    };
+
+    run_trimmed_classification_layout(temp_root / "trimmed_classifications.frx",
+                                      "trimmed_classifications.frx",
+                                      "report");
+    run_trimmed_classification_layout(temp_root / "trimmed_classifications.lbx",
+                                      "trimmed_classifications.lbx",
+                                      "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -78379,6 +78554,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_unsupported_report_layout_objtype_codes(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_geometry(argv[1]);
     test_studio_host_json_uses_integer_portions_for_fractional_report_layout_classifications(argv[1]);
+    test_studio_host_json_trims_report_layout_classifications(argv[1]);
     test_studio_host_json_defaults_missing_report_layout_geometry_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
     test_studio_host_json_ignores_missing_report_layout_objtype_schema(argv[1]);

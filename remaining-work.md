@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1759 trimmed report/label layout classification coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with whitespace-padded `OBJTYPE`/`OBJCODE` values for root settings, live/deleted bands, and live/deleted layout objects, proving trimmed values drive settings, band, object, kind-count, and selected settings/section/object JSON while inspection stays non-failing and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1758 fractional report/label layout classification coverage shipped. Studio host regression coverage now creates synthetic FRX/LBX assets with fractional `OBJTYPE`/`OBJCODE` values for root settings, live/deleted bands, and live/deleted layout objects, proving integer portions drive settings, band, object, kind-count, and selected settings/section/object JSON while inspection stays non-failing and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1757 mixed-case report/label settings memo-name coverage shipped. Report layout summaries now match known memo-derived setting names case-insensitively while preserving source spelling in selected-settings metadata. Studio host regression coverage creates synthetic FRX/LBX assets with lower/mixed-case live and deleted memo-derived settings, proving valid live page/column summaries parse case-insensitively, selected-settings JSON exposes original setting-name spelling with source-line and memo provenance, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only src/studio/report_layout.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1756 CR-only report/label settings memo-line coverage shipped. Report layout parsing now treats carriage-return-only separators in root `EXPR` memo text as real setting lines. Studio host regression coverage creates synthetic FRX/LBX assets with live and deleted CR-only memo-derived settings, proving page/column summaries parse valid live settings, selected-settings JSON exposes live/deleted settings in source order with source-line and memo provenance, inspection stays non-failing, and label identity is retained. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only src/studio/report_layout.cpp`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1773,7 +1774,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1758 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1759 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1844,7 +1845,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1758 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1759 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
