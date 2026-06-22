@@ -101,11 +101,12 @@ internal sealed class StudioMainForm : Form
         openDocuments[normalizedPath] = page;
         editorControl.LoadDocument(normalizedPath);
 
-        Text = localization.Format("Studio.WindowTitleWithAssetKind", CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath));
+        var assetKind = CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath, localization);
+        Text = localization.Format("Studio.WindowTitleWithAssetKind", assetKind);
         UpdateStatus(localization.Format(
             "Studio.OpenDocumentStatus",
             normalizedPath,
-            CopperfinStudioHostBridge.DescribeAssetKind(normalizedPath),
+            assetKind,
             documentTabs.TabPages.Count));
     }
 

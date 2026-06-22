@@ -54,25 +54,21 @@ internal static class CopperfinStudioHostBridge
         return DiagnosticsProcess.Start(startInfo) is not null;
     }
 
-    public static string DescribeAssetKind(string path)
+    public static string DescribeAssetKind(string path, CopperfinLocalization? localization = null)
     {
-        switch (Path.GetExtension(path).ToLowerInvariant())
+        localization ??= new CopperfinLocalization();
+        var key = Path.GetExtension(path).ToLowerInvariant() switch
         {
-            case ".pjx":
-                return "Visual project";
-            case ".scx":
-                return "Visual form";
-            case ".vcx":
-                return "Visual class library";
-            case ".frx":
-                return "Visual report";
-            case ".lbx":
-                return "Visual label";
-            case ".mnx":
-                return "Visual menu";
-            default:
-                return "Copperfin asset";
-        }
+            ".pjx" => "Studio.AssetKind.Project",
+            ".scx" => "Studio.AssetKind.Form",
+            ".vcx" => "Studio.AssetKind.ClassLibrary",
+            ".frx" => "Studio.AssetKind.Report",
+            ".lbx" => "Studio.AssetKind.Label",
+            ".mnx" => "Studio.AssetKind.Menu",
+            _ => "Studio.AssetKind.Generic"
+        };
+
+        return localization.Text(key);
     }
 
     private static string Quote(string value)

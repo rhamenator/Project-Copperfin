@@ -19,7 +19,7 @@ Localized text must be separated from stable protocol values:
 
 ## Resource Layout
 
-The initial .NET UI catalog lives in `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs` and is linked into:
+The initial .NET UI catalog lives in `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs`. It currently covers the standalone Studio shell strings plus catalog-backed asset-kind display labels for project, form, class library, report, label, menu, and generic assets, and is linked into:
 
 - `vsix/Copperfin.Studio`: standalone Studio shell.
 - `vsix/Copperfin.DesignerSmokeTests`: UI smoke test project.

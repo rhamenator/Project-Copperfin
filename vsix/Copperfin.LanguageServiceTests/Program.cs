@@ -13,6 +13,7 @@ internal static class Program
         TestLocalizationCatalogNormalizesSpanishAndPortugueseLocales();
         TestLocalizationCatalogFallsBackToEnglish();
         TestLocalizationCatalogFormatsWithInvariantCulture();
+        TestLocalizationCatalogLocalizesStudioAssetKinds();
         TestDottedClassMemberResolvesToLongestProjectSymbolPrefix();
         TestDottedMemberFallsBackToTrailingProcedureName();
         TestQuickInfoUsesResolvedProjectSymbolDescriptionForDottedMemberAccess();
@@ -84,6 +85,41 @@ internal static class Program
             "localized formatting should preserve asset kind arguments");
         Expect(status.Contains("Abas abertas: 3", StringComparison.Ordinal),
             "localized formatting should preserve numeric arguments with invariant formatting");
+    }
+
+    private static void TestLocalizationCatalogLocalizesStudioAssetKinds()
+    {
+        var english = new CopperfinLocalization("en-US");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.pjx", english) == "Visual project",
+            "English catalog should preserve the Studio project asset-kind label");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.scx", english) == "Visual form",
+            "English catalog should preserve the Studio form asset-kind label");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.vcx", english) == "Visual class library",
+            "English catalog should preserve the Studio class-library asset-kind label");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.frx", english) == "Visual report",
+            "English catalog should preserve the Studio report asset-kind label");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.lbx", english) == "Visual label",
+            "English catalog should preserve the Studio label asset-kind label");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.mnx", english) == "Visual menu",
+            "English catalog should preserve the Studio menu asset-kind label");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.txt", english) == "Copperfin asset",
+            "English catalog should preserve the generic Studio asset-kind label");
+
+        var spanish = new CopperfinLocalization("es-MX");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.frx", spanish) == "Informe visual",
+            "Spanish catalog should localize report asset-kind labels");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.lbx", spanish) == "Etiqueta visual",
+            "Spanish catalog should localize label asset-kind labels");
+
+        var portuguese = new CopperfinLocalization("pt");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.frx", portuguese) == "Relatório visual",
+            "Portuguese catalog should localize report asset-kind labels");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.txt", portuguese) == "Ativo Copperfin",
+            "Portuguese catalog should localize generic asset-kind labels");
+
+        var unsupported = new CopperfinLocalization("de-DE");
+        Expect(CopperfinStudioHostBridge.DescribeAssetKind("customer.frx", unsupported) == "Visual report",
+            "unsupported locales should keep English asset-kind fallback labels");
     }
 
     private static void TestDottedClassMemberResolvesToLongestProjectSymbolPrefix()

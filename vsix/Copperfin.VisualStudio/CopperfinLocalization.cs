@@ -32,7 +32,14 @@ internal sealed class CopperfinLocalization
                 ["Studio.OpenDialogTitle"] = "Open Copperfin Asset",
                 ["Studio.OpenDialogFilter"] = "Copperfin/VFP assets|*.pjx;*.scx;*.vcx;*.frx;*.lbx;*.mnx|All files|*.*",
                 ["Studio.WindowTitleWithAssetKind"] = "Copperfin Studio - {0}",
-                ["Studio.OpenDocumentStatus"] = "{0}   |   {1}   |   Open tabs: {2}"
+                ["Studio.OpenDocumentStatus"] = "{0}   |   {1}   |   Open tabs: {2}",
+                ["Studio.AssetKind.Project"] = "Visual project",
+                ["Studio.AssetKind.Form"] = "Visual form",
+                ["Studio.AssetKind.ClassLibrary"] = "Visual class library",
+                ["Studio.AssetKind.Report"] = "Visual report",
+                ["Studio.AssetKind.Label"] = "Visual label",
+                ["Studio.AssetKind.Menu"] = "Visual menu",
+                ["Studio.AssetKind.Generic"] = "Copperfin asset"
             },
             [SpanishLatinAmericaLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -46,7 +53,14 @@ internal sealed class CopperfinLocalization
                 ["Studio.OpenDialogTitle"] = "Abrir activo de Copperfin",
                 ["Studio.OpenDialogFilter"] = "Activos Copperfin/VFP|*.pjx;*.scx;*.vcx;*.frx;*.lbx;*.mnx|Todos los archivos|*.*",
                 ["Studio.WindowTitleWithAssetKind"] = "Copperfin Studio - {0}",
-                ["Studio.OpenDocumentStatus"] = "{0}   |   {1}   |   Pestañas abiertas: {2}"
+                ["Studio.OpenDocumentStatus"] = "{0}   |   {1}   |   Pestañas abiertas: {2}",
+                ["Studio.AssetKind.Project"] = "Proyecto visual",
+                ["Studio.AssetKind.Form"] = "Formulario visual",
+                ["Studio.AssetKind.ClassLibrary"] = "Biblioteca de clases visual",
+                ["Studio.AssetKind.Report"] = "Informe visual",
+                ["Studio.AssetKind.Label"] = "Etiqueta visual",
+                ["Studio.AssetKind.Menu"] = "Menú visual",
+                ["Studio.AssetKind.Generic"] = "Activo Copperfin"
             },
             [PortugueseBrazilLocale] = new Dictionary<string, string>(StringComparer.Ordinal)
             {
@@ -60,7 +74,14 @@ internal sealed class CopperfinLocalization
                 ["Studio.OpenDialogTitle"] = "Abrir ativo do Copperfin",
                 ["Studio.OpenDialogFilter"] = "Ativos Copperfin/VFP|*.pjx;*.scx;*.vcx;*.frx;*.lbx;*.mnx|Todos os arquivos|*.*",
                 ["Studio.WindowTitleWithAssetKind"] = "Copperfin Studio - {0}",
-                ["Studio.OpenDocumentStatus"] = "{0}   |   {1}   |   Abas abertas: {2}"
+                ["Studio.OpenDocumentStatus"] = "{0}   |   {1}   |   Abas abertas: {2}",
+                ["Studio.AssetKind.Project"] = "Projeto visual",
+                ["Studio.AssetKind.Form"] = "Formulário visual",
+                ["Studio.AssetKind.ClassLibrary"] = "Biblioteca de classes visual",
+                ["Studio.AssetKind.Report"] = "Relatório visual",
+                ["Studio.AssetKind.Label"] = "Etiqueta visual",
+                ["Studio.AssetKind.Menu"] = "Menu visual",
+                ["Studio.AssetKind.Generic"] = "Ativo Copperfin"
             }
         };
 
