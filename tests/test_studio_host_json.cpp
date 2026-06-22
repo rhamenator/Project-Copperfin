@@ -10300,6 +10300,22 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_sections_by_sta
                                 "#1818: " + operation_label + " should preserve deleted section counts");
                 expect_contains(reorder_process.stdout_text, "\"deletedSectionHeightTotal\": 550",
                                 "#1818: " + operation_label + " should preserve deleted section height totals");
+                expect_contains(reorder_process.stdout_text, "\"previewBoundsAvailable\": true",
+                                "#1876: " + operation_label + " should preserve live preview availability");
+                expect_contains(reorder_process.stdout_text, "\"previewBoundsTop\": 0",
+                                "#1876: " + operation_label + " should preserve live preview top bounds");
+                expect_contains(reorder_process.stdout_text, "\"previewBoundsBottom\": 500",
+                                "#1876: " + operation_label + " should preserve live preview bottom bounds");
+                expect_contains(reorder_process.stdout_text, "\"previewBoundsHeight\": 500",
+                                "#1876: " + operation_label + " should preserve live preview height");
+                expect_contains(reorder_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                                "#1876: " + operation_label + " should preserve deleted preview availability");
+                expect_contains(reorder_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
+                                "#1876: " + operation_label + " should preserve deleted preview top bounds");
+                expect_contains(reorder_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1050",
+                                "#1876: " + operation_label + " should preserve deleted preview bottom bounds");
+                expect_contains(reorder_process.stdout_text, "\"deletedPreviewBoundsHeight\": 550",
+                                "#1876: " + operation_label + " should preserve deleted preview height");
                 expect_contains(reorder_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                                 "#1818: " + operation_label + " should advertise selected sections");
                 expect_contains(reorder_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
