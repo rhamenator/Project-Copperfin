@@ -3718,6 +3718,29 @@ void write_synthetic_report_table_for_extended_object_kind_json(
     expect(delete_result.ok, "#1762: synthetic report table should mark deleted picture object");
 }
 
+void write_synthetic_report_table_for_detail_header_footer_section_kind_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 32U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "9", "detail header expression", "0", "300", "detail-header-guid"},
+        {"9", "10", "detail footer expression", "300", "250", "detail-footer-guid"},
+        {"9", "10", "deleted detail footer expression", "550", "200", "deleted-detail-footer-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1763: synthetic report table for detail header/footer section JSON should be created");
+
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
+    expect(delete_result.ok, "#1763: synthetic report table should mark deleted detail footer section");
+}
+
 void write_synthetic_report_table_for_stable_deleted_layout_json(const std::filesystem::path& report_path) {
     write_synthetic_report_table_for_layout_json(report_path);
     const auto unique_id_result = copperfin::vfp::update_visual_object_property({
@@ -6374,6 +6397,125 @@ void test_studio_host_json_exposes_extended_report_object_kinds(
     run_extended_kind_summary(temp_root / "extended_object_kinds.lbx",
                               "extended_object_kinds.lbx",
                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_detail_header_footer_section_kinds(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_detail_header_footer_section_kind_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_detail_header_footer_sections = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_detail_header_footer_section_kind_json(asset_path);
+
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " detail header/footer section summary stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " detail header/footer section summary stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#1763: detail header/footer report/label section-kind JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1763: detail header/footer section-kind JSON should return report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#1763: detail header/footer label layouts should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"sectionCount\": 2",
+                        "#1763: detail header/footer section-kind JSON should summarize live sections");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1763: detail header/footer section-kind JSON should summarize deleted sections");
+        expect_contains(process.stdout_text, "\"sectionKindCount\": 2",
+                        "#1763: detail header/footer section-kind JSON should expose live kind bucket count");
+        expect_contains(process.stdout_text,
+                        "\"sectionKindCounts\": [\n"
+                        "        {\"kind\": \"detail_footer\", \"count\": 1},\n"
+                        "        {\"kind\": \"detail_header\", \"count\": 1}\n"
+                        "      ]",
+                        "#1763: detail header/footer section-kind JSON should count live detail header/footer buckets");
+        expect_contains(process.stdout_text, "\"deletedSectionKindCount\": 1",
+                        "#1763: detail header/footer section-kind JSON should expose deleted kind bucket count");
+        expect_contains(process.stdout_text,
+                        "\"deletedSectionKindCounts\": [\n"
+                        "        {\"kind\": \"detail_footer\", \"count\": 1}\n"
+                        "      ]",
+                        "#1763: detail header/footer section-kind JSON should count deleted detail footer buckets");
+        expect_contains(process.stdout_text, "\"sectionHeightTotal\": 550",
+                        "#1763: detail header/footer section-kind JSON should sum live section heights");
+        expect_contains(process.stdout_text, "\"deletedSectionHeightTotal\": 200",
+                        "#1763: detail header/footer section-kind JSON should sum deleted section heights");
+
+        const auto expect_selected_section = [&](const std::string& unique_id,
+                                                 const std::string& record_index,
+                                                 const std::string& object_code,
+                                                 const std::string& band_title,
+                                                 const std::string& band_kind,
+                                                 const std::string& selection_label) {
+            const auto section_process = run_process_capture(
+                studio_host_path,
+                {"--path", asset_path.string(), "--unique-id", unique_id, "--json"},
+                temp_root);
+
+            if (section_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " selected " << selection_label
+                          << " stdout:\n" << section_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " selected " << selection_label
+                          << " stderr:\n" << section_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(section_process.exit_code == 0,
+                   "#1763: selected detail header/footer section JSON should exit successfully");
+            expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#1763: selected detail header/footer JSON should advertise selected sections");
+            expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#1763: selected detail header/footer JSON should expose section selection kind");
+            expect_contains_in_order(
+                section_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"" + band_title + "\"",
+                    "\"bandKind\": \"" + band_kind + "\"",
+                    "\"recordIndex\": " + record_index,
+                    "\"objectCode\": " + object_code
+                },
+                "#1763: selected " + selection_label + " JSON should expose detail header/footer band metadata");
+        };
+
+        expect_selected_section("detail-header-guid", "0", "9", "Detail Header", "detail_header", "detail header");
+        expect_selected_section("detail-footer-guid", "1", "10", "Detail Footer", "detail_footer", "detail footer");
+        expect_selected_section("deleted-detail-footer-guid",
+                                "2",
+                                "10",
+                                "Detail Footer",
+                                "detail_footer",
+                                "deleted detail footer");
+    };
+
+    run_detail_header_footer_sections(temp_root / "detail_header_footer_sections.frx",
+                                      "detail_header_footer_sections.frx",
+                                      "report");
+    run_detail_header_footer_sections(temp_root / "detail_header_footer_sections.lbx",
+                                      "detail_header_footer_sections.lbx",
+                                      "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -78961,6 +79103,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
+    test_studio_host_json_exposes_detail_header_footer_section_kinds(argv[1]);
     test_studio_host_json_clamps_negative_report_layout_dimensions(argv[1]);
     test_studio_host_json_defaults_malformed_report_layout_numerics(argv[1]);
     test_studio_host_json_defaults_oversized_report_layout_numerics(argv[1]);
