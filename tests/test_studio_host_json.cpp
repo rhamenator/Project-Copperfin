@@ -7574,6 +7574,170 @@ void test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_se
     }
 }
 
+void test_studio_host_json_updates_deleted_detail_header_footer_section_tops_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() /
+        "copperfin_studio_host_deleted_detail_header_footer_section_top_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_deleted_detail_header_footer_section_top_update =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_deleted_detail_header_footer_section_expression_json(asset_path);
+
+            const auto update_header_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "deleted-detail-header-guid",
+                    "--property-name", "VPOS",
+                    "--property-value", "620",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_header_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-header section top update stdout:\n"
+                          << update_header_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-header section top update stderr:\n"
+                          << update_header_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_header_process.exit_code == 0,
+                   "#1808: deleted detail-header section top update by stable selection should exit successfully");
+            const auto header_top_property = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 1U,
+                .object_name = {},
+                .unique_id = "deleted-detail-header-guid",
+                .property_name = "VPOS"
+            });
+            expect(header_top_property.ok && header_top_property.exists &&
+                       header_top_property.value == "620",
+                   "#1808: deleted detail-header section top update should persist the VPOS field");
+            expect_contains(update_header_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1808: deleted detail-header section top update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_header_process.stdout_text, "\"isLabel\": true",
+                                "#1808: deleted detail-header label section top update should retain label identity");
+            }
+            expect_contains(update_header_process.stdout_text, "\"sectionCount\": 1",
+                            "#1808: deleted detail-header section top update should preserve live section count");
+            expect_contains(update_header_process.stdout_text, "\"deletedSectionCount\": 2",
+                            "#1808: deleted detail-header section top update should preserve deleted section count");
+            expect_contains(update_header_process.stdout_text, "\"sectionHeightTotal\": 500",
+                            "#1808: deleted detail-header section top update should preserve live section heights");
+            expect_contains(update_header_process.stdout_text, "\"deletedSectionHeightTotal\": 550",
+                            "#1808: deleted detail-header section top update should preserve deleted section heights");
+            expect_contains(update_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#1808: deleted detail-header section top update should preserve selected section availability");
+            expect_contains(update_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#1808: deleted detail-header section top update should preserve selection kind");
+            expect_contains_in_order(
+                update_header_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Header\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": true",
+                    "\"sectionIndex\": null",
+                    "\"sectionCount\": 0",
+                    "\"objectCode\": 9",
+                    "\"top\": 620",
+                    "\"height\": 300",
+                    "\"bottom\": 920"
+                },
+                "#1808: deleted detail-header section top update should refresh selected-section geometry");
+
+            const auto update_footer_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--set-property",
+                    "--unique-id", "deleted-detail-footer-guid",
+                    "--property-name", "VPOS",
+                    "--property-value", "940",
+                    "--json"
+                },
+                temp_root);
+
+            if (update_footer_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " deleted detail-footer section top update stdout:\n"
+                          << update_footer_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " deleted detail-footer section top update stderr:\n"
+                          << update_footer_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(update_footer_process.exit_code == 0,
+                   "#1808: deleted detail-footer section top update by stable selection should exit successfully");
+            const auto footer_top_property = copperfin::vfp::query_visual_object_property({
+                .path = asset_path.string(),
+                .record_index = 2U,
+                .object_name = {},
+                .unique_id = "deleted-detail-footer-guid",
+                .property_name = "VPOS"
+            });
+            expect(footer_top_property.ok && footer_top_property.exists &&
+                       footer_top_property.value == "940",
+                   "#1808: deleted detail-footer section top update should persist the VPOS field");
+            expect_contains(update_footer_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#1808: deleted detail-footer section top update should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(update_footer_process.stdout_text, "\"isLabel\": true",
+                                "#1808: deleted detail-footer label section top update should retain label identity");
+            }
+            expect_contains(update_footer_process.stdout_text, "\"sectionCount\": 1",
+                            "#1808: deleted detail-footer section top update should preserve live section count");
+            expect_contains(update_footer_process.stdout_text, "\"deletedSectionCount\": 2",
+                            "#1808: deleted detail-footer section top update should preserve deleted section count");
+            expect_contains(update_footer_process.stdout_text, "\"sectionHeightTotal\": 500",
+                            "#1808: deleted detail-footer section top update should preserve live section heights");
+            expect_contains(update_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 550",
+                            "#1808: deleted detail-footer section top update should preserve deleted section heights");
+            expect_contains(update_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#1808: deleted detail-footer section top update should preserve selected section availability");
+            expect_contains(update_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#1808: deleted detail-footer section top update should preserve selection kind");
+            expect_contains_in_order(
+                update_footer_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Footer\"",
+                    "\"bandKind\": \"detail_footer\"",
+                    "\"recordIndex\": 2",
+                    "\"deleted\": true",
+                    "\"sectionIndex\": null",
+                    "\"sectionCount\": 0",
+                    "\"objectCode\": 10",
+                    "\"top\": 940",
+                    "\"height\": 250",
+                    "\"bottom\": 1190"
+                },
+                "#1808: deleted detail-footer section top update should refresh selected-section geometry");
+        };
+
+    run_deleted_detail_header_footer_section_top_update(
+        temp_root / "deleted_detail_header_footer_section_top_stable.frx",
+        "deleted_detail_header_footer_section_top_stable.frx",
+        "report");
+    run_deleted_detail_header_footer_section_top_update(
+        temp_root / "deleted_detail_header_footer_section_top_stable.lbx",
+        "deleted_detail_header_footer_section_top_stable.lbx",
+        "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_detail_header_footer_object_containment(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -86548,6 +86712,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_clears_deleted_detail_header_footer_section_heights_by_stable_selection(argv[1]);
     test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_selection(argv[1]);
     test_studio_host_json_clears_detail_header_footer_section_tops_by_stable_selection(argv[1]);
+    test_studio_host_json_updates_deleted_detail_header_footer_section_tops_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_containment(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_detail_header_footer_object_font_metadata_by_stable_selection(argv[1]);
