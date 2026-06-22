@@ -5,6 +5,7 @@
 /.history/
 /vsix/**/bin/
 /vsix/**/obj/
+/.tmp/
 *.user
 *.suo
 *.VC.db
