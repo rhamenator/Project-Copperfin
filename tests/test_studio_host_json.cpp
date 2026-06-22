@@ -3894,6 +3894,26 @@ void write_synthetic_report_table_for_missing_root_expr_layout_json(
     expect(delete_result.ok, "#1723: synthetic report table should mark the no-EXPR settings row deleted");
 }
 
+void write_synthetic_report_table_for_missing_section_expr_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 48U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "3", "100", "500", "missing-expr-live-section-guid"},
+        {"9", "5", "900", "300", "missing-expr-deleted-section-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1724: synthetic report table without section EXPR schema should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 1U, true);
+    expect(delete_result.ok, "#1724: synthetic report table should mark the no-EXPR section deleted");
+}
+
 void write_synthetic_report_table_for_group_section_expression_json(const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJTYPE", .type = 'N', .length = 8U},
@@ -6312,6 +6332,166 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
     run_missing_root_expr_layout(temp_root / "missing_root_expr.lbx",
                                  "missing_root_expr.lbx",
                                  "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_preserves_report_sections_without_expr_schema(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_missing_section_expr_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_missing_section_expr_layout = [&](const fs::path& asset_path,
+                                                     const std::string& title,
+                                                     const std::string& label) {
+        write_synthetic_report_table_for_missing_section_expr_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " missing section EXPR summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " missing section EXPR summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1724: missing section EXPR schema should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1724: missing section EXPR layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1724: missing section EXPR label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
+                        "#1724: missing section EXPR layouts should not infer page setup");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1724: missing section EXPR layouts should preserve live section counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
+                        "#1724: missing section EXPR layouts should preserve deleted section counts");
+        expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 500",
+                        "#1724: missing section EXPR layouts should preserve live section heights");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionHeightTotal\": 300",
+                        "#1724: missing section EXPR layouts should preserve deleted section heights");
+        expect_contains(summary_process.stdout_text, "\"sectionKindCounts\": [\n        {\"kind\": \"group_header\", \"count\": 1}\n      ]",
+                        "#1724: missing live section EXPR layouts should preserve band-kind counts");
+        expect_contains(summary_process.stdout_text, "\"deletedSectionKindCounts\": [\n        {\"kind\": \"group_footer\", \"count\": 1}\n      ]",
+                        "#1724: missing deleted section EXPR layouts should preserve band-kind counts");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"group_header_0\"",
+                "\"title\": \"Group Header\"",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"objectCode\": 3",
+                "\"top\": 100",
+                "\"height\": 500",
+                "\"bottom\": 600"
+            },
+            "#1724: missing live section EXPR layouts should serialize null expression provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedSections\": [",
+                "\"id\": \"group_footer_1\"",
+                "\"title\": \"Group Footer\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCode\": 5",
+                "\"top\": 900",
+                "\"height\": 300",
+                "\"bottom\": 1200"
+            },
+            "#1724: missing deleted section EXPR layouts should serialize null expression provenance");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "0", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1724: missing section EXPR live selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1724: missing section EXPR live selection should advertise selected sections");
+        expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1724: missing section EXPR live selection should expose section selection kind");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_header_0\"",
+                "\"title\": \"Group Header\"",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 0",
+                "\"deleted\": false",
+                "\"objectCode\": 3",
+                "\"top\": 100",
+                "\"height\": 500",
+                "\"bottom\": 600"
+            },
+            "#1724: missing live section EXPR selection should expose section metadata with null expression provenance");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1724: missing section EXPR deleted selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#1724: missing section EXPR deleted selection should advertise selected sections");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#1724: missing section EXPR deleted selection should expose section selection kind");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_footer_1\"",
+                "\"title\": \"Group Footer\"",
+                "\"bandKind\": \"group_footer\"",
+                "\"expression\": \"\"",
+                "\"expressionFieldIndex\": null",
+                "\"expressionMemoBlockNumber\": 0",
+                "\"recordIndex\": 1",
+                "\"deleted\": true",
+                "\"objectCode\": 5",
+                "\"top\": 900",
+                "\"height\": 300",
+                "\"bottom\": 1200"
+            },
+            "#1724: missing deleted section EXPR selection should expose section metadata with null expression provenance");
+    };
+
+    run_missing_section_expr_layout(temp_root / "missing_section_expr.frx",
+                                    "missing_section_expr.frx",
+                                    "report");
+    run_missing_section_expr_layout(temp_root / "missing_section_expr.lbx",
+                                    "missing_section_expr.lbx",
+                                    "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -72082,6 +72262,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_ignores_missing_report_layout_classification_fields(argv[1]);
     test_studio_host_json_exposes_unknown_report_band_codes(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
+    test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_report_group_footer_expressions_by_stable_selection(argv[1]);
