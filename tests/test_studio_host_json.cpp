@@ -4153,6 +4153,31 @@ void write_synthetic_report_table_for_unresolved_unplaced_object_memo_layout_jso
     expect(create_result.ok, "#1739: synthetic report table with unresolved unplaced object memo placeholders should be created");
 }
 
+void write_synthetic_report_table_for_unresolved_geometry_memo_layout_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "HPOS", .type = 'C', .length = 24U},
+        {.name = "VPOS", .type = 'C', .length = 24U},
+        {.name = "WIDTH", .type = 'C', .length = 24U},
+        {.name = "HEIGHT", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"9", "4", "detail.placeholder.geometry", "", "<memo block 70>", "", "<memo block 71>"},
+        {"8", "0", "customer.unresolved.geometry", "<memo block 72>", "<memo block 73>",
+         "<memo block 74>", "<memo block 75>"},
+        {"5", "", "\"Deleted unresolved geometry\"", "<memo block 76>", "<memo block 77>",
+         "<memo block 78>", "<memo block 79>"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok, "#1740: synthetic report table with unresolved geometry memo placeholders should be created");
+    const auto delete_result = copperfin::vfp::set_record_deleted_flag(report_path.string(), 2U, true);
+    expect(delete_result.ok, "#1740: synthetic report table should mark unresolved geometry object deleted");
+}
+
 void write_synthetic_report_table_for_missing_root_expr_layout_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -8196,6 +8221,181 @@ void test_studio_host_json_suppresses_unresolved_unplaced_report_object_memo_pla
     run_unresolved_unplaced_object_memo_layout(temp_root / "unresolved_unplaced_object_memo.lbx",
                                                "unresolved_unplaced_object_memo.lbx",
                                                "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_unresolved_report_geometry_memo_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_unresolved_geometry_memo_layout = [&](const fs::path& asset_path,
+                                                         const std::string& title,
+                                                         const std::string& label) {
+        write_synthetic_report_table_for_unresolved_geometry_memo_layout_json(asset_path);
+
+        const auto summary_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--json"},
+            temp_root);
+
+        if (summary_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " unresolved geometry memo summary stdout:\n"
+                      << summary_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " unresolved geometry memo summary stderr:\n"
+                      << summary_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(summary_process.exit_code == 0,
+               "#1740: unresolved geometry memo placeholders should keep report/label inspection non-failing");
+        expect_contains(summary_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1740: unresolved geometry memo layouts should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(summary_process.stdout_text, "\"isLabel\": true",
+                            "#1740: unresolved geometry memo label layouts should retain label identity");
+        }
+        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1740: unresolved geometry memo layouts should expose defaulted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1740: unresolved geometry memo live preview width should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"previewBoundsHeight\": 0",
+                        "#1740: unresolved geometry memo live preview height should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1740: unresolved geometry memo layouts should expose deleted defaulted preview bounds");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1740: unresolved geometry memo deleted preview width should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#1740: unresolved geometry memo deleted preview height should stay non-inverted");
+        expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
+                        "#1740: unresolved geometry memo layouts should preserve section rows");
+        expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
+                        "#1740: unresolved geometry memo layouts should preserve live object counts");
+        expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
+                        "#1740: unresolved geometry memo layouts should preserve deleted object counts");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"detail_0\"",
+                "\"top\": 0",
+                "\"topFieldIndex\": 4",
+                "\"height\": 0",
+                "\"heightFieldIndex\": 6",
+                "\"bottom\": 0"
+            },
+            "#1740: unresolved section geometry memo placeholders should default to zero with field provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"objects\": [",
+                "\"recordIndex\": 1",
+                "\"left\": 0",
+                "\"leftFieldIndex\": 3",
+                "\"top\": 0",
+                "\"topFieldIndex\": 4",
+                "\"width\": 0",
+                "\"widthFieldIndex\": 5",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"heightFieldIndex\": 6",
+                "\"bottom\": 0"
+            },
+            "#1740: unresolved live object geometry memo placeholders should default to zero with field provenance");
+        expect_contains_in_order(
+            summary_process.stdout_text,
+            {
+                "\"deletedObjects\": [",
+                "\"recordIndex\": 2",
+                "\"left\": 0",
+                "\"leftFieldIndex\": 3",
+                "\"top\": 0",
+                "\"topFieldIndex\": 4",
+                "\"width\": 0",
+                "\"widthFieldIndex\": 5",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"heightFieldIndex\": 6",
+                "\"bottom\": 0"
+            },
+            "#1740: unresolved deleted object geometry memo placeholders should default to zero with field provenance");
+        expect_not_contains(summary_process.stdout_text, "<memo block",
+                            "#1740: unresolved geometry memo placeholders should not leak into summary JSON");
+
+        const auto live_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "1", "--json"},
+            temp_root);
+
+        expect(live_process.exit_code == 0,
+               "#1740: unresolved live object geometry memo selection should keep inspection non-failing");
+        expect_contains(live_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1740: unresolved live object geometry memo selection should advertise selected objects");
+        expect_contains_in_order(
+            live_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 1",
+                "\"left\": 0",
+                "\"leftFieldIndex\": 3",
+                "\"top\": 0",
+                "\"topFieldIndex\": 4",
+                "\"width\": 0",
+                "\"widthFieldIndex\": 5",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"heightFieldIndex\": 6",
+                "\"bottom\": 0"
+            },
+            "#1740: unresolved live object geometry memo selection should expose zero non-inverted geometry");
+        expect_not_contains(live_process.stdout_text, "<memo block",
+                            "#1740: unresolved live object geometry memo placeholders should not leak into selection JSON");
+
+        const auto deleted_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--record", "2", "--json"},
+            temp_root);
+
+        expect(deleted_process.exit_code == 0,
+               "#1740: unresolved deleted object geometry memo selection should keep inspection non-failing");
+        expect_contains(deleted_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#1740: unresolved deleted object geometry memo selection should advertise selected objects");
+        expect_contains_in_order(
+            deleted_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 2",
+                "\"deleted\": true",
+                "\"left\": 0",
+                "\"leftFieldIndex\": 3",
+                "\"top\": 0",
+                "\"topFieldIndex\": 4",
+                "\"width\": 0",
+                "\"widthFieldIndex\": 5",
+                "\"right\": 0",
+                "\"height\": 0",
+                "\"heightFieldIndex\": 6",
+                "\"bottom\": 0"
+            },
+            "#1740: unresolved deleted object geometry memo selection should expose zero non-inverted geometry");
+        expect_not_contains(deleted_process.stdout_text, "<memo block",
+                            "#1740: unresolved deleted object geometry memo placeholders should not leak into selection JSON");
+    };
+
+    run_unresolved_geometry_memo_layout(temp_root / "unresolved_geometry_memo.frx",
+                                        "unresolved_geometry_memo.frx",
+                                        "report");
+    run_unresolved_geometry_memo_layout(temp_root / "unresolved_geometry_memo.lbx",
+                                        "unresolved_geometry_memo.lbx",
+                                        "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -74852,6 +75052,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_suppresses_unresolved_report_section_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_placeholders(argv[1]);
     test_studio_host_json_suppresses_unresolved_unplaced_report_object_memo_placeholders(argv[1]);
+    test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders(argv[1]);
     test_studio_host_json_preserves_report_settings_without_root_expr_schema(argv[1]);
     test_studio_host_json_preserves_report_sections_without_expr_schema(argv[1]);
     test_studio_host_json_defaults_report_sections_without_geometry_schema(argv[1]);
