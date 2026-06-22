@@ -1,3 +1,4 @@
+- 2026-06-22: E3/#1772 deleted detail header/footer report/label object-expression edit coverage shipped. Studio host regression coverage now proves stable-selected deleted Detail Header/Footer FRX/LBX label/field objects support `--set-property --unique-id ... --property-name EXPR --property-value ... --json` and `--clear-property --unique-id ... --property-name EXPR --json`, preserve deleted state, persist refreshed or blank EXPR memo data, refresh deleted-object and selected-object expression text/provenance, keep selected containing-section availability false/null instead of fabricating live section membership, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1771 deleted detail header/footer report/label object-expression selection coverage shipped. Studio host regression coverage now proves stable-selected deleted Detail Header/Footer FRX/LBX label/field objects expose deleted-object and selected-object expression text/provenance, preserve deleted state, keep selected containing-section availability false/null instead of fabricating live section membership, preserve deleted placed-object counts, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1770 detail header/footer report/label object-expression edit coverage shipped. Studio host regression coverage now proves stable-selected Detail Header/Footer FRX/LBX label/field objects support `--set-property --unique-id ... --property-name EXPR --property-value ... --json` and `--clear-property --unique-id ... --property-name EXPR --json`, persist refreshed or blank EXPR memo data, refresh selected-object expression text/provenance plus containing-section metadata, keep inspection non-failing, and retain label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
 - 2026-06-22: E3/#1769 detail header/footer report/label object-expression selection coverage shipped. Studio host regression coverage now proves stable-selected live FRX/LBX label/field objects placed inside Detail Header and Detail Footer bands expose selected-object expression text, expression field/memo provenance, object kind, containing-section ids/record indexes, section-relative coordinates, containing-section object counts, non-failing inspection, and label identity. Fresh validation passed with `git diff --check`, `c++ -std=c++20 -Iinclude -fsyntax-only tests/test_studio_host_json.cpp`, `make -C build copperfin_studio_host test_studio_host_json`, and `./build/tests/test_studio_host_json ./build/copperfin_studio_host`. Parent `#24` remains open.
@@ -1786,7 +1787,7 @@ flowchart TD
         C1["Build / Package / Debug Pipeline<br/>baseline shipped; open depth"]
         C2["Shared Design Model<br/>#22 closed"]
         C3["Designer Interactions<br/>#23 open evidence-audit queue"]
-        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1771 latest"]
+        C4["Report / Label Designer Fidelity<br/>#24 active<br/>#1772 latest"]
         C5["VS / Standalone / Language Service<br/>open depth; managed gate active"]
     end
 
@@ -1857,7 +1858,7 @@ flowchart LR
         direction TB
         SE1["E1 Shared Design Model<br/>closed<br/>#22"]
         SE2["E2 Designer Interaction<br/>open evidence-audit queue<br/>#23"]
-        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1771 latest<br/>#24"]
+        SE3["E3 Report/Label Designer Completion<br/>active<br/>#1772 latest<br/>#24"]
     end
 
     subgraph SF[Phase F]
