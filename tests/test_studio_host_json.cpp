@@ -70943,6 +70943,139 @@ void test_studio_host_json_renames_report_visual_object_batches_by_stable_select
     }
 }
 
+void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_report_visual_object_duplicate_batch_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_report_object_duplicate_batch = [&](const fs::path& asset_path,
+                                                       const std::string& title,
+                                                       const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        const std::size_t before_count = visual_object_count(asset_path);
+        const auto duplicate_batch_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-duplicate-batch",
+                "--path", asset_path.string(),
+                "--selected-unique-id", "left-field-guid",
+                "--new-unique-id", "left-copy-guid",
+                "--selected-unique-id", "right-field-guid",
+                "--new-unique-id", "right-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (duplicate_batch_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable report object duplicate-batch stdout:\n"
+                      << duplicate_batch_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable report object duplicate-batch stderr:\n"
+                      << duplicate_batch_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(duplicate_batch_process.exit_code == 0,
+               "#1844: report/label stable visual-object duplicate-batch JSON should exit successfully");
+        expect_contains(duplicate_batch_process.stdout_text, "\"visualObjectDuplicateBatch\": {",
+                        "#1844: report/label stable visual-object duplicate-batch JSON should expose a batch object");
+        expect_contains(duplicate_batch_process.stdout_text, "\"affectedObjectCount\": 2",
+                        "#1844: report/label stable visual-object duplicate-batch JSON should expose affected object counts");
+        expect_contains(duplicate_batch_process.stdout_text, "\"dryRun\": false",
+                        "#1844: report/label stable visual-object duplicate-batch JSON should expose committed state");
+        expect_contains(duplicate_batch_process.stdout_text, "\"mutatesAsset\": true",
+                        "#1844: report/label stable visual-object duplicate-batch JSON should expose mutation state");
+        expect_contains(duplicate_batch_process.stdout_text, "\"undoAvailable\": false",
+                        "#1844: report/label stable visual-object duplicate-batch JSON should expose undo availability");
+        expect(visual_object_count(asset_path) == before_count + 2U &&
+                   visual_object_exists(asset_path, "left-field-guid") &&
+                   visual_object_exists(asset_path, "right-field-guid") &&
+                   visual_object_exists(asset_path, "left-copy-guid") &&
+                   visual_object_exists(asset_path, "right-copy-guid") &&
+                   visual_object_order(asset_path) ==
+                       "left-field-guid,middle-field-guid,right-field-guid,left-copy-guid,right-copy-guid",
+               "#1844: report/label stable visual-object duplicate-batch should append duplicates after original objects");
+
+        const auto reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "left-copy-guid", "--json"},
+            temp_root);
+        expect(reopen_process.exit_code == 0,
+               "#1844: report/label stable visual-object duplicate-batch reopen should exit successfully");
+        expect_contains(reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#1844: report/label stable visual-object duplicate-batch should leave report-layout JSON readable");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
+                            "#1844: label stable visual-object duplicate-batch should retain label identity");
+        }
+        expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"left-copy-guid\"",
+                        "#1844: report/label stable visual-object duplicate-batch should preserve selected duplicate identity after reopen");
+        expect_contains_in_order(
+            reopen_process.stdout_text,
+            {
+                "\"selectedReportObject\": {",
+                "\"recordIndex\": 5",
+                "\"sectionObjectIndex\": 3",
+                "\"sectionObjectCount\": 5",
+                "\"objectKind\": \"field\"",
+                "\"expression\": \"left.value\""
+            },
+            "#1844: report/label stable visual-object duplicate-batch should refresh selected duplicate metadata after reopen");
+    };
+
+    const auto run_report_object_duplicate_batch_rollback = [&](const fs::path& asset_path,
+                                                                const std::string& label) {
+        write_synthetic_report_table_for_layout_reorder_json(asset_path);
+        const std::size_t before_count = visual_object_count(asset_path);
+        const auto rollback_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-object-duplicate-batch",
+                "--path", asset_path.string(),
+                "--selected-unique-id", "left-field-guid",
+                "--new-unique-id", "left-rollback-copy-guid",
+                "--selected-unique-id", "right-field-guid",
+                "--new-unique-id", "left-rollback-copy-guid",
+                "--json"
+            },
+            temp_root);
+
+        expect(rollback_process.exit_code == 4,
+               "#1844: report/label stable visual-object duplicate-batch identity collision should fail");
+        expect_contains(rollback_process.stdout_text, "\"visualObjectDuplicateBatch\": null",
+                        "#1844: failed report/label stable visual-object duplicate-batch JSON should not expose stale batch objects");
+        expect_contains(rollback_process.stdout_text, "The requested replacement identity already exists in the asset.",
+                        "#1844: failed report/label stable visual-object duplicate-batch JSON should report collision errors");
+        expect(visual_object_count(asset_path) == before_count &&
+                   visual_object_exists(asset_path, "left-field-guid") &&
+                   visual_object_exists(asset_path, "middle-field-guid") &&
+                   visual_object_exists(asset_path, "right-field-guid") &&
+                   !visual_object_exists(asset_path, "left-rollback-copy-guid") &&
+                   visual_object_order(asset_path) == "left-field-guid,middle-field-guid,right-field-guid",
+               "#1844: failed report/label stable visual-object duplicate-batch should roll back earlier duplicates");
+        (void)label;
+    };
+
+    run_report_object_duplicate_batch(temp_root / "report_object_duplicate_batch.frx",
+                                      "report_object_duplicate_batch.frx",
+                                      "report");
+    run_report_object_duplicate_batch(temp_root / "report_object_duplicate_batch.lbx",
+                                      "report_object_duplicate_batch.lbx",
+                                      "label");
+    run_report_object_duplicate_batch_rollback(temp_root / "report_object_duplicate_batch_rollback.frx",
+                                               "report");
+    run_report_object_duplicate_batch_rollback(temp_root / "report_object_duplicate_batch_rollback.lbx",
+                                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_clears_properties_by_stable_selectors(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -95998,6 +96131,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_updates_visual_object_batches(argv[1]);
     test_studio_host_json_updates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_renames_report_visual_object_batches_by_stable_selection(argv[1]);
+    test_studio_host_json_duplicates_report_visual_object_batches_by_stable_selection(argv[1]);
     test_studio_host_json_clears_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_renames_properties_by_stable_selectors(argv[1]);
     test_studio_host_json_applies_deleted_states_by_stable_selectors(argv[1]);
