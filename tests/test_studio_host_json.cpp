@@ -43030,6 +43030,13 @@ void test_studio_host_json_updates_report_settings_memos_by_record_selection(con
                "#1527: report/label settings memo update should persist the EXPR memo field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1527: report/label settings memo update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2038: label settings memo update should retain label identity");
+        }
+        expect_full_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2038: record-selected report/label settings memo update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1527: report/label settings memo update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"orientationCode\": 1",
@@ -43124,6 +43131,13 @@ void test_studio_host_json_updates_deleted_report_settings_memos_by_record_selec
                "#1579: deleted report/label settings memo update should persist the EXPR memo field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1579: deleted report/label settings memo update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2038: label deleted settings memo update should retain label identity");
+        }
+        expect_full_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2038: record-selected deleted report/label settings memo update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1579: deleted report/label settings memo update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -43236,6 +43250,13 @@ void test_studio_host_json_clears_deleted_report_settings_memos_by_record_select
                "#1580: deleted report/label settings memo clear should preserve the direct EXPR field carrier");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1580: deleted report/label settings memo clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2038: label deleted settings memo clear should retain label identity");
+        }
+        expect_full_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2038: record-selected deleted report/label settings memo clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1580: deleted report/label settings memo clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
@@ -43327,6 +43348,13 @@ void test_studio_host_json_clears_report_settings_memos_by_record_selection(
                "#1556: report/label settings memo clear should preserve the direct EXPR field carrier");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1556: report/label settings memo clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2038: label settings memo clear should retain label identity");
+        }
+        expect_full_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2038: record-selected report/label settings memo clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1556: report/label settings memo clear should preserve direct-field page setup availability");
         expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
