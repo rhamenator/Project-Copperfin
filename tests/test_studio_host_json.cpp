@@ -60153,6 +60153,30 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
 
     const fs::path report_path = temp_root / "summary.frx";
     write_synthetic_form_asset(report_path);
+    const auto report_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--json"},
+        temp_root);
+
+    if (report_process.exit_code != 0) {
+        std::cerr << "studio host report stdout:\n" << report_process.stdout_text << "\n";
+        std::cerr << "studio host report stderr:\n" << report_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(report_process.exit_code == 0,
+           "#2073: Studio host report JSON smoke should exit successfully");
+    expect_contains(report_process.stdout_text, "\"kind\": \"report\"",
+                    "#2073: report JSON should preserve report document kind");
+    expect_contains(report_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+                    "#2073: report documents should default to report-expression JSON contexts");
+    expect_contains(report_process.stdout_text, "\"builderCount\": 1",
+                    "#2073: report JSON should expose report builder count");
+    expect_contains(report_process.stdout_text, "\"id\": \"report-builder\"",
+                    "#2073: report JSON should expose report builder ids");
+    expect_not_contains(report_process.stdout_text, "\"id\": \"label-wizard\"",
+                        "#2073: report JSON should not expose label wizard ids");
+
     const auto report_data_environment_symbol_process = run_process_capture(
         studio_host_path,
         {"--path", report_path.string(), "--symbol", "Dataenvironment.OpenTables", "--json"},
