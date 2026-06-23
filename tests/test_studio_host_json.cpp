@@ -60144,6 +60144,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#1011: label JSON should preserve label document kind");
     expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
                     "#1011: label documents should default to label-expression JSON contexts");
+    expect_contains(label_process.stdout_text, "\"editorActionCount\": 5",
+                    "#2076: label expression contexts should expose the full report/label editor-action set");
+    expect_contains(label_process.stdout_text, "\"id\": \"edit-report-expression\"",
+                    "#2076: label expression contexts should expose expression editor actions");
+    expect_contains(label_process.stdout_text, "\"id\": \"show-toolbox\"",
+                    "#2076: label expression contexts should expose toolbox editor actions");
+    expect_contains(label_process.stdout_text, "\"id\": \"edit-data-environment\"",
+                    "#2076: label expression contexts should expose data-environment editor actions");
     expect_contains(label_process.stdout_text, "\"builderCount\": 1",
                     "#1011: label JSON should expose label builder count");
     expect_contains(label_process.stdout_text, "\"id\": \"label-wizard\"",
@@ -60170,6 +60178,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#2073: report JSON should preserve report document kind");
     expect_contains(report_process.stdout_text, "\"selectionContext\": \"report_expression\"",
                     "#2073: report documents should default to report-expression JSON contexts");
+    expect_contains(report_process.stdout_text, "\"editorActionCount\": 5",
+                    "#2076: report expression contexts should expose the full report/label editor-action set");
+    expect_contains(report_process.stdout_text, "\"id\": \"edit-report-expression\"",
+                    "#2076: report expression contexts should expose expression editor actions");
+    expect_contains(report_process.stdout_text, "\"id\": \"show-toolbox\"",
+                    "#2076: report expression contexts should expose toolbox editor actions");
+    expect_contains(report_process.stdout_text, "\"id\": \"edit-data-environment\"",
+                    "#2076: report expression contexts should expose data-environment editor actions");
     expect_contains(report_process.stdout_text, "\"builderCount\": 1",
                     "#2073: report JSON should expose report builder count");
     expect_contains(report_process.stdout_text, "\"id\": \"report-builder\"",
