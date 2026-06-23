@@ -76973,6 +76973,7 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
             "--toolbox-create-dispatch-catalog",
             "--toolbox-context", "report",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Report Dispatch Catalog",
             "--admit-create-operation", "true",
             "--json"
         },
@@ -76997,8 +76998,14 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
         "#1376: report toolbox-create-dispatch-catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2108: report toolbox-create-dispatch-catalog JSON should preserve report parent payloads");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2145: report toolbox-create-dispatch-catalog JSON should expose caller field names");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyValue\": \"Report Dispatch Catalog\"",
+        "#2145: report toolbox-create-dispatch-catalog JSON should expose caller field values");
     expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1254: report toolbox-create-dispatch-catalog JSON should preserve report dispatch context");
+    expect_contains(report_catalog_process.stdout_text, "\"--field-value\", \"CAPTION=Report Dispatch Catalog\"",
+        "#2145: report toolbox-create-dispatch-catalog JSON should preserve report dispatch field arguments");
     expect_contains(report_catalog_process.stdout_text, "\"dryRun\": false",
         "#2108: report toolbox-create-dispatch-catalog JSON should expose non-dry-run dispatch state");
     expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": true",
