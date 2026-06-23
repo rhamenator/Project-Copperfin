@@ -74694,27 +74694,31 @@ void test_studio_host_json_plans_toolbox_object_creation_from_palette_dispatch(
         },
         temp_root);
     expect(label_plan_process.exit_code == 0,
-        "#2090: label toolbox-create-from-dispatch-plan JSON command should exit successfully");
+        "#2139: label toolbox-create-from-dispatch-plan JSON command should exit successfully");
+    expect_contains(label_plan_process.stdout_text, "\"toolboxCreatePlan\": {",
+        "#2139: label toolbox-create-from-dispatch-plan JSON should expose stable create plans");
+    expect_contains(label_plan_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#2139: label toolbox-create-from-dispatch-plan JSON should use dispatch toolbox contexts");
     expect_contains(label_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should resolve report contexts");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should resolve report contexts");
     expect_contains(label_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should expose label plans");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should expose label plans");
     expect_contains(label_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should expose generated label names");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should expose generated label names");
     expect_contains(label_plan_process.stdout_text, "\"uniqueId\": \"dispatch-label-plan-guid\"",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should expose label unique ids");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should expose label unique ids");
     expect_contains(label_plan_process.stdout_text, "\"parentName\": \"DetailBand\"",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should expose label parent overrides");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should expose label parent overrides");
     expect_contains(label_plan_process.stdout_text, "\"propertyValue\": \"Dispatch Label Plan\"",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should expose label field values");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should expose label field values");
     expect_contains(label_plan_process.stdout_text, "\"dryRun\": true",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should remain a create plan");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should remain a create plan");
     expect_contains(label_plan_process.stdout_text, "\"mutatesAsset\": false",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should remain non-mutating");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should remain non-mutating");
     expect_not_contains(label_plan_process.stdout_text, "\"className\": \"TextBox\"",
-        "#2090: label toolbox-create-from-dispatch-plan JSON should exclude form-only textbox plans");
+        "#2139: label toolbox-create-from-dispatch-plan JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
-        "#2090: label toolbox-create-from-dispatch-plan host command should not mutate assets");
+        "#2139: label toolbox-create-from-dispatch-plan host command should not mutate assets");
 
     const auto non_admitted_process = run_process_capture(
         studio_host_path,
