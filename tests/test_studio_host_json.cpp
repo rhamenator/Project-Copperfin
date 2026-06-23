@@ -76566,6 +76566,7 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
             "--toolbox-create-plan-catalog",
             "--toolbox-context", "report",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Report Plan Catalog",
             "--json"
         },
         temp_root);
@@ -76591,6 +76592,10 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
         "#1244: report toolbox-create-plan-catalog JSON should expose generated label names");
     expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2107: report toolbox-create-plan-catalog JSON should preserve report parent payloads");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2143: report toolbox-create-plan-catalog JSON should expose caller field names");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyValue\": \"Report Plan Catalog\"",
+        "#2143: report toolbox-create-plan-catalog JSON should expose caller field values");
     expect_contains(report_catalog_process.stdout_text, "\"dryRun\": true",
         "#2107: report toolbox-create-plan-catalog JSON should remain dry-run");
     expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": false",
