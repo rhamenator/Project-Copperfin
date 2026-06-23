@@ -53062,6 +53062,8 @@ void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_se
                         "#1858: report/label stable visual-object duplicate-subtree JSON should expose mutation state");
         expect_contains(duplicate_process.stdout_text, "\"undoAvailable\": false",
                         "#1858: report/label stable visual-object duplicate-subtree JSON should expose undo availability");
+        expect_contains(duplicate_process.stdout_text, "\"undoLabel\": \"\"",
+                        "#2173: report/label stable visual-object duplicate-subtree JSON should expose empty undo labels");
         expect(visual_object_count(asset_path) == before_count + 1U &&
                    visual_object_exists(asset_path, "left-field-guid") &&
                    visual_object_exists(asset_path, "middle-field-guid") &&
