@@ -74886,28 +74886,40 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
         },
         temp_root);
     expect(report_process.exit_code == 0,
-        "#1314: report toolbox-create-from-dispatch JSON command should exit successfully");
+        "#2137: report toolbox-create-from-dispatch JSON command should exit successfully");
+    expect_contains(report_process.stdout_text, "\"toolboxCreateFromDispatch\": {",
+        "#2137: report toolbox-create-from-dispatch JSON should expose a stable result object");
+    expect_contains(report_process.stdout_text, "\"createPlanOk\": true",
+        "#2137: report toolbox-create-from-dispatch JSON should expose create-plan state");
+    expect_contains(report_process.stdout_text, "\"createResult\": {",
+        "#2137: report toolbox-create-from-dispatch JSON should expose lower-level create results");
+    expect_contains(report_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#2137: report toolbox-create-from-dispatch JSON should use dispatch toolbox contexts");
     expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
-        "#1314: report toolbox-create-from-dispatch JSON should resolve report contexts");
+        "#2137: report toolbox-create-from-dispatch JSON should resolve report contexts");
     expect_contains(report_process.stdout_text, "\"objectName\": \"lbl1\"",
-        "#1314: report toolbox-create-from-dispatch JSON should expose generated label names");
+        "#2137: report toolbox-create-from-dispatch JSON should expose generated label names");
     expect_contains(report_process.stdout_text, "\"uniqueId\": \"dispatch-host-report-label-guid\"",
-        "#1314: report toolbox-create-from-dispatch JSON should expose report label unique ids");
+        "#2137: report toolbox-create-from-dispatch JSON should expose report label unique ids");
     expect_contains(report_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
-        "#1384: report toolbox-create-from-dispatch JSON should summarize created report object names");
+        "#2137: report toolbox-create-from-dispatch JSON should summarize created report object names");
     expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-report-label-guid\"]",
-        "#1384: report toolbox-create-from-dispatch JSON should summarize created report unique ids");
+        "#2137: report toolbox-create-from-dispatch JSON should summarize created report unique ids");
     expect_contains(report_process.stdout_text, "\"createErrors\": []",
-        "#2105: report toolbox-create-from-dispatch JSON should summarize empty create errors");
+        "#2137: report toolbox-create-from-dispatch JSON should summarize empty create errors");
     expect_contains(report_process.stdout_text, "\"propertyValue\": \"Dispatch Report\"",
-        "#2105: report toolbox-create-from-dispatch JSON should preserve report label field values");
+        "#2137: report toolbox-create-from-dispatch JSON should preserve report label field values");
+    expect_contains(report_process.stdout_text, "\"dryRun\": false",
+        "#2137: report toolbox-create-from-dispatch JSON should expose execution state");
+    expect_contains(report_process.stdout_text, "\"mutatesAsset\": true",
+        "#2137: report toolbox-create-from-dispatch JSON should expose mutation state");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
-        "#1314: report toolbox-create-from-dispatch JSON should exclude form-only textbox metadata");
+        "#2137: report toolbox-create-from-dispatch JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 2U,
-        "#1314: report toolbox-create-from-dispatch host command should mutate the asset exactly once");
+        "#2137: report toolbox-create-from-dispatch host command should mutate the asset exactly once");
     expect(visual_object_property(form_path, "dispatch-host-report-label-guid", "CAPTION") ==
             "Dispatch Report",
-        "#2105: report toolbox-create-from-dispatch host command should persist caller fields");
+        "#2137: report toolbox-create-from-dispatch host command should persist caller fields");
 
     const auto label_process = run_process_capture(
         studio_host_path,
