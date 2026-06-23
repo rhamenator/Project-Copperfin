@@ -36613,6 +36613,38 @@ void test_studio_host_json_updates_report_section_tops_by_record_selection(const
                "#1526: report/label section top update should persist the VPOS field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1526: report/label section top update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#1915: label section top update should retain label identity");
+        }
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1915: report/label section top update should preserve preview bounds availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1915: report/label section top update should preserve preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1915: report/label section top update should preserve preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1915: report/label section top update should preserve preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1915: report/label section top update should preserve preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1915: report/label section top update should preserve preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1915: report/label section top update should preserve preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1915: report/label section top update should preserve deleted preview availability");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1915: report/label section top update should preserve deleted preview left bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1915: report/label section top update should preserve deleted preview top bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1915: report/label section top update should preserve deleted preview right bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1915: report/label section top update should preserve deleted preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1915: report/label section top update should preserve deleted preview widths");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1915: report/label section top update should preserve deleted preview heights");
         expect_contains(update_process.stdout_text, "\"sectionHeightTotal\": 7000",
                         "#1526: report/label section top update should preserve section height totals");
         expect_contains(update_process.stdout_text, "\"placedObjectCount\": 2",
