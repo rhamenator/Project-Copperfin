@@ -25,7 +25,7 @@ Current state:
 Active issue lanes:
 
 - critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- live execution is currently centered on E3/#24 report/label designer fidelity; latest shipped child `#1989` covers selected summary label section preview metadata; E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
+- live execution is currently centered on E3/#24 report/label designer fidelity; latest shipped child `#1990` covers selected deleted summary report section preview metadata; E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
 
 Execution rule:
 
@@ -75,7 +75,7 @@ Current state:
 
 - `#22` is closed; `#23` and `#24` remain open as designer lane parents.
 - `#23` still has many open evidence-audit child rows; close completed children only with specific issue/test/validation evidence, and keep parent `#23` open until root-level closure evidence is explicit.
-- `#24` remains the active E3 report/label lane; latest shipped child is `#1989`, so inspect live GitHub state and create or pick the next prompt-sized E3 child before more report/label implementation unless a higher-weight blocker is open.
+- `#24` remains the active E3 report/label lane; latest shipped child is `#1990`, so inspect live GitHub state and create or pick the next prompt-sized E3 child before more report/label implementation unless a higher-weight blocker is open.
 - `#27`-`#29` currently have no downstream open native slice queue in the tracked handoff (`#178`-`#183`, `#395`-`#401` shipped); re-audit those parent issues before opening new language-service children.
 
 ## Phase F: Federation, Interop, And Modern Platform
