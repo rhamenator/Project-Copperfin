@@ -49893,6 +49893,13 @@ void test_studio_host_json_updates_deleted_report_column_spacing_fields_by_recor
                "#1597: deleted report/label column-spacing field update should persist the COLSPACING field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1597: deleted report/label column-spacing field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2034: label deleted column-spacing field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2034: record-selected deleted report/label column-spacing update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1597: deleted report/label column-spacing field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -49988,6 +49995,13 @@ void test_studio_host_json_clears_deleted_report_column_spacing_fields_by_record
                "#1598: deleted report/label column-spacing field clear should blank the COLSPACING field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1598: deleted report/label column-spacing field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2034: label deleted column-spacing field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2034: record-selected deleted report/label column-spacing clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1598: deleted report/label column-spacing field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -50082,6 +50096,13 @@ void test_studio_host_json_updates_report_column_spacing_fields_by_record_select
                "#1540: report/label column-spacing field update should persist the COLSPACING field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1540: report/label column-spacing field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2034: label column-spacing field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2034: record-selected report/label column-spacing update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1540: report/label column-spacing field update should not fabricate page setup availability");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -50160,6 +50181,13 @@ void test_studio_host_json_clears_report_column_spacing_fields_by_record_selecti
                "#1555: report/label column-spacing field clear should blank the COLSPACING field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1555: report/label column-spacing field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2034: label column-spacing field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2034: record-selected report/label column-spacing clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1555: report/label column-spacing field clear should not fabricate page setup availability");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": true",
