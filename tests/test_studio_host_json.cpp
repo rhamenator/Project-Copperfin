@@ -74201,6 +74201,38 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch(cons
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1303: report selection-toolbox-create-dispatch-plan JSON should exclude form-only textbox plans");
 
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-dispatch-plan", "label",
+            "--selection-context", "label_expression",
+            "--parent-name", "DetailBand",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(label_process.exit_code == 0,
+        "#2082: label selection-toolbox-create-dispatch-plan JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should expose label selections");
+    expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should expose label dispatches");
+    expect_contains(label_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should expose generated label names");
+    expect_contains(label_process.stdout_text, "\"--toolbox-context\", \"report\"",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should preserve report context arguments");
+    expect_contains(label_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"]",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should summarize dispatch-ready label item ids");
+    expect_contains(label_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should summarize empty dispatch errors");
+    expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2082: label selection-toolbox-create-dispatch-plan JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2082: label selection-toolbox-create-dispatch-plan host command should not mutate assets");
+
     const auto unavailable_process = run_process_capture(
         studio_host_path,
         {
