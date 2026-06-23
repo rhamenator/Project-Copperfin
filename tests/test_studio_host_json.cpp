@@ -50669,6 +50669,13 @@ void test_studio_host_json_updates_report_column_setup_by_record_selection(const
                "#1528: report/label column setup update should persist the EXPR memo field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1528: report/label column setup update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2036: label column setup update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2036: record-selected report/label column setup update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1528: report/label column setup update should not fabricate page setup availability");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -50752,6 +50759,13 @@ void test_studio_host_json_updates_deleted_report_column_setup_by_record_selecti
                "#1599: deleted report/label column setup update should persist the EXPR memo field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1599: deleted report/label column setup update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2036: label deleted column setup update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2036: record-selected deleted report/label column setup update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1599: deleted report/label column setup update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -50847,6 +50861,13 @@ void test_studio_host_json_clears_report_column_setup_by_record_selection(const 
                "#1557: report/label column setup clear should preserve the direct EXPR field carrier");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1557: report/label column setup clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2036: label column setup clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2036: record-selected report/label column setup clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1557: report/label column setup clear should not fabricate page setup availability");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -50915,6 +50936,13 @@ void test_studio_host_json_clears_deleted_report_column_setup_by_record_selectio
                         "#1600: deleted report/label column setup clear should preserve and blank the EXPR field carrier");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1600: deleted report/label column setup clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2036: label deleted column setup clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2036: record-selected deleted report/label column setup clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1600: deleted report/label column setup clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
