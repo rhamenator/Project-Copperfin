@@ -53522,6 +53522,34 @@ void test_studio_host_json_exposes_selected_deleted_detail_report_objects_orphan
                         "#1673: stable deleted orphaned detail object selections should preserve live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1673: stable deleted orphaned detail object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1955: stable deleted orphaned detail object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1955: stable deleted orphaned detail object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2200",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                        "#1955: stable deleted orphaned detail object JSON should preserve deleted preview heights");
         expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                         "#1673: stable deleted orphaned detail object selections should not advertise selected-section availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
