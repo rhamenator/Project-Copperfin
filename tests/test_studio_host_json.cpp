@@ -81902,6 +81902,8 @@ void test_studio_host_json_clears_deleted_report_visual_property_batches_by_stab
                         "#1864: deleted report/label stable visual-property clear-batch JSON should expose mutation state");
         expect_contains(clear_batch_process.stdout_text, "\"undoAvailable\": true",
                         "#1864: deleted report/label stable visual-property clear-batch JSON should expose undo availability");
+        expect_contains(clear_batch_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                        "#2158: deleted report/label stable visual-property clear-batch JSON should expose the latest undo label");
         expect(visual_object_deleted(asset_path, "middle-field-guid") &&
                    visual_object_deleted(asset_path, "right-field-guid") &&
                    !visual_object_deleted(asset_path, "left-field-guid"),
