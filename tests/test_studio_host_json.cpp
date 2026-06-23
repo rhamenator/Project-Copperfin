@@ -77423,6 +77423,7 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(
             "--toolbox-create-batch-plan-catalog",
             "--toolbox-context", "report",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Report Batch Plan Catalog",
             "--json"
         },
         temp_root);
@@ -77450,6 +77451,10 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_plan_catalog(
         "#2109: report toolbox-create-batch-plan-catalog JSON should expose generated label names");
     expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2109: report toolbox-create-batch-plan-catalog JSON should preserve report parent payloads");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2146: report toolbox-create-batch-plan-catalog JSON should expose caller field names");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyValue\": \"Report Batch Plan Catalog\"",
+        "#2146: report toolbox-create-batch-plan-catalog JSON should expose caller field values");
     expect_contains(report_catalog_process.stdout_text, "\"dryRun\": true",
         "#2109: report toolbox-create-batch-plan-catalog JSON should remain dry-run");
     expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": false",
