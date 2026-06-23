@@ -78366,14 +78366,44 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batches(const
         temp_root);
     expect(label_plan_process.exit_code == 0,
         "#2087: label selection-toolbox-create-batch-plan JSON command should exit successfully");
+    expect_contains(label_plan_process.stdout_text, "\"selectionToolboxCreateBatchPlan\": {",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose a stable result object");
     expect_contains(label_plan_process.stdout_text, "\"selectionContext\": \"label_expression\"",
         "#2087: label selection-toolbox-create-batch-plan JSON should expose label selections");
     expect_contains(label_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2087: label selection-toolbox-create-batch-plan JSON should resolve report contexts");
+    expect_contains(label_plan_process.stdout_text, "\"launchPlanOk\": true",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose launch state");
+    expect_contains(label_plan_process.stdout_text, "\"itemCount\": 1",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose label item counts");
+    expect_contains(label_plan_process.stdout_text, "\"planCount\": 1",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose plan counts");
+    expect_contains(label_plan_process.stdout_text, "\"errorCount\": 0",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose zero errors");
+    expect_contains(label_plan_process.stdout_text, "\"batchPlanOk\": true",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose batch-plan state");
+    expect_contains(label_plan_process.stdout_text, "\"batchPlan\": {",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose nested batch plans");
     expect_contains(label_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#2087: label selection-toolbox-create-batch-plan JSON should expose label plans");
     expect_contains(label_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#2087: label selection-toolbox-create-batch-plan JSON should expose generated label names");
+    expect_contains(label_plan_process.stdout_text, "\"uniqueId\": \"selection-label-batch-plan-guid\"",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose caller unique ids");
+    expect_contains(label_plan_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2122: label selection-toolbox-create-batch-plan JSON should preserve label parent payloads");
+    expect_contains(label_plan_process.stdout_text, "\"propertyValue\": \"Label Selection\"",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose caller label fields");
+    expect_contains(label_plan_process.stdout_text, "\"planReadyItemIds\": [\"label\"]",
+        "#2122: label selection-toolbox-create-batch-plan JSON should summarize plan-ready label item ids");
+    expect_contains(label_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose empty blocked item ids");
+    expect_contains(label_plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose empty blocked plan errors");
+    expect_contains(label_plan_process.stdout_text, "\"dryRun\": true",
+        "#2122: label selection-toolbox-create-batch-plan JSON should expose dry-run state");
+    expect_contains(label_plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#2122: label selection-toolbox-create-batch-plan JSON should remain non-mutating");
     expect_not_contains(label_plan_process.stdout_text, "\"className\": \"TextBox\"",
         "#2087: label selection-toolbox-create-batch-plan JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
