@@ -74027,6 +74027,64 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch(const std::str
     expect(visual_object_count(form_path) == before_count,
         "#1250: toolbox-create-dispatch-plan host command should not mutate the visual asset");
 
+    const auto report_dispatch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-plan", "label",
+            "--toolbox-context", "report",
+            "--unique-id", "direct-report-dispatch-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Direct Report Dispatch",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(report_dispatch_process.exit_code == 0,
+        "#2103: report toolbox-create-dispatch-plan JSON command should exit successfully");
+    expect_contains(report_dispatch_process.stdout_text, "\"toolboxCreateDispatchPlan\": {",
+        "#2103: report toolbox-create-dispatch-plan JSON should expose dispatch plans");
+    expect_contains(report_dispatch_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should expose label plans");
+    expect_contains(report_dispatch_process.stdout_text, "\"className\": \"Label\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should expose label descriptor metadata");
+    expect_contains(report_dispatch_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve report contexts");
+    expect_contains(report_dispatch_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should expose generated label names");
+    expect_contains(report_dispatch_process.stdout_text, "\"uniqueId\": \"direct-report-dispatch-guid\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve label unique ids");
+    expect_contains(report_dispatch_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve label parent overrides");
+    expect_contains(report_dispatch_process.stdout_text, "\"propertyValue\": \"Direct Report Dispatch\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve label field values");
+    expect_contains(report_dispatch_process.stdout_text, "\"dispatchArguments\": [",
+        "#2103: report toolbox-create-dispatch-plan JSON should expose dispatch arguments");
+    expect_contains(report_dispatch_process.stdout_text, "\"--toolbox-create\", \"label\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should dispatch label creates");
+    expect_contains(report_dispatch_process.stdout_text, "\"--toolbox-context\", \"report\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve report context arguments");
+    expect_contains(report_dispatch_process.stdout_text, "\"--object-name\", \"lbl1\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve generated label arguments");
+    expect_contains(report_dispatch_process.stdout_text, "\"--unique-id\", \"direct-report-dispatch-guid\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve label unique-id arguments");
+    expect_contains(report_dispatch_process.stdout_text, "\"--parent-name\", \"DetailBand\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve label parent arguments");
+    expect_contains(report_dispatch_process.stdout_text, "\"--field-value\", \"CAPTION=Direct Report Dispatch\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should preserve label field arguments");
+    expect_contains(report_dispatch_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"]",
+        "#2103: report toolbox-create-dispatch-plan JSON should summarize dispatch-ready report item ids");
+    expect_contains(report_dispatch_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#2103: report toolbox-create-dispatch-plan JSON should summarize empty blocked item ids");
+    expect_contains(report_dispatch_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#2103: report toolbox-create-dispatch-plan JSON should summarize empty dispatch errors");
+    expect_contains(report_dispatch_process.stdout_text, "\"executed\": false",
+        "#2103: report toolbox-create-dispatch-plan JSON should remain non-executing");
+    expect_not_contains(report_dispatch_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2103: report toolbox-create-dispatch-plan JSON should exclude form-only TextBox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2103: report toolbox-create-dispatch-plan host command should not mutate assets");
+
     const auto non_admitted_process = run_process_capture(
         studio_host_path,
         {
