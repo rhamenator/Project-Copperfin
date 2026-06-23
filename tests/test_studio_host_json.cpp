@@ -48914,6 +48914,9 @@ void test_studio_host_json_updates_report_column_count_fields_by_stable_selectio
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1835: label stable column-count field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2031: stable-selected report/label column-count update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1835: report/label stable column-count field update should not fabricate page setup availability");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -49007,6 +49010,9 @@ void test_studio_host_json_clears_report_column_count_fields_by_stable_selection
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1835: label stable column-count field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2031: stable-selected report/label column-count clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1835: report/label stable column-count field clear should not fabricate page setup availability");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -49103,6 +49109,9 @@ void test_studio_host_json_updates_deleted_report_column_count_fields_by_stable_
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1835: label stable deleted column-count field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2031: stable-selected deleted report/label column-count update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1835: report/label stable deleted column-count field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -49202,6 +49211,9 @@ void test_studio_host_json_clears_deleted_report_column_count_fields_by_stable_s
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1835: label stable deleted column-count field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2031: stable-selected deleted report/label column-count clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1835: report/label stable deleted column-count field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
