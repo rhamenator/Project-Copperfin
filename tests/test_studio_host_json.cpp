@@ -73835,14 +73835,34 @@ void test_studio_host_json_plans_selection_toolbox_object_creation(const std::st
         temp_root);
     expect(label_plan_process.exit_code == 0,
         "#2081: label selection-toolbox-create-plan JSON command should exit successfully");
+    expect_contains(label_plan_process.stdout_text, "\"selectionToolboxCreatePlan\": {",
+        "#2121: label selection-toolbox-create-plan JSON should expose a stable result object");
     expect_contains(label_plan_process.stdout_text, "\"selectionContext\": \"label_expression\"",
         "#2081: label selection-toolbox-create-plan JSON should expose label selections");
     expect_contains(label_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2081: label selection-toolbox-create-plan JSON should expose report contexts");
+    expect_contains(label_plan_process.stdout_text, "\"launchPlanOk\": true",
+        "#2121: label selection-toolbox-create-plan JSON should expose launch plan status");
+    expect_contains(label_plan_process.stdout_text, "\"createPlanOk\": true",
+        "#2121: label selection-toolbox-create-plan JSON should expose create plan status");
+    expect_contains(label_plan_process.stdout_text, "\"createPlan\": {",
+        "#2121: label selection-toolbox-create-plan JSON should expose nested create plans");
     expect_contains(label_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#2081: label selection-toolbox-create-plan JSON should expose label plans");
     expect_contains(label_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#2081: label selection-toolbox-create-plan JSON should expose generated label names");
+    expect_contains(label_plan_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2121: label selection-toolbox-create-plan JSON should preserve label parent payloads");
+    expect_contains(label_plan_process.stdout_text, "\"planReadyItemIds\": [\"label\"]",
+        "#2121: label selection-toolbox-create-plan JSON should summarize plan-ready label item ids");
+    expect_contains(label_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#2121: label selection-toolbox-create-plan JSON should expose empty blocked item ids");
+    expect_contains(label_plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#2121: label selection-toolbox-create-plan JSON should expose empty blocked plan errors");
+    expect_contains(label_plan_process.stdout_text, "\"dryRun\": true",
+        "#2121: label selection-toolbox-create-plan JSON should expose dry-run state");
+    expect_contains(label_plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#2121: label selection-toolbox-create-plan JSON should remain non-mutating");
     expect_not_contains(label_plan_process.stdout_text, "\"className\": \"TextBox\"",
         "#2081: label selection-toolbox-create-plan JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
