@@ -44942,6 +44942,13 @@ void test_studio_host_json_updates_report_bottom_margin_fields_by_record_selecti
                "#1541: report/label bottom-margin field update should persist the BOTMARGIN field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1541: report/label bottom-margin field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2028: label bottom-margin field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2028: record-selected report/label bottom-margin update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1541: report/label bottom-margin field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"topMargin\": 10",
@@ -45020,6 +45027,13 @@ void test_studio_host_json_clears_report_bottom_margin_fields_by_record_selectio
                "#1550: report/label bottom-margin field clear should blank the BOTMARGIN field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1550: report/label bottom-margin field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2028: label bottom-margin field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2028: record-selected report/label bottom-margin clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1550: report/label bottom-margin field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
@@ -45101,6 +45115,13 @@ void test_studio_host_json_updates_deleted_report_bottom_margin_fields_by_record
                "#1583: deleted report/label bottom-margin field update should persist the BOTMARGIN field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1583: deleted report/label bottom-margin field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2028: label deleted bottom-margin field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2028: record-selected deleted report/label bottom-margin update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1583: deleted report/label bottom-margin field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -45195,6 +45216,13 @@ void test_studio_host_json_clears_deleted_report_bottom_margin_fields_by_record_
                "#1584: deleted report/label bottom-margin field clear should blank the BOTMARGIN field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1584: deleted report/label bottom-margin field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2028: label deleted bottom-margin field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2028: record-selected deleted report/label bottom-margin clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1584: deleted report/label bottom-margin field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
