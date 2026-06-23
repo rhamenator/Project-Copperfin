@@ -60067,6 +60067,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#2078: explicit report_expression contexts should expose data-environment editor actions");
     expect_contains(report_override_process.stdout_text, "\"toolboxItemCount\": 4",
                     "#2078: explicit report_expression contexts should expose report-safe toolbox item counts");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"label\"",
+                    "#2079: explicit report_expression contexts should expose report label toolbox items");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"image\"",
+                    "#2079: explicit report_expression contexts should expose report image toolbox items");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"line\"",
+                    "#2079: explicit report_expression contexts should expose report line toolbox items");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"shape\"",
+                    "#2079: explicit report_expression contexts should expose report shape toolbox items");
     expect_not_contains(report_override_process.stdout_text, "\"id\": \"textbox\"",
                         "#2078: explicit report_expression contexts should not expose form-only TextBox toolbox items");
     expect_contains(report_override_process.stdout_text, "\"id\": \"report-builder\"",
@@ -60099,6 +60107,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#2078: explicit label_expression contexts should expose data-environment editor actions");
     expect_contains(label_override_process.stdout_text, "\"toolboxItemCount\": 4",
                     "#2078: explicit label_expression contexts should expose report-safe toolbox item counts");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"label\"",
+                    "#2079: explicit label_expression contexts should expose report label toolbox items");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"image\"",
+                    "#2079: explicit label_expression contexts should expose report image toolbox items");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"line\"",
+                    "#2079: explicit label_expression contexts should expose report line toolbox items");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"shape\"",
+                    "#2079: explicit label_expression contexts should expose report shape toolbox items");
     expect_not_contains(label_override_process.stdout_text, "\"id\": \"textbox\"",
                         "#2078: explicit label_expression contexts should not expose form-only TextBox toolbox items");
     expect_contains(label_override_process.stdout_text, "\"id\": \"label-wizard\"",
