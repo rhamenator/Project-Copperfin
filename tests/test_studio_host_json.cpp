@@ -78112,6 +78112,7 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
             "--selection-toolbox-create-batch-dispatch-catalog",
             "--selection-context", "report_expression",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Report Selection Batch Dispatch Catalog",
             "--admit-create-operation", "true",
             "--json"
         },
@@ -78148,8 +78149,15 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         "#1381: report selection toolbox batch dispatch catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2114: report selection toolbox batch dispatch catalog JSON should preserve report parent payloads");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2153: report selection toolbox batch dispatch catalog JSON should expose caller field names");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyValue\": \"Report Selection Batch Dispatch Catalog\"",
+        "#2153: report selection toolbox batch dispatch catalog JSON should expose caller field values");
     expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1299: report selection toolbox batch dispatch catalog JSON should preserve report dispatch context");
+    expect_contains(report_catalog_process.stdout_text,
+        "\"--field-value\", \"CAPTION=Report Selection Batch Dispatch Catalog\"",
+        "#2153: report selection toolbox batch dispatch catalog JSON should preserve report dispatch field arguments");
     expect_contains(report_catalog_process.stdout_text, "\"dryRun\": false",
         "#2114: report selection toolbox batch dispatch catalog JSON should expose non-dry-run dispatch state");
     expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": true",
