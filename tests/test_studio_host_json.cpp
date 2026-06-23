@@ -53382,6 +53382,34 @@ void test_studio_host_json_exposes_selected_page_header_report_sections_by_stabl
                         "#1664: stable page-header section selections should advertise report-selection availability");
         expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1664: stable page-header section selections should expose section selection kind");
+        expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2012: stable selected page-header section JSON should expose live preview availability");
+        expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2012: stable selected page-header section JSON should preserve live preview left bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2012: stable selected page-header section JSON should preserve live preview top bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#2012: stable selected page-header section JSON should preserve live preview right bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#2012: stable selected page-header section JSON should preserve live preview bottom bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#2012: stable selected page-header section JSON should preserve live preview widths");
+        expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#2012: stable selected page-header section JSON should preserve live preview heights");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2012: stable selected page-header section JSON should preserve deleted preview availability");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#2012: stable selected page-header section JSON should preserve deleted preview left bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2012: stable selected page-header section JSON should preserve deleted preview top bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#2012: stable selected page-header section JSON should preserve deleted preview right bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#2012: stable selected page-header section JSON should preserve deleted preview bottom bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#2012: stable selected page-header section JSON should preserve deleted preview widths");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#2012: stable selected page-header section JSON should preserve deleted preview heights");
         expect_contains(section_process.stdout_text, "\"sectionCount\": 2",
                         "#1664: stable page-header section selections should preserve live section counts");
         expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 0",
