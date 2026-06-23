@@ -53166,6 +53166,8 @@ void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_se
                "#1858: report/label stable visual-object duplicate-subtree should reject replacement collisions");
         expect_contains(collision_process.stdout_text, "\"visualObjectDuplicateSubtree\": null",
                         "#1858: failed report/label stable visual-object duplicate-subtree JSON should not expose stale result objects");
+        expect_not_contains(collision_process.stdout_text, "\"undoAvailable\": true",
+                            "#2176: failed report/label stable visual-object duplicate-subtree JSON should not advertise undo availability");
         expect_contains(collision_process.stdout_text, "The requested replacement identity already exists in the asset.",
                         "#1858: failed report/label stable visual-object duplicate-subtree JSON should report collision errors");
         expect(visual_object_count(asset_path) == before_count &&
@@ -53199,6 +53201,8 @@ void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_se
                "#1858: report/label stable visual-object duplicate-subtree should reject missing stable selectors");
         expect_contains(missing_process.stdout_text, "\"visualObjectDuplicateSubtree\": null",
                         "#1858: missing-selector report/label stable visual-object duplicate-subtree JSON should not expose stale result objects");
+        expect_not_contains(missing_process.stdout_text, "\"undoAvailable\": true",
+                            "#2176: missing-selector report/label stable visual-object duplicate-subtree JSON should not advertise undo availability");
         expect_contains(missing_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1858: missing-selector report/label stable visual-object duplicate-subtree JSON should report selector errors");
         expect(visual_object_order(asset_path) == "left-field-guid,middle-field-guid,right-field-guid" &&
