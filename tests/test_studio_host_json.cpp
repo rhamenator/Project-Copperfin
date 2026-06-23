@@ -45650,6 +45650,9 @@ void test_studio_host_json_updates_report_grid_vertical_fields_by_stable_selecti
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1831: label stable vertical-grid field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2025: stable-selected report/label vertical-grid update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1831: report/label stable vertical-grid field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"topMargin\": 10",
@@ -45743,6 +45746,9 @@ void test_studio_host_json_clears_report_grid_vertical_fields_by_stable_selectio
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1831: label stable vertical-grid field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2025: stable-selected report/label vertical-grid clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1831: report/label stable vertical-grid field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
@@ -45839,6 +45845,9 @@ void test_studio_host_json_updates_deleted_report_grid_vertical_fields_by_stable
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1831: label stable deleted vertical-grid field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2025: stable-selected deleted report/label vertical-grid update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1831: report/label stable deleted vertical-grid field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -45926,6 +45935,9 @@ void test_studio_host_json_clears_deleted_report_grid_vertical_fields_by_stable_
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1831: label stable deleted vertical-grid field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2025: stable-selected deleted report/label vertical-grid clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1831: report/label stable deleted vertical-grid field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
