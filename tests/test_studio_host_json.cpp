@@ -28004,6 +28004,104 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
     expect_contains(page_header_object_process.stdout_text, "\"bandKind\": \"page_header\"",
                     "#1972: containing-section JSON should expose selected page-header object band kinds");
 
+    const fs::path deleted_page_header_object_path = temp_root / "deleted_page_header_object.frx";
+    write_synthetic_report_table_for_layout_json(deleted_page_header_object_path);
+    const auto delete_page_header_object_result =
+        copperfin::vfp::set_record_deleted_flag(deleted_page_header_object_path.string(), 4U, true);
+    expect(delete_page_header_object_result.ok,
+           "#1974: selected deleted page-header report object fixture should mark the page-header object deleted");
+
+    const auto deleted_page_header_object_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_page_header_object_path.string(), "--record", "4", "--json"},
+        temp_root);
+
+    if (deleted_page_header_object_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted page-header report object stdout:\n"
+                  << deleted_page_header_object_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted page-header report object stderr:\n"
+                  << deleted_page_header_object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_page_header_object_process.exit_code == 0,
+           "#1974: selected deleted page-header report object JSON should exit successfully");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1974: deleted page-header report object selections should advertise selected-object availability");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1974: deleted page-header report object selections should advertise report-selection availability");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1974: deleted page-header report object selections should expose object selection kind");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1974: selected deleted page-header report object JSON should preserve live preview availability");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1974: selected deleted page-header report object JSON should preserve live preview left bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1974: selected deleted page-header report object JSON should preserve live preview top bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1974: selected deleted page-header report object JSON should preserve live preview right bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                    "#1974: selected deleted page-header report object JSON should preserve live preview bottom bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                    "#1974: selected deleted page-header report object JSON should preserve live preview widths");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                    "#1974: selected deleted page-header report object JSON should preserve live preview heights");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1974: selected deleted page-header report object JSON should expose deleted preview availability");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 900",
+                    "#1974: selected deleted page-header report object JSON should expand deleted preview left bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPreviewBoundsTop\": 100",
+                    "#1974: selected deleted page-header report object JSON should expand deleted preview top bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2700",
+                    "#1974: selected deleted page-header report object JSON should expand deleted preview right bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                    "#1974: selected deleted page-header report object JSON should preserve deleted preview bottom bounds");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1800",
+                    "#1974: selected deleted page-header report object JSON should expand deleted preview widths");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 2800",
+                    "#1974: selected deleted page-header report object JSON should expand deleted preview heights");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1974: selected deleted page-header report objects should not advertise selected-section availability");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1974: selected deleted page-header report objects should serialize null selected sections");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1974: selected deleted page-header report objects should not advertise selected-settings availability");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1974: selected deleted page-header report objects should serialize null selected settings");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"liveObjectCount\": 2",
+                    "#1974: selected deleted page-header report object JSON should summarize remaining live objects");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedObjectCount\": 2",
+                    "#1974: selected deleted page-header report object JSON should summarize deleted objects");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedPlacedObjectCount\": 2",
+                    "#1974: selected deleted page-header report object JSON should count deleted placed objects");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"deletedUnplacedObjectCount\": 0",
+                    "#1974: selected deleted page-header report object JSON should not fabricate deleted unplaced objects");
+    expect_contains_in_order(
+        deleted_page_header_object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 4",
+            "\"deleted\": true",
+            "\"containingSectionId\": \"\"",
+            "\"containingSectionRecordIndex\": null",
+            "\"sectionRelativeTop\": 0",
+            "\"sectionRelativeBottom\": 0",
+            "\"sectionObjectIndex\": null",
+            "\"sectionObjectCount\": 0",
+            "\"objectTypeCode\": 5",
+            "\"objectKind\": \"label\"",
+            "\"expression\": \"\\\"Invoice\\\"\""
+        },
+        "#1974: deleted page-header report object selections should expose selected-object metadata without section membership");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"right\": 2700",
+                    "#1974: selected deleted page-header report object JSON should expose object right-edge coordinates");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"bottom\": 450",
+                    "#1974: selected deleted page-header report object JSON should expose object bottom-edge coordinates");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1974: deleted page-header report objects should not advertise selected containing-section availability");
+    expect_contains(deleted_page_header_object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1974: deleted page-header report objects should serialize null selected containing-section JSON");
+
     const auto deleted_object_process = run_process_capture(
         studio_host_path,
         {"--path", report_path.string(), "--record", "6", "--json"},
