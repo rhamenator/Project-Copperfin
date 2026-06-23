@@ -79375,20 +79375,50 @@ void test_studio_host_json_creates_selection_toolbox_object_batches(const std::s
         temp_root);
     expect(report_process.exit_code == 0,
         "#1311: report selection-toolbox-create-batch JSON command should exit successfully");
+    expect_contains(report_process.stdout_text, "\"selectionToolboxCreateBatch\": {",
+        "#2116: report selection-toolbox-create-batch JSON should expose a stable result object");
     expect_contains(report_process.stdout_text, "\"selectionContext\": \"report_expression\"",
         "#1311: report selection-toolbox-create-batch JSON should expose report selections");
     expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#1311: report selection-toolbox-create-batch JSON should resolve report contexts");
+    expect_contains(report_process.stdout_text, "\"launchPlanOk\": true",
+        "#2116: report selection-toolbox-create-batch JSON should expose launch state");
+    expect_contains(report_process.stdout_text, "\"batchPlanOk\": true",
+        "#2116: report selection-toolbox-create-batch JSON should expose nested batch-plan state");
+    expect_contains(report_process.stdout_text, "\"createResult\": {",
+        "#2116: report selection-toolbox-create-batch JSON should expose lower-level create results");
     expect_contains(report_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1311: report selection-toolbox-create-batch JSON should expose generated labels");
     expect_contains(report_process.stdout_text, "\"uniqueId\": \"selection-batch-host-report-label-guid\"",
         "#1311: report selection-toolbox-create-batch JSON should expose label unique ids");
+    expect_contains(report_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2116: report selection-toolbox-create-batch JSON should preserve report parent payloads");
     expect_contains(report_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
         "#1383: report selection-toolbox-create-batch JSON should summarize created report object names");
     expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"selection-batch-host-report-label-guid\"]",
         "#1383: report selection-toolbox-create-batch JSON should summarize created report unique ids");
+    expect_contains(report_process.stdout_text, "\"createErrors\": []",
+        "#2116: report selection-toolbox-create-batch JSON should summarize empty create errors");
+    expect_contains(report_process.stdout_text, "\"propertyValue\": \"Report Selection Batch\"",
+        "#2116: report selection-toolbox-create-batch JSON should expose caller report fields");
+    expect_contains(report_process.stdout_text, "\"dryRun\": false",
+        "#2116: report selection-toolbox-create-batch JSON should expose execution state");
+    expect_contains(report_process.stdout_text, "\"mutatesAsset\": true",
+        "#2116: report selection-toolbox-create-batch JSON should expose mutation state");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1311: report selection-toolbox-create-batch JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count + 4U,
+        "#2116: report selection-toolbox-create-batch host command should mutate the asset exactly once");
+
+    const auto report_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-batch-host-report-label-guid",
+        .property_name = "CAPTION"
+    });
+    expect(report_caption.ok && report_caption.exists && report_caption.value == "Report Selection Batch",
+        "#2116: report selection-toolbox-create-batch host command should persist report label captions");
 
     const auto label_process = run_process_capture(
         studio_host_path,
