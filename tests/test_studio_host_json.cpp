@@ -73754,6 +73754,31 @@ void test_studio_host_json_plans_selection_toolbox_object_creation(const std::st
     expect_not_contains(report_plan_process.stdout_text, "\"className\": \"TextBox\"",
         "#1301: report selection-toolbox-create-plan JSON should exclude form-only textbox plans");
 
+    const auto label_plan_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-plan", "label",
+            "--selection-context", "label_expression",
+            "--parent-name", "DetailBand",
+            "--json"
+        },
+        temp_root);
+    expect(label_plan_process.exit_code == 0,
+        "#2081: label selection-toolbox-create-plan JSON command should exit successfully");
+    expect_contains(label_plan_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#2081: label selection-toolbox-create-plan JSON should expose label selections");
+    expect_contains(label_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2081: label selection-toolbox-create-plan JSON should expose report contexts");
+    expect_contains(label_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2081: label selection-toolbox-create-plan JSON should expose label plans");
+    expect_contains(label_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2081: label selection-toolbox-create-plan JSON should expose generated label names");
+    expect_not_contains(label_plan_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2081: label selection-toolbox-create-plan JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2081: label selection-toolbox-create-plan host command should not mutate assets");
+
     const auto unavailable_process = run_process_capture(
         studio_host_path,
         {
