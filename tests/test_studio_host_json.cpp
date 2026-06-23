@@ -76704,6 +76704,7 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
             "--selection-toolbox-create-plan-catalog",
             "--selection-context", "report_expression",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Report Selection Plan Catalog",
             "--json"
         },
         temp_root);
@@ -76729,6 +76730,10 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
         "#1293: report selection toolbox create-plan catalog JSON should expose generated labels");
     expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2111: report selection toolbox create-plan catalog JSON should preserve report parent payloads");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2148: report selection toolbox create-plan catalog JSON should expose caller field names");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyValue\": \"Report Selection Plan Catalog\"",
+        "#2148: report selection toolbox create-plan catalog JSON should expose caller field values");
     expect_contains(report_catalog_process.stdout_text, "\"dryRun\": true",
         "#2111: report selection toolbox create-plan catalog JSON should remain dry-run");
     expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": false",
