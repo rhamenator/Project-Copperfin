@@ -81628,6 +81628,8 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
                         "#1871: deleted report/label stable visual-property clear JSON should expose mutation state");
         expect_contains(clear_process.stdout_text, "\"undoAvailable\": true",
                         "#1871: deleted report/label stable visual-property clear JSON should expose undo availability");
+        expect_contains(clear_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                        "#2157: deleted report/label stable visual-property clear JSON should expose expression undo labels");
         expect(visual_object_deleted(asset_path, "middle-field-guid") &&
                    visual_object_deleted(asset_path, "right-field-guid") &&
                    !visual_object_deleted(asset_path, "left-field-guid"),
@@ -81734,6 +81736,8 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
                         "#2059: deleted report/label stable visual-property geometry clear JSON should expose a clear object");
         expect_contains(geometry_clear_process.stdout_text, "\"affectedObjectCount\": 1",
                         "#2059: deleted report/label stable visual-property geometry clear JSON should expose affected property counts");
+        expect_contains(geometry_clear_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                        "#2157: deleted report/label stable visual-property geometry clear JSON should expose geometry undo labels");
 
         const auto geometry_reopen_process = run_process_capture(
             studio_host_path,
