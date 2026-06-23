@@ -78831,22 +78831,66 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         temp_root);
     expect(report_process.exit_code == 0,
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON command should exit successfully");
+    expect_contains(report_process.stdout_text, "\"selectionToolboxCreateBatchDispatchPlan\": {",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose a stable result object");
     expect_contains(report_process.stdout_text, "\"selectionContext\": \"report_expression\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should expose report selections");
     expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should resolve report contexts");
+    expect_contains(report_process.stdout_text, "\"launchPlanOk\": true",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose launch state");
+    expect_contains(report_process.stdout_text, "\"itemCount\": 1",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose report item counts");
+    expect_contains(report_process.stdout_text, "\"dispatchCount\": 1",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose dispatch counts");
+    expect_contains(report_process.stdout_text, "\"errorCount\": 0",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose zero errors");
+    expect_contains(report_process.stdout_text, "\"batchPlanOk\": true",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose batch-plan state");
+    expect_contains(report_process.stdout_text, "\"dispatchOk\": true",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose dispatch state");
+    expect_contains(report_process.stdout_text, "\"batchPlan\": {",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose nested batch plans");
+    expect_contains(report_process.stdout_text, "\"dispatch\": {",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose nested dispatch plans");
     expect_contains(report_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should expose label plans");
     expect_contains(report_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should expose generated label names");
+    expect_contains(report_process.stdout_text, "\"uniqueId\": \"selection-report-dispatch-label-guid\"",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose caller unique ids");
+    expect_contains(report_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should preserve report parent payloads");
+    expect_contains(report_process.stdout_text, "\"propertyValue\": \"Report Selection Dispatch\"",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose caller report fields");
+    expect_contains(report_process.stdout_text, "\"dispatchArguments\": [",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose dispatch arguments");
+    expect_contains(report_process.stdout_text, "\"--toolbox-create-batch\"",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should dispatch to batch creation");
     expect_contains(report_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should dispatch resolved report contexts");
+    expect_contains(report_process.stdout_text, "\"--parent-name\", \"DetailBand\"",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should preserve report parent arguments");
+    expect_contains(report_process.stdout_text, "\"--field-value\", \"CAPTION=Report Selection Dispatch\"",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should preserve report field arguments");
     expect_contains(report_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"]",
         "#1387: report selection-toolbox-create-batch-dispatch-plan JSON should summarize dispatch-ready report item ids");
+    expect_contains(report_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should summarize empty blocked item ids");
     expect_contains(report_process.stdout_text, "\"dispatchBlockedErrors\": []",
         "#1387: report selection-toolbox-create-batch-dispatch-plan JSON should summarize empty dispatch errors");
+    expect_contains(report_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose admission state");
+    expect_contains(report_process.stdout_text, "\"dryRun\": false",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose non-dry-run dispatch state");
+    expect_contains(report_process.stdout_text, "\"executed\": false",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should remain non-executing");
+    expect_contains(report_process.stdout_text, "\"mutatesAsset\": true",
+        "#2118: report selection-toolbox-create-batch-dispatch-plan JSON should expose mutation intent");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1307: report selection-toolbox-create-batch-dispatch-plan JSON should exclude form-only textboxes");
+    expect(visual_object_count(form_path) == before_count,
+        "#2118: report selection-toolbox-create-batch-dispatch-plan host command should not mutate assets");
 
     const auto label_process = run_process_capture(
         studio_host_path,
