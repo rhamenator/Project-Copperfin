@@ -77231,6 +77231,7 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch_cata
             "--selection-toolbox-create-dispatch-catalog",
             "--selection-context", "label_expression",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Label Selection Dispatch Catalog",
             "--admit-create-operation", "true",
             "--json"
         },
@@ -77259,8 +77260,15 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch_cata
         "#2083: label selection toolbox create-dispatch catalog JSON should summarize empty blocked dispatch errors");
     expect_contains(label_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2126: label selection toolbox create-dispatch catalog JSON should preserve label parent payloads");
+    expect_contains(label_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2151: label selection toolbox create-dispatch catalog JSON should expose caller field names");
+    expect_contains(label_catalog_process.stdout_text, "\"propertyValue\": \"Label Selection Dispatch Catalog\"",
+        "#2151: label selection toolbox create-dispatch catalog JSON should expose caller field values");
     expect_contains(label_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#2083: label selection toolbox create-dispatch catalog JSON should preserve report contexts");
+    expect_contains(label_catalog_process.stdout_text,
+        "\"--field-value\", \"CAPTION=Label Selection Dispatch Catalog\"",
+        "#2151: label selection toolbox create-dispatch catalog JSON should preserve label dispatch field arguments");
     expect_contains(label_catalog_process.stdout_text, "\"dryRun\": false",
         "#2126: label selection toolbox create-dispatch catalog JSON should expose non-dry-run dispatch state");
     expect_contains(label_catalog_process.stdout_text, "\"mutatesAsset\": true",
