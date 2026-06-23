@@ -25843,6 +25843,34 @@ void test_studio_host_json_exposes_deleted_report_column_footer_sections_by_stab
                         "#1681: stable selected deleted column-footer section JSON should preserve live sibling section counts");
         expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
                         "#1681: stable selected deleted column-footer section JSON should expose deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 3050",
+                        "#1940: stable selected deleted column-footer section JSON should refresh live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 3050",
+                        "#1940: stable selected deleted column-footer section JSON should refresh live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1940: stable selected deleted column-footer section JSON should expose deleted preview availability");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview left bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 3050",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview top bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview right bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 3450",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview bottom bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview widths");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 400",
+                        "#1940: stable selected deleted column-footer section JSON should preserve deleted preview heights");
         expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
                         "#1681: stable selected deleted column-footer sections should not advertise selected-object availability");
         expect_contains(process.stdout_text, "\"selectedReportObject\": null",
