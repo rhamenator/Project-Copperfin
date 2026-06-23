@@ -83895,6 +83895,8 @@ void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stabl
                         "#1862: deleted report/label stable visual-object rename-batch JSON should expose mutation state");
         expect_contains(rename_batch_process.stdout_text, "\"undoAvailable\": true",
                         "#1862: deleted report/label stable visual-object rename-batch JSON should expose undo availability");
+        expect_contains(rename_batch_process.stdout_text, "\"undoLabel\": \"Property UNIQUEID\"",
+                        "#2167: deleted report/label stable visual-object rename-batch JSON should expose renamed-identity undo labels");
         expect(visual_object_count(asset_path) == before_count &&
                    visual_object_exists(asset_path, "left-field-guid") &&
                    !visual_object_exists(asset_path, "middle-field-guid") &&
