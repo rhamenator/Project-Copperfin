@@ -77599,6 +77599,7 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_ca
             "--selection-toolbox-create-batch-plan-catalog",
             "--selection-context", "report_expression",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Report Selection Batch Plan Catalog",
             "--json"
         },
         temp_root);
@@ -77628,6 +77629,10 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_ca
         "#1379: report selection toolbox batch create-plan catalog JSON should summarize empty blocked plan errors");
     expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2113: report selection toolbox batch create-plan catalog JSON should preserve report parent payloads");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2152: report selection toolbox batch create-plan catalog JSON should expose caller field names");
+    expect_contains(report_catalog_process.stdout_text, "\"propertyValue\": \"Report Selection Batch Plan Catalog\"",
+        "#2152: report selection toolbox batch create-plan catalog JSON should expose caller field values");
     expect_contains(report_catalog_process.stdout_text, "\"dryRun\": true",
         "#2113: report selection toolbox batch create-plan catalog JSON should remain dry-run");
     expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": false",
