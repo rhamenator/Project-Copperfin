@@ -51821,6 +51821,9 @@ void test_studio_host_json_deletes_report_settings_by_record_selection(const std
            "#1475: report settings delete should exit successfully");
     expect(dbf_record_deleted(report_path, 0U),
            "#1475: report settings delete should mark the FRX settings record deleted");
+    expect_full_report_layout_preview_bounds(
+        delete_process.stdout_text,
+        "#2040: record-selected report settings delete JSON");
     expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
                     "#1475: deleted report settings JSON should remove settings from live counts");
     expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
@@ -51889,6 +51892,9 @@ void test_studio_host_json_deletes_label_settings_by_record_selection(const std:
            "#1494: label settings delete should mark the LBX settings record deleted");
     expect_contains(delete_process.stdout_text, "\"isLabel\": true",
                     "#1494: deleted label settings JSON should retain label identity");
+    expect_full_report_layout_preview_bounds(
+        delete_process.stdout_text,
+        "#2040: record-selected label settings delete JSON");
     expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
                     "#1494: deleted label settings JSON should remove settings from live counts");
     expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
@@ -52067,6 +52073,9 @@ void test_studio_host_json_restores_report_settings_by_record_selection(const st
            "#1476: report settings restore should exit successfully");
     expect(!dbf_record_deleted(report_path, 0U),
            "#1476: report settings restore should clear the FRX settings record delete flag");
+    expect_full_report_layout_preview_bounds(
+        restore_process.stdout_text,
+        "#2040: record-selected report settings restore JSON");
     expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
                     "#1476: restored report settings JSON should restore live setting counts");
     expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
@@ -52135,6 +52144,9 @@ void test_studio_host_json_restores_label_settings_by_record_selection(const std
            "#1495: label settings restore should clear the LBX settings record delete flag");
     expect_contains(restore_process.stdout_text, "\"isLabel\": true",
                     "#1495: restored label settings JSON should retain label identity");
+    expect_full_report_layout_preview_bounds(
+        restore_process.stdout_text,
+        "#2040: record-selected label settings restore JSON");
     expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
                     "#1495: restored label settings JSON should restore live setting counts");
     expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
