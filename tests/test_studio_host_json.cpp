@@ -50501,6 +50501,124 @@ void test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_re
     }
 }
 
+void test_studio_host_json_exposes_selected_deleted_summary_label_objects_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_deleted_summary_label_objects_record_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "selected_deleted_summary_object_record.lbx";
+    write_synthetic_report_table_for_deleted_summary_object_json(label_path);
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "3", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host record-selected deleted summary label object stdout:\n"
+                  << object_process.stdout_text << "\n";
+        std::cerr << "studio host record-selected deleted summary label object stderr:\n"
+                  << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0,
+           "#1979: record-selected deleted summary label object JSON should exit successfully");
+    expect_contains(object_process.stdout_text,
+                    "\"documentTitle\": \"selected_deleted_summary_object_record.lbx\"",
+                    "#1979: record-selected deleted summary label object JSON should preserve document titles");
+    expect_contains(object_process.stdout_text, "\"isLabel\": true",
+                    "#1979: record-selected deleted summary label object JSON should retain label identity");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1979: record-selected deleted summary label object selections should advertise selected-object availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1979: record-selected deleted summary label object selections should advertise report-selection availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1979: record-selected deleted summary label object selections should expose object selection kind");
+    expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1979: record-selected deleted summary label object JSON should expose live preview availability");
+    expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1979: record-selected deleted summary label object JSON should preserve live preview left bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1979: record-selected deleted summary label object JSON should preserve live preview top bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 0",
+                    "#1979: record-selected deleted summary label object JSON should preserve live preview right bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3900",
+                    "#1979: record-selected deleted summary label object JSON should preserve live preview bottom bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 0",
+                    "#1979: record-selected deleted summary label object JSON should preserve live preview widths");
+    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3900",
+                    "#1979: record-selected deleted summary label object JSON should preserve live preview heights");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1979: record-selected deleted summary label object JSON should expose deleted preview availability");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 400",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted preview left bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 3300",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted preview top bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 1900",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted preview right bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3550",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted preview bottom bounds");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1500",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted preview widths");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted preview heights");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1979: record-selected deleted summary label objects should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1979: record-selected deleted summary label objects should serialize null selected sections");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1979: record-selected deleted summary label objects should not advertise selected-settings availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1979: record-selected deleted summary label objects should serialize null selected settings");
+    expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                    "#1979: record-selected deleted summary label object JSON should preserve live section counts");
+    expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted section counts");
+    expect_contains(object_process.stdout_text, "\"liveObjectCount\": 0",
+                    "#1979: record-selected deleted summary label object JSON should clear live object counts");
+    expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
+                    "#1979: record-selected deleted summary label object JSON should preserve deleted object counts");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1979: record-selected deleted summary label objects should not advertise containing-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1979: record-selected deleted summary label objects should serialize null containing sections");
+    expect_contains_in_order(
+        object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 3",
+            "\"deleted\": true",
+            "\"containingSectionId\": \"\"",
+            "\"containingSectionRecordIndex\": null",
+            "\"sectionRelativeTop\": 0",
+            "\"sectionRelativeBottom\": 0",
+            "\"sectionObjectIndex\": null",
+            "\"sectionObjectCount\": 0",
+            "\"objectTypeCode\": 5",
+            "\"objectKind\": \"label\"",
+            "\"expression\": \"\\\"Summary label\\\"\""
+        },
+        "#1979: record-selected deleted summary label object selections should expose selected deleted-object metadata");
+    expect_contains(object_process.stdout_text, "\"left\": 400",
+                    "#1979: record-selected deleted summary label object selections should expose selected-object left bounds");
+    expect_contains(object_process.stdout_text, "\"top\": 3300",
+                    "#1979: record-selected deleted summary label object selections should expose selected-object top bounds");
+    expect_contains(object_process.stdout_text, "\"right\": 1900",
+                    "#1979: record-selected deleted summary label object selections should expose selected-object right bounds");
+    expect_contains(object_process.stdout_text, "\"bottom\": 3550",
+                    "#1979: record-selected deleted summary label object selections should expose selected-object bottom bounds");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -102218,6 +102336,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_summary_report_objects_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_summary_label_objects_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_record_selection(argv[1]);
+    test_studio_host_json_exposes_selected_deleted_summary_label_objects_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_selection_for_missing_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_blank_stable_selector(argv[1]);
