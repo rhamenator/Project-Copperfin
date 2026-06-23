@@ -53292,6 +53292,8 @@ void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_s
                         "#1859: deleted report/label stable visual-object duplicate-subtree JSON should expose copied root object names");
         expect_contains(duplicate_process.stdout_text, "\"rootUniqueId\": \"middle-deleted-copy-guid\"",
                         "#1859: deleted report/label stable visual-object duplicate-subtree JSON should expose copied root unique ids");
+        expect_contains(duplicate_process.stdout_text, "\"rootParentName\": \"\"",
+                        "#2175: deleted report/label stable visual-object duplicate-subtree JSON should expose copied root parent names");
         expect_contains(duplicate_process.stdout_text, "\"dryRun\": false",
                         "#2174: deleted report/label stable visual-object duplicate-subtree JSON should expose committed state");
         expect_contains(duplicate_process.stdout_text, "\"mutatesAsset\": true",
