@@ -80134,6 +80134,34 @@ void test_studio_host_json_copies_deleted_report_visual_property_batches_by_stab
             expect_contains(target_reopen_process.stdout_text, "\"isLabel\": true",
                             "#1868: deleted label stable visual-property copy-batch should retain label identity");
         }
+        expect_contains(target_reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve live preview availability");
+        expect_contains(target_reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve live preview left bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve live preview top bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve live preview right bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve live preview bottom bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve live preview width");
+        expect_contains(target_reopen_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve live preview height");
+        expect_contains(target_reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve deleted preview availability");
+        expect_contains(target_reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 100",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve deleted preview left bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve deleted preview top bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 150",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve deleted preview right bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2800",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve deleted preview bottom bounds");
+        expect_contains(target_reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 50",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve deleted preview width");
+        expect_contains(target_reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                        "#2057: stable deleted report/label visual-property copy-batch JSON should preserve deleted preview height");
         expect_contains(target_reopen_process.stdout_text, "\"liveObjectCount\": 1",
                         "#1868: deleted report/label stable visual-property copy-batch should preserve live sibling counts");
         expect_contains(target_reopen_process.stdout_text, "\"deletedObjectCount\": 2",
