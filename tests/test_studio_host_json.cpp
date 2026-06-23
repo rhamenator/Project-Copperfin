@@ -75008,6 +75008,53 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatches_from_palette
     expect(visual_object_count(form_path) == before_count,
         "#2092: report toolbox-create-dispatch-from-dispatch-plan host command should not mutate assets");
 
+    const auto label_dispatch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-dispatch-from-dispatch-plan", "label",
+            "--selection-context", "label_expression",
+            "--create-unique-id", "dispatch-label-dispatch-guid",
+            "--create-parent-name", "DetailBand",
+            "--field-value", "CAPTION=Dispatch Label Plan",
+            "--admit-palette-invocation", "true",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(label_dispatch_process.exit_code == 0,
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON command should exit successfully");
+    expect_contains(label_dispatch_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should expose label dispatch plans");
+    expect_contains(label_dispatch_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should resolve report contexts");
+    expect_contains(label_dispatch_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should expose generated label names");
+    expect_contains(label_dispatch_process.stdout_text, "\"uniqueId\": \"dispatch-label-dispatch-guid\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should expose label unique ids");
+    expect_contains(label_dispatch_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should expose label parent overrides");
+    expect_contains(label_dispatch_process.stdout_text, "\"propertyValue\": \"Dispatch Label Plan\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should expose label field values");
+    expect_contains(label_dispatch_process.stdout_text, "\"--toolbox-create\", \"label\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should dispatch label creates");
+    expect_contains(label_dispatch_process.stdout_text, "\"--toolbox-context\", \"report\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should preserve report context arguments");
+    expect_contains(label_dispatch_process.stdout_text, "\"--object-name\", \"lbl1\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should preserve label object-name arguments");
+    expect_contains(label_dispatch_process.stdout_text, "\"--unique-id\", \"dispatch-label-dispatch-guid\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should preserve label unique-id arguments");
+    expect_contains(label_dispatch_process.stdout_text, "\"--parent-name\", \"DetailBand\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should preserve label parent arguments");
+    expect_contains(label_dispatch_process.stdout_text, "\"--field-value\", \"CAPTION=Dispatch Label Plan\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should preserve label field arguments");
+    expect_contains(label_dispatch_process.stdout_text, "\"executed\": false",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should remain non-executing");
+    expect_not_contains(label_dispatch_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2093: label toolbox-create-dispatch-from-dispatch-plan host command should not mutate assets");
+
     const auto non_admitted_palette_process = run_process_capture(
         studio_host_path,
         {
