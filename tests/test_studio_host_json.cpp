@@ -48345,6 +48345,13 @@ void test_studio_host_json_updates_report_column_count_fields_by_record_selectio
                "#1538: report/label column-count field update should persist the COLS field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1538: report/label column-count field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2030: label column-count field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2030: record-selected report/label column-count update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1538: report/label column-count field update should not fabricate page setup availability");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -48425,6 +48432,13 @@ void test_studio_host_json_updates_deleted_report_column_count_fields_by_record_
                "#1593: deleted report/label column-count field update should persist the COLS field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1593: deleted report/label column-count field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2030: label deleted column-count field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2030: record-selected deleted report/label column-count update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1593: deleted report/label column-count field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -48520,6 +48534,13 @@ void test_studio_host_json_clears_deleted_report_column_count_fields_by_record_s
                "#1594: deleted report/label column-count field clear should blank the COLS field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1594: deleted report/label column-count field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2030: label deleted column-count field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2030: record-selected deleted report/label column-count clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1594: deleted report/label column-count field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -48801,6 +48822,13 @@ void test_studio_host_json_clears_report_column_count_fields_by_record_selection
                "#1553: report/label column-count field clear should blank the COLS field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1553: report/label column-count field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2030: label column-count field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2030: record-selected report/label column-count clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1553: report/label column-count field clear should not fabricate page setup availability");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": true",
