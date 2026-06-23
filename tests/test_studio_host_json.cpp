@@ -46709,6 +46709,9 @@ void test_studio_host_json_updates_report_orientation_fields_by_record_selection
                "#1544: report/label orientation field update should persist the ORIENTATION field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1544: report/label orientation field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2022: record-selected report/label orientation update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1544: report/label orientation field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
@@ -46793,6 +46796,9 @@ void test_studio_host_json_clears_report_orientation_fields_by_record_selection(
                "#1548: report/label orientation field clear should blank the ORIENTATION field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1548: report/label orientation field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2022: record-selected report/label orientation clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1548: report/label orientation field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
@@ -46881,6 +46887,9 @@ void test_studio_host_json_updates_deleted_report_orientation_fields_by_record_s
                "#1589: deleted report/label orientation field update should persist the ORIENTATION field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1589: deleted report/label orientation field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2022: record-selected deleted report/label orientation update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1589: deleted report/label orientation field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -46979,6 +46988,9 @@ void test_studio_host_json_clears_deleted_report_orientation_fields_by_record_se
                "#1590: deleted report/label orientation field clear should blank the ORIENTATION field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1590: deleted report/label orientation field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2022: record-selected deleted report/label orientation clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1590: deleted report/label orientation field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
