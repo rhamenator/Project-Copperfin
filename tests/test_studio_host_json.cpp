@@ -53654,6 +53654,34 @@ void test_studio_host_json_exposes_selected_report_settings(const std::string& s
                     "#1457: report settings selections should expose settings selection kind");
     expect_contains(settings_process.stdout_text, "\"selectedReportSettings\": [",
                     "#1456: report root selections should expose selected-settings JSON");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1956: selected report settings JSON should expose live preview availability");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1956: selected report settings JSON should preserve live preview left bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1956: selected report settings JSON should preserve live preview top bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1956: selected report settings JSON should preserve live preview right bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                    "#1956: selected report settings JSON should preserve live preview bottom bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                    "#1956: selected report settings JSON should preserve live preview widths");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                    "#1956: selected report settings JSON should preserve live preview heights");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1956: selected report settings JSON should expose deleted preview availability");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                    "#1956: selected report settings JSON should preserve deleted preview left bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                    "#1956: selected report settings JSON should preserve deleted preview top bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                    "#1956: selected report settings JSON should preserve deleted preview right bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                    "#1956: selected report settings JSON should preserve deleted preview bottom bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                    "#1956: selected report settings JSON should preserve deleted preview widths");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                    "#1956: selected report settings JSON should preserve deleted preview heights");
     expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1514: selected report settings should not advertise selected-section availability");
     expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
