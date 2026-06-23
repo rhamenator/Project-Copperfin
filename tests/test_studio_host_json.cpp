@@ -60042,6 +60042,26 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
     expect_not_contains(container_override_process.stdout_text, "\"id\": \"class-builder\"",
                         "#1014: explicit container_object contexts should not expose class builders");
 
+    const auto report_override_process = run_process_capture(
+        studio_host_path,
+        {"--path", form_path.string(), "--selection-context", "report_expression", "--json"},
+        temp_root);
+
+    if (report_override_process.exit_code != 0) {
+        std::cerr << "studio host report override stdout:\n" << report_override_process.stdout_text << "\n";
+        std::cerr << "studio host report override stderr:\n" << report_override_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(report_override_process.exit_code == 0,
+           "#2072: Studio host explicit report context JSON smoke should exit successfully");
+    expect_contains(report_override_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+                    "#2072: explicit report_expression selection contexts should serialize through host JSON");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"report-builder\"",
+                    "#2072: explicit report_expression contexts should expose report builder metadata");
+    expect_not_contains(report_override_process.stdout_text, "\"id\": \"label-wizard\"",
+                        "#2072: explicit report_expression contexts should not reuse label wizard metadata");
+
     const auto label_override_process = run_process_capture(
         studio_host_path,
         {"--path", form_path.string(), "--selection-context", "label_expression", "--json"},
