@@ -79176,6 +79176,34 @@ void test_studio_host_json_updates_report_visual_object_batches_by_stable_select
             expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                             "#1842: label stable visual-object update-batch should retain label identity");
         }
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve live preview availability");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve live preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve live preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsRight\": 5500",
+                        "#2048: stable report/label live visual-object update-batch JSON should refresh live preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve live preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsWidth\": 5500",
+                        "#2048: stable report/label live visual-object update-batch JSON should refresh live preview width");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve live preview height");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve deleted preview availability");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve deleted preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve deleted preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve deleted preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve deleted preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve deleted preview width");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#2048: stable report/label live visual-object update-batch JSON should preserve deleted preview height");
         expect_contains_in_order(
             reopen_process.stdout_text,
             {
