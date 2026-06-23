@@ -84626,6 +84626,8 @@ void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stab
                         "#1861: deleted report/label stable visual-object reorder-batch JSON should expose mutation state");
         expect_contains(reorder_batch_process.stdout_text, "\"undoAvailable\": false",
                         "#1861: deleted report/label stable visual-object reorder-batch JSON should expose undo availability");
+        expect_contains(reorder_batch_process.stdout_text, "\"undoLabel\": \"\"",
+                        "#2172: deleted report/label stable visual-object reorder-batch JSON should expose empty undo labels");
         expect(visual_object_order(asset_path) == "right-field-guid,middle-field-guid,left-field-guid" &&
                    visual_object_deleted(asset_path, "right-field-guid") &&
                    visual_object_deleted(asset_path, "middle-field-guid") &&
