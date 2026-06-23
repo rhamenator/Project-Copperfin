@@ -78760,6 +78760,52 @@ void test_studio_host_json_creates_toolbox_object_batches(const std::string& stu
             command_caption.ok && command_caption.exists && command_caption.value == "Create Batch",
         "#1248: toolbox-create-batch host command should persist per-item direct fields");
 
+    const std::size_t report_batch_before_count = visual_object_count(form_path);
+    const auto report_batch_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch",
+            "--toolbox-context", "report",
+            "--toolbox-item", "label",
+            "--unique-id", "direct-report-batch-label-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Direct Report Batch",
+            "--json"
+        },
+        temp_root);
+    expect(report_batch_process.exit_code == 0,
+        "#2099: report toolbox-create-batch JSON command should exit successfully");
+    expect_contains(report_batch_process.stdout_text, "\"toolboxCreateBatch\": {",
+        "#2099: report toolbox-create-batch JSON should expose a batch result object");
+    expect_contains(report_batch_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2099: report toolbox-create-batch JSON should expose generated label names");
+    expect_contains(report_batch_process.stdout_text, "\"uniqueId\": \"direct-report-batch-label-guid\"",
+        "#2099: report toolbox-create-batch JSON should expose label unique ids");
+    expect_contains(report_batch_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2099: report toolbox-create-batch JSON should preserve label parent overrides");
+    expect_contains(report_batch_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
+        "#2099: report toolbox-create-batch JSON should summarize created report object names");
+    expect_contains(report_batch_process.stdout_text, "\"createdUniqueIds\": [\"direct-report-batch-label-guid\"]",
+        "#2099: report toolbox-create-batch JSON should summarize created report unique ids");
+    expect_contains(report_batch_process.stdout_text, "\"createErrors\": []",
+        "#2099: report toolbox-create-batch JSON should summarize empty create errors");
+    expect_not_contains(report_batch_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2099: report toolbox-create-batch JSON should exclude form-only textbox metadata");
+    expect(visual_object_count(form_path) == report_batch_before_count + 1U,
+        "#2099: report toolbox-create-batch host command should mutate the asset exactly once");
+
+    const auto report_batch_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "direct-report-batch-label-guid",
+        .property_name = "CAPTION"
+    });
+    expect(report_batch_caption.ok && report_batch_caption.exists &&
+            report_batch_caption.value == "Direct Report Batch",
+        "#2099: report toolbox-create-batch host command should persist caller fields");
+
     const std::size_t committed_count = visual_object_count(form_path);
     const auto duplicate_process = run_process_capture(
         studio_host_path,
