@@ -73790,16 +73790,38 @@ void test_studio_host_json_plans_selection_toolbox_object_creation(const std::st
         temp_root);
     expect(report_plan_process.exit_code == 0,
         "#1301: report selection-toolbox-create-plan JSON command should exit successfully");
+    expect_contains(report_plan_process.stdout_text, "\"selectionToolboxCreatePlan\": {",
+        "#2119: report selection-toolbox-create-plan JSON should expose a stable result object");
     expect_contains(report_plan_process.stdout_text, "\"selectionContext\": \"report_expression\"",
         "#1301: report selection-toolbox-create-plan JSON should expose report selections");
     expect_contains(report_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#1301: report selection-toolbox-create-plan JSON should expose report contexts");
+    expect_contains(report_plan_process.stdout_text, "\"launchPlanOk\": true",
+        "#2119: report selection-toolbox-create-plan JSON should expose launch plan status");
+    expect_contains(report_plan_process.stdout_text, "\"createPlanOk\": true",
+        "#2119: report selection-toolbox-create-plan JSON should expose create plan status");
+    expect_contains(report_plan_process.stdout_text, "\"createPlan\": {",
+        "#2119: report selection-toolbox-create-plan JSON should expose nested create plans");
     expect_contains(report_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1301: report selection-toolbox-create-plan JSON should expose label plans");
     expect_contains(report_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1301: report selection-toolbox-create-plan JSON should expose generated label names");
+    expect_contains(report_plan_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2119: report selection-toolbox-create-plan JSON should preserve report parent payloads");
+    expect_contains(report_plan_process.stdout_text, "\"planReadyItemIds\": [\"label\"]",
+        "#2119: report selection-toolbox-create-plan JSON should summarize plan-ready report item ids");
+    expect_contains(report_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#2119: report selection-toolbox-create-plan JSON should expose empty blocked item ids");
+    expect_contains(report_plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#2119: report selection-toolbox-create-plan JSON should expose empty blocked plan errors");
+    expect_contains(report_plan_process.stdout_text, "\"dryRun\": true",
+        "#2119: report selection-toolbox-create-plan JSON should expose dry-run state");
+    expect_contains(report_plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#2119: report selection-toolbox-create-plan JSON should remain non-mutating");
     expect_not_contains(report_plan_process.stdout_text, "\"className\": \"TextBox\"",
         "#1301: report selection-toolbox-create-plan JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2119: report selection-toolbox-create-plan host command should not mutate assets");
 
     const auto label_plan_process = run_process_capture(
         studio_host_path,
