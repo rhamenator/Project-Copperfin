@@ -60057,6 +60057,18 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
            "#2072: Studio host explicit report context JSON smoke should exit successfully");
     expect_contains(report_override_process.stdout_text, "\"selectionContext\": \"report_expression\"",
                     "#2072: explicit report_expression selection contexts should serialize through host JSON");
+    expect_contains(report_override_process.stdout_text, "\"editorActionCount\": 5",
+                    "#2078: explicit report_expression contexts should expose the full report/label editor-action set");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"edit-report-expression\"",
+                    "#2078: explicit report_expression contexts should expose expression editor actions");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"show-toolbox\"",
+                    "#2078: explicit report_expression contexts should expose toolbox editor actions");
+    expect_contains(report_override_process.stdout_text, "\"id\": \"edit-data-environment\"",
+                    "#2078: explicit report_expression contexts should expose data-environment editor actions");
+    expect_contains(report_override_process.stdout_text, "\"toolboxItemCount\": 4",
+                    "#2078: explicit report_expression contexts should expose report-safe toolbox item counts");
+    expect_not_contains(report_override_process.stdout_text, "\"id\": \"textbox\"",
+                        "#2078: explicit report_expression contexts should not expose form-only TextBox toolbox items");
     expect_contains(report_override_process.stdout_text, "\"id\": \"report-builder\"",
                     "#2072: explicit report_expression contexts should expose report builder metadata");
     expect_not_contains(report_override_process.stdout_text, "\"id\": \"label-wizard\"",
@@ -60077,6 +60089,18 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
            "#1011: Studio host explicit label context JSON smoke should exit successfully");
     expect_contains(label_override_process.stdout_text, "\"selectionContext\": \"label_expression\"",
                     "#1011: explicit label_expression selection contexts should serialize through host JSON");
+    expect_contains(label_override_process.stdout_text, "\"editorActionCount\": 5",
+                    "#2078: explicit label_expression contexts should expose the full report/label editor-action set");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"edit-report-expression\"",
+                    "#2078: explicit label_expression contexts should expose expression editor actions");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"show-toolbox\"",
+                    "#2078: explicit label_expression contexts should expose toolbox editor actions");
+    expect_contains(label_override_process.stdout_text, "\"id\": \"edit-data-environment\"",
+                    "#2078: explicit label_expression contexts should expose data-environment editor actions");
+    expect_contains(label_override_process.stdout_text, "\"toolboxItemCount\": 4",
+                    "#2078: explicit label_expression contexts should expose report-safe toolbox item counts");
+    expect_not_contains(label_override_process.stdout_text, "\"id\": \"textbox\"",
+                        "#2078: explicit label_expression contexts should not expose form-only TextBox toolbox items");
     expect_contains(label_override_process.stdout_text, "\"id\": \"label-wizard\"",
                     "#1011: explicit label_expression contexts should expose label wizard builders");
     expect_not_contains(label_override_process.stdout_text, "\"id\": \"report-builder\"",
