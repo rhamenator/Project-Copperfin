@@ -37224,6 +37224,22 @@ void test_studio_host_json_clears_report_section_heights_and_tops_by_stable_sele
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1824: label stable section top clear should retain label identity");
         }
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1914: report/label stable section top clear should preserve preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1914: report/label stable section top clear should preserve preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1914: report/label stable section top clear should refresh preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1914: report/label stable section top clear should preserve preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 5000",
+                        "#1914: report/label stable section top clear should refresh preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#1914: report/label stable section top clear should preserve preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#1914: report/label stable section top clear should preserve preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1914: report/label stable section top clear should not fabricate deleted preview bounds");
         expect_contains(clear_process.stdout_text, "\"sectionHeightTotal\": 5000",
                         "#1824: report/label stable section top clear should preserve section height totals");
         expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 3",
