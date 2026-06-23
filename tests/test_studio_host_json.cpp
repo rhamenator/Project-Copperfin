@@ -77966,10 +77966,26 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         temp_root);
     expect(label_catalog_process.exit_code == 0,
         "#2088: label selection toolbox batch dispatch catalog JSON command should exit successfully");
+    expect_contains(label_catalog_process.stdout_text, "\"selectionToolboxCreateBatchDispatchCatalog\": {",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose catalog objects");
     expect_contains(label_catalog_process.stdout_text, "\"selectionContext\": \"label_expression\"",
         "#2088: label selection toolbox batch dispatch catalog JSON should expose label selections");
     expect_contains(label_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2088: label selection toolbox batch dispatch catalog JSON should expose report contexts");
+    expect_contains(label_catalog_process.stdout_text, "\"launchPlanOk\": true",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose launch state");
+    expect_contains(label_catalog_process.stdout_text, "\"dispatchCount\": 1",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose one label batch dispatch");
+    expect_contains(label_catalog_process.stdout_text, "\"errorCount\": 0",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose zero catalog errors");
+    expect_contains(label_catalog_process.stdout_text, "\"batchPlanOk\": true",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose batch plan state");
+    expect_contains(label_catalog_process.stdout_text, "\"batchPlan\": {",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose nested batch plans");
+    expect_contains(label_catalog_process.stdout_text, "\"dispatchOk\": true",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose dispatch state");
+    expect_contains(label_catalog_process.stdout_text, "\"dispatch\": {",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose nested dispatch plans");
     expect_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#2088: label selection toolbox batch dispatch catalog JSON should include label plans");
     expect_contains(label_catalog_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
@@ -77978,12 +77994,18 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         "#2088: label selection toolbox batch dispatch catalog JSON should summarize empty blocked item ids");
     expect_contains(label_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
         "#2088: label selection toolbox batch dispatch catalog JSON should summarize empty blocked dispatch errors");
+    expect_contains(label_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2128: label selection toolbox batch dispatch catalog JSON should preserve label parent payloads");
     expect_contains(label_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#2088: label selection toolbox batch dispatch catalog JSON should preserve report dispatch context");
+    expect_contains(label_catalog_process.stdout_text, "\"dryRun\": false",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose non-dry-run dispatch state");
+    expect_contains(label_catalog_process.stdout_text, "\"mutatesAsset\": true",
+        "#2128: label selection toolbox batch dispatch catalog JSON should expose mutation intent");
     expect_not_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#2088: label selection toolbox batch dispatch catalog JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
-        "#2088: label selection toolbox batch dispatch catalog host command should not mutate the asset");
+        "#2128: label selection toolbox batch dispatch catalog host command should not mutate the asset");
 
     const auto unsupported_selection_process = run_process_capture(
         studio_host_path,
