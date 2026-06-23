@@ -50145,6 +50145,125 @@ void test_studio_host_json_exposes_selected_summary_report_objects_by_stable_sel
     }
 }
 
+void test_studio_host_json_exposes_selected_summary_report_objects_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_summary_report_objects_record_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "selected_summary_object_record.frx";
+    write_synthetic_report_table_for_stable_summary_object_json(report_path);
+
+    const auto object_process = run_process_capture(
+        studio_host_path,
+        {"--path", report_path.string(), "--record", "3", "--json"},
+        temp_root);
+
+    if (object_process.exit_code != 0) {
+        std::cerr << "studio host record-selected summary report object stdout:\n"
+                  << object_process.stdout_text << "\n";
+        std::cerr << "studio host record-selected summary report object stderr:\n"
+                  << object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(object_process.exit_code == 0,
+           "#1976: record-selected summary report object JSON should exit successfully");
+    expect_contains(object_process.stdout_text, "\"documentTitle\": \"selected_summary_object_record.frx\"",
+                    "#1976: record-selected summary report object JSON should preserve document titles");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1976: record-selected summary report object selections should advertise selected-object availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1976: record-selected summary report object selections should advertise report-selection availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1976: record-selected summary report object selections should expose object selection kind");
+    expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1976: record-selected summary report object JSON should expose live preview availability");
+    expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1976: record-selected summary report object JSON should preserve live preview left bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1976: record-selected summary report object JSON should preserve live preview top bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 1900",
+                    "#1976: record-selected summary report object JSON should preserve live preview right bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3900",
+                    "#1976: record-selected summary report object JSON should preserve live preview bottom bounds");
+    expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 1900",
+                    "#1976: record-selected summary report object JSON should preserve live preview widths");
+    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3900",
+                    "#1976: record-selected summary report object JSON should preserve live preview heights");
+    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                    "#1976: record-selected summary report object JSON should not fabricate deleted preview availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1976: record-selected summary report objects should not advertise selected-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1976: record-selected summary report objects should serialize null selected sections");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1976: record-selected summary report objects should not advertise selected-settings availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1976: record-selected summary report objects should serialize null selected settings");
+    expect_contains(object_process.stdout_text, "\"sectionCount\": 2",
+                    "#1976: record-selected summary report object JSON should preserve live section counts");
+    expect_contains(object_process.stdout_text, "\"deletedSectionCount\": 0",
+                    "#1976: record-selected summary report object JSON should preserve deleted section counts");
+    expect_contains(object_process.stdout_text, "\"liveObjectCount\": 1",
+                    "#1976: record-selected summary report object JSON should preserve live object counts");
+    expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 0",
+                    "#1976: record-selected summary report object JSON should preserve deleted object counts");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
+                    "#1976: record-selected summary report objects should advertise containing-section availability");
+    expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
+                    "#1976: record-selected summary report objects should expose containing-section JSON");
+    expect_contains_in_order(
+        object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 3",
+            "\"deleted\": false",
+            "\"containingSectionId\": \"summary_2\"",
+            "\"containingSectionRecordIndex\": 2",
+            "\"sectionRelativeTop\": 100",
+            "\"sectionRelativeBottom\": 350",
+            "\"sectionObjectIndex\": 0",
+            "\"sectionObjectCount\": 1",
+            "\"objectTypeCode\": 5",
+            "\"objectKind\": \"label\"",
+            "\"expression\": \"\\\"Summary label\\\"\""
+        },
+        "#1976: record-selected summary report object selections should expose selected-object metadata");
+    expect_contains(object_process.stdout_text, "\"left\": 400",
+                    "#1976: record-selected summary report object selections should expose selected-object left bounds");
+    expect_contains(object_process.stdout_text, "\"top\": 3300",
+                    "#1976: record-selected summary report object selections should expose selected-object top bounds");
+    expect_contains(object_process.stdout_text, "\"right\": 1900",
+                    "#1976: record-selected summary report object selections should expose selected-object right bounds");
+    expect_contains(object_process.stdout_text, "\"bottom\": 3550",
+                    "#1976: record-selected summary report object selections should expose selected-object bottom bounds");
+    expect_contains_in_order(
+        object_process.stdout_text,
+        {
+            "\"selectedReportObjectSection\": {",
+            "\"id\": \"summary_2\"",
+            "\"bandKind\": \"summary\"",
+            "\"recordIndex\": 2",
+            "\"deleted\": false",
+            "\"sectionIndex\": 1",
+            "\"sectionCount\": 2",
+            "\"top\": 3200",
+            "\"height\": 700",
+            "\"bottom\": 3900",
+            "\"objectCount\": 1"
+        },
+        "#1976: record-selected summary report object selections should expose containing summary metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -101859,6 +101978,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_deleted_page_header_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_summary_report_objects_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_selected_summary_report_objects_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_summary_report_objects_by_stable_selection(argv[1]);
     test_studio_host_json_clears_report_selection_for_missing_stable_selector(argv[1]);
     test_studio_host_json_clears_report_selection_for_blank_stable_selector(argv[1]);
