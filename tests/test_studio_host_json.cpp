@@ -81636,6 +81636,34 @@ void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_sel
             expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                             "#1844: label stable visual-object duplicate-batch should retain label identity");
         }
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve live preview availability");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve live preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve live preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve live preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve live preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve live preview width");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve live preview height");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should not fabricate deleted preview availability");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve zero deleted preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve zero deleted preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve zero deleted preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve zero deleted preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve zero deleted preview width");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#2052: stable report/label live visual-object duplicate-batch JSON should preserve zero deleted preview height");
         expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"left-copy-guid\"",
                         "#1844: report/label stable visual-object duplicate-batch should preserve selected duplicate identity after reopen");
         expect_contains_in_order(
