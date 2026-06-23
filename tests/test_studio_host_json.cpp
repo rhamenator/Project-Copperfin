@@ -54605,6 +54605,34 @@ void test_studio_host_json_exposes_selected_label_settings(const std::string& st
                     "#1496: label settings selections should expose settings selection kind");
     expect_contains(settings_process.stdout_text, "\"selectedReportSettings\": [",
                     "#1496: label root selections should expose selected-settings JSON");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1958: selected label settings JSON should expose live preview availability");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1958: selected label settings JSON should preserve live preview left bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1958: selected label settings JSON should preserve live preview top bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1958: selected label settings JSON should preserve live preview right bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                    "#1958: selected label settings JSON should preserve live preview bottom bounds");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                    "#1958: selected label settings JSON should preserve live preview widths");
+    expect_contains(settings_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                    "#1958: selected label settings JSON should preserve live preview heights");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1958: selected label settings JSON should expose deleted preview availability");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                    "#1958: selected label settings JSON should preserve deleted preview left bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                    "#1958: selected label settings JSON should preserve deleted preview top bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                    "#1958: selected label settings JSON should preserve deleted preview right bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                    "#1958: selected label settings JSON should preserve deleted preview bottom bounds");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                    "#1958: selected label settings JSON should preserve deleted preview widths");
+    expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                    "#1958: selected label settings JSON should preserve deleted preview heights");
     expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1504: selected label settings should not advertise selected-section availability");
     expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
