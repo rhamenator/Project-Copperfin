@@ -50273,6 +50273,9 @@ void test_studio_host_json_updates_report_column_spacing_fields_by_stable_select
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1837: label stable column-spacing field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2035: stable-selected report/label column-spacing update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1837: report/label stable column-spacing field update should not fabricate page setup availability");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -50366,6 +50369,9 @@ void test_studio_host_json_clears_report_column_spacing_fields_by_stable_selecti
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1837: label stable column-spacing field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2035: stable-selected report/label column-spacing clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1837: report/label stable column-spacing field clear should not fabricate page setup availability");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -50462,6 +50468,9 @@ void test_studio_host_json_updates_deleted_report_column_spacing_fields_by_stabl
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1837: label stable deleted column-spacing field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2035: stable-selected deleted report/label column-spacing update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1837: report/label stable deleted column-spacing field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -50561,6 +50570,9 @@ void test_studio_host_json_clears_deleted_report_column_spacing_fields_by_stable
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1837: label stable deleted column-spacing field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2035: stable-selected deleted report/label column-spacing clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1837: report/label stable deleted column-spacing field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
