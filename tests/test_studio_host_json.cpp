@@ -52249,6 +52249,34 @@ void test_studio_host_json_exposes_selected_deleted_column_header_report_objects
                         "#1688: stable deleted column-header object selections should clear live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1688: stable deleted column-header object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1946: stable selected deleted column-header object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1946: stable selected deleted column-header object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1946: stable selected deleted column-header object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1946: stable selected deleted column-header object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3450",
+                        "#1946: stable selected deleted column-header object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1946: stable selected deleted column-header object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3450",
+                        "#1946: stable selected deleted column-header object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1946: stable selected deleted column-header object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 200",
+                        "#1946: stable selected deleted column-header object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 100",
+                        "#1946: stable selected deleted column-header object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 1900",
+                        "#1946: stable selected deleted column-header object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 350",
+                        "#1946: stable selected deleted column-header object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1700",
+                        "#1946: stable selected deleted column-header object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
+                        "#1946: stable selected deleted column-header object JSON should preserve deleted preview heights");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
                         "#1688: stable deleted column-header object selections should not advertise containing-section availability");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
