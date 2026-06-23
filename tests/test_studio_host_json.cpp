@@ -79869,10 +79869,26 @@ void test_studio_host_json_creates_toolbox_objects(const std::string& studio_hos
                     "#1019: report-compatible toolbox creates should expose generated label names");
     expect_contains(report_label_process.stdout_text, "\"uniqueId\": \"report-label-guid\"",
                     "#1019: report-compatible toolbox creates should expose created unique ids");
+    expect_contains(report_label_process.stdout_text, "\"parentName\": \"DetailBand\"",
+                    "#2104: report-compatible toolbox creates should preserve report label parents");
     expect_contains(report_label_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
                     "#1382: report toolbox-create JSON should summarize created report object names");
     expect_contains(report_label_process.stdout_text, "\"createdUniqueIds\": [\"report-label-guid\"]",
                     "#1382: report toolbox-create JSON should summarize created report unique ids");
+    expect_not_contains(report_label_process.stdout_text, "\"className\": \"TextBox\"",
+                    "#2104: report toolbox-create JSON should exclude form-only TextBox metadata");
+    expect(visual_object_count(form_path) == object_count_before_failure + 1U,
+        "#2104: report toolbox-create host command should mutate the asset exactly once");
+
+    const auto report_label_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "report-label-guid",
+        .property_name = "CAPTION"
+    });
+    expect(report_label_caption.ok && report_label_caption.exists && report_label_caption.value == "Total",
+        "#2104: report toolbox-create host command should persist caller report label fields");
 
     const std::size_t object_count_before_context_failure = visual_object_count(form_path);
     const auto report_textbox_process = run_process_capture(
