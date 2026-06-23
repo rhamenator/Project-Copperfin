@@ -25473,6 +25473,22 @@ void test_studio_host_json_exposes_report_column_header_sections_by_stable_selec
                         "#1676: stable selected column-header section JSON should preserve live sibling section counts");
         expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
                         "#1676: stable selected column-header section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1937: stable selected column-header section JSON should expose live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1937: stable selected column-header section JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1937: stable selected column-header section JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1937: stable selected column-header section JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 3450",
+                        "#1937: stable selected column-header section JSON should preserve live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1937: stable selected column-header section JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 3450",
+                        "#1937: stable selected column-header section JSON should preserve live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1937: stable selected column-header section JSON should not fabricate deleted preview availability");
         expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
                         "#1676: stable selected column-header sections should not advertise selected-object availability");
         expect_contains(process.stdout_text, "\"selectedReportObject\": null",
