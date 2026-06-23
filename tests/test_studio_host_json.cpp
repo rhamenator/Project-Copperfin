@@ -77139,6 +77139,38 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
     expect(visual_object_count(form_path) == before_count,
         "#1299: report selection toolbox batch dispatch catalog host command should not mutate the asset");
 
+    const auto label_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--selection-context", "label_expression",
+            "--parent-name", "DetailBand",
+            "--admit-create-operation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(label_catalog_process.exit_code == 0,
+        "#2088: label selection toolbox batch dispatch catalog JSON command should exit successfully");
+    expect_contains(label_catalog_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#2088: label selection toolbox batch dispatch catalog JSON should expose label selections");
+    expect_contains(label_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2088: label selection toolbox batch dispatch catalog JSON should expose report contexts");
+    expect_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2088: label selection toolbox batch dispatch catalog JSON should include label plans");
+    expect_contains(label_catalog_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
+        "#2088: label selection toolbox batch dispatch catalog JSON should summarize dispatch-ready label items");
+    expect_contains(label_catalog_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#2088: label selection toolbox batch dispatch catalog JSON should summarize empty blocked item ids");
+    expect_contains(label_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
+        "#2088: label selection toolbox batch dispatch catalog JSON should summarize empty blocked dispatch errors");
+    expect_contains(label_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
+        "#2088: label selection toolbox batch dispatch catalog JSON should preserve report dispatch context");
+    expect_not_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#2088: label selection toolbox batch dispatch catalog JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2088: label selection toolbox batch dispatch catalog host command should not mutate the asset");
+
     const auto unsupported_selection_process = run_process_capture(
         studio_host_path,
         {
