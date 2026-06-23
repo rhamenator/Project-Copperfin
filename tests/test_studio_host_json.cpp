@@ -74393,24 +74393,54 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_dispatch(cons
         temp_root);
     expect(label_process.exit_code == 0,
         "#2082: label selection-toolbox-create-dispatch-plan JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"selectionToolboxCreateDispatchPlan\": {",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose a stable result object");
     expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should expose label selections");
     expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"launchPlanOk\": true",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose launch state");
+    expect_contains(label_process.stdout_text, "\"createPlanOk\": true",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose create-plan state");
+    expect_contains(label_process.stdout_text, "\"dispatchOk\": true",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose dispatch state");
+    expect_contains(label_process.stdout_text, "\"dispatchCount\": 1",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose dispatch counts");
+    expect_contains(label_process.stdout_text, "\"errorCount\": 0",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose zero errors");
     expect_contains(label_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should expose label dispatches");
     expect_contains(label_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should expose generated label names");
+    expect_contains(label_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should preserve label parent payloads");
+    expect_contains(label_process.stdout_text, "\"dispatchArguments\": [",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose dispatch arguments");
+    expect_contains(label_process.stdout_text, "\"--toolbox-create\", \"label\"",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should dispatch to toolbox-create");
     expect_contains(label_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should preserve report context arguments");
+    expect_contains(label_process.stdout_text, "\"--parent-name\", \"DetailBand\"",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should preserve label parent arguments");
     expect_contains(label_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"]",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should summarize dispatch-ready label item ids");
+    expect_contains(label_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should summarize empty blocked item ids");
     expect_contains(label_process.stdout_text, "\"dispatchBlockedErrors\": []",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should summarize empty dispatch errors");
+    expect_contains(label_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose dispatch admission state");
+    expect_contains(label_process.stdout_text, "\"dryRun\": false",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose non-dry-run state");
+    expect_contains(label_process.stdout_text, "\"executed\": false",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should remain non-executing");
+    expect_contains(label_process.stdout_text, "\"mutatesAsset\": true",
+        "#2123: label selection-toolbox-create-dispatch-plan JSON should expose mutation intent");
     expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
         "#2082: label selection-toolbox-create-dispatch-plan JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
-        "#2082: label selection-toolbox-create-dispatch-plan host command should not mutate assets");
+        "#2123: label selection-toolbox-create-dispatch-plan host command should not mutate assets");
 
     const auto unavailable_process = run_process_capture(
         studio_host_path,
