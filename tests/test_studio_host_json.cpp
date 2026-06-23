@@ -76223,43 +76223,53 @@ void test_studio_host_json_plans_toolbox_object_creation_batch_dispatches_from_p
         },
         temp_root);
     expect(label_batch_dispatch_process.exit_code == 0,
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON command should exit successfully");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON command should exit successfully");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"toolboxCreateBatchDispatchPlan\": {",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose batch dispatch plans");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose stable batch dispatch plans");
+    expect_contains(label_batch_dispatch_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should use dispatch toolbox contexts");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"toolboxContext\": \"report\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should resolve report contexts");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should resolve report contexts");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"itemCount\": 1",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label batch item counts");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label batch item counts");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"toolboxItemId\": \"label\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label batch dispatch plans");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label batch dispatch plans");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"objectName\": \"lbl1\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose generated label names");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose generated label names");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"uniqueId\": \"dispatch-label-batch-dispatch-guid\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label unique ids");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label unique ids");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"parentName\": \"DetailBand\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label parent overrides");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label parent overrides");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"propertyValue\": \"Dispatch Label Batch Plan\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label field values");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose label field values");
+    expect_contains(label_batch_dispatch_process.stdout_text, "\"dispatchArguments\": [",
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose dispatch arguments");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"--toolbox-create-batch\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should dispatch to batch create");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should dispatch to batch create");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"--toolbox-context\", \"report\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve report context arguments");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve report context arguments");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"--toolbox-item\", \"label\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label item arguments");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label item arguments");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"--object-name\", \"lbl1\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label object-name arguments");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label object-name arguments");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"--unique-id\", \"dispatch-label-batch-dispatch-guid\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label unique-id arguments");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label unique-id arguments");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"--parent-name\", \"DetailBand\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label parent arguments");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label parent arguments");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"--field-value\", \"CAPTION=Dispatch Label Batch Plan\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label field arguments");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should preserve label field arguments");
+    expect_contains(label_batch_dispatch_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose dispatch admission state");
+    expect_contains(label_batch_dispatch_process.stdout_text, "\"dryRun\": false",
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose non-dry-run state");
     expect_contains(label_batch_dispatch_process.stdout_text, "\"executed\": false",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should remain non-executing");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should remain non-executing");
+    expect_contains(label_batch_dispatch_process.stdout_text, "\"mutatesAsset\": true",
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should expose mutation intent");
     expect_not_contains(label_batch_dispatch_process.stdout_text, "\"className\": \"TextBox\"",
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should exclude form-only textbox plans");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
-        "#2098: label toolbox-create-batch-dispatch-from-dispatch-plan host command should not mutate assets");
+        "#2134: label toolbox-create-batch-dispatch-from-dispatch-plan host command should not mutate assets");
 
     const auto non_admitted_palette_process = run_process_capture(
         studio_host_path,
