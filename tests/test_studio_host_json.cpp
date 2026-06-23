@@ -54703,6 +54703,34 @@ void test_studio_host_json_exposes_selected_summary_report_objects_by_stable_sel
             expect_contains(object_process.stdout_text, "\"isLabel\": true",
                             "#1696: stable selected summary label object JSON should retain label identity");
         }
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2066: stable selected summary report/label object JSON should expose live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 1900",
+                        "#2066: stable selected summary report/label object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3900",
+                        "#2066: stable selected summary report/label object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 1900",
+                        "#2066: stable selected summary report/label object JSON should preserve live preview width");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3900",
+                        "#2066: stable selected summary report/label object JSON should preserve live preview height");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2066: stable selected summary report/label object JSON should not fabricate deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve zero deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve zero deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve zero deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve zero deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve zero deleted preview width");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#2066: stable selected summary report/label object JSON should preserve zero deleted preview height");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1696: stable summary object selections should advertise selected-object availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
