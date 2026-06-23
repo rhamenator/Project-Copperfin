@@ -53286,10 +53286,20 @@ void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_s
                         "#1859: deleted report/label stable visual-object duplicate-subtree JSON should expose appended root indexes");
         expect_contains(duplicate_process.stdout_text, "\"copiedCount\": 1",
                         "#1859: deleted report/label stable visual-object duplicate-subtree JSON should expose copied counts");
+        expect_contains(duplicate_process.stdout_text, "\"affectedObjectCount\": 1",
+                        "#2174: deleted report/label stable visual-object duplicate-subtree JSON should expose affected object counts");
         expect_contains(duplicate_process.stdout_text, "\"rootObjectName\": \"MiddleDeletedCopy\"",
                         "#1859: deleted report/label stable visual-object duplicate-subtree JSON should expose copied root object names");
         expect_contains(duplicate_process.stdout_text, "\"rootUniqueId\": \"middle-deleted-copy-guid\"",
                         "#1859: deleted report/label stable visual-object duplicate-subtree JSON should expose copied root unique ids");
+        expect_contains(duplicate_process.stdout_text, "\"dryRun\": false",
+                        "#2174: deleted report/label stable visual-object duplicate-subtree JSON should expose committed state");
+        expect_contains(duplicate_process.stdout_text, "\"mutatesAsset\": true",
+                        "#2174: deleted report/label stable visual-object duplicate-subtree JSON should expose mutation state");
+        expect_contains(duplicate_process.stdout_text, "\"undoAvailable\": false",
+                        "#2174: deleted report/label stable visual-object duplicate-subtree JSON should expose undo availability");
+        expect_contains(duplicate_process.stdout_text, "\"undoLabel\": \"\"",
+                        "#2174: deleted report/label stable visual-object duplicate-subtree JSON should expose empty undo labels");
         expect(visual_object_count(asset_path) == before_count + 1U &&
                    visual_object_deleted(asset_path, "middle-field-guid") &&
                    visual_object_deleted(asset_path, "middle-deleted-copy-guid") &&
