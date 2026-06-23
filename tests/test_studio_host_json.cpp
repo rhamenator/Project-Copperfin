@@ -52112,6 +52112,22 @@ void test_studio_host_json_exposes_selected_column_header_report_objects_by_stab
                         "#1684: stable column-header object selections should preserve live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 0",
                         "#1684: stable column-header object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1945: stable selected column-header object JSON should expose live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1945: stable selected column-header object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1945: stable selected column-header object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 1900",
+                        "#1945: stable selected column-header object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3450",
+                        "#1945: stable selected column-header object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 1900",
+                        "#1945: stable selected column-header object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3450",
+                        "#1945: stable selected column-header object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1945: stable selected column-header object JSON should not fabricate deleted preview bounds");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                         "#1684: stable column-header object selections should advertise containing-section availability");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
