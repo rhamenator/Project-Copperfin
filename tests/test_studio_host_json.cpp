@@ -52933,6 +52933,34 @@ void test_studio_host_json_exposes_selected_page_header_report_objects_by_stable
                         "#1663: stable page-header object selections should preserve live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1663: stable page-header object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1951: stable selected page-header object JSON should expose live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1951: stable selected page-header object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1951: stable selected page-header object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1951: stable selected page-header object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1951: stable selected page-header object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1951: stable selected page-header object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1951: stable selected page-header object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1951: stable selected page-header object JSON should preserve deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1951: stable selected page-header object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1951: stable selected page-header object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1951: stable selected page-header object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1951: stable selected page-header object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1951: stable selected page-header object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1951: stable selected page-header object JSON should preserve deleted preview heights");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                         "#1663: stable page-header object selections should advertise containing-section availability");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": {",
