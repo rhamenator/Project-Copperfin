@@ -55,6 +55,37 @@ void expect_contains_in_order(
     }
 }
 
+void expect_full_report_layout_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 0",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 5200",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 8100",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 5200",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 8100",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 1000",
+                    prefix + " should preserve deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 2600",
+                    prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 2200",
+                    prefix + " should preserve deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 2900",
+                    prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 1200",
+                    prefix + " should preserve deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 300",
+                    prefix + " should preserve deleted preview heights");
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -43750,6 +43781,9 @@ void test_studio_host_json_updates_report_page_margin_fields_by_record_selection
                "#1537: report/label page-margin field update should persist the TOPMARGIN field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1537: report/label page-margin field update should return refreshed report-layout JSON");
+        expect_full_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2018: record-selected report/label page-margin update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1537: report/label page-margin field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"topMargin\": " + updated_margin,
@@ -43832,6 +43866,9 @@ void test_studio_host_json_updates_deleted_report_page_margin_fields_by_record_s
                "#1581: deleted report/label page-margin field update should persist the TOPMARGIN field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1581: deleted report/label page-margin field update should return refreshed report-layout JSON");
+        expect_full_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2018: record-selected deleted report/label page-margin update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1581: deleted report/label page-margin field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -43934,6 +43971,9 @@ void test_studio_host_json_clears_deleted_report_page_margin_fields_by_record_se
                "#1582: deleted report/label page-margin field clear should blank the TOPMARGIN field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1582: deleted report/label page-margin field clear should return refreshed report-layout JSON");
+        expect_full_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2018: record-selected deleted report/label page-margin clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1582: deleted report/label page-margin field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
@@ -44033,6 +44073,9 @@ void test_studio_host_json_clears_report_page_margin_fields_by_record_selection(
                "#1549: report/label page-margin field clear should blank the TOPMARGIN field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1549: report/label page-margin field clear should return refreshed report-layout JSON");
+        expect_full_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2018: record-selected report/label page-margin clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1549: report/label page-margin field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
