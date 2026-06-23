@@ -57401,6 +57401,34 @@ void test_studio_host_json_exposes_selected_group_footer_report_objects_by_stabl
             expect_contains(object_process.stdout_text, "\"isLabel\": true",
                             "#1691: stable selected group-footer label object JSON should retain label identity");
         }
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2070: stable selected group-footer report/label object JSON should expose live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 1800",
+                        "#2070: stable selected group-footer report/label object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2070: stable selected group-footer report/label object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 1800",
+                        "#2070: stable selected group-footer report/label object JSON should preserve live preview width");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#2070: stable selected group-footer report/label object JSON should preserve live preview height");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2070: stable selected group-footer report/label object JSON should not fabricate deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve zero deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve zero deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve zero deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve zero deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve zero deleted preview width");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#2070: stable selected group-footer report/label object JSON should preserve zero deleted preview height");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1691: stable group-footer object selections should advertise selected-object availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
