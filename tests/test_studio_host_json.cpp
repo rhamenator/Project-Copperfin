@@ -44167,6 +44167,9 @@ void test_studio_host_json_updates_report_page_margin_fields_by_stable_selection
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1828: label stable page-margin field update should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2019: stable-selected report/label page-margin update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1828: report/label stable page-margin field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"topMargin\": " + updated_margin,
@@ -44258,6 +44261,9 @@ void test_studio_host_json_clears_report_page_margin_fields_by_stable_selection(
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1828: label stable page-margin field clear should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2019: stable-selected report/label page-margin clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1828: report/label stable page-margin field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"topMarginAvailable\": false",
@@ -44352,6 +44358,9 @@ void test_studio_host_json_updates_deleted_report_page_margin_fields_by_stable_s
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1829: label stable deleted page-margin field update should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2019: stable-selected deleted report/label page-margin update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1829: report/label stable deleted page-margin field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -44445,6 +44454,9 @@ void test_studio_host_json_clears_deleted_report_page_margin_fields_by_stable_se
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1829: label stable deleted page-margin field clear should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2019: stable-selected deleted report/label page-margin clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1829: report/label stable deleted page-margin field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
