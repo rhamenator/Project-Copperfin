@@ -36951,6 +36951,22 @@ void test_studio_host_json_updates_report_section_heights_and_tops_by_stable_sel
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1824: label stable section height update should retain label identity");
         }
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1911: report/label stable section height update should preserve preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1911: report/label stable section height update should preserve preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#1911: report/label stable section height update should preserve preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1911: report/label stable section height update should preserve preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": " + updated_bottom,
+                        "#1911: report/label stable section height update should refresh preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#1911: report/label stable section height update should preserve preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": " + updated_height,
+                        "#1911: report/label stable section height update should refresh preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1911: report/label stable section height update should not fabricate deleted preview bounds");
         expect_contains(update_process.stdout_text, "\"sectionHeightTotal\": " + updated_height,
                         "#1824: report/label stable section height update should refresh section height totals");
         expect_contains(update_process.stdout_text, "\"placedObjectCount\": 3",
