@@ -52581,6 +52581,34 @@ void test_studio_host_json_applies_report_object_deleted_states_by_stable_select
             expect_contains(delete_process.stdout_text, "\"isLabel\": true",
                             "#1840: label stable object deleted-states batch delete should retain label identity");
         }
+        expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2043: stable report/label object deleted-states batch delete JSON should preserve live preview availability");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2043: stable report/label object deleted-states batch delete JSON should preserve live preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2043: stable report/label object deleted-states batch delete JSON should preserve live preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh live preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#2043: stable report/label object deleted-states batch delete JSON should preserve live preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh live preview width");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#2043: stable report/label object deleted-states batch delete JSON should preserve live preview height");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2043: stable report/label object deleted-states batch delete JSON should expose deleted preview availability");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 900",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh deleted preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 100",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh deleted preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 5200",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh deleted preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3050",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh deleted preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 4300",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh deleted preview width");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 2950",
+                        "#2043: stable report/label object deleted-states batch delete JSON should refresh deleted preview height");
         expect_contains(delete_process.stdout_text, "\"liveObjectCount\": 1",
                         "#1840: report/label stable object deleted-states batch delete should remove objects from live counts");
         expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 0",
@@ -52664,6 +52692,9 @@ void test_studio_host_json_applies_report_object_deleted_states_by_stable_select
             expect_contains(restore_process.stdout_text, "\"isLabel\": true",
                             "#1840: label stable object deleted-states batch restore should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            restore_process.stdout_text,
+            "#2043: stable report/label object deleted-states batch restore JSON");
         expect_contains(restore_process.stdout_text, "\"liveObjectCount\": 3",
                         "#1840: report/label stable object deleted-states batch restore should restore live object counts");
         expect_contains(restore_process.stdout_text, "\"placedObjectCount\": 2",
