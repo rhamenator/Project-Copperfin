@@ -27199,6 +27199,34 @@ void test_studio_host_json_exposes_label_layout_parity(const std::string& studio
                     "#1499: unplaced label object selections should advertise report-selection availability");
     expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                     "#1499: unplaced label object selections should expose object selection kind");
+    expect_contains(unplaced_object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1969: selected unplaced label object JSON should expose live preview availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1969: selected unplaced label object JSON should preserve live preview left bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1969: selected unplaced label object JSON should preserve live preview top bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1969: selected unplaced label object JSON should preserve live preview right bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                    "#1969: selected unplaced label object JSON should preserve live preview bottom bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                    "#1969: selected unplaced label object JSON should preserve live preview widths");
+    expect_contains(unplaced_object_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                    "#1969: selected unplaced label object JSON should preserve live preview heights");
+    expect_contains(unplaced_object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1969: selected unplaced label object JSON should expose deleted preview availability");
+    expect_contains(unplaced_object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                    "#1969: selected unplaced label object JSON should preserve deleted preview left bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                    "#1969: selected unplaced label object JSON should preserve deleted preview top bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                    "#1969: selected unplaced label object JSON should preserve deleted preview right bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                    "#1969: selected unplaced label object JSON should preserve deleted preview bottom bounds");
+    expect_contains(unplaced_object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                    "#1969: selected unplaced label object JSON should preserve deleted preview widths");
+    expect_contains(unplaced_object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                    "#1969: selected unplaced label object JSON should preserve deleted preview heights");
     expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                     "#1508: selected unplaced label objects should not advertise selected-section availability");
     expect_contains(unplaced_object_process.stdout_text, "\"selectedReportSection\": null",
