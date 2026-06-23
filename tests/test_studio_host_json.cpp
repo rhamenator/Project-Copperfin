@@ -84031,6 +84031,8 @@ void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stabl
                "#1862: deleted report/label stable visual-object rename-batch identity collision should fail");
         expect_contains(rollback_process.stdout_text, "\"visualObjectRenameBatch\": null",
                         "#1862: failed deleted report/label stable visual-object rename-batch JSON should not expose stale batch objects");
+        expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
+                            "#2179: failed deleted report/label stable visual-object rename-batch JSON should not advertise undo availability");
         expect_contains(rollback_process.stdout_text, "The requested identity value already exists in the asset.",
                         "#1862: failed deleted report/label stable visual-object rename-batch JSON should report collision errors");
         expect(visual_object_exists(asset_path, "left-field-guid") &&
