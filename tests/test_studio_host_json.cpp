@@ -79042,24 +79042,66 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         temp_root);
     expect(label_process.exit_code == 0,
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"selectionToolboxCreateBatchDispatchPlan\": {",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose a stable result object");
     expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should expose label selections");
     expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"launchPlanOk\": true",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose launch state");
+    expect_contains(label_process.stdout_text, "\"itemCount\": 1",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose label item counts");
+    expect_contains(label_process.stdout_text, "\"dispatchCount\": 1",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose dispatch counts");
+    expect_contains(label_process.stdout_text, "\"errorCount\": 0",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose zero errors");
+    expect_contains(label_process.stdout_text, "\"batchPlanOk\": true",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose batch-plan state");
+    expect_contains(label_process.stdout_text, "\"dispatchOk\": true",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose dispatch state");
+    expect_contains(label_process.stdout_text, "\"batchPlan\": {",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose nested batch plans");
+    expect_contains(label_process.stdout_text, "\"dispatch\": {",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose nested dispatch plans");
     expect_contains(label_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should expose label plans");
     expect_contains(label_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should expose generated label names");
+    expect_contains(label_process.stdout_text, "\"uniqueId\": \"selection-batch-dispatch-guid\"",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose caller unique ids");
+    expect_contains(label_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should preserve label parent payloads");
+    expect_contains(label_process.stdout_text, "\"propertyValue\": \"Label Selection Dispatch\"",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose caller label fields");
+    expect_contains(label_process.stdout_text, "\"dispatchArguments\": [",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose dispatch arguments");
+    expect_contains(label_process.stdout_text, "\"--toolbox-create-batch\"",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should dispatch to batch creation");
     expect_contains(label_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should dispatch resolved report contexts");
+    expect_contains(label_process.stdout_text, "\"--parent-name\", \"DetailBand\"",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should preserve label parent arguments");
+    expect_contains(label_process.stdout_text, "\"--field-value\", \"CAPTION=Label Selection Dispatch\"",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should preserve label field arguments");
     expect_contains(label_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"]",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should summarize dispatch-ready label item ids");
+    expect_contains(label_process.stdout_text, "\"dispatchBlockedItemIds\": []",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should summarize empty blocked item ids");
     expect_contains(label_process.stdout_text, "\"dispatchBlockedErrors\": []",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should summarize empty dispatch errors");
+    expect_contains(label_process.stdout_text, "\"dispatchAdmitted\": true",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose admission state");
+    expect_contains(label_process.stdout_text, "\"dryRun\": false",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose non-dry-run dispatch state");
+    expect_contains(label_process.stdout_text, "\"executed\": false",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should remain non-executing");
+    expect_contains(label_process.stdout_text, "\"mutatesAsset\": true",
+        "#2124: label selection-toolbox-create-batch-dispatch-plan JSON should expose mutation intent");
     expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
         "#2086: label selection-toolbox-create-batch-dispatch-plan JSON should exclude form-only textboxes");
     expect(visual_object_count(form_path) == before_count,
-        "#2086: label selection-toolbox-create-batch-dispatch-plan host command should not mutate assets");
+        "#2124: label selection-toolbox-create-batch-dispatch-plan host command should not mutate assets");
 
     const auto unavailable_process = run_process_capture(
         studio_host_path,
