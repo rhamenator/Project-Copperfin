@@ -27760,6 +27760,110 @@ void test_studio_host_json_exposes_selected_page_header_report_sections_by_recor
     }
 }
 
+void test_studio_host_json_exposes_selected_page_header_label_sections_by_record_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selected_page_header_label_sections_record_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path label_path = temp_root / "selected_page_header_section_record.lbx";
+    write_synthetic_report_table_for_stable_page_header_section_json(label_path);
+
+    const auto section_process = run_process_capture(
+        studio_host_path,
+        {"--path", label_path.string(), "--record", "1", "--json"},
+        temp_root);
+
+    if (section_process.exit_code != 0) {
+        std::cerr << "studio host record-selected page-header label section stdout:\n"
+                  << section_process.stdout_text << "\n";
+        std::cerr << "studio host record-selected page-header label section stderr:\n"
+                  << section_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(section_process.exit_code == 0,
+           "#2009: record-selected page-header label section JSON should exit successfully");
+    expect_contains(section_process.stdout_text,
+                    "\"documentTitle\": \"selected_page_header_section_record.lbx\"",
+                    "#2009: record-selected page-header label section JSON should preserve document titles");
+    expect_contains(section_process.stdout_text, "\"isLabel\": true",
+                    "#2009: record-selected page-header label section JSON should retain label identity");
+    expect_contains(section_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                    "#2009: record-selected page-header label sections should advertise selected-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#2009: record-selected page-header label sections should advertise report-selection availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                    "#2009: record-selected page-header label sections should expose section selection kind");
+    expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#2009: record-selected page-header label section JSON should expose live preview availability");
+    expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#2009: record-selected page-header label section JSON should preserve live preview left bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#2009: record-selected page-header label section JSON should preserve live preview top bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 0",
+                    "#2009: record-selected page-header label section JSON should preserve live preview right bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 3700",
+                    "#2009: record-selected page-header label section JSON should preserve live preview bottom bounds");
+    expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 0",
+                    "#2009: record-selected page-header label section JSON should preserve live preview widths");
+    expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 3700",
+                    "#2009: record-selected page-header label section JSON should preserve live preview heights");
+    expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                    "#2009: record-selected page-header label section JSON should not fabricate deleted preview availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                    "#2009: record-selected page-header label sections should not advertise selected-object availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
+                    "#2009: record-selected page-header label sections should serialize null selected objects");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#2009: record-selected page-header label sections should not advertise selected object-section availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#2009: record-selected page-header label sections should serialize null selected object sections");
+    expect_contains(section_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#2009: record-selected page-header label sections should not advertise selected-settings availability");
+    expect_contains(section_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#2009: record-selected page-header label sections should serialize null selected settings");
+    expect_contains(section_process.stdout_text, "\"sectionCount\": 3",
+                    "#2009: record-selected page-header label section JSON should preserve live section counts");
+    expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 0",
+                    "#2009: record-selected page-header label section JSON should preserve deleted section counts");
+    expect_contains_in_order(
+        section_process.stdout_text,
+        {
+            "\"sections\": [",
+            "\"bandKind\": \"page_header\"",
+            "\"recordIndex\": 1",
+            "\"bandKind\": \"detail\"",
+            "\"recordIndex\": 2",
+            "\"bandKind\": \"page_footer\"",
+            "\"recordIndex\": 3"
+        },
+        "#2009: record-selected page-header label section JSON should expose sibling section metadata");
+    expect_contains_in_order(
+        section_process.stdout_text,
+        {
+            "\"selectedReportSection\": {",
+            "\"id\": \"page_header_1\"",
+            "\"bandKind\": \"page_header\"",
+            "\"recordIndex\": 1",
+            "\"deleted\": false",
+            "\"sectionIndex\": 0",
+            "\"sectionCount\": 3",
+            "\"top\": 0",
+            "\"height\": 700",
+            "\"bottom\": 700"
+        },
+        "#2009: record-selected page-header label sections should expose selected section metadata");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_selected_summary_report_sections_by_stable_selection(
     const std::string& studio_host_path) {
     namespace fs = std::filesystem;
@@ -105499,6 +105603,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_exposes_selected_deleted_column_footer_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_column_footer_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_page_header_report_sections_by_record_selection(argv[1]);
+    test_studio_host_json_exposes_selected_page_header_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_summary_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_deleted_summary_report_sections_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_deleted_report_group_section_expressions_by_stable_selection(argv[1]);
