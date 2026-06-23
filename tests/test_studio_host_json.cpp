@@ -53064,6 +53064,34 @@ void test_studio_host_json_exposes_selected_report_settings_by_stable_selection(
                         "#1658: stable live settings selections should preserve deleted setting counts");
         expect_contains(settings_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1658: stable live settings selections should preserve page setup availability");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2016: stable selected generic settings JSON should expose live preview availability");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2016: stable selected generic settings JSON should preserve live preview left bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2016: stable selected generic settings JSON should preserve live preview top bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#2016: stable selected generic settings JSON should preserve live preview right bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#2016: stable selected generic settings JSON should preserve live preview bottom bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#2016: stable selected generic settings JSON should preserve live preview widths");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#2016: stable selected generic settings JSON should preserve live preview heights");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2016: stable selected generic settings JSON should preserve deleted preview availability");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#2016: stable selected generic settings JSON should preserve deleted preview left bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2016: stable selected generic settings JSON should preserve deleted preview top bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#2016: stable selected generic settings JSON should preserve deleted preview right bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#2016: stable selected generic settings JSON should preserve deleted preview bottom bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#2016: stable selected generic settings JSON should preserve deleted preview widths");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#2016: stable selected generic settings JSON should preserve deleted preview heights");
         expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                         "#1658: stable live settings selections should not advertise selected-section availability");
         expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
@@ -53125,6 +53153,34 @@ void test_studio_host_json_exposes_selected_report_settings_by_stable_selection(
                         "#1658: stable deleted settings selections should expose deleted setting counts");
         expect_contains(settings_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1658: stable deleted settings selections should clear live page setup availability");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2016: stable selected deleted generic settings JSON should preserve live preview availability");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2016: stable selected deleted generic settings JSON should preserve live preview left bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2016: stable selected deleted generic settings JSON should preserve live preview top bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#2016: stable selected deleted generic settings JSON should preserve live preview right bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#2016: stable selected deleted generic settings JSON should preserve live preview bottom bounds");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#2016: stable selected deleted generic settings JSON should preserve live preview widths");
+        expect_contains(settings_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#2016: stable selected deleted generic settings JSON should preserve live preview heights");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2016: stable selected deleted generic settings JSON should preserve deleted preview availability");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#2016: stable selected deleted generic settings JSON should preserve deleted preview left bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2016: stable selected deleted generic settings JSON should preserve deleted preview top bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#2016: stable selected deleted generic settings JSON should preserve deleted preview right bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#2016: stable selected deleted generic settings JSON should preserve deleted preview bottom bounds");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#2016: stable selected deleted generic settings JSON should preserve deleted preview widths");
+        expect_contains(settings_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#2016: stable selected deleted generic settings JSON should preserve deleted preview heights");
         expect_contains(settings_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                         "#1658: stable deleted settings selections should not advertise selected-section availability");
         expect_contains(settings_process.stdout_text, "\"selectedReportSection\": null",
