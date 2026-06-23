@@ -75804,25 +75804,43 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
         },
         temp_root);
     expect(label_process.exit_code == 0,
-        "#2096: label toolbox-create-batch-from-dispatch JSON command should exit successfully");
+        "#2132: label toolbox-create-batch-from-dispatch JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"toolboxCreateBatchFromDispatch\": {",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose a stable result object");
+    expect_contains(label_process.stdout_text, "\"batchPlanOk\": true",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose batch-plan state");
+    expect_contains(label_process.stdout_text, "\"createResult\": {",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose lower-level create results");
+    expect_contains(label_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should use dispatch toolbox contexts");
     expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
-        "#2096: label toolbox-create-batch-from-dispatch JSON should resolve report contexts");
+        "#2132: label toolbox-create-batch-from-dispatch JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"itemCount\": 1",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose label batch item counts");
+    expect_contains(label_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose label batch plans");
     expect_contains(label_process.stdout_text, "\"objectName\": \"lbl2\"",
-        "#2096: label toolbox-create-batch-from-dispatch JSON should expose generated label names");
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose generated label names");
     expect_contains(label_process.stdout_text, "\"parentName\": \"DetailBand\"",
-        "#2096: label toolbox-create-batch-from-dispatch JSON should preserve label parent overrides");
+        "#2132: label toolbox-create-batch-from-dispatch JSON should preserve label parent overrides");
+    expect_contains(label_process.stdout_text, "\"propertyValue\": \"Batch Label\"",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should preserve label field values");
     expect_contains(label_process.stdout_text, "\"createdObjectNames\": [\"lbl2\"]",
-        "#2096: label toolbox-create-batch-from-dispatch JSON should summarize created label object names");
+        "#2132: label toolbox-create-batch-from-dispatch JSON should summarize created label object names");
     expect_contains(label_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-batch-label-guid\"]",
-        "#2096: label toolbox-create-batch-from-dispatch JSON should summarize created label unique ids");
+        "#2132: label toolbox-create-batch-from-dispatch JSON should summarize created label unique ids");
     expect_contains(label_process.stdout_text, "\"createErrors\": []",
-        "#2096: label toolbox-create-batch-from-dispatch JSON should summarize empty create errors");
+        "#2132: label toolbox-create-batch-from-dispatch JSON should summarize empty create errors");
+    expect_contains(label_process.stdout_text, "\"dryRun\": false",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose execution state");
+    expect_contains(label_process.stdout_text, "\"mutatesAsset\": true",
+        "#2132: label toolbox-create-batch-from-dispatch JSON should expose mutation state");
     expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
-        "#2096: label toolbox-create-batch-from-dispatch JSON should exclude form-only textbox metadata");
+        "#2132: label toolbox-create-batch-from-dispatch JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 5U,
-        "#2096: label toolbox-create-batch-from-dispatch host command should append one object");
+        "#2132: label toolbox-create-batch-from-dispatch host command should append one object");
     expect(visual_object_property(form_path, "dispatch-host-batch-label-guid", "CAPTION") == "Batch Label",
-        "#2096: label toolbox-create-batch-from-dispatch host command should persist caller fields");
+        "#2132: label toolbox-create-batch-from-dispatch host command should persist caller fields");
 
     const std::size_t committed_count = visual_object_count(form_path);
     const auto non_admitted_process = run_process_capture(
