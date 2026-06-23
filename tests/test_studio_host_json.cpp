@@ -60152,6 +60152,18 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#2076: label expression contexts should expose toolbox editor actions");
     expect_contains(label_process.stdout_text, "\"id\": \"edit-data-environment\"",
                     "#2076: label expression contexts should expose data-environment editor actions");
+    expect_contains(label_process.stdout_text, "\"toolboxItemCount\": 4",
+                    "#2077: label expression contexts should expose report-safe toolbox item counts");
+    expect_contains(label_process.stdout_text, "\"id\": \"label\"",
+                    "#2077: label expression contexts should expose report label toolbox items");
+    expect_contains(label_process.stdout_text, "\"id\": \"image\"",
+                    "#2077: label expression contexts should expose report image toolbox items");
+    expect_contains(label_process.stdout_text, "\"id\": \"line\"",
+                    "#2077: label expression contexts should expose report line toolbox items");
+    expect_contains(label_process.stdout_text, "\"id\": \"shape\"",
+                    "#2077: label expression contexts should expose report shape toolbox items");
+    expect_not_contains(label_process.stdout_text, "\"id\": \"textbox\"",
+                        "#2077: label expression contexts should not expose form-only TextBox toolbox items");
     expect_contains(label_process.stdout_text, "\"builderCount\": 1",
                     "#1011: label JSON should expose label builder count");
     expect_contains(label_process.stdout_text, "\"id\": \"label-wizard\"",
@@ -60186,6 +60198,18 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#2076: report expression contexts should expose toolbox editor actions");
     expect_contains(report_process.stdout_text, "\"id\": \"edit-data-environment\"",
                     "#2076: report expression contexts should expose data-environment editor actions");
+    expect_contains(report_process.stdout_text, "\"toolboxItemCount\": 4",
+                    "#2077: report expression contexts should expose report-safe toolbox item counts");
+    expect_contains(report_process.stdout_text, "\"id\": \"label\"",
+                    "#2077: report expression contexts should expose report label toolbox items");
+    expect_contains(report_process.stdout_text, "\"id\": \"image\"",
+                    "#2077: report expression contexts should expose report image toolbox items");
+    expect_contains(report_process.stdout_text, "\"id\": \"line\"",
+                    "#2077: report expression contexts should expose report line toolbox items");
+    expect_contains(report_process.stdout_text, "\"id\": \"shape\"",
+                    "#2077: report expression contexts should expose report shape toolbox items");
+    expect_not_contains(report_process.stdout_text, "\"id\": \"textbox\"",
+                        "#2077: report expression contexts should not expose form-only TextBox toolbox items");
     expect_contains(report_process.stdout_text, "\"builderCount\": 1",
                     "#2073: report JSON should expose report builder count");
     expect_contains(report_process.stdout_text, "\"id\": \"report-builder\"",
