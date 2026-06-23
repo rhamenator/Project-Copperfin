@@ -27880,6 +27880,104 @@ void test_studio_host_json_exposes_selected_report_objects(const std::string& st
     expect_contains(unplaced_object_process.stdout_text, "\"selectedReportObjectSection\": null",
                     "#1480: unplaced report objects should serialize null selected containing-section JSON");
 
+    const fs::path deleted_unplaced_object_path = temp_root / "deleted_unplaced_object.frx";
+    write_synthetic_report_table_for_layout_json(deleted_unplaced_object_path);
+    const auto delete_unplaced_object_result =
+        copperfin::vfp::set_record_deleted_flag(deleted_unplaced_object_path.string(), 5U, true);
+    expect(delete_unplaced_object_result.ok,
+           "#1970: selected deleted unplaced report object fixture should mark the unplaced object deleted");
+
+    const auto deleted_unplaced_object_process = run_process_capture(
+        studio_host_path,
+        {"--path", deleted_unplaced_object_path.string(), "--record", "5", "--json"},
+        temp_root);
+
+    if (deleted_unplaced_object_process.exit_code != 0) {
+        std::cerr << "studio host selected deleted unplaced report object stdout:\n"
+                  << deleted_unplaced_object_process.stdout_text << "\n";
+        std::cerr << "studio host selected deleted unplaced report object stderr:\n"
+                  << deleted_unplaced_object_process.stderr_text << "\n";
+        std::cerr << "fixture root: " << temp_root << "\n";
+    }
+
+    expect(deleted_unplaced_object_process.exit_code == 0,
+           "#1970: selected deleted unplaced report object JSON should exit successfully");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                    "#1970: deleted unplaced report object selections should advertise selected-object availability");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                    "#1970: deleted unplaced report object selections should advertise report-selection availability");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                    "#1970: deleted unplaced report object selections should expose object selection kind");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1970: selected deleted unplaced report object JSON should preserve live preview availability");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#1970: selected deleted unplaced report object JSON should preserve live preview left bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#1970: selected deleted unplaced report object JSON should preserve live preview top bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                    "#1970: selected deleted unplaced report object JSON should preserve live preview right bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                    "#1970: selected deleted unplaced report object JSON should preserve remaining live preview bottom bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                    "#1970: selected deleted unplaced report object JSON should preserve live preview widths");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"previewBoundsHeight\": 7000",
+                    "#1970: selected deleted unplaced report object JSON should preserve remaining live preview heights");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#1970: selected deleted unplaced report object JSON should expose deleted preview availability");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 50",
+                    "#1970: selected deleted unplaced report object JSON should expand deleted preview left bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                    "#1970: selected deleted unplaced report object JSON should preserve deleted preview top bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                    "#1970: selected deleted unplaced report object JSON should preserve deleted preview right bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 8100",
+                    "#1970: selected deleted unplaced report object JSON should expand deleted preview bottom bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2150",
+                    "#1970: selected deleted unplaced report object JSON should expand deleted preview widths");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5500",
+                    "#1970: selected deleted unplaced report object JSON should expand deleted preview heights");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
+                    "#1970: selected deleted unplaced report objects should not advertise selected-section availability");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportSection\": null",
+                    "#1970: selected deleted unplaced report objects should serialize null selected sections");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                    "#1970: selected deleted unplaced report objects should not advertise selected-settings availability");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportSettings\": null",
+                    "#1970: selected deleted unplaced report objects should serialize null selected settings");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"liveObjectCount\": 2",
+                    "#1970: selected deleted unplaced report object JSON should summarize remaining live objects");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedObjectCount\": 2",
+                    "#1970: selected deleted unplaced report object JSON should summarize deleted objects");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedPlacedObjectCount\": 1",
+                    "#1970: selected deleted unplaced report object JSON should retain deleted placed object counts");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"deletedUnplacedObjectCount\": 1",
+                    "#1970: selected deleted unplaced report object JSON should count deleted unplaced objects");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"left\": 50",
+                    "#1970: deleted unplaced report object selections should expose selected-object left bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"top\": 8000",
+                    "#1970: deleted unplaced report object selections should expose selected-object top bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"right\": 150",
+                    "#1970: deleted unplaced report object selections should expose selected-object right bounds");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"bottom\": 8100",
+                    "#1970: deleted unplaced report object selections should expose selected-object bottom bounds");
+    expect_contains_in_order(
+        deleted_unplaced_object_process.stdout_text,
+        {
+            "\"selectedReportObject\": {",
+            "\"recordIndex\": 5",
+            "\"deleted\": true",
+            "\"containingSectionId\": \"\"",
+            "\"containingSectionRecordIndex\": null",
+            "\"sectionObjectIndex\": null",
+            "\"sectionObjectCount\": 0",
+            "\"objectKind\": \"line\""
+        },
+        "#1970: deleted unplaced report object selections should expose selected-object metadata without section membership");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
+                    "#1970: deleted unplaced report objects should not advertise selected containing-section availability");
+    expect_contains(deleted_unplaced_object_process.stdout_text, "\"selectedReportObjectSection\": null",
+                    "#1970: deleted unplaced report objects should serialize null selected containing-section JSON");
+
     const auto section_process = run_process_capture(
         studio_host_path,
         {"--path", report_path.string(), "--record", "1", "--json"},
