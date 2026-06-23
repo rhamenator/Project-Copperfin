@@ -73619,6 +73619,53 @@ void test_studio_host_json_plans_toolbox_object_creation(const std::string& stud
     expect(visual_object_count(form_path) == before_count,
         "#1242: toolbox-create-plan host command should not mutate the visual asset");
 
+    const auto report_plan_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-plan", "label",
+            "--toolbox-context", "report",
+            "--unique-id", "direct-report-plan-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Direct Report Plan",
+            "--json"
+        },
+        temp_root);
+    expect(report_plan_process.exit_code == 0,
+        "#2102: report toolbox-create-plan JSON command should exit successfully");
+    expect_contains(report_plan_process.stdout_text, "\"toolboxCreatePlan\": {",
+        "#2102: report toolbox-create-plan JSON should expose create plans");
+    expect_contains(report_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2102: report toolbox-create-plan JSON should expose label plans");
+    expect_contains(report_plan_process.stdout_text, "\"className\": \"Label\"",
+        "#2102: report toolbox-create-plan JSON should expose label descriptor metadata");
+    expect_contains(report_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2102: report toolbox-create-plan JSON should preserve report contexts");
+    expect_contains(report_plan_process.stdout_text, "\"planReadyItemIds\": [\"label\"]",
+        "#2102: report toolbox-create-plan JSON should summarize plan-ready report item ids");
+    expect_contains(report_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#2102: report toolbox-create-plan JSON should summarize empty blocked item ids");
+    expect_contains(report_plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#2102: report toolbox-create-plan JSON should summarize empty plan errors");
+    expect_contains(report_plan_process.stdout_text, "\"targetRecordIndex\": 2",
+        "#2102: report toolbox-create-plan JSON should expose target record indexes");
+    expect_contains(report_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2102: report toolbox-create-plan JSON should expose generated label names");
+    expect_contains(report_plan_process.stdout_text, "\"uniqueId\": \"direct-report-plan-guid\"",
+        "#2102: report toolbox-create-plan JSON should preserve label unique ids");
+    expect_contains(report_plan_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2102: report toolbox-create-plan JSON should preserve label parent overrides");
+    expect_contains(report_plan_process.stdout_text, "\"propertyValue\": \"Direct Report Plan\"",
+        "#2102: report toolbox-create-plan JSON should preserve label field values");
+    expect_contains(report_plan_process.stdout_text, "\"dryRun\": true",
+        "#2102: report toolbox-create-plan JSON should remain a dry-run plan");
+    expect_contains(report_plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#2102: report toolbox-create-plan JSON should remain non-mutating");
+    expect_not_contains(report_plan_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2102: report toolbox-create-plan JSON should exclude form-only TextBox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2102: report toolbox-create-plan host command should not mutate assets");
+
     const auto unknown_process = run_process_capture(
         studio_host_path,
         {
