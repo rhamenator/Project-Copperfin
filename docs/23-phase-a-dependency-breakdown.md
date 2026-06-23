@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-22. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 remains open with many prompt-sized children still open in GitHub; treat them as evidence-audit/closure cleanup unless fresh implementation evidence shows a real remaining local miss.
-- Latest implemented E3 slice: `#1924`, stable-selected deleted report/label section top clear preview-metadata coverage. Recent adjacent E3 batch/stable-selector slices through `#1923`-`#1799` are shipped; keep their evidence in the historical tables below instead of repeating it in recurring handoff text.
+- Latest implemented E3 slice: `#1925`, layout-object preview evidence-row backfill for already-shipped `#1883`-`#1896`. Recent adjacent E3 implementation slices through `#1924`-`#1799` are shipped; keep their evidence in the historical tables below instead of repeating it in recurring handoff text.
 - Recent non-E3 shipped context: localization/release-readiness slices through `#1856` under `#1779`/`#113`, evidence-management `#1700` under `#108`, F1 error-management `#1714` under `#25`, and E2 raw-code fallback `#1749` under `#23`.
 - Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
 - Current continuation shape: continue prompt-sized E3/#24 children in report/label designer fidelity, report/label section editing, report/label output preview metadata, and layout/runtime parity seams, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
@@ -399,6 +399,20 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#24` | `#1899` closed | Studio host regressions prove stable-selected report/label layout-object HPOS edits expand live preview bounds while preserving deleted preview bounds |
 | `#24` | `#1898` closed | Studio host regressions prove record-selected report/label layout-object HPOS edits expand live preview bounds while preserving deleted preview bounds |
 | `#24` | `#1897` closed | Studio host regressions prove stable-selected report/label layout-object WIDTH clears refresh live preview bounds while preserving deleted preview bounds |
+| `#24` | `#1896` closed | Studio host regressions prove record-selected report/label layout-object WIDTH clears refresh live preview bounds while preserving deleted preview bounds |
+| `#24` | `#1895` closed | Studio host regressions prove stable-selected report/label layout-object WIDTH edits expand live preview bounds while preserving deleted preview bounds |
+| `#24` | `#1894` closed | Studio host regressions prove record-selected report/label layout-object WIDTH edits expand live preview bounds while preserving deleted preview bounds |
+| `#24` | `#1893` closed | Studio host regressions prove stable-selected deleted report/label layout-object restore-as-unplaced commands refresh live preview bounds and clear deleted preview availability |
+| `#24` | `#1892` closed | Studio host regressions prove record-selected deleted report/label layout-object restore-as-unplaced commands refresh live preview bounds and clear deleted preview availability |
+| `#24` | `#1891` closed | Studio host regressions prove stable-selected deleted report/label layout-object restores refresh live preview bounds and clear deleted preview availability |
+| `#24` | `#1890` closed | Studio host regressions prove edited unplaced report/label layout-object restores refresh live preview bounds while preserving deleted preview bounds |
+| `#24` | `#1889` closed | Studio host regressions prove edited unplaced report/label layout-object deletes refresh live preview bounds and expand deleted preview bounds |
+| `#24` | `#1888` closed | Studio host regressions prove edited report/label layout-object restores refresh live preview bounds while preserving deleted preview bounds |
+| `#24` | `#1887` closed | Studio host regressions prove edited report/label layout-object deletes refresh live preview bounds and expand deleted preview bounds |
+| `#24` | `#1886` closed | Studio host regressions prove stable-selected live edited report/label layout-object snaps preserve live and deleted preview bounds |
+| `#24` | `#1885` closed | Studio host regressions prove stable-selected live edited report/label layout-object resizes preserve live and deleted preview bounds |
+| `#24` | `#1884` closed | Studio host regressions prove stable-selected live edited report/label layout-object alignments preserve live and deleted preview bounds |
+| `#24` | `#1883` closed | Studio host regressions prove stable-selected live edited report/label layout-object nudges preserve live and deleted preview bounds |
 | `#24` | `#1882` closed | Studio host regressions prove stable-selected live edited unplaced report/label layout-object renames preserve preview bounds while keeping selected-object section metadata null |
 | `#24` | `#1881` closed | Studio host regressions prove stable-selected live edited unplaced report/label layout-object duplicates preserve preview bounds while keeping selected-object section metadata null |
 | `#24` | `#1880` closed | Studio host regressions prove stable-selected live edited unplaced report/label layout-object reorders preserve preview bounds while keeping selected-object section metadata null |
