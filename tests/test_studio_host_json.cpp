@@ -76715,6 +76715,35 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_plan_ca
     expect(visual_object_count(form_path) == before_count,
         "#1297: report selection toolbox batch create-plan catalog host command should not mutate assets");
 
+    const auto label_catalog_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch-plan-catalog",
+            "--selection-context", "label_expression",
+            "--parent-name", "DetailBand",
+            "--json"
+        },
+        temp_root);
+    expect(label_catalog_process.exit_code == 0,
+        "#2089: label selection toolbox batch create-plan catalog JSON command should exit successfully");
+    expect_contains(label_catalog_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#2089: label selection toolbox batch create-plan catalog JSON should expose label selections");
+    expect_contains(label_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2089: label selection toolbox batch create-plan catalog JSON should resolve report contexts");
+    expect_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2089: label selection toolbox batch create-plan catalog JSON should include label plans");
+    expect_contains(label_catalog_process.stdout_text, "\"planReadyItemIds\": [\"label\"",
+        "#2089: label selection toolbox batch create-plan catalog JSON should summarize plan-ready label items");
+    expect_contains(label_catalog_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#2089: label selection toolbox batch create-plan catalog JSON should summarize empty blocked item ids");
+    expect_contains(label_catalog_process.stdout_text, "\"planBlockedErrors\": []",
+        "#2089: label selection toolbox batch create-plan catalog JSON should summarize empty blocked plan errors");
+    expect_not_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
+        "#2089: label selection toolbox batch create-plan catalog JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2089: label selection toolbox batch create-plan catalog host command should not mutate assets");
+
     const auto unsupported_catalog_process = run_process_capture(
         studio_host_path,
         {
