@@ -24189,6 +24189,22 @@ void test_studio_host_json_exposes_report_group_section_expressions_by_stable_se
                         "#1666: stable selected group-header section JSON should preserve sibling section counts");
         expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
                         "#1666: stable selected group-header section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1929: stable selected group-header section JSON should preserve preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1929: stable selected group-header section JSON should preserve preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1929: stable selected group-header section JSON should preserve preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1929: stable selected group-header section JSON should preserve preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#1929: stable selected group-header section JSON should preserve preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1929: stable selected group-header section JSON should preserve preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#1929: stable selected group-header section JSON should preserve preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1929: stable selected group-header section JSON should not fabricate deleted preview bounds");
         expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
                         "#1666: stable selected group-header sections should not advertise selected-object availability");
         expect_contains(process.stdout_text, "\"selectedReportObject\": null",
@@ -24294,6 +24310,22 @@ void test_studio_host_json_exposes_report_group_footer_expressions_by_stable_sel
                         "#1667: stable selected group-footer section JSON should preserve sibling section counts");
         expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
                         "#1667: stable selected group-footer section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1929: stable selected group-footer section JSON should preserve preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1929: stable selected group-footer section JSON should preserve preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1929: stable selected group-footer section JSON should preserve preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1929: stable selected group-footer section JSON should preserve preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#1929: stable selected group-footer section JSON should preserve preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1929: stable selected group-footer section JSON should preserve preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#1929: stable selected group-footer section JSON should preserve preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1929: stable selected group-footer section JSON should not fabricate deleted preview bounds");
         expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
                         "#1667: stable selected group-footer sections should not advertise selected-object availability");
         expect_contains(process.stdout_text, "\"selectedReportObject\": null",
