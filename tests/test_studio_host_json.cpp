@@ -82116,6 +82116,8 @@ void test_studio_host_json_copies_deleted_report_visual_properties_by_stable_sel
                         "#1869: deleted report/label stable visual-property copy JSON should expose mutation state");
         expect_contains(copy_process.stdout_text, "\"undoAvailable\": true",
                         "#1869: deleted report/label stable visual-property copy JSON should expose undo availability");
+        expect_contains(copy_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                        "#2159: deleted report/label stable visual-property copy JSON should expose copied-property undo labels");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
                    visual_object_property(asset_path, "right-field-guid", "EXPR") == "middle.value" &&
                    visual_object_deleted(asset_path, "middle-field-guid") &&
