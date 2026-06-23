@@ -27391,6 +27391,20 @@ void test_studio_host_json_exposes_selected_report_sections(const std::string& s
                     "#1478: deleted selected report section JSON should not expose live sections");
     expect_contains(deleted_section_process.stdout_text, "\"deletedSectionCount\": 1",
                     "#1478: deleted selected report section JSON should expose deleted section counts");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#1961: deleted selected report section JSON should preserve live preview availability");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsLeft\": 100",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview left bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsTop\": 2600",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview top bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsRight\": 150",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview right bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview bottom bounds");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsWidth\": 50",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview widths");
+    expect_contains(deleted_section_process.stdout_text, "\"previewBoundsHeight\": 200",
+                    "#1961: deleted selected report section JSON should preserve remaining live preview heights");
     expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
                     "#1524: deleted selected report section JSON should expose deleted preview bounds availability");
     expect_contains(deleted_section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
