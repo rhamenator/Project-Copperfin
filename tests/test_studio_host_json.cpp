@@ -36039,6 +36039,20 @@ void test_studio_host_json_updates_report_layout_object_top_preview_bounds_by_st
                         "#1642: report/label layout object stable top update should preserve preview bottom bounds");
         expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 9100",
                         "#1642: report/label layout object stable top update should refresh preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1907: report/label layout object stable top update should preserve deleted preview availability");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1907: report/label layout object stable top update should preserve deleted preview left bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#1907: report/label layout object stable top update should preserve deleted preview top bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1907: report/label layout object stable top update should preserve deleted preview right bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#1907: report/label layout object stable top update should preserve deleted preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1907: report/label layout object stable top update should preserve deleted preview widths");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1907: report/label layout object stable top update should preserve deleted preview heights");
         expect_contains(update_process.stdout_text, "\"placedObjectCount\": 1",
                         "#1642: report/label layout object stable top update should decrement placed counts");
         expect_contains(update_process.stdout_text, "\"unplacedObjectCount\": 2",
