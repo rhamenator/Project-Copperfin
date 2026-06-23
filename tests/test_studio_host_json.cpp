@@ -82755,6 +82755,8 @@ void test_studio_host_json_moves_deleted_report_visual_property_batches_by_stabl
                         "#1867: deleted report/label stable visual-property move-batch JSON should expose mutation state");
         expect_contains(move_batch_process.stdout_text, "\"undoAvailable\": true",
                         "#1867: deleted report/label stable visual-property move-batch JSON should expose undo availability");
+        expect_contains(move_batch_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                        "#2162: deleted report/label stable visual-property move-batch JSON should expose moved-property undo labels");
         expect(visual_object_property(asset_path, "right-field-guid", "EXPR") == "middle.value" &&
                    visual_object_deleted(asset_path, "middle-field-guid") &&
                    visual_object_deleted(asset_path, "right-field-guid") &&
