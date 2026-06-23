@@ -52342,6 +52342,34 @@ void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
             expect_contains(delete_process.stdout_text, "\"isLabel\": true",
                             "#1839: label stable deleted-states batch delete should retain label identity");
         }
+        expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should expose live preview availability");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 100",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh live preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve live preview width");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 8000",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh live preview height");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should expose deleted preview availability");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh deleted preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh deleted preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve deleted preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2900",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should preserve deleted preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 2200",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh deleted preview width");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 2900",
+                        "#2042: stable report/label settings+section deleted-states batch delete JSON should refresh deleted preview height");
         expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
                         "#1839: report/label stable deleted-states batch delete should remove live settings");
         expect_contains(delete_process.stdout_text, "\"deletedSettingCount\": 6",
@@ -52414,6 +52442,9 @@ void test_studio_host_json_applies_report_deleted_states_by_stable_selection(
             expect_contains(restore_process.stdout_text, "\"isLabel\": true",
                             "#1839: label stable deleted-states batch restore should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            restore_process.stdout_text,
+            "#2042: stable report/label settings+section deleted-states batch restore JSON");
         expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
                         "#1839: report/label stable deleted-states batch restore should restore live settings");
         expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
