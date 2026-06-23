@@ -74693,6 +74693,44 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
     expect(visual_object_count(form_path) == before_count + 2U,
         "#1314: report toolbox-create-from-dispatch host command should mutate the asset exactly once");
 
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch", "label",
+            "--selection-context", "label_expression",
+            "--create-unique-id", "dispatch-host-label-guid",
+            "--create-parent-name", "DetailBand",
+            "--field-value", "CAPTION=Dispatch Label",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(label_process.exit_code == 0,
+        "#2091: label toolbox-create-from-dispatch JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2091: label toolbox-create-from-dispatch JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"objectName\": \"lbl2\"",
+        "#2091: label toolbox-create-from-dispatch JSON should expose generated label names");
+    expect_contains(label_process.stdout_text, "\"uniqueId\": \"dispatch-host-label-guid\"",
+        "#2091: label toolbox-create-from-dispatch JSON should expose label unique ids");
+    expect_contains(label_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2091: label toolbox-create-from-dispatch JSON should expose label parent overrides");
+    expect_contains(label_process.stdout_text, "\"createdObjectNames\": [\"lbl2\"]",
+        "#2091: label toolbox-create-from-dispatch JSON should summarize created label object names");
+    expect_contains(label_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-label-guid\"]",
+        "#2091: label toolbox-create-from-dispatch JSON should summarize created label unique ids");
+    expect_contains(label_process.stdout_text, "\"createErrors\": []",
+        "#2091: label toolbox-create-from-dispatch JSON should summarize empty create errors");
+    expect_contains(label_process.stdout_text, "\"propertyValue\": \"Dispatch Label\"",
+        "#2091: label toolbox-create-from-dispatch JSON should expose label field values");
+    expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2091: label toolbox-create-from-dispatch JSON should exclude form-only textbox metadata");
+    expect(visual_object_count(form_path) == before_count + 3U,
+        "#2091: label toolbox-create-from-dispatch host command should mutate the asset exactly once");
+    expect(visual_object_property(form_path, "dispatch-host-label-guid", "CAPTION") == "Dispatch Label",
+        "#2091: label toolbox-create-from-dispatch host command should persist caller fields");
+
     const std::size_t committed_count = visual_object_count(form_path);
     const auto non_admitted_process = run_process_capture(
         studio_host_path,
