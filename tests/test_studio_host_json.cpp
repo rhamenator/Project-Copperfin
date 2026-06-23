@@ -60196,8 +60196,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#1016: report DataEnvironment symbols should infer data-environment JSON contexts");
     expect_contains(report_data_environment_symbol_process.stdout_text, "\"id\": \"data-environment-builder\"",
                     "#1016: report DataEnvironment symbols should expose data-environment builders");
+    expect_not_contains(report_data_environment_symbol_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+                        "#2074: report DataEnvironment symbols should not keep report-expression contexts");
     expect_not_contains(report_data_environment_symbol_process.stdout_text, "\"selectionContext\": \"label_expression\"",
                         "#1016: DataEnvironment symbols should override report/label expression defaults");
+    expect_not_contains(report_data_environment_symbol_process.stdout_text, "\"id\": \"report-builder\"",
+                        "#2074: report DataEnvironment symbols should not expose report builder metadata");
+    expect_not_contains(report_data_environment_symbol_process.stdout_text, "\"id\": \"label-wizard\"",
+                        "#2074: report DataEnvironment symbols should not expose label wizard metadata");
 
     const fs::path class_path = temp_root / "customer.vcx";
     write_synthetic_form_asset(class_path);
@@ -60280,8 +60286,14 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
                     "#1016: selected label DataEnvironment records should expose data-environment editor actions");
     expect_contains(label_data_environment_process.stdout_text, "\"id\": \"data-environment-builder\"",
                     "#1016: selected label DataEnvironment records should expose data-environment builders");
+    expect_not_contains(label_data_environment_process.stdout_text, "\"selectionContext\": \"report_expression\"",
+                        "#2074: selected label DataEnvironment records should not expose report-expression contexts");
     expect_not_contains(label_data_environment_process.stdout_text, "\"selectionContext\": \"label_expression\"",
                         "#1016: selected label DataEnvironment records should not keep label-expression defaults");
+    expect_not_contains(label_data_environment_process.stdout_text, "\"id\": \"report-builder\"",
+                        "#2074: selected label DataEnvironment records should not expose report builder metadata");
+    expect_not_contains(label_data_environment_process.stdout_text, "\"id\": \"label-wizard\"",
+                        "#2074: selected label DataEnvironment records should not expose label wizard metadata");
 
     const auto symbol_process = run_process_capture(
         studio_host_path,
