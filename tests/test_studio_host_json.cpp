@@ -53318,6 +53318,34 @@ void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_s
             expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                             "#1859: deleted label stable visual-object duplicate-subtree should retain label identity");
         }
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should preserve live preview availability");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should preserve live preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should preserve live preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should preserve live preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should preserve live preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should preserve live preview width");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should preserve live preview height");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should expose deleted preview availability");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 100",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should expose deleted preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should expose deleted preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 150",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should expose deleted preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2800",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should expose deleted preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 50",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should expose deleted preview width");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                        "#2047: stable deleted report/label object subtree duplicate JSON should expose deleted preview height");
         expect_contains(reopen_process.stdout_text, "\"liveObjectCount\": 2",
                         "#1859: deleted report/label stable visual-object duplicate-subtree should preserve live sibling counts");
         expect_contains(reopen_process.stdout_text, "\"deletedObjectCount\": 2",
