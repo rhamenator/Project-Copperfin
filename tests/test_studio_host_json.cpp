@@ -60194,6 +60194,10 @@ void test_studio_host_json_exposes_designer_contexts(const std::string& studio_h
            "#1016: Studio host report DataEnvironment symbol JSON smoke should exit successfully");
     expect_contains(report_data_environment_symbol_process.stdout_text, "\"selectionContext\": \"data_environment\"",
                     "#1016: report DataEnvironment symbols should infer data-environment JSON contexts");
+    expect_contains(report_data_environment_symbol_process.stdout_text, "\"toolboxItemCount\": 0",
+                    "#2075: report DataEnvironment symbols should expose zero toolbox-item count");
+    expect_contains(report_data_environment_symbol_process.stdout_text, "\"id\": \"edit-data-environment\"",
+                    "#2075: report DataEnvironment symbols should expose data-environment editor actions");
     expect_contains(report_data_environment_symbol_process.stdout_text, "\"id\": \"data-environment-builder\"",
                     "#1016: report DataEnvironment symbols should expose data-environment builders");
     expect_not_contains(report_data_environment_symbol_process.stdout_text, "\"selectionContext\": \"report_expression\"",
