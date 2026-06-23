@@ -82175,6 +82175,34 @@ void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stab
             expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                             "#1861: deleted label stable visual-object reorder-batch should retain label identity");
         }
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve live preview availability");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve live preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve live preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve live preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve live preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve live preview width");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve live preview height");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should expose deleted preview availability");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 100",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve deleted preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve deleted preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 150",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve deleted preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2800",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve deleted preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 50",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve deleted preview width");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                        "#2055: stable deleted report/label visual-object reorder-batch JSON should preserve deleted preview height");
         expect_contains(reopen_process.stdout_text, "\"liveObjectCount\": 1",
                         "#1861: deleted report/label stable visual-object reorder-batch should preserve live sibling counts");
         expect_contains(reopen_process.stdout_text, "\"deletedObjectCount\": 2",
