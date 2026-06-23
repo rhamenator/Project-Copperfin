@@ -48635,6 +48635,13 @@ void test_studio_host_json_updates_deleted_report_column_width_fields_by_record_
                "#1595: deleted report/label column-width field update should persist the COLWIDTH field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1595: deleted report/label column-width field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2032: label deleted column-width field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2032: record-selected deleted report/label column-width update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1595: deleted report/label column-width field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -48730,6 +48737,13 @@ void test_studio_host_json_clears_deleted_report_column_width_fields_by_record_s
                "#1596: deleted report/label column-width field clear should blank the COLWIDTH field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1596: deleted report/label column-width field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2032: label deleted column-width field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2032: record-selected deleted report/label column-width clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1596: deleted report/label column-width field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": false",
@@ -49308,6 +49322,13 @@ void test_studio_host_json_updates_report_column_width_fields_by_record_selectio
                "#1539: report/label column-width field update should persist the COLWIDTH field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1539: report/label column-width field update should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(update_process.stdout_text, "\"isLabel\": true",
+                            "#2032: label column-width field update should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2032: record-selected report/label column-width update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1539: report/label column-width field update should not fabricate page setup availability");
         expect_contains(update_process.stdout_text, "\"columnSetupAvailable\": true",
@@ -49386,6 +49407,13 @@ void test_studio_host_json_clears_report_column_width_fields_by_record_selection
                "#1554: report/label column-width field clear should blank the COLWIDTH field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1554: report/label column-width field clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#2032: label column-width field clear should retain label identity");
+        }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2032: record-selected report/label column-width clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1554: report/label column-width field clear should not fabricate page setup availability");
         expect_contains(clear_process.stdout_text, "\"columnSetupAvailable\": true",
