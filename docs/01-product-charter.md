@@ -80,20 +80,32 @@ Language and framework choices should be judged against these, not the other way
 
 ## Non-Goals For Version 1
 
-- perfect bug-for-bug compatibility with every undocumented runtime edge case
+- bug-for-bug compatibility with VFP9's known, catalogued defects (see the known-bug exception registry below) — these are intentionally not reproduced
+- reproducing VFP9's crash behavior on inputs that crash real VFP9 — Copperfin must not crash on these inputs (see Compatibility Fidelity Rule below)
 - pixel-perfect recreation of the original IDE shell
 - support for every third-party ActiveX control on day one
 - full cloud-native rewrite of every legacy app automatically
 - producing binaries for FoxBASE, FoxBASE+, FoxPro 1.x/2.x, dBASE, or Clipper
+
+## Compatibility Fidelity Rule
+
+Copperfin's parity target is **exact duplication of VFP9 behavior, including undocumented edge-case behavior**, with exactly two carved-out exceptions:
+
+1. **Known VFP9 bugs.** Where real VFP9's behavior is a catalogued defect rather than intended behavior, Copperfin intentionally does not reproduce it. Every such exception must be recorded in the known-bug exception registry (`docs/27-known-vfp9-bug-exceptions.md`) with the observed VFP9 behavior, the classification, the evidence it was checked against, and Copperfin's intentional alternate behavior.
+2. **Inputs where real VFP9 crashes.** Copperfin must not crash on these inputs. The documented default is to raise a catchable runtime error through the existing `TRY`/`CATCH`/`ON ERROR` machinery instead, so the failure is recoverable rather than fatal. A registry entry should record the crashing input and confirm the non-crash fallback was applied.
+
+Outside of these two exception categories, an undocumented edge case is in scope for exact parity, not excluded by default. Edge-case behavior should be validated against real, installed VFP9 (observed product behavior) or shipped documentation per `docs/07-clean-room-rules.md` — never against decompiled VFP9 binaries, which remain a restricted input.
 
 ## Success Criteria
 
 - open legacy DBF/FPT/CDX/DBC assets safely and accurately
 - connect to SQLite, PostgreSQL, SQL Server, and Oracle through a consistent data access layer
 - run a meaningful subset of FoxPro-style business logic with tests
+- duplicate VFP9 edge-case behavior exactly per the Compatibility Fidelity Rule, outside the known-bug and crash exceptions
 - host and call .NET components from Copperfin applications cleanly
 - generate .NET-consumable assemblies or executables so Copperfin-built logic can be reused in .NET applications
 - ship as a 64-bit-first platform with a modernization story stronger than late-stage VFP had
+- provide modern capabilities beyond VFP9 using VFP-like phraseology/syntax: threading/concurrency primitives, deeper .NET capabilities, polyglot interoperability, and transpilation to other platforms
 - import or map common forms/reports/projects into a modern workspace
 - package apps without brittle shared-machine setup
 - enforce modern authn, authz, audit, secrets, and policy controls
