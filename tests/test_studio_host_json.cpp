@@ -75660,10 +75660,17 @@ void test_studio_host_json_creates_toolbox_object_batches_from_palette_dispatch(
         "#1385: report toolbox-create-batch-from-dispatch JSON should summarize created report object names");
     expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-batch-report-label-guid\"]",
         "#1385: report toolbox-create-batch-from-dispatch JSON should summarize created report unique ids");
+    expect_contains(report_process.stdout_text, "\"createErrors\": []",
+        "#2106: report toolbox-create-batch-from-dispatch JSON should summarize empty create errors");
+    expect_contains(report_process.stdout_text, "\"propertyValue\": \"Batch Report Label\"",
+        "#2106: report toolbox-create-batch-from-dispatch JSON should preserve report label field values");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1315: report toolbox-create-batch-from-dispatch JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 4U,
         "#1315: report toolbox-create-batch-from-dispatch host command should append one object");
+    expect(visual_object_property(form_path, "dispatch-host-batch-report-label-guid", "CAPTION") ==
+            "Batch Report Label",
+        "#2106: report toolbox-create-batch-from-dispatch host command should persist caller fields");
 
     const auto label_process = run_process_capture(
         studio_host_path,
