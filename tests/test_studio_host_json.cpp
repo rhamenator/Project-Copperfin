@@ -24432,6 +24432,22 @@ void test_studio_host_json_exposes_selected_summary_report_sections_by_stable_se
                         "#1694: stable selected summary sections should preserve live section counts");
         expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 0",
                         "#1694: stable selected summary sections should preserve deleted section counts");
+        expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1931: stable selected summary section JSON should preserve preview availability");
+        expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1931: stable selected summary section JSON should preserve preview left bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1931: stable selected summary section JSON should preserve preview top bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1931: stable selected summary section JSON should preserve preview right bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 3900",
+                        "#1931: stable selected summary section JSON should preserve preview bottom bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1931: stable selected summary section JSON should preserve preview widths");
+        expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 3900",
+                        "#1931: stable selected summary section JSON should preserve preview heights");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1931: stable selected summary section JSON should not fabricate deleted preview bounds");
         expect_contains(section_process.stdout_text, "\"selectedReportObjectAvailable\": false",
                         "#1694: stable selected summary sections should not advertise selected-object availability");
         expect_contains(section_process.stdout_text, "\"selectedReportObject\": null",
