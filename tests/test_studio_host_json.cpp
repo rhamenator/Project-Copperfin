@@ -30596,6 +30596,34 @@ void test_studio_host_json_exposes_report_layout_column_setup(const std::string&
                     "#1518: report column setup JSON should expose column spacing availability");
     expect_contains(report_process.stdout_text, "\"columnSpacing\": 120",
                     "#1518: report column setup JSON should expose column spacing");
+    expect_contains(report_process.stdout_text, "\"previewBoundsAvailable\": false",
+                    "#2017: report column setup JSON should not fabricate live preview availability");
+    expect_contains(report_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#2017: report column setup JSON should preserve zero live preview left bounds");
+    expect_contains(report_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#2017: report column setup JSON should preserve zero live preview top bounds");
+    expect_contains(report_process.stdout_text, "\"previewBoundsRight\": 0",
+                    "#2017: report column setup JSON should preserve zero live preview right bounds");
+    expect_contains(report_process.stdout_text, "\"previewBoundsBottom\": 0",
+                    "#2017: report column setup JSON should preserve zero live preview bottom bounds");
+    expect_contains(report_process.stdout_text, "\"previewBoundsWidth\": 0",
+                    "#2017: report column setup JSON should preserve zero live preview widths");
+    expect_contains(report_process.stdout_text, "\"previewBoundsHeight\": 0",
+                    "#2017: report column setup JSON should preserve zero live preview heights");
+    expect_contains(report_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                    "#2017: report column setup JSON should not fabricate deleted preview availability");
+    expect_contains(report_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                    "#2017: report column setup JSON should preserve zero deleted preview left bounds");
+    expect_contains(report_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                    "#2017: report column setup JSON should preserve zero deleted preview top bounds");
+    expect_contains(report_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                    "#2017: report column setup JSON should preserve zero deleted preview right bounds");
+    expect_contains(report_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                    "#2017: report column setup JSON should preserve zero deleted preview bottom bounds");
+    expect_contains(report_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                    "#2017: report column setup JSON should preserve zero deleted preview widths");
+    expect_contains(report_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                    "#2017: report column setup JSON should preserve zero deleted preview heights");
     expect_contains(report_process.stdout_text, "\"settingCount\": 3",
                     "#1518: report column setup JSON should preserve compact setting counts");
     expect_contains(report_process.stdout_text, "\"name\": \"COLS\", \"recordIndex\": 0, \"fieldIndex\": 2, \"sourceLineIndex\": 0, \"memoBlockNumber\": 1, \"value\": \"2\"",
@@ -30632,6 +30660,34 @@ void test_studio_host_json_exposes_report_layout_column_setup(const std::string&
                     "#1518: label column setup JSON should expose column widths");
     expect_contains(label_process.stdout_text, "\"columnSpacing\": 120",
                     "#1518: label column setup JSON should expose column spacing");
+    expect_contains(label_process.stdout_text, "\"previewBoundsAvailable\": false",
+                    "#2017: label column setup JSON should not fabricate live preview availability");
+    expect_contains(label_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#2017: label column setup JSON should preserve zero live preview left bounds");
+    expect_contains(label_process.stdout_text, "\"previewBoundsTop\": 0",
+                    "#2017: label column setup JSON should preserve zero live preview top bounds");
+    expect_contains(label_process.stdout_text, "\"previewBoundsRight\": 0",
+                    "#2017: label column setup JSON should preserve zero live preview right bounds");
+    expect_contains(label_process.stdout_text, "\"previewBoundsBottom\": 0",
+                    "#2017: label column setup JSON should preserve zero live preview bottom bounds");
+    expect_contains(label_process.stdout_text, "\"previewBoundsWidth\": 0",
+                    "#2017: label column setup JSON should preserve zero live preview widths");
+    expect_contains(label_process.stdout_text, "\"previewBoundsHeight\": 0",
+                    "#2017: label column setup JSON should preserve zero live preview heights");
+    expect_contains(label_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                    "#2017: label column setup JSON should not fabricate deleted preview availability");
+    expect_contains(label_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                    "#2017: label column setup JSON should preserve zero deleted preview left bounds");
+    expect_contains(label_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                    "#2017: label column setup JSON should preserve zero deleted preview top bounds");
+    expect_contains(label_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                    "#2017: label column setup JSON should preserve zero deleted preview right bounds");
+    expect_contains(label_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                    "#2017: label column setup JSON should preserve zero deleted preview bottom bounds");
+    expect_contains(label_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                    "#2017: label column setup JSON should preserve zero deleted preview widths");
+    expect_contains(label_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                    "#2017: label column setup JSON should preserve zero deleted preview heights");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
