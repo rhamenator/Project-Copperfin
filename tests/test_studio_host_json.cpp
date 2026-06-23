@@ -79749,22 +79749,50 @@ void test_studio_host_json_creates_selection_toolbox_object_batches(const std::s
         temp_root);
     expect(label_process.exit_code == 0,
         "#2085: label selection-toolbox-create-batch JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"selectionToolboxCreateBatch\": {",
+        "#2130: label selection-toolbox-create-batch JSON should expose a stable result object");
     expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
         "#2085: label selection-toolbox-create-batch JSON should expose label selections");
     expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2085: label selection-toolbox-create-batch JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"launchPlanOk\": true",
+        "#2130: label selection-toolbox-create-batch JSON should expose launch state");
+    expect_contains(label_process.stdout_text, "\"batchPlanOk\": true",
+        "#2130: label selection-toolbox-create-batch JSON should expose nested batch-plan state");
+    expect_contains(label_process.stdout_text, "\"createResult\": {",
+        "#2130: label selection-toolbox-create-batch JSON should expose lower-level create results");
     expect_contains(label_process.stdout_text, "\"objectName\": \"lbl2\"",
         "#2085: label selection-toolbox-create-batch JSON should expose generated labels");
     expect_contains(label_process.stdout_text, "\"uniqueId\": \"selection-batch-label-guid\"",
         "#2085: label selection-toolbox-create-batch JSON should expose label unique ids");
+    expect_contains(label_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2130: label selection-toolbox-create-batch JSON should preserve label parent payloads");
     expect_contains(label_process.stdout_text, "\"createdObjectNames\": [\"lbl2\"]",
         "#2085: label selection-toolbox-create-batch JSON should summarize created label object names");
     expect_contains(label_process.stdout_text, "\"createdUniqueIds\": [\"selection-batch-label-guid\"]",
         "#2085: label selection-toolbox-create-batch JSON should summarize created label unique ids");
+    expect_contains(label_process.stdout_text, "\"createErrors\": []",
+        "#2130: label selection-toolbox-create-batch JSON should summarize empty create errors");
+    expect_contains(label_process.stdout_text, "\"propertyValue\": \"Label Selection Batch\"",
+        "#2130: label selection-toolbox-create-batch JSON should expose caller label fields");
+    expect_contains(label_process.stdout_text, "\"dryRun\": false",
+        "#2130: label selection-toolbox-create-batch JSON should expose execution state");
+    expect_contains(label_process.stdout_text, "\"mutatesAsset\": true",
+        "#2130: label selection-toolbox-create-batch JSON should expose mutation state");
     expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
         "#2085: label selection-toolbox-create-batch JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count + 5U,
-        "#2085: label selection-toolbox-create-batch host command should mutate the asset exactly once");
+        "#2130: label selection-toolbox-create-batch host command should mutate the asset exactly once");
+
+    const auto label_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-batch-label-guid",
+        .property_name = "CAPTION"
+    });
+    expect(label_caption.ok && label_caption.exists && label_caption.value == "Label Selection Batch",
+        "#2130: label selection-toolbox-create-batch host command should persist label captions");
 
     const std::size_t committed_count = visual_object_count(form_path);
     const auto unavailable_process = run_process_capture(
