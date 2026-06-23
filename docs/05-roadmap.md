@@ -25,7 +25,7 @@ Current state:
 Active issue lanes:
 
 - critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- live execution is currently centered on E3/#24 report/label designer fidelity; latest shipped child `#1920` covers record-selected deleted report/label section height clear preview metadata; E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
+- live execution is currently centered on E3/#24 report/label designer fidelity; latest shipped child `#1921` covers stable-selected deleted report/label section height update preview metadata; E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
 
 Execution rule:
 
