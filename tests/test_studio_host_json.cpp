@@ -77792,6 +77792,52 @@ void test_studio_host_json_plans_toolbox_object_creation_batches(const std::stri
     expect(visual_object_count(form_path) == before_count,
         "#1246: toolbox-create-batch-plan host command should not mutate the visual asset");
 
+    const auto report_batch_plan_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-batch-plan",
+            "--toolbox-context", "report",
+            "--toolbox-item", "label",
+            "--unique-id", "direct-report-batch-plan-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Direct Report Plan",
+            "--json"
+        },
+        temp_root);
+    expect(report_batch_plan_process.exit_code == 0,
+        "#2101: report toolbox-create-batch-plan JSON command should exit successfully");
+    expect_contains(report_batch_plan_process.stdout_text, "\"toolboxCreateBatchPlan\": {",
+        "#2101: report toolbox-create-batch-plan JSON should expose batch plans");
+    expect_contains(report_batch_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2101: report toolbox-create-batch-plan JSON should preserve report contexts");
+    expect_contains(report_batch_plan_process.stdout_text, "\"itemCount\": 1",
+        "#2101: report toolbox-create-batch-plan JSON should expose report item counts");
+    expect_contains(report_batch_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2101: report toolbox-create-batch-plan JSON should expose label plans");
+    expect_contains(report_batch_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2101: report toolbox-create-batch-plan JSON should expose generated label names");
+    expect_contains(report_batch_plan_process.stdout_text, "\"uniqueId\": \"direct-report-batch-plan-guid\"",
+        "#2101: report toolbox-create-batch-plan JSON should preserve label unique ids");
+    expect_contains(report_batch_plan_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2101: report toolbox-create-batch-plan JSON should preserve label parent overrides");
+    expect_contains(report_batch_plan_process.stdout_text, "\"propertyValue\": \"Direct Report Plan\"",
+        "#2101: report toolbox-create-batch-plan JSON should preserve label field values");
+    expect_contains(report_batch_plan_process.stdout_text, "\"planReadyItemIds\": [\"label\"]",
+        "#2101: report toolbox-create-batch-plan JSON should summarize plan-ready report item ids");
+    expect_contains(report_batch_plan_process.stdout_text, "\"planBlockedItemIds\": []",
+        "#2101: report toolbox-create-batch-plan JSON should summarize empty blocked item ids");
+    expect_contains(report_batch_plan_process.stdout_text, "\"planBlockedErrors\": []",
+        "#2101: report toolbox-create-batch-plan JSON should summarize empty plan errors");
+    expect_contains(report_batch_plan_process.stdout_text, "\"dryRun\": true",
+        "#2101: report toolbox-create-batch-plan JSON should remain a dry-run plan");
+    expect_contains(report_batch_plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#2101: report toolbox-create-batch-plan JSON should remain non-mutating");
+    expect_not_contains(report_batch_plan_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2101: report toolbox-create-batch-plan JSON should exclude form-only TextBox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2101: report toolbox-create-batch-plan host command should not mutate assets");
+
     const auto missing_items_process = run_process_capture(
         studio_host_path,
         {
