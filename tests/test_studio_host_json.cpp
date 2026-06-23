@@ -51709,6 +51709,34 @@ void test_studio_host_json_exposes_selected_deleted_title_report_objects_by_stab
                         "#1686: stable deleted title-band object selections should clear live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1686: stable deleted title-band object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1942: stable selected deleted title-band object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1942: stable selected deleted title-band object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1942: stable selected deleted title-band object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1942: stable selected deleted title-band object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3700",
+                        "#1942: stable selected deleted title-band object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1942: stable selected deleted title-band object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3700",
+                        "#1942: stable selected deleted title-band object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1942: stable selected deleted title-band object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 100",
+                        "#1942: stable selected deleted title-band object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 120",
+                        "#1942: stable selected deleted title-band object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 1500",
+                        "#1942: stable selected deleted title-band object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 420",
+                        "#1942: stable selected deleted title-band object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1400",
+                        "#1942: stable selected deleted title-band object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1942: stable selected deleted title-band object JSON should preserve deleted preview heights");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
                         "#1686: stable deleted title-band object selections should not advertise containing-section availability");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
