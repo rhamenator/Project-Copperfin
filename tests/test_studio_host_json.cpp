@@ -76700,8 +76700,14 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
         temp_root);
     expect(report_catalog_process.exit_code == 0,
         "#1254: report toolbox-create-dispatch-catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxCreateDispatchCatalog\": {",
+        "#2108: report toolbox-create-dispatch-catalog JSON should expose a catalog object");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#1254: report toolbox-create-dispatch-catalog JSON should expose report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchCount\": ",
+        "#2108: report toolbox-create-dispatch-catalog JSON should expose report dispatch counts");
+    expect_contains(report_catalog_process.stdout_text, "\"errorCount\": 0",
+        "#2108: report toolbox-create-dispatch-catalog JSON should expose zero catalog errors");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1254: report toolbox-create-dispatch-catalog JSON should include label dispatches");
     expect_contains(report_catalog_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
@@ -76710,10 +76716,18 @@ void test_studio_host_json_plans_toolbox_object_creation_dispatch_catalog(const 
         "#1376: report toolbox-create-dispatch-catalog JSON should summarize empty blocked item ids");
     expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
         "#1376: report toolbox-create-dispatch-catalog JSON should summarize empty blocked dispatch errors");
+    expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2108: report toolbox-create-dispatch-catalog JSON should preserve report parent payloads");
     expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1254: report toolbox-create-dispatch-catalog JSON should preserve report dispatch context");
+    expect_contains(report_catalog_process.stdout_text, "\"dryRun\": false",
+        "#2108: report toolbox-create-dispatch-catalog JSON should expose non-dry-run dispatch state");
+    expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": true",
+        "#2108: report toolbox-create-dispatch-catalog JSON should expose mutation intent");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1254: report toolbox-create-dispatch-catalog JSON should exclude form-only textbox dispatches");
+    expect(visual_object_count(form_path) == before_count,
+        "#2108: report toolbox-create-dispatch-catalog host command should not mutate assets");
 
     const auto missing_context_process = run_process_capture(
         studio_host_path,
