@@ -82961,6 +82961,8 @@ void test_studio_host_json_rejects_deleted_report_visual_property_rename_by_stab
                "#1872: deleted report/label stable visual-property rename should reject direct FRX/LBX fields");
         expect_contains(rename_process.stdout_text, "\"visualPropertyRename\": null",
                         "#1872: failed deleted report/label stable visual-property rename JSON should not expose stale rename objects");
+        expect_not_contains(rename_process.stdout_text, "\"undoAvailable\": true",
+                            "#2163: failed deleted report/label stable visual-property rename JSON should not advertise undo availability");
         expect_contains(rename_process.stdout_text, "Direct DBF-backed fields cannot be renamed per object.",
                         "#1872: failed deleted report/label stable visual-property rename JSON should report direct-field errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
@@ -83067,6 +83069,8 @@ void test_studio_host_json_rejects_deleted_report_visual_property_rename_by_stab
                "#1872: deleted report/label stable visual-property rename missing selector should fail");
         expect_contains(missing_selector_process.stdout_text, "\"visualPropertyRename\": null",
                         "#1872: missing-selector deleted report/label stable visual-property rename JSON should not expose stale rename objects");
+        expect_not_contains(missing_selector_process.stdout_text, "\"undoAvailable\": true",
+                            "#2163: missing-selector deleted report/label stable visual-property rename JSON should not advertise undo availability");
         expect_contains(missing_selector_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1872: missing-selector deleted report/label stable visual-property rename JSON should report selector errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
