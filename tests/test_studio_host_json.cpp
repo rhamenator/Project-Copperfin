@@ -76317,8 +76317,14 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
         temp_root);
     expect(report_catalog_process.exit_code == 0,
         "#1244: report toolbox-create-plan-catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"toolboxCreatePlanCatalog\": {",
+        "#2107: report toolbox-create-plan-catalog JSON should expose a catalog object");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#1244: report toolbox-create-plan-catalog JSON should expose report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"planCount\": ",
+        "#2107: report toolbox-create-plan-catalog JSON should expose report plan counts");
+    expect_contains(report_catalog_process.stdout_text, "\"errorCount\": 0",
+        "#2107: report toolbox-create-plan-catalog JSON should expose zero catalog errors");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1244: report toolbox-create-plan-catalog JSON should include label plans");
     expect_contains(report_catalog_process.stdout_text, "\"planReadyItemIds\": [\"label\"",
@@ -76329,6 +76335,12 @@ void test_studio_host_json_plans_toolbox_object_creation_catalog(const std::stri
         "#1374: report toolbox-create-plan-catalog JSON should summarize empty blocked plan errors");
     expect_contains(report_catalog_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1244: report toolbox-create-plan-catalog JSON should expose generated label names");
+    expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2107: report toolbox-create-plan-catalog JSON should preserve report parent payloads");
+    expect_contains(report_catalog_process.stdout_text, "\"dryRun\": true",
+        "#2107: report toolbox-create-plan-catalog JSON should remain dry-run");
+    expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#2107: report toolbox-create-plan-catalog JSON should remain non-mutating");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1244: report toolbox-create-plan-catalog JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
