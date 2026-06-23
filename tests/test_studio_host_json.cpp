@@ -78472,6 +78472,38 @@ void test_studio_host_json_creates_selection_toolbox_object_batches(const std::s
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1311: report selection-toolbox-create-batch JSON should exclude form-only textbox plans");
 
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create-batch",
+            "--selection-context", "label_expression",
+            "--toolbox-item", "label",
+            "--unique-id", "selection-batch-label-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Label Selection Batch",
+            "--json"
+        },
+        temp_root);
+    expect(label_process.exit_code == 0,
+        "#2085: label selection-toolbox-create-batch JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#2085: label selection-toolbox-create-batch JSON should expose label selections");
+    expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2085: label selection-toolbox-create-batch JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"objectName\": \"lbl2\"",
+        "#2085: label selection-toolbox-create-batch JSON should expose generated labels");
+    expect_contains(label_process.stdout_text, "\"uniqueId\": \"selection-batch-label-guid\"",
+        "#2085: label selection-toolbox-create-batch JSON should expose label unique ids");
+    expect_contains(label_process.stdout_text, "\"createdObjectNames\": [\"lbl2\"]",
+        "#2085: label selection-toolbox-create-batch JSON should summarize created label object names");
+    expect_contains(label_process.stdout_text, "\"createdUniqueIds\": [\"selection-batch-label-guid\"]",
+        "#2085: label selection-toolbox-create-batch JSON should summarize created label unique ids");
+    expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2085: label selection-toolbox-create-batch JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count + 5U,
+        "#2085: label selection-toolbox-create-batch host command should mutate the asset exactly once");
+
     const std::size_t committed_count = visual_object_count(form_path);
     const auto unavailable_process = run_process_capture(
         studio_host_path,
