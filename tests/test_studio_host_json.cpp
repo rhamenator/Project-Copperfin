@@ -52801,6 +52801,34 @@ void test_studio_host_json_exposes_selected_deleted_unplaced_report_objects_by_s
                         "#1662: stable deleted unplaced object selections should clear deleted placed object counts");
         expect_contains(object_process.stdout_text, "\"deletedUnplacedObjectCount\": 1",
                         "#1662: stable deleted unplaced object selections should expose deleted unplaced object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1950: stable selected deleted unplaced object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1950: stable selected deleted unplaced object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1950: stable selected deleted unplaced object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 5200",
+                        "#1950: stable selected deleted unplaced object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 8100",
+                        "#1950: stable selected deleted unplaced object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 5200",
+                        "#1950: stable selected deleted unplaced object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 8100",
+                        "#1950: stable selected deleted unplaced object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1950: stable selected deleted unplaced object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 1000",
+                        "#1950: stable selected deleted unplaced object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 9000",
+                        "#1950: stable selected deleted unplaced object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 2200",
+                        "#1950: stable selected deleted unplaced object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 9300",
+                        "#1950: stable selected deleted unplaced object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1200",
+                        "#1950: stable selected deleted unplaced object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1950: stable selected deleted unplaced object JSON should preserve deleted preview heights");
         expect_contains(object_process.stdout_text, "\"selectedReportSectionAvailable\": false",
                         "#1662: stable deleted unplaced object selections should not advertise selected-section availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSection\": null",
