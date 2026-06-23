@@ -51979,6 +51979,34 @@ void test_studio_host_json_exposes_selected_deleted_page_footer_report_objects_b
                         "#1687: stable deleted page-footer object selections should clear live object counts");
         expect_contains(object_process.stdout_text, "\"deletedObjectCount\": 1",
                         "#1687: stable deleted page-footer object selections should preserve deleted object counts");
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1944: stable selected deleted page-footer object JSON should preserve live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1944: stable selected deleted page-footer object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1944: stable selected deleted page-footer object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1944: stable selected deleted page-footer object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 3700",
+                        "#1944: stable selected deleted page-footer object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1944: stable selected deleted page-footer object JSON should preserve live preview widths");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 3700",
+                        "#1944: stable selected deleted page-footer object JSON should preserve live preview heights");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1944: stable selected deleted page-footer object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 150",
+                        "#1944: stable selected deleted page-footer object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 3300",
+                        "#1944: stable selected deleted page-footer object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 1750",
+                        "#1944: stable selected deleted page-footer object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 3600",
+                        "#1944: stable selected deleted page-footer object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1600",
+                        "#1944: stable selected deleted page-footer object JSON should preserve deleted preview widths");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#1944: stable selected deleted page-footer object JSON should preserve deleted preview heights");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": false",
                         "#1687: stable deleted page-footer object selections should not advertise containing-section availability");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
