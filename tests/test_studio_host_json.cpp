@@ -52822,6 +52822,34 @@ void test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable
             expect_contains(delete_process.stdout_text, "\"isLabel\": true",
                             "#1857: label stable object subtree delete should retain label identity");
         }
+        expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2045: stable report/label object subtree delete JSON should preserve live preview availability");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2045: stable report/label object subtree delete JSON should preserve live preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2045: stable report/label object subtree delete JSON should preserve live preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2045: stable report/label object subtree delete JSON should preserve live preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2045: stable report/label object subtree delete JSON should preserve live preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2045: stable report/label object subtree delete JSON should preserve live preview width");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2045: stable report/label object subtree delete JSON should preserve live preview height");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2045: stable report/label object subtree delete JSON should expose deleted preview availability");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 100",
+                        "#2045: stable report/label object subtree delete JSON should expose deleted preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2045: stable report/label object subtree delete JSON should expose deleted preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 150",
+                        "#2045: stable report/label object subtree delete JSON should expose deleted preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2800",
+                        "#2045: stable report/label object subtree delete JSON should expose deleted preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 50",
+                        "#2045: stable report/label object subtree delete JSON should expose deleted preview width");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                        "#2045: stable report/label object subtree delete JSON should expose deleted preview height");
         expect_contains(delete_process.stdout_text, "\"liveObjectCount\": 2",
                         "#1857: report/label stable object subtree delete should remove the object from live counts");
         expect_contains(delete_process.stdout_text, "\"deletedObjectCount\": 1",
@@ -52880,6 +52908,34 @@ void test_studio_host_json_applies_report_object_subtree_deleted_state_by_stable
             expect_contains(restore_process.stdout_text, "\"isLabel\": true",
                             "#1857: label stable object subtree restore should retain label identity");
         }
+        expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2045: stable report/label object subtree restore JSON should preserve live preview availability");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2045: stable report/label object subtree restore JSON should preserve live preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2045: stable report/label object subtree restore JSON should preserve live preview top bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2045: stable report/label object subtree restore JSON should preserve live preview right bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2045: stable report/label object subtree restore JSON should preserve live preview bottom bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2045: stable report/label object subtree restore JSON should preserve live preview width");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2045: stable report/label object subtree restore JSON should preserve live preview height");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2045: stable report/label object subtree restore JSON should clear deleted preview availability");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2045: stable report/label object subtree restore JSON should preserve zero deleted preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2045: stable report/label object subtree restore JSON should preserve zero deleted preview top bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2045: stable report/label object subtree restore JSON should preserve zero deleted preview right bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#2045: stable report/label object subtree restore JSON should preserve zero deleted preview bottom bounds");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2045: stable report/label object subtree restore JSON should preserve zero deleted preview width");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#2045: stable report/label object subtree restore JSON should preserve zero deleted preview height");
         expect_contains(restore_process.stdout_text, "\"liveObjectCount\": 3",
                         "#1857: report/label stable object subtree restore should restore live object counts");
         expect_contains(restore_process.stdout_text, "\"deletedObjectCount\": 0",
