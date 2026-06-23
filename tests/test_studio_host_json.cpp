@@ -53229,6 +53229,22 @@ void test_studio_host_json_exposes_selected_report_sections_by_stable_selection(
                         "#1659: stable live section selections should not advertise selected object-section availability");
         expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
                         "#1659: stable live section selections should serialize null selected object sections");
+        expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2014: stable selected generic section JSON should expose live preview availability");
+        expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2014: stable selected generic section JSON should preserve live preview left bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2014: stable selected generic section JSON should preserve live preview top bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2014: stable selected generic section JSON should include selected section object right bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2014: stable selected generic section JSON should preserve live preview bottom bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2014: stable selected generic section JSON should include selected section object widths");
+        expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2014: stable selected generic section JSON should preserve live preview heights");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2014: stable selected generic section JSON should not fabricate deleted preview availability");
         expect_contains(section_process.stdout_text, "\"sectionCount\": 1",
                         "#1659: stable live section selections should preserve live section counts");
         expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 0",
@@ -53293,6 +53309,34 @@ void test_studio_host_json_exposes_selected_report_sections_by_stable_selection(
                         "#1659: stable deleted section selections should not advertise selected object-section availability");
         expect_contains(section_process.stdout_text, "\"selectedReportObjectSection\": null",
                         "#1659: stable deleted section selections should serialize null selected object sections");
+        expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2014: stable selected deleted generic section JSON should preserve live preview availability");
+        expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 100",
+                        "#2014: stable selected deleted generic section JSON should preserve live unplaced preview left bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 2600",
+                        "#2014: stable selected deleted generic section JSON should preserve live unplaced preview top bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2014: stable selected deleted generic section JSON should preserve live unplaced preview right bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                        "#2014: stable selected deleted generic section JSON should preserve live unplaced preview bottom bounds");
+        expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 50",
+                        "#2014: stable selected deleted generic section JSON should preserve live unplaced preview widths");
+        expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 200",
+                        "#2014: stable selected deleted generic section JSON should preserve live unplaced preview heights");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2014: stable selected deleted generic section JSON should expose deleted preview availability");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2014: stable selected deleted generic section JSON should preserve deleted section left bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                        "#2014: stable selected deleted generic section JSON should preserve deleted section top bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2014: stable selected deleted generic section JSON should preserve deleted section right bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                        "#2014: stable selected deleted generic section JSON should preserve deleted section bottom bounds");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2014: stable selected deleted generic section JSON should preserve deleted section widths");
+        expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                        "#2014: stable selected deleted generic section JSON should preserve deleted section heights");
         expect_contains(section_process.stdout_text, "\"sectionCount\": 0",
                         "#1659: stable deleted section selections should not expose live section counts");
         expect_contains(section_process.stdout_text, "\"deletedSectionCount\": 1",
