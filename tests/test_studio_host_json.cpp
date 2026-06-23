@@ -76595,10 +76595,14 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
         temp_root);
     expect(label_catalog_process.exit_code == 0,
         "#2080: label selection toolbox create-plan catalog JSON command should exit successfully");
+    expect_contains(label_catalog_process.stdout_text, "\"selectionToolboxCreatePlanCatalog\": {",
+        "#2125: label selection toolbox create-plan catalog JSON should expose a catalog object");
     expect_contains(label_catalog_process.stdout_text, "\"selectionContext\": \"label_expression\"",
         "#2080: label selection toolbox create-plan catalog JSON should expose label selections");
     expect_contains(label_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2080: label selection toolbox create-plan catalog JSON should resolve report contexts");
+    expect_contains(label_catalog_process.stdout_text, "\"launchPlanOk\": true",
+        "#2125: label selection toolbox create-plan catalog JSON should expose launch state");
     expect_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#2080: label selection toolbox create-plan catalog JSON should include label plans");
     expect_contains(label_catalog_process.stdout_text, "\"planReadyItemIds\": [\"label\"",
@@ -76609,10 +76613,16 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
         "#2080: label selection toolbox create-plan catalog JSON should summarize empty blocked plan errors");
     expect_contains(label_catalog_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#2080: label selection toolbox create-plan catalog JSON should expose generated labels");
+    expect_contains(label_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2125: label selection toolbox create-plan catalog JSON should preserve label parent payloads");
+    expect_contains(label_catalog_process.stdout_text, "\"dryRun\": true",
+        "#2125: label selection toolbox create-plan catalog JSON should remain dry-run");
+    expect_contains(label_catalog_process.stdout_text, "\"mutatesAsset\": false",
+        "#2125: label selection toolbox create-plan catalog JSON should remain non-mutating");
     expect_not_contains(label_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#2080: label selection toolbox create-plan catalog JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
-        "#2080: label selection toolbox create-plan catalog host command should not mutate assets");
+        "#2125: label selection toolbox create-plan catalog host command should not mutate assets");
 
     const auto unsupported_catalog_process = run_process_capture(
         studio_host_path,
