@@ -77768,10 +77768,26 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         temp_root);
     expect(report_catalog_process.exit_code == 0,
         "#1299: report selection toolbox batch dispatch catalog JSON command should exit successfully");
+    expect_contains(report_catalog_process.stdout_text, "\"selectionToolboxCreateBatchDispatchCatalog\": {",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose catalog objects");
     expect_contains(report_catalog_process.stdout_text, "\"selectionContext\": \"report_expression\"",
         "#1299: report selection toolbox batch dispatch catalog JSON should expose report selections");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#1299: report selection toolbox batch dispatch catalog JSON should expose report contexts");
+    expect_contains(report_catalog_process.stdout_text, "\"launchPlanOk\": true",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose launch state");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchCount\": 1",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose one report batch dispatch");
+    expect_contains(report_catalog_process.stdout_text, "\"errorCount\": 0",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose zero catalog errors");
+    expect_contains(report_catalog_process.stdout_text, "\"batchPlanOk\": true",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose batch plan state");
+    expect_contains(report_catalog_process.stdout_text, "\"batchPlan\": {",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose nested batch plans");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatchOk\": true",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose dispatch state");
+    expect_contains(report_catalog_process.stdout_text, "\"dispatch\": {",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose nested dispatch plans");
     expect_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"label\"",
         "#1299: report selection toolbox batch dispatch catalog JSON should include label plans");
     expect_contains(report_catalog_process.stdout_text, "\"dispatchReadyItemIds\": [\"label\"",
@@ -77780,8 +77796,14 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_batch_dispatc
         "#1381: report selection toolbox batch dispatch catalog JSON should summarize empty blocked item ids");
     expect_contains(report_catalog_process.stdout_text, "\"dispatchBlockedErrors\": []",
         "#1381: report selection toolbox batch dispatch catalog JSON should summarize empty blocked dispatch errors");
+    expect_contains(report_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2114: report selection toolbox batch dispatch catalog JSON should preserve report parent payloads");
     expect_contains(report_catalog_process.stdout_text, "\"--toolbox-context\", \"report\"",
         "#1299: report selection toolbox batch dispatch catalog JSON should preserve report dispatch context");
+    expect_contains(report_catalog_process.stdout_text, "\"dryRun\": false",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose non-dry-run dispatch state");
+    expect_contains(report_catalog_process.stdout_text, "\"mutatesAsset\": true",
+        "#2114: report selection toolbox batch dispatch catalog JSON should expose mutation intent");
     expect_not_contains(report_catalog_process.stdout_text, "\"toolboxItemId\": \"textbox\"",
         "#1299: report selection toolbox batch dispatch catalog JSON should exclude form-only textbox plans");
     expect(visual_object_count(form_path) == before_count,
