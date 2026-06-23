@@ -47093,6 +47093,9 @@ void test_studio_host_json_updates_report_orientation_fields_by_stable_selection
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1833: label stable orientation field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2023: stable-selected report/label orientation update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1833: report/label stable orientation field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"orientationCode\": " + updated_orientation,
@@ -47192,6 +47195,9 @@ void test_studio_host_json_clears_report_orientation_fields_by_stable_selection(
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1833: label stable orientation field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2023: stable-selected report/label orientation clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1833: report/label stable orientation field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"orientationAvailable\": false",
@@ -47295,6 +47301,9 @@ void test_studio_host_json_updates_deleted_report_orientation_fields_by_stable_s
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1833: label stable deleted orientation field update should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2023: stable-selected deleted report/label orientation update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1833: report/label stable deleted orientation field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -47384,6 +47393,9 @@ void test_studio_host_json_clears_deleted_report_orientation_fields_by_stable_se
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1833: label stable deleted orientation field clear should retain label identity");
         }
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2023: stable-selected deleted report/label orientation clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1833: report/label stable deleted orientation field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
