@@ -14,7 +14,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Current State
 
-- Last shipped E3 child: `#2165`, deleted report/label visual-property reorder rejection undo-state JSON coverage.
+- Last shipped E3 child: `#2166`, deleted report/label visual-property reorder-batch rejection undo-state JSON coverage.
 - Current lane: continue E3/#24 report/label designer fidelity and section-aware host surfaces.
 - Next action: inspect live GitHub children under `#24`; pick the highest-weight open prompt-sized child, or create the next child under `#24` if none fits.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.
