@@ -37127,6 +37127,22 @@ void test_studio_host_json_clears_report_section_heights_and_tops_by_stable_sele
             expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                             "#1824: label stable section height clear should retain label identity");
         }
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1912: report/label stable section height clear should preserve preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1912: report/label stable section height clear should preserve preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#1912: report/label stable section height clear should preserve preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1912: report/label stable section height clear should preserve preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                        "#1912: report/label stable section height clear should refresh preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#1912: report/label stable section height clear should preserve preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 800",
+                        "#1912: report/label stable section height clear should refresh preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1912: report/label stable section height clear should not fabricate deleted preview bounds");
         expect_contains(clear_process.stdout_text, "\"sectionHeightTotal\": 0",
                         "#1824: report/label stable section height clear should refresh section height totals");
         expect_contains(clear_process.stdout_text, "\"placedObjectCount\": 0",
