@@ -37034,6 +37034,22 @@ void test_studio_host_json_updates_report_section_heights_and_tops_by_stable_sel
             expect_contains(update_process.stdout_text, "\"isLabel\": true",
                             "#1824: label stable section top update should retain label identity");
         }
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1913: report/label stable section top update should preserve preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1913: report/label stable section top update should preserve preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 2500",
+                        "#1913: report/label stable section top update should refresh preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1913: report/label stable section top update should preserve preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 7500",
+                        "#1913: report/label stable section top update should refresh preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#1913: report/label stable section top update should preserve preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#1913: report/label stable section top update should preserve preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1913: report/label stable section top update should not fabricate deleted preview bounds");
         expect_contains(update_process.stdout_text, "\"sectionHeightTotal\": 5000",
                         "#1824: report/label stable section top update should preserve section height totals");
         expect_contains(update_process.stdout_text, "\"placedObjectCount\": 3",
