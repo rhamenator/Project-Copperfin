@@ -51975,6 +51975,9 @@ void test_studio_host_json_deletes_report_settings_by_stable_selection(const std
             expect_contains(delete_process.stdout_text, "\"isLabel\": true",
                             "#1656: stable label settings delete should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            delete_process.stdout_text,
+            "#2041: stable-selected report/label settings delete JSON");
         expect_contains(delete_process.stdout_text, "\"settingCount\": 0",
                         "#1656: stable report/label settings delete should remove settings from live counts");
         expect_contains(delete_process.stdout_text, "\"pageSetupAvailable\": false",
@@ -52227,6 +52230,9 @@ void test_studio_host_json_restores_report_settings_by_stable_selection(const st
             expect_contains(restore_process.stdout_text, "\"isLabel\": true",
                             "#1657: stable label settings restore should retain label identity");
         }
+        expect_full_report_layout_preview_bounds(
+            restore_process.stdout_text,
+            "#2041: stable-selected report/label settings restore JSON");
         expect_contains(restore_process.stdout_text, "\"settingCount\": 6",
                         "#1657: stable report/label settings restore should restore live setting counts");
         expect_contains(restore_process.stdout_text, "\"deletedSettingCount\": 0",
