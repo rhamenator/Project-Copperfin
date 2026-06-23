@@ -86,6 +86,37 @@ void expect_full_report_layout_preview_bounds(const std::string& text, const std
                     prefix + " should preserve deleted preview heights");
 }
 
+void expect_empty_report_layout_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": false",
+                    prefix + " should not fabricate live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve zero live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 0",
+                    prefix + " should preserve zero live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 0",
+                    prefix + " should preserve zero live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 0",
+                    prefix + " should preserve zero live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 0",
+                    prefix + " should preserve zero live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 0",
+                    prefix + " should preserve zero live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": false",
+                    prefix + " should not fabricate deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 0",
+                    prefix + " should preserve zero deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 0",
+                    prefix + " should preserve zero deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 0",
+                    prefix + " should preserve zero deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 0",
+                    prefix + " should preserve zero deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 0",
+                    prefix + " should preserve zero deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 0",
+                    prefix + " should preserve zero deleted preview heights");
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -47428,6 +47459,9 @@ void test_studio_host_json_updates_report_paper_size_fields_by_record_selection(
                "#1545: report/label paper-size field update should persist the PAPERSIZE field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1545: report/label paper-size field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2020: record-selected report/label paper-size update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1545: report/label paper-size field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"orientationCode\": 0",
@@ -47512,6 +47546,9 @@ void test_studio_host_json_clears_report_paper_size_fields_by_record_selection(
                "#1547: report/label paper-size field clear should blank the PAPERSIZE field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1547: report/label paper-size field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2020: record-selected report/label paper-size clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1547: report/label paper-size field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"orientationCode\": 0",
@@ -47600,6 +47637,9 @@ void test_studio_host_json_updates_deleted_report_paper_size_fields_by_record_se
                "#1591: deleted report/label paper-size field update should persist the PAPERSIZE field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1591: deleted report/label paper-size field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2020: record-selected deleted report/label paper-size update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1591: deleted report/label paper-size field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -47698,6 +47738,9 @@ void test_studio_host_json_clears_deleted_report_paper_size_fields_by_record_sel
                "#1592: deleted report/label paper-size field clear should blank the PAPERSIZE field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1592: deleted report/label paper-size field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2020: record-selected deleted report/label paper-size clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1592: deleted report/label paper-size field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
