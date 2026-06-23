@@ -36479,6 +36479,38 @@ void test_studio_host_json_clears_deleted_report_section_heights_by_record_selec
                "#1576: deleted report/label section height clear should exit successfully");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1576: deleted report/label section height clear should return refreshed report-layout JSON");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(clear_process.stdout_text, "\"isLabel\": true",
+                            "#1920: deleted label section height clear should retain label identity");
+        }
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1920: deleted report/label section height clear should preserve live preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 100",
+                        "#1920: deleted report/label section height clear should preserve live preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 2600",
+                        "#1920: deleted report/label section height clear should preserve live preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#1920: deleted report/label section height clear should preserve live preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                        "#1920: deleted report/label section height clear should preserve live preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 50",
+                        "#1920: deleted report/label section height clear should preserve live preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 200",
+                        "#1920: deleted report/label section height clear should preserve live preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#1920: deleted report/label section height clear should preserve deleted preview availability");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#1920: deleted report/label section height clear should preserve deleted preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                        "#1920: deleted report/label section height clear should preserve deleted preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#1920: deleted report/label section height clear should preserve deleted preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2000",
+                        "#1920: deleted report/label section height clear should refresh deleted preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#1920: deleted report/label section height clear should preserve deleted preview widths");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#1920: deleted report/label section height clear should refresh deleted preview heights");
         expect_contains(clear_process.stdout_text, "\"sectionCount\": 0",
                         "#1576: deleted report/label section height clear should not fabricate live sections");
         expect_contains(clear_process.stdout_text, "\"deletedSectionCount\": 1",
