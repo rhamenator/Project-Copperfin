@@ -74924,6 +74924,14 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
         temp_root);
     expect(label_process.exit_code == 0,
         "#2091: label toolbox-create-from-dispatch JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"toolboxCreateFromDispatch\": {",
+        "#2131: label toolbox-create-from-dispatch JSON should expose a stable result object");
+    expect_contains(label_process.stdout_text, "\"createPlanOk\": true",
+        "#2131: label toolbox-create-from-dispatch JSON should expose create-plan state");
+    expect_contains(label_process.stdout_text, "\"createResult\": {",
+        "#2131: label toolbox-create-from-dispatch JSON should expose lower-level create results");
+    expect_contains(label_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#2131: label toolbox-create-from-dispatch JSON should use dispatch toolbox contexts");
     expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#2091: label toolbox-create-from-dispatch JSON should resolve report contexts");
     expect_contains(label_process.stdout_text, "\"objectName\": \"lbl2\"",
@@ -74940,12 +74948,16 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
         "#2091: label toolbox-create-from-dispatch JSON should summarize empty create errors");
     expect_contains(label_process.stdout_text, "\"propertyValue\": \"Dispatch Label\"",
         "#2091: label toolbox-create-from-dispatch JSON should expose label field values");
+    expect_contains(label_process.stdout_text, "\"dryRun\": false",
+        "#2131: label toolbox-create-from-dispatch JSON should expose execution state");
+    expect_contains(label_process.stdout_text, "\"mutatesAsset\": true",
+        "#2131: label toolbox-create-from-dispatch JSON should expose mutation state");
     expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
         "#2091: label toolbox-create-from-dispatch JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 3U,
-        "#2091: label toolbox-create-from-dispatch host command should mutate the asset exactly once");
+        "#2131: label toolbox-create-from-dispatch host command should mutate the asset exactly once");
     expect(visual_object_property(form_path, "dispatch-host-label-guid", "CAPTION") == "Dispatch Label",
-        "#2091: label toolbox-create-from-dispatch host command should persist caller fields");
+        "#2131: label toolbox-create-from-dispatch host command should persist caller fields");
 
     const std::size_t committed_count = visual_object_count(form_path);
     const auto non_admitted_process = run_process_capture(
