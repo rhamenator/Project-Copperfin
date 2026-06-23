@@ -57268,6 +57268,34 @@ void test_studio_host_json_exposes_selected_deleted_group_header_report_objects_
             expect_contains(object_process.stdout_text, "\"isLabel\": true",
                             "#1692: stable selected deleted group-header label object JSON should retain label identity");
         }
+        expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2069: stable selected deleted group-header report/label object JSON should expose live preview availability");
+        expect_contains(object_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve live preview left bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve live preview top bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve live preview right bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve live preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve live preview width");
+        expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve live preview height");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2069: stable selected deleted group-header report/label object JSON should expose deleted preview availability");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 300",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve deleted preview left bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 100",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve deleted preview top bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 1700",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve deleted preview right bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 350",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve deleted preview bottom bounds");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsWidth\": 1400",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve deleted preview width");
+        expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 250",
+                        "#2069: stable selected deleted group-header report/label object JSON should preserve deleted preview height");
         expect_contains(object_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1692: stable deleted group-header object selections should advertise selected-object availability");
         expect_contains(object_process.stdout_text, "\"selectedReportSelectionAvailable\": true",
