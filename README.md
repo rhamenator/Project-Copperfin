@@ -67,6 +67,11 @@ Contents:
 - [`docs/21-database-federation-and-query-translation.md`](E:/Project-Copperfin/docs/21-database-federation-and-query-translation.md)
 - [`docs/22-vfp-language-reference-coverage.md`](E:/Project-Copperfin/docs/22-vfp-language-reference-coverage.md)
 - [`docs/23-vfp-help-and-component-mining.md`](E:/Project-Copperfin/docs/23-vfp-help-and-component-mining.md)
+- [`docs/23-phase-a-dependency-breakdown.md`](E:/Project-Copperfin/docs/23-phase-a-dependency-breakdown.md)
+- [`docs/24-system-uml.md`](E:/Project-Copperfin/docs/24-system-uml.md)
+- [`docs/25-engine-concurrency-policy.md`](E:/Project-Copperfin/docs/25-engine-concurrency-policy.md)
+- [`docs/26-localization-and-release-readiness.md`](E:/Project-Copperfin/docs/26-localization-and-release-readiness.md)
+- [`docs/27-known-vfp9-bug-exceptions.md`](E:/Project-Copperfin/docs/27-known-vfp9-bug-exceptions.md)
 - [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
 
 Recommended next build order:

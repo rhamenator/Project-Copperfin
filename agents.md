@@ -15,6 +15,10 @@ Use these sources in order:
 
 `remaining-work.md` is intentionally deprecated as an active planning source. `issues.txt` is a local snapshot only; never use it instead of live GitHub state.
 
+## Standing Goal: Requirements Recovery
+
+Eventual goal, restated here because it keeps getting dropped from condensed guidance: build a DO-178-style LLR <-> code <-> test traceability matrix via requirements recovery, since Copperfin's requirements were never written before its code. See `docs/01-product-charter.md` (Compatibility Fidelity Rule) and `docs/27-known-vfp9-bug-exceptions.md` (bug/crash exception registry). A recovered requirement must validate against real installed VFP9 or shipped docs only, never decompiled binaries (`docs/07-clean-room-rules.md`). Not the current lane — pick it up only when explicitly prioritized, and do not let it block active work.
+
 ## Product And Roadmap Intent
 
 Copperfin is not only a VFP 9 compatibility clone. The foundation is maintaining existing FoxPro/VFP codebases without forced rewrites, then enabling gradual modernization through .NET-facing commands, interop paths, safer host behavior, modern runtime capabilities, richer tooling, portability, generated outputs, host integration, and eventually the rapid application-building feel FoxPro/VFP provided.
