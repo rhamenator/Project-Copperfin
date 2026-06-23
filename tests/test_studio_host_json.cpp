@@ -74680,6 +74680,46 @@ void test_studio_host_json_plans_toolbox_object_creation_from_palette_dispatch(
     expect(visual_object_count(form_path) == before_count,
         "#1261: toolbox-create-from-dispatch-plan override commands should not mutate the visual asset");
 
+    const auto report_plan_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--toolbox-create-from-dispatch-plan", "label",
+            "--selection-context", "report_expression",
+            "--create-unique-id", "dispatch-report-plan-guid",
+            "--create-parent-name", "DetailBand",
+            "--field-value", "CAPTION=Dispatch Report Plan",
+            "--admit-palette-invocation", "true",
+            "--json"
+        },
+        temp_root);
+    expect(report_plan_process.exit_code == 0,
+        "#2142: report toolbox-create-from-dispatch-plan JSON command should exit successfully");
+    expect_contains(report_plan_process.stdout_text, "\"toolboxCreatePlan\": {",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should expose stable create plans");
+    expect_contains(report_plan_process.stdout_text, "\"toolboxContextProvided\": true",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should use dispatch toolbox contexts");
+    expect_contains(report_plan_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should resolve report contexts");
+    expect_contains(report_plan_process.stdout_text, "\"toolboxItemId\": \"label\"",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should expose label plans");
+    expect_contains(report_plan_process.stdout_text, "\"objectName\": \"lbl1\"",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should expose generated label names");
+    expect_contains(report_plan_process.stdout_text, "\"uniqueId\": \"dispatch-report-plan-guid\"",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should expose report label unique ids");
+    expect_contains(report_plan_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should expose report label parent overrides");
+    expect_contains(report_plan_process.stdout_text, "\"propertyValue\": \"Dispatch Report Plan\"",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should expose report label field values");
+    expect_contains(report_plan_process.stdout_text, "\"dryRun\": true",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should remain a create plan");
+    expect_contains(report_plan_process.stdout_text, "\"mutatesAsset\": false",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should remain non-mutating");
+    expect_not_contains(report_plan_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2142: report toolbox-create-from-dispatch-plan JSON should exclude form-only textbox plans");
+    expect(visual_object_count(form_path) == before_count,
+        "#2142: report toolbox-create-from-dispatch-plan host command should not mutate assets");
+
     const auto label_plan_process = run_process_capture(
         studio_host_path,
         {
