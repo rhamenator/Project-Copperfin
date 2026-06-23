@@ -79570,6 +79570,34 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
             expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                             "#1871: deleted label stable visual-property clear should retain label identity");
         }
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve live preview availability");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve live preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve live preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve live preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve live preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve live preview width");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve live preview height");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2059: stable deleted report/label visual-property clear JSON should expose deleted preview availability");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 100",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve deleted preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve deleted preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 150",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve deleted preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2800",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve deleted preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 50",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve deleted preview width");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                        "#2059: stable deleted report/label visual-property clear JSON should preserve deleted preview height");
         expect_contains(reopen_process.stdout_text, "\"liveObjectCount\": 1",
                         "#1871: deleted report/label stable visual-property clear should preserve live sibling counts");
         expect_contains(reopen_process.stdout_text, "\"deletedObjectCount\": 2",
@@ -79596,6 +79624,80 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
                         "#1871: deleted report/label stable visual-property clear should preserve stable identities");
         expect_contains(reopen_process.stdout_text, "\"containingSectionRecordIndex\": null",
                         "#1871: deleted report/label stable visual-property clear should keep deleted rows uncontained");
+
+        const auto geometry_clear_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-property-clear",
+                "--path", asset_path.string(),
+                "--property-name", "HPOS",
+                "--unique-id", "middle-field-guid",
+                "--json"
+            },
+            temp_root);
+
+        if (geometry_clear_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report geometry clear stdout:\n"
+                      << geometry_clear_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report geometry clear stderr:\n"
+                      << geometry_clear_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(geometry_clear_process.exit_code == 0,
+               "#2059: deleted report/label stable visual-property geometry clear JSON should exit successfully");
+        expect_contains(geometry_clear_process.stdout_text, "\"visualPropertyClear\": {",
+                        "#2059: deleted report/label stable visual-property geometry clear JSON should expose a clear object");
+        expect_contains(geometry_clear_process.stdout_text, "\"affectedObjectCount\": 1",
+                        "#2059: deleted report/label stable visual-property geometry clear JSON should expose affected property counts");
+
+        const auto geometry_reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "middle-field-guid", "--json"},
+            temp_root);
+
+        if (geometry_reopen_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report geometry clear reopen stdout:\n"
+                      << geometry_reopen_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report geometry clear reopen stderr:\n"
+                      << geometry_reopen_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(geometry_reopen_process.exit_code == 0,
+               "#2059: deleted report/label stable visual-property geometry clear reopen should exit successfully");
+        expect_contains(geometry_reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve live preview availability");
+        expect_contains(geometry_reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve live preview left bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve live preview top bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve live preview right bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve live preview bottom bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve live preview width");
+        expect_contains(geometry_reopen_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve live preview height");
+        expect_contains(geometry_reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should expose deleted preview availability");
+        expect_contains(geometry_reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should refresh deleted preview left bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 2600",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve deleted preview top bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 150",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should refresh deleted preview right bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 2800",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve deleted preview bottom bounds");
+        expect_contains(geometry_reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 150",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should refresh deleted preview width");
+        expect_contains(geometry_reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                        "#2059: stable deleted report/label visual-property geometry clear JSON should preserve deleted preview height");
+        expect_contains(geometry_reopen_process.stdout_text, "\"left\": 0",
+                        "#2059: deleted report/label stable visual-property geometry clear should refresh cleared left metadata");
+        expect_contains(geometry_reopen_process.stdout_text, "\"right\": 50",
+                        "#2059: deleted report/label stable visual-property geometry clear should refresh cleared bounds metadata");
     };
 
     const auto run_deleted_report_property_clear_failure = [&](const fs::path& asset_path,
