@@ -25331,6 +25331,22 @@ void test_studio_host_json_exposes_report_page_footer_sections_by_stable_selecti
                         "#1675: stable selected page-footer section JSON should preserve live sibling section counts");
         expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
                         "#1675: stable selected page-footer section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#1935: stable selected page-footer section JSON should expose live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#1935: stable selected page-footer section JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#1935: stable selected page-footer section JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#1935: stable selected page-footer section JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 3700",
+                        "#1935: stable selected page-footer section JSON should preserve live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#1935: stable selected page-footer section JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 3700",
+                        "#1935: stable selected page-footer section JSON should preserve live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#1935: stable selected page-footer section JSON should not fabricate deleted preview availability");
         expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
                         "#1675: stable selected page-footer sections should not advertise selected-object availability");
         expect_contains(process.stdout_text, "\"selectedReportObject\": null",
