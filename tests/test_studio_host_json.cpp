@@ -81275,6 +81275,34 @@ void test_studio_host_json_renames_report_visual_object_batches_by_stable_select
             expect_contains(reopen_process.stdout_text, "\"isLabel\": true",
                             "#1843: label stable visual-object rename-batch should retain label identity");
         }
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve live preview availability");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve live preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve live preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve live preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve live preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve live preview width");
+        expect_contains(reopen_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve live preview height");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2050: stable report/label live visual-object rename-batch JSON should not fabricate deleted preview availability");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve zero deleted preview left bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve zero deleted preview top bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve zero deleted preview right bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve zero deleted preview bottom bounds");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve zero deleted preview width");
+        expect_contains(reopen_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
+                        "#2050: stable report/label live visual-object rename-batch JSON should preserve zero deleted preview height");
         expect_contains(reopen_process.stdout_text, "\"uniqueId\": \"left-renamed-guid\"",
                         "#1843: report/label stable visual-object rename-batch should preserve selected object identity after reopen");
         expect_contains_in_order(
