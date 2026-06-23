@@ -16371,6 +16371,34 @@ void test_studio_host_json_updates_detail_header_footer_section_expressions_by_s
                                     "#1810: " + operation_label + " should preserve live section count");
                     expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
                                     "#1810: " + operation_label + " should preserve deleted section count");
+                    expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                                    "#1927: " + operation_label + " should preserve live preview availability");
+                    expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                                    "#1927: " + operation_label + " should preserve live preview left bounds");
+                    expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                                    "#1927: " + operation_label + " should preserve live preview top bounds");
+                    expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                                    "#1927: " + operation_label + " should preserve live preview right bounds");
+                    expect_contains(process.stdout_text, "\"previewBoundsBottom\": 550",
+                                    "#1927: " + operation_label + " should preserve live preview bottom bounds");
+                    expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                                    "#1927: " + operation_label + " should preserve live preview widths");
+                    expect_contains(process.stdout_text, "\"previewBoundsHeight\": 550",
+                                    "#1927: " + operation_label + " should preserve live preview heights");
+                    expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                                    "#1927: " + operation_label + " should preserve deleted preview availability");
+                    expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                                    "#1927: " + operation_label + " should preserve deleted preview left bounds");
+                    expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                                    "#1927: " + operation_label + " should preserve deleted preview top bounds");
+                    expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                                    "#1927: " + operation_label + " should preserve deleted preview right bounds");
+                    expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                                    "#1927: " + operation_label + " should preserve deleted preview bottom bounds");
+                    expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                                    "#1927: " + operation_label + " should preserve deleted preview widths");
+                    expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                                    "#1927: " + operation_label + " should preserve deleted preview heights");
                     expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
                                     "#1810: " + operation_label + " should preserve section selection");
                     expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
