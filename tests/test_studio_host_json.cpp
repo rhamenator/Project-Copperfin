@@ -78751,6 +78751,37 @@ void test_studio_host_json_creates_selection_toolbox_objects(const std::string& 
     expect(visual_object_count(form_path) == before_count + 2U,
         "#1309: report selection-toolbox-create host command should mutate the asset exactly once");
 
+    const auto label_process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", form_path.string(),
+            "--selection-toolbox-create", "label",
+            "--selection-context", "label_expression",
+            "--unique-id", "selection-label-expression-label-guid",
+            "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Label Selection",
+            "--json"
+        },
+        temp_root);
+    expect(label_process.exit_code == 0,
+        "#2084: label selection-toolbox-create JSON command should exit successfully");
+    expect_contains(label_process.stdout_text, "\"selectionContext\": \"label_expression\"",
+        "#2084: label selection-toolbox-create JSON should expose label selections");
+    expect_contains(label_process.stdout_text, "\"toolboxContext\": \"report\"",
+        "#2084: label selection-toolbox-create JSON should resolve report contexts");
+    expect_contains(label_process.stdout_text, "\"objectName\": \"lbl2\"",
+        "#2084: label selection-toolbox-create JSON should expose generated label names");
+    expect_contains(label_process.stdout_text, "\"uniqueId\": \"selection-label-expression-label-guid\"",
+        "#2084: label selection-toolbox-create JSON should expose label unique ids");
+    expect_contains(label_process.stdout_text, "\"createdObjectNames\": [\"lbl2\"]",
+        "#2084: label selection-toolbox-create JSON should summarize created label object names");
+    expect_contains(label_process.stdout_text, "\"createdUniqueIds\": [\"selection-label-expression-label-guid\"]",
+        "#2084: label selection-toolbox-create JSON should summarize created label unique ids");
+    expect_not_contains(label_process.stdout_text, "\"className\": \"TextBox\"",
+        "#2084: label selection-toolbox-create JSON should exclude form-only textbox metadata");
+    expect(visual_object_count(form_path) == before_count + 3U,
+        "#2084: label selection-toolbox-create host command should mutate the asset exactly once");
+
     const std::size_t committed_count = visual_object_count(form_path);
     const auto unavailable_process = run_process_capture(
         studio_host_path,
