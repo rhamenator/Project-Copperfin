@@ -45288,6 +45288,9 @@ void test_studio_host_json_updates_report_grid_vertical_fields_by_record_selecti
                "#1542: report/label vertical-grid field update should persist the GRIDV field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1542: report/label vertical-grid field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2024: record-selected report/label vertical-grid update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1542: report/label vertical-grid field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"topMargin\": 10",
@@ -45366,6 +45369,9 @@ void test_studio_host_json_clears_report_grid_vertical_fields_by_record_selectio
                "#1551: report/label vertical-grid field clear should blank the GRIDV field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1551: report/label vertical-grid field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2024: record-selected report/label vertical-grid clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1551: report/label vertical-grid field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
@@ -45447,6 +45453,9 @@ void test_studio_host_json_updates_deleted_report_grid_vertical_fields_by_record
                "#1585: deleted report/label vertical-grid field update should persist the GRIDV field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1585: deleted report/label vertical-grid field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2024: record-selected deleted report/label vertical-grid update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1585: deleted report/label vertical-grid field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -45541,6 +45550,9 @@ void test_studio_host_json_clears_deleted_report_grid_vertical_fields_by_record_
                "#1586: deleted report/label vertical-grid field clear should blank the GRIDV field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1586: deleted report/label vertical-grid field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2024: record-selected deleted report/label vertical-grid clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1586: deleted report/label vertical-grid field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
