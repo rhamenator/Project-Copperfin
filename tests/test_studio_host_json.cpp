@@ -79684,22 +79684,50 @@ void test_studio_host_json_creates_selection_toolbox_objects(const std::string& 
         temp_root);
     expect(report_process.exit_code == 0,
         "#1309: report selection-toolbox-create JSON command should exit successfully");
+    expect_contains(report_process.stdout_text, "\"selectionToolboxCreate\": {",
+        "#2115: report selection-toolbox-create JSON should expose a stable result object");
     expect_contains(report_process.stdout_text, "\"selectionContext\": \"report_expression\"",
         "#1309: report selection-toolbox-create JSON should expose report selections");
     expect_contains(report_process.stdout_text, "\"toolboxContext\": \"report\"",
         "#1309: report selection-toolbox-create JSON should resolve report contexts");
+    expect_contains(report_process.stdout_text, "\"launchPlanOk\": true",
+        "#2115: report selection-toolbox-create JSON should expose launch state");
+    expect_contains(report_process.stdout_text, "\"createPlanOk\": true",
+        "#2115: report selection-toolbox-create JSON should expose nested create-plan state");
+    expect_contains(report_process.stdout_text, "\"createResult\": {",
+        "#2115: report selection-toolbox-create JSON should expose lower-level create results");
     expect_contains(report_process.stdout_text, "\"objectName\": \"lbl1\"",
         "#1309: report selection-toolbox-create JSON should expose generated label names");
     expect_contains(report_process.stdout_text, "\"uniqueId\": \"selection-report-label-guid\"",
         "#1309: report selection-toolbox-create JSON should expose report label unique ids");
+    expect_contains(report_process.stdout_text, "\"parentName\": \"DetailBand\"",
+        "#2115: report selection-toolbox-create JSON should preserve report parent payloads");
     expect_contains(report_process.stdout_text, "\"createdObjectNames\": [\"lbl1\"]",
         "#1382: report selection-toolbox-create JSON should summarize created report object names");
     expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"selection-report-label-guid\"]",
         "#1382: report selection-toolbox-create JSON should summarize created report unique ids");
+    expect_contains(report_process.stdout_text, "\"createErrors\": []",
+        "#2115: report selection-toolbox-create JSON should summarize empty create errors");
+    expect_contains(report_process.stdout_text, "\"propertyValue\": \"Report Selection\"",
+        "#2115: report selection-toolbox-create JSON should expose caller report fields");
+    expect_contains(report_process.stdout_text, "\"dryRun\": false",
+        "#2115: report selection-toolbox-create JSON should expose execution state");
+    expect_contains(report_process.stdout_text, "\"mutatesAsset\": true",
+        "#2115: report selection-toolbox-create JSON should expose mutation state");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1309: report selection-toolbox-create JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 2U,
         "#1309: report selection-toolbox-create host command should mutate the asset exactly once");
+
+    const auto report_caption = copperfin::vfp::query_visual_object_property({
+        .path = form_path.string(),
+        .record_index = 0U,
+        .object_name = {},
+        .unique_id = "selection-report-label-guid",
+        .property_name = "CAPTION"
+    });
+    expect(report_caption.ok && report_caption.exists && report_caption.value == "Report Selection",
+        "#2115: report selection-toolbox-create host command should persist report label captions");
 
     const auto label_process = run_process_capture(
         studio_host_path,
