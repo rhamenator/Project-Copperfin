@@ -84087,6 +84087,8 @@ void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_sel
                         "#1844: report/label stable visual-object duplicate-batch JSON should expose mutation state");
         expect_contains(duplicate_batch_process.stdout_text, "\"undoAvailable\": false",
                         "#1844: report/label stable visual-object duplicate-batch JSON should expose undo availability");
+        expect_contains(duplicate_batch_process.stdout_text, "\"undoLabel\": \"\"",
+                        "#2169: report/label stable visual-object duplicate-batch JSON should expose empty undo labels");
         expect(visual_object_count(asset_path) == before_count + 2U &&
                    visual_object_exists(asset_path, "left-field-guid") &&
                    visual_object_exists(asset_path, "right-field-guid") &&
