@@ -76750,6 +76750,7 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
             "--selection-toolbox-create-plan-catalog",
             "--selection-context", "label_expression",
             "--parent-name", "DetailBand",
+            "--field-value", "CAPTION=Label Selection Plan Catalog",
             "--json"
         },
         temp_root);
@@ -76775,6 +76776,10 @@ void test_studio_host_json_plans_selection_toolbox_object_creation_catalog(
         "#2080: label selection toolbox create-plan catalog JSON should expose generated labels");
     expect_contains(label_catalog_process.stdout_text, "\"parentName\": \"DetailBand\"",
         "#2125: label selection toolbox create-plan catalog JSON should preserve label parent payloads");
+    expect_contains(label_catalog_process.stdout_text, "\"propertyName\": \"CAPTION\"",
+        "#2150: label selection toolbox create-plan catalog JSON should expose caller field names");
+    expect_contains(label_catalog_process.stdout_text, "\"propertyValue\": \"Label Selection Plan Catalog\"",
+        "#2150: label selection toolbox create-plan catalog JSON should expose caller field values");
     expect_contains(label_catalog_process.stdout_text, "\"dryRun\": true",
         "#2125: label selection toolbox create-plan catalog JSON should remain dry-run");
     expect_contains(label_catalog_process.stdout_text, "\"mutatesAsset\": false",
