@@ -53414,6 +53414,8 @@ void test_studio_host_json_duplicates_deleted_report_visual_object_subtrees_by_s
                "#1859: deleted report/label stable visual-object duplicate-subtree should reject replacement collisions");
         expect_contains(collision_process.stdout_text, "\"visualObjectDuplicateSubtree\": null",
                         "#1859: failed deleted report/label stable visual-object duplicate-subtree JSON should not expose stale result objects");
+        expect_not_contains(collision_process.stdout_text, "\"undoAvailable\": true",
+                            "#2177: failed deleted report/label stable visual-object duplicate-subtree JSON should not advertise undo availability");
         expect_contains(collision_process.stdout_text, "The requested replacement identity already exists in the asset.",
                         "#1859: failed deleted report/label stable visual-object duplicate-subtree JSON should report collision errors");
         expect(visual_object_count(asset_path) == before_count &&
