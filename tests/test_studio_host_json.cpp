@@ -81238,6 +81238,8 @@ void test_studio_host_json_updates_report_visual_object_batches_by_stable_select
                         "#1842: report/label stable visual-object update-batch JSON should expose mutation state");
         expect_contains(update_batch_process.stdout_text, "\"undoAvailable\": true",
                         "#1842: report/label stable visual-object update-batch JSON should expose undo availability");
+        expect_contains(update_batch_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                        "#2156: report/label stable visual-object update-batch JSON should expose the latest undo label");
         expect(visual_object_property(asset_path, "field-guid", "EXPR") == "customer.contact" &&
                    visual_object_property(asset_path, "field-guid", "WIDTH") == "4300" &&
                    visual_object_property(asset_path, "label-guid", "EXPR") == "\"Updated invoice\"" &&
@@ -81417,6 +81419,8 @@ void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stabl
                         "#1863: deleted report/label stable visual-object update-batch JSON should expose mutation state");
         expect_contains(update_batch_process.stdout_text, "\"undoAvailable\": true",
                         "#1863: deleted report/label stable visual-object update-batch JSON should expose undo availability");
+        expect_contains(update_batch_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                        "#2156: deleted report/label stable visual-object update-batch JSON should expose the latest undo label");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.updated" &&
                    visual_object_property(asset_path, "middle-field-guid", "WIDTH") == "4300" &&
                    visual_object_property(asset_path, "right-field-guid", "EXPR") == "right.updated" &&
