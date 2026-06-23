@@ -74793,10 +74793,17 @@ void test_studio_host_json_creates_toolbox_object_from_palette_dispatch(
         "#1384: report toolbox-create-from-dispatch JSON should summarize created report object names");
     expect_contains(report_process.stdout_text, "\"createdUniqueIds\": [\"dispatch-host-report-label-guid\"]",
         "#1384: report toolbox-create-from-dispatch JSON should summarize created report unique ids");
+    expect_contains(report_process.stdout_text, "\"createErrors\": []",
+        "#2105: report toolbox-create-from-dispatch JSON should summarize empty create errors");
+    expect_contains(report_process.stdout_text, "\"propertyValue\": \"Dispatch Report\"",
+        "#2105: report toolbox-create-from-dispatch JSON should preserve report label field values");
     expect_not_contains(report_process.stdout_text, "\"className\": \"TextBox\"",
         "#1314: report toolbox-create-from-dispatch JSON should exclude form-only textbox metadata");
     expect(visual_object_count(form_path) == before_count + 2U,
         "#1314: report toolbox-create-from-dispatch host command should mutate the asset exactly once");
+    expect(visual_object_property(form_path, "dispatch-host-report-label-guid", "CAPTION") ==
+            "Dispatch Report",
+        "#2105: report toolbox-create-from-dispatch host command should persist caller fields");
 
     const auto label_process = run_process_capture(
         studio_host_path,
