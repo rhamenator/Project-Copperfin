@@ -46022,6 +46022,9 @@ void test_studio_host_json_updates_report_grid_horizontal_fields_by_record_selec
                "#1543: report/label horizontal-grid field update should persist the GRIDH field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1543: report/label horizontal-grid field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2026: record-selected report/label horizontal-grid update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1543: report/label horizontal-grid field update should preserve page setup availability");
         expect_contains(update_process.stdout_text, "\"topMargin\": 10",
@@ -46100,6 +46103,9 @@ void test_studio_host_json_clears_report_grid_horizontal_fields_by_record_select
                "#1552: report/label horizontal-grid field clear should blank the GRIDH field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1552: report/label horizontal-grid field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2026: record-selected report/label horizontal-grid clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": true",
                         "#1552: report/label horizontal-grid field clear should preserve page setup availability");
         expect_contains(clear_process.stdout_text, "\"topMargin\": 10",
@@ -46181,6 +46187,9 @@ void test_studio_host_json_updates_deleted_report_grid_horizontal_fields_by_reco
                "#1587: deleted report/label horizontal-grid field update should persist the GRIDH field");
         expect_contains(update_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1587: deleted report/label horizontal-grid field update should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            update_process.stdout_text,
+            "#2026: record-selected deleted report/label horizontal-grid update JSON");
         expect_contains(update_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1587: deleted report/label horizontal-grid field update should not fabricate live page setup");
         expect_contains(update_process.stdout_text, "\"settingCount\": 0",
@@ -46275,6 +46284,9 @@ void test_studio_host_json_clears_deleted_report_grid_horizontal_fields_by_recor
                "#1588: deleted report/label horizontal-grid field clear should blank the GRIDH field");
         expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1588: deleted report/label horizontal-grid field clear should return refreshed report-layout JSON");
+        expect_empty_report_layout_preview_bounds(
+            clear_process.stdout_text,
+            "#2026: record-selected deleted report/label horizontal-grid clear JSON");
         expect_contains(clear_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1588: deleted report/label horizontal-grid field clear should not fabricate live page setup");
         expect_contains(clear_process.stdout_text, "\"settingCount\": 0",
