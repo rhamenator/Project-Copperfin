@@ -338,6 +338,37 @@ void expect_missing_section_objcode_preview_bounds(const std::string& text, cons
                     prefix + " should preserve deleted preview heights");
 }
 
+void expect_unknown_band_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 300",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 0",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 1000",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 0",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 700",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 0",
+                    prefix + " should preserve deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 1200",
+                    prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 0",
+                    prefix + " should preserve deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 1600",
+                    prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 0",
+                    prefix + " should preserve deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 400",
+                    prefix + " should preserve deleted preview heights");
+}
+
 void expect_missing_object_objcode_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
@@ -21215,6 +21246,9 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
                         "#1722: unknown deleted band top bounds should be preserved");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1600",
                         "#1722: unknown deleted band bottom bounds should be preserved");
+        expect_unknown_band_preview_bounds(
+            summary_process.stdout_text,
+            "#2346: unknown band summary JSON");
         expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
                         "#1722: unknown live bands should remain section rows");
         expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
@@ -21237,6 +21271,9 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
                "#1722: unknown live band record selection should keep inspection non-failing");
         expect_contains(live_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                         "#1722: unknown live band selections should expose selected sections");
+        expect_unknown_band_preview_bounds(
+            live_process.stdout_text,
+            "#2346: selected unknown live band JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -21263,6 +21300,9 @@ void test_studio_host_json_exposes_unknown_report_band_codes(const std::string& 
                "#1722: unknown deleted band record selection should keep inspection non-failing");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                         "#1722: unknown deleted band selections should expose selected sections");
+        expect_unknown_band_preview_bounds(
+            deleted_process.stdout_text,
+            "#2346: selected unknown deleted band JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
