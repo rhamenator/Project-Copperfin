@@ -191,6 +191,15 @@ int main() {
                pseudo_toolbox->id == "show-toolbox" &&
                pseudo_toolbox->command_token == "studio.toolbox.show_for_context",
            "#2361: pseudo-localized editor actions should decorate toolbox labels without changing command tokens");
+    expect(english_catalog.translate("Studio.EditorActionDispatch.Error.AdmittedInvocationRequired") ==
+               "An editor action dispatch request requires an admitted non-dry-run invocation." &&
+               english_catalog.translate("Studio.EditorActionDispatch.Execution.Error.ExecutionAdmissionRequired") ==
+                   "An editor action dispatch execution request requires explicit execution admission." &&
+               english_catalog.translate("Studio.EditorActionDispatch.CatalogEntry.Error.ExecutionAdmissionRequired") ==
+                   "An editor action dispatch execution catalog entry requires explicit execution admission." &&
+               pseudo_catalog.translate("Studio.EditorActionDispatch.Error.AdmittedInvocationRequired").starts_with("[!! ") &&
+               pseudo_catalog.translate("Studio.EditorActionDispatch.Execution.Error.ExecutorDidNotLaunch").starts_with("[!! "),
+           "#2362: editor action dispatch error prose should resolve through localizable catalog keys");
 
     const auto visual_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::visual_object);
@@ -795,6 +804,47 @@ int main() {
                !non_zero_execution.executed &&
                non_zero_execution.dry_run,
            "#1320: editor action dispatch execution should reject non-zero executor exit codes");
+    const auto launch_failure_default_error = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = method_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = false,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!launch_failure_default_error.ok &&
+               launch_failure_default_error.error ==
+                   "An editor action dispatch executor did not launch the editor action." &&
+               !launch_failure_default_error.executed &&
+               launch_failure_default_error.dry_run,
+           "#2362: editor action dispatch execution should localize default launch-failure prose");
+
+    const auto non_zero_default_error = copperfin::studio::execute_studio_editor_action_dispatch({
+        .dispatch_plan = method_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioEditorActionDispatchPlan&) {
+            return copperfin::studio::StudioEditorActionDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 9,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!non_zero_default_error.ok &&
+               non_zero_default_error.error ==
+                   "An editor action dispatch executor returned a non-zero exit code." &&
+               non_zero_default_error.observation.launched &&
+               non_zero_default_error.observation.exit_code == 9 &&
+               !non_zero_default_error.executed &&
+               non_zero_default_error.dry_run,
+           "#2362: editor action dispatch execution should localize default non-zero-exit prose");
 
     const auto dry_run_dispatch = copperfin::studio::plan_studio_editor_action_dispatch({
         .admission_plan = dry_run_property_invocation.plan
