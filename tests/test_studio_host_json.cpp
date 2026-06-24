@@ -13025,6 +13025,16 @@ void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_sel
                             "#1783: detail-header object duplicate should preserve object selection kind");
             expect_contains(duplicate_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1783: detail-header object duplicate should preserve containing-section availability");
+            expect_contains(duplicate_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2289: detail-header object duplicate should preserve live preview availability");
+            expect_contains(duplicate_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2289: detail-header object duplicate should preserve live preview top bounds");
+            expect_contains(duplicate_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2289: detail-header object duplicate should preserve live preview bottom bounds");
+            expect_contains(duplicate_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2289: detail-header object duplicate should preserve live preview heights");
+            expect_contains(duplicate_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2289: detail-header object duplicate should not fabricate deleted preview availability");
             expect_contains_in_order(
                 duplicate_header_process.stdout_text,
                 {
@@ -13099,6 +13109,16 @@ void test_studio_host_json_duplicates_detail_header_footer_objects_by_stable_sel
                             "#1783: detail-footer object duplicate should preserve object selection kind");
             expect_contains(duplicate_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1783: detail-footer object duplicate should preserve containing-section availability");
+            expect_contains(duplicate_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2289: detail-footer object duplicate should preserve live preview availability");
+            expect_contains(duplicate_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2289: detail-footer object duplicate should preserve live preview top bounds");
+            expect_contains(duplicate_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2289: detail-footer object duplicate should preserve live preview bottom bounds");
+            expect_contains(duplicate_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2289: detail-footer object duplicate should preserve live preview heights");
+            expect_contains(duplicate_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2289: detail-footer object duplicate should not fabricate deleted preview availability");
             expect_contains_in_order(
                 duplicate_footer_process.stdout_text,
                 {
