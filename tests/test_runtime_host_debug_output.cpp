@@ -39,6 +39,19 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
     write_text(
         english_root / "strings.json",
         "{\n"
+        "  \"RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed\": \"Unable to create bridge response directory.\",\n"
+        "  \"RuntimeHost.Bridge.Error.PrgStartupRequired\": \"Bridge invocation currently requires a PRG startup source.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestArtifactNotFound\": \"Bridge request artifact not found.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestDescriptorMismatch\": \"Bridge request descriptor mismatch.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestMediaTypeMismatch\": \"Bridge request media type mismatch.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestParameterCountMismatch\": \"Bridge request parameter count mismatch.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestParameterNameMismatch\": \"Bridge request parameter name mismatch.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch\": \"Bridge request schema version mismatch.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequiredArguments\": \"Bridge invocation requires request/response path, media type, and schema version arguments.\",\n"
+        "  \"RuntimeHost.Bridge.Error.SourceArtifactNotFound\": \"Bridge routine source artifact not found.\",\n"
+        "  \"RuntimeHost.Bridge.Error.UnsupportedRoutineExportName\": \"Bridge routine export name is not a supported PRG identifier.\",\n"
+        "  \"RuntimeHost.Bridge.Error.WriteResponseArtifactFailed\": \"Unable to write bridge response artifact.\",\n"
+        "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"Unable to write bridge routine bootstrap.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"Manifest is empty or invalid.\",\n"
@@ -2076,6 +2089,39 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
         expect(missing_federation_argument.stdout_text.find("--federation-backend") != std::string::npos &&
                    missing_federation_argument.stdout_text.find("--federation-query") != std::string::npos,
                "#2351: pseudo-localized federation validation should preserve CLI tokens");
+
+        const fs::path bridge_manifest_path = temp_root / "bridge.cfmanifest";
+        const fs::path bridge_source_path = temp_root / "bridge.prg";
+        const fs::path bridge_response_path = temp_root / "bridge.response.json";
+        write_text(
+            bridge_manifest_path,
+            std::string("manifest_version=1\n"
+            "project_title=BridgeLocalization\n"
+            "startup_item=bridge.prg\n"
+            "startup_source=") + bridge_source_path.string() + "\n"
+            "security_enabled=false\n"
+            "dotnet_story=none\n");
+        write_text(bridge_source_path, "RETURN 1\n");
+
+        const auto bridge_error = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", bridge_manifest_path.string(),
+                "--request-path", (temp_root / "missing.request.json").string(),
+                "--response-path", bridge_response_path.string(),
+                "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+                "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+                "--schema-version", "v1"
+            },
+            temp_root);
+        expect(bridge_error.exit_code == 6,
+               "#2352: pseudo-localized bridge errors should keep the bridge validation exit code");
+        expect(bridge_error.stdout_text.find("status: error") != std::string::npos,
+               "#2352: pseudo-localized bridge errors should preserve machine-readable status");
+        expect(bridge_error.stdout_text.find("runtime.mode: bridge-invocation") != std::string::npos,
+               "#2352: pseudo-localized bridge errors should preserve bridge runtime mode");
+        expect(bridge_error.stdout_text.find("[!! ") != std::string::npos,
+               "#2352: pseudo-localized bridge errors should decorate prose");
     }
 
     fs::remove_all(temp_root, ignored);

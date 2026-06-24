@@ -359,6 +359,7 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
+| `#2348` | `#2352` closed | Runtime host bridge-invocation error prose routes through the portable C++ localization catalog while preserving bridge status/mode and artifact contracts as invariant placeholders |
 | `#2348` | `#2351` closed | Runtime host top-level command/federation/manifest error prose routes through the portable C++ localization catalog while preserving CLI/status/runtime contract tokens as invariant placeholders |
 | `#2348` | `#2350` closed | Build host usage text and direct command error prose route through the portable C++ localization catalog while preserving CLI/status/build contract tokens as invariant placeholders |
 | `#2348` | `#2349` closed | Runtime host usage text routes through the portable C++ localization catalog while preserving CLI/debug/federation tokens as invariant placeholders |

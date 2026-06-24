@@ -444,6 +444,13 @@ bool runtime_bridge_mode_requested(const RuntimeBridgeInvocationOptions& options
            !trim_copy(options.schema_version).empty();
 }
 
+std::string localized_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& key,
+    const copperfin::localization::PlaceholderMap& placeholders = {}) {
+    return catalog.translate(key, placeholders);
+}
+
 bool is_runtime_bridge_routine_identifier(const std::string& value) {
     const std::string identifier = trim_copy(value);
     if (identifier.empty()) {
@@ -466,16 +473,17 @@ bool is_runtime_bridge_routine_identifier(const std::string& value) {
 std::optional<std::filesystem::path> materialize_runtime_bridge_routine_bootstrap(
     const RuntimeBridgeInvocationOptions& options,
     const std::vector<std::string>& parameter_values,
+    const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error_message) {
     const std::string export_name = trim_copy(options.library_export);
     if (!is_runtime_bridge_routine_identifier(export_name)) {
-        error_message = "Bridge routine export name is not a supported PRG identifier.";
+        error_message = localized_message(catalog, "RuntimeHost.Bridge.Error.UnsupportedRoutineExportName");
         return std::nullopt;
     }
 
     std::ifstream source_input(options.source_path, std::ios::binary);
     if (!source_input.good()) {
-        error_message = "Bridge routine source artifact not found.";
+        error_message = localized_message(catalog, "RuntimeHost.Bridge.Error.SourceArtifactNotFound");
         return std::nullopt;
     }
     std::ostringstream source_stream;
@@ -504,7 +512,7 @@ std::optional<std::filesystem::path> materialize_runtime_bridge_routine_bootstra
     }
     bootstrap_output.close();
     if (!bootstrap_output.good()) {
-        error_message = "Unable to write bridge routine bootstrap.";
+        error_message = localized_message(catalog, "RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed");
         return std::nullopt;
     }
 
@@ -522,7 +530,8 @@ void remove_runtime_bridge_routine_bootstrap(const std::optional<std::filesystem
 int run_runtime_bridge_invocation(
     const RuntimeBridgeInvocationOptions& options,
     const std::string& startup_source,
-    const std::string& working_directory) {
+    const std::string& working_directory,
+    const copperfin::localization::LocalizedCatalog& catalog) {
     if (trim_copy(options.request_path).empty() ||
         trim_copy(options.response_path).empty() ||
         trim_copy(options.request_media_type).empty() ||
@@ -530,7 +539,7 @@ int run_runtime_bridge_invocation(
         trim_copy(options.schema_version).empty()) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: Bridge invocation requires request/response path, media type, and schema version arguments.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequiredArguments") << "\n";
         return 2;
     }
 
@@ -538,7 +547,7 @@ int run_runtime_bridge_invocation(
     if (!request_input.good()) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: Bridge request artifact not found.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestArtifactNotFound") << "\n";
         return 6;
     }
     std::ostringstream request_document_stream;
@@ -551,13 +560,13 @@ int run_runtime_bridge_invocation(
     if (request_media_type != options.request_media_type) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: Bridge request media type mismatch.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch") << "\n";
         return 6;
     }
     if (request_schema_version != options.schema_version) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: Bridge request schema version mismatch.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch") << "\n";
         return 6;
     }
     const auto descriptor_matches = [&](const std::string& field_name, const std::string& expected_value) {
@@ -572,7 +581,7 @@ int run_runtime_bridge_invocation(
         !descriptor_matches("parameter_count", options.parameter_count)) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: Bridge request descriptor mismatch.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestDescriptorMismatch") << "\n";
         return 6;
     }
 
@@ -586,17 +595,17 @@ int run_runtime_bridge_invocation(
         if (trim_copy(options.parameter_count) != std::to_string(parameter_values.size())) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
-            std::cout << "error: Bridge request parameter count mismatch.\n";
+            std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestParameterCountMismatch") << "\n";
             return 6;
         }
         if (!bridge_parameter_names_match(split_bridge_parameter_name_list(options.parameter_names), parameter_names)) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
-            std::cout << "error: Bridge request parameter name mismatch.\n";
+            std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestParameterNameMismatch") << "\n";
             return 6;
         }
         std::string bootstrap_error;
-        const auto bootstrap_path = materialize_runtime_bridge_routine_bootstrap(options, parameter_values, bootstrap_error);
+        const auto bootstrap_path = materialize_runtime_bridge_routine_bootstrap(options, parameter_values, catalog, bootstrap_error);
         if (!bootstrap_path.has_value()) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
@@ -610,7 +619,7 @@ int run_runtime_bridge_invocation(
     if (lowercase_copy(std::filesystem::path(execution_source).extension().string()) != ".prg") {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: Bridge invocation currently requires a PRG startup source.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.PrgStartupRequired") << "\n";
         return 6;
     }
 
@@ -643,7 +652,7 @@ int run_runtime_bridge_invocation(
         if (directory_error) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
-            std::cout << "error: Unable to create bridge response directory.\n";
+            std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed") << "\n";
             return 6;
         }
     }
@@ -660,7 +669,7 @@ int run_runtime_bridge_invocation(
     if (!response_output.good()) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: Unable to write bridge response artifact.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed") << "\n";
         return 6;
     }
 
@@ -934,13 +943,6 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
     std::cout << catalog.translate("RuntimeHost.Usage.Manifest", invariant_tokens) << "\n";
     std::cout << catalog.translate("RuntimeHost.Usage.Federation", invariant_tokens) << "\n";
     std::cout << catalog.translate("RuntimeHost.Usage.FederationPlanning", invariant_tokens) << "\n";
-}
-
-std::string localized_message(
-    const copperfin::localization::LocalizedCatalog& catalog,
-    const std::string& key,
-    const copperfin::localization::PlaceholderMap& placeholders = {}) {
-    return catalog.translate(key, placeholders);
 }
 
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
@@ -1540,7 +1542,7 @@ int main(int argc, char** argv) {
         resolve_effective_working_directory(manifest, manifest_directory);
 
     if (runtime_bridge_mode_requested(bridge_options)) {
-        return run_runtime_bridge_invocation(bridge_options, startup_source, working_directory);
+        return run_runtime_bridge_invocation(bridge_options, startup_source, working_directory, catalog);
     }
 
     const std::string startup_extension = lowercase_copy(std::filesystem::path(startup_source).extension().string());
