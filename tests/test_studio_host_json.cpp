@@ -82484,6 +82484,8 @@ void test_studio_host_json_copies_deleted_report_visual_property_batches_by_stab
                "#1868: deleted report/label stable visual-property copy-batch missing selector should fail");
         expect_contains(rollback_process.stdout_text, "\"visualPropertyCopyBatch\": null",
                         "#1868: failed deleted report/label stable visual-property copy-batch JSON should not expose stale batch objects");
+        expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
+                            "#2189: failed deleted report/label stable visual-property copy-batch JSON should not advertise undo availability");
         expect_contains(rollback_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1868: failed deleted report/label stable visual-property copy-batch JSON should report missing selector errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
