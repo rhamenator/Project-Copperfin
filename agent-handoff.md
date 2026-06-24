@@ -7,7 +7,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 - Start from live GitHub issue state plus the current repo guidance in `agents.md` and `docs/23-phase-a-dependency-breakdown.md`.
 - Use the issue hierarchy: umbrella issues are planning/tracking units, parent/lane issues group work, and prompt-sized child issues are execution units.
 - Pick or create one open prompt-sized child issue before implementation. Do not execute directly from an umbrella or parent/lane issue when child slices exist or can be created.
-- Current active implementation lane is E3/#24, report/label designer fidelity, unless live GitHub state shows a higher-weight blocker.
+- Current active implementation lane is E3/#24, report/label designer fidelity, unless live GitHub state shows a higher-weight blocker. Localization/#2348 is now a standing architectural constraint for new user-facing text.
 - Phase A, D1/#19, E1/#22, and old numbered runtime/planning sequences are historical/closed unless live regression evidence reopens them.
 - Preserve deferred modernization and wishlist work as roadmap intent, not noise; do not close, ignore, or discard future-facing issues merely because they are not current blockers.
 - Keep changes narrow, implementation-first, and validated. Update durable docs only when behavior or active guidance changes.
@@ -15,10 +15,11 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2347`, fractional geometry preview-metadata JSON coverage.
-- Current lane: continue E3/#24 report/label designer fidelity and section-aware host surfaces.
+- Last shipped localization child: `#1779`, portable C++ catalog/fallback/pseudo-locale infrastructure and first CLI usage-text routing.
+- Current lane: continue E3/#24 report/label designer fidelity and section-aware host surfaces, preserving localization rules for any new user-facing text.
 - Next action: inspect live GitHub children under `#24`; pick the highest-weight open prompt-sized child, or create the next child under `#24` if none fits.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.
-- Localization/release-readiness slices under `#1779`/`#113` have recently shipped through `#1856`; continue them only if live issue state makes them higher priority than E3/#24.
+- Localization/release-readiness slices under `#2348`/`#113` have shipped through `#1779` and `#1856`; continue them only if live issue state makes them higher priority than E3/#24.
 
 ## Required Reading
 

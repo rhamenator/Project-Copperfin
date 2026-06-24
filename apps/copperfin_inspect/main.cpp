@@ -1,12 +1,64 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/asset_inspector.h"
 #include "copperfin/security/process_hardening.h"
 
+#include <filesystem>
 #include <iostream>
+#include <string>
 
 namespace {
 
-void print_usage() {
-    std::cout << "Usage: copperfin_inspect <path-to-vfp-asset>\n";
+struct CommandLineOptions {
+    std::string asset_path;
+    std::string locale;
+    bool help = false;
+    bool valid = true;
+};
+
+CommandLineOptions parse_arguments(int argc, char** argv) {
+    CommandLineOptions options;
+    for (int index = 1; index < argc; ++index) {
+        const std::string argument = argv[index];
+        if (argument == "--help" || argument == "-h") {
+            options.help = true;
+            continue;
+        }
+        if (argument == "--locale") {
+            if (index + 1 >= argc) {
+                options.valid = false;
+                return options;
+            }
+            options.locale = argv[++index];
+            continue;
+        }
+        if (options.asset_path.empty()) {
+            options.asset_path = argument;
+        } else {
+            options.valid = false;
+            return options;
+        }
+    }
+    return options;
+}
+
+copperfin::localization::LocalizedCatalog load_localization(
+    const char* executable_path,
+    const std::string& explicit_locale) {
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
+    return copperfin::localization::load_catalogs(
+        locale_root,
+        copperfin::localization::select_locale(explicit_locale));
+}
+
+void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
+    std::cout << catalog.translate(
+        "Inspect.Usage",
+        {
+            {"assetPathArgument", "<path-to-vfp-asset>"},
+            {"commandName", "copperfin_inspect"},
+            {"localeOption", "--locale"},
+            {"localeValue", "<locale>"}
+        }) << "\n";
 }
 
 void print_inspection(const copperfin::vfp::AssetInspectionResult& result) {
@@ -104,12 +156,14 @@ int main(int argc, char** argv) {
         std::cerr << "warning: " << hardening.message << "\n";
     }
 
-    if (argc != 2) {
-        print_usage();
-        return 1;
+    const CommandLineOptions options = parse_arguments(argc, argv);
+    const copperfin::localization::LocalizedCatalog catalog = load_localization(argv[0], options.locale);
+    if (!options.valid || options.help || options.asset_path.empty()) {
+        print_usage(catalog);
+        return options.help && options.valid ? 0 : 1;
     }
 
-    const copperfin::vfp::AssetInspectionResult result = copperfin::vfp::inspect_asset(argv[1]);
+    const copperfin::vfp::AssetInspectionResult result = copperfin::vfp::inspect_asset(options.asset_path);
     print_inspection(result);
     return result.ok ? 0 : 2;
 }

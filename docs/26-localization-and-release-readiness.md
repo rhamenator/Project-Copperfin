@@ -1,10 +1,13 @@
 # Localization And Release Readiness
 
-Copperfin localization is a release-readiness track for shipping Spanish and Portuguese builds without changing machine-readable contracts. The first supported product locales are:
+Copperfin localization is a release-readiness track for shipping locale-ready builds without changing machine-readable contracts. The first portable C++ locales are:
 
-- `en`: default English fallback.
-- `es-419`: Spanish for Latin America. Neutral `es` and regional `es-*` requests normalize here until a region-specific catalog is justified.
-- `pt-BR`: Brazilian Portuguese. Neutral `pt` and regional `pt-*` requests normalize here until another Portuguese catalog is justified.
+- `en-US`: source-of-truth/default English fallback.
+- `es-419`: Latin American Spanish placeholder catalog; not production-ready until separately reviewed.
+- `pt-BR`: Brazilian Portuguese placeholder catalog; not production-ready until separately reviewed.
+- `qps-ploc`: pseudo-locale for testing string routing, expansion, Unicode handling, and hard-coded text assumptions.
+
+See [localization.md](localization.md) for the portable C++ catalog contract.
 
 ## Contract
 
@@ -15,17 +18,19 @@ Localized text must be separated from stable protocol values:
 - Error handling must keep machine-stable codes or keys available even when the human message is localized.
 - Missing locale catalogs fall back to English.
 - Missing keys fall back to the stable key instead of returning blank text.
-- Locale selection must be deterministic and testable. Standalone Studio accepts `--locale <tag>` and also honors `COPPERFIN_UI_LOCALE`.
+- Locale selection must be deterministic and testable. Portable C++ surfaces use `--locale <tag>` where practical and honor `COPPERFIN_LOCALE`; existing .NET Studio surfaces retain their documented host-specific locale selection until migrated.
 
 ## Resource Layout
 
-The initial .NET UI catalog lives in `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs`. It currently covers the standalone Studio shell strings, catalog-backed asset-kind display labels for project, form, class library, report, label, menu, and generic assets, plus the embedded VSIX asset editor title/subtitle/guidance/Open/Reveal/Refresh chrome, host-mode subtitles, project workspace tab labels, Hide project records object-browser option, project command buttons, debugger controls, initial status/guidance strings, project workspace placeholder pane text, explorer list column headers, static asset-family guidance text, snapshot unavailable/loaded status text, undo labels and status text, undo-available suffixes, property update status text, and static launch/workflow dialog text. It is linked into:
+The portable C++ catalog lives under `resources/locales/<locale>/strings.json` and installs to `share/copperfin/locales`. The first C++ surface routed through it is `copperfin_inspect` usage text; machine-readable inspection fields remain invariant.
+
+The existing .NET UI catalog lives in `vsix/Copperfin.VisualStudio/CopperfinLocalization.cs`. It currently covers the standalone Studio shell strings, catalog-backed asset-kind display labels for project, form, class library, report, label, menu, and generic assets, plus the embedded VSIX asset editor title/subtitle/guidance/Open/Reveal/Refresh chrome, host-mode subtitles, project workspace tab labels, Hide project records object-browser option, project command buttons, debugger controls, initial status/guidance strings, project workspace placeholder pane text, explorer list column headers, static asset-family guidance text, snapshot unavailable/loaded status text, undo labels and status text, undo-available suffixes, property update status text, and static launch/workflow dialog text. It is linked into:
 
 - `vsix/Copperfin.Studio`: standalone Studio shell.
 - `vsix/Copperfin.DesignerSmokeTests`: UI smoke test project.
 - `vsix/Copperfin.LanguageServiceTests`: portable catalog tests.
 
-Future surfaces should either reuse this catalog directly or add equivalent resource catalogs with the same locale normalization and fallback rules:
+Future surfaces should reuse an existing catalog where practical or add equivalent resource catalogs with the same locale normalization and fallback rules:
 
 - CLI/native diagnostics: keep command switches and JSON fields stable; localize human summaries behind locale-aware lookup.
 - Studio host JSON: keep JSON contracts stable; localize optional display text only when a consumer requests it.

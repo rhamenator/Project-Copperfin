@@ -30,6 +30,23 @@ add_test(
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_runtime_host_binding_check.cmake
 )
 
+add_executable(test_localization
+    test_localization.cpp
+    prg_engine_test_support.cpp
+)
+target_link_libraries(test_localization PRIVATE cf_localization cf_xbase_runtime)
+
+if(MSVC)
+    target_compile_options(test_localization PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(test_localization PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_test(
+    NAME test_localization
+    COMMAND $<TARGET_FILE:test_localization> $<TARGET_FILE:copperfin_inspect>
+)
+
 add_executable(test_runtime_host_debug_output
     test_runtime_host_debug_output.cpp
 )

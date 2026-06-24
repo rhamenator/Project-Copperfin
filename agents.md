@@ -29,7 +29,7 @@ Treat wishlist and future-facing issues as deferred roadmap work, not noise. Do 
 
 Choose work from live GitHub issue state and current repo guidance, not from old numbered ledgers.
 
-- Current active implementation lane is E3/#24, report/label designer fidelity, unless live GitHub state shows a higher-weight blocker.
+- Current active implementation lane is E3/#24, report/label designer fidelity, unless live GitHub state shows a higher-weight blocker. Treat localization/#2348 as a standing architectural constraint for new user-facing text.
 - Phase A, D1/#19, E1/#22, and old historical issue sequences are closed/historical unless live regression evidence reopens them.
 - Prefer the open prompt-sized child issue that unblocks the most downstream work.
 - Create the next prompt-sized child under the active lane before coding when no existing child fits.

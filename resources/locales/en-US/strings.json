@@ -1,0 +1,11 @@
+{
+  "Command.Build": "Build",
+  "Command.Inspect": "Inspect",
+  "Command.Run": "Run",
+  "Diagnostic.ExpectedTokenBeforeToken": "Expected {expectedToken} before {actualToken}.",
+  "Diagnostic.UnterminatedString": "Unterminated string literal.",
+  "Error.CatalogMissing": "Localization catalog is missing: {path}",
+  "Error.UnknownLocale": "Unknown locale: {locale}",
+  "Help.LocaleOption": "Select the user-interface locale.",
+  "Inspect.Usage": "Usage: {commandName} [{localeOption} {localeValue}] {assetPathArgument}"
+}

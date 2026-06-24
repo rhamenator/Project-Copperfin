@@ -15,6 +15,21 @@ endif()
 
 option(COPPERFIN_BUILD_TESTS "Build Copperfin tests" ON)
 
+add_library(cf_localization
+    src/localization/localization.cpp
+)
+
+target_include_directories(cf_localization
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+if(MSVC)
+    target_compile_options(cf_localization PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(cf_localization PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
 add_library(cf_security
     src/security/audit_stream.cpp
     src/security/authorization.cpp
@@ -201,6 +216,7 @@ add_executable(copperfin_inspect
 )
 
 target_link_libraries(copperfin_inspect PRIVATE cf_vfp_assets cf_security)
+target_link_libraries(copperfin_inspect PRIVATE cf_localization)
 
 if(MSVC)
     target_compile_options(copperfin_inspect PRIVATE /W4 /permissive-)
@@ -250,6 +266,10 @@ install(TARGETS copperfin_inspect copperfin_studio_host copperfin_runtime_host c
 
 install(FILES README.md LICENSE SECURITY.md remaining-work.md
     DESTINATION share/copperfin
+)
+
+install(DIRECTORY resources/locales/
+    DESTINATION share/copperfin/locales
 )
 
 set(CPACK_PACKAGE_NAME "copperfin")

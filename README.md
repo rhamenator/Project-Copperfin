@@ -83,7 +83,7 @@ Contents:
 Current implementation focus:
 
 1. Maintain the VFP9-compatible data/runtime foundation and avoid reopening closed core lanes without fresh regression evidence.
-2. Finish report/label designer fidelity and section-aware host surfaces under E3/#24.
+2. Finish report/label designer fidelity and section-aware host surfaces under E3/#24 while routing new user-facing text through localization.
 3. Keep Visual Studio and standalone Studio designer surfaces validated through shared host JSON and focused smoke coverage.
 4. Continue release-readiness, localization, security, and evidence-audit cleanup when live issue state makes those slices higher priority.
 5. Preserve modernization, .NET interop, portability, and Requirements Recovery as explicit roadmap goals that follow the compatibility and usability foundation.
