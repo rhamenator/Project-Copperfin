@@ -8216,6 +8216,14 @@ void test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_s
                             "#1806: detail-header section top update should preserve selected section availability");
             expect_contains(update_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1806: detail-header section top update should preserve selection kind");
+            expect_contains(update_header_process.stdout_text, "\"dryRun\": false",
+                            "#2233: detail-header section top update JSON should expose committed state");
+            expect_contains(update_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2233: detail-header section top update JSON should expose mutation state");
+            expect_contains(update_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2233: detail-header section top update JSON should expose undo availability");
+            expect_contains(update_header_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2233: detail-header section top update JSON should expose top undo labels");
             expect_contains_in_order(
                 update_header_process.stdout_text,
                 {
@@ -8276,6 +8284,14 @@ void test_studio_host_json_updates_detail_header_footer_section_tops_by_stable_s
                             "#1806: detail-footer section top update should preserve selected section availability");
             expect_contains(update_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1806: detail-footer section top update should preserve selection kind");
+            expect_contains(update_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2233: detail-footer section top update JSON should expose committed state");
+            expect_contains(update_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2233: detail-footer section top update JSON should expose mutation state");
+            expect_contains(update_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2233: detail-footer section top update JSON should expose undo availability");
+            expect_contains(update_footer_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2233: detail-footer section top update JSON should expose top undo labels");
             expect_contains_in_order(
                 update_footer_process.stdout_text,
                 {
