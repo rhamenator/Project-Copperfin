@@ -6903,6 +6903,34 @@ void test_studio_host_json_exposes_extended_report_object_kinds(
             expect_contains(process.stdout_text, "\"isLabel\": true",
                             "#1762: extended object-kind label layouts should retain label identity");
         }
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2311: extended object-kind JSON should preserve live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2311: extended object-kind JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2311: extended object-kind JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 1200",
+                        "#2311: extended object-kind JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 7200",
+                        "#2311: extended object-kind JSON should preserve live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 1200",
+                        "#2311: extended object-kind JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 7200",
+                        "#2311: extended object-kind JSON should preserve live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2311: extended object-kind JSON should preserve deleted preview availability");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 400",
+                        "#2311: extended object-kind JSON should preserve deleted preview left bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 1500",
+                        "#2311: extended object-kind JSON should preserve deleted preview top bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 1100",
+                        "#2311: extended object-kind JSON should preserve deleted preview right bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 1800",
+                        "#2311: extended object-kind JSON should preserve deleted preview bottom bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 700",
+                        "#2311: extended object-kind JSON should preserve deleted preview widths");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                        "#2311: extended object-kind JSON should preserve deleted preview heights");
         expect_contains(process.stdout_text, "\"liveObjectCount\": 3",
                         "#1762: extended object-kind JSON should summarize live objects");
         expect_contains(process.stdout_text, "\"placedObjectCount\": 2",
@@ -6958,6 +6986,22 @@ void test_studio_host_json_exposes_extended_report_object_kinds(
                             "#1762: selected extended object-kind JSON should advertise selected objects");
             expect_contains(object_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
                             "#1762: selected extended object-kind JSON should expose object selection kind");
+            expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2311: selected extended object-kind JSON should preserve live preview availability");
+            expect_contains(object_process.stdout_text, "\"previewBoundsRight\": 1200",
+                            "#2311: selected extended object-kind JSON should preserve live preview right bounds");
+            expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 7200",
+                            "#2311: selected extended object-kind JSON should preserve live preview bottom bounds");
+            expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2311: selected extended object-kind JSON should preserve deleted preview availability");
+            expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsLeft\": 400",
+                            "#2311: selected extended object-kind JSON should preserve deleted preview left bounds");
+            expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 1500",
+                            "#2311: selected extended object-kind JSON should preserve deleted preview top bounds");
+            expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsRight\": 1100",
+                            "#2311: selected extended object-kind JSON should preserve deleted preview right bounds");
+            expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1800",
+                            "#2311: selected extended object-kind JSON should preserve deleted preview bottom bounds");
             expect_contains_in_order(
                 object_process.stdout_text,
                 {
