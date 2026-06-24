@@ -2,6 +2,7 @@
 #include "copperfin/studio/context_editor_actions.h"
 #include "copperfin/studio/editor_action_dispatch.h"
 #include "copperfin/studio/editor_action_invocation_admission.h"
+#include "copperfin/studio/toolbox_palette.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -35,6 +36,17 @@ const copperfin::studio::StudioEditorActionDescriptor* find_action(
     for (const auto& action : actions) {
         if (action.id == id) {
             return &action;
+        }
+    }
+    return nullptr;
+}
+
+const copperfin::studio::StudioToolboxItemDescriptor* find_toolbox_item(
+    const std::vector<copperfin::studio::StudioToolboxItemDescriptor>& items,
+    std::string_view id) {
+    for (const auto& item : items) {
+        if (item.id == id) {
+            return &item;
         }
     }
     return nullptr;
@@ -206,6 +218,37 @@ int main() {
                    "An editor action invocation admission catalog request requires at least one context action." &&
                pseudo_catalog.translate("Studio.EditorActionInvocationAdmission.Error.ValidatedActionIdRequired").starts_with("[!! "),
            "#2363: editor action invocation admission error prose should resolve through localizable catalog keys");
+    const auto english_toolbox = copperfin::studio::studio_toolbox_palette_for_catalog(english_catalog);
+    const auto* english_label_toolbox = find_toolbox_item(english_toolbox, "label");
+    expect(english_label_toolbox != nullptr &&
+               english_label_toolbox->title == "Label" &&
+               english_label_toolbox->category == "Standard Controls" &&
+               english_label_toolbox->description ==
+                   "Display static text or report captions with VFP Label semantics." &&
+               english_label_toolbox->vfp_class == "Label" &&
+               english_label_toolbox->base_class == "Label" &&
+               english_label_toolbox->default_name_prefix == "lbl",
+           "#2364: en-US toolbox palette display text should localize while preserving invariant label metadata");
+    const auto pseudo_toolbox_palette = copperfin::studio::studio_toolbox_palette_for_catalog(pseudo_catalog);
+    const auto* pseudo_label_toolbox = find_toolbox_item(pseudo_toolbox_palette, "label");
+    expect(pseudo_label_toolbox != nullptr &&
+               pseudo_label_toolbox->title.starts_with("[!! ") &&
+               pseudo_label_toolbox->category.starts_with("[!! ") &&
+               pseudo_label_toolbox->description.starts_with("[!! ") &&
+               pseudo_label_toolbox->id == "label" &&
+               pseudo_label_toolbox->vfp_class == "Label" &&
+               pseudo_label_toolbox->base_class == "Label" &&
+               pseudo_label_toolbox->default_name_prefix == "lbl",
+           "#2364: pseudo-localized toolbox palette display text should preserve invariant label metadata");
+    const auto report_toolbox_items = copperfin::studio::studio_toolbox_items_for_context(
+        copperfin::studio::StudioToolboxContext::report);
+    expect(report_toolbox_items.size() == 4U &&
+               find_toolbox_item(report_toolbox_items, "label") != nullptr &&
+               find_toolbox_item(report_toolbox_items, "image") != nullptr &&
+               find_toolbox_item(report_toolbox_items, "line") != nullptr &&
+               find_toolbox_item(report_toolbox_items, "shape") != nullptr &&
+               find_toolbox_item(report_toolbox_items, "textbox") == nullptr,
+           "#2364: localized toolbox palette should preserve report-safe filtering semantics");
 
     const auto visual_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::visual_object);
@@ -1308,6 +1351,18 @@ int main() {
     });
     expect(!unknown_action_plan.ok,
            "#1207: editor action launch plans should reject unknown action ids");
+
+    const auto unsupported_toolbox_launch = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::menu_item,
+        .asset_path = "menus/main.mnx",
+        .record_index = 5U,
+        .object_name = "FileExit",
+        .unique_id = "menu-guid"
+    });
+    expect(!unsupported_toolbox_launch.ok &&
+               unsupported_toolbox_launch.error ==
+                   "The selected Studio context does not expose a toolbox palette.",
+           "#2364: toolbox palette launch errors should resolve through the en-US localization catalog");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/context_editor_actions.h"
 
 #include <cstddef>
@@ -18,14 +19,14 @@ enum class StudioToolboxContext {
 
 struct StudioToolboxItemDescriptor {
     std::string_view id;
-    std::string_view title;
-    std::string_view category;
+    std::string title;
+    std::string category;
     std::string_view vfp_class;
     std::string_view base_class;
     std::string_view default_name_prefix;
     std::vector<StudioToolboxContext> contexts;
     bool container = false;
-    std::string_view description;
+    std::string description;
 };
 
 struct StudioToolboxPaletteLaunchRequest {
@@ -98,6 +99,8 @@ struct StudioToolboxPaletteLaunchCatalogResult {
 };
 
 [[nodiscard]] const char* studio_toolbox_context_name(StudioToolboxContext context);
+[[nodiscard]] std::vector<StudioToolboxItemDescriptor> studio_toolbox_palette_for_catalog(
+    const localization::LocalizedCatalog& catalog);
 [[nodiscard]] const std::vector<StudioToolboxItemDescriptor>& studio_toolbox_palette();
 [[nodiscard]] std::vector<StudioToolboxItemDescriptor> studio_toolbox_items_for_context(StudioToolboxContext context);
 [[nodiscard]] StudioToolboxPaletteQueryResult query_studio_toolbox_palette(
