@@ -11420,6 +11420,22 @@ void test_studio_host_json_exposes_deleted_detail_header_footer_object_font_meta
                                     "#1774: selected deleted detail header/footer object fonts should not fabricate containing sections");
                     expect_contains(object_process.stdout_text, "\"selectedReportObjectSection\": null",
                                     "#1774: selected deleted detail header/footer object fonts should serialize null containing-section JSON");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                                    "#2281: selected deleted detail header/footer object fonts should preserve live preview availability");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                                    "#2281: selected deleted detail header/footer object fonts should preserve live preview top bounds");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 550",
+                                    "#2281: selected deleted detail header/footer object fonts should preserve live preview bottom bounds");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 550",
+                                    "#2281: selected deleted detail header/footer object fonts should preserve live preview heights");
+                    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                                    "#2281: selected deleted detail header/footer object fonts should expose deleted preview availability");
+                    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                                    "#2281: selected deleted detail header/footer object fonts should expose deleted preview top bounds");
+                    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                                    "#2281: selected deleted detail header/footer object fonts should expose deleted preview bottom bounds");
+                    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsHeight\": 410",
+                                    "#2281: selected deleted detail header/footer object fonts should expose deleted preview heights");
                     expect_contains_in_order(
                         object_process.stdout_text,
                         {
