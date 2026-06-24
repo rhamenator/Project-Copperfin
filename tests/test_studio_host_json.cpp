@@ -25902,18 +25902,9 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
             expect_contains(summary_process.stdout_text, "\"isLabel\": true",
                             "#1727: missing section geometry label layouts should retain label identity");
         }
-        expect_contains(summary_process.stdout_text, "\"previewBoundsAvailable\": true",
-                        "#1727: missing live section geometry should expose zero preview bounds");
-        expect_contains(summary_process.stdout_text, "\"previewBoundsTop\": 0",
-                        "#1727: missing live section geometry should default preview top to zero");
-        expect_contains(summary_process.stdout_text, "\"previewBoundsBottom\": 0",
-                        "#1727: missing live section geometry should default preview bottom to zero");
-        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
-                        "#1727: missing deleted section geometry should expose zero deleted preview bounds");
-        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
-                        "#1727: missing deleted section geometry should default deleted preview top to zero");
-        expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 0",
-                        "#1727: missing deleted section geometry should default deleted preview bottom to zero");
+        expect_zero_available_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2341: missing section geometry summary JSON");
         expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
                         "#1727: missing section geometry layouts should preserve live section counts");
         expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
@@ -25976,6 +25967,9 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
                         "#1727: missing section geometry live selection should advertise selected sections");
         expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1727: missing section geometry live selection should expose section selection kind");
+        expect_zero_available_report_layout_preview_bounds(
+            live_process.stdout_text,
+            "#2341: selected missing live section geometry JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -26007,6 +26001,9 @@ void test_studio_host_json_defaults_report_sections_without_geometry_schema(
                         "#1727: missing section geometry deleted selection should advertise selected sections");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1727: missing section geometry deleted selection should expose section selection kind");
+        expect_zero_available_report_layout_preview_bounds(
+            deleted_process.stdout_text,
+            "#2341: selected missing deleted section geometry JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
