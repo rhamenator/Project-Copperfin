@@ -84764,6 +84764,8 @@ void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stab
                "#1861: deleted report/label stable visual-object reorder-batch missing target should fail");
         expect_contains(rollback_process.stdout_text, "\"visualObjectReorderBatch\": null",
                         "#1861: failed deleted report/label stable visual-object reorder-batch JSON should not expose stale batch objects");
+        expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
+                            "#2183: failed deleted report/label stable visual-object reorder-batch JSON should not advertise undo availability");
         expect_contains(rollback_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1861: failed deleted report/label stable visual-object reorder-batch JSON should report missing-target errors");
         expect(visual_object_order(asset_path) == "left-field-guid,middle-field-guid,right-field-guid" &&
