@@ -21718,6 +21718,9 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
                         "#1733: invalid direct paper size should keep the default paper-size code inert");
         expect_contains(summary_process.stdout_text, "\"topMargin\": 0",
                         "#1733: invalid direct top margin should keep the default top-margin value inert");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2318: invalid direct page setup summary JSON");
 
         const auto live_process = run_process_capture(
             studio_host_path,
@@ -21730,6 +21733,9 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
                         "#1733: invalid direct live settings should advertise selected-settings availability");
         expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1733: invalid direct live settings should expose settings selection kind");
+        expect_empty_report_layout_preview_bounds(
+            live_process.stdout_text,
+            "#2318: selected invalid direct live settings JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -21760,6 +21766,9 @@ void test_studio_host_json_ignores_invalid_direct_report_page_setup_fields(
                         "#1733: invalid direct deleted settings should advertise selected-settings availability");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1733: invalid direct deleted settings should expose settings selection kind");
+        expect_empty_report_layout_preview_bounds(
+            deleted_process.stdout_text,
+            "#2318: selected invalid direct deleted settings JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
