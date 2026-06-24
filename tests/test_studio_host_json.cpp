@@ -30793,6 +30793,34 @@ void test_studio_host_json_exposes_deleted_report_group_section_expressions(
                         "#1569: deleted group section selections should expose selected-section availability");
         expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1569: deleted group section selections should preserve section selection classification");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2271: deleted group section expression JSON should preserve live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2271: deleted group section expression JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 600",
+                        "#2271: deleted group section expression JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2271: deleted group section expression JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2271: deleted group section expression JSON should preserve live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2271: deleted group section expression JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2271: deleted group section expression JSON should preserve live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2271: deleted group section expression JSON should preserve deleted preview availability");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2271: deleted group section expression JSON should preserve deleted preview left bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2271: deleted group section expression JSON should preserve deleted preview top bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2271: deleted group section expression JSON should preserve deleted preview right bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 600",
+                        "#2271: deleted group section expression JSON should preserve deleted preview bottom bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2271: deleted group section expression JSON should preserve deleted preview widths");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 600",
+                        "#2271: deleted group section expression JSON should preserve deleted preview heights");
         expect_contains_in_order(
             process.stdout_text,
             {
@@ -30883,6 +30911,34 @@ void test_studio_host_json_exposes_deleted_report_group_footer_expressions(
                         "#1570: deleted group footer selections should expose selected-section availability");
         expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1570: deleted group footer selections should preserve section selection classification");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2271: deleted group footer expression JSON should preserve live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2271: deleted group footer expression JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2271: deleted group footer expression JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2271: deleted group footer expression JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 3600",
+                        "#2271: deleted group footer expression JSON should preserve live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2271: deleted group footer expression JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 3600",
+                        "#2271: deleted group footer expression JSON should preserve live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2271: deleted group footer expression JSON should preserve deleted preview availability");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2271: deleted group footer expression JSON should preserve deleted preview left bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 3600",
+                        "#2271: deleted group footer expression JSON should preserve deleted preview top bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2271: deleted group footer expression JSON should preserve deleted preview right bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 4100",
+                        "#2271: deleted group footer expression JSON should preserve deleted preview bottom bounds");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2271: deleted group footer expression JSON should preserve deleted preview widths");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 500",
+                        "#2271: deleted group footer expression JSON should preserve deleted preview heights");
         expect_contains_in_order(
             process.stdout_text,
             {
