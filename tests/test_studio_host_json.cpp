@@ -15266,6 +15266,16 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
                             "#1793: detail-header object snap should preserve object selection kind");
             expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1793: detail-header object snap should preserve containing-section availability");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2299: detail-header object snap should preserve live preview availability");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2299: detail-header object snap should preserve live preview top bounds");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2299: detail-header object snap should preserve live preview bottom bounds");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2299: detail-header object snap should preserve live preview heights");
+            expect_contains(snap_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2299: detail-header object snap should not fabricate deleted preview availability");
             expect_contains(snap_header_process.stdout_text, "\"dryRun\": false",
                             "#2252: detail-header object snap JSON should expose committed execution");
             expect_contains(snap_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -15348,6 +15358,16 @@ void test_studio_host_json_snaps_detail_header_footer_objects_by_stable_selectio
                             "#1793: detail-footer object snap should preserve object selection kind");
             expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1793: detail-footer object snap should preserve containing-section availability");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2299: detail-footer object snap should preserve live preview availability");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2299: detail-footer object snap should preserve live preview top bounds");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2299: detail-footer object snap should preserve live preview bottom bounds");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2299: detail-footer object snap should preserve live preview heights");
+            expect_contains(snap_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2299: detail-footer object snap should not fabricate deleted preview availability");
             expect_contains(snap_footer_process.stdout_text, "\"dryRun\": false",
                             "#2252: detail-footer object snap JSON should expose committed execution");
             expect_contains(snap_footer_process.stdout_text, "\"mutatesAsset\": true",
