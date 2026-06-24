@@ -1,6 +1,9 @@
 #include "copperfin/studio/toolbox_dispatch.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
@@ -12,6 +15,18 @@ void append_argument(std::vector<std::string>& arguments, std::string key, std::
     arguments.push_back(std::move(value));
 }
 
+const copperfin::localization::LocalizedCatalog& toolbox_dispatch_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string toolbox_dispatch_text(std::string_view key) {
+    return toolbox_dispatch_catalog().translate(key);
+}
+
 std::string toolbox_dispatch_execution_readiness_error(
     const StudioToolboxDispatchResult& dispatch,
     bool admit_execution) {
@@ -19,26 +34,26 @@ std::string toolbox_dispatch_execution_readiness_error(
         return dispatch.error;
     }
     if (!admit_execution) {
-        return "A toolbox dispatch execution catalog entry requires explicit execution admission.";
+        return toolbox_dispatch_text("Studio.ToolboxDispatch.CatalogEntry.Error.ExecutionAdmissionRequired");
     }
     const auto& dispatch_plan = dispatch.plan;
     if (dispatch_plan.command_token.empty()) {
-        return "A toolbox dispatch execution catalog entry requires a command token.";
+        return toolbox_dispatch_text("Studio.ToolboxDispatch.CatalogEntry.Error.CommandTokenRequired");
     }
     if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
-        return "A toolbox dispatch execution catalog entry requires an admitted non-dry-run dispatch.";
+        return toolbox_dispatch_text("Studio.ToolboxDispatch.CatalogEntry.Error.AdmittedDispatchRequired");
     }
     if (dispatch_plan.executed) {
-        return "A toolbox dispatch execution catalog entry requires a non-executed dispatch.";
+        return toolbox_dispatch_text("Studio.ToolboxDispatch.CatalogEntry.Error.NonExecutedDispatchRequired");
     }
     if (dispatch_plan.items.empty() || dispatch_plan.item_count == 0U) {
-        return "A toolbox dispatch execution catalog entry requires validated toolbox item metadata.";
+        return toolbox_dispatch_text("Studio.ToolboxDispatch.CatalogEntry.Error.ValidatedItemMetadataRequired");
     }
     if (dispatch_plan.item_count != dispatch_plan.items.size()) {
-        return "A toolbox dispatch execution catalog entry requires consistent toolbox item metadata.";
+        return toolbox_dispatch_text("Studio.ToolboxDispatch.CatalogEntry.Error.ConsistentItemMetadataRequired");
     }
     if (dispatch_plan.dispatch_arguments.empty()) {
-        return "A toolbox dispatch execution catalog entry requires dispatch arguments.";
+        return toolbox_dispatch_text("Studio.ToolboxDispatch.CatalogEntry.Error.DispatchArgumentsRequired");
     }
 
     return {};
@@ -51,28 +66,28 @@ StudioToolboxDispatchResult plan_studio_toolbox_dispatch(
     if (request.admission_plan.command_token.empty()) {
         return {
             .ok = false,
-            .error = "A toolbox dispatch request requires a command token.",
+            .error = toolbox_dispatch_text("Studio.ToolboxDispatch.Error.CommandTokenRequired"),
             .plan = {}
         };
     }
     if (!request.admission_plan.palette_invocation_admitted || request.admission_plan.dry_run) {
         return {
             .ok = false,
-            .error = "A toolbox dispatch request requires an admitted non-dry-run invocation.",
+            .error = toolbox_dispatch_text("Studio.ToolboxDispatch.Error.AdmittedInvocationRequired"),
             .plan = {}
         };
     }
     if (request.admission_plan.items.empty() || request.admission_plan.item_count == 0U) {
         return {
             .ok = false,
-            .error = "A toolbox dispatch request requires validated toolbox item metadata.",
+            .error = toolbox_dispatch_text("Studio.ToolboxDispatch.Error.ValidatedItemMetadataRequired"),
             .plan = {}
         };
     }
     if (request.admission_plan.item_count != request.admission_plan.items.size()) {
         return {
             .ok = false,
-            .error = "A toolbox dispatch request requires consistent toolbox item metadata.",
+            .error = toolbox_dispatch_text("Studio.ToolboxDispatch.Error.ConsistentItemMetadataRequired"),
             .plan = {}
         };
     }
@@ -193,7 +208,7 @@ StudioSelectionToolboxDispatchCatalogResult plan_studio_toolbox_dispatch_catalog
     if (!invocation_catalog.ok) {
         return {
             .ok = false,
-            .error = "A selection-context toolbox dispatch catalog request requires a toolbox palette.",
+            .error = toolbox_dispatch_text("Studio.ToolboxDispatch.Error.SelectionCatalogRequiresPalette"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .command_token = {},
@@ -270,28 +285,28 @@ StudioToolboxDispatchExecutionResult execute_studio_toolbox_dispatch(
 
     const auto& dispatch_plan = request.dispatch_plan;
     if (!request.admit_execution) {
-        return failed("A toolbox dispatch execution request requires explicit execution admission.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.ExecutionAdmissionRequired"));
     }
     if (!request.executor) {
-        return failed("A toolbox dispatch execution request requires an executor.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.ExecutorRequired"));
     }
     if (dispatch_plan.command_token.empty()) {
-        return failed("A toolbox dispatch execution request requires a command token.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.CommandTokenRequired"));
     }
     if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
-        return failed("A toolbox dispatch execution request requires an admitted non-dry-run dispatch.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.AdmittedDispatchRequired"));
     }
     if (dispatch_plan.executed) {
-        return failed("A toolbox dispatch execution request requires a non-executed dispatch.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.NonExecutedDispatchRequired"));
     }
     if (dispatch_plan.items.empty() || dispatch_plan.item_count == 0U) {
-        return failed("A toolbox dispatch execution request requires validated toolbox item metadata.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired"));
     }
     if (dispatch_plan.item_count != dispatch_plan.items.size()) {
-        return failed("A toolbox dispatch execution request requires consistent toolbox item metadata.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.ConsistentItemMetadataRequired"));
     }
     if (dispatch_plan.dispatch_arguments.empty()) {
-        return failed("A toolbox dispatch execution request requires dispatch arguments.");
+        return failed(toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.DispatchArgumentsRequired"));
     }
 
     auto observation = request.executor(dispatch_plan);
@@ -299,7 +314,7 @@ StudioToolboxDispatchExecutionResult execute_studio_toolbox_dispatch(
         return {
             .ok = false,
             .error = observation.error.empty()
-                ? "A toolbox dispatch executor did not launch the toolbox dispatch."
+                ? toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.ExecutorDidNotLaunch")
                 : observation.error,
             .dispatch_plan = {},
             .observation = std::move(observation),
@@ -313,7 +328,7 @@ StudioToolboxDispatchExecutionResult execute_studio_toolbox_dispatch(
         return {
             .ok = false,
             .error = observation.error.empty()
-                ? "A toolbox dispatch executor returned a non-zero exit code."
+                ? toolbox_dispatch_text("Studio.ToolboxDispatch.Execution.Error.ExecutorNonZeroExit")
                 : observation.error,
             .dispatch_plan = {},
             .observation = std::move(observation),
