@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/builder_dispatch.h"
 #include "copperfin/studio/builder_invocation_admission.h"
 #include "copperfin/studio/builder_registry.h"
@@ -24,6 +25,17 @@ bool has_builder(const std::vector<copperfin::studio::StudioBuilderDescriptor>& 
         }
     }
     return false;
+}
+
+const copperfin::studio::StudioBuilderDescriptor* find_builder(
+    const std::vector<copperfin::studio::StudioBuilderDescriptor>& builders,
+    std::string_view id) {
+    for (const auto& builder : builders) {
+        if (builder.id == id) {
+            return &builder;
+        }
+    }
+    return nullptr;
 }
 
 bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
@@ -132,6 +144,42 @@ int main() {
     expect(has_builder(builders, "report-builder"), "#956: registry should include the report builder");
     expect(has_builder(builders, "menu-designer"), "#1013: registry should include the menu designer builder");
     expect(has_builder(builders, "application-wizard"), "#956: registry should include the application wizard");
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto english_builders = copperfin::studio::studio_builder_registry_for_catalog(english_catalog);
+    const auto* english_report_builder = find_builder(english_builders, "report-builder");
+    expect(english_report_builder != nullptr &&
+               english_report_builder->title == "Report Builder" &&
+               english_report_builder->description ==
+                   "Configure report data, grouping, bands, expressions, and preview defaults." &&
+               english_report_builder->kind == StudioBuilderKind::builder &&
+               english_report_builder->context == StudioBuilderContext::report &&
+               english_report_builder->vfp9_equivalent == "ReportBuilder.app" &&
+               english_report_builder->copperfin_component == "cf_report_surface" &&
+               english_report_builder->entry_point == "cf_builders.report_builder",
+           "#2367: en-US builder registry should localize report builder text and preserve invariant metadata");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto pseudo_builders = copperfin::studio::studio_builder_registry_for_catalog(pseudo_catalog);
+    const auto* pseudo_label_wizard = find_builder(pseudo_builders, "label-wizard");
+    expect(pseudo_label_wizard != nullptr &&
+               pseudo_label_wizard->title.starts_with("[!! ") &&
+               pseudo_label_wizard->description.starts_with("[!! ") &&
+               pseudo_label_wizard->id == "label-wizard" &&
+               pseudo_label_wizard->kind == StudioBuilderKind::wizard &&
+               pseudo_label_wizard->context == StudioBuilderContext::label &&
+               pseudo_label_wizard->vfp9_equivalent == "Wizards label templates" &&
+               pseudo_label_wizard->copperfin_component == "cf_wizards" &&
+               pseudo_label_wizard->entry_point == "cf_wizards.label_wizard",
+           "#2367: pseudo-localized builder registry should decorate display text and preserve invariant wizard metadata");
+    expect(english_catalog.translate("Studio.BuilderRegistry.Error.BuilderIdRequired") ==
+               "A builder launch request requires a builder id." &&
+               english_catalog.translate("Studio.BuilderRegistry.Error.BuilderUnavailableForContext") ==
+                   "The requested builder is not available for the selected designer context." &&
+               english_catalog.translate("Studio.BuilderRegistry.Error.LaunchCatalogRequiresBuilder") ==
+                   "A builder launch catalog request requires at least one context builder." &&
+               pseudo_catalog.translate("Studio.BuilderRegistry.Error.BuilderUnavailableForContext").starts_with("[!! "),
+           "#2367: builder registry launch error prose should resolve through localizable catalog keys");
 
     const auto control_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::control);
     expect(control_builders.size() >= 2U, "#956: control context should expose multiple control builders");

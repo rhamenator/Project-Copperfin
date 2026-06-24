@@ -1,11 +1,63 @@
 #include "copperfin/studio/builder_registry.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <iterator>
+#include <map>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
+
+namespace {
+
+const copperfin::localization::LocalizedCatalog& builder_registry_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string builder_registry_text(std::string_view key) {
+    return builder_registry_catalog().translate(key);
+}
+
+const std::vector<std::string>& builder_registry_display_text(
+    const copperfin::localization::LocalizedCatalog& catalog) {
+    static std::map<std::string, std::vector<std::string>> text_by_locale;
+    const auto cache_key = catalog.requested_locale.empty()
+        ? std::string(copperfin::localization::default_locale)
+        : catalog.requested_locale;
+    const auto [entry, inserted] = text_by_locale.emplace(cache_key, std::vector<std::string>{});
+    if (inserted) {
+        entry->second = {
+            catalog.translate("Studio.Builder.FormBuilder.Title"),
+            catalog.translate("Studio.Builder.FormBuilder.Description"),
+            catalog.translate("Studio.Builder.ClassBuilder.Title"),
+            catalog.translate("Studio.Builder.ClassBuilder.Description"),
+            catalog.translate("Studio.Builder.ControlBuilder.Title"),
+            catalog.translate("Studio.Builder.ControlBuilder.Description"),
+            catalog.translate("Studio.Builder.GridBuilder.Title"),
+            catalog.translate("Studio.Builder.GridBuilder.Description"),
+            catalog.translate("Studio.Builder.ReportBuilder.Title"),
+            catalog.translate("Studio.Builder.ReportBuilder.Description"),
+            catalog.translate("Studio.Builder.LabelWizard.Title"),
+            catalog.translate("Studio.Builder.LabelWizard.Description"),
+            catalog.translate("Studio.Builder.MenuDesigner.Title"),
+            catalog.translate("Studio.Builder.MenuDesigner.Description"),
+            catalog.translate("Studio.Builder.ApplicationWizard.Title"),
+            catalog.translate("Studio.Builder.ApplicationWizard.Description"),
+            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Title"),
+            catalog.translate("Studio.Builder.DataEnvironmentBuilder.Description")
+        };
+    }
+    return entry->second;
+}
+
+}  // namespace
 
 const char* studio_builder_kind_name(StudioBuilderKind kind) {
     switch (kind) {
@@ -39,100 +91,106 @@ const char* studio_builder_context_name(StudioBuilderContext context) {
     return "form";
 }
 
-const std::vector<StudioBuilderDescriptor>& studio_builder_registry() {
-    static const std::vector<StudioBuilderDescriptor> builders = {
+std::vector<StudioBuilderDescriptor> studio_builder_registry_for_catalog(
+    const copperfin::localization::LocalizedCatalog& catalog) {
+    const auto& text = builder_registry_display_text(catalog);
+    return {
         {
             .id = "form-builder",
-            .title = "Form Builder",
+            .title = text[0],
             .kind = StudioBuilderKind::builder,
             .context = StudioBuilderContext::form,
             .vfp9_equivalent = "builder.app form builder",
             .copperfin_component = "cf_form_surface",
             .entry_point = "cf_builders.form_builder",
-            .description = "Configure form-level data, layout, and generated method defaults."
+            .description = text[1]
         },
         {
             .id = "class-builder",
-            .title = "Class Builder",
+            .title = text[2],
             .kind = StudioBuilderKind::builder,
             .context = StudioBuilderContext::class_designer,
             .vfp9_equivalent = "builder.app class builder",
             .copperfin_component = "cf_class_surface",
             .entry_point = "cf_builders.class_builder",
-            .description = "Configure visual class defaults, inheritance metadata, and reusable members."
+            .description = text[3]
         },
         {
             .id = "control-builder",
-            .title = "Control Builder",
+            .title = text[4],
             .kind = StudioBuilderKind::builder,
             .context = StudioBuilderContext::control,
             .vfp9_equivalent = "builder.app control builders",
             .copperfin_component = "cf_form_surface",
             .entry_point = "cf_builders.control_builder",
-            .description = "Configure selected control bindings, captions, styles, and generated event hooks."
+            .description = text[5]
         },
         {
             .id = "grid-builder",
-            .title = "Grid Builder",
+            .title = text[6],
             .kind = StudioBuilderKind::builder,
             .context = StudioBuilderContext::control,
             .vfp9_equivalent = "builder.app grid builder",
             .copperfin_component = "cf_form_surface",
             .entry_point = "cf_builders.grid_builder",
-            .description = "Configure grid columns, data bindings, headings, and display behavior."
+            .description = text[7]
         },
         {
             .id = "report-builder",
-            .title = "Report Builder",
+            .title = text[8],
             .kind = StudioBuilderKind::builder,
             .context = StudioBuilderContext::report,
             .vfp9_equivalent = "ReportBuilder.app",
             .copperfin_component = "cf_report_surface",
             .entry_point = "cf_builders.report_builder",
-            .description = "Configure report data, grouping, bands, expressions, and preview defaults."
+            .description = text[9]
         },
         {
             .id = "label-wizard",
-            .title = "Label Wizard",
+            .title = text[10],
             .kind = StudioBuilderKind::wizard,
             .context = StudioBuilderContext::label,
             .vfp9_equivalent = "Wizards label templates",
             .copperfin_component = "cf_wizards",
             .entry_point = "cf_wizards.label_wizard",
-            .description = "Create label layouts from stock/template choices while preserving LBX/LBT semantics."
+            .description = text[11]
         },
         {
             .id = "menu-designer",
-            .title = "Menu Designer",
+            .title = text[12],
             .kind = StudioBuilderKind::builder,
             .context = StudioBuilderContext::menu,
             .vfp9_equivalent = "Menu Designer",
             .copperfin_component = "cf_menu_surface",
             .entry_point = "cf_builders.menu_designer",
-            .description = "Edit MNX/MNT prompt, command, hierarchy, setup, and cleanup metadata."
+            .description = text[13]
         },
         {
             .id = "application-wizard",
-            .title = "Application Wizard",
+            .title = text[14],
             .kind = StudioBuilderKind::wizard,
             .context = StudioBuilderContext::project,
             .vfp9_equivalent = "Wizards application templates",
             .copperfin_component = "cf_wizards",
             .entry_point = "cf_wizards.application_wizard",
-            .description = "Scaffold project assets, startup programs, and template forms using VFP-compatible metadata."
+            .description = text[15]
         },
         {
             .id = "data-environment-builder",
-            .title = "Data Environment Builder",
+            .title = text[16],
             .kind = StudioBuilderKind::builder,
             .context = StudioBuilderContext::data_environment,
             .vfp9_equivalent = "data environment builder",
             .copperfin_component = "cf_data_explorer",
             .entry_point = "cf_builders.data_environment_builder",
-            .description = "Configure table/cursor bindings and relation metadata for form and report data environments."
+            .description = text[17]
         }
     };
+}
 
+const std::vector<StudioBuilderDescriptor>& studio_builder_registry() {
+    static const std::vector<StudioBuilderDescriptor> builders =
+        studio_builder_registry_for_catalog(builder_registry_catalog());
     return builders;
 }
 
@@ -153,7 +211,7 @@ StudioBuilderLaunchPlanResult plan_studio_builder_launch(const StudioBuilderLaun
     if (request.builder_id.empty()) {
         return {
             .ok = false,
-            .error = "A builder launch request requires a builder id.",
+            .error = builder_registry_text("Studio.BuilderRegistry.Error.BuilderIdRequired"),
             .plan = {}
         };
     }
@@ -169,7 +227,7 @@ StudioBuilderLaunchPlanResult plan_studio_builder_launch(const StudioBuilderLaun
     if (builder == builders.end()) {
         return {
             .ok = false,
-            .error = "The requested builder is not available for the selected designer context.",
+            .error = builder_registry_text("Studio.BuilderRegistry.Error.BuilderUnavailableForContext"),
             .plan = {}
         };
     }
@@ -195,7 +253,7 @@ StudioBuilderLaunchCatalogResult plan_studio_builder_launch_catalog(
     if (builders.empty()) {
         return {
             .ok = false,
-            .error = "A builder launch catalog request requires at least one context builder.",
+            .error = builder_registry_text("Studio.BuilderRegistry.Error.LaunchCatalogRequiresBuilder"),
             .context = request.context,
             .builder_count = 0U,
             .launch_plan_count = 0U,
