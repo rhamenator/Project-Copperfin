@@ -13906,6 +13906,14 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                             "#1790: deleted detail-header object align should not fabricate containing sections");
             expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1790: deleted detail-header object align should serialize null containing-section JSON");
+            expect_contains(align_header_process.stdout_text, "\"dryRun\": false",
+                            "#2249: deleted detail-header object align JSON should expose committed execution");
+            expect_contains(align_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2249: deleted detail-header object align JSON should expose mutation state");
+            expect_contains(align_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2249: deleted detail-header object align JSON should expose undo availability");
+            expect_contains(align_header_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                            "#2249: deleted detail-header object align JSON should expose horizontal-position undo labels");
             expect_contains_in_order(
                 align_header_process.stdout_text,
                 {
@@ -13977,6 +13985,14 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                             "#1790: deleted detail-footer object align should not fabricate containing sections");
             expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1790: deleted detail-footer object align should serialize null containing-section JSON");
+            expect_contains(align_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2249: deleted detail-footer object align JSON should expose committed execution");
+            expect_contains(align_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2249: deleted detail-footer object align JSON should expose mutation state");
+            expect_contains(align_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2249: deleted detail-footer object align JSON should expose undo availability");
+            expect_contains(align_footer_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                            "#2249: deleted detail-footer object align JSON should expose horizontal-position undo labels");
             expect_contains_in_order(
                 align_footer_process.stdout_text,
                 {
