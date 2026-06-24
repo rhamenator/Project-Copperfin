@@ -7070,6 +7070,34 @@ void test_studio_host_json_exposes_detail_header_footer_section_kinds(
                             "#1763: selected detail header/footer JSON should advertise selected sections");
             expect_contains(section_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1763: selected detail header/footer JSON should expose section selection kind");
+            expect_contains(section_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2275: selected detail header/footer section JSON should preserve live preview availability");
+            expect_contains(section_process.stdout_text, "\"previewBoundsLeft\": 0",
+                            "#2275: selected detail header/footer section JSON should preserve live preview left bounds");
+            expect_contains(section_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2275: selected detail header/footer section JSON should preserve live preview top bounds");
+            expect_contains(section_process.stdout_text, "\"previewBoundsRight\": 0",
+                            "#2275: selected detail header/footer section JSON should preserve live preview right bounds");
+            expect_contains(section_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2275: selected detail header/footer section JSON should preserve live preview bottom bounds");
+            expect_contains(section_process.stdout_text, "\"previewBoundsWidth\": 0",
+                            "#2275: selected detail header/footer section JSON should preserve live preview widths");
+            expect_contains(section_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2275: selected detail header/footer section JSON should preserve live preview heights");
+            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2275: selected detail header/footer section JSON should preserve deleted preview availability");
+            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                            "#2275: selected detail header/footer section JSON should preserve deleted preview left bounds");
+            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                            "#2275: selected detail header/footer section JSON should preserve deleted preview top bounds");
+            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                            "#2275: selected detail header/footer section JSON should preserve deleted preview right bounds");
+            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                            "#2275: selected detail header/footer section JSON should preserve deleted preview bottom bounds");
+            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                            "#2275: selected detail header/footer section JSON should preserve deleted preview widths");
+            expect_contains(section_process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                            "#2275: selected detail header/footer section JSON should preserve deleted preview heights");
             expect_contains_in_order(
                 section_process.stdout_text,
                 {
