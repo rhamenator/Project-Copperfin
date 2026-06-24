@@ -16462,6 +16462,14 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                             "#1772: deleted detail-header object expression update should not fabricate containing sections");
             expect_contains(update_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1772: deleted detail-header object expression update should serialize null containing-section JSON");
+            expect_contains(update_process.stdout_text, "\"dryRun\": false",
+                            "#2261: deleted detail-header object expression update JSON should expose committed execution");
+            expect_contains(update_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2261: deleted detail-header object expression update JSON should expose mutation state");
+            expect_contains(update_process.stdout_text, "\"undoAvailable\": true",
+                            "#2261: deleted detail-header object expression update JSON should expose undo availability");
+            expect_contains(update_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                            "#2261: deleted detail-header object expression update JSON should expose expression undo labels");
             expect_contains_in_order(
                 update_process.stdout_text,
                 {
@@ -16536,6 +16544,14 @@ void test_studio_host_json_updates_deleted_detail_header_footer_object_expressio
                             "#1772: deleted detail-footer object expression clear should not fabricate containing sections");
             expect_contains(clear_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1772: deleted detail-footer object expression clear should serialize null containing-section JSON");
+            expect_contains(clear_process.stdout_text, "\"dryRun\": false",
+                            "#2261: deleted detail-footer object expression clear JSON should expose committed execution");
+            expect_contains(clear_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2261: deleted detail-footer object expression clear JSON should expose mutation state");
+            expect_contains(clear_process.stdout_text, "\"undoAvailable\": true",
+                            "#2261: deleted detail-footer object expression clear JSON should expose undo availability");
+            expect_contains(clear_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                            "#2261: deleted detail-footer object expression clear JSON should expose expression undo labels");
             expect_contains_in_order(
                 clear_process.stdout_text,
                 {
