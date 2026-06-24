@@ -21011,6 +21011,9 @@ void test_studio_host_json_ignores_missing_report_layout_classification_fields(
                         "#1721: missing classification rows should not create live preview bounds");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
                         "#1721: missing classification rows should not create deleted preview bounds");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2344: missing classification summary JSON");
         expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1721: missing classification rows should not infer root settings");
         expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
@@ -21118,6 +21121,9 @@ void test_studio_host_json_ignores_missing_report_layout_objtype_schema(
                         "#1731: OBJCODE-only rows should not create live preview bounds");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
                         "#1731: OBJCODE-only rows should not create deleted preview bounds");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2344: OBJCODE-only summary JSON");
         expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1731: OBJCODE-only rows should not infer root settings");
         expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
