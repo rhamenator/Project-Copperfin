@@ -9134,6 +9134,16 @@ void test_studio_host_json_exposes_detail_header_footer_object_containment(
                         "#1764: detail header/footer object JSON should count both objects as placed");
         expect_contains(process.stdout_text, "\"unplacedObjectCount\": 0",
                         "#1764: detail header/footer object JSON should not fabricate unplaced objects");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2310: detail header/footer object JSON should preserve live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2310: detail header/footer object JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 550",
+                        "#2310: detail header/footer object JSON should preserve live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 550",
+                        "#2310: detail header/footer object JSON should preserve live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2310: detail header/footer object JSON should not fabricate deleted preview bounds");
         expect_contains(process.stdout_text,
                         "\"sectionKindCounts\": [\n"
                         "        {\"kind\": \"detail_footer\", \"count\": 1},\n"
@@ -9170,6 +9180,16 @@ void test_studio_host_json_exposes_detail_header_footer_object_containment(
                             "#1764: selected detail header/footer object JSON should expose object selection kind");
             expect_contains(object_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1764: selected detail header/footer object JSON should expose containing sections");
+            expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2310: selected detail header/footer object JSON should preserve live preview availability");
+            expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2310: selected detail header/footer object JSON should preserve live preview top bounds");
+            expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2310: selected detail header/footer object JSON should preserve live preview bottom bounds");
+            expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2310: selected detail header/footer object JSON should preserve live preview heights");
+            expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2310: selected detail header/footer object JSON should not fabricate deleted preview bounds");
             expect_contains_in_order(
                 object_process.stdout_text,
                 {
