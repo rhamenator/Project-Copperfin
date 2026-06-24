@@ -30985,6 +30985,34 @@ void test_studio_host_json_updates_deleted_report_group_section_expressions(
                         "#1571: deleted group section expression updates should preserve selected-section availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1571: deleted group section expression updates should preserve selection kind");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2270: deleted group section expression update should preserve live preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2270: deleted group section expression update should preserve live preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 600",
+                        "#2270: deleted group section expression update should preserve live preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2270: deleted group section expression update should preserve live preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2270: deleted group section expression update should preserve live preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2270: deleted group section expression update should preserve live preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2270: deleted group section expression update should preserve live preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2270: deleted group section expression update should preserve deleted preview availability");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2270: deleted group section expression update should preserve deleted preview left bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2270: deleted group section expression update should preserve deleted preview top bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2270: deleted group section expression update should preserve deleted preview right bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 600",
+                        "#2270: deleted group section expression update should preserve deleted preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2270: deleted group section expression update should preserve deleted preview widths");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsHeight\": 600",
+                        "#2270: deleted group section expression update should preserve deleted preview heights");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -31077,6 +31105,34 @@ void test_studio_host_json_clears_deleted_report_group_section_expressions(
                         "#1572: deleted group section expression clears should preserve selected-section availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1572: deleted group section expression clears should preserve selection kind");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2270: deleted group section expression clear should preserve live preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2270: deleted group section expression clear should preserve live preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 600",
+                        "#2270: deleted group section expression clear should preserve live preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2270: deleted group section expression clear should preserve live preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2270: deleted group section expression clear should preserve live preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2270: deleted group section expression clear should preserve live preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2270: deleted group section expression clear should preserve live preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2270: deleted group section expression clear should preserve deleted preview availability");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2270: deleted group section expression clear should preserve deleted preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                        "#2270: deleted group section expression clear should preserve deleted preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2270: deleted group section expression clear should preserve deleted preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 600",
+                        "#2270: deleted group section expression clear should preserve deleted preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2270: deleted group section expression clear should preserve deleted preview widths");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsHeight\": 600",
+                        "#2270: deleted group section expression clear should preserve deleted preview heights");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
@@ -31179,6 +31235,34 @@ void test_studio_host_json_updates_deleted_report_group_footer_expressions(
                         "#1574: deleted group footer expression updates should preserve selected-section availability");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1574: deleted group footer expression updates should preserve selection kind");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2270: deleted group footer expression update should preserve live preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2270: deleted group footer expression update should preserve live preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2270: deleted group footer expression update should preserve live preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2270: deleted group footer expression update should preserve live preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 3600",
+                        "#2270: deleted group footer expression update should preserve live preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2270: deleted group footer expression update should preserve live preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 3600",
+                        "#2270: deleted group footer expression update should preserve live preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2270: deleted group footer expression update should preserve deleted preview availability");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2270: deleted group footer expression update should preserve deleted preview left bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsTop\": 3600",
+                        "#2270: deleted group footer expression update should preserve deleted preview top bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2270: deleted group footer expression update should preserve deleted preview right bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsBottom\": 4100",
+                        "#2270: deleted group footer expression update should preserve deleted preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2270: deleted group footer expression update should preserve deleted preview widths");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsHeight\": 500",
+                        "#2270: deleted group footer expression update should preserve deleted preview heights");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -31275,6 +31359,34 @@ void test_studio_host_json_clears_deleted_report_group_footer_expressions(
                         "#1573: deleted group footer expression clears should preserve selected-section availability");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1573: deleted group footer expression clears should preserve selection kind");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2270: deleted group footer expression clear should preserve live preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2270: deleted group footer expression clear should preserve live preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2270: deleted group footer expression clear should preserve live preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2270: deleted group footer expression clear should preserve live preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 3600",
+                        "#2270: deleted group footer expression clear should preserve live preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2270: deleted group footer expression clear should preserve live preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 3600",
+                        "#2270: deleted group footer expression clear should preserve live preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2270: deleted group footer expression clear should preserve deleted preview availability");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2270: deleted group footer expression clear should preserve deleted preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsTop\": 3600",
+                        "#2270: deleted group footer expression clear should preserve deleted preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2270: deleted group footer expression clear should preserve deleted preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsBottom\": 4100",
+                        "#2270: deleted group footer expression clear should preserve deleted preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2270: deleted group footer expression clear should preserve deleted preview widths");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsHeight\": 500",
+                        "#2270: deleted group footer expression clear should preserve deleted preview heights");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
