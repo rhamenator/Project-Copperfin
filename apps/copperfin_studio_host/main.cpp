@@ -20312,7 +20312,7 @@ void print_json_report_layout_sections(
 }
 
 void print_json_document(const copperfin::studio::StudioDocumentModel& document,
-                         bool property_mutation_performed = false) {
+                         bool asset_mutation_performed = false) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto deleted_object_count = static_cast<std::size_t>(std::count_if(
         objects.begin(),
@@ -20441,7 +20441,7 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document,
     std::cout << "    \"commandUndoLabel\": ";
     print_json_string(command_undo_status.label);
     std::cout << ",\n";
-    if (property_mutation_performed) {
+    if (asset_mutation_performed) {
         std::cout << "    \"dryRun\": false,\n";
         std::cout << "    \"mutatesAsset\": true,\n";
         std::cout << "    \"undoAvailable\": "
@@ -25413,7 +25413,7 @@ int main(int argc, char** argv) {
         }
     }
 
-    bool property_mutation_performed = false;
+    bool asset_mutation_performed = false;
     if (parse_result.request.apply_property_update) {
         const auto update_result = copperfin::vfp::update_visual_object_property({
             .path = parse_result.request.path,
@@ -25430,7 +25430,7 @@ int main(int argc, char** argv) {
             return 4;
         }
 
-        property_mutation_performed = true;
+        asset_mutation_performed = true;
         select_open_request_visual_object();
     }
 
@@ -25449,7 +25449,7 @@ int main(int argc, char** argv) {
             return 4;
         }
 
-        property_mutation_performed = true;
+        asset_mutation_performed = true;
         select_open_request_visual_object();
     }
 
@@ -25469,7 +25469,7 @@ int main(int argc, char** argv) {
             return 4;
         }
 
-        property_mutation_performed = true;
+        asset_mutation_performed = true;
     }
 
     if (parse_result.request.delete_object) {
@@ -25486,6 +25486,8 @@ int main(int argc, char** argv) {
             std::cout << "error: " << delete_result.error << "\n";
             return 4;
         }
+
+        asset_mutation_performed = true;
     }
 
     if (parse_result.request.restore_object) {
@@ -25502,6 +25504,8 @@ int main(int argc, char** argv) {
             std::cout << "error: " << restore_result.error << "\n";
             return 4;
         }
+
+        asset_mutation_performed = true;
     }
 
     if (parse_result.request.deleted_states) {
@@ -29742,7 +29746,7 @@ int main(int argc, char** argv) {
     }
 
     if (parse_result.output_json) {
-        print_json_document(open_result.document, property_mutation_performed);
+        print_json_document(open_result.document, asset_mutation_performed);
         return 0;
     }
 

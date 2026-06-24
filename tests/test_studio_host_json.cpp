@@ -9185,6 +9185,14 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_sections_by
                                     "#1812: " + operation_label + " should not select report objects");
                     expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
                                     "#1812: " + operation_label + " should not select settings");
+                    expect_contains(process.stdout_text, "\"dryRun\": false",
+                                    "#2240: " + operation_label + " JSON should expose committed state");
+                    expect_contains(process.stdout_text, "\"mutatesAsset\": true",
+                                    "#2240: " + operation_label + " JSON should expose mutation state");
+                    expect_contains(process.stdout_text, "\"undoAvailable\": false",
+                                    "#2240: " + operation_label + " JSON should expose undo availability");
+                    expect_contains(process.stdout_text, "\"undoLabel\": \"\"",
+                                    "#2240: " + operation_label + " JSON should expose empty undo labels");
                     expect_contains_in_order(
                         process.stdout_text,
                         {
