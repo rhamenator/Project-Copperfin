@@ -15707,6 +15707,14 @@ void test_studio_host_json_distributes_detail_header_footer_objects_vertically_b
                             "#1799: detail-header object vertical distribution should preserve object selection kind");
             expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1799: detail-header object vertical distribution should preserve containing-section availability");
+            expect_contains(distribute_header_process.stdout_text, "\"dryRun\": false",
+                            "#2258: detail-header object vertical distribution JSON should expose committed execution");
+            expect_contains(distribute_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2258: detail-header object vertical distribution JSON should expose mutation state");
+            expect_contains(distribute_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2258: detail-header object vertical distribution JSON should expose undo availability");
+            expect_contains(distribute_header_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2258: detail-header object vertical distribution JSON should expose vertical-distribution undo labels");
             expect_contains_in_order(
                 distribute_header_process.stdout_text,
                 {
@@ -15784,6 +15792,14 @@ void test_studio_host_json_distributes_detail_header_footer_objects_vertically_b
                             "#1799: detail-footer object vertical distribution should preserve object selection kind");
             expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1799: detail-footer object vertical distribution should preserve containing-section availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2258: detail-footer object vertical distribution JSON should expose committed execution");
+            expect_contains(distribute_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2258: detail-footer object vertical distribution JSON should expose mutation state");
+            expect_contains(distribute_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2258: detail-footer object vertical distribution JSON should expose undo availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2258: detail-footer object vertical distribution JSON should expose vertical-distribution undo labels");
             expect_contains_in_order(
                 distribute_footer_process.stdout_text,
                 {
