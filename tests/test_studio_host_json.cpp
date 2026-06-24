@@ -19967,6 +19967,9 @@ void test_studio_host_json_ignores_unsupported_report_layout_objtype_codes(
                         message_prefix + " should not expose selected-settings availability");
         expect_contains(stdout_text, "\"selectedReportSettings\": null",
                         message_prefix + " should serialize null selected settings");
+        expect_empty_report_layout_preview_bounds(
+            stdout_text,
+            "#2315: " + message_prefix + " selected unsupported OBJTYPE JSON");
     };
 
     const auto run_unsupported_objtype_layout = [&](const fs::path& asset_path,
