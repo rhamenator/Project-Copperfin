@@ -9508,6 +9508,14 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                             "#1821: detail-footer section preview delete should preserve selected section availability");
             expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1821: detail-footer section preview delete should preserve selection kind");
+            expect_contains(delete_process.stdout_text, "\"dryRun\": false",
+                            "#2241: detail-footer section preview delete JSON should expose committed state");
+            expect_contains(delete_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2241: detail-footer section preview delete JSON should expose mutation state");
+            expect_contains(delete_process.stdout_text, "\"undoAvailable\": false",
+                            "#2241: detail-footer section preview delete JSON should expose undo availability");
+            expect_contains(delete_process.stdout_text, "\"undoLabel\": \"\"",
+                            "#2241: detail-footer section preview delete JSON should expose empty undo labels");
             expect_contains_in_order(
                 delete_process.stdout_text,
                 {
@@ -9586,6 +9594,14 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                             "#1821: detail-footer section preview restore should preserve selected section availability");
             expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1821: detail-footer section preview restore should preserve selection kind");
+            expect_contains(restore_process.stdout_text, "\"dryRun\": false",
+                            "#2241: detail-footer section preview restore JSON should expose committed state");
+            expect_contains(restore_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2241: detail-footer section preview restore JSON should expose mutation state");
+            expect_contains(restore_process.stdout_text, "\"undoAvailable\": false",
+                            "#2241: detail-footer section preview restore JSON should expose undo availability");
+            expect_contains(restore_process.stdout_text, "\"undoLabel\": \"\"",
+                            "#2241: detail-footer section preview restore JSON should expose empty undo labels");
             expect_contains_in_order(
                 restore_process.stdout_text,
                 {
