@@ -15721,6 +15721,16 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                             "#1795: detail-header object nudge should preserve object selection kind");
             expect_contains(nudge_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1795: detail-header object nudge should preserve containing-section availability");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2301: detail-header object nudge should preserve live preview availability");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2301: detail-header object nudge should preserve live preview top bounds");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2301: detail-header object nudge should preserve live preview bottom bounds");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2301: detail-header object nudge should preserve live preview heights");
+            expect_contains(nudge_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2301: detail-header object nudge should not fabricate deleted preview availability");
             expect_contains(nudge_header_process.stdout_text, "\"dryRun\": false",
                             "#2254: detail-header object nudge JSON should expose committed execution");
             expect_contains(nudge_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -15803,6 +15813,16 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                             "#1795: detail-footer object nudge should preserve object selection kind");
             expect_contains(nudge_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1795: detail-footer object nudge should preserve containing-section availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2301: detail-footer object nudge should preserve live preview availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2301: detail-footer object nudge should preserve live preview top bounds");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2301: detail-footer object nudge should preserve live preview bottom bounds");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2301: detail-footer object nudge should preserve live preview heights");
+            expect_contains(nudge_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2301: detail-footer object nudge should not fabricate deleted preview availability");
             expect_contains(nudge_footer_process.stdout_text, "\"dryRun\": false",
                             "#2254: detail-footer object nudge JSON should expose committed execution");
             expect_contains(nudge_footer_process.stdout_text, "\"mutatesAsset\": true",
