@@ -20285,6 +20285,9 @@ void test_studio_host_json_ignores_negative_report_layout_classifications(
                         "#1761: negative classification rows should not create live preview bounds");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
                         "#1761: negative classification rows should not create deleted preview bounds");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2358: negative classification summary JSON");
         expect_contains(summary_process.stdout_text, "\"sectionCount\": 0",
                         "#1761: negative classification rows should not create live sections");
         expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 0",
@@ -20305,6 +20308,9 @@ void test_studio_host_json_ignores_negative_report_layout_classifications(
             expect_no_report_selection(
                 selected_process.stdout_text,
                 "#1761: negative classification record " + std::to_string(record_index));
+            expect_empty_report_layout_preview_bounds(
+                selected_process.stdout_text,
+                "#2358: selected negative classification record " + std::to_string(record_index));
         }
     };
 
