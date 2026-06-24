@@ -15308,6 +15308,14 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                             "#1797: detail-header object distribution should preserve object selection kind");
             expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1797: detail-header object distribution should preserve containing-section availability");
+            expect_contains(distribute_header_process.stdout_text, "\"dryRun\": false",
+                            "#2256: detail-header object distribution JSON should expose committed execution");
+            expect_contains(distribute_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2256: detail-header object distribution JSON should expose mutation state");
+            expect_contains(distribute_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2256: detail-header object distribution JSON should expose undo availability");
+            expect_contains(distribute_header_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                            "#2256: detail-header object distribution JSON should expose horizontal-distribution undo labels");
             expect_contains_in_order(
                 distribute_header_process.stdout_text,
                 {
@@ -15385,6 +15393,14 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                             "#1797: detail-footer object distribution should preserve object selection kind");
             expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1797: detail-footer object distribution should preserve containing-section availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2256: detail-footer object distribution JSON should expose committed execution");
+            expect_contains(distribute_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2256: detail-footer object distribution JSON should expose mutation state");
+            expect_contains(distribute_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2256: detail-footer object distribution JSON should expose undo availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                            "#2256: detail-footer object distribution JSON should expose horizontal-distribution undo labels");
             expect_contains_in_order(
                 distribute_footer_process.stdout_text,
                 {
