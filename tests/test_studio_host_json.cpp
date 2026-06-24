@@ -16848,6 +16848,34 @@ void test_studio_host_json_exposes_detail_header_footer_section_expressions_by_s
                                 "#1768: stable detail header/footer expression selection should preserve live sections");
                 expect_contains(process.stdout_text, "\"deletedSectionCount\": 1",
                                 "#1768: stable detail header/footer expression selection should preserve deleted sections");
+                expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                                "#2267: stable detail header/footer expression selection should preserve live preview availability");
+                expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                                "#2267: stable detail header/footer expression selection should preserve live preview left bounds");
+                expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                                "#2267: stable detail header/footer expression selection should preserve live preview top bounds");
+                expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                                "#2267: stable detail header/footer expression selection should preserve live preview right bounds");
+                expect_contains(process.stdout_text, "\"previewBoundsBottom\": 550",
+                                "#2267: stable detail header/footer expression selection should preserve live preview bottom bounds");
+                expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                                "#2267: stable detail header/footer expression selection should preserve live preview widths");
+                expect_contains(process.stdout_text, "\"previewBoundsHeight\": 550",
+                                "#2267: stable detail header/footer expression selection should preserve live preview heights");
+                expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                                "#2267: stable detail header/footer expression selection should preserve deleted preview availability");
+                expect_contains(process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                                "#2267: stable detail header/footer expression selection should preserve deleted preview left bounds");
+                expect_contains(process.stdout_text, "\"deletedPreviewBoundsTop\": 550",
+                                "#2267: stable detail header/footer expression selection should preserve deleted preview top bounds");
+                expect_contains(process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                                "#2267: stable detail header/footer expression selection should preserve deleted preview right bounds");
+                expect_contains(process.stdout_text, "\"deletedPreviewBoundsBottom\": 750",
+                                "#2267: stable detail header/footer expression selection should preserve deleted preview bottom bounds");
+                expect_contains(process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                                "#2267: stable detail header/footer expression selection should preserve deleted preview widths");
+                expect_contains(process.stdout_text, "\"deletedPreviewBoundsHeight\": 200",
+                                "#2267: stable detail header/footer expression selection should preserve deleted preview heights");
                 expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
                                 "#1768: stable detail header/footer expression selection should expose selected sections");
                 expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
