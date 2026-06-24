@@ -388,6 +388,37 @@ void expect_missing_object_expr_preview_bounds(const std::string& text, const st
                     prefix + " should preserve deleted preview heights");
 }
 
+void expect_missing_object_title_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 100",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 560",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 900",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 560",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 800",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 360",
+                    prefix + " should preserve deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 500",
+                    prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 740",
+                    prefix + " should preserve deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 610",
+                    prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 380",
+                    prefix + " should preserve deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 110",
+                    prefix + " should preserve deleted preview heights");
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -26283,6 +26314,9 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                         "#1726: missing live object title layouts should preserve object-kind counts");
         expect_contains(summary_process.stdout_text, "\"deletedObjectKindCounts\": [\n        {\"kind\": \"label\", \"count\": 1}\n      ]",
                         "#1726: missing deleted object title layouts should preserve object-kind counts");
+        expect_missing_object_title_preview_bounds(
+            summary_process.stdout_text,
+            "#2340: missing object title summary JSON");
         expect_contains_in_order(
             summary_process.stdout_text,
             {
@@ -26343,6 +26377,9 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                         "#1726: missing object title live selection should expose object selection kind");
         expect_contains(live_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                         "#1726: missing object title live selection should expose containing-section metadata");
+        expect_missing_object_title_preview_bounds(
+            live_process.stdout_text,
+            "#2340: selected missing live object title JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -26383,6 +26420,9 @@ void test_studio_host_json_synthesizes_report_object_titles_without_title_schema
                         "#1726: missing object title deleted selection should not fabricate containing sections");
         expect_contains(deleted_process.stdout_text, "\"selectedReportObjectSection\": null",
                         "#1726: missing object title deleted selection should serialize null containing sections");
+        expect_missing_object_title_preview_bounds(
+            deleted_process.stdout_text,
+            "#2340: selected missing deleted object title JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
