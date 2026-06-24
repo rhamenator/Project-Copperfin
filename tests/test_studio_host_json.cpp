@@ -15122,6 +15122,14 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                             "#1796: deleted detail-header object nudge should not fabricate containing sections");
             expect_contains(nudge_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1796: deleted detail-header object nudge should serialize null containing-section JSON");
+            expect_contains(nudge_header_process.stdout_text, "\"dryRun\": false",
+                            "#2255: deleted detail-header object nudge JSON should expose committed execution");
+            expect_contains(nudge_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2255: deleted detail-header object nudge JSON should expose mutation state");
+            expect_contains(nudge_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2255: deleted detail-header object nudge JSON should expose undo availability");
+            expect_contains(nudge_header_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2255: deleted detail-header object nudge JSON should expose nudge undo labels");
             expect_contains_in_order(
                 nudge_header_process.stdout_text,
                 {
@@ -15194,6 +15202,14 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                             "#1796: deleted detail-footer object nudge should not fabricate containing sections");
             expect_contains(nudge_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1796: deleted detail-footer object nudge should serialize null containing-section JSON");
+            expect_contains(nudge_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2255: deleted detail-footer object nudge JSON should expose committed execution");
+            expect_contains(nudge_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2255: deleted detail-footer object nudge JSON should expose mutation state");
+            expect_contains(nudge_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2255: deleted detail-footer object nudge JSON should expose undo availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2255: deleted detail-footer object nudge JSON should expose nudge undo labels");
             expect_contains_in_order(
                 nudge_footer_process.stdout_text,
                 {
