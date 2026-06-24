@@ -15502,6 +15502,22 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                             "#1794: deleted detail-header object snap should not fabricate containing sections");
             expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1794: deleted detail-header object snap should serialize null containing-section JSON");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2300: deleted detail-header object snap should preserve live preview availability");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2300: deleted detail-header object snap should preserve live preview top bounds");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2300: deleted detail-header object snap should preserve live preview bottom bounds");
+            expect_contains(snap_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2300: deleted detail-header object snap should preserve live preview heights");
+            expect_contains(snap_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2300: deleted detail-header object snap should expose deleted preview availability");
+            expect_contains(snap_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 70",
+                            "#2300: deleted detail-header object snap should refresh deleted preview top bounds");
+            expect_contains(snap_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                            "#2300: deleted detail-header object snap should preserve deleted preview bottom bounds");
+            expect_contains(snap_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 390",
+                            "#2300: deleted detail-header object snap should refresh deleted preview heights");
             expect_contains(snap_header_process.stdout_text, "\"dryRun\": false",
                             "#2253: deleted detail-header object snap JSON should expose committed execution");
             expect_contains(snap_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -15582,6 +15598,22 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                             "#1794: deleted detail-footer object snap should not fabricate containing sections");
             expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1794: deleted detail-footer object snap should serialize null containing-section JSON");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2300: deleted detail-footer object snap should preserve live preview availability");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2300: deleted detail-footer object snap should preserve live preview top bounds");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2300: deleted detail-footer object snap should preserve live preview bottom bounds");
+            expect_contains(snap_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2300: deleted detail-footer object snap should preserve live preview heights");
+            expect_contains(snap_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2300: deleted detail-footer object snap should expose deleted preview availability");
+            expect_contains(snap_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2300: deleted detail-footer object snap should preserve deleted preview top bounds");
+            expect_contains(snap_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 450",
+                            "#2300: deleted detail-footer object snap should refresh deleted preview bottom bounds");
+            expect_contains(snap_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 400",
+                            "#2300: deleted detail-footer object snap should refresh deleted preview heights");
             expect_contains(snap_footer_process.stdout_text, "\"dryRun\": false",
                             "#2253: deleted detail-footer object snap JSON should expose committed execution");
             expect_contains(snap_footer_process.stdout_text, "\"mutatesAsset\": true",
