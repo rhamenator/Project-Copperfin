@@ -9765,6 +9765,14 @@ void test_studio_host_json_duplicates_detail_header_footer_sections_by_stable_se
                                 "#1813: " + operation_label + " should not fabricate object sections");
                 expect_contains(duplicate_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
                                 "#1813: " + operation_label + " should not select settings");
+                expect_contains(duplicate_process.stdout_text, "\"dryRun\": false",
+                                "#2242: " + operation_label + " JSON should expose committed state");
+                expect_contains(duplicate_process.stdout_text, "\"mutatesAsset\": true",
+                                "#2242: " + operation_label + " JSON should expose mutation state");
+                expect_contains(duplicate_process.stdout_text, "\"undoAvailable\": false",
+                                "#2242: " + operation_label + " JSON should expose undo availability");
+                expect_contains(duplicate_process.stdout_text, "\"undoLabel\": \"\"",
+                                "#2242: " + operation_label + " JSON should expose empty undo labels");
                 expect_contains_in_order(
                     duplicate_process.stdout_text,
                     {

@@ -25569,6 +25569,7 @@ int main(int argc, char** argv) {
         open_request.object_name = duplicate_result.object_name;
         open_request.unique_id = duplicate_result.unique_id;
         open_request.selection_record_available = true;
+        asset_mutation_performed = true;
     }
 
     if (parse_result.request.rename_object) {
