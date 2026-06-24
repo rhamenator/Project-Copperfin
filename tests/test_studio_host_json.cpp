@@ -22885,6 +22885,9 @@ void test_studio_host_json_preserves_fractional_report_direct_setting_fields(
                         "#1746: fractional direct settings should parse column-width integer portion");
         expect_contains(summary_process.stdout_text, "\"columnSpacing\": 42",
                         "#1746: fractional direct settings should parse column-spacing integer portion");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2321: fractional direct settings summary JSON");
 
         const auto live_settings_process = run_process_capture(
             studio_host_path,
@@ -22895,6 +22898,11 @@ void test_studio_host_json_preserves_fractional_report_direct_setting_fields(
                "#1746: fractional live direct-setting selection should keep inspection non-failing");
         expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
                         "#1746: fractional live direct-setting selection should expose raw settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1746: fractional live direct-setting selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            live_settings_process.stdout_text,
+            "#2321: selected fractional live direct settings JSON");
         expect_contains_in_order(
             live_settings_process.stdout_text,
             {
@@ -22929,6 +22937,11 @@ void test_studio_host_json_preserves_fractional_report_direct_setting_fields(
                "#1746: fractional deleted direct-setting selection should keep inspection non-failing");
         expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
                         "#1746: fractional deleted direct-setting selection should expose raw settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1746: fractional deleted direct-setting selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            deleted_settings_process.stdout_text,
+            "#2321: selected fractional deleted direct settings JSON");
         expect_contains_in_order(
             deleted_settings_process.stdout_text,
             {
