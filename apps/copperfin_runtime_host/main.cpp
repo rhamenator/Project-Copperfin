@@ -936,6 +936,13 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
     std::cout << catalog.translate("RuntimeHost.Usage.FederationPlanning", invariant_tokens) << "\n";
 }
 
+std::string localized_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& key,
+    const copperfin::localization::PlaceholderMap& placeholders = {}) {
+    return catalog.translate(key, placeholders);
+}
+
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
     const auto separator = value.rfind(':');
     if (separator == std::string::npos) {
@@ -1369,7 +1376,10 @@ int main(int argc, char** argv) {
             ++index;
         } else {
             std::cout << "status: error\n";
-            std::cout << "error: Unknown argument: " << arg << "\n";
+            std::cout << "error: " << localized_message(
+                catalog,
+                "RuntimeHost.Error.UnknownArgument",
+                {{"argument", arg}}) << "\n";
             print_usage(catalog);
             return 2;
         }
@@ -1379,20 +1389,29 @@ int main(int argc, char** argv) {
         !trim_copy(federation_backend).empty() || !trim_copy(federation_query).empty();
     if (federation_mode_requested && runtime_bridge_mode_requested(bridge_options)) {
         std::cout << "status: error\n";
-        std::cout << "error: Bridge invocation mode cannot be combined with federation query mode.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Error.BridgeFederationModeConflict") << "\n";
         return 2;
     }
     if (federation_mode_requested) {
         if (trim_copy(federation_backend).empty() || trim_copy(federation_query).empty()) {
             std::cout << "status: error\n";
-            std::cout << "error: --federation-backend and --federation-query are both required in federation mode.\n";
+            std::cout << "error: " << localized_message(
+                catalog,
+                "RuntimeHost.Error.FederationRequiredOptions",
+                {
+                    {"federationBackendOption", "--federation-backend"},
+                    {"federationQueryOption", "--federation-query"}
+                }) << "\n";
             return 2;
         }
 
         const auto backend = copperfin::platform::federation_backend_from_string(federation_backend);
         if (!backend.has_value()) {
             std::cout << "status: error\n";
-            std::cout << "error: Unknown federation backend: " << federation_backend << "\n";
+            std::cout << "error: " << localized_message(
+                catalog,
+                "RuntimeHost.Error.UnknownFederationBackend",
+                {{"backend", federation_backend}}) << "\n";
             return 2;
         }
 
@@ -1403,7 +1422,13 @@ int main(int argc, char** argv) {
             if (!copperfin::security::role_has_permission(security_profile, security_role, "ai.mcp")) {
                 std::cout << "status: error\n";
                 std::cout << "runtime.mode: federation-query-plan\n";
-                std::cout << "error: Security policy denied ai.mcp for role '" << security_role << "'.\n";
+                std::cout << "error: " << localized_message(
+                    catalog,
+                    "RuntimeHost.Error.SecurityPolicyDenied",
+                    {
+                        {"permission", "ai.mcp"},
+                        {"role", security_role}
+                    }) << "\n";
                 return 7;
             }
         }
@@ -1448,14 +1473,14 @@ int main(int argc, char** argv) {
 
     if (!std::filesystem::exists(manifest_path)) {
         std::cout << "status: error\n";
-        std::cout << "error: Manifest file not found.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Error.ManifestNotFound") << "\n";
         return 3;
     }
 
     const auto manifest = load_manifest(manifest_path);
     if (manifest.empty()) {
         std::cout << "status: error\n";
-        std::cout << "error: Manifest is empty or invalid.\n";
+        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Error.ManifestEmptyOrInvalid") << "\n";
         return 4;
     }
 
@@ -1478,7 +1503,13 @@ int main(int argc, char** argv) {
                     "role missing permission: project.open");
             }
             std::cout << "status: error\n";
-            std::cout << "error: Security policy denied project.open for role '" << security_role << "'.\n";
+            std::cout << "error: " << localized_message(
+                catalog,
+                "RuntimeHost.Error.SecurityPolicyDenied",
+                {
+                    {"permission", "project.open"},
+                    {"role", security_role}
+                }) << "\n";
             return 7;
         }
 

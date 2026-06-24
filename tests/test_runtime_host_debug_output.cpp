@@ -39,6 +39,13 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
     write_text(
         english_root / "strings.json",
         "{\n"
+        "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
+        "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
+        "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"Manifest is empty or invalid.\",\n"
+        "  \"RuntimeHost.Error.ManifestNotFound\": \"Manifest file not found.\",\n"
+        "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"Security policy denied {permission} for role '{role}'.\",\n"
+        "  \"RuntimeHost.Error.UnknownArgument\": \"Unknown argument: {argument}\",\n"
+        "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Unknown federation backend: {backend}\",\n"
         "  \"RuntimeHost.Usage.Federation\": \"   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
         "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
         "  \"RuntimeHost.Usage.Manifest\": \"Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\"\n"
@@ -2045,6 +2052,30 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                    process.stdout_text.find("--debug-command") != std::string::npos &&
                    process.stdout_text.find("<continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>") != std::string::npos,
                "#2349: pseudo-localized runtime host usage should preserve CLI and debug-command tokens");
+
+        const auto unknown_argument = run_process_capture(runtime_host_path, {"--unknown-option"}, temp_root);
+        expect(unknown_argument.exit_code == 2,
+               "#2351: pseudo-localized runtime host unknown arguments should keep the usage exit code");
+        expect(unknown_argument.stdout_text.find("status: error") != std::string::npos,
+               "#2351: pseudo-localized runtime host errors should preserve machine-readable status");
+        expect(unknown_argument.stdout_text.find("[!! ") != std::string::npos,
+               "#2351: pseudo-localized runtime host unknown arguments should decorate prose");
+        expect(unknown_argument.stdout_text.find("--unknown-option") != std::string::npos,
+               "#2351: pseudo-localized runtime host unknown arguments should preserve CLI tokens");
+
+        const auto missing_federation_argument = run_process_capture(
+            runtime_host_path,
+            {"--federation-backend", "sqlite"},
+            temp_root);
+        expect(missing_federation_argument.exit_code == 2,
+               "#2351: pseudo-localized federation validation should keep the usage exit code");
+        expect(missing_federation_argument.stdout_text.find("status: error") != std::string::npos,
+               "#2351: pseudo-localized federation validation should preserve machine-readable status");
+        expect(missing_federation_argument.stdout_text.find("[!! ") != std::string::npos,
+               "#2351: pseudo-localized federation validation should decorate prose");
+        expect(missing_federation_argument.stdout_text.find("--federation-backend") != std::string::npos &&
+                   missing_federation_argument.stdout_text.find("--federation-query") != std::string::npos,
+               "#2351: pseudo-localized federation validation should preserve CLI tokens");
     }
 
     fs::remove_all(temp_root, ignored);

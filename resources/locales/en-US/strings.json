@@ -21,5 +21,12 @@
   "Inspect.Usage": "Usage: {commandName} [{localeOption} {localeValue}] {assetPathArgument}",
   "RuntimeHost.Usage.Federation": "   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]",
   "RuntimeHost.Usage.FederationPlanning": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]",
-  "RuntimeHost.Usage.Manifest": "Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]"
+  "RuntimeHost.Usage.Manifest": "Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]",
+  "RuntimeHost.Error.BridgeFederationModeConflict": "Bridge invocation mode cannot be combined with federation query mode.",
+  "RuntimeHost.Error.FederationRequiredOptions": "{federationBackendOption} and {federationQueryOption} are both required in federation mode.",
+  "RuntimeHost.Error.ManifestEmptyOrInvalid": "Manifest is empty or invalid.",
+  "RuntimeHost.Error.ManifestNotFound": "Manifest file not found.",
+  "RuntimeHost.Error.SecurityPolicyDenied": "Security policy denied {permission} for role '{role}'.",
+  "RuntimeHost.Error.UnknownArgument": "Unknown argument: {argument}",
+  "RuntimeHost.Error.UnknownFederationBackend": "Unknown federation backend: {backend}"
 }
