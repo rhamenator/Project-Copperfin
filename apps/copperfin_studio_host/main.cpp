@@ -20311,7 +20311,8 @@ void print_json_report_layout_sections(
     std::cout << indent << "]";
 }
 
-void print_json_document(const copperfin::studio::StudioDocumentModel& document) {
+void print_json_document(const copperfin::studio::StudioDocumentModel& document,
+                         bool property_mutation_performed = false) {
     const auto objects = copperfin::studio::build_object_snapshot(document);
     const auto deleted_object_count = static_cast<std::size_t>(std::count_if(
         objects.begin(),
@@ -20440,6 +20441,15 @@ void print_json_document(const copperfin::studio::StudioDocumentModel& document)
     std::cout << "    \"commandUndoLabel\": ";
     print_json_string(command_undo_status.label);
     std::cout << ",\n";
+    if (property_mutation_performed) {
+        std::cout << "    \"dryRun\": false,\n";
+        std::cout << "    \"mutatesAsset\": true,\n";
+        std::cout << "    \"undoAvailable\": "
+                  << (command_undo_status.available ? "true" : "false") << ",\n";
+        std::cout << "    \"undoLabel\": ";
+        print_json_string(command_undo_status.label);
+        std::cout << ",\n";
+    }
     std::cout << "    \"designerContexts\": ";
     print_json_designer_contexts(document.designer_contexts);
     std::cout << ",\n";
@@ -25403,6 +25413,7 @@ int main(int argc, char** argv) {
         }
     }
 
+    bool property_mutation_performed = false;
     if (parse_result.request.apply_property_update) {
         const auto update_result = copperfin::vfp::update_visual_object_property({
             .path = parse_result.request.path,
@@ -25419,6 +25430,7 @@ int main(int argc, char** argv) {
             return 4;
         }
 
+        property_mutation_performed = true;
         select_open_request_visual_object();
     }
 
@@ -25437,6 +25449,7 @@ int main(int argc, char** argv) {
             return 4;
         }
 
+        property_mutation_performed = true;
         select_open_request_visual_object();
     }
 
@@ -25456,6 +25469,7 @@ int main(int argc, char** argv) {
             return 4;
         }
 
+        property_mutation_performed = true;
     }
 
     if (parse_result.request.delete_object) {
@@ -29728,7 +29742,7 @@ int main(int argc, char** argv) {
     }
 
     if (parse_result.output_json) {
-        print_json_document(open_result.document);
+        print_json_document(open_result.document, property_mutation_performed);
         return 0;
     }
 

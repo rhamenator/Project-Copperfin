@@ -7164,6 +7164,14 @@ void test_studio_host_json_updates_detail_header_footer_section_heights_by_stabl
                             "#1802: detail-header section height update should preserve selected section availability");
             expect_contains(update_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1802: detail-header section height update should preserve selection kind");
+            expect_contains(update_header_process.stdout_text, "\"dryRun\": false",
+                            "#2232: detail-header section height update JSON should expose committed state");
+            expect_contains(update_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2232: detail-header section height update JSON should expose mutation state");
+            expect_contains(update_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2232: detail-header section height update JSON should expose undo availability");
+            expect_contains(update_header_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
+                            "#2232: detail-header section height update JSON should expose height undo labels");
             expect_contains_in_order(
                 update_header_process.stdout_text,
                 {
@@ -7224,6 +7232,14 @@ void test_studio_host_json_updates_detail_header_footer_section_heights_by_stabl
                             "#1802: detail-footer section height update should preserve selected section availability");
             expect_contains(update_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1802: detail-footer section height update should preserve selection kind");
+            expect_contains(update_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2232: detail-footer section height update JSON should expose committed state");
+            expect_contains(update_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2232: detail-footer section height update JSON should expose mutation state");
+            expect_contains(update_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2232: detail-footer section height update JSON should expose undo availability");
+            expect_contains(update_footer_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
+                            "#2232: detail-footer section height update JSON should expose height undo labels");
             expect_contains_in_order(
                 update_footer_process.stdout_text,
                 {
