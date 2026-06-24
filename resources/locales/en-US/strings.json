@@ -7,5 +7,8 @@
   "Error.CatalogMissing": "Localization catalog is missing: {path}",
   "Error.UnknownLocale": "Unknown locale: {locale}",
   "Help.LocaleOption": "Select the user-interface locale.",
-  "Inspect.Usage": "Usage: {commandName} [{localeOption} {localeValue}] {assetPathArgument}"
+  "Inspect.Usage": "Usage: {commandName} [{localeOption} {localeValue}] {assetPathArgument}",
+  "RuntimeHost.Usage.Federation": "   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]",
+  "RuntimeHost.Usage.FederationPlanning": "       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]",
+  "RuntimeHost.Usage.Manifest": "Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]"
 }

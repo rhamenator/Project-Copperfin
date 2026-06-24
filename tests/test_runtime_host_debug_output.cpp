@@ -31,6 +31,21 @@ void write_text(const std::filesystem::path& path, const std::string& text) {
     output << text;
 }
 
+void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root) {
+    const std::filesystem::path english_root = locale_root / "en-US";
+    const std::filesystem::path pseudo_root = locale_root / "qps-ploc";
+    std::filesystem::create_directories(english_root);
+    std::filesystem::create_directories(pseudo_root);
+    write_text(
+        english_root / "strings.json",
+        "{\n"
+        "  \"RuntimeHost.Usage.Federation\": \"   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
+        "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
+        "  \"RuntimeHost.Usage.Manifest\": \"Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\"\n"
+        "}\n");
+    write_text(pseudo_root / "strings.json", "{}\n");
+}
+
 std::string read_text(const std::filesystem::path& path) {
     std::ifstream input(path, std::ios::binary);
     return {
@@ -1996,6 +2011,45 @@ void test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(const std::st
     }
 }
 
+void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_usage_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(runtime_host_path, {}, temp_root);
+        expect(process.exit_code == 2,
+               "#2349: runtime host without manifest should keep the usage exit code");
+        expect(process.stdout_text.find("Usage: copperfin_runtime_host --manifest <path> [--debug]") != std::string::npos,
+               "#2349: runtime host en-US usage should remain stable");
+        expect(process.stdout_text.find("--federation-backend <sqlite|postgresql|sqlserver|oracle>") != std::string::npos,
+               "#2349: runtime host en-US usage should preserve federation CLI tokens");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        const auto process = run_process_capture(runtime_host_path, {}, temp_root);
+        expect(process.exit_code == 2,
+               "#2349: pseudo-localized runtime host usage should keep the usage exit code");
+        expect(process.stdout_text.find("[!! ") != std::string::npos,
+               "#2349: pseudo-localized runtime host usage should decorate prose");
+        expect(process.stdout_text.find("copperfin_runtime_host") != std::string::npos &&
+                   process.stdout_text.find("--manifest") != std::string::npos &&
+                   process.stdout_text.find("--debug-command") != std::string::npos &&
+                   process.stdout_text.find("<continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>") != std::string::npos,
+               "#2349: pseudo-localized runtime host usage should preserve CLI and debug-command tokens");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -2024,6 +2078,7 @@ int main(int argc, char** argv) {
     test_runtime_host_rejects_nested_bridge_descriptor_fields(argv[1]);
     test_runtime_host_rejects_bridge_descriptor_identity_mismatch(argv[1]);
     test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(argv[1]);
+    test_runtime_host_usage_text_localizes_without_changing_cli_tokens(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";

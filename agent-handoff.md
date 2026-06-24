@@ -15,11 +15,11 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2347`, fractional geometry preview-metadata JSON coverage.
-- Last shipped localization child: `#1779`, portable C++ catalog/fallback/pseudo-locale infrastructure and first CLI usage-text routing.
+- Last shipped localization child: `#2349`, runtime host usage text routed through the portable C++ localization catalog while preserving CLI/debug/federation tokens.
 - Current lane: continue E3/#24 report/label designer fidelity and section-aware host surfaces, preserving localization rules for any new user-facing text.
 - Next action: inspect live GitHub children under `#24`; pick the highest-weight open prompt-sized child, or create the next child under `#24` if none fits.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.
-- Localization/release-readiness slices under `#2348`/`#113` have shipped through `#1779` and `#1856`; continue them only if live issue state makes them higher priority than E3/#24.
+- Localization/release-readiness slices under `#2348`/`#113` have shipped through `#2349` and `#1856`; continue them only if live issue state makes them higher priority than E3/#24.
 
 ## Required Reading
 

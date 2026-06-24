@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/platform/federation_execution.h"
@@ -891,10 +892,48 @@ std::string resolve_federation_security_role() {
     return configured_role.empty() ? "developer" : configured_role;
 }
 
-void print_usage() {
-    std::cout << "Usage: copperfin_runtime_host --manifest <path> [--debug] [--breakpoint <file:line>] [--debug-command <continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>]\n";
-    std::cout << "   or: copperfin_runtime_host --federation-backend <sqlite|postgresql|sqlserver|oracle> --federation-query <fox-sql> [--federation-target <name>]\n";
-    std::cout << "       [--federation-planning-enable <true|false>] [--federation-planning-require <true|false>] [--federation-planning-audit <true|false>]\n";
+std::string explicit_locale_from_arguments(int argc, char** argv) {
+    for (int index = 1; index + 1 < argc; ++index) {
+        if (std::string(argv[index]) == "--locale") {
+            return argv[index + 1];
+        }
+    }
+    return {};
+}
+
+copperfin::localization::LocalizedCatalog load_localization(
+    const char* executable_path,
+    const std::string& explicit_locale) {
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
+    return copperfin::localization::load_catalogs(
+        locale_root,
+        copperfin::localization::select_locale(explicit_locale));
+}
+
+void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
+    const copperfin::localization::PlaceholderMap invariant_tokens{
+        {"booleanValue", "<true|false>"},
+        {"breakpointOption", "--breakpoint"},
+        {"breakpointValue", "<file:line>"},
+        {"commandName", "copperfin_runtime_host"},
+        {"debugCommandOption", "--debug-command"},
+        {"debugCommandValue", "<continue|step|next|out|watch:<expr>|select:<action-id>|invoke:<action-id>|break:add:<file:line>|break:remove:<file:line>|break:add-action:<action-id>|break:remove-action:<action-id>|break:clear|break:list>"},
+        {"debugOption", "--debug"},
+        {"federationBackendOption", "--federation-backend"},
+        {"federationBackendValue", "<sqlite|postgresql|sqlserver|oracle>"},
+        {"federationQueryOption", "--federation-query"},
+        {"federationQueryValue", "<fox-sql>"},
+        {"federationTargetOption", "--federation-target"},
+        {"federationTargetValue", "<name>"},
+        {"manifestOption", "--manifest"},
+        {"manifestValue", "<path>"},
+        {"planningAuditOption", "--federation-planning-audit"},
+        {"planningEnableOption", "--federation-planning-enable"},
+        {"planningRequireOption", "--federation-planning-require"}
+    };
+    std::cout << catalog.translate("RuntimeHost.Usage.Manifest", invariant_tokens) << "\n";
+    std::cout << catalog.translate("RuntimeHost.Usage.Federation", invariant_tokens) << "\n";
+    std::cout << catalog.translate("RuntimeHost.Usage.FederationPlanning", invariant_tokens) << "\n";
 }
 
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
@@ -1265,6 +1304,9 @@ int main(int argc, char** argv) {
         std::cerr << "warning: " << hardening.message << "\n";
     }
 
+    const copperfin::localization::LocalizedCatalog catalog =
+        load_localization(argc > 0 ? argv[0] : nullptr, explicit_locale_from_arguments(argc, argv));
+
     std::string manifest_path;
     std::string federation_backend;
     std::string federation_query;
@@ -1323,10 +1365,12 @@ int main(int argc, char** argv) {
             bridge_options.response_media_type = argv[++index];
         } else if (arg == "--schema-version" && (index + 1) < argc) {
             bridge_options.schema_version = argv[++index];
+        } else if (arg == "--locale" && (index + 1) < argc) {
+            ++index;
         } else {
             std::cout << "status: error\n";
             std::cout << "error: Unknown argument: " << arg << "\n";
-            print_usage();
+            print_usage(catalog);
             return 2;
         }
     }
@@ -1397,7 +1441,7 @@ int main(int argc, char** argv) {
     if (manifest_path.empty()) {
         manifest_path = resolve_implicit_manifest_path(argc > 0 ? argv[0] : nullptr);
         if (manifest_path.empty()) {
-            print_usage();
+            print_usage(catalog);
             return 2;
         }
     }
