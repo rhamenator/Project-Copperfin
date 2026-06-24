@@ -85326,6 +85326,10 @@ void test_studio_host_json_reorders_deleted_report_visual_object_batches_by_stab
                "#1861: deleted report/label stable visual-object reorder-batch missing target should fail");
         expect_contains(rollback_process.stdout_text, "\"visualObjectReorderBatch\": null",
                         "#1861: failed deleted report/label stable visual-object reorder-batch JSON should not expose stale batch objects");
+        expect_not_contains(rollback_process.stdout_text, "\"dryRun\": false",
+                            "#2227: failed deleted report/label stable visual-object reorder-batch JSON should not expose stale committed state");
+        expect_not_contains(rollback_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2227: failed deleted report/label stable visual-object reorder-batch JSON should not expose stale mutation state");
         expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
                             "#2183: failed deleted report/label stable visual-object reorder-batch JSON should not advertise undo availability");
         expect_not_contains(rollback_process.stdout_text, "\"undoLabel\":",
