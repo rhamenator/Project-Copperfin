@@ -14719,6 +14719,14 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                             "#1794: deleted detail-header object snap should not fabricate containing sections");
             expect_contains(snap_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1794: deleted detail-header object snap should serialize null containing-section JSON");
+            expect_contains(snap_header_process.stdout_text, "\"dryRun\": false",
+                            "#2253: deleted detail-header object snap JSON should expose committed execution");
+            expect_contains(snap_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2253: deleted detail-header object snap JSON should expose mutation state");
+            expect_contains(snap_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2253: deleted detail-header object snap JSON should expose undo availability");
+            expect_contains(snap_header_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2253: deleted detail-header object snap JSON should expose snap undo labels");
             expect_contains_in_order(
                 snap_header_process.stdout_text,
                 {
@@ -14791,6 +14799,14 @@ void test_studio_host_json_snaps_deleted_detail_header_footer_objects_by_stable_
                             "#1794: deleted detail-footer object snap should not fabricate containing sections");
             expect_contains(snap_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1794: deleted detail-footer object snap should serialize null containing-section JSON");
+            expect_contains(snap_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2253: deleted detail-footer object snap JSON should expose committed execution");
+            expect_contains(snap_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2253: deleted detail-footer object snap JSON should expose mutation state");
+            expect_contains(snap_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2253: deleted detail-footer object snap JSON should expose undo availability");
+            expect_contains(snap_footer_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2253: deleted detail-footer object snap JSON should expose snap undo labels");
             expect_contains_in_order(
                 snap_footer_process.stdout_text,
                 {
