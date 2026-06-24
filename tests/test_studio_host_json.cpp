@@ -179,6 +179,37 @@ void expect_fractional_geometry_preview_bounds(const std::string& text, const st
                     prefix + " should preserve deleted preview heights");
 }
 
+void expect_negative_dimension_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 0",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 300",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 0",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 300",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 0",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 700",
+                    prefix + " should preserve deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 50",
+                    prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 700",
+                    prefix + " should preserve deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 50",
+                    prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 0",
+                    prefix + " should preserve deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 0",
+                    prefix + " should preserve deleted preview heights");
+}
+
 void expect_zero_available_report_layout_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
@@ -19622,6 +19653,9 @@ void test_studio_host_json_clamps_negative_report_layout_dimensions(
                         "#1715: negative-dimension layouts should preserve deleted object counts");
         expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
                         "#1715: negative section heights should be clamped to zero in summaries");
+        expect_negative_dimension_preview_bounds(
+            summary_process.stdout_text,
+            "#2353: negative-dimension summary JSON");
 
         const auto live_process = run_process_capture(
             studio_host_path,
@@ -19630,6 +19664,9 @@ void test_studio_host_json_clamps_negative_report_layout_dimensions(
 
         expect(live_process.exit_code == 0,
                "#1715: negative-dimension live object selection should keep inspection non-failing");
+        expect_negative_dimension_preview_bounds(
+            live_process.stdout_text,
+            "#2353: selected negative-dimension live object JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -19652,6 +19689,9 @@ void test_studio_host_json_clamps_negative_report_layout_dimensions(
 
         expect(deleted_process.exit_code == 0,
                "#1715: negative-dimension deleted object selection should keep inspection non-failing");
+        expect_negative_dimension_preview_bounds(
+            deleted_process.stdout_text,
+            "#2353: selected negative-dimension deleted object JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
