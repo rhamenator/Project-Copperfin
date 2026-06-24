@@ -82377,6 +82377,10 @@ void test_studio_host_json_copies_deleted_report_visual_properties_by_stable_sel
                "#1869: deleted report/label stable visual-property copy missing selector should fail");
         expect_contains(missing_selector_process.stdout_text, "\"visualPropertyCopy\": null",
                         "#1869: failed deleted report/label stable visual-property copy JSON should not expose stale copy objects");
+        expect_not_contains(missing_selector_process.stdout_text, "\"dryRun\": false",
+                            "#2214: failed deleted report/label stable visual-property copy JSON should not expose stale committed state");
+        expect_not_contains(missing_selector_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2214: failed deleted report/label stable visual-property copy JSON should not expose stale mutation state");
         expect_not_contains(missing_selector_process.stdout_text, "\"undoAvailable\": true",
                             "#2188: failed deleted report/label stable visual-property copy JSON should not advertise undo availability");
         expect_not_contains(missing_selector_process.stdout_text, "\"undoLabel\":",
