@@ -17078,6 +17078,16 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                             "#1770: detail-header object expression update should preserve object selection kind");
             expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1770: detail-header object expression update should preserve containing-section availability");
+            expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2307: detail-header object expression update should preserve live preview availability");
+            expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2307: detail-header object expression update should preserve live preview top bounds");
+            expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2307: detail-header object expression update should preserve live preview bottom bounds");
+            expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2307: detail-header object expression update should preserve live preview heights");
+            expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2307: detail-header object expression update should not fabricate deleted preview bounds");
             expect_contains(update_process.stdout_text, "\"dryRun\": false",
                             "#2260: detail-header object expression update JSON should expose committed execution");
             expect_contains(update_process.stdout_text, "\"mutatesAsset\": true",
@@ -17149,6 +17159,16 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                             "#1770: detail-footer object expression clear should preserve object selection kind");
             expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1770: detail-footer object expression clear should preserve containing-section availability");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2307: detail-footer object expression clear should preserve live preview availability");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2307: detail-footer object expression clear should preserve live preview top bounds");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2307: detail-footer object expression clear should preserve live preview bottom bounds");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2307: detail-footer object expression clear should preserve live preview heights");
+            expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2307: detail-footer object expression clear should not fabricate deleted preview bounds");
             expect_contains(clear_process.stdout_text, "\"dryRun\": false",
                             "#2260: detail-footer object expression clear JSON should expose committed execution");
             expect_contains(clear_process.stdout_text, "\"mutatesAsset\": true",
