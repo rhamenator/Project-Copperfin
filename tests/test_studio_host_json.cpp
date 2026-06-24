@@ -19927,6 +19927,9 @@ void test_studio_host_json_defaults_oversized_report_layout_numerics(
                         "#1717: oversized layout numerics should preserve deleted object counts");
         expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
                         "#1717: oversized section heights should default to zero in summaries");
+        expect_zero_available_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2355: oversized numeric summary JSON");
 
         const auto live_process = run_process_capture(
             studio_host_path,
@@ -19935,6 +19938,9 @@ void test_studio_host_json_defaults_oversized_report_layout_numerics(
 
         expect(live_process.exit_code == 0,
                "#1717: oversized live object selection should keep inspection non-failing");
+        expect_zero_available_report_layout_preview_bounds(
+            live_process.stdout_text,
+            "#2355: selected oversized numeric live object JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -19957,6 +19963,9 @@ void test_studio_host_json_defaults_oversized_report_layout_numerics(
 
         expect(deleted_process.exit_code == 0,
                "#1717: oversized deleted object selection should keep inspection non-failing");
+        expect_zero_available_report_layout_preview_bounds(
+            deleted_process.stdout_text,
+            "#2355: selected oversized numeric deleted object JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
