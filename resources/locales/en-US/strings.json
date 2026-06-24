@@ -95,6 +95,7 @@
   "Studio.SelectionBuilderLaunch.Error.BuilderIdRequired": "A selection-context builder launch request requires a builder id.",
   "Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext": "The requested builder is not available for the selected Studio context.",
   "Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder": "A selection-context builder launch catalog request requires at least one builder.",
+  "Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired": "A designer invocation admission request requires at least one validated launch surface.",
   "Studio.EditorAction.EditDataEnvironment.Description": "Open data-environment bindings for forms, reports, and selected data-context entries.",
   "Studio.EditorAction.EditDataEnvironment.Label": "Data Environment",
   "Studio.EditorAction.EditMenuCommand.Description": "Open menu command, shortcut, and detail metadata for MNX/MNT menu items.",

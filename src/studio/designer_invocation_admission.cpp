@@ -1,8 +1,27 @@
 #include "copperfin/studio/designer_invocation_admission.h"
 
+#include "copperfin/localization/localization.h"
+
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
+
+namespace {
+
+const copperfin::localization::LocalizedCatalog& designer_invocation_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string designer_invocation_text(std::string_view key) {
+    return designer_invocation_catalog().translate(key);
+}
+
+}  // namespace
 
 StudioDesignerInvocationAdmissionResult plan_studio_designer_invocation_admission(
     const StudioDesignerInvocationAdmissionRequest& request) {
@@ -80,7 +99,7 @@ StudioDesignerInvocationAdmissionResult plan_studio_designer_invocation_admissio
     if (valid_surface_count == 0U) {
         return {
             .ok = false,
-            .error = "A designer invocation admission request requires at least one validated launch surface.",
+            .error = designer_invocation_text("Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired"),
             .plan = {}
         };
     }

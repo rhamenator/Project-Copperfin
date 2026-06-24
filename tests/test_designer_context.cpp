@@ -967,6 +967,10 @@ int main() {
                empty_invocation_admission.error ==
                    "A designer invocation admission request requires at least one validated launch surface.",
            "#1221: aggregate designer invocation admission should reject empty launch-surface plans");
+    expect(english_catalog.translate("Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired") ==
+               "A designer invocation admission request requires at least one validated launch surface." &&
+               pseudo_catalog.translate("Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired").starts_with("[!! "),
+           "#2370: designer invocation admission error prose should resolve through localizable catalog keys");
 
     const auto visual_dispatch = copperfin::studio::plan_studio_designer_dispatch({
         .invocation_admission_plan = visual_invocation_admission.plan
