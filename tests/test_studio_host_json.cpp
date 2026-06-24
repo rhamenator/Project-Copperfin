@@ -10513,6 +10513,14 @@ void test_studio_host_json_reorders_detail_header_footer_sections_by_stable_sele
                                 "#1815: " + operation_label + " should not fabricate object sections");
                 expect_contains(reorder_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
                                 "#1815: " + operation_label + " should not select settings");
+                expect_contains(reorder_process.stdout_text, "\"dryRun\": false",
+                                "#2246: " + operation_label + " JSON should expose committed state");
+                expect_contains(reorder_process.stdout_text, "\"mutatesAsset\": true",
+                                "#2246: " + operation_label + " JSON should expose mutation state");
+                expect_contains(reorder_process.stdout_text, "\"undoAvailable\": false",
+                                "#2246: " + operation_label + " JSON should expose undo availability");
+                expect_contains(reorder_process.stdout_text, "\"undoLabel\": \"\"",
+                                "#2246: " + operation_label + " JSON should expose empty undo labels");
                 expect_contains_in_order(
                     reorder_process.stdout_text,
                     {
