@@ -25701,6 +25701,7 @@ int main(int argc, char** argv) {
         }
 
         select_open_request_visual_object();
+        asset_mutation_performed = true;
     }
 
     if (parse_result.request.resize_object) {

@@ -13692,6 +13692,14 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                             "#1789: detail-header object align should preserve object selection kind");
             expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1789: detail-header object align should preserve containing-section availability");
+            expect_contains(align_header_process.stdout_text, "\"dryRun\": false",
+                            "#2248: detail-header object align JSON should expose committed state");
+            expect_contains(align_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2248: detail-header object align JSON should expose mutation state");
+            expect_contains(align_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2248: detail-header object align JSON should expose undo availability");
+            expect_contains(align_header_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                            "#2248: detail-header object align JSON should expose horizontal-position undo labels");
             expect_contains_in_order(
                 align_header_process.stdout_text,
                 {
@@ -13765,6 +13773,14 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                             "#1789: detail-footer object align should preserve object selection kind");
             expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1789: detail-footer object align should preserve containing-section availability");
+            expect_contains(align_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2248: detail-footer object align JSON should expose committed state");
+            expect_contains(align_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2248: detail-footer object align JSON should expose mutation state");
+            expect_contains(align_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2248: detail-footer object align JSON should expose undo availability");
+            expect_contains(align_footer_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                            "#2248: detail-footer object align JSON should expose horizontal-position undo labels");
             expect_contains_in_order(
                 align_footer_process.stdout_text,
                 {
