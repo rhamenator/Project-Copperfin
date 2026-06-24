@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/designer_context.h"
 #include "copperfin/studio/designer_dispatch.h"
 #include "copperfin/studio/designer_invocation_admission.h"
@@ -451,6 +452,23 @@ int main() {
                std::string(data_builder_plan.plan.builder.id) == "data-environment-builder" &&
                data_builder_plan.plan.context == copperfin::studio::StudioBuilderContext::data_environment,
            "#1205: data-environment selection contexts should plan data-environment builders");
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    expect(english_catalog.translate("Studio.SelectionBuilderLaunch.Error.BuilderIdRequired") ==
+               "A selection-context builder launch request requires a builder id." &&
+               english_catalog.translate("Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder") ==
+                   "A selection-context builder launch catalog request requires at least one builder." &&
+               english_catalog.translate("Studio.SelectionBuilderInvocationAdmission.Error.CatalogRequiresBuilder") ==
+                   "A selection-context builder invocation admission catalog request requires at least one builder." &&
+               english_catalog.translate("Studio.SelectionBuilderDispatch.Error.DispatchCatalogRequiresBuilder") ==
+                   "A selection-context builder dispatch catalog request requires at least one builder." &&
+               english_catalog.translate("Studio.SelectionBuilderDispatch.Error.ExecutionCatalogRequiresBuilder") ==
+                   "A selection-context builder dispatch execution catalog request requires at least one builder." &&
+               pseudo_catalog.translate("Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext").starts_with("[!! ") &&
+               pseudo_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired").starts_with("[!! "),
+           "#2369: selection-context builder error prose should resolve through localizable catalog keys");
 
     const auto missing_builder_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
         .selection_context = StudioEditorSelectionContext::visual_object,

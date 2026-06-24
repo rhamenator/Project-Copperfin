@@ -1,7 +1,10 @@
 #include "copperfin/studio/designer_context.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
@@ -57,6 +60,18 @@ std::vector<StudioToolboxItemDescriptor> toolbox_items_for_selection_context(Stu
     return {};
 }
 
+const copperfin::localization::LocalizedCatalog& designer_context_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string designer_context_text(std::string_view key) {
+    return designer_context_catalog().translate(key);
+}
+
 std::string builder_dispatch_execution_readiness_error(
     const StudioBuilderDispatchResult& dispatch,
     bool admit_execution) {
@@ -64,26 +79,26 @@ std::string builder_dispatch_execution_readiness_error(
         return dispatch.error;
     }
     if (!admit_execution) {
-        return "A builder dispatch execution catalog entry requires explicit execution admission.";
+        return designer_context_text("Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired");
     }
     const auto& dispatch_plan = dispatch.plan;
     if (dispatch_plan.builder.id.empty()) {
-        return "A builder dispatch execution catalog entry requires a validated builder id.";
+        return designer_context_text("Studio.BuilderDispatch.CatalogEntry.Error.ValidatedBuilderIdRequired");
     }
     if (dispatch_plan.command_token.empty()) {
-        return "A builder dispatch execution catalog entry requires a command token.";
+        return designer_context_text("Studio.BuilderDispatch.CatalogEntry.Error.CommandTokenRequired");
     }
     if (dispatch_plan.entry_point.empty()) {
-        return "A builder dispatch execution catalog entry requires a launch entry point.";
+        return designer_context_text("Studio.BuilderDispatch.CatalogEntry.Error.EntryPointRequired");
     }
     if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
-        return "A builder dispatch execution catalog entry requires an admitted non-dry-run dispatch.";
+        return designer_context_text("Studio.BuilderDispatch.CatalogEntry.Error.AdmittedDispatchRequired");
     }
     if (dispatch_plan.executed) {
-        return "A builder dispatch execution catalog entry requires a non-executed dispatch.";
+        return designer_context_text("Studio.BuilderDispatch.CatalogEntry.Error.NonExecutedDispatchRequired");
     }
     if (dispatch_plan.dispatch_arguments.empty()) {
-        return "A builder dispatch execution catalog entry requires dispatch arguments.";
+        return designer_context_text("Studio.BuilderDispatch.CatalogEntry.Error.DispatchArgumentsRequired");
     }
 
     return {};
@@ -112,7 +127,7 @@ StudioSelectionBuilderLaunchPlanResult plan_studio_builder_launch_for_selection(
     if (request.builder_id.empty()) {
         return {
             .ok = false,
-            .error = "A selection-context builder launch request requires a builder id.",
+            .error = designer_context_text("Studio.SelectionBuilderLaunch.Error.BuilderIdRequired"),
             .selection_context = request.selection_context,
             .plan = {}
         };
@@ -131,7 +146,7 @@ StudioSelectionBuilderLaunchPlanResult plan_studio_builder_launch_for_selection(
     if (builder == designer_context.builders.end()) {
         return {
             .ok = false,
-            .error = "The requested builder is not available for the selected Studio context.",
+            .error = designer_context_text("Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext"),
             .selection_context = request.selection_context,
             .plan = {}
         };
@@ -162,7 +177,7 @@ plan_studio_builder_launch_catalog_for_selection(
     if (designer_context.builders.empty()) {
         return {
             .ok = false,
-            .error = "A selection-context builder launch catalog request requires at least one builder.",
+            .error = designer_context_text("Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder"),
             .selection_context = request.selection_context,
             .builder_count = 0U,
             .launch_plan_count = 0U,
@@ -223,7 +238,7 @@ plan_studio_builder_invocation_admission_catalog_for_selection(
     if (designer_context.builders.empty()) {
         return {
             .ok = false,
-            .error = "A selection-context builder invocation admission catalog request requires at least one builder.",
+            .error = designer_context_text("Studio.SelectionBuilderInvocationAdmission.Error.CatalogRequiresBuilder"),
             .selection_context = request.selection_context,
             .builder_count = 0U,
             .admission_count = 0U,
@@ -308,7 +323,7 @@ plan_studio_builder_dispatch_catalog_for_selection(
     if (!admission_catalog.ok) {
         return {
             .ok = false,
-            .error = "A selection-context builder dispatch catalog request requires at least one builder.",
+            .error = designer_context_text("Studio.SelectionBuilderDispatch.Error.DispatchCatalogRequiresBuilder"),
             .selection_context = request.selection_context,
             .builder_count = 0U,
             .dispatch_count = 0U,
@@ -385,7 +400,7 @@ plan_studio_builder_dispatch_execution_catalog_for_selection(
     if (!dispatch_catalog.ok) {
         return {
             .ok = false,
-            .error = "A selection-context builder dispatch execution catalog request requires at least one builder.",
+            .error = designer_context_text("Studio.SelectionBuilderDispatch.Error.ExecutionCatalogRequiresBuilder"),
             .selection_context = request.selection_context,
             .builder_count = 0U,
             .execution_ready_count = 0U,
