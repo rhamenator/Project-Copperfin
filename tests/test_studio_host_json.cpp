@@ -241,6 +241,39 @@ void expect_unresolved_section_memo_preview_bounds(const std::string& text, cons
                     prefix + " should preserve deleted preview heights");
 }
 
+void expect_unresolved_deleted_object_memo_preview_bounds(
+    const std::string& text,
+    const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 2000",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 0",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 7000",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 0",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 5000",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 1200",
+                    prefix + " should preserve deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 2600",
+                    prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 5200",
+                    prefix + " should preserve deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 3050",
+                    prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 4000",
+                    prefix + " should preserve deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 450",
+                    prefix + " should preserve deleted preview heights");
+}
+
 void expect_missing_section_objcode_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
@@ -25058,6 +25091,9 @@ void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_plac
                 "\"highlightCount\": 0"
             },
             "#1738: unresolved deleted object memo summary should suppress expression/highlight text while preserving object metadata");
+        expect_unresolved_deleted_object_memo_preview_bounds(
+            summary_process.stdout_text,
+            "#2334: unresolved deleted object memo summary JSON");
         expect_not_contains(summary_process.stdout_text, "<memo block",
                             "#1738: unresolved deleted object memo placeholders should not leak into summary JSON");
 
@@ -25095,6 +25131,9 @@ void test_studio_host_json_suppresses_unresolved_deleted_report_object_memo_plac
                 "\"highlightCount\": 0"
             },
             "#1738: unresolved deleted object memo selection should suppress expression/highlight text while preserving object metadata");
+        expect_unresolved_deleted_object_memo_preview_bounds(
+            deleted_process.stdout_text,
+            "#2334: selected unresolved deleted object memo JSON");
         expect_not_contains(deleted_process.stdout_text, "<memo block",
                             "#1738: unresolved deleted object memo placeholders should not leak into selection JSON");
     };
