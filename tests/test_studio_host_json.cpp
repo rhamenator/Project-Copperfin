@@ -82672,6 +82672,8 @@ void test_studio_host_json_copies_deleted_report_visual_property_batches_by_stab
                         "#1868: failed deleted report/label stable visual-property copy-batch JSON should not expose stale batch objects");
         expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
                             "#2189: failed deleted report/label stable visual-property copy-batch JSON should not advertise undo availability");
+        expect_not_contains(rollback_process.stdout_text, "\"undoLabel\":",
+                            "#2205: failed deleted report/label stable visual-property copy-batch JSON should not expose stale undo labels");
         expect_contains(rollback_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1868: failed deleted report/label stable visual-property copy-batch JSON should report missing selector errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
@@ -82708,6 +82710,8 @@ void test_studio_host_json_copies_deleted_report_visual_property_batches_by_stab
                         "#2197: failed deleted report/label stable visual-property geometry copy-batch JSON should not expose stale batch objects");
         expect_not_contains(geometry_rollback_process.stdout_text, "\"undoAvailable\": true",
                             "#2197: failed deleted report/label stable visual-property geometry copy-batch JSON should not advertise undo availability");
+        expect_not_contains(geometry_rollback_process.stdout_text, "\"undoLabel\":",
+                            "#2205: failed deleted report/label stable visual-property geometry copy-batch JSON should not expose stale undo labels");
         expect_contains(geometry_rollback_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#2197: failed deleted report/label stable visual-property geometry copy-batch JSON should report missing selector errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "HPOS") == "175" &&
