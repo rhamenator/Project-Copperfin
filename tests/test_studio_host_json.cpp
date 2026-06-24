@@ -310,18 +310,30 @@ void expect_unresolved_unplaced_object_memo_preview_bounds(
 void expect_missing_section_objcode_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
     expect_contains(text, "\"previewBoundsTop\": 150",
                     prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 0",
+                    prefix + " should preserve live preview right bounds");
     expect_contains(text, "\"previewBoundsBottom\": 600",
                     prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 0",
+                    prefix + " should preserve live preview widths");
     expect_contains(text, "\"previewBoundsHeight\": 450",
                     prefix + " should preserve live preview heights");
     expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
                     prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 0",
+                    prefix + " should preserve deleted preview left bounds");
     expect_contains(text, "\"deletedPreviewBoundsTop\": 900",
                     prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 0",
+                    prefix + " should preserve deleted preview right bounds");
     expect_contains(text, "\"deletedPreviewBoundsBottom\": 1150",
                     prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 0",
+                    prefix + " should preserve deleted preview widths");
     expect_contains(text, "\"deletedPreviewBoundsHeight\": 250",
                     prefix + " should preserve deleted preview heights");
 }
@@ -21325,6 +21337,9 @@ void test_studio_host_json_defaults_missing_report_section_objcode_schema(
                         "#1728: missing live section OBJCODE should preserve live section heights");
         expect_contains(summary_process.stdout_text, "\"deletedSectionHeightTotal\": 250",
                         "#1728: missing deleted section OBJCODE should preserve deleted section heights");
+        expect_missing_section_objcode_preview_bounds(
+            summary_process.stdout_text,
+            "#2342: missing section OBJCODE summary JSON");
         expect_contains_in_order(
             summary_process.stdout_text,
             {
