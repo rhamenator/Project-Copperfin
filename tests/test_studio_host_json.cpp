@@ -148,6 +148,37 @@ void expect_normalized_classification_preview_bounds(const std::string& text, co
                     prefix + " should preserve deleted preview heights");
 }
 
+void expect_zero_available_report_layout_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve zero live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 0",
+                    prefix + " should preserve zero live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 0",
+                    prefix + " should preserve zero live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 0",
+                    prefix + " should preserve zero live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 0",
+                    prefix + " should preserve zero live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 0",
+                    prefix + " should preserve zero live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 0",
+                    prefix + " should preserve zero deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 0",
+                    prefix + " should preserve zero deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 0",
+                    prefix + " should preserve zero deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 0",
+                    prefix + " should preserve zero deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 0",
+                    prefix + " should preserve zero deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 0",
+                    prefix + " should preserve zero deleted preview heights");
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -20593,6 +20624,9 @@ void test_studio_host_json_defaults_missing_report_layout_geometry_fields(
 
         expect(live_process.exit_code == 0,
                "#1720: missing geometry live object selection should keep inspection non-failing");
+        expect_zero_available_report_layout_preview_bounds(
+            live_process.stdout_text,
+            "#2313: selected missing-geometry live object JSON");
         expect_contains(live_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                         "#1720: missing geometry live object should still resolve the zero-height section");
         expect_contains_in_order(
@@ -20621,6 +20655,9 @@ void test_studio_host_json_defaults_missing_report_layout_geometry_fields(
 
         expect(deleted_process.exit_code == 0,
                "#1720: missing geometry deleted object selection should keep inspection non-failing");
+        expect_zero_available_report_layout_preview_bounds(
+            deleted_process.stdout_text,
+            "#2313: selected missing-geometry deleted object JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
