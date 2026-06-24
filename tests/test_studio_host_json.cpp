@@ -21027,6 +21027,9 @@ void test_studio_host_json_defaults_missing_report_layout_geometry_fields(
                         "#1720: missing geometry layouts should preserve section rows");
         expect_contains(summary_process.stdout_text, "\"sectionHeightTotal\": 0",
                         "#1720: missing section geometry should default to zero in summaries");
+        expect_zero_available_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2360: missing-geometry summary JSON");
 
         const auto live_process = run_process_capture(
             studio_host_path,
