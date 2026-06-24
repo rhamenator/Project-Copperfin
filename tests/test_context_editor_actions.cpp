@@ -200,6 +200,12 @@ int main() {
                pseudo_catalog.translate("Studio.EditorActionDispatch.Error.AdmittedInvocationRequired").starts_with("[!! ") &&
                pseudo_catalog.translate("Studio.EditorActionDispatch.Execution.Error.ExecutorDidNotLaunch").starts_with("[!! "),
            "#2362: editor action dispatch error prose should resolve through localizable catalog keys");
+    expect(english_catalog.translate("Studio.EditorActionInvocationAdmission.Error.CommandTokenRequired") ==
+               "An editor action invocation admission request requires a command token." &&
+               english_catalog.translate("Studio.EditorActionInvocationAdmission.Error.CatalogRequiresAction") ==
+                   "An editor action invocation admission catalog request requires at least one context action." &&
+               pseudo_catalog.translate("Studio.EditorActionInvocationAdmission.Error.ValidatedActionIdRequired").starts_with("[!! "),
+           "#2363: editor action invocation admission error prose should resolve through localizable catalog keys");
 
     const auto visual_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::visual_object);
@@ -860,7 +866,9 @@ int main() {
         .launch_plan = missing_command_plan,
         .admit_editor_invocation = true
     });
-    expect(!missing_command_invocation.ok,
+    expect(!missing_command_invocation.ok &&
+               missing_command_invocation.error ==
+                   "An editor action invocation admission request requires a command token.",
            "#1217: editor action invocation admission should reject launch plans without command tokens");
 
     auto missing_action_plan_for_invocation = method_plan.plan;
@@ -869,7 +877,9 @@ int main() {
         .launch_plan = missing_action_plan_for_invocation,
         .admit_editor_invocation = true
     });
-    expect(!missing_action_invocation.ok,
+    expect(!missing_action_invocation.ok &&
+               missing_action_invocation.error ==
+                   "An editor action invocation admission request requires a validated action id.",
            "#1217: editor action invocation admission should reject launch plans without action ids");
 
     const auto expression_plan = copperfin::studio::plan_studio_editor_action_launch({

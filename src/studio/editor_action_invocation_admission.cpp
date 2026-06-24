@@ -1,23 +1,44 @@
 #include "copperfin/studio/editor_action_invocation_admission.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
+
+namespace {
+
+const copperfin::localization::LocalizedCatalog& editor_action_invocation_admission_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string editor_action_invocation_admission_text(std::string_view key) {
+    return editor_action_invocation_admission_catalog().translate(key);
+}
+
+}  // namespace
 
 StudioEditorActionInvocationAdmissionResult plan_studio_editor_action_invocation_admission(
     const StudioEditorActionInvocationAdmissionRequest& request) {
     if (request.launch_plan.action.id.empty()) {
         return {
             .ok = false,
-            .error = "An editor action invocation admission request requires a validated action id.",
+            .error = editor_action_invocation_admission_text(
+                "Studio.EditorActionInvocationAdmission.Error.ValidatedActionIdRequired"),
             .plan = {}
         };
     }
     if (request.launch_plan.command_token.empty()) {
         return {
             .ok = false,
-            .error = "An editor action invocation admission request requires a command token.",
+            .error = editor_action_invocation_admission_text(
+                "Studio.EditorActionInvocationAdmission.Error.CommandTokenRequired"),
             .plan = {}
         };
     }
@@ -51,7 +72,8 @@ plan_studio_editor_action_invocation_admission_catalog(
     if (actions.empty()) {
         return {
             .ok = false,
-            .error = "An editor action invocation admission catalog request requires at least one context action.",
+            .error = editor_action_invocation_admission_text(
+                "Studio.EditorActionInvocationAdmission.Error.CatalogRequiresAction"),
             .selection_context = request.selection_context,
             .action_count = 0U,
             .admission_count = 0U,
