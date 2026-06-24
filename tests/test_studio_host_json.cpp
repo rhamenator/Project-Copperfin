@@ -25353,6 +25353,9 @@ void test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders
                         "#1740: unresolved geometry memo deleted preview width should stay non-inverted");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 0",
                         "#1740: unresolved geometry memo deleted preview height should stay non-inverted");
+        expect_zero_available_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2336: unresolved geometry memo summary JSON");
         expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
                         "#1740: unresolved geometry memo layouts should preserve section rows");
         expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
@@ -25417,6 +25420,9 @@ void test_studio_host_json_defaults_unresolved_report_geometry_memo_placeholders
                "#1740: unresolved live object geometry memo selection should keep inspection non-failing");
         expect_contains(live_process.stdout_text, "\"selectedReportObjectAvailable\": true",
                         "#1740: unresolved live object geometry memo selection should advertise selected objects");
+        expect_zero_available_report_layout_preview_bounds(
+            live_process.stdout_text,
+            "#2336: selected unresolved live geometry memo JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
