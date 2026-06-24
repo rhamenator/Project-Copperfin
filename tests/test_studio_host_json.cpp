@@ -23199,6 +23199,9 @@ void test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(
                         "#1748: dot-leading column width should not advertise availability");
         expect_contains(summary_process.stdout_text, "\"columnSpacingAvailable\": false",
                         "#1748: dot-leading column spacing should not advertise availability");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2323: dot-leading direct settings summary JSON");
 
         const auto live_settings_process = run_process_capture(
             studio_host_path,
@@ -23209,6 +23212,11 @@ void test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(
                "#1748: dot-leading live direct-setting selection should keep inspection non-failing");
         expect_contains(live_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
                         "#1748: dot-leading live direct-setting selection should expose raw settings");
+        expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1748: dot-leading live direct-setting selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            live_settings_process.stdout_text,
+            "#2323: selected dot-leading live direct settings JSON");
         expect_contains_in_order(
             live_settings_process.stdout_text,
             {
@@ -23243,6 +23251,11 @@ void test_studio_host_json_ignores_dot_leading_report_direct_setting_fields(
                "#1748: dot-leading deleted direct-setting selection should keep inspection non-failing");
         expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettingsAvailable\": true",
                         "#1748: dot-leading deleted direct-setting selection should expose raw settings");
+        expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
+                        "#1748: dot-leading deleted direct-setting selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            deleted_settings_process.stdout_text,
+            "#2323: selected dot-leading deleted direct settings JSON");
         expect_contains_in_order(
             deleted_settings_process.stdout_text,
             {
