@@ -183,6 +183,31 @@ void test_machine_contract_fields_remain_invariant() {
         "#1779: only diagnostic prose should be localized");
 }
 
+void test_catalog_root_resolution_searches_parent_directories() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_parent_catalog_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root / "resources" / "locales");
+    seed_test_catalogs(temp_root / "resources" / "locales");
+
+    const fs::path nested_working_directory = temp_root / ".tmp" / "fixture";
+    fs::create_directories(nested_working_directory);
+
+    const fs::path previous_working_directory = fs::current_path();
+    fs::current_path(nested_working_directory);
+    const fs::path resolved_root = copperfin::localization::resolve_catalog_root();
+    const auto catalog = copperfin::localization::load_catalogs(resolved_root, "en-US");
+    fs::current_path(previous_working_directory);
+
+    expect(
+        fs::equivalent(resolved_root, temp_root / "resources" / "locales") &&
+            catalog.translate("Command.Inspect") == "Inspect",
+        "#2361: catalog root resolution should find repo-local resources from nested temp directories");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_parser_behavior_remains_locale_invariant() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_parser_invariant_tests";
@@ -242,6 +267,7 @@ int main(int argc, char** argv) {
     test_catalog_loading_and_fallback();
     test_placeholders_pseudo_locale_and_unicode();
     test_machine_contract_fields_remain_invariant();
+    test_catalog_root_resolution_searches_parent_directories();
     test_parser_behavior_remains_locale_invariant();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);

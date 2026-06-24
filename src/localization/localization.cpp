@@ -413,6 +413,20 @@ std::filesystem::path resolve_catalog_root(const std::filesystem::path& executab
     if (std::filesystem::exists(developer_tree)) {
         return developer_tree;
     }
+
+    std::filesystem::path ancestor = std::filesystem::absolute(std::filesystem::current_path());
+    while (!ancestor.empty()) {
+        const std::filesystem::path ancestor_developer_tree = ancestor / "resources" / "locales";
+        if (std::filesystem::exists(ancestor_developer_tree)) {
+            return ancestor_developer_tree;
+        }
+        const std::filesystem::path parent = ancestor.parent_path();
+        if (parent == ancestor) {
+            break;
+        }
+        ancestor = parent;
+    }
+
     return "resources/locales";
 }
 

@@ -203,7 +203,7 @@ target_include_directories(cf_design_model
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-target_link_libraries(cf_design_model PUBLIC cf_vfp_assets cf_prg_analysis)
+target_link_libraries(cf_design_model PUBLIC cf_vfp_assets cf_prg_analysis cf_localization)
 
 if(MSVC)
     target_compile_options(cf_design_model PRIVATE /W4 /permissive-)

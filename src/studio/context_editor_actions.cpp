@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <iterator>
 #include <string>
+#include <string_view>
 
 namespace copperfin::studio {
 
@@ -10,6 +11,18 @@ namespace {
 
 bool supports_context(const StudioEditorActionDescriptor& action, StudioEditorSelectionContext context) {
     return std::find(action.contexts.begin(), action.contexts.end(), context) != action.contexts.end();
+}
+
+const copperfin::localization::LocalizedCatalog& editor_action_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string editor_action_text(std::string_view key) {
+    return editor_action_catalog().translate(key);
 }
 
 }  // namespace
@@ -56,14 +69,15 @@ const char* studio_editor_action_kind_name(StudioEditorActionKind kind) {
     return "property_grid";
 }
 
-const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry() {
+std::vector<StudioEditorActionDescriptor> studio_editor_action_registry_for_catalog(
+    const copperfin::localization::LocalizedCatalog& catalog) {
     using Context = StudioEditorSelectionContext;
     using Kind = StudioEditorActionKind;
 
-    static const std::vector<StudioEditorActionDescriptor> actions = {
+    return {
         {
             .id = "show-property-grid",
-            .label = "Properties",
+            .label = catalog.translate("Studio.EditorAction.ShowPropertyGrid.Label"),
             .kind = Kind::property_grid,
             .contexts = {
                 Context::visual_object,
@@ -77,11 +91,11 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             },
             .command_token = "studio.property_grid.show",
             .target_surface = "property-grid",
-            .description = "Show the selected object's direct and memo-backed VFP properties."
+            .description = catalog.translate("Studio.EditorAction.ShowPropertyGrid.Description")
         },
         {
             .id = "edit-visual-method",
-            .label = "Edit Method",
+            .label = catalog.translate("Studio.EditorAction.EditVisualMethod.Label"),
             .kind = Kind::source_editor,
             .contexts = {
                 Context::visual_object,
@@ -91,29 +105,29 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             },
             .command_token = "studio.method_editor.open",
             .target_surface = "method-editor",
-            .description = "Open the selected visual object's PROCEDURE/FUNCTION source in a method editor."
+            .description = catalog.translate("Studio.EditorAction.EditVisualMethod.Description")
         },
         {
             .id = "edit-report-expression",
-            .label = "Edit Expression",
+            .label = catalog.translate("Studio.EditorAction.EditReportExpression.Label"),
             .kind = Kind::expression_editor,
             .contexts = {Context::report_expression, Context::label_expression},
             .command_token = "studio.expression_editor.open",
             .target_surface = "expression-editor",
-            .description = "Open FRX/LBX expression text with report/label source provenance."
+            .description = catalog.translate("Studio.EditorAction.EditReportExpression.Description")
         },
         {
             .id = "edit-menu-command",
-            .label = "Edit Menu Command",
+            .label = catalog.translate("Studio.EditorAction.EditMenuCommand.Label"),
             .kind = Kind::source_editor,
             .contexts = {Context::menu_item},
             .command_token = "studio.menu_command_editor.open",
             .target_surface = "menu-command-editor",
-            .description = "Open menu command, shortcut, and detail metadata for MNX/MNT menu items."
+            .description = catalog.translate("Studio.EditorAction.EditMenuCommand.Description")
         },
         {
             .id = "open-builder",
-            .label = "Builder",
+            .label = catalog.translate("Studio.EditorAction.OpenBuilder.Label"),
             .kind = Kind::builder,
             .contexts = {
                 Context::visual_object,
@@ -127,11 +141,11 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             },
             .command_token = "studio.builder.open_for_context",
             .target_surface = "builder-registry",
-            .description = "Open the context-filtered VFP-compatible builder or wizard list."
+            .description = catalog.translate("Studio.EditorAction.OpenBuilder.Description")
         },
         {
             .id = "show-toolbox",
-            .label = "Toolbox",
+            .label = catalog.translate("Studio.EditorAction.ShowToolbox.Label"),
             .kind = Kind::toolbox,
             .contexts = {
                 Context::visual_object,
@@ -142,28 +156,32 @@ const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry()
             },
             .command_token = "studio.toolbox.show_for_context",
             .target_surface = "toolbox-palette",
-            .description = "Show toolbox items relevant to the active visual designer context."
+            .description = catalog.translate("Studio.EditorAction.ShowToolbox.Description")
         },
         {
             .id = "edit-data-environment",
-            .label = "Data Environment",
+            .label = catalog.translate("Studio.EditorAction.EditDataEnvironment.Label"),
             .kind = Kind::builder,
             .contexts = {Context::visual_object, Context::report_expression, Context::label_expression, Context::data_environment},
             .command_token = "studio.data_environment.open",
             .target_surface = "data-environment",
-            .description = "Open data-environment bindings for forms, reports, and selected data-context entries."
+            .description = catalog.translate("Studio.EditorAction.EditDataEnvironment.Description")
         },
         {
             .id = "navigate-project-item",
-            .label = "Go To Project Item",
+            .label = catalog.translate("Studio.EditorAction.NavigateProjectItem.Label"),
             .kind = Kind::navigator,
             .contexts = {Context::project_item},
             .command_token = "studio.project_item.navigate",
             .target_surface = "project-explorer",
-            .description = "Navigate from the active designer/editor selection back to the owning PJX/PJT item."
+            .description = catalog.translate("Studio.EditorAction.NavigateProjectItem.Description")
         }
     };
+}
 
+const std::vector<StudioEditorActionDescriptor>& studio_editor_action_registry() {
+    static const std::vector<StudioEditorActionDescriptor> actions =
+        studio_editor_action_registry_for_catalog(editor_action_catalog());
     return actions;
 }
 
@@ -181,7 +199,7 @@ StudioEditorActionLaunchPlanResult plan_studio_editor_action_launch(
     if (request.action_id.empty()) {
         return {
             .ok = false,
-            .error = "An editor action launch request requires an action id.",
+            .error = editor_action_text("Studio.EditorAction.Error.ActionIdRequired"),
             .plan = {}
         };
     }
@@ -197,7 +215,7 @@ StudioEditorActionLaunchPlanResult plan_studio_editor_action_launch(
     if (action == actions.end()) {
         return {
             .ok = false,
-            .error = "The requested editor action is not available for the selected Studio context.",
+            .error = editor_action_text("Studio.EditorAction.Error.ActionUnavailableForContext"),
             .plan = {}
         };
     }
@@ -227,7 +245,7 @@ StudioEditorActionLaunchCatalogResult plan_studio_editor_action_launch_catalog(
     if (actions.empty()) {
         return {
             .ok = false,
-            .error = "An editor action launch catalog request requires at least one action.",
+            .error = editor_action_text("Studio.EditorAction.Error.LaunchCatalogRequiresAction"),
             .selection_context = request.selection_context,
             .action_count = 0U,
             .launch_plan_count = 0U,

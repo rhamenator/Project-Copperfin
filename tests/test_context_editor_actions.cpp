@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/context_editor_actions.h"
 #include "copperfin/studio/editor_action_dispatch.h"
 #include "copperfin/studio/editor_action_invocation_admission.h"
@@ -26,6 +27,17 @@ bool has_action(
         }
     }
     return false;
+}
+
+const copperfin::studio::StudioEditorActionDescriptor* find_action(
+    const std::vector<copperfin::studio::StudioEditorActionDescriptor>& actions,
+    std::string_view id) {
+    for (const auto& action : actions) {
+        if (action.id == id) {
+            return &action;
+        }
+    }
+    return nullptr;
 }
 
 bool has_argument_pair(const std::vector<std::string>& arguments, const std::string& key, const std::string& value) {
@@ -150,6 +162,35 @@ int main() {
     expect(has_action(actions, "edit-report-expression"), "#958: registry should include expression editor action");
     expect(has_action(actions, "open-builder"), "#958: registry should include builder action");
     expect(has_action(actions, "show-toolbox"), "#958: registry should include toolbox action");
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto english_actions = copperfin::studio::studio_editor_action_registry_for_catalog(english_catalog);
+    const auto* english_report_expression = find_action(english_actions, "edit-report-expression");
+    expect(english_report_expression != nullptr &&
+               english_report_expression->label == "Edit Expression" &&
+               english_report_expression->description ==
+                   "Open FRX/LBX expression text with report/label source provenance." &&
+               english_report_expression->command_token == "studio.expression_editor.open" &&
+               english_report_expression->target_surface == "expression-editor",
+           "#2361: en-US editor action catalog should preserve report/label expression action text and invariant tokens");
+
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto pseudo_actions = copperfin::studio::studio_editor_action_registry_for_catalog(pseudo_catalog);
+    const auto* pseudo_report_expression = find_action(pseudo_actions, "edit-report-expression");
+    const auto* pseudo_toolbox = find_action(pseudo_actions, "show-toolbox");
+    expect(pseudo_report_expression != nullptr &&
+               pseudo_report_expression->label.starts_with("[!! ") &&
+               pseudo_report_expression->description.starts_with("[!! ") &&
+               pseudo_report_expression->id == "edit-report-expression" &&
+               pseudo_report_expression->command_token == "studio.expression_editor.open" &&
+               pseudo_report_expression->target_surface == "expression-editor",
+           "#2361: pseudo-localized editor actions should decorate report/label prose while preserving invariant action tokens");
+    expect(pseudo_toolbox != nullptr &&
+               pseudo_toolbox->label.starts_with("[!! ") &&
+               pseudo_toolbox->id == "show-toolbox" &&
+               pseudo_toolbox->command_token == "studio.toolbox.show_for_context",
+           "#2361: pseudo-localized editor actions should decorate toolbox labels without changing command tokens");
 
     const auto visual_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::visual_object);
