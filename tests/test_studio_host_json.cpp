@@ -16860,6 +16860,22 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                             "#1800: deleted detail-header object vertical distribution should not fabricate containing sections");
             expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1800: deleted detail-header object vertical distribution should serialize null containing-section JSON");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2306: deleted detail-header object vertical distribution should preserve live preview availability");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2306: deleted detail-header object vertical distribution should preserve live preview top bounds");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2306: deleted detail-header object vertical distribution should preserve live preview bottom bounds");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2306: deleted detail-header object vertical distribution should preserve live preview heights");
+            expect_contains(distribute_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2306: deleted detail-header object vertical distribution should expose deleted preview availability");
+            expect_contains(distribute_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 40",
+                            "#2306: deleted detail-header object vertical distribution should preserve deleted preview top bounds");
+            expect_contains(distribute_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 490",
+                            "#2306: deleted detail-header object vertical distribution should preserve deleted preview bottom bounds");
+            expect_contains(distribute_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 450",
+                            "#2306: deleted detail-header object vertical distribution should preserve deleted preview heights");
             expect_contains(distribute_header_process.stdout_text, "\"dryRun\": false",
                             "#2259: deleted detail-header object vertical distribution JSON should expose committed execution");
             expect_contains(distribute_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -16943,6 +16959,22 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                             "#1800: deleted detail-footer object vertical distribution should not fabricate containing sections");
             expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1800: deleted detail-footer object vertical distribution should serialize null containing-section JSON");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2306: deleted detail-footer object vertical distribution should preserve live preview availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2306: deleted detail-footer object vertical distribution should preserve live preview top bounds");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2306: deleted detail-footer object vertical distribution should preserve live preview bottom bounds");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2306: deleted detail-footer object vertical distribution should preserve live preview heights");
+            expect_contains(distribute_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2306: deleted detail-footer object vertical distribution should expose deleted preview availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 40",
+                            "#2306: deleted detail-footer object vertical distribution should preserve deleted preview top bounds");
+            expect_contains(distribute_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 490",
+                            "#2306: deleted detail-footer object vertical distribution should preserve deleted preview bottom bounds");
+            expect_contains(distribute_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 450",
+                            "#2306: deleted detail-footer object vertical distribution should preserve deleted preview heights");
             expect_contains(distribute_footer_process.stdout_text, "\"dryRun\": false",
                             "#2259: deleted detail-footer object vertical distribution JSON should expose committed execution");
             expect_contains(distribute_footer_process.stdout_text, "\"mutatesAsset\": true",
