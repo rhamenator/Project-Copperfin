@@ -7693,10 +7693,32 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_heights_
                             "#1804: deleted detail-header section height update should preserve live section heights");
             expect_contains(update_header_process.stdout_text, "\"deletedSectionHeightTotal\": 610",
                             "#1804: deleted detail-header section height update should refresh deleted section heights");
+            expect_contains(update_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2236: deleted detail-header section height update should preserve live preview availability");
+            expect_contains(update_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2236: deleted detail-header section height update should preserve live preview top bounds");
+            expect_contains(update_header_process.stdout_text, "\"previewBoundsBottom\": 500",
+                            "#2236: deleted detail-header section height update should preserve live preview bottom bounds");
+            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2236: deleted detail-header section height update should preserve deleted preview availability");
+            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
+                            "#2236: deleted detail-header section height update should preserve deleted preview top bounds");
+            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1050",
+                            "#2236: deleted detail-header section height update should preserve deleted preview bottom bounds");
+            expect_contains(update_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 550",
+                            "#2236: deleted detail-header section height update should preserve deleted preview heights");
             expect_contains(update_header_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1804: deleted detail-header section height update should preserve selected section availability");
             expect_contains(update_header_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1804: deleted detail-header section height update should preserve selection kind");
+            expect_contains(update_header_process.stdout_text, "\"dryRun\": false",
+                            "#2236: deleted detail-header section height update JSON should expose committed state");
+            expect_contains(update_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2236: deleted detail-header section height update JSON should expose mutation state");
+            expect_contains(update_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2236: deleted detail-header section height update JSON should expose undo availability");
+            expect_contains(update_header_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
+                            "#2236: deleted detail-header section height update JSON should expose height undo labels");
             expect_contains_in_order(
                 update_header_process.stdout_text,
                 {
@@ -7760,10 +7782,32 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_heights_
                             "#1804: deleted detail-footer section height update should preserve live section heights");
             expect_contains(update_footer_process.stdout_text, "\"deletedSectionHeightTotal\": 650",
                             "#1804: deleted detail-footer section height update should refresh deleted section heights");
+            expect_contains(update_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2236: deleted detail-footer section height update should preserve live preview availability");
+            expect_contains(update_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2236: deleted detail-footer section height update should preserve live preview top bounds");
+            expect_contains(update_footer_process.stdout_text, "\"previewBoundsBottom\": 500",
+                            "#2236: deleted detail-footer section height update should preserve live preview bottom bounds");
+            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2236: deleted detail-footer section height update should preserve deleted preview availability");
+            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 500",
+                            "#2236: deleted detail-footer section height update should preserve deleted preview top bounds");
+            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 1090",
+                            "#2236: deleted detail-footer section height update should refresh deleted preview bottom bounds");
+            expect_contains(update_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 590",
+                            "#2236: deleted detail-footer section height update should refresh deleted preview heights");
             expect_contains(update_footer_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1804: deleted detail-footer section height update should preserve selected section availability");
             expect_contains(update_footer_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1804: deleted detail-footer section height update should preserve selection kind");
+            expect_contains(update_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2236: deleted detail-footer section height update JSON should expose committed state");
+            expect_contains(update_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2236: deleted detail-footer section height update JSON should expose mutation state");
+            expect_contains(update_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2236: deleted detail-footer section height update JSON should expose undo availability");
+            expect_contains(update_footer_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
+                            "#2236: deleted detail-footer section height update JSON should expose height undo labels");
             expect_contains_in_order(
                 update_footer_process.stdout_text,
                 {
