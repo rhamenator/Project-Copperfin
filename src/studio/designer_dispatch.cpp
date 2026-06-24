@@ -1,11 +1,26 @@
 #include "copperfin/studio/designer_dispatch.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
 
 namespace {
+
+const copperfin::localization::LocalizedCatalog& designer_dispatch_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string designer_dispatch_text(std::string_view key) {
+    return designer_dispatch_catalog().translate(key);
+}
 
 std::string designer_dispatch_execution_readiness_error(
     const StudioDesignerDispatchResult& dispatch,
@@ -14,32 +29,32 @@ std::string designer_dispatch_execution_readiness_error(
         return dispatch.error;
     }
     if (!admit_execution) {
-        return "A designer dispatch execution catalog entry requires explicit execution admission.";
+        return designer_dispatch_text("Studio.DesignerDispatch.CatalogEntry.Error.ExecutionAdmissionRequired");
     }
 
     const auto& dispatch_plan = dispatch.plan;
     if (dispatch_plan.dispatch_count == 0U) {
-        return "A designer dispatch execution catalog entry requires at least one admitted dispatch.";
+        return designer_dispatch_text("Studio.DesignerDispatch.CatalogEntry.Error.AdmittedDispatchRequired");
     }
     if (dispatch_plan.error_count != 0U) {
-        return "A designer dispatch execution catalog entry requires an error-free dispatch plan.";
+        return designer_dispatch_text("Studio.DesignerDispatch.CatalogEntry.Error.ErrorFreeDispatchRequired");
     }
     if (dispatch_plan.dry_run) {
-        return "A designer dispatch execution catalog entry requires a non-dry-run dispatch plan.";
+        return designer_dispatch_text("Studio.DesignerDispatch.CatalogEntry.Error.NonDryRunDispatchRequired");
     }
 
     for (const auto& editor_dispatch : dispatch_plan.editor_action_dispatches) {
         if (editor_dispatch.ok && editor_dispatch.plan.executed) {
-            return "A designer dispatch execution catalog entry requires non-executed editor dispatches.";
+            return designer_dispatch_text("Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedEditorDispatchesRequired");
         }
     }
     for (const auto& builder_dispatch : dispatch_plan.builder_dispatches) {
         if (builder_dispatch.ok && builder_dispatch.plan.executed) {
-            return "A designer dispatch execution catalog entry requires non-executed builder dispatches.";
+            return designer_dispatch_text("Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedBuilderDispatchesRequired");
         }
     }
     if (dispatch_plan.toolbox_dispatch.ok && dispatch_plan.toolbox_dispatch.plan.executed) {
-        return "A designer dispatch execution catalog entry requires a non-executed toolbox dispatch.";
+        return designer_dispatch_text("Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedToolboxDispatchRequired");
     }
 
     return {};
@@ -102,7 +117,7 @@ StudioDesignerDispatchResult plan_studio_designer_dispatch(
     if (input_surface_count == 0U) {
         return {
             .ok = false,
-            .error = "A designer dispatch request requires at least one invocation admission.",
+            .error = designer_dispatch_text("Studio.DesignerDispatch.Error.InvocationAdmissionRequired"),
             .plan = {}
         };
     }
@@ -237,16 +252,16 @@ StudioDesignerDispatchExecutionResult execute_studio_designer_dispatch(
 
     const auto& dispatch_plan = request.dispatch_plan;
     if (!request.admit_execution) {
-        return failed("A designer dispatch execution request requires explicit execution admission.");
+        return failed(designer_dispatch_text("Studio.DesignerDispatch.Execution.Error.ExecutionAdmissionRequired"));
     }
     if (dispatch_plan.dispatch_count == 0U) {
-        return failed("A designer dispatch execution request requires at least one admitted dispatch.");
+        return failed(designer_dispatch_text("Studio.DesignerDispatch.Execution.Error.AdmittedDispatchRequired"));
     }
     if (dispatch_plan.error_count != 0U) {
-        return failed("A designer dispatch execution request requires an error-free dispatch plan.");
+        return failed(designer_dispatch_text("Studio.DesignerDispatch.Execution.Error.ErrorFreeDispatchRequired"));
     }
     if (dispatch_plan.dry_run) {
-        return failed("A designer dispatch execution request requires a non-dry-run dispatch plan.");
+        return failed(designer_dispatch_text("Studio.DesignerDispatch.Execution.Error.NonDryRunDispatchRequired"));
     }
 
     bool needs_editor_executor = false;
@@ -265,13 +280,13 @@ StudioDesignerDispatchExecutionResult execute_studio_designer_dispatch(
     }
     const bool needs_toolbox_executor = dispatch_plan.toolbox_dispatch.ok;
     if (needs_editor_executor && !request.editor_action_executor) {
-        return failed("A designer dispatch execution request requires an editor action executor.");
+        return failed(designer_dispatch_text("Studio.DesignerDispatch.Execution.Error.EditorExecutorRequired"));
     }
     if (needs_builder_executor && !request.builder_executor) {
-        return failed("A designer dispatch execution request requires a builder executor.");
+        return failed(designer_dispatch_text("Studio.DesignerDispatch.Execution.Error.BuilderExecutorRequired"));
     }
     if (needs_toolbox_executor && !request.toolbox_executor) {
-        return failed("A designer dispatch execution request requires a toolbox executor.");
+        return failed(designer_dispatch_text("Studio.DesignerDispatch.Execution.Error.ToolboxExecutorRequired"));
     }
 
     std::vector<StudioEditorActionDispatchExecutionResult> editor_executions;

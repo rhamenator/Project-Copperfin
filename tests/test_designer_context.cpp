@@ -1030,6 +1030,19 @@ int main() {
     expect(!empty_dispatch.ok &&
                empty_dispatch.error == "A designer dispatch request requires at least one invocation admission.",
            "#1237: aggregate designer dispatch should reject empty invocation inputs");
+    expect(english_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired") ==
+               "A designer dispatch request requires at least one invocation admission." &&
+               english_catalog.translate("Studio.DesignerDispatch.Execution.Error.ExecutionAdmissionRequired") ==
+                   "A designer dispatch execution request requires explicit execution admission." &&
+               english_catalog.translate("Studio.DesignerDispatch.Execution.Error.BuilderExecutorRequired") ==
+                   "A designer dispatch execution request requires a builder executor." &&
+               english_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.ErrorFreeDispatchRequired") ==
+                   "A designer dispatch execution catalog entry requires an error-free dispatch plan." &&
+               english_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.AdmittedDispatchRequired") ==
+                   "A designer dispatch execution catalog entry requires at least one admitted dispatch." &&
+               pseudo_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired").starts_with("[!! ") &&
+               pseudo_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.ExecutionAdmissionRequired").starts_with("[!! "),
+           "#2371: designer dispatch error prose should resolve through localizable catalog keys");
 
     std::size_t editor_execution_calls = 0U;
     std::size_t builder_execution_calls = 0U;
