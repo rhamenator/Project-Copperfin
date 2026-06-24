@@ -25685,6 +25685,9 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
                         "#1724: missing live section EXPR layouts should preserve band-kind counts");
         expect_contains(summary_process.stdout_text, "\"deletedSectionKindCounts\": [\n        {\"kind\": \"group_footer\", \"count\": 1}\n      ]",
                         "#1724: missing deleted section EXPR layouts should preserve band-kind counts");
+        expect_unresolved_section_memo_preview_bounds(
+            summary_process.stdout_text,
+            "#2338: missing section EXPR summary JSON");
         expect_contains_in_order(
             summary_process.stdout_text,
             {
@@ -25733,6 +25736,9 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
                         "#1724: missing section EXPR live selection should advertise selected sections");
         expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1724: missing section EXPR live selection should expose section selection kind");
+        expect_unresolved_section_memo_preview_bounds(
+            live_process.stdout_text,
+            "#2338: selected missing live section EXPR JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -25763,6 +25769,9 @@ void test_studio_host_json_preserves_report_sections_without_expr_schema(
                         "#1724: missing section EXPR deleted selection should advertise selected sections");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1724: missing section EXPR deleted selection should expose section selection kind");
+        expect_unresolved_section_memo_preview_bounds(
+            deleted_process.stdout_text,
+            "#2338: selected missing deleted section EXPR JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
