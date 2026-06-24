@@ -12803,6 +12803,22 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_
                             "#1782: detail-header object delete should not fabricate containing-section availability");
             expect_contains(delete_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1782: detail-header object delete should serialize null containing-section JSON");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2288: detail-header object delete should preserve live preview availability");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2288: detail-header object delete should preserve live preview top bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2288: detail-header object delete should preserve live preview bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2288: detail-header object delete should preserve live preview heights");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2288: detail-header object delete should expose deleted preview availability");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2288: detail-header object delete should expose deleted preview top bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 170",
+                            "#2288: detail-header object delete should expose deleted preview bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 120",
+                            "#2288: detail-header object delete should expose deleted preview heights");
             expect_contains_in_order(
                 delete_process.stdout_text,
                 {
@@ -12892,6 +12908,22 @@ void test_studio_host_json_deletes_and_restores_detail_header_footer_objects_by_
                             "#1782: detail-footer object restore should rehydrate containing-section availability");
             expect_contains(restore_process.stdout_text, "\"selectedReportObjectSection\": {",
                             "#1782: detail-footer object restore should serialize containing-section JSON");
+            expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2288: detail-footer object restore should preserve live preview availability");
+            expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2288: detail-footer object restore should preserve live preview top bounds");
+            expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2288: detail-footer object restore should preserve live preview bottom bounds");
+            expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2288: detail-footer object restore should preserve live preview heights");
+            expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2288: detail-footer object restore should preserve deleted preview availability");
+            expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2288: detail-footer object restore should preserve deleted preview top bounds");
+            expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsBottom\": 170",
+                            "#2288: detail-footer object restore should preserve deleted preview bottom bounds");
+            expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsHeight\": 120",
+                            "#2288: detail-footer object restore should preserve deleted preview heights");
             expect_contains_in_order(
                 restore_process.stdout_text,
                 {
