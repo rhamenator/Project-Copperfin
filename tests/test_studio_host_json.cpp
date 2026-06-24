@@ -20254,6 +20254,9 @@ void test_studio_host_json_ignores_unsupported_report_layout_objtype_codes(
                         "#1732: unsupported OBJTYPE rows should not create live preview bounds");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
                         "#1732: unsupported OBJTYPE rows should not create deleted preview bounds");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2345: unsupported OBJTYPE summary JSON");
         expect_contains(summary_process.stdout_text, "\"pageSetupAvailable\": false",
                         "#1732: unsupported OBJTYPE rows should not infer root settings");
         expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
