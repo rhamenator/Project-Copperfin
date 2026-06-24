@@ -24558,6 +24558,9 @@ void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
         expect_contains(summary_process.stdout_text,
                         "\"name\": \"ColSpacing\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 3, \"memoBlockNumber\": 2, \"value\": \"42\"",
                         "#1757: mixed-case deleted column-spacing should preserve source spelling and provenance");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2331: mixed-case settings memo summary JSON");
 
         const auto live_settings_process = run_process_capture(
             studio_host_path,
@@ -24570,6 +24573,9 @@ void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
                         "#1757: mixed-case live settings memo selection should expose settings");
         expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1757: mixed-case live settings memo selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            live_settings_process.stdout_text,
+            "#2331: selected mixed-case live settings memo JSON");
         expect_contains_in_order(
             live_settings_process.stdout_text,
             {
@@ -24606,6 +24612,9 @@ void test_studio_host_json_parses_mixed_case_report_setting_memo_names(
                         "#1757: mixed-case deleted settings memo selection should expose settings");
         expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1757: mixed-case deleted settings memo selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            deleted_settings_process.stdout_text,
+            "#2331: selected mixed-case deleted settings memo JSON");
         expect_contains_in_order(
             deleted_settings_process.stdout_text,
             {
