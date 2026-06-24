@@ -81849,6 +81849,10 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
                "#1871: deleted report/label stable visual-property clear missing selector should fail");
         expect_contains(missing_selector_process.stdout_text, "\"visualPropertyClear\": null",
                         "#1871: failed deleted report/label stable visual-property clear JSON should not expose stale clear objects");
+        expect_not_contains(missing_selector_process.stdout_text, "\"dryRun\": false",
+                            "#2212: failed deleted report/label stable visual-property clear JSON should not expose stale committed state");
+        expect_not_contains(missing_selector_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2212: failed deleted report/label stable visual-property clear JSON should not expose stale mutation state");
         expect_not_contains(missing_selector_process.stdout_text, "\"undoAvailable\": true",
                             "#2187: failed deleted report/label stable visual-property clear JSON should not advertise undo availability");
         expect_not_contains(missing_selector_process.stdout_text, "\"undoLabel\":",
