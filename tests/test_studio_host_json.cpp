@@ -20721,6 +20721,9 @@ void test_studio_host_json_ignores_missing_report_layout_classification_fields(
                         message_prefix + " should not expose selected-settings availability");
         expect_contains(stdout_text, "\"selectedReportSettings\": null",
                         message_prefix + " should serialize null selected settings");
+        expect_empty_report_layout_preview_bounds(
+            stdout_text,
+            "#2314: " + message_prefix + " selected missing classification schema JSON");
     };
 
     const auto run_missing_classification_layout = [&](const fs::path& asset_path,
@@ -20825,6 +20828,9 @@ void test_studio_host_json_ignores_missing_report_layout_objtype_schema(
                         message_prefix + " should not expose selected-settings availability");
         expect_contains(stdout_text, "\"selectedReportSettings\": null",
                         message_prefix + " should serialize null selected settings");
+        expect_empty_report_layout_preview_bounds(
+            stdout_text,
+            "#2314: " + message_prefix + " selected OBJCODE-only schema JSON");
     };
 
     const auto run_missing_objtype_layout = [&](const fs::path& asset_path,
