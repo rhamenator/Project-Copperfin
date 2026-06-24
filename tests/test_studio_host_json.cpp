@@ -11119,6 +11119,16 @@ void test_studio_host_json_exposes_detail_header_footer_object_expressions_by_st
                                     "#1769: selected detail header/footer object expressions should not select sections");
                     expect_contains(object_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
                                     "#1769: selected detail header/footer object expressions should not select settings");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsAvailable\": true",
+                                    "#2279: selected detail header/footer object expressions should preserve live preview availability");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsTop\": 0",
+                                    "#2279: selected detail header/footer object expressions should preserve live preview top bounds");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsBottom\": 550",
+                                    "#2279: selected detail header/footer object expressions should preserve live preview bottom bounds");
+                    expect_contains(object_process.stdout_text, "\"previewBoundsHeight\": 550",
+                                    "#2279: selected detail header/footer object expressions should preserve live preview heights");
+                    expect_contains(object_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                                    "#2279: selected detail header/footer object expressions should not fabricate deleted preview availability");
                     expect_contains_in_order(
                         object_process.stdout_text,
                         {
