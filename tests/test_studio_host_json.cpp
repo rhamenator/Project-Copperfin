@@ -52353,6 +52353,34 @@ void test_studio_host_json_deletes_label_sections_by_record_selection(const std:
                     "#1492: deleted label section JSON should remove the section from live section counts");
     expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
                     "#1492: deleted label section JSON should expose deleted section counts");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#2273: deleted label section JSON should preserve live preview availability");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 100",
+                    "#2273: deleted label section JSON should preserve live preview left bounds");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2600",
+                    "#2273: deleted label section JSON should preserve live preview top bounds");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
+                    "#2273: deleted label section JSON should preserve live preview right bounds");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                    "#2273: deleted label section JSON should preserve live preview bottom bounds");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 50",
+                    "#2273: deleted label section JSON should preserve live preview widths");
+    expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 200",
+                    "#2273: deleted label section JSON should preserve live preview heights");
+    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                    "#2273: deleted label section JSON should expose deleted preview availability");
+    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                    "#2273: deleted label section JSON should preserve deleted preview left bounds");
+    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                    "#2273: deleted label section JSON should preserve deleted preview top bounds");
+    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                    "#2273: deleted label section JSON should preserve deleted preview right bounds");
+    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                    "#2273: deleted label section JSON should preserve deleted preview bottom bounds");
+    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                    "#2273: deleted label section JSON should preserve deleted preview widths");
+    expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                    "#2273: deleted label section JSON should preserve deleted preview heights");
     expect_contains_in_order(
         delete_process.stdout_text,
         {
@@ -52435,6 +52463,34 @@ void test_studio_host_json_deletes_report_sections_by_stable_selection(const std
                         "#1655: stable report/label section delete should remove the section from live section counts");
         expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
                         "#1655: stable report/label section delete should expose deleted section counts");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2273: stable report/label section delete should preserve live preview availability");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsLeft\": 100",
+                        "#2273: stable report/label section delete should preserve live preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 2600",
+                        "#2273: stable report/label section delete should preserve live preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2273: stable report/label section delete should preserve live preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 2800",
+                        "#2273: stable report/label section delete should preserve live preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsWidth\": 50",
+                        "#2273: stable report/label section delete should preserve live preview widths");
+        expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 200",
+                        "#2273: stable report/label section delete should preserve live preview heights");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                        "#2273: stable report/label section delete should expose deleted preview availability");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsLeft\": 0",
+                        "#2273: stable report/label section delete should preserve deleted preview left bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 2000",
+                        "#2273: stable report/label section delete should preserve deleted preview top bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsRight\": 0",
+                        "#2273: stable report/label section delete should preserve deleted preview right bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 7000",
+                        "#2273: stable report/label section delete should preserve deleted preview bottom bounds");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsWidth\": 0",
+                        "#2273: stable report/label section delete should preserve deleted preview widths");
+        expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 5000",
+                        "#2273: stable report/label section delete should preserve deleted preview heights");
         expect_contains_in_order(
             delete_process.stdout_text,
             {
