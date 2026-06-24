@@ -25599,6 +25599,7 @@ int main(int argc, char** argv) {
             open_request.unique_id = parse_result.request.new_unique_id;
         }
         select_open_request_visual_object();
+        asset_mutation_performed = true;
     }
 
     if (parse_result.request.reparent_object) {

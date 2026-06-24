@@ -10139,6 +10139,14 @@ void test_studio_host_json_renames_detail_header_footer_sections_by_stable_selec
                                 "#1814: " + operation_label + " should not fabricate object sections");
                 expect_contains(rename_process.stdout_text, "\"selectedReportSettingsAvailable\": false",
                                 "#1814: " + operation_label + " should not select settings");
+                expect_contains(rename_process.stdout_text, "\"dryRun\": false",
+                                "#2244: " + operation_label + " JSON should expose committed state");
+                expect_contains(rename_process.stdout_text, "\"mutatesAsset\": true",
+                                "#2244: " + operation_label + " JSON should expose mutation state");
+                expect_contains(rename_process.stdout_text, "\"undoAvailable\": true",
+                                "#2244: " + operation_label + " JSON should expose undo availability");
+                expect_contains(rename_process.stdout_text, "\"undoLabel\": \"Property UNIQUEID\"",
+                                "#2244: " + operation_label + " JSON should expose renamed-identity undo labels");
                 expect_contains_in_order(
                     rename_process.stdout_text,
                     {
