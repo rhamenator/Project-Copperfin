@@ -119,5 +119,9 @@
   "Studio.Toolbox.Item.TextBox.Description": "Edit character, numeric, date, and bound field values.",
   "Studio.Toolbox.Item.TextBox.Title": "TextBox",
   "Studio.ToolboxPalette.Error.ContextUnavailable": "The selected Studio context does not expose a toolbox palette.",
-  "Studio.ToolboxPalette.Error.NoItems": "The selected Studio context has no toolbox items."
+  "Studio.ToolboxPalette.Error.NoItems": "The selected Studio context has no toolbox items.",
+  "Studio.ToolboxInvocationAdmission.Error.CatalogRequiresItemMetadata": "A toolbox invocation admission catalog request requires validated toolbox item metadata.",
+  "Studio.ToolboxInvocationAdmission.Error.ConsistentItemMetadataRequired": "A toolbox invocation admission request requires consistent toolbox item metadata.",
+  "Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette": "A selection-context toolbox invocation admission catalog request requires a toolbox palette.",
+  "Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired": "A toolbox invocation admission request requires validated toolbox item metadata."
 }

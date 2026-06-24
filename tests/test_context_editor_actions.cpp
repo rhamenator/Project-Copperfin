@@ -2,6 +2,7 @@
 #include "copperfin/studio/context_editor_actions.h"
 #include "copperfin/studio/editor_action_dispatch.h"
 #include "copperfin/studio/editor_action_invocation_admission.h"
+#include "copperfin/studio/toolbox_invocation_admission.h"
 #include "copperfin/studio/toolbox_palette.h"
 
 #include <cstdlib>
@@ -249,6 +250,12 @@ int main() {
                find_toolbox_item(report_toolbox_items, "shape") != nullptr &&
                find_toolbox_item(report_toolbox_items, "textbox") == nullptr,
            "#2364: localized toolbox palette should preserve report-safe filtering semantics");
+    expect(english_catalog.translate("Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired") ==
+               "A toolbox invocation admission request requires validated toolbox item metadata." &&
+               english_catalog.translate("Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette") ==
+                   "A selection-context toolbox invocation admission catalog request requires a toolbox palette." &&
+               pseudo_catalog.translate("Studio.ToolboxInvocationAdmission.Error.ConsistentItemMetadataRequired").starts_with("[!! "),
+           "#2365: toolbox invocation admission error prose should resolve through localizable catalog keys");
 
     const auto visual_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::visual_object);
@@ -1363,6 +1370,57 @@ int main() {
                unsupported_toolbox_launch.error ==
                    "The selected Studio context does not expose a toolbox palette.",
            "#2364: toolbox palette launch errors should resolve through the en-US localization catalog");
+    const auto report_toolbox_launch = copperfin::studio::plan_studio_toolbox_palette_launch({
+        .selection_context = StudioEditorSelectionContext::report_expression,
+        .asset_path = "reports/orders.frx",
+        .record_index = 2U,
+        .object_name = "Expr1",
+        .unique_id = "expr-guid"
+    });
+    const auto admitted_toolbox_invocation = copperfin::studio::plan_studio_toolbox_invocation_admission({
+        .launch_plan = report_toolbox_launch.plan,
+        .admit_palette_invocation = true
+    });
+    expect(report_toolbox_launch.ok &&
+               admitted_toolbox_invocation.ok &&
+               admitted_toolbox_invocation.plan.command_token == "studio.toolbox.palette.invoke" &&
+               admitted_toolbox_invocation.plan.toolbox_context == copperfin::studio::StudioToolboxContext::report &&
+               admitted_toolbox_invocation.plan.item_count == 4U &&
+               admitted_toolbox_invocation.plan.palette_invocation_admitted &&
+               !admitted_toolbox_invocation.plan.dry_run &&
+               !admitted_toolbox_invocation.plan.mutates_asset &&
+               find_toolbox_item(admitted_toolbox_invocation.plan.items, "label") != nullptr &&
+               find_toolbox_item(admitted_toolbox_invocation.plan.items, "textbox") == nullptr,
+           "#2365: toolbox invocation admission should preserve report-safe invariant metadata");
+    auto inconsistent_toolbox_launch = report_toolbox_launch.plan;
+    inconsistent_toolbox_launch.item_count = inconsistent_toolbox_launch.items.size() + 1U;
+    const auto inconsistent_toolbox_invocation =
+        copperfin::studio::plan_studio_toolbox_invocation_admission({
+            .launch_plan = inconsistent_toolbox_launch,
+            .admit_palette_invocation = true
+        });
+    expect(!inconsistent_toolbox_invocation.ok &&
+               inconsistent_toolbox_invocation.error ==
+                   "A toolbox invocation admission request requires consistent toolbox item metadata.",
+           "#2365: toolbox invocation admission should localize inconsistent item metadata errors");
+    const auto unsupported_selection_toolbox_invocation_catalog =
+        copperfin::studio::plan_studio_toolbox_invocation_admission_catalog_for_selection({
+            .selection_context = StudioEditorSelectionContext::menu_item,
+            .asset_path = "menus/main.mnx",
+            .record_index = 5U,
+            .object_name = "FileExit",
+            .unique_id = "menu-guid",
+            .admit_palette_invocation = true
+        });
+    expect(!unsupported_selection_toolbox_invocation_catalog.ok &&
+               unsupported_selection_toolbox_invocation_catalog.error ==
+                   "A selection-context toolbox invocation admission catalog request requires a toolbox palette." &&
+               unsupported_selection_toolbox_invocation_catalog.item_count == 0U &&
+               unsupported_selection_toolbox_invocation_catalog.admission_count == 0U &&
+               unsupported_selection_toolbox_invocation_catalog.error_count == 0U &&
+               unsupported_selection_toolbox_invocation_catalog.dry_run &&
+               !unsupported_selection_toolbox_invocation_catalog.mutates_asset,
+           "#2365: selection toolbox invocation admission catalogs should localize missing-palette errors");
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

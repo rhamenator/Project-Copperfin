@@ -1,23 +1,44 @@
 #include "copperfin/studio/toolbox_invocation_admission.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
+
+namespace {
+
+const copperfin::localization::LocalizedCatalog& toolbox_invocation_admission_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string toolbox_invocation_admission_text(std::string_view key) {
+    return toolbox_invocation_admission_catalog().translate(key);
+}
+
+}  // namespace
 
 StudioToolboxInvocationAdmissionResult plan_studio_toolbox_invocation_admission(
     const StudioToolboxInvocationAdmissionRequest& request) {
     if (request.launch_plan.items.empty() || request.launch_plan.item_count == 0U) {
         return {
             .ok = false,
-            .error = "A toolbox invocation admission request requires validated toolbox item metadata.",
+            .error = toolbox_invocation_admission_text(
+                "Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired"),
             .plan = {}
         };
     }
     if (request.launch_plan.item_count != request.launch_plan.items.size()) {
         return {
             .ok = false,
-            .error = "A toolbox invocation admission request requires consistent toolbox item metadata.",
+            .error = toolbox_invocation_admission_text(
+                "Studio.ToolboxInvocationAdmission.Error.ConsistentItemMetadataRequired"),
             .plan = {}
         };
     }
@@ -48,7 +69,8 @@ StudioToolboxInvocationAdmissionCatalogResult plan_studio_toolbox_invocation_adm
     if (items.empty()) {
         return {
             .ok = false,
-            .error = "A toolbox invocation admission catalog request requires validated toolbox item metadata.",
+            .error = toolbox_invocation_admission_text(
+                "Studio.ToolboxInvocationAdmission.Error.CatalogRequiresItemMetadata"),
             .selection_context = request.selection_context,
             .toolbox_context = request.toolbox_context,
             .command_token = {},
@@ -116,7 +138,8 @@ plan_studio_toolbox_invocation_admission_catalog_for_selection(
     if (!launch_plan.ok) {
         return {
             .ok = false,
-            .error = "A selection-context toolbox invocation admission catalog request requires a toolbox palette.",
+            .error = toolbox_invocation_admission_text(
+                "Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .command_token = {},
