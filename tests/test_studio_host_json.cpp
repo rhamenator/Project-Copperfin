@@ -82267,6 +82267,8 @@ void test_studio_host_json_copies_deleted_report_visual_properties_by_stable_sel
                "#1869: deleted report/label stable visual-property copy missing selector should fail");
         expect_contains(missing_selector_process.stdout_text, "\"visualPropertyCopy\": null",
                         "#1869: failed deleted report/label stable visual-property copy JSON should not expose stale copy objects");
+        expect_not_contains(missing_selector_process.stdout_text, "\"undoAvailable\": true",
+                            "#2188: failed deleted report/label stable visual-property copy JSON should not advertise undo availability");
         expect_contains(missing_selector_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1869: failed deleted report/label stable visual-property copy JSON should report missing selector errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
