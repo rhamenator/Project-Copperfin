@@ -12384,6 +12384,16 @@ void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stabl
                             "#1780: detail-header object geometry update should preserve object selection kind");
             expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1780: detail-header object geometry update should preserve containing-section availability");
+            expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2286: detail-header object geometry update should preserve live preview availability");
+            expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2286: detail-header object geometry update should preserve live preview top bounds");
+            expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2286: detail-header object geometry update should preserve live preview bottom bounds");
+            expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2286: detail-header object geometry update should preserve live preview heights");
+            expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2286: detail-header object geometry update should not fabricate deleted preview availability");
             expect_contains_in_order(
                 update_process.stdout_text,
                 {
@@ -12451,6 +12461,16 @@ void test_studio_host_json_updates_detail_header_footer_object_geometry_by_stabl
                             "#1780: detail-footer object geometry clear should preserve object selection kind");
             expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1780: detail-footer object geometry clear should preserve containing-section availability");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2286: detail-footer object geometry clear should preserve live preview availability");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2286: detail-footer object geometry clear should preserve live preview top bounds");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2286: detail-footer object geometry clear should preserve live preview bottom bounds");
+            expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2286: detail-footer object geometry clear should preserve live preview heights");
+            expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2286: detail-footer object geometry clear should not fabricate deleted preview availability");
             expect_contains_in_order(
                 clear_process.stdout_text,
                 {
