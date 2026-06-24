@@ -53166,6 +53166,10 @@ void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_se
                "#1858: report/label stable visual-object duplicate-subtree should reject replacement collisions");
         expect_contains(collision_process.stdout_text, "\"visualObjectDuplicateSubtree\": null",
                         "#1858: failed report/label stable visual-object duplicate-subtree JSON should not expose stale result objects");
+        expect_not_contains(collision_process.stdout_text, "\"dryRun\": false",
+                            "#2222: failed report/label stable visual-object duplicate-subtree JSON should not expose stale committed state");
+        expect_not_contains(collision_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2222: failed report/label stable visual-object duplicate-subtree JSON should not expose stale mutation state");
         expect_not_contains(collision_process.stdout_text, "\"undoAvailable\": true",
                             "#2176: failed report/label stable visual-object duplicate-subtree JSON should not advertise undo availability");
         expect_not_contains(collision_process.stdout_text, "\"undoLabel\":",
@@ -53203,6 +53207,10 @@ void test_studio_host_json_duplicates_report_visual_object_subtrees_by_stable_se
                "#1858: report/label stable visual-object duplicate-subtree should reject missing stable selectors");
         expect_contains(missing_process.stdout_text, "\"visualObjectDuplicateSubtree\": null",
                         "#1858: missing-selector report/label stable visual-object duplicate-subtree JSON should not expose stale result objects");
+        expect_not_contains(missing_process.stdout_text, "\"dryRun\": false",
+                            "#2222: missing-selector report/label stable visual-object duplicate-subtree JSON should not expose stale committed state");
+        expect_not_contains(missing_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2222: missing-selector report/label stable visual-object duplicate-subtree JSON should not expose stale mutation state");
         expect_not_contains(missing_process.stdout_text, "\"undoAvailable\": true",
                             "#2176: missing-selector report/label stable visual-object duplicate-subtree JSON should not advertise undo availability");
         expect_not_contains(missing_process.stdout_text, "\"undoLabel\":",
