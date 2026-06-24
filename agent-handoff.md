@@ -14,7 +14,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 
 ## Current State
 
-- Last shipped E3 child: `#2356`, invalid classification preview-metadata JSON coverage.
+- Last shipped E3 child: `#2357`, dot-leading classification preview-metadata JSON coverage.
 - Last shipped localization child: `#2352`, runtime host bridge-invocation validation/error prose routed through the portable C++ localization catalog while preserving bridge status/mode and artifact contracts.
 - Current lane: continue E3/#24 report/label designer fidelity and section-aware host surfaces, preserving localization rules for any new user-facing text.
 - Next action: inspect live GitHub children under `#24`; pick the highest-weight open prompt-sized child, or create the next child under `#24` if none fits.
