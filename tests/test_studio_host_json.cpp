@@ -21512,6 +21512,9 @@ void test_studio_host_json_defaults_missing_report_object_objcode_schema(
                         "#1729: missing object OBJCODE deleted preview top should come from the deleted object");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsBottom\": 740",
                         "#1729: missing object OBJCODE deleted preview bottom should come from the deleted object");
+        expect_missing_object_objcode_preview_bounds(
+            summary_process.stdout_text,
+            "#2343: missing object OBJCODE summary JSON");
         expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
                         "#1729: missing object OBJCODE layouts should preserve live object counts");
         expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
