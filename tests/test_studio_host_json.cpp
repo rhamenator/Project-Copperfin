@@ -81562,6 +81562,8 @@ void test_studio_host_json_updates_deleted_report_visual_object_batches_by_stabl
                "#1863: deleted report/label stable visual-object update-batch missing selector should fail");
         expect_contains(rollback_process.stdout_text, "\"visualObjectUpdateBatch\": null",
                         "#1863: failed deleted report/label stable visual-object update-batch JSON should not expose stale batch objects");
+        expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
+                            "#2185: failed deleted report/label stable visual-object update-batch JSON should not advertise undo availability");
         expect_contains(rollback_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1863: failed deleted report/label stable visual-object update-batch JSON should report missing selector errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
