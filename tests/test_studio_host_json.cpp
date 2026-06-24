@@ -14351,6 +14351,16 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                             "#1789: detail-header object align should preserve object selection kind");
             expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1789: detail-header object align should preserve containing-section availability");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2295: detail-header object align should preserve live preview availability");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2295: detail-header object align should preserve live preview top bounds");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2295: detail-header object align should preserve live preview bottom bounds");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2295: detail-header object align should preserve live preview heights");
+            expect_contains(align_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2295: detail-header object align should not fabricate deleted preview availability");
             expect_contains(align_header_process.stdout_text, "\"dryRun\": false",
                             "#2248: detail-header object align JSON should expose committed state");
             expect_contains(align_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -14432,6 +14442,16 @@ void test_studio_host_json_aligns_detail_header_footer_objects_by_stable_selecti
                             "#1789: detail-footer object align should preserve object selection kind");
             expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1789: detail-footer object align should preserve containing-section availability");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2295: detail-footer object align should preserve live preview availability");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2295: detail-footer object align should preserve live preview top bounds");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2295: detail-footer object align should preserve live preview bottom bounds");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2295: detail-footer object align should preserve live preview heights");
+            expect_contains(align_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2295: detail-footer object align should not fabricate deleted preview availability");
             expect_contains(align_footer_process.stdout_text, "\"dryRun\": false",
                             "#2248: detail-footer object align JSON should expose committed state");
             expect_contains(align_footer_process.stdout_text, "\"mutatesAsset\": true",
