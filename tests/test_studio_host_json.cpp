@@ -16655,6 +16655,28 @@ void test_studio_host_json_updates_detail_header_footer_section_expressions(
                         "#1765: detail-header expression update should preserve section selection");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1765: detail-header expression update should preserve selection kind");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2262: detail-header expression update should preserve live preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2262: detail-header expression update should preserve live preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2262: detail-header expression update should preserve live preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2262: detail-header expression update should preserve live preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 550",
+                        "#2262: detail-header expression update should preserve live preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2262: detail-header expression update should preserve live preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 550",
+                        "#2262: detail-header expression update should preserve live preview heights");
+        expect_contains(update_process.stdout_text, "\"dryRun\": false",
+                        "#2262: detail-header expression update JSON should expose committed execution");
+        expect_contains(update_process.stdout_text, "\"mutatesAsset\": true",
+                        "#2262: detail-header expression update JSON should expose mutation state");
+        expect_contains(update_process.stdout_text, "\"undoAvailable\": true",
+                        "#2262: detail-header expression update JSON should expose undo availability");
+        expect_contains(update_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                        "#2262: detail-header expression update JSON should expose expression undo labels");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -16713,6 +16735,28 @@ void test_studio_host_json_updates_detail_header_footer_section_expressions(
                         "#1765: detail-footer expression clear should preserve section selection");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1765: detail-footer expression clear should preserve selection kind");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2262: detail-footer expression clear should preserve live preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2262: detail-footer expression clear should preserve live preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2262: detail-footer expression clear should preserve live preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2262: detail-footer expression clear should preserve live preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 550",
+                        "#2262: detail-footer expression clear should preserve live preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2262: detail-footer expression clear should preserve live preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 550",
+                        "#2262: detail-footer expression clear should preserve live preview heights");
+        expect_contains(clear_process.stdout_text, "\"dryRun\": false",
+                        "#2262: detail-footer expression clear JSON should expose committed execution");
+        expect_contains(clear_process.stdout_text, "\"mutatesAsset\": true",
+                        "#2262: detail-footer expression clear JSON should expose mutation state");
+        expect_contains(clear_process.stdout_text, "\"undoAvailable\": true",
+                        "#2262: detail-footer expression clear JSON should expose undo availability");
+        expect_contains(clear_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                        "#2262: detail-footer expression clear JSON should expose expression undo labels");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
