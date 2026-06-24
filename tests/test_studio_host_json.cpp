@@ -14094,6 +14094,14 @@ void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_select
                             "#1791: detail-header object resize should preserve object selection kind");
             expect_contains(resize_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1791: detail-header object resize should preserve containing-section availability");
+            expect_contains(resize_header_process.stdout_text, "\"dryRun\": false",
+                            "#2250: detail-header object resize JSON should expose committed execution");
+            expect_contains(resize_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2250: detail-header object resize JSON should expose mutation state");
+            expect_contains(resize_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2250: detail-header object resize JSON should expose undo availability");
+            expect_contains(resize_header_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
+                            "#2250: detail-header object resize JSON should expose resize undo labels");
             expect_contains_in_order(
                 resize_header_process.stdout_text,
                 {
@@ -14170,6 +14178,14 @@ void test_studio_host_json_resizes_detail_header_footer_objects_by_stable_select
                             "#1791: detail-footer object resize should preserve object selection kind");
             expect_contains(resize_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1791: detail-footer object resize should preserve containing-section availability");
+            expect_contains(resize_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2250: detail-footer object resize JSON should expose committed execution");
+            expect_contains(resize_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2250: detail-footer object resize JSON should expose mutation state");
+            expect_contains(resize_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2250: detail-footer object resize JSON should expose undo availability");
+            expect_contains(resize_footer_process.stdout_text, "\"undoLabel\": \"Property HEIGHT\"",
+                            "#2250: detail-footer object resize JSON should expose resize undo labels");
             expect_contains_in_order(
                 resize_footer_process.stdout_text,
                 {
