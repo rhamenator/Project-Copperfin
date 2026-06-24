@@ -179,6 +179,37 @@ void expect_zero_available_report_layout_preview_bounds(const std::string& text,
                     prefix + " should preserve zero deleted preview heights");
 }
 
+void expect_unresolved_memo_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 2000",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 5200",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 7000",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 5200",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 5000",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": false",
+                    prefix + " should not fabricate deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 0",
+                    prefix + " should preserve zero deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 0",
+                    prefix + " should preserve zero deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 0",
+                    prefix + " should preserve zero deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 0",
+                    prefix + " should preserve zero deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 0",
+                    prefix + " should preserve zero deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 0",
+                    prefix + " should preserve zero deleted preview heights");
+}
+
 void expect_missing_section_objcode_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
@@ -24694,6 +24725,9 @@ void test_studio_host_json_suppresses_unresolved_report_memo_placeholders(
                         "#1736: unresolved root memo placeholders should not fabricate page setup");
         expect_contains(summary_process.stdout_text, "\"highlightCount\": 0",
                         "#1736: unresolved object memo placeholders should not become highlights");
+        expect_unresolved_memo_preview_bounds(
+            summary_process.stdout_text,
+            "#2332: unresolved memo placeholder summary JSON");
         expect_not_contains(summary_process.stdout_text, "<memo block",
                             "#1736: unresolved memo placeholders should not leak into summary JSON");
 
@@ -24708,6 +24742,9 @@ void test_studio_host_json_suppresses_unresolved_report_memo_placeholders(
                         "#1736: unresolved live root settings should not expose selected settings");
         expect_contains(live_settings_process.stdout_text, "\"selectedReportSettings\": null",
                         "#1736: unresolved live root selected settings should be null");
+        expect_unresolved_memo_preview_bounds(
+            live_settings_process.stdout_text,
+            "#2332: selected unresolved live root memo JSON");
         expect_not_contains(live_settings_process.stdout_text, "<memo block",
                             "#1736: unresolved live root memo placeholders should not leak into selection JSON");
 
@@ -24722,6 +24759,9 @@ void test_studio_host_json_suppresses_unresolved_report_memo_placeholders(
                         "#1736: unresolved deleted root settings should not expose selected settings");
         expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSettings\": null",
                         "#1736: unresolved deleted root selected settings should be null");
+        expect_unresolved_memo_preview_bounds(
+            deleted_settings_process.stdout_text,
+            "#2332: selected unresolved deleted root memo JSON");
         expect_not_contains(deleted_settings_process.stdout_text, "<memo block",
                             "#1736: unresolved deleted root memo placeholders should not leak into selection JSON");
 
@@ -24738,6 +24778,9 @@ void test_studio_host_json_suppresses_unresolved_report_memo_placeholders(
                         "#1736: unresolved object expressions should be suppressed");
         expect_contains(object_process.stdout_text, "\"highlightCount\": 0",
                         "#1736: unresolved font/mode memo placeholders should not become selected-object highlights");
+        expect_unresolved_memo_preview_bounds(
+            object_process.stdout_text,
+            "#2332: selected unresolved object memo JSON");
         expect_not_contains(object_process.stdout_text, "<memo block",
                             "#1736: unresolved object memo placeholders should not leak into selected-object JSON");
     };
