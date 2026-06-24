@@ -14906,6 +14906,14 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                             "#1795: detail-header object nudge should preserve object selection kind");
             expect_contains(nudge_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1795: detail-header object nudge should preserve containing-section availability");
+            expect_contains(nudge_header_process.stdout_text, "\"dryRun\": false",
+                            "#2254: detail-header object nudge JSON should expose committed execution");
+            expect_contains(nudge_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2254: detail-header object nudge JSON should expose mutation state");
+            expect_contains(nudge_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2254: detail-header object nudge JSON should expose undo availability");
+            expect_contains(nudge_header_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2254: detail-header object nudge JSON should expose nudge undo labels");
             expect_contains_in_order(
                 nudge_header_process.stdout_text,
                 {
@@ -14980,6 +14988,14 @@ void test_studio_host_json_nudges_detail_header_footer_objects_by_stable_selecti
                             "#1795: detail-footer object nudge should preserve object selection kind");
             expect_contains(nudge_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1795: detail-footer object nudge should preserve containing-section availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2254: detail-footer object nudge JSON should expose committed execution");
+            expect_contains(nudge_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2254: detail-footer object nudge JSON should expose mutation state");
+            expect_contains(nudge_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2254: detail-footer object nudge JSON should expose undo availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2254: detail-footer object nudge JSON should expose nudge undo labels");
             expect_contains_in_order(
                 nudge_footer_process.stdout_text,
                 {
