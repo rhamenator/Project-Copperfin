@@ -14158,6 +14158,22 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
                             "#1788: deleted detail-header object reorder should not fabricate containing sections");
             expect_contains(reorder_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1788: deleted detail-header object reorder should serialize null containing-section JSON");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2294: deleted detail-header object reorder should preserve live preview availability");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2294: deleted detail-header object reorder should preserve live preview top bounds");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2294: deleted detail-header object reorder should preserve live preview bottom bounds");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2294: deleted detail-header object reorder should preserve live preview heights");
+            expect_contains(reorder_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2294: deleted detail-header object reorder should expose deleted preview availability");
+            expect_contains(reorder_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2294: deleted detail-header object reorder should preserve deleted preview top bounds");
+            expect_contains(reorder_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                            "#2294: deleted detail-header object reorder should preserve deleted preview bottom bounds");
+            expect_contains(reorder_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 410",
+                            "#2294: deleted detail-header object reorder should preserve deleted preview heights");
             expect_contains_in_order(
                 reorder_header_process.stdout_text,
                 {
@@ -14223,6 +14239,22 @@ void test_studio_host_json_reorders_deleted_detail_header_footer_objects_by_stab
                             "#1788: deleted detail-footer object reorder should not fabricate containing sections");
             expect_contains(reorder_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1788: deleted detail-footer object reorder should serialize null containing-section JSON");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2294: deleted detail-footer object reorder should preserve live preview availability");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2294: deleted detail-footer object reorder should preserve live preview top bounds");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2294: deleted detail-footer object reorder should preserve live preview bottom bounds");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2294: deleted detail-footer object reorder should preserve live preview heights");
+            expect_contains(reorder_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2294: deleted detail-footer object reorder should expose deleted preview availability");
+            expect_contains(reorder_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2294: deleted detail-footer object reorder should preserve deleted preview top bounds");
+            expect_contains(reorder_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                            "#2294: deleted detail-footer object reorder should preserve deleted preview bottom bounds");
+            expect_contains(reorder_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 410",
+                            "#2294: deleted detail-footer object reorder should preserve deleted preview heights");
             expect_contains_in_order(
                 reorder_footer_process.stdout_text,
                 {
