@@ -30421,6 +30421,22 @@ void test_studio_host_json_updates_report_group_section_expressions_by_record_se
                         "#1567: report/label group section expression update should preserve section selection");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1567: report/label group section expression update should preserve selection kind");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2269: report/label group section expression update should preserve preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2269: report/label group section expression update should preserve preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2269: report/label group section expression update should preserve preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2269: report/label group section expression update should preserve preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2269: report/label group section expression update should preserve preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2269: report/label group section expression update should preserve preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#2269: report/label group section expression update should preserve preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2269: report/label group section expression update should not fabricate deleted preview bounds");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -30496,6 +30512,22 @@ void test_studio_host_json_clears_report_group_section_expressions_by_record_sel
                         "#1567: report/label group section expression clear should preserve section selection");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1567: report/label group section expression clear should preserve selection kind");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2269: report/label group section expression clear should preserve preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2269: report/label group section expression clear should preserve preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2269: report/label group section expression clear should preserve preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2269: report/label group section expression clear should preserve preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2269: report/label group section expression clear should preserve preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2269: report/label group section expression clear should preserve preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#2269: report/label group section expression clear should preserve preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2269: report/label group section expression clear should not fabricate deleted preview bounds");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
@@ -30581,6 +30613,22 @@ void test_studio_host_json_updates_report_group_footer_expressions_by_record_sel
                         "#1568: report/label group footer expression update should preserve section selection");
         expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1568: report/label group footer expression update should preserve selection kind");
+        expect_contains(update_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2269: report/label group footer expression update should preserve preview availability");
+        expect_contains(update_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2269: report/label group footer expression update should preserve preview left bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2269: report/label group footer expression update should preserve preview top bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2269: report/label group footer expression update should preserve preview right bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2269: report/label group footer expression update should preserve preview bottom bounds");
+        expect_contains(update_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2269: report/label group footer expression update should preserve preview widths");
+        expect_contains(update_process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#2269: report/label group footer expression update should preserve preview heights");
+        expect_contains(update_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2269: report/label group footer expression update should not fabricate deleted preview bounds");
         expect_contains_in_order(
             update_process.stdout_text,
             {
@@ -30656,6 +30704,22 @@ void test_studio_host_json_clears_report_group_footer_expressions_by_record_sele
                         "#1568: report/label group footer expression clear should preserve section selection");
         expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                         "#1568: report/label group footer expression clear should preserve selection kind");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2269: report/label group footer expression clear should preserve preview availability");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2269: report/label group footer expression clear should preserve preview left bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2269: report/label group footer expression clear should preserve preview top bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2269: report/label group footer expression clear should preserve preview right bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2269: report/label group footer expression clear should preserve preview bottom bounds");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2269: report/label group footer expression clear should preserve preview widths");
+        expect_contains(clear_process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#2269: report/label group footer expression clear should preserve preview heights");
+        expect_contains(clear_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2269: report/label group footer expression clear should not fabricate deleted preview bounds");
         expect_contains_in_order(
             clear_process.stdout_text,
             {
