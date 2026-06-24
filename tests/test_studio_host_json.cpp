@@ -14585,6 +14585,22 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                             "#1790: deleted detail-header object align should not fabricate containing sections");
             expect_contains(align_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1790: deleted detail-header object align should serialize null containing-section JSON");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2296: deleted detail-header object align should preserve live preview availability");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2296: deleted detail-header object align should preserve live preview top bounds");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2296: deleted detail-header object align should preserve live preview bottom bounds");
+            expect_contains(align_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2296: deleted detail-header object align should preserve live preview heights");
+            expect_contains(align_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2296: deleted detail-header object align should expose deleted preview availability");
+            expect_contains(align_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2296: deleted detail-header object align should preserve deleted preview top bounds");
+            expect_contains(align_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                            "#2296: deleted detail-header object align should preserve deleted preview bottom bounds");
+            expect_contains(align_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 410",
+                            "#2296: deleted detail-header object align should preserve deleted preview heights");
             expect_contains(align_header_process.stdout_text, "\"dryRun\": false",
                             "#2249: deleted detail-header object align JSON should expose committed execution");
             expect_contains(align_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -14664,6 +14680,22 @@ void test_studio_host_json_aligns_deleted_detail_header_footer_objects_by_stable
                             "#1790: deleted detail-footer object align should not fabricate containing sections");
             expect_contains(align_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1790: deleted detail-footer object align should serialize null containing-section JSON");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2296: deleted detail-footer object align should preserve live preview availability");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2296: deleted detail-footer object align should preserve live preview top bounds");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2296: deleted detail-footer object align should preserve live preview bottom bounds");
+            expect_contains(align_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2296: deleted detail-footer object align should preserve live preview heights");
+            expect_contains(align_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2296: deleted detail-footer object align should expose deleted preview availability");
+            expect_contains(align_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2296: deleted detail-footer object align should preserve deleted preview top bounds");
+            expect_contains(align_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                            "#2296: deleted detail-footer object align should preserve deleted preview bottom bounds");
+            expect_contains(align_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 410",
+                            "#2296: deleted detail-footer object align should preserve deleted preview heights");
             expect_contains(align_footer_process.stdout_text, "\"dryRun\": false",
                             "#2249: deleted detail-footer object align JSON should expose committed execution");
             expect_contains(align_footer_process.stdout_text, "\"mutatesAsset\": true",
