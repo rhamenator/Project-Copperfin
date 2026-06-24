@@ -15921,6 +15921,14 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                             "#1800: deleted detail-header object vertical distribution should not fabricate containing sections");
             expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1800: deleted detail-header object vertical distribution should serialize null containing-section JSON");
+            expect_contains(distribute_header_process.stdout_text, "\"dryRun\": false",
+                            "#2259: deleted detail-header object vertical distribution JSON should expose committed execution");
+            expect_contains(distribute_header_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2259: deleted detail-header object vertical distribution JSON should expose mutation state");
+            expect_contains(distribute_header_process.stdout_text, "\"undoAvailable\": true",
+                            "#2259: deleted detail-header object vertical distribution JSON should expose undo availability");
+            expect_contains(distribute_header_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2259: deleted detail-header object vertical distribution JSON should expose vertical-distribution undo labels");
             expect_contains_in_order(
                 distribute_header_process.stdout_text,
                 {
@@ -15996,6 +16004,14 @@ void test_studio_host_json_distributes_deleted_detail_header_footer_objects_vert
                             "#1800: deleted detail-footer object vertical distribution should not fabricate containing sections");
             expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1800: deleted detail-footer object vertical distribution should serialize null containing-section JSON");
+            expect_contains(distribute_footer_process.stdout_text, "\"dryRun\": false",
+                            "#2259: deleted detail-footer object vertical distribution JSON should expose committed execution");
+            expect_contains(distribute_footer_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2259: deleted detail-footer object vertical distribution JSON should expose mutation state");
+            expect_contains(distribute_footer_process.stdout_text, "\"undoAvailable\": true",
+                            "#2259: deleted detail-footer object vertical distribution JSON should expose undo availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"undoLabel\": \"Property VPOS\"",
+                            "#2259: deleted detail-footer object vertical distribution JSON should expose vertical-distribution undo labels");
             expect_contains_in_order(
                 distribute_footer_process.stdout_text,
                 {
