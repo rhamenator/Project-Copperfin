@@ -23748,6 +23748,9 @@ void test_studio_host_json_ignores_blank_report_setting_memo_values(
         expect_contains(summary_process.stdout_text,
                         "\"name\": \"COLSPACING\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": 8, \"memoBlockNumber\": 2, \"value\": \"\"",
                         "#1752: deleted blank memo column-spacing provenance should remain inspectable");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2326: blank settings memo summary JSON");
 
         const auto live_settings_process = run_process_capture(
             studio_host_path,
@@ -23760,6 +23763,9 @@ void test_studio_host_json_ignores_blank_report_setting_memo_values(
                         "#1752: blank live settings memo selection should expose raw settings");
         expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1752: blank live settings memo selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            live_settings_process.stdout_text,
+            "#2326: selected blank live settings memo JSON");
         expect_contains_in_order(
             live_settings_process.stdout_text,
             {
@@ -23808,6 +23814,9 @@ void test_studio_host_json_ignores_blank_report_setting_memo_values(
                         "#1752: blank deleted settings memo selection should expose raw settings");
         expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1752: blank deleted settings memo selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            deleted_settings_process.stdout_text,
+            "#2326: selected blank deleted settings memo JSON");
         expect_contains_in_order(
             deleted_settings_process.stdout_text,
             {
