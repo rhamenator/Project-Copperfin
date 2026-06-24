@@ -15045,6 +15045,22 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                             "#1792: deleted detail-header object resize should not fabricate containing sections");
             expect_contains(resize_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1792: deleted detail-header object resize should serialize null containing-section JSON");
+            expect_contains(resize_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2298: deleted detail-header object resize should preserve live preview availability");
+            expect_contains(resize_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2298: deleted detail-header object resize should preserve live preview top bounds");
+            expect_contains(resize_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2298: deleted detail-header object resize should preserve live preview bottom bounds");
+            expect_contains(resize_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2298: deleted detail-header object resize should preserve live preview heights");
+            expect_contains(resize_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2298: deleted detail-header object resize should expose deleted preview availability");
+            expect_contains(resize_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2298: deleted detail-header object resize should preserve deleted preview top bounds");
+            expect_contains(resize_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                            "#2298: deleted detail-header object resize should preserve deleted preview bottom bounds");
+            expect_contains(resize_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 410",
+                            "#2298: deleted detail-header object resize should preserve deleted preview heights");
             expect_contains(resize_header_process.stdout_text, "\"dryRun\": false",
                             "#2251: deleted detail-header object resize JSON should expose committed execution");
             expect_contains(resize_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -15127,6 +15143,22 @@ void test_studio_host_json_resizes_deleted_detail_header_footer_objects_by_stabl
                             "#1792: deleted detail-footer object resize should not fabricate containing sections");
             expect_contains(resize_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1792: deleted detail-footer object resize should serialize null containing-section JSON");
+            expect_contains(resize_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2298: deleted detail-footer object resize should preserve live preview availability");
+            expect_contains(resize_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2298: deleted detail-footer object resize should preserve live preview top bounds");
+            expect_contains(resize_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2298: deleted detail-footer object resize should preserve live preview bottom bounds");
+            expect_contains(resize_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2298: deleted detail-footer object resize should preserve live preview heights");
+            expect_contains(resize_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2298: deleted detail-footer object resize should expose deleted preview availability");
+            expect_contains(resize_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2298: deleted detail-footer object resize should preserve deleted preview top bounds");
+            expect_contains(resize_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 480",
+                            "#2298: deleted detail-footer object resize should preserve deleted preview bottom bounds");
+            expect_contains(resize_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 430",
+                            "#2298: deleted detail-footer object resize should preserve deleted preview heights");
             expect_contains(resize_footer_process.stdout_text, "\"dryRun\": false",
                             "#2251: deleted detail-footer object resize JSON should expose committed execution");
             expect_contains(resize_footer_process.stdout_text, "\"mutatesAsset\": true",
