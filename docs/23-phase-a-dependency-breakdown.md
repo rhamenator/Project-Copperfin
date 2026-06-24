@@ -14,7 +14,7 @@ This is the only actionable queue in this file as of 2026-06-22. If another sect
 
 - Phase A, D1/#19, and E1/#22 are closed. Do not reopen the old Phase A gate (`#150`-`#153`), runtime lanes (`#92`-`#101`), shared design-model lane (`#22`), or earlier `#154`-`#203` planning branch unless fresh issue evidence shows a regression.
 - The live execution lane has advanced to E3/#24: report/label designer fidelity and section-aware host surfaces. E2/#23 remains open with many prompt-sized children still open in GitHub; treat them as evidence-audit/closure cleanup unless fresh implementation evidence shows a real remaining local miss.
-- Latest implemented E3 slice: `#2328`, duplicate settings preview-metadata JSON coverage. Recent adjacent E3 implementation slices through `#2327`-`#1799` are shipped; keep their evidence in the historical tables below instead of repeating it in recurring handoff text.
+- Latest implemented E3 slice: `#2329`, invalid-first duplicate settings preview-metadata JSON coverage. Recent adjacent E3 implementation slices through `#2328`-`#1799` are shipped; keep their evidence in the historical tables below instead of repeating it in recurring handoff text.
 - Recent non-E3 shipped context: localization/release-readiness slices through `#1856` under `#1779`/`#113`, evidence-management `#1700` under `#108`, F1 error-management `#1714` under `#25`, and E2 raw-code fallback `#1749` under `#23`.
 - Evidence-backed child issue closure is approved for completed slices; keep parent/lane issues open unless root-level closure evidence is explicit.
 - Current continuation shape: continue prompt-sized E3/#24 children in report/label designer fidelity, report/label section editing, report/label output preview metadata, and layout/runtime parity seams, with stable non-mutating admission/planning seams first, host exposure where useful, focused tests, docs, validation, commit, push, and issue closure per slice.
@@ -894,7 +894,7 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 | `#24` | `#1752` closed | Studio host regressions prove blank report/label settings memo values stay inspectable without fabricated setup availability while preserving unavailable zero preview metadata |
 | `#24` | `#1753` closed | Studio host regressions prove malformed report/label settings memo lines are skipped while valid later settings retain provenance and unavailable zero preview metadata |
 | `#24` | `#1754` closed | Studio host regressions prove duplicate report/label settings keep first-match summary precedence while preserving duplicate metadata and unavailable zero preview metadata |
-| `#24` | `#1755` closed | Studio host regressions prove invalid-first duplicate report/label settings do not fabricate summaries from later duplicates |
+| `#24` | `#1755` closed | Studio host regressions prove invalid-first duplicate report/label settings do not fabricate summaries from later duplicates while preserving unavailable zero preview metadata |
 | `#24` | `#1756` closed | Studio host regressions prove CR-only report/label settings memo lines parse as separate settings with provenance |
 | `#24` | `#1757` closed | Studio host regressions prove mixed-case report/label settings memo names drive summaries case-insensitively |
 | `#24` | `#1758` closed | Studio host regressions prove fractional report/label layout classification codes use integer portions for roots, bands, and objects |

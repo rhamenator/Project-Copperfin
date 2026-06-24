@@ -24240,6 +24240,9 @@ void test_studio_host_json_preserves_invalid_first_duplicate_report_setting_prec
         expect_contains(summary_process.stdout_text,
                         "\"name\": \"COLS\", \"recordIndex\": 1, \"fieldIndex\": 4, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"11\"",
                         "#1755: direct valid deleted column duplicate should remain inspectable");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2329: invalid-first duplicate settings summary JSON");
 
         const auto live_settings_process = run_process_capture(
             studio_host_path,
@@ -24252,6 +24255,9 @@ void test_studio_host_json_preserves_invalid_first_duplicate_report_setting_prec
                         "#1755: invalid-first duplicate live settings selection should expose settings");
         expect_contains(live_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1755: invalid-first duplicate live settings selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            live_settings_process.stdout_text,
+            "#2329: selected invalid-first duplicate live settings JSON");
         expect_contains_in_order(
             live_settings_process.stdout_text,
             {
@@ -24293,6 +24299,9 @@ void test_studio_host_json_preserves_invalid_first_duplicate_report_setting_prec
                         "#1755: invalid-first duplicate deleted settings selection should expose settings");
         expect_contains(deleted_settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1755: invalid-first duplicate deleted settings selection should expose settings kind");
+        expect_empty_report_layout_preview_bounds(
+            deleted_settings_process.stdout_text,
+            "#2329: selected invalid-first duplicate deleted settings JSON");
         expect_contains_in_order(
             deleted_settings_process.stdout_text,
             {
