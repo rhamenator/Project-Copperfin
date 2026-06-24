@@ -148,6 +148,37 @@ void expect_normalized_classification_preview_bounds(const std::string& text, co
                     prefix + " should preserve deleted preview heights");
 }
 
+void expect_fractional_geometry_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 10",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 425",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 1010",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 425",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 1000",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 425",
+                    prefix + " should preserve deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 700",
+                    prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 575",
+                    prefix + " should preserve deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 740",
+                    prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 150",
+                    prefix + " should preserve deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 40",
+                    prefix + " should preserve deleted preview heights");
+}
+
 void expect_zero_available_report_layout_preview_bounds(const std::string& text, const std::string& prefix) {
     expect_contains(text, "\"previewBoundsAvailable\": true",
                     prefix + " should preserve live preview availability");
@@ -20393,6 +20424,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_ge
                         "#1719: fractional deleted layout width should use integer portions");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsHeight\": 40",
                         "#1719: fractional deleted layout height should use integer portions");
+        expect_fractional_geometry_preview_bounds(
+            summary_process.stdout_text,
+            "#2347: fractional geometry summary JSON");
         expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 1",
                         "#1719: fractional layout numerics should preserve live object counts");
         expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 1",
@@ -20407,6 +20441,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_ge
 
         expect(live_process.exit_code == 0,
                "#1719: fractional live object selection should keep inspection non-failing");
+        expect_fractional_geometry_preview_bounds(
+            live_process.stdout_text,
+            "#2347: selected fractional live object JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -20429,6 +20466,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_ge
 
         expect(deleted_process.exit_code == 0,
                "#1719: fractional deleted object selection should keep inspection non-failing");
+        expect_fractional_geometry_preview_bounds(
+            deleted_process.stdout_text,
+            "#2347: selected fractional deleted object JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
