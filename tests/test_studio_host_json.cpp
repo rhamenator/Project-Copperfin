@@ -17306,6 +17306,8 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_expressi
 
             expect(update_process.exit_code == 0,
                    "#1766: deleted detail-header report/label expression update should exit successfully");
+            expect(dbf_record_deleted(asset_path, 1U),
+                   "#2264: deleted detail-header expression update should preserve deleted state");
             const auto updated_expr = copperfin::vfp::query_visual_object_property({
                 .path = asset_path.string(),
                 .record_index = 1U,
@@ -17330,6 +17332,14 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_expressi
                             "#1766: deleted detail-header expression update should preserve section selection");
             expect_contains(update_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1766: deleted detail-header expression update should preserve selection kind");
+            expect_contains(update_process.stdout_text, "\"dryRun\": false",
+                            "#2264: deleted detail-header expression update JSON should expose committed execution");
+            expect_contains(update_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2264: deleted detail-header expression update JSON should expose mutation state");
+            expect_contains(update_process.stdout_text, "\"undoAvailable\": true",
+                            "#2264: deleted detail-header expression update JSON should expose undo availability");
+            expect_contains(update_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                            "#2264: deleted detail-header expression update JSON should expose expression undo labels");
             expect_contains_in_order(
                 update_process.stdout_text,
                 {
@@ -17405,16 +17415,30 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_expressi
 
             expect(clear_process.exit_code == 0,
                    "#1766: deleted detail-footer report/label expression clear should exit successfully");
+            expect(dbf_record_deleted(asset_path, 2U),
+                   "#2264: deleted detail-footer expression clear should preserve deleted state");
             expect_contains(clear_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                             "#1766: deleted detail-footer expression clear should return refreshed layout JSON");
             if (asset_path.extension() == ".lbx") {
                 expect_contains(clear_process.stdout_text, "\"isLabel\": true",
                                 "#1766: deleted detail-footer expression clear should retain label identity");
             }
+            expect_contains(clear_process.stdout_text, "\"sectionCount\": 1",
+                            "#2264: deleted detail-footer expression clear should preserve live section count");
+            expect_contains(clear_process.stdout_text, "\"deletedSectionCount\": 2",
+                            "#2264: deleted detail-footer expression clear should preserve deleted section count");
             expect_contains(clear_process.stdout_text, "\"selectedReportSectionAvailable\": true",
                             "#1766: deleted detail-footer expression clear should preserve section selection");
             expect_contains(clear_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
                             "#1766: deleted detail-footer expression clear should preserve selection kind");
+            expect_contains(clear_process.stdout_text, "\"dryRun\": false",
+                            "#2264: deleted detail-footer expression clear JSON should expose committed execution");
+            expect_contains(clear_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2264: deleted detail-footer expression clear JSON should expose mutation state");
+            expect_contains(clear_process.stdout_text, "\"undoAvailable\": true",
+                            "#2264: deleted detail-footer expression clear JSON should expose undo availability");
+            expect_contains(clear_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                            "#2264: deleted detail-footer expression clear JSON should expose expression undo labels");
             expect_contains_in_order(
                 clear_process.stdout_text,
                 {
