@@ -117,6 +117,37 @@ void expect_empty_report_layout_preview_bounds(const std::string& text, const st
                     prefix + " should preserve zero deleted preview heights");
 }
 
+void expect_normalized_classification_preview_bounds(const std::string& text, const std::string& prefix) {
+    expect_contains(text, "\"previewBoundsAvailable\": true",
+                    prefix + " should preserve live preview availability");
+    expect_contains(text, "\"previewBoundsLeft\": 0",
+                    prefix + " should preserve live preview left bounds");
+    expect_contains(text, "\"previewBoundsTop\": 100",
+                    prefix + " should preserve live preview top bounds");
+    expect_contains(text, "\"previewBoundsRight\": 360",
+                    prefix + " should preserve live preview right bounds");
+    expect_contains(text, "\"previewBoundsBottom\": 400",
+                    prefix + " should preserve live preview bottom bounds");
+    expect_contains(text, "\"previewBoundsWidth\": 360",
+                    prefix + " should preserve live preview widths");
+    expect_contains(text, "\"previewBoundsHeight\": 300",
+                    prefix + " should preserve live preview heights");
+    expect_contains(text, "\"deletedPreviewBoundsAvailable\": true",
+                    prefix + " should preserve deleted preview availability");
+    expect_contains(text, "\"deletedPreviewBoundsLeft\": 0",
+                    prefix + " should preserve deleted preview left bounds");
+    expect_contains(text, "\"deletedPreviewBoundsTop\": 600",
+                    prefix + " should preserve deleted preview top bounds");
+    expect_contains(text, "\"deletedPreviewBoundsRight\": 150",
+                    prefix + " should preserve deleted preview right bounds");
+    expect_contains(text, "\"deletedPreviewBoundsBottom\": 800",
+                    prefix + " should preserve deleted preview bottom bounds");
+    expect_contains(text, "\"deletedPreviewBoundsWidth\": 150",
+                    prefix + " should preserve deleted preview widths");
+    expect_contains(text, "\"deletedPreviewBoundsHeight\": 200",
+                    prefix + " should preserve deleted preview heights");
+}
+
 std::string quote_command_argument(const std::string& value) {
     std::string quoted = "\"";
     quoted.reserve(value.size() + 2U);
@@ -20150,6 +20181,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
                         "#1758: fractional root classifications should preserve later settings values");
         expect_contains(summary_process.stdout_text, "\"settingCount\": 2",
                         "#1758: fractional root classifications should preserve live root settings");
+        expect_normalized_classification_preview_bounds(
+            summary_process.stdout_text,
+            "#2312: fractional classification summary JSON");
         expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
                         "#1758: fractional band classifications should create live sections");
         expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
@@ -20216,6 +20250,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
                         "#1758: fractional live section classification should preserve integer band kinds");
         expect_contains(section_process.stdout_text, "\"objectCode\": 4",
                         "#1758: fractional live section classification should preserve integer band codes");
+        expect_normalized_classification_preview_bounds(
+            section_process.stdout_text,
+            "#2312: selected fractional live section classification JSON");
 
         const auto object_process = run_process_capture(
             studio_host_path,
@@ -20245,6 +20282,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
                         "#1758: fractional live object classification should preserve integer object codes");
         expect_contains(object_process.stdout_text, "\"containingSectionRecordIndex\": 1",
                         "#1758: fractional live object classification should preserve containing sections");
+        expect_normalized_classification_preview_bounds(
+            object_process.stdout_text,
+            "#2312: selected fractional live object classification JSON");
 
         const auto deleted_section_process = run_process_capture(
             studio_host_path,
@@ -20268,6 +20308,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
                         "#1758: fractional deleted section classification should preserve integer band kinds");
         expect_contains(deleted_section_process.stdout_text, "\"objectCode\": 7",
                         "#1758: fractional deleted section classification should preserve integer band codes");
+        expect_normalized_classification_preview_bounds(
+            deleted_section_process.stdout_text,
+            "#2312: selected fractional deleted section classification JSON");
 
         const auto deleted_object_process = run_process_capture(
             studio_host_path,
@@ -20291,6 +20334,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
                         "#1758: fractional deleted object classification should preserve integer object kinds");
         expect_contains(deleted_object_process.stdout_text, "\"objectCode\": 1",
                         "#1758: fractional deleted object classification should preserve integer object codes");
+        expect_normalized_classification_preview_bounds(
+            deleted_object_process.stdout_text,
+            "#2312: selected fractional deleted object classification JSON");
     };
 
     run_fractional_classification_layout(temp_root / "fractional_classifications.frx",
@@ -20349,6 +20395,9 @@ void test_studio_host_json_trims_report_layout_classifications(
                         "#1759: trimmed root classifications should preserve later settings values");
         expect_contains(summary_process.stdout_text, "\"settingCount\": 2",
                         "#1759: trimmed root classifications should preserve live root settings");
+        expect_normalized_classification_preview_bounds(
+            summary_process.stdout_text,
+            "#2312: trimmed classification summary JSON");
         expect_contains(summary_process.stdout_text, "\"sectionCount\": 1",
                         "#1759: trimmed band classifications should create live sections");
         expect_contains(summary_process.stdout_text, "\"deletedSectionCount\": 1",
@@ -20391,6 +20440,9 @@ void test_studio_host_json_trims_report_layout_classifications(
                         "#1759: trimmed live section classification should preserve trimmed band kinds");
         expect_contains(section_process.stdout_text, "\"objectCode\": 4",
                         "#1759: trimmed live section classification should preserve trimmed band codes");
+        expect_normalized_classification_preview_bounds(
+            section_process.stdout_text,
+            "#2312: selected trimmed live section classification JSON");
 
         const auto object_process = run_process_capture(
             studio_host_path,
@@ -20410,6 +20462,9 @@ void test_studio_host_json_trims_report_layout_classifications(
                         "#1759: trimmed live object classification should preserve trimmed object codes");
         expect_contains(object_process.stdout_text, "\"containingSectionRecordIndex\": 1",
                         "#1759: trimmed live object classification should preserve containing sections");
+        expect_normalized_classification_preview_bounds(
+            object_process.stdout_text,
+            "#2312: selected trimmed live object classification JSON");
 
         const auto deleted_section_process = run_process_capture(
             studio_host_path,
@@ -20423,6 +20478,9 @@ void test_studio_host_json_trims_report_layout_classifications(
                         "#1759: trimmed deleted section classification should preserve trimmed band kinds");
         expect_contains(deleted_section_process.stdout_text, "\"objectCode\": 7",
                         "#1759: trimmed deleted section classification should preserve trimmed band codes");
+        expect_normalized_classification_preview_bounds(
+            deleted_section_process.stdout_text,
+            "#2312: selected trimmed deleted section classification JSON");
 
         const auto deleted_object_process = run_process_capture(
             studio_host_path,
@@ -20438,6 +20496,9 @@ void test_studio_host_json_trims_report_layout_classifications(
                         "#1759: trimmed deleted object classification should preserve trimmed object kinds");
         expect_contains(deleted_object_process.stdout_text, "\"objectCode\": 1",
                         "#1759: trimmed deleted object classification should preserve trimmed object codes");
+        expect_normalized_classification_preview_bounds(
+            deleted_object_process.stdout_text,
+            "#2312: selected trimmed deleted object classification JSON");
     };
 
     run_trimmed_classification_layout(temp_root / "trimmed_classifications.frx",
