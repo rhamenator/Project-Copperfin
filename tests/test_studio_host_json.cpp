@@ -84585,6 +84585,10 @@ void test_studio_host_json_renames_deleted_report_visual_object_batches_by_stabl
                "#1862: deleted report/label stable visual-object rename-batch identity collision should fail");
         expect_contains(rollback_process.stdout_text, "\"visualObjectRenameBatch\": null",
                         "#1862: failed deleted report/label stable visual-object rename-batch JSON should not expose stale batch objects");
+        expect_not_contains(rollback_process.stdout_text, "\"dryRun\": false",
+                            "#2231: failed deleted report/label stable visual-object rename-batch JSON should not expose stale committed state");
+        expect_not_contains(rollback_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2231: failed deleted report/label stable visual-object rename-batch JSON should not expose stale mutation state");
         expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
                             "#2179: failed deleted report/label stable visual-object rename-batch JSON should not advertise undo availability");
         expect_not_contains(rollback_process.stdout_text, "\"undoLabel\":",
