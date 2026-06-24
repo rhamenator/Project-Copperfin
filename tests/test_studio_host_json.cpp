@@ -52635,6 +52635,22 @@ void test_studio_host_json_restores_label_sections_by_record_selection(const std
                     "#1493: restored label section JSON should restore live section counts");
     expect_contains(restore_process.stdout_text, "\"deletedSectionCount\": 0",
                     "#1493: restored label section JSON should clear deleted section counts");
+    expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                    "#2274: restored label section JSON should expose live preview availability");
+    expect_contains(restore_process.stdout_text, "\"previewBoundsLeft\": 0",
+                    "#2274: restored label section JSON should preserve live preview left bounds");
+    expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 2000",
+                    "#2274: restored label section JSON should preserve live preview top bounds");
+    expect_contains(restore_process.stdout_text, "\"previewBoundsRight\": 150",
+                    "#2274: restored label section JSON should preserve live preview right bounds");
+    expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                    "#2274: restored label section JSON should preserve live preview bottom bounds");
+    expect_contains(restore_process.stdout_text, "\"previewBoundsWidth\": 150",
+                    "#2274: restored label section JSON should preserve live preview widths");
+    expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                    "#2274: restored label section JSON should preserve live preview heights");
+    expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                    "#2274: restored label section JSON should clear deleted preview availability");
     expect_contains_in_order(
         restore_process.stdout_text,
         {
@@ -52709,6 +52725,22 @@ void test_studio_host_json_restores_report_sections_by_stable_selection(const st
                         "#1654: stable report/label section restore should restore live section counts");
         expect_contains(restore_process.stdout_text, "\"deletedSectionCount\": 0",
                         "#1654: stable report/label section restore should clear deleted section counts");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2274: stable report/label section restore should expose live preview availability");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2274: stable report/label section restore should preserve live preview left bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 2000",
+                        "#2274: stable report/label section restore should preserve live preview top bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsRight\": 150",
+                        "#2274: stable report/label section restore should preserve live preview right bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 7000",
+                        "#2274: stable report/label section restore should preserve live preview bottom bounds");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsWidth\": 150",
+                        "#2274: stable report/label section restore should preserve live preview widths");
+        expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 5000",
+                        "#2274: stable report/label section restore should preserve live preview heights");
+        expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2274: stable report/label section restore should clear deleted preview availability");
         expect_contains_in_order(
             restore_process.stdout_text,
             {
