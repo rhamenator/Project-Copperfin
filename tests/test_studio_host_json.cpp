@@ -16107,6 +16107,14 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                             "#1770: detail-header object expression update should preserve object selection kind");
             expect_contains(update_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1770: detail-header object expression update should preserve containing-section availability");
+            expect_contains(update_process.stdout_text, "\"dryRun\": false",
+                            "#2260: detail-header object expression update JSON should expose committed execution");
+            expect_contains(update_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2260: detail-header object expression update JSON should expose mutation state");
+            expect_contains(update_process.stdout_text, "\"undoAvailable\": true",
+                            "#2260: detail-header object expression update JSON should expose undo availability");
+            expect_contains(update_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                            "#2260: detail-header object expression update JSON should expose expression undo labels");
             expect_contains_in_order(
                 update_process.stdout_text,
                 {
@@ -16170,6 +16178,14 @@ void test_studio_host_json_updates_detail_header_footer_object_expressions_by_st
                             "#1770: detail-footer object expression clear should preserve object selection kind");
             expect_contains(clear_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1770: detail-footer object expression clear should preserve containing-section availability");
+            expect_contains(clear_process.stdout_text, "\"dryRun\": false",
+                            "#2260: detail-footer object expression clear JSON should expose committed execution");
+            expect_contains(clear_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2260: detail-footer object expression clear JSON should expose mutation state");
+            expect_contains(clear_process.stdout_text, "\"undoAvailable\": true",
+                            "#2260: detail-footer object expression clear JSON should expose undo availability");
+            expect_contains(clear_process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                            "#2260: detail-footer object expression clear JSON should expose expression undo labels");
             expect_contains_in_order(
                 clear_process.stdout_text,
                 {
