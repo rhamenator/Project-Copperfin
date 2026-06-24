@@ -81760,6 +81760,12 @@ void test_studio_host_json_clears_deleted_report_visual_properties_by_stable_sel
                         "#2059: deleted report/label stable visual-property geometry clear JSON should expose a clear object");
         expect_contains(geometry_clear_process.stdout_text, "\"affectedObjectCount\": 1",
                         "#2059: deleted report/label stable visual-property geometry clear JSON should expose affected property counts");
+        expect_contains(geometry_clear_process.stdout_text, "\"dryRun\": false",
+                        "#2192: deleted report/label stable visual-property geometry clear JSON should expose committed state");
+        expect_contains(geometry_clear_process.stdout_text, "\"mutatesAsset\": true",
+                        "#2192: deleted report/label stable visual-property geometry clear JSON should expose mutation state");
+        expect_contains(geometry_clear_process.stdout_text, "\"undoAvailable\": true",
+                        "#2192: deleted report/label stable visual-property geometry clear JSON should expose undo availability");
         expect_contains(geometry_clear_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
                         "#2157: deleted report/label stable visual-property geometry clear JSON should expose geometry undo labels");
 
