@@ -180,6 +180,19 @@ int main() {
                    "A builder launch catalog request requires at least one context builder." &&
                pseudo_catalog.translate("Studio.BuilderRegistry.Error.BuilderUnavailableForContext").starts_with("[!! "),
            "#2367: builder registry launch error prose should resolve through localizable catalog keys");
+    expect(english_catalog.translate("Studio.BuilderInvocationAdmission.Error.ValidatedBuilderIdRequired") ==
+               "A builder invocation admission request requires a validated builder id." &&
+               english_catalog.translate("Studio.BuilderInvocationAdmission.Error.CatalogRequiresBuilder") ==
+                   "A builder invocation admission catalog request requires at least one context builder." &&
+               english_catalog.translate("Studio.BuilderDispatch.Error.AdmittedInvocationRequired") ==
+                   "A builder dispatch request requires an admitted non-dry-run invocation." &&
+               english_catalog.translate("Studio.BuilderDispatch.Execution.Error.ExecutionAdmissionRequired") ==
+                   "A builder dispatch execution request requires explicit execution admission." &&
+               english_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired") ==
+                   "A builder dispatch execution catalog entry requires explicit execution admission." &&
+               pseudo_catalog.translate("Studio.BuilderDispatch.Execution.Error.ExecutorDidNotLaunch").starts_with("[!! ") &&
+               pseudo_catalog.translate("Studio.BuilderDispatch.Error.ExecutionCatalogRequiresBuilder").starts_with("[!! "),
+           "#2368: builder invocation and dispatch error prose should resolve through localizable catalog keys");
 
     const auto control_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::control);
     expect(control_builders.size() >= 2U, "#956: control context should expose multiple control builders");
@@ -562,6 +575,24 @@ int main() {
                launch_failure_execution.dry_run &&
                launch_failure_execution.observation.error == "launcher unavailable",
            "#1318: builder dispatch execution should surface launch failures without stale execution metadata");
+    const auto default_launch_failure_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = control_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = false,
+                .exit_code = 0,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!default_launch_failure_execution.ok &&
+               default_launch_failure_execution.error == "A builder dispatch executor did not launch the builder." &&
+               !default_launch_failure_execution.executed &&
+               default_launch_failure_execution.dry_run,
+           "#2368: builder dispatch execution should localize default launch-failure prose");
 
     const auto non_zero_execution = copperfin::studio::execute_studio_builder_dispatch({
         .dispatch_plan = control_dispatch.plan,
@@ -583,6 +614,26 @@ int main() {
                !non_zero_execution.executed &&
                non_zero_execution.dry_run,
            "#1318: builder dispatch execution should reject non-zero executor exit codes");
+    const auto default_non_zero_execution = copperfin::studio::execute_studio_builder_dispatch({
+        .dispatch_plan = control_dispatch.plan,
+        .admit_execution = true,
+        .executor = [](const copperfin::studio::StudioBuilderDispatchPlan&) {
+            return copperfin::studio::StudioBuilderDispatchExecutionObservation{
+                .launched = true,
+                .exit_code = 9,
+                .output = {},
+                .error = {},
+                .mutates_asset = false
+            };
+        }
+    });
+    expect(!default_non_zero_execution.ok &&
+               default_non_zero_execution.error == "A builder dispatch executor returned a non-zero exit code." &&
+               default_non_zero_execution.observation.launched &&
+               default_non_zero_execution.observation.exit_code == 9 &&
+               !default_non_zero_execution.executed &&
+               default_non_zero_execution.dry_run,
+           "#2368: builder dispatch execution should localize default non-zero-exit prose");
 
     const auto dry_run_builder_dispatch = copperfin::studio::plan_studio_builder_dispatch({
         .admission_plan = dry_run_label_invocation.plan

@@ -1,22 +1,41 @@
 #include "copperfin/studio/builder_invocation_admission.h"
 
+#include "copperfin/localization/localization.h"
+
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
+
+namespace {
+
+const copperfin::localization::LocalizedCatalog& builder_invocation_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string builder_invocation_text(std::string_view key) {
+    return builder_invocation_catalog().translate(key);
+}
+
+}  // namespace
 
 StudioBuilderInvocationAdmissionResult plan_studio_builder_invocation_admission(
     const StudioBuilderInvocationAdmissionRequest& request) {
     if (request.launch_plan.builder.id.empty()) {
         return {
             .ok = false,
-            .error = "A builder invocation admission request requires a validated builder id.",
+            .error = builder_invocation_text("Studio.BuilderInvocationAdmission.Error.ValidatedBuilderIdRequired"),
             .plan = {}
         };
     }
     if (request.launch_plan.entry_point.empty()) {
         return {
             .ok = false,
-            .error = "A builder invocation admission request requires a launch entry point.",
+            .error = builder_invocation_text("Studio.BuilderInvocationAdmission.Error.EntryPointRequired"),
             .plan = {}
         };
     }
@@ -46,7 +65,7 @@ StudioBuilderInvocationAdmissionCatalogResult plan_studio_builder_invocation_adm
     if (builders.empty()) {
         return {
             .ok = false,
-            .error = "A builder invocation admission catalog request requires at least one context builder.",
+            .error = builder_invocation_text("Studio.BuilderInvocationAdmission.Error.CatalogRequiresBuilder"),
             .context = request.context,
             .builder_count = 0U,
             .admission_count = 0U,

@@ -1,6 +1,9 @@
 #include "copperfin/studio/builder_dispatch.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace copperfin::studio {
@@ -12,6 +15,18 @@ void append_argument(std::vector<std::string>& arguments, std::string key, std::
     arguments.push_back(std::move(value));
 }
 
+const copperfin::localization::LocalizedCatalog& builder_dispatch_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string builder_dispatch_text(std::string_view key) {
+    return builder_dispatch_catalog().translate(key);
+}
+
 std::string builder_dispatch_execution_readiness_error(
     const StudioBuilderDispatchResult& dispatch,
     bool admit_execution) {
@@ -19,26 +34,26 @@ std::string builder_dispatch_execution_readiness_error(
         return dispatch.error;
     }
     if (!admit_execution) {
-        return "A builder dispatch execution catalog entry requires explicit execution admission.";
+        return builder_dispatch_text("Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired");
     }
     const auto& dispatch_plan = dispatch.plan;
     if (dispatch_plan.builder.id.empty()) {
-        return "A builder dispatch execution catalog entry requires a validated builder id.";
+        return builder_dispatch_text("Studio.BuilderDispatch.CatalogEntry.Error.ValidatedBuilderIdRequired");
     }
     if (dispatch_plan.command_token.empty()) {
-        return "A builder dispatch execution catalog entry requires a command token.";
+        return builder_dispatch_text("Studio.BuilderDispatch.CatalogEntry.Error.CommandTokenRequired");
     }
     if (dispatch_plan.entry_point.empty()) {
-        return "A builder dispatch execution catalog entry requires a launch entry point.";
+        return builder_dispatch_text("Studio.BuilderDispatch.CatalogEntry.Error.EntryPointRequired");
     }
     if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
-        return "A builder dispatch execution catalog entry requires an admitted non-dry-run dispatch.";
+        return builder_dispatch_text("Studio.BuilderDispatch.CatalogEntry.Error.AdmittedDispatchRequired");
     }
     if (dispatch_plan.executed) {
-        return "A builder dispatch execution catalog entry requires a non-executed dispatch.";
+        return builder_dispatch_text("Studio.BuilderDispatch.CatalogEntry.Error.NonExecutedDispatchRequired");
     }
     if (dispatch_plan.dispatch_arguments.empty()) {
-        return "A builder dispatch execution catalog entry requires dispatch arguments.";
+        return builder_dispatch_text("Studio.BuilderDispatch.CatalogEntry.Error.DispatchArgumentsRequired");
     }
 
     return {};
@@ -51,28 +66,28 @@ StudioBuilderDispatchResult plan_studio_builder_dispatch(
     if (request.admission_plan.builder.id.empty()) {
         return {
             .ok = false,
-            .error = "A builder dispatch request requires a validated builder id.",
+            .error = builder_dispatch_text("Studio.BuilderDispatch.Error.ValidatedBuilderIdRequired"),
             .plan = {}
         };
     }
     if (request.admission_plan.command_token.empty()) {
         return {
             .ok = false,
-            .error = "A builder dispatch request requires a command token.",
+            .error = builder_dispatch_text("Studio.BuilderDispatch.Error.CommandTokenRequired"),
             .plan = {}
         };
     }
     if (request.admission_plan.entry_point.empty()) {
         return {
             .ok = false,
-            .error = "A builder dispatch request requires a launch entry point.",
+            .error = builder_dispatch_text("Studio.BuilderDispatch.Error.EntryPointRequired"),
             .plan = {}
         };
     }
     if (!request.admission_plan.ui_launch_admitted || request.admission_plan.dry_run) {
         return {
             .ok = false,
-            .error = "A builder dispatch request requires an admitted non-dry-run invocation.",
+            .error = builder_dispatch_text("Studio.BuilderDispatch.Error.AdmittedInvocationRequired"),
             .plan = {}
         };
     }
@@ -121,7 +136,7 @@ StudioBuilderDispatchCatalogResult plan_studio_builder_dispatch_catalog(
     if (!admission_catalog.ok) {
         return {
             .ok = false,
-            .error = "A builder dispatch catalog request requires at least one context builder.",
+            .error = builder_dispatch_text("Studio.BuilderDispatch.Error.DispatchCatalogRequiresBuilder"),
             .context = request.context,
             .builder_count = 0U,
             .dispatch_count = 0U,
@@ -200,28 +215,28 @@ StudioBuilderDispatchExecutionResult execute_studio_builder_dispatch(
 
     const auto& dispatch_plan = request.dispatch_plan;
     if (!request.admit_execution) {
-        return failed("A builder dispatch execution request requires explicit execution admission.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.ExecutionAdmissionRequired"));
     }
     if (!request.executor) {
-        return failed("A builder dispatch execution request requires an executor.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.ExecutorRequired"));
     }
     if (dispatch_plan.builder.id.empty()) {
-        return failed("A builder dispatch execution request requires a validated builder id.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired"));
     }
     if (dispatch_plan.command_token.empty()) {
-        return failed("A builder dispatch execution request requires a command token.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.CommandTokenRequired"));
     }
     if (dispatch_plan.entry_point.empty()) {
-        return failed("A builder dispatch execution request requires a launch entry point.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.EntryPointRequired"));
     }
     if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run) {
-        return failed("A builder dispatch execution request requires an admitted non-dry-run dispatch.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired"));
     }
     if (dispatch_plan.executed) {
-        return failed("A builder dispatch execution request requires a non-executed dispatch.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.NonExecutedDispatchRequired"));
     }
     if (dispatch_plan.dispatch_arguments.empty()) {
-        return failed("A builder dispatch execution request requires dispatch arguments.");
+        return failed(builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.DispatchArgumentsRequired"));
     }
 
     auto observation = request.executor(dispatch_plan);
@@ -229,7 +244,7 @@ StudioBuilderDispatchExecutionResult execute_studio_builder_dispatch(
         return {
             .ok = false,
             .error = observation.error.empty()
-                ? "A builder dispatch executor did not launch the builder."
+                ? builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.ExecutorDidNotLaunch")
                 : observation.error,
             .dispatch_plan = {},
             .observation = std::move(observation),
@@ -243,7 +258,7 @@ StudioBuilderDispatchExecutionResult execute_studio_builder_dispatch(
         return {
             .ok = false,
             .error = observation.error.empty()
-                ? "A builder dispatch executor returned a non-zero exit code."
+                ? builder_dispatch_text("Studio.BuilderDispatch.Execution.Error.ExecutorNonZeroExit")
                 : observation.error,
             .dispatch_plan = {},
             .observation = std::move(observation),
@@ -282,7 +297,7 @@ StudioBuilderDispatchExecutionCatalogResult plan_studio_builder_dispatch_executi
     if (!dispatch_catalog.ok) {
         return {
             .ok = false,
-            .error = "A builder dispatch execution catalog request requires at least one context builder.",
+            .error = builder_dispatch_text("Studio.BuilderDispatch.Error.ExecutionCatalogRequiresBuilder"),
             .context = request.context,
             .builder_count = 0U,
             .execution_ready_count = 0U,
