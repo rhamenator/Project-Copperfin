@@ -9536,6 +9536,189 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
+    const auto run_detail_header_delete_restore_preview_bounds =
+        [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
+            write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
+
+            const auto delete_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--delete-object",
+                    "--unique-id", "detail-header-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (delete_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header section preview delete stdout:\n"
+                          << delete_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header section preview delete stderr:\n"
+                          << delete_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(delete_process.exit_code == 0,
+                   "#2278: detail-header section preview delete by stable selection should exit successfully");
+            expect(dbf_record_deleted(asset_path, 0U),
+                   "#2278: detail-header section preview delete should mark the section deleted");
+            expect_contains(delete_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#2278: detail-header section preview delete should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(delete_process.stdout_text, "\"isLabel\": true",
+                                "#2278: detail-header label section preview delete should retain label identity");
+            }
+            expect_contains(delete_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2278: detail-header section preview delete should preserve live preview availability");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsTop\": 50",
+                            "#2278: detail-header section preview delete should shrink live preview top bounds to orphaned objects");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2278: detail-header section preview delete should preserve live preview bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"previewBoundsHeight\": 500",
+                            "#2278: detail-header section preview delete should shrink live preview heights");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2278: detail-header section preview delete should expose deleted preview availability");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsTop\": 0",
+                            "#2278: detail-header section preview delete should expose deleted preview top bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsBottom\": 300",
+                            "#2278: detail-header section preview delete should expose deleted preview bottom bounds");
+            expect_contains(delete_process.stdout_text, "\"deletedPreviewBoundsHeight\": 300",
+                            "#2278: detail-header section preview delete should expose deleted preview heights");
+            expect_contains(delete_process.stdout_text, "\"sectionCount\": 1",
+                            "#2278: detail-header section preview delete should keep the sibling section live");
+            expect_contains(delete_process.stdout_text, "\"deletedSectionCount\": 1",
+                            "#2278: detail-header section preview delete should expose one deleted section");
+            expect_contains(delete_process.stdout_text, "\"placedObjectCount\": 1",
+                            "#2278: detail-header section preview delete should keep sibling objects placed");
+            expect_contains(delete_process.stdout_text, "\"unplacedObjectCount\": 1",
+                            "#2278: detail-header section preview delete should orphan former header objects");
+            expect_contains(delete_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#2278: detail-header section preview delete should preserve selected section availability");
+            expect_contains(delete_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#2278: detail-header section preview delete should preserve selection kind");
+            expect_contains(delete_process.stdout_text, "\"dryRun\": false",
+                            "#2278: detail-header section preview delete JSON should expose committed state");
+            expect_contains(delete_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2278: detail-header section preview delete JSON should expose mutation state");
+            expect_contains(delete_process.stdout_text, "\"undoAvailable\": false",
+                            "#2278: detail-header section preview delete JSON should expose undo availability");
+            expect_contains(delete_process.stdout_text, "\"undoLabel\": \"\"",
+                            "#2278: detail-header section preview delete JSON should expose empty undo labels");
+            expect_contains_in_order(
+                delete_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Header\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"recordIndex\": 0",
+                    "\"deleted\": true",
+                    "\"sectionIndex\": null",
+                    "\"sectionCount\": 0",
+                    "\"top\": 0",
+                    "\"height\": 300",
+                    "\"bottom\": 300"
+                },
+                "#2278: detail-header section preview delete should refresh selected deleted-section geometry");
+            expect_contains_in_order(
+                delete_process.stdout_text,
+                {
+                    "\"unplacedObjects\": [",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"\"",
+                    "\"containingSectionRecordIndex\": null",
+                    "\"sectionObjectIndex\": null",
+                    "\"sectionObjectCount\": 0"
+                },
+                "#2278: detail-header section preview delete should clear former header object containment");
+
+            const auto restore_process = run_process_capture(
+                studio_host_path,
+                {
+                    "--path", asset_path.string(),
+                    "--restore-object",
+                    "--unique-id", "detail-header-guid",
+                    "--json"
+                },
+                temp_root);
+
+            if (restore_process.exit_code != 0) {
+                std::cerr << "studio host " << label << " detail-header section preview restore stdout:\n"
+                          << restore_process.stdout_text << "\n";
+                std::cerr << "studio host " << label << " detail-header section preview restore stderr:\n"
+                          << restore_process.stderr_text << "\n";
+                std::cerr << "fixture root: " << temp_root << "\n";
+            }
+
+            expect(restore_process.exit_code == 0,
+                   "#2278: detail-header section preview restore by stable selection should exit successfully");
+            expect(!dbf_record_deleted(asset_path, 0U),
+                   "#2278: detail-header section preview restore should clear the deleted state");
+            expect_contains(restore_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                            "#2278: detail-header section preview restore should return refreshed layout JSON");
+            if (asset_path.extension() == ".lbx") {
+                expect_contains(restore_process.stdout_text, "\"isLabel\": true",
+                                "#2278: detail-header label section preview restore should retain label identity");
+            }
+            expect_contains(restore_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2278: detail-header section preview restore should preserve live preview availability");
+            expect_contains(restore_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2278: detail-header section preview restore should restore live preview top bounds");
+            expect_contains(restore_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2278: detail-header section preview restore should preserve live preview bottom bounds");
+            expect_contains(restore_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2278: detail-header section preview restore should restore live preview heights");
+            expect_contains(restore_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2278: detail-header section preview restore should clear deleted preview availability");
+            expect_contains(restore_process.stdout_text, "\"sectionCount\": 2",
+                            "#2278: detail-header section preview restore should restore live section counts");
+            expect_contains(restore_process.stdout_text, "\"deletedSectionCount\": 0",
+                            "#2278: detail-header section preview restore should clear deleted section counts");
+            expect_contains(restore_process.stdout_text, "\"placedObjectCount\": 2",
+                            "#2278: detail-header section preview restore should restore placed object counts");
+            expect_contains(restore_process.stdout_text, "\"unplacedObjectCount\": 0",
+                            "#2278: detail-header section preview restore should clear unplaced object counts");
+            expect_contains(restore_process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                            "#2278: detail-header section preview restore should preserve selected section availability");
+            expect_contains(restore_process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                            "#2278: detail-header section preview restore should preserve selection kind");
+            expect_contains(restore_process.stdout_text, "\"dryRun\": false",
+                            "#2278: detail-header section preview restore JSON should expose committed state");
+            expect_contains(restore_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2278: detail-header section preview restore JSON should expose mutation state");
+            expect_contains(restore_process.stdout_text, "\"undoAvailable\": false",
+                            "#2278: detail-header section preview restore JSON should expose undo availability");
+            expect_contains(restore_process.stdout_text, "\"undoLabel\": \"\"",
+                            "#2278: detail-header section preview restore JSON should expose empty undo labels");
+            expect_contains_in_order(
+                restore_process.stdout_text,
+                {
+                    "\"selectedReportSection\": {",
+                    "\"title\": \"Detail Header\"",
+                    "\"bandKind\": \"detail_header\"",
+                    "\"recordIndex\": 0",
+                    "\"deleted\": false",
+                    "\"sectionIndex\": 0",
+                    "\"sectionCount\": 2",
+                    "\"top\": 0",
+                    "\"height\": 300",
+                    "\"bottom\": 300"
+                },
+                "#2278: detail-header section preview restore should refresh selected live-section geometry");
+            expect_contains_in_order(
+                restore_process.stdout_text,
+                {
+                    "\"objects\": [",
+                    "\"recordIndex\": 1",
+                    "\"deleted\": false",
+                    "\"containingSectionId\": \"detail_header_0\"",
+                    "\"containingSectionRecordIndex\": 0",
+                    "\"sectionObjectIndex\": 0",
+                    "\"sectionObjectCount\": 1"
+                },
+                "#2278: detail-header section preview restore should restore header object containment");
+        };
+
     const auto run_detail_footer_delete_restore_preview_bounds =
         [&](const fs::path& asset_path, const std::string& title, const std::string& label) {
             write_synthetic_report_table_for_detail_header_footer_object_json(asset_path);
@@ -9719,6 +9902,14 @@ void test_studio_host_json_refreshes_detail_header_footer_section_delete_restore
                 "#1821: detail-footer section preview restore should restore footer object containment");
         };
 
+    run_detail_header_delete_restore_preview_bounds(
+        temp_root / "detail_header_section_delete_restore_preview_bounds.frx",
+        "detail_header_section_delete_restore_preview_bounds.frx",
+        "report");
+    run_detail_header_delete_restore_preview_bounds(
+        temp_root / "detail_header_section_delete_restore_preview_bounds.lbx",
+        "detail_header_section_delete_restore_preview_bounds.lbx",
+        "label");
     run_detail_footer_delete_restore_preview_bounds(
         temp_root / "detail_footer_section_delete_restore_preview_bounds.frx",
         "detail_footer_section_delete_restore_preview_bounds.frx",
