@@ -24801,8 +24801,34 @@ void test_studio_host_json_exposes_report_group_section_expressions(const std::s
                "#1566: report/label group section expression JSON should exit successfully");
         expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
                         "#1566: report/label group section expression JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#2268: record-selected label group section JSON should retain label identity");
+        }
         expect_contains(process.stdout_text, "\"sectionCount\": 3",
                         "#1566: report/label group section expression JSON should preserve group/detail/footer sections");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#2268: record-selected group section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2268: record-selected group section JSON should expose live preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsLeft\": 0",
+                        "#2268: record-selected group section JSON should preserve live preview left bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2268: record-selected group section JSON should preserve live preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsRight\": 0",
+                        "#2268: record-selected group section JSON should preserve live preview right bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 4100",
+                        "#2268: record-selected group section JSON should preserve live preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsWidth\": 0",
+                        "#2268: record-selected group section JSON should preserve live preview widths");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 4100",
+                        "#2268: record-selected group section JSON should preserve live preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2268: record-selected group section JSON should not fabricate deleted preview bounds");
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#2268: record-selected group section JSON should expose selected-section availability");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#2268: record-selected group section JSON should expose report-selection availability");
         expect_contains_in_order(
             process.stdout_text,
             {
