@@ -27,6 +27,12 @@ Interop maturity:
 - Current .NET support is an early modernization path, not a general managed-runtime surface: the build host can publish a generated C# launcher/stub that the native runtime pipeline starts as a child process, while generated C# transpilation output is only an emitted artifact today.
 - Python and broader polyglot support are planning/scaffolding surfaces only; there is no Python runtime hook. These capabilities should stay behind a user-selected modernization target until they are implemented and tested end-to-end.
 
+Requirements Recovery:
+
+- Copperfin's eventual requirements-recovery goal is to build a DO-178-style low-level requirement, code, and test traceability matrix from the implementation and validated VFP9 behavior, because the project did not start with a complete requirements set.
+- Recovered requirements must be grounded in real installed VFP9 behavior or shipped documentation, with known-bug and crash exceptions catalogued explicitly. Decompiled VFP binaries are not acceptable requirement sources under the clean-room rules.
+- This is a standing product-quality goal, not the current implementation lane. Current execution remains focused on compatibility, designer fidelity, release-readiness, and prompt-sized GitHub issue slices.
+
 Why "Copperfin"?
 
 - `Copper` signals durable infrastructure, wiring, and business systems.
@@ -74,14 +80,13 @@ Contents:
 - [`docs/27-known-vfp9-bug-exceptions.md`](E:/Project-Copperfin/docs/27-known-vfp9-bug-exceptions.md)
 - [`assets/logo.svg`](E:/Project-Copperfin/assets/logo.svg)
 
-Recommended next build order:
+Current implementation focus:
 
-1. File engine for DBF/FPT/CDX/DBC fidelity.
-2. Connector layer for SQLite, PostgreSQL, SQL Server, and Oracle.
-3. Query/runtime core with compatibility tests.
-4. Forms and reports import/render pipeline.
-5. Migration toolkit and packaging.
-6. Security and policy layer.
+1. Maintain the VFP9-compatible data/runtime foundation and avoid reopening closed core lanes without fresh regression evidence.
+2. Finish report/label designer fidelity and section-aware host surfaces under E3/#24.
+3. Keep Visual Studio and standalone Studio designer surfaces validated through shared host JSON and focused smoke coverage.
+4. Continue release-readiness, localization, security, and evidence-audit cleanup when live issue state makes those slices higher priority.
+5. Preserve modernization, .NET interop, portability, and Requirements Recovery as explicit roadmap goals that follow the compatibility and usability foundation.
 
 Implementation bias:
 
@@ -175,7 +180,6 @@ Known limitation:
 
 - memo-heavy real-world designer files still need deeper VFP-specific decoding and presentation polish before they feel like a true visual designer
 - the Visual Studio extension and standalone Studio now provide a shared project debugger pane on top of the native runtime/debug host, but they still do not provide full VFP 9-style design fidelity or the full FoxPro/VFP runtime surface
-- packaged runtime output is now good enough to launch runnable `SCX/VCX/MNX` startup assets from staged package content, but broader asset-family execution and deeper event/lifecycle fidelity still need work
 - packaged runtime output is now good enough to launch runnable `SCX/VCX/MNX/FRX/LBX` startup assets from staged package content, but deeper event/lifecycle fidelity still needs work
 - runtime action dispatch now covers menu selection and extracted method invocation, but higher-fidelity form/report object lifecycle, richer UI event simulation, and broader runtime semantics still need work
 - runtime execution no longer truncates to the Studio preview record limit, which improves parity for deeper `MNX` submenu trees and other larger xAssets

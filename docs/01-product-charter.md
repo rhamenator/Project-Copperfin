@@ -96,12 +96,25 @@ Copperfin's parity target is **exact duplication of VFP9 behavior, including und
 
 Outside of these two exception categories, an undocumented edge case is in scope for exact parity, not excluded by default. Edge-case behavior should be validated against real, installed VFP9 (observed product behavior) or shipped documentation per `docs/07-clean-room-rules.md` — never against decompiled VFP9 binaries, which remain a restricted input.
 
+## Requirements Recovery Principle
+
+Copperfin did not begin with a complete up-front requirements set, so a later requirements-recovery pass is a product-quality goal rather than an optional documentation exercise.
+
+The intended output is a DO-178-style traceability matrix that links recovered low-level requirements to code and tests. Recovered requirements must be derived from:
+
+- observed behavior from a real installed VFP9 environment
+- shipped Microsoft/VFP documentation
+- Copperfin's documented compatibility exceptions for known VFP9 bugs and crash cases
+
+Recovered requirements must not be derived from decompiled VFP binaries or other restricted clean-room inputs. The compatibility fidelity rule above remains the source of truth for deciding when an observed edge case is a requirement, a known-bug exception, or a non-crash safety fallback.
+
 ## Success Criteria
 
 - open legacy DBF/FPT/CDX/DBC assets safely and accurately
 - connect to SQLite, PostgreSQL, SQL Server, and Oracle through a consistent data access layer
 - run a meaningful subset of FoxPro-style business logic with tests
 - duplicate VFP9 edge-case behavior exactly per the Compatibility Fidelity Rule, outside the known-bug and crash exceptions
+- recover and maintain traceable low-level compatibility requirements from validated VFP9 behavior, shipped docs, and documented exception registries
 - host and call .NET components from Copperfin applications cleanly
 - generate .NET-consumable assemblies or executables so Copperfin-built logic can be reused in .NET applications
 - ship as a 64-bit-first platform with a modernization story stronger than late-stage VFP had
