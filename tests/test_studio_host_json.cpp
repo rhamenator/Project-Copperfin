@@ -83026,6 +83026,10 @@ void test_studio_host_json_moves_deleted_report_visual_properties_by_stable_sele
                "#1870: deleted report/label stable visual-property move missing selector should fail");
         expect_contains(missing_selector_process.stdout_text, "\"visualPropertyMove\": null",
                         "#1870: failed deleted report/label stable visual-property move JSON should not expose stale move objects");
+        expect_not_contains(missing_selector_process.stdout_text, "\"dryRun\": false",
+                            "#2216: failed deleted report/label stable visual-property move JSON should not expose stale committed state");
+        expect_not_contains(missing_selector_process.stdout_text, "\"mutatesAsset\": true",
+                            "#2216: failed deleted report/label stable visual-property move JSON should not expose stale mutation state");
         expect_not_contains(missing_selector_process.stdout_text, "\"undoAvailable\": true",
                             "#2190: failed deleted report/label stable visual-property move JSON should not advertise undo availability");
         expect_not_contains(missing_selector_process.stdout_text, "\"undoLabel\":",
