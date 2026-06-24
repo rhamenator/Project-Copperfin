@@ -84198,6 +84198,8 @@ void test_studio_host_json_duplicates_report_visual_object_batches_by_stable_sel
                "#1844: report/label stable visual-object duplicate-batch identity collision should fail");
         expect_contains(rollback_process.stdout_text, "\"visualObjectDuplicateBatch\": null",
                         "#1844: failed report/label stable visual-object duplicate-batch JSON should not expose stale batch objects");
+        expect_not_contains(rollback_process.stdout_text, "\"undoAvailable\": true",
+                            "#2180: failed report/label stable visual-object duplicate-batch JSON should not advertise undo availability");
         expect_contains(rollback_process.stdout_text, "The requested replacement identity already exists in the asset.",
                         "#1844: failed report/label stable visual-object duplicate-batch JSON should report collision errors");
         expect(visual_object_count(asset_path) == before_count &&
