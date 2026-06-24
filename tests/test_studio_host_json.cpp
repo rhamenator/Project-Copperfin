@@ -15957,6 +15957,22 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                             "#1796: deleted detail-header object nudge should not fabricate containing sections");
             expect_contains(nudge_header_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1796: deleted detail-header object nudge should serialize null containing-section JSON");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2302: deleted detail-header object nudge should preserve live preview availability");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2302: deleted detail-header object nudge should preserve live preview top bounds");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2302: deleted detail-header object nudge should preserve live preview bottom bounds");
+            expect_contains(nudge_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2302: deleted detail-header object nudge should preserve live preview heights");
+            expect_contains(nudge_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2302: deleted detail-header object nudge should expose deleted preview availability");
+            expect_contains(nudge_header_process.stdout_text, "\"deletedPreviewBoundsTop\": 30",
+                            "#2302: deleted detail-header object nudge should refresh deleted preview top bounds");
+            expect_contains(nudge_header_process.stdout_text, "\"deletedPreviewBoundsBottom\": 460",
+                            "#2302: deleted detail-header object nudge should preserve deleted preview bottom bounds");
+            expect_contains(nudge_header_process.stdout_text, "\"deletedPreviewBoundsHeight\": 430",
+                            "#2302: deleted detail-header object nudge should refresh deleted preview heights");
             expect_contains(nudge_header_process.stdout_text, "\"dryRun\": false",
                             "#2255: deleted detail-header object nudge JSON should expose committed execution");
             expect_contains(nudge_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -16037,6 +16053,22 @@ void test_studio_host_json_nudges_deleted_detail_header_footer_objects_by_stable
                             "#1796: deleted detail-footer object nudge should not fabricate containing sections");
             expect_contains(nudge_footer_process.stdout_text, "\"selectedReportObjectSection\": null",
                             "#1796: deleted detail-footer object nudge should serialize null containing-section JSON");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2302: deleted detail-footer object nudge should preserve live preview availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2302: deleted detail-footer object nudge should preserve live preview top bounds");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2302: deleted detail-footer object nudge should preserve live preview bottom bounds");
+            expect_contains(nudge_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2302: deleted detail-footer object nudge should preserve live preview heights");
+            expect_contains(nudge_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": true",
+                            "#2302: deleted detail-footer object nudge should expose deleted preview availability");
+            expect_contains(nudge_footer_process.stdout_text, "\"deletedPreviewBoundsTop\": 50",
+                            "#2302: deleted detail-footer object nudge should preserve deleted preview top bounds");
+            expect_contains(nudge_footer_process.stdout_text, "\"deletedPreviewBoundsBottom\": 440",
+                            "#2302: deleted detail-footer object nudge should refresh deleted preview bottom bounds");
+            expect_contains(nudge_footer_process.stdout_text, "\"deletedPreviewBoundsHeight\": 390",
+                            "#2302: deleted detail-footer object nudge should refresh deleted preview heights");
             expect_contains(nudge_footer_process.stdout_text, "\"dryRun\": false",
                             "#2255: deleted detail-footer object nudge JSON should expose committed execution");
             expect_contains(nudge_footer_process.stdout_text, "\"mutatesAsset\": true",
