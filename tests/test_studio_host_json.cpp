@@ -20059,6 +20059,9 @@ void test_studio_host_json_ignores_invalid_report_layout_classifications(
                         "#1718: invalid classification rows should not create live preview bounds");
         expect_contains(summary_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
                         "#1718: invalid classification rows should not create deleted preview bounds");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2356: invalid classification summary JSON");
         expect_contains(summary_process.stdout_text, "\"liveObjectCount\": 0",
                         "#1718: invalid classification rows should not create live layout objects");
         expect_contains(summary_process.stdout_text, "\"deletedObjectCount\": 0",
@@ -20081,6 +20084,9 @@ void test_studio_host_json_ignores_invalid_report_layout_classifications(
             expect_no_report_selection(
                 selected_process.stdout_text,
                 "#1718: invalid classification record " + std::to_string(record_index));
+            expect_empty_report_layout_preview_bounds(
+                selected_process.stdout_text,
+                "#2356: selected invalid classification record " + std::to_string(record_index));
         }
     };
 
