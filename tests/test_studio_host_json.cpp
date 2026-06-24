@@ -13915,6 +13915,16 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
                             "#1787: detail-header object reorder should preserve object selection kind");
             expect_contains(reorder_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1787: detail-header object reorder should preserve containing-section availability");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2293: detail-header object reorder should preserve live preview availability");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2293: detail-header object reorder should preserve live preview top bounds");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2293: detail-header object reorder should preserve live preview bottom bounds");
+            expect_contains(reorder_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2293: detail-header object reorder should preserve live preview heights");
+            expect_contains(reorder_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2293: detail-header object reorder should not fabricate deleted preview availability");
             expect_contains_in_order(
                 reorder_header_process.stdout_text,
                 {
@@ -13991,6 +14001,16 @@ void test_studio_host_json_reorders_detail_header_footer_objects_by_stable_selec
                             "#1787: detail-footer object reorder should preserve object selection kind");
             expect_contains(reorder_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1787: detail-footer object reorder should preserve containing-section availability");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2293: detail-footer object reorder should preserve live preview availability");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2293: detail-footer object reorder should preserve live preview top bounds");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2293: detail-footer object reorder should preserve live preview bottom bounds");
+            expect_contains(reorder_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2293: detail-footer object reorder should preserve live preview heights");
+            expect_contains(reorder_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2293: detail-footer object reorder should not fabricate deleted preview availability");
             expect_contains_in_order(
                 reorder_footer_process.stdout_text,
                 {
