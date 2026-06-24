@@ -1,4 +1,5 @@
 #include "copperfin/platform/extensibility_model.h"
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
@@ -25,8 +26,48 @@
 
 namespace {
 
-void print_usage() {
-    std::cout << "Usage: copperfin_build_host build --project <path-to-pjx> --output-dir <directory> [--configuration debug|release] [--enable-security] [--emit-dotnet-launcher] [--runtime-host <path>]\n";
+std::string explicit_locale_from_arguments(int argc, char** argv) {
+    for (int index = 1; index + 1 < argc; ++index) {
+        if (std::string(argv[index]) == "--locale") {
+            return argv[index + 1];
+        }
+    }
+    return {};
+}
+
+copperfin::localization::LocalizedCatalog load_localization(
+    const char* executable_path,
+    const std::string& explicit_locale) {
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
+    return copperfin::localization::load_catalogs(
+        locale_root,
+        copperfin::localization::select_locale(explicit_locale));
+}
+
+void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
+    std::cout << catalog.translate(
+        "BuildHost.Usage",
+        {
+            {"buildCommand", "build"},
+            {"commandName", "copperfin_build_host"},
+            {"configurationOption", "--configuration"},
+            {"configurationValue", "debug|release"},
+            {"emitDotnetLauncherOption", "--emit-dotnet-launcher"},
+            {"enableSecurityOption", "--enable-security"},
+            {"outputDirOption", "--output-dir"},
+            {"outputDirValue", "<directory>"},
+            {"projectOption", "--project"},
+            {"projectValue", "<path-to-pjx>"},
+            {"runtimeHostOption", "--runtime-host"},
+            {"runtimeHostValue", "<path>"}
+        }) << "\n";
+}
+
+std::string message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& key,
+    const copperfin::localization::PlaceholderMap& placeholders = {}) {
+    return catalog.translate(key, placeholders);
 }
 
 std::string environment_value(const char* name) {
@@ -81,7 +122,10 @@ std::string resolve_runtime_host_path(const std::string& override_path, const st
     return (host_root / host_name).string();
 }
 
-bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std::string& error) {
+bool run_dotnet_publish(
+    const copperfin::runtime::RuntimePackagePlan& plan,
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string& error) {
     const std::filesystem::path project_path(plan.launcher_project_path);
     const std::filesystem::path output_dir(plan.package_root);
     const std::string configuration = plan.configuration == copperfin::runtime::BuildConfiguration::release ? "Release" : "Debug";
@@ -96,7 +140,7 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
         .require_trusted_signature = true
     });
     if (!auth.allowed) {
-        error = "dotnet publish denied by external process policy: " + auth.error;
+        error = message(catalog, "BuildHost.Error.DotnetPublishDenied", {{"error", auth.error}});
         return false;
     }
 
@@ -138,12 +182,15 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
     }
 #endif
     if (exit_code == -1) {
-        error = "dotnet publish failed to start: " + std::error_code(errno, std::generic_category()).message();
+        error = message(
+            catalog,
+            "BuildHost.Error.DotnetPublishFailedToStart",
+            {{"error", std::error_code(errno, std::generic_category()).message()}});
         return false;
     }
 
     if (exit_code != 0) {
-        error = "dotnet publish failed for generated launcher.";
+        error = message(catalog, "BuildHost.Error.DotnetPublishFailed");
         return false;
     }
 
@@ -161,7 +208,7 @@ bool run_dotnet_publish(const copperfin::runtime::RuntimePackagePlan& plan, std:
         }
 
         if (!std::filesystem::exists(plan.launcher_output_path)) {
-            error = "Generated launcher executable was not found after publish.";
+            error = message(catalog, "BuildHost.Error.GeneratedLauncherMissing");
             return false;
         }
     }
@@ -183,13 +230,20 @@ int main(int argc, char** argv) {
         std::cerr << "warning: " << hardening.message << "\n";
     }
 
+    const copperfin::localization::LocalizedCatalog catalog =
+        load_localization(argv[0], explicit_locale_from_arguments(argc, argv));
+
     std::vector<std::string> args;
     for (int index = 1; index < argc; ++index) {
+        if (std::string(argv[index]) == "--locale" && index + 1 < argc) {
+            ++index;
+            continue;
+        }
         args.emplace_back(argv[index]);
     }
 
     if (args.empty() || args[0] != "build") {
-        print_usage();
+        print_usage(catalog);
         return 2;
     }
 
@@ -217,16 +271,25 @@ int main(int argc, char** argv) {
             runtime_host_override = args[++index];
         } else {
             std::cout << "status: error\n";
-            std::cout << "error: Unknown or incomplete argument: " << arg << "\n";
-            print_usage();
+            std::cout << "error: " << message(
+                catalog,
+                "BuildHost.Error.UnknownOrIncompleteArgument",
+                {{"argument", arg}}) << "\n";
+            print_usage(catalog);
             return 2;
         }
     }
 
     if (project_path.empty() || output_dir.empty()) {
         std::cout << "status: error\n";
-        std::cout << "error: --project and --output-dir are required.\n";
-        print_usage();
+        std::cout << "error: " << message(
+            catalog,
+            "BuildHost.Error.RequiredProjectAndOutput",
+            {
+                {"outputDirOption", "--output-dir"},
+                {"projectOption", "--project"}
+            }) << "\n";
+        print_usage(catalog);
         return 2;
     }
 
@@ -260,14 +323,26 @@ int main(int argc, char** argv) {
 
         if (!copperfin::security::role_has_permission(security_profile, security_role, "build.execute")) {
             std::cout << "status: error\n";
-            std::cout << "error: Security policy denied build.execute for role '" << security_role << "'.\n";
+            std::cout << "error: " << message(
+                catalog,
+                "BuildHost.Error.SecurityPolicyDenied",
+                {
+                    {"permission", "build.execute"},
+                    {"role", security_role}
+                }) << "\n";
             return 7;
         }
 
         if (configuration == copperfin::runtime::BuildConfiguration::release &&
             !copperfin::security::role_has_permission(security_profile, security_role, "build.release")) {
             std::cout << "status: error\n";
-            std::cout << "error: Security policy denied build.release for role '" << security_role << "'.\n";
+            std::cout << "error: " << message(
+                catalog,
+                "BuildHost.Error.SecurityPolicyDenied",
+                {
+                    {"permission", "build.release"},
+                    {"role", security_role}
+                }) << "\n";
             return 7;
         }
 
@@ -288,14 +363,23 @@ int main(int argc, char** argv) {
 
             if (signing_ref.empty()) {
                 std::cout << "status: error\n";
-                std::cout << "error: Security-enabled release builds require COPPERFIN_RELEASE_SIGNING_KEY_REF (env:<NAME>).\n";
+                std::cout << "error: " << message(
+                    catalog,
+                    "BuildHost.Error.ReleaseSigningKeyRequired",
+                    {
+                        {"environmentVariable", "COPPERFIN_RELEASE_SIGNING_KEY_REF"},
+                        {"environmentValue", "env:<NAME>"}
+                    }) << "\n";
                 return 7;
             }
 
             const auto secret = copperfin::security::resolve_secret_reference(signing_ref);
             if (!secret.ok) {
                 std::cout << "status: error\n";
-                std::cout << "error: Signing key reference validation failed: " << secret.error << "\n";
+                std::cout << "error: " << message(
+                    catalog,
+                    "BuildHost.Error.SigningKeyValidationFailed",
+                    {{"error", secret.error}}) << "\n";
                 return 7;
             }
         }
@@ -314,7 +398,7 @@ int main(int argc, char** argv) {
 
     if (!plan.ok) {
         std::cout << "status: error\n";
-        std::cout << "error: Build plan creation failed.\n";
+        std::cout << "error: " << message(catalog, "BuildHost.Error.BuildPlanCreationFailed") << "\n";
         return 4;
     }
 
@@ -354,7 +438,7 @@ int main(int argc, char** argv) {
 
     if (final_plan.emit_dotnet_launcher) {
         std::string publish_error;
-        if (!run_dotnet_publish(final_plan, publish_error)) {
+        if (!run_dotnet_publish(final_plan, catalog, publish_error)) {
             if (enable_security && !final_plan.audit_log_path.empty()) {
                 (void)copperfin::security::append_immutable_audit_event(
                     final_plan.audit_log_path,

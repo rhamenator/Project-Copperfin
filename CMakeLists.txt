@@ -253,7 +253,7 @@ add_executable(copperfin_build_host
     apps/copperfin_build_host/main.cpp
 )
 
-target_link_libraries(copperfin_build_host PRIVATE cf_runtime_pipeline)
+target_link_libraries(copperfin_build_host PRIVATE cf_runtime_pipeline cf_localization)
 
 if(MSVC)
     target_compile_options(copperfin_build_host PRIVATE /W4 /permissive-)

@@ -3036,6 +3036,58 @@ void run_default_runtime_host_resolution_smoke(const std::string& build_host_pat
     fs::remove_all(temp_root, ignored);
 }
 
+void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
+    namespace fs = std::filesystem;
+
+    expect(fs::exists(build_host_path), "build host executable should exist before running localized usage smoke test");
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_build_host_localized_usage";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    {
+        ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        const auto process = run_process_capture(build_host_path, {}, temp_root);
+        expect(process.exit_code == 2, "build host without a build command should fail usage validation");
+        expect(process.stdout_text.find(
+                   "Usage: copperfin_build_host build --project <path-to-pjx> --output-dir <directory>") !=
+                   std::string::npos,
+               "default build host usage should preserve the en-US CLI text");
+        expect(process.stdout_text.find("--configuration debug|release") != std::string::npos,
+               "default build host usage should preserve configuration tokens");
+    }
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+        const auto process = run_process_capture(build_host_path, {}, temp_root);
+        expect(process.exit_code == 2, "pseudo-localized build host usage should still fail usage validation");
+        expect(process.stdout_text.find("[!! ") != std::string::npos,
+               "pseudo-localized build host usage should decorate prose");
+        expect(process.stdout_text.find("copperfin_build_host") != std::string::npos,
+               "pseudo-localized build host usage should preserve the command name");
+        expect(process.stdout_text.find("--project") != std::string::npos,
+               "pseudo-localized build host usage should preserve CLI flags");
+        expect(process.stdout_text.find("debug|release") != std::string::npos,
+               "pseudo-localized build host usage should preserve invariant configuration values");
+
+        const auto error_process = run_process_capture(build_host_path, {"build", "--project"}, temp_root);
+        expect(error_process.exit_code == 2,
+               "pseudo-localized build host command errors should still use the original exit code");
+        expect(error_process.stdout_text.find("status: error") != std::string::npos,
+               "pseudo-localized build host command errors should preserve machine-readable status");
+        expect(error_process.stdout_text.find("[!! ") != std::string::npos,
+               "pseudo-localized build host command errors should decorate prose");
+        expect(error_process.stdout_text.find("--project") != std::string::npos,
+               "pseudo-localized build host command errors should preserve the invalid CLI flag");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -3049,6 +3101,7 @@ int main(int argc, char** argv) {
     run_app_build_host_smoke(argv[1]);
     run_fxp_build_host_smoke(argv[1]);
     run_default_runtime_host_resolution_smoke(argv[1]);
+    run_build_host_localized_usage_smoke(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

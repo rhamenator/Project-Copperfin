@@ -359,6 +359,7 @@ Current prompt-sized slice queue and closure status after Phase A/D1/E1 closure.
 
 | Parent | Slice Issue | Intended Prompt Slice |
 | --- | --- | --- |
+| `#2348` | `#2350` closed | Build host usage text and direct command error prose route through the portable C++ localization catalog while preserving CLI/status/build contract tokens as invariant placeholders |
 | `#2348` | `#2349` closed | Runtime host usage text routes through the portable C++ localization catalog while preserving CLI/debug/federation tokens as invariant placeholders |
 | `#2348` | `#1779` closed | Portable C++ localization catalogs, fallback, pseudo-locale, placeholder formatting, package locale layout, and first CLI usage-text routing |
 | `#113` | `#1856` closed | Embedded VSIX launch/workflow dialog text localizes through the shared English/es-419/pt-BR catalog with smoke coverage |
