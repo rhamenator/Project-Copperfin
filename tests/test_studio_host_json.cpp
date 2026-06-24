@@ -20661,6 +20661,9 @@ void test_studio_host_json_uses_integer_portions_for_fractional_report_layout_cl
                 "\"value\": \"9\""
             },
             "#1758: fractional root classification should preserve selected settings provenance");
+        expect_normalized_classification_preview_bounds(
+            settings_process.stdout_text,
+            "#2359: selected fractional settings classification JSON");
 
         const auto section_process = run_process_capture(
             studio_host_path,
@@ -20861,6 +20864,9 @@ void test_studio_host_json_trims_report_layout_classifications(
                         "#1759: trimmed root classification should resolve selected settings");
         expect_contains(settings_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1759: trimmed root classification should expose settings selection kind");
+        expect_normalized_classification_preview_bounds(
+            settings_process.stdout_text,
+            "#2359: selected trimmed settings classification JSON");
 
         const auto section_process = run_process_capture(
             studio_host_path,
