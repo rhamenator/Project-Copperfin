@@ -16175,6 +16175,16 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                             "#1797: detail-header object distribution should preserve object selection kind");
             expect_contains(distribute_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1797: detail-header object distribution should preserve containing-section availability");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2303: detail-header object distribution should preserve live preview availability");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2303: detail-header object distribution should preserve live preview top bounds");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2303: detail-header object distribution should preserve live preview bottom bounds");
+            expect_contains(distribute_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2303: detail-header object distribution should preserve live preview heights");
+            expect_contains(distribute_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2303: detail-header object distribution should not fabricate deleted preview availability");
             expect_contains(distribute_header_process.stdout_text, "\"dryRun\": false",
                             "#2256: detail-header object distribution JSON should expose committed execution");
             expect_contains(distribute_header_process.stdout_text, "\"mutatesAsset\": true",
@@ -16260,6 +16270,16 @@ void test_studio_host_json_distributes_detail_header_footer_objects_by_stable_se
                             "#1797: detail-footer object distribution should preserve object selection kind");
             expect_contains(distribute_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1797: detail-footer object distribution should preserve containing-section availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2303: detail-footer object distribution should preserve live preview availability");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2303: detail-footer object distribution should preserve live preview top bounds");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2303: detail-footer object distribution should preserve live preview bottom bounds");
+            expect_contains(distribute_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2303: detail-footer object distribution should preserve live preview heights");
+            expect_contains(distribute_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2303: detail-footer object distribution should not fabricate deleted preview availability");
             expect_contains(distribute_footer_process.stdout_text, "\"dryRun\": false",
                             "#2256: detail-footer object distribution JSON should expose committed execution");
             expect_contains(distribute_footer_process.stdout_text, "\"mutatesAsset\": true",
