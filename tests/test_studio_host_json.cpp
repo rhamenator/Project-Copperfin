@@ -83825,6 +83825,8 @@ void test_studio_host_json_rejects_deleted_report_visual_property_reorder_by_sta
                         "#1873: failed deleted report/label stable visual-property reorder JSON should not expose stale reorder objects");
         expect_not_contains(reorder_process.stdout_text, "\"undoAvailable\": true",
                             "#2165: failed deleted report/label stable visual-property reorder JSON should not advertise undo availability");
+        expect_not_contains(reorder_process.stdout_text, "\"undoLabel\":",
+                            "#2210: failed deleted report/label stable visual-property reorder JSON should not expose stale undo labels");
         expect_contains(reorder_process.stdout_text, "Direct DBF-backed fields cannot be reordered per object.",
                         "#1873: failed deleted report/label stable visual-property reorder JSON should report direct-field errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
@@ -83932,6 +83934,8 @@ void test_studio_host_json_rejects_deleted_report_visual_property_reorder_by_sta
                         "#1873: missing-selector deleted report/label stable visual-property reorder JSON should not expose stale reorder objects");
         expect_not_contains(missing_selector_process.stdout_text, "\"undoAvailable\": true",
                             "#2165: missing-selector deleted report/label stable visual-property reorder JSON should not advertise undo availability");
+        expect_not_contains(missing_selector_process.stdout_text, "\"undoLabel\":",
+                            "#2210: missing-selector deleted report/label stable visual-property reorder JSON should not expose stale undo labels");
         expect_contains(missing_selector_process.stdout_text, "No visual object with the requested unique id was found.",
                         "#1873: missing-selector deleted report/label stable visual-property reorder JSON should report selector errors");
         expect(visual_object_property(asset_path, "middle-field-guid", "EXPR") == "middle.value" &&
