@@ -17580,6 +17580,14 @@ void test_studio_host_json_updates_deleted_detail_header_footer_section_expressi
                                     "#1811: " + operation_label + " should not select report objects");
                     expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
                                     "#1811: " + operation_label + " should not select settings");
+                    expect_contains(process.stdout_text, "\"dryRun\": false",
+                                    "#2265: " + operation_label + " JSON should expose committed execution");
+                    expect_contains(process.stdout_text, "\"mutatesAsset\": true",
+                                    "#2265: " + operation_label + " JSON should expose mutation state");
+                    expect_contains(process.stdout_text, "\"undoAvailable\": true",
+                                    "#2265: " + operation_label + " JSON should expose undo availability");
+                    expect_contains(process.stdout_text, "\"undoLabel\": \"Property EXPR\"",
+                                    "#2265: " + operation_label + " JSON should expose expression undo labels");
                     expect_contains_in_order(
                         process.stdout_text,
                         {
