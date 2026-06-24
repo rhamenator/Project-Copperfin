@@ -25552,6 +25552,9 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
         expect_contains(summary_process.stdout_text,
                         "\"name\": \"ORIENTATION\", \"recordIndex\": 1, \"fieldIndex\": 2, \"sourceLineIndex\": null, \"memoBlockNumber\": 0, \"value\": \"0\"",
                         "#1723: deleted direct orientation provenance should use the direct field without EXPR");
+        expect_empty_report_layout_preview_bounds(
+            summary_process.stdout_text,
+            "#2337: missing root EXPR settings summary JSON");
 
         const auto live_process = run_process_capture(
             studio_host_path,
@@ -25564,6 +25567,9 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
                         "#1723: missing root EXPR live settings should advertise selected-settings availability");
         expect_contains(live_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1723: missing root EXPR live settings should expose settings selection kind");
+        expect_empty_report_layout_preview_bounds(
+            live_process.stdout_text,
+            "#2337: selected missing root EXPR live settings JSON");
         expect_contains_in_order(
             live_process.stdout_text,
             {
@@ -25594,6 +25600,9 @@ void test_studio_host_json_preserves_report_settings_without_root_expr_schema(
                         "#1723: missing root EXPR deleted settings should advertise selected-settings availability");
         expect_contains(deleted_process.stdout_text, "\"selectedReportSelectionKind\": \"settings\"",
                         "#1723: missing root EXPR deleted settings should expose settings selection kind");
+        expect_empty_report_layout_preview_bounds(
+            deleted_process.stdout_text,
+            "#2337: selected missing root EXPR deleted settings JSON");
         expect_contains_in_order(
             deleted_process.stdout_text,
             {
