@@ -13471,6 +13471,16 @@ void test_studio_host_json_renames_detail_header_footer_objects_by_stable_select
                             "#1785: detail-header object rename should preserve object selection kind");
             expect_contains(rename_header_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1785: detail-header object rename should preserve containing-section availability");
+            expect_contains(rename_header_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2291: detail-header object rename should preserve live preview availability");
+            expect_contains(rename_header_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2291: detail-header object rename should preserve live preview top bounds");
+            expect_contains(rename_header_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2291: detail-header object rename should preserve live preview bottom bounds");
+            expect_contains(rename_header_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2291: detail-header object rename should preserve live preview heights");
+            expect_contains(rename_header_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2291: detail-header object rename should not fabricate deleted preview availability");
             expect_contains_in_order(
                 rename_header_process.stdout_text,
                 {
@@ -13543,6 +13553,16 @@ void test_studio_host_json_renames_detail_header_footer_objects_by_stable_select
                             "#1785: detail-footer object rename should preserve object selection kind");
             expect_contains(rename_footer_process.stdout_text, "\"selectedReportObjectSectionAvailable\": true",
                             "#1785: detail-footer object rename should preserve containing-section availability");
+            expect_contains(rename_footer_process.stdout_text, "\"previewBoundsAvailable\": true",
+                            "#2291: detail-footer object rename should preserve live preview availability");
+            expect_contains(rename_footer_process.stdout_text, "\"previewBoundsTop\": 0",
+                            "#2291: detail-footer object rename should preserve live preview top bounds");
+            expect_contains(rename_footer_process.stdout_text, "\"previewBoundsBottom\": 550",
+                            "#2291: detail-footer object rename should preserve live preview bottom bounds");
+            expect_contains(rename_footer_process.stdout_text, "\"previewBoundsHeight\": 550",
+                            "#2291: detail-footer object rename should preserve live preview heights");
+            expect_contains(rename_footer_process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                            "#2291: detail-footer object rename should not fabricate deleted preview availability");
             expect_contains_in_order(
                 rename_footer_process.stdout_text,
                 {
