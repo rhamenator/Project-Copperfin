@@ -82248,6 +82248,88 @@ void test_studio_host_json_copies_deleted_report_visual_properties_by_stable_sel
                 "\"uniqueId\": \"middle-field-guid\""
             },
             "#1869: deleted report/label stable visual-property copy should preserve selected source expressions");
+
+        write_synthetic_report_table_for_layout_distribution_json(asset_path);
+        mark_deleted(asset_path, "middle-field-guid");
+        mark_deleted(asset_path, "right-field-guid");
+
+        const auto geometry_copy_process = run_process_capture(
+            studio_host_path,
+            {
+                "--visual-property-copy",
+                "--path", asset_path.string(),
+                "--property-name", "HPOS",
+                "--source-unique-id", "middle-field-guid",
+                "--target-unique-id", "right-field-guid",
+                "--replace-existing", "true",
+                "--json"
+            },
+            temp_root);
+
+        if (geometry_copy_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report geometry copy stdout:\n"
+                      << geometry_copy_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report geometry copy stderr:\n"
+                      << geometry_copy_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(geometry_copy_process.exit_code == 0,
+               "#2193: deleted report/label stable visual-property geometry copy JSON should exit successfully");
+        expect_contains(geometry_copy_process.stdout_text, "\"visualPropertyCopy\": {",
+                        "#2193: deleted report/label stable visual-property geometry copy JSON should expose a copy object");
+        expect_contains(geometry_copy_process.stdout_text, "\"affectedObjectCount\": 1",
+                        "#2193: deleted report/label stable visual-property geometry copy JSON should expose affected property counts");
+        expect_contains(geometry_copy_process.stdout_text, "\"dryRun\": false",
+                        "#2193: deleted report/label stable visual-property geometry copy JSON should expose committed state");
+        expect_contains(geometry_copy_process.stdout_text, "\"mutatesAsset\": true",
+                        "#2193: deleted report/label stable visual-property geometry copy JSON should expose mutation state");
+        expect_contains(geometry_copy_process.stdout_text, "\"undoAvailable\": true",
+                        "#2193: deleted report/label stable visual-property geometry copy JSON should expose undo availability");
+        expect_contains(geometry_copy_process.stdout_text, "\"undoLabel\": \"Property HPOS\"",
+                        "#2193: deleted report/label stable visual-property geometry copy JSON should expose geometry undo labels");
+        expect(visual_object_property(asset_path, "middle-field-guid", "HPOS") == "175" &&
+                   visual_object_property(asset_path, "right-field-guid", "HPOS") == "175" &&
+                   visual_object_deleted(asset_path, "middle-field-guid") &&
+                   visual_object_deleted(asset_path, "right-field-guid") &&
+                   !visual_object_deleted(asset_path, "left-field-guid"),
+               "#2193: deleted report/label stable visual-property geometry copy should copy geometry without changing deleted state");
+
+        const auto geometry_target_reopen_process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "right-field-guid", "--json"},
+            temp_root);
+
+        if (geometry_target_reopen_process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable deleted report geometry copy target reopen stdout:\n"
+                      << geometry_target_reopen_process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable deleted report geometry copy target reopen stderr:\n"
+                      << geometry_target_reopen_process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(geometry_target_reopen_process.exit_code == 0,
+               "#2193: deleted report/label stable visual-property geometry copy target reopen should exit successfully");
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2193: deleted report/label stable visual-property geometry copy should leave report-layout JSON readable");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(geometry_target_reopen_process.stdout_text, "\"isLabel\": true",
+                            "#2193: deleted label stable visual-property geometry copy should retain label identity");
+        }
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"selectedReportObjectAvailable\": true",
+                        "#2193: deleted report/label stable visual-property geometry copy should select the copied target row");
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"selectedReportSelectionKind\": \"object\"",
+                        "#2193: deleted report/label stable visual-property geometry copy should preserve report object selection kind");
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"recordIndex\": 4",
+                        "#2193: deleted report/label stable visual-property geometry copy should preserve target record indexes");
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"deleted\": true",
+                        "#2193: deleted report/label stable visual-property geometry copy should preserve target deleted state");
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"left\": 175",
+                        "#2193: deleted report/label stable visual-property geometry copy should refresh copied target left metadata");
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"right\": 225",
+                        "#2193: deleted report/label stable visual-property geometry copy should refresh copied target bounds metadata");
+        expect_contains(geometry_target_reopen_process.stdout_text, "\"uniqueId\": \"right-field-guid\"",
+                        "#2193: deleted report/label stable visual-property geometry copy should preserve target stable identities");
     };
 
     const auto run_deleted_report_property_copy_failure = [&](const fs::path& asset_path,
