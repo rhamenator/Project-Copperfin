@@ -7520,6 +7520,97 @@ void test_studio_host_launch_mouse_drag_target_selector_value_diagnostics_locali
     }
 }
 
+void test_studio_host_launch_ole_drop_drawing_target_selector_value_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_ole_drop_drawing_target_selector_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--ole-drop-effects-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2470: default ole-drop-effects-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --ole-drop-effects-target-object-name.",
+        "#2470: default ole-drop-effects-target-object-name missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--draw-style-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2470: default draw-style-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --draw-style-target-unique-id.",
+        "#2470: default draw-style-target-unique-id missing diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--ole-drop-text-insertion-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2470: pseudo-localized ole-drop-text-insertion-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2470: pseudo-localized ole-drop-text-insertion-target-unique-id missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--ole-drop-text-insertion-target-unique-id",
+        "#2470: pseudo-localized ole-drop-text-insertion-target-unique-id missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --ole-drop-text-insertion-target-unique-id.",
+        "#2470: pseudo-localized ole-drop-text-insertion-target-unique-id missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--button-count-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2470: pseudo-localized button-count-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2470: pseudo-localized button-count-target-object-name missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--button-count-target-object-name",
+        "#2470: pseudo-localized button-count-target-object-name missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --button-count-target-object-name.",
+        "#2470: pseudo-localized button-count-target-object-name missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--draw-mode-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2470: pseudo-localized draw-mode-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2470: pseudo-localized draw-mode-target-unique-id missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--draw-mode-target-unique-id",
+        "#2470: pseudo-localized draw-mode-target-unique-id missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --draw-mode-target-unique-id.",
+        "#2470: pseudo-localized draw-mode-target-unique-id missing diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -121072,6 +121163,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_state_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_media_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_mouse_drag_target_selector_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_ole_drop_drawing_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

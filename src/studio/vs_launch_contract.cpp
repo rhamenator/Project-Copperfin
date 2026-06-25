@@ -4739,7 +4739,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-effects-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-effects-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-effects-target-object-name")};
             }
             result.request.ole_drop_effects_objects.push_back({
                 .record_index = 0U,
@@ -4751,7 +4751,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-effects-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-effects-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-effects-target-unique-id")};
             }
             result.request.ole_drop_effects_objects.push_back({
                 .record_index = 0U,
@@ -4763,7 +4763,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-text-insertion-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-text-insertion-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-text-insertion-target-object-name")};
             }
             result.request.ole_drop_text_insertion_objects.push_back({
                 .record_index = 0U,
@@ -4775,7 +4775,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-text-insertion-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-text-insertion-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-text-insertion-target-unique-id")};
             }
             result.request.ole_drop_text_insertion_objects.push_back({
                 .record_index = 0U,
@@ -4787,7 +4787,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--button-count-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --button-count-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--button-count-target-object-name")};
             }
             result.request.button_count_objects.push_back({
                 .record_index = 0U,
@@ -4799,7 +4799,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--button-count-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --button-count-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--button-count-target-unique-id")};
             }
             result.request.button_count_objects.push_back({
                 .record_index = 0U,
@@ -4811,7 +4811,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--curvature-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --curvature-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--curvature-target-object-name")};
             }
             result.request.curvature_objects.push_back({
                 .record_index = 0U,
@@ -4823,7 +4823,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--curvature-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --curvature-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--curvature-target-unique-id")};
             }
             result.request.curvature_objects.push_back({
                 .record_index = 0U,
@@ -4835,7 +4835,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-mode-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-mode-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-mode-target-object-name")};
             }
             result.request.draw_mode_objects.push_back({
                 .record_index = 0U,
@@ -4847,7 +4847,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-mode-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-mode-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-mode-target-unique-id")};
             }
             result.request.draw_mode_objects.push_back({
                 .record_index = 0U,
@@ -4859,7 +4859,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-style-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-style-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-style-target-object-name")};
             }
             result.request.draw_style_objects.push_back({
                 .record_index = 0U,
@@ -4871,7 +4871,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-style-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-style-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-style-target-unique-id")};
             }
             result.request.draw_style_objects.push_back({
                 .record_index = 0U,
