@@ -1077,6 +1077,41 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_dbf_table_creation_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap y_field{{"fieldType", "Y"}};
+
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.CreateFieldRequired") ==
+            "At least one field is required to create a DBF table.",
+        "#2382: DBF table creation field-required error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.EightByteFieldWidthInvalid", y_field) ==
+            "Y fields require a width of exactly 8 bytes.",
+        "#2382: DBF table field-type width errors should preserve named placeholders");
+    expect(
+        pseudo_catalog.translate("Vfp.DbfTable.Error.CreateFieldRequired") !=
+            english_catalog.translate("Vfp.DbfTable.Error.CreateFieldRequired"),
+        "#2382: DBF table creation/open/write errors should be pseudo-localizable");
+
+    const auto no_fields_result = copperfin::vfp::create_dbf_table_file("unused.dbf", {}, {});
+    expect(!no_fields_result.ok, "#2382: DBF table creation should reject empty field lists");
+    expect(
+        no_fields_result.error == "At least one field is required to create a DBF table.",
+        "#2382: empty field list should preserve the default localized error");
+
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "BALANCE", .type = 'Y', .offset = 1U, .length = 4U, .decimal_count = 0U}
+    };
+    const auto invalid_width_result = copperfin::vfp::create_dbf_table_file("unused.dbf", fields, {{"0"}});
+    expect(!invalid_width_result.ok, "#2382: DBF table creation should reject invalid Y field widths");
+    expect(
+        invalid_width_result.error == "Y fields require a width of exactly 8 bytes.",
+        "#2382: invalid Y field width should preserve the default localized placeholder output");
+}
+
 void test_memo_sidecar_version_mismatch_is_diagnosed() {
     // GAP-02: malformed memo sidecar headers must not crash parsing.
     // If payload decoding fails, the reader should surface a stable placeholder.
@@ -1528,6 +1563,7 @@ int main() {
     test_dbf_field_descriptor_count_exceeds_header_size_is_rejected();
     test_dbf_record_width_mismatch_field_sum_is_rejected();
     test_dbf_table_record_value_errors_resolve_through_localization_catalog();
+    test_dbf_table_creation_errors_resolve_through_localization_catalog();
     test_memo_sidecar_version_mismatch_is_diagnosed();
     test_dbf_field_name_without_null_terminator_is_tolerated();
     test_currency_field_boundary_values();

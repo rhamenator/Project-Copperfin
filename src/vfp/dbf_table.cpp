@@ -83,8 +83,10 @@ const localization::LocalizedCatalog& dbf_table_catalog() {
     return catalog;
 }
 
-std::string dbf_table_text(std::string_view key) {
-    return dbf_table_catalog().translate(key);
+std::string dbf_table_text(
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    return dbf_table_catalog().translate(key, placeholders);
 }
 
 std::string trim_right(std::string text) {
@@ -1106,7 +1108,7 @@ std::vector<std::uint8_t> read_memo_block_raw(const std::string& sidecar_path, s
 DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size_t max_records) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open table file."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
     std::vector<std::uint8_t> bytes = {
@@ -1123,7 +1125,7 @@ DbfTableParseResult parse_dbf_table_from_file(const std::string& path, std::size
     table.header = header_result.header;
 
     if (bytes.size() < table.header.header_length) {
-        return {.ok = false, .error = "Table file is shorter than its header length."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.HeaderLengthExceedsFile")};
     }
 
     std::size_t field_offset = 32U;
@@ -1190,7 +1192,7 @@ DbfWriteResult create_dbf_table_file(
     const std::vector<DbfFieldDescriptor>& fields,
     const std::vector<std::vector<std::string>>& records) {
     if (fields.empty()) {
-        return {.ok = false, .error = "At least one field is required to create a DBF table."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateFieldRequired")};
     }
 
     std::vector<RawFieldDescriptor> raw_fields;
@@ -1199,27 +1201,32 @@ DbfWriteResult create_dbf_table_file(
     bool has_memo_fields = false;
     for (const auto& field : fields) {
         if (trim_both(field.name).empty()) {
-            return {.ok = false, .error = "Field names cannot be empty."};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired")};
         }
         if (field.length == 0U) {
-            return {.ok = false, .error = "Field lengths must be greater than zero."};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldLengthRequired")};
         }
         if (!supports_table_field_storage(field.type)) {
-            return {.ok = false, .error = "Table creation is not implemented for one or more field types yet."};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CreateUnsupportedFieldType")};
         }
         if (is_memo_pointer_field(field.type)) {
             if (field.length < 4U) {
-                return {.ok = false, .error = "Memo fields require a width of at least 4 bytes."};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoFieldWidthTooSmall")};
             }
             has_memo_fields = true;
         } else if ((field.type == 'V' || field.type == 'Q') && field.length < 2U) {
-            return {.ok = false, .error = "V/Q fields require a width of at least 2 bytes."};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.VqFieldWidthTooSmall")};
         } else if (field.type == 'B' && field.length != 8U) {
-            return {.ok = false, .error = "Double fields require a width of exactly 8 bytes."};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DoubleFieldWidthInvalid")};
         } else if (field.type == 'I' && field.length != 4U) {
-            return {.ok = false, .error = "Integer fields require a width of exactly 4 bytes."};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.IntegerFieldWidthInvalid")};
         } else if ((field.type == 'Y' || field.type == 'T') && field.length != 8U) {
-            return {.ok = false, .error = std::string(1U, field.type) + " fields require a width of exactly 8 bytes."};
+            return {
+                .ok = false,
+                .error = dbf_table_text(
+                    "Vfp.DbfTable.Error.EightByteFieldWidthInvalid",
+                    {{"fieldType", std::string(1U, field.type)}})
+            };
         }
 
         raw_fields.push_back({
@@ -1272,7 +1279,7 @@ DbfWriteResult create_dbf_table_file(
 
     for (std::size_t record_index = 0; record_index < records.size(); ++record_index) {
         if (records[record_index].size() != raw_fields.size()) {
-            return {.ok = false, .error = "Record field counts must match the DBF schema.", .record_count = records.size()};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordFieldCountMismatch"), .record_count = records.size()};
         }
 
         const std::size_t record_offset = header.header_length + (record_index * header.record_length);
@@ -1307,7 +1314,7 @@ DbfWriteResult create_dbf_table_file(
     const bool had_memo_file = has_memo_fields && !original_memo_bytes.empty();
 
     if (!write_binary_file(path, bytes)) {
-        return {.ok = false, .error = "Unable to write table file.", .record_count = records.size()};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = records.size()};
     }
     if (has_memo_fields && !write_binary_file(memo_path, memo_bytes)) {
         if (had_table_file) {
@@ -1325,7 +1332,7 @@ DbfWriteResult create_dbf_table_file(
                 std::filesystem::remove(memo_path, ignored);
             }
         }
-        return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = records.size()};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteMemoSidecarFailed"), .record_count = records.size()};
     }
 
     return {.ok = true, .error = {}, .record_count = records.size()};
