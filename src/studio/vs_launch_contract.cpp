@@ -8374,92 +8374,142 @@ LaunchParseResult parse_launch_arguments(
             "--disabled-picture-object")};
     }
     if (result.request.ole_drag_picture_object && !result.request.ole_drag_picture_available) {
-        return {.ok = false, .error = "An object OLE drag-picture assignment requires --ole-drag-picture."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "OLE drag-picture",
+            "--ole-drag-picture")};
     }
     if (result.request.ole_drag_picture_object && result.request.ole_drag_picture_objects.empty()) {
-        return {.ok = false, .error = "An object OLE drag-picture assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drag-picture")};
     }
     if (!result.request.ole_drag_picture_object &&
         (result.request.ole_drag_picture_available ||
          !result.request.ole_drag_picture_objects.empty())) {
-        return {.ok = false, .error = "OLE drag-picture arguments can only be used with --ole-drag-picture-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "OLE drag-picture",
+            "--ole-drag-picture-object")};
     }
     if (result.request.mouse_icon_object && !result.request.mouse_icon_available) {
-        return {.ok = false, .error = "An object mouse-icon assignment requires --mouse-icon."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "mouse-icon",
+            "--mouse-icon")};
     }
     if (result.request.mouse_icon_object && result.request.mouse_icon_objects.empty()) {
-        return {.ok = false, .error = "An object mouse-icon assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "mouse-icon")};
     }
     if (!result.request.mouse_icon_object &&
         (result.request.mouse_icon_available ||
          !result.request.mouse_icon_objects.empty())) {
-        return {.ok = false, .error = "Mouse-icon arguments can only be used with --mouse-icon-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Mouse-icon",
+            "--mouse-icon-object")};
     }
     if (result.request.drag_icon_object && !result.request.drag_icon_available) {
-        return {.ok = false, .error = "An object drag-icon assignment requires --drag-icon."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "drag-icon",
+            "--drag-icon")};
     }
     if (result.request.drag_icon_object && result.request.drag_icon_objects.empty()) {
-        return {.ok = false, .error = "An object drag-icon assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "drag-icon")};
     }
     if (!result.request.drag_icon_object &&
         (result.request.drag_icon_available ||
          !result.request.drag_icon_objects.empty())) {
-        return {.ok = false, .error = "Drag-icon arguments can only be used with --drag-icon-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Drag-icon",
+            "--drag-icon-object")};
     }
     if (result.request.drag_mode_object && !result.request.drag_mode_available) {
-        return {.ok = false, .error = "An object drag-mode assignment requires --drag-mode."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "drag-mode",
+            "--drag-mode")};
     }
     if (result.request.drag_mode_object && result.request.drag_mode_objects.empty()) {
-        return {.ok = false, .error = "An object drag-mode assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "drag-mode")};
     }
     if (!result.request.drag_mode_object &&
         (result.request.drag_mode_available ||
          !result.request.drag_mode_objects.empty())) {
-        return {.ok = false, .error = "Drag-mode arguments can only be used with --drag-mode-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Drag-mode",
+            "--drag-mode-object")};
     }
     if (result.request.ole_drag_mode_object && !result.request.ole_drag_mode_available) {
-        return {.ok = false, .error = "An object OLE drag-mode assignment requires --ole-drag-mode."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "OLE drag-mode",
+            "--ole-drag-mode")};
     }
     if (result.request.ole_drag_mode_object && result.request.ole_drag_mode_objects.empty()) {
-        return {.ok = false, .error = "An object OLE drag-mode assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drag-mode")};
     }
     if (!result.request.ole_drag_mode_object &&
         (result.request.ole_drag_mode_available ||
          !result.request.ole_drag_mode_objects.empty())) {
-        return {.ok = false, .error = "OLE drag-mode arguments can only be used with --ole-drag-mode-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "OLE drag-mode",
+            "--ole-drag-mode-object")};
     }
     if (result.request.ole_drop_mode_object && !result.request.ole_drop_mode_available) {
-        return {.ok = false, .error = "An object OLE drop-mode assignment requires --ole-drop-mode."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "OLE drop-mode",
+            "--ole-drop-mode")};
     }
     if (result.request.ole_drop_mode_object && result.request.ole_drop_mode_objects.empty()) {
-        return {.ok = false, .error = "An object OLE drop-mode assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drop-mode")};
     }
     if (!result.request.ole_drop_mode_object &&
         (result.request.ole_drop_mode_available ||
          !result.request.ole_drop_mode_objects.empty())) {
-        return {.ok = false, .error = "OLE drop-mode arguments can only be used with --ole-drop-mode-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "OLE drop-mode",
+            "--ole-drop-mode-object")};
     }
     if (result.request.ole_drop_effects_object && !result.request.ole_drop_effects_available) {
-        return {.ok = false, .error = "An object OLE drop-effects assignment requires --ole-drop-effects."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "OLE drop-effects",
+            "--ole-drop-effects")};
     }
     if (result.request.ole_drop_effects_object && result.request.ole_drop_effects_objects.empty()) {
-        return {.ok = false, .error = "An object OLE drop-effects assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drop-effects")};
     }
     if (!result.request.ole_drop_effects_object &&
         (result.request.ole_drop_effects_available ||
          !result.request.ole_drop_effects_objects.empty())) {
-        return {.ok = false, .error = "OLE drop-effects arguments can only be used with --ole-drop-effects-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "OLE drop-effects",
+            "--ole-drop-effects-object")};
     }
     if (result.request.ole_drop_text_insertion_object && !result.request.ole_drop_text_insertion_available) {
-        return {.ok = false, .error = "An object OLE drop text-insertion assignment requires --ole-drop-text-insertion."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "OLE drop text-insertion",
+            "--ole-drop-text-insertion")};
     }
     if (result.request.ole_drop_text_insertion_object && result.request.ole_drop_text_insertion_objects.empty()) {
-        return {.ok = false, .error = "An object OLE drop text-insertion assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "OLE drop text-insertion")};
     }
     if (!result.request.ole_drop_text_insertion_object &&
         (result.request.ole_drop_text_insertion_available ||
          !result.request.ole_drop_text_insertion_objects.empty())) {
-        return {.ok = false, .error = "OLE drop text-insertion arguments can only be used with --ole-drop-text-insertion-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "OLE drop text-insertion",
+            "--ole-drop-text-insertion-object")};
     }
     if (result.request.button_count_object && !result.request.button_count_available) {
         return {.ok = false, .error = "An object button-count assignment requires --button-count."};
