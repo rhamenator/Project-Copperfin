@@ -3729,14 +3729,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-width") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-width."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-width")};
             }
             int max_width = 0;
             if (!parse_int_value(args[++index], max_width)) {
-                return {.ok = false, .error = "The --max-width value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--max-width")};
             }
             if (max_width < 0) {
-                return {.ok = false, .error = "The --max-width value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--max-width")};
             }
             result.request.max_width = max_width;
             result.request.max_width_available = true;
@@ -3745,14 +3745,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-left") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-left."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-left")};
             }
             int max_left = 0;
             if (!parse_int_value(args[++index], max_left)) {
-                return {.ok = false, .error = "The --max-left value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--max-left")};
             }
             if (max_left < 0) {
-                return {.ok = false, .error = "The --max-left value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--max-left")};
             }
             result.request.max_left = max_left;
             result.request.max_left_available = true;
@@ -3761,14 +3761,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-top") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-top."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-top")};
             }
             int max_top = 0;
             if (!parse_int_value(args[++index], max_top)) {
-                return {.ok = false, .error = "The --max-top value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--max-top")};
             }
             if (max_top < 0) {
-                return {.ok = false, .error = "The --max-top value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--max-top")};
             }
             result.request.max_top = max_top;
             result.request.max_top_available = true;
@@ -3777,11 +3777,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-size") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-size."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-size")};
             }
             const auto auto_size = parse_bool_value(args[++index]);
             if (!auto_size.has_value()) {
-                return {.ok = false, .error = "The --auto-size value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--auto-size")};
             }
             result.request.auto_size = *auto_size;
             result.request.auto_size_available = true;
@@ -3790,11 +3790,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-release") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-release."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-release")};
             }
             const auto auto_release = parse_bool_value(args[++index]);
             if (!auto_release.has_value()) {
-                return {.ok = false, .error = "The --auto-release value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--auto-release")};
             }
             result.request.auto_release = *auto_release;
             result.request.auto_release_available = true;
@@ -3803,11 +3803,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--continuous-scroll") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --continuous-scroll."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--continuous-scroll")};
             }
             const auto continuous_scroll = parse_bool_value(args[++index]);
             if (!continuous_scroll.has_value()) {
-                return {.ok = false, .error = "The --continuous-scroll value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--continuous-scroll")};
             }
             result.request.continuous_scroll = *continuous_scroll;
             result.request.continuous_scroll_available = true;
@@ -3816,11 +3816,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dockable") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dockable."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dockable")};
             }
             const auto dockable = parse_bool_value(args[++index]);
             if (!dockable.has_value()) {
-                return {.ok = false, .error = "The --dockable value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--dockable")};
             }
             result.request.dockable = *dockable;
             result.request.dockable_available = true;
@@ -3829,11 +3829,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--clip-controls") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --clip-controls."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--clip-controls")};
             }
             const auto clip_controls = parse_bool_value(args[++index]);
             if (!clip_controls.has_value()) {
-                return {.ok = false, .error = "The --clip-controls value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--clip-controls")};
             }
             result.request.clip_controls = *clip_controls;
             result.request.clip_controls_available = true;
@@ -3842,11 +3842,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--sparse") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --sparse."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--sparse")};
             }
             const auto sparse = parse_bool_value(args[++index]);
             if (!sparse.has_value()) {
-                return {.ok = false, .error = "The --sparse value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--sparse")};
             }
             result.request.sparse = *sparse;
             result.request.sparse_available = true;
@@ -3855,11 +3855,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--lock-screen") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --lock-screen."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--lock-screen")};
             }
             const auto lock_screen = parse_bool_value(args[++index]);
             if (!lock_screen.has_value()) {
-                return {.ok = false, .error = "The --lock-screen value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--lock-screen")};
             }
             result.request.lock_screen = *lock_screen;
             result.request.lock_screen_available = true;
@@ -3868,11 +3868,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--allow-cell-selection") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --allow-cell-selection."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--allow-cell-selection")};
             }
             const auto allow_cell_selection = parse_bool_value(args[++index]);
             if (!allow_cell_selection.has_value()) {
-                return {.ok = false, .error = "The --allow-cell-selection value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--allow-cell-selection")};
             }
             result.request.allow_cell_selection = *allow_cell_selection;
             result.request.allow_cell_selection_available = true;
@@ -3881,11 +3881,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--hide-selection") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --hide-selection."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--hide-selection")};
             }
             const auto hide_selection = parse_bool_value(args[++index]);
             if (!hide_selection.has_value()) {
-                return {.ok = false, .error = "The --hide-selection value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--hide-selection")};
             }
             result.request.hide_selection = *hide_selection;
             result.request.hide_selection_available = true;
