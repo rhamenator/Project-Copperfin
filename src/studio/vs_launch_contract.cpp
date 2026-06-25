@@ -7374,7 +7374,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-name-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-name-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-name-target-object-name")};
             }
             result.request.font_name_objects.push_back({
                 .record_index = 0U,
@@ -7386,7 +7386,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-name-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-name-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-name-target-unique-id")};
             }
             result.request.font_name_objects.push_back({
                 .record_index = 0U,
@@ -7398,7 +7398,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-size-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-size-target-object-name")};
             }
             result.request.font_size_objects.push_back({
                 .record_index = 0U,
@@ -7410,7 +7410,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-size-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-size-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-size-target-unique-id")};
             }
             result.request.font_size_objects.push_back({
                 .record_index = 0U,
@@ -7422,7 +7422,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-bold-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-bold-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-bold-target-object-name")};
             }
             result.request.font_bold_objects.push_back({
                 .record_index = 0U,
@@ -7434,7 +7434,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-bold-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-bold-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-bold-target-unique-id")};
             }
             result.request.font_bold_objects.push_back({
                 .record_index = 0U,
@@ -7446,7 +7446,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-italic-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-italic-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-italic-target-object-name")};
             }
             result.request.font_italic_objects.push_back({
                 .record_index = 0U,
@@ -7458,7 +7458,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-italic-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-italic-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-italic-target-unique-id")};
             }
             result.request.font_italic_objects.push_back({
                 .record_index = 0U,
@@ -7470,7 +7470,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-underline-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-underline-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-underline-target-object-name")};
             }
             result.request.font_underline_objects.push_back({
                 .record_index = 0U,
@@ -7482,7 +7482,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-underline-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-underline-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-underline-target-unique-id")};
             }
             result.request.font_underline_objects.push_back({
                 .record_index = 0U,
@@ -7494,7 +7494,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-strikethru-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-strikethru-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-strikethru-target-object-name")};
             }
             result.request.font_strikethru_objects.push_back({
                 .record_index = 0U,
@@ -7506,7 +7506,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-strikethru-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-strikethru-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-strikethru-target-unique-id")};
             }
             result.request.font_strikethru_objects.push_back({
                 .record_index = 0U,
@@ -7518,7 +7518,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-outline-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-outline-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-outline-target-object-name")};
             }
             result.request.font_outline_objects.push_back({
                 .record_index = 0U,
@@ -7530,7 +7530,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-outline-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-outline-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-outline-target-unique-id")};
             }
             result.request.font_outline_objects.push_back({
                 .record_index = 0U,
@@ -7542,7 +7542,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-shadow-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-shadow-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-shadow-target-object-name")};
             }
             result.request.font_shadow_objects.push_back({
                 .record_index = 0U,
@@ -7554,7 +7554,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-shadow-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-shadow-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-shadow-target-unique-id")};
             }
             result.request.font_shadow_objects.push_back({
                 .record_index = 0U,
