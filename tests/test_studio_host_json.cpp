@@ -6528,6 +6528,102 @@ void test_studio_host_launch_window_flag_value_diagnostics_localize(const std::s
     }
 }
 
+void test_studio_host_launch_bounds_border_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_bounds_border_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--min-height"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2459: default min-height missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --min-height.",
+        "#2459: default min-height missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--min-height", "-1"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2459: default min-height not-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "The --min-height value must not be negative.",
+        "#2459: default min-height not-negative diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--min-width", "-1"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2459: pseudo-localized min-width not-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2459: pseudo-localized min-width not-negative diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--min-width",
+        "#2459: pseudo-localized min-width not-negative diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --min-width value must not be negative.",
+        "#2459: pseudo-localized min-width not-negative diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--movable", "maybe"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2459: pseudo-localized movable boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2459: pseudo-localized movable boolean diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--movable",
+        "#2459: pseudo-localized movable boolean diagnostics should preserve CLI option names");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2459: pseudo-localized movable boolean diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2459: pseudo-localized movable boolean diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --movable value must be true or false.",
+        "#2459: pseudo-localized movable boolean diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--border-style", "solid"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2459: pseudo-localized border-style integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2459: pseudo-localized border-style integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--border-style",
+        "#2459: pseudo-localized border-style integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --border-style value must be an integer.",
+        "#2459: pseudo-localized border-style integer diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -120069,6 +120165,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_record_list_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_display_dynamic_color_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_window_flag_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_bounds_border_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

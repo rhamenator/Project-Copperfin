@@ -161,6 +161,16 @@ std::string localized_non_negative_value_required(
         });
 }
 
+std::string localized_not_negative_value_required(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+        {
+            {"option", std::string(option)}
+        });
+}
+
 std::string localized_true_false_value_required(
     const localization::LocalizedCatalog& catalog,
     std::string_view option) {
@@ -3197,14 +3207,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-height") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-height."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-height")};
             }
             int min_height = 0;
             if (!parse_int_value(args[++index], min_height)) {
-                return {.ok = false, .error = "The --min-height value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--min-height")};
             }
             if (min_height < 0) {
-                return {.ok = false, .error = "The --min-height value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--min-height")};
             }
             result.request.min_height = min_height;
             result.request.min_height_available = true;
@@ -3213,14 +3223,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-width") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-width."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-width")};
             }
             int min_width = 0;
             if (!parse_int_value(args[++index], min_width)) {
-                return {.ok = false, .error = "The --min-width value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--min-width")};
             }
             if (min_width < 0) {
-                return {.ok = false, .error = "The --min-width value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--min-width")};
             }
             result.request.min_width = min_width;
             result.request.min_width_available = true;
@@ -3229,14 +3239,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-height") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-height."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-height")};
             }
             int max_height = 0;
             if (!parse_int_value(args[++index], max_height)) {
-                return {.ok = false, .error = "The --max-height value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--max-height")};
             }
             if (max_height < 0) {
-                return {.ok = false, .error = "The --max-height value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--max-height")};
             }
             result.request.max_height = max_height;
             result.request.max_height_available = true;
@@ -3245,11 +3255,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--movable") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --movable."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--movable")};
             }
             const auto movable = parse_bool_value(args[++index]);
             if (!movable.has_value()) {
-                return {.ok = false, .error = "The --movable value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--movable")};
             }
             result.request.movable = *movable;
             result.request.movable_available = true;
@@ -3258,11 +3268,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--half-height-caption") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --half-height-caption."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--half-height-caption")};
             }
             const auto half_height_caption = parse_bool_value(args[++index]);
             if (!half_height_caption.has_value()) {
-                return {.ok = false, .error = "The --half-height-caption value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--half-height-caption")};
             }
             result.request.half_height_caption = *half_height_caption;
             result.request.half_height_caption_available = true;
@@ -3271,11 +3281,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mdi-form") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mdi-form."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mdi-form")};
             }
             const auto mdi_form = parse_bool_value(args[++index]);
             if (!mdi_form.has_value()) {
-                return {.ok = false, .error = "The --mdi-form value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--mdi-form")};
             }
             result.request.mdi_form = *mdi_form;
             result.request.mdi_form_available = true;
@@ -3284,14 +3294,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--back-style") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --back-style."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--back-style")};
             }
             int back_style = 0;
             if (!parse_int_value(args[++index], back_style)) {
-                return {.ok = false, .error = "The --back-style value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--back-style")};
             }
             if (back_style < 0) {
-                return {.ok = false, .error = "The --back-style value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--back-style")};
             }
             result.request.back_style = back_style;
             result.request.back_style_available = true;
@@ -3300,14 +3310,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-style") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-style."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-style")};
             }
             int border_style = 0;
             if (!parse_int_value(args[++index], border_style)) {
-                return {.ok = false, .error = "The --border-style value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--border-style")};
             }
             if (border_style < 0) {
-                return {.ok = false, .error = "The --border-style value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--border-style")};
             }
             result.request.border_style = border_style;
             result.request.border_style_available = true;
@@ -3316,14 +3326,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-width") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-width."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-width")};
             }
             int border_width = 0;
             if (!parse_int_value(args[++index], border_width)) {
-                return {.ok = false, .error = "The --border-width value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--border-width")};
             }
             if (border_width < 0) {
-                return {.ok = false, .error = "The --border-width value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--border-width")};
             }
             result.request.border_width = border_width;
             result.request.border_width_available = true;
@@ -3332,14 +3342,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-color")};
             }
             int border_color = 0;
             if (!parse_int_value(args[++index], border_color)) {
-                return {.ok = false, .error = "The --border-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--border-color")};
             }
             if (border_color < 0) {
-                return {.ok = false, .error = "The --border-color value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--border-color")};
             }
             result.request.border_color = border_color;
             result.request.border_color_available = true;
