@@ -6606,7 +6606,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-height-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-height-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-height-target-object-name")};
             }
             result.request.min_height_objects.push_back({
                 .record_index = 0U,
@@ -6618,7 +6618,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-height-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-height-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-height-target-unique-id")};
             }
             result.request.min_height_objects.push_back({
                 .record_index = 0U,
@@ -6630,7 +6630,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-width-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-width-target-object-name")};
             }
             result.request.min_width_objects.push_back({
                 .record_index = 0U,
@@ -6642,7 +6642,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-width-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-width-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-width-target-unique-id")};
             }
             result.request.min_width_objects.push_back({
                 .record_index = 0U,
@@ -6654,7 +6654,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-height-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-height-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-height-target-object-name")};
             }
             result.request.max_height_objects.push_back({
                 .record_index = 0U,
@@ -6666,7 +6666,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-height-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-height-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-height-target-unique-id")};
             }
             result.request.max_height_objects.push_back({
                 .record_index = 0U,
@@ -6678,7 +6678,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--movable-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --movable-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--movable-target-object-name")};
             }
             result.request.movable_objects.push_back({
                 .record_index = 0U,
@@ -6690,7 +6690,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--movable-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --movable-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--movable-target-unique-id")};
             }
             result.request.movable_objects.push_back({
                 .record_index = 0U,
@@ -6702,7 +6702,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--half-height-caption-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --half-height-caption-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--half-height-caption-target-object-name")};
             }
             result.request.half_height_caption_objects.push_back({
                 .record_index = 0U,
@@ -6714,7 +6714,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--half-height-caption-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --half-height-caption-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--half-height-caption-target-unique-id")};
             }
             result.request.half_height_caption_objects.push_back({
                 .record_index = 0U,
@@ -6726,7 +6726,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mdi-form-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mdi-form-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mdi-form-target-object-name")};
             }
             result.request.mdi_form_objects.push_back({
                 .record_index = 0U,
@@ -6738,7 +6738,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mdi-form-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mdi-form-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mdi-form-target-unique-id")};
             }
             result.request.mdi_form_objects.push_back({
                 .record_index = 0U,
@@ -6750,7 +6750,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--back-style-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --back-style-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--back-style-target-object-name")};
             }
             result.request.back_style_objects.push_back({
                 .record_index = 0U,
@@ -6762,7 +6762,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--back-style-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --back-style-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--back-style-target-unique-id")};
             }
             result.request.back_style_objects.push_back({
                 .record_index = 0U,
@@ -6774,7 +6774,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-style-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-style-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-style-target-object-name")};
             }
             result.request.border_style_objects.push_back({
                 .record_index = 0U,
@@ -6786,7 +6786,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-style-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-style-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-style-target-unique-id")};
             }
             result.request.border_style_objects.push_back({
                 .record_index = 0U,
@@ -6798,7 +6798,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-width-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-width-target-object-name")};
             }
             result.request.border_width_objects.push_back({
                 .record_index = 0U,
@@ -6810,7 +6810,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-width-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-width-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-width-target-unique-id")};
             }
             result.request.border_width_objects.push_back({
                 .record_index = 0U,
@@ -6822,7 +6822,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-color-target-object-name")};
             }
             result.request.border_color_objects.push_back({
                 .record_index = 0U,
@@ -6834,7 +6834,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--border-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --border-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--border-color-target-unique-id")};
             }
             result.request.border_color_objects.push_back({
                 .record_index = 0U,
