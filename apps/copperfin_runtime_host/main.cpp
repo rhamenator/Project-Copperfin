@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -946,17 +947,41 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
 }
 
 std::optional<copperfin::runtime::RuntimeBreakpoint> parse_breakpoint(const std::string& value, const std::string& startup_source) {
+    const auto parse_line = [](const std::string& text) -> std::optional<std::size_t> {
+        if (text.empty()) {
+            return std::nullopt;
+        }
+        std::size_t parsed = 0;
+        try {
+            const auto line = static_cast<std::size_t>(std::stoull(text, &parsed));
+            if (parsed != text.size()) {
+                return std::nullopt;
+            }
+            return line;
+        } catch (const std::exception&) {
+            return std::nullopt;
+        }
+    };
+
     const auto separator = value.rfind(':');
     if (separator == std::string::npos) {
+        const auto line = parse_line(value);
+        if (!line.has_value()) {
+            return std::nullopt;
+        }
         return copperfin::runtime::RuntimeBreakpoint{
             .file_path = startup_source,
-            .line = static_cast<std::size_t>(std::stoull(value))
+            .line = *line
         };
     }
 
+    const auto line = parse_line(value.substr(separator + 1U));
+    if (!line.has_value()) {
+        return std::nullopt;
+    }
     return copperfin::runtime::RuntimeBreakpoint{
         .file_path = value.substr(0U, separator),
-        .line = static_cast<std::size_t>(std::stoull(value.substr(separator + 1U)))
+        .line = *line
     };
 }
 
@@ -1094,7 +1119,8 @@ struct XAssetBootstrapResult {
 
 XAssetBootstrapResult materialize_xasset_bootstrap(
     const std::string& startup_source,
-    bool include_read_events) {
+    bool include_read_events,
+    const copperfin::localization::LocalizedCatalog& catalog) {
     XAssetBootstrapResult result;
     copperfin::studio::StudioOpenRequest request{};
     request.path = startup_source;
@@ -1109,7 +1135,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     result.model = copperfin::runtime::build_xasset_executable_model(open_result.document);
     if (!result.model.ok || !result.model.runnable_startup) {
         result.error = result.model.error.empty()
-            ? "No runnable startup methods were found in asset."
+            ? localized_message(catalog, "RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound")
             : result.model.error;
         return result;
     }
@@ -1125,7 +1151,7 @@ XAssetBootstrapResult materialize_xasset_bootstrap(
     output << result.bootstrap_source;
     output.close();
     if (!output.good()) {
-        result.error = "Unable to materialize xAsset bootstrap.";
+        result.error = localized_message(catalog, "RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed");
         return result;
     }
 
@@ -1566,11 +1592,11 @@ int main(int argc, char** argv) {
     std::string runtime_mode = "prg-engine";
     std::string xasset_bootstrap_source;
     if (!prg_startup) {
-        const auto bootstrap = materialize_xasset_bootstrap(startup_source, true);
+        const auto bootstrap = materialize_xasset_bootstrap(startup_source, true, catalog);
         xasset_model = bootstrap.model;
         if (!bootstrap.bootstrap_path.has_value()) {
             std::cout << "runtime.mode: compatibility-launcher\n";
-            std::cout << "launch.note: Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\n";
+            std::cout << "launch.note: " << localized_message(catalog, "RuntimeHost.Launch.Note.CompatibilityLauncher") << "\n";
             std::cout << "launch.note: " << bootstrap.error << "\n";
             std::cout << "debug.breakpoint_support: false\n";
             std::cout << "debug.step_support: false\n";
@@ -1623,7 +1649,10 @@ int main(int argc, char** argv) {
                         "role missing permission: runtime.admin");
                 }
                 std::cout << "status: error\n";
-                std::cout << "error: Security policy denied runtime.admin for role '" << security_role << "'.\n";
+                std::cout << "error: " << localized_message(
+                    catalog,
+                    "RuntimeHost.Error.SecurityPolicyDenied",
+                    {{"permission", "runtime.admin"}, {"role", security_role}}) << "\n";
                 return 9;
             }
 
@@ -1631,19 +1660,27 @@ int main(int argc, char** argv) {
                 const auto action_routine = resolve_action_routine_name(xasset_model, command);
                 if (!action_routine.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Unknown xAsset action: " << command << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.UnknownXAssetAction",
+                        {{"command", command}}) << "\n";
                     return 5;
                 }
                 if (!session.dispatch_event_handler(*action_routine)) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Unable to dispatch xAsset action: " << command << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+                        {{"command", command}}) << "\n";
                     return 5;
                 }
                 state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
             } else if (starts_with_insensitive(command, "watch:")) {
                 if (!state.paused || state.completed) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Watch evaluation requires an active paused state.\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.WatchRequiresPausedState") << "\n";
                     return 5;
                 }
                 const auto watch = session.evaluate_watch_expression(command.substr(6U));
@@ -1662,7 +1699,10 @@ int main(int argc, char** argv) {
                 const auto breakpoint = parse_breakpoint(command.substr(10U), effective_startup_source);
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Invalid breakpoint command: " << command << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+                        {{"command", command}}) << "\n";
                     return 5;
                 }
                 session.add_breakpoint(*breakpoint);
@@ -1673,12 +1713,18 @@ int main(int argc, char** argv) {
                 const auto breakpoint = parse_breakpoint(command.substr(13U), effective_startup_source);
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Invalid breakpoint command: " << command << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+                        {{"command", command}}) << "\n";
                     return 5;
                 }
                 if (!session.remove_breakpoint(*breakpoint)) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Unknown breakpoint: " << breakpoint->file_path << ":" << breakpoint->line << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.UnknownBreakpoint",
+                        {{"path", breakpoint->file_path}, {"line", std::to_string(breakpoint->line)}}) << "\n";
                     return 5;
                 }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
@@ -1687,7 +1733,9 @@ int main(int argc, char** argv) {
             } else if (starts_with_insensitive(command, "break:add-action:")) {
                 if (runtime_mode != "xasset-bootstrap") {
                     std::cout << "status: error\n";
-                    std::cout << "error: xAsset action breakpoints require xasset-bootstrap mode.\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode") << "\n";
                     return 5;
                 }
                 const auto breakpoint = resolve_action_breakpoint(
@@ -1697,7 +1745,10 @@ int main(int argc, char** argv) {
                     command.substr(17U));
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Unknown or non-breakpointable xAsset action: " << trim_copy(command.substr(17U)) << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+                        {{"action", trim_copy(command.substr(17U))}}) << "\n";
                     return 5;
                 }
                 session.add_breakpoint(*breakpoint);
@@ -1707,7 +1758,9 @@ int main(int argc, char** argv) {
             } else if (starts_with_insensitive(command, "break:remove-action:")) {
                 if (runtime_mode != "xasset-bootstrap") {
                     std::cout << "status: error\n";
-                    std::cout << "error: xAsset action breakpoints require xasset-bootstrap mode.\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode") << "\n";
                     return 5;
                 }
                 const auto breakpoint = resolve_action_breakpoint(
@@ -1717,12 +1770,18 @@ int main(int argc, char** argv) {
                     command.substr(20U));
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Unknown or non-breakpointable xAsset action: " << trim_copy(command.substr(20U)) << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+                        {{"action", trim_copy(command.substr(20U))}}) << "\n";
                     return 5;
                 }
                 if (!session.remove_breakpoint(*breakpoint)) {
                     std::cout << "status: error\n";
-                    std::cout << "error: Unknown breakpoint for xAsset action: " << trim_copy(command.substr(20U)) << "\n";
+                    std::cout << "error: " << localized_message(
+                        catalog,
+                        "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
+                        {{"action", trim_copy(command.substr(20U))}}) << "\n";
                     return 5;
                 }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";

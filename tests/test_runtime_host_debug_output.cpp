@@ -52,6 +52,17 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Bridge.Error.UnsupportedRoutineExportName\": \"Bridge routine export name is not a supported PRG identifier.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteResponseArtifactFailed\": \"Unable to write bridge response artifact.\",\n"
         "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"Unable to write bridge routine bootstrap.\",\n"
+        "  \"RuntimeHost.Debug.Error.DispatchXAssetActionFailed\": \"Unable to dispatch xAsset action: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.InvalidBreakpointCommand\": \"Invalid breakpoint command: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed\": \"Unable to materialize xAsset bootstrap.\",\n"
+        "  \"RuntimeHost.Debug.Error.NoRunnableStartupMethodsFound\": \"No runnable startup methods were found in asset.\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownBreakpoint\": \"Unknown breakpoint: {path}:{line}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction\": \"Unknown breakpoint for xAsset action: {action}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction\": \"Unknown or non-breakpointable xAsset action: {action}\",\n"
+        "  \"RuntimeHost.Debug.Error.UnknownXAssetAction\": \"Unknown xAsset action: {command}\",\n"
+        "  \"RuntimeHost.Debug.Error.WatchRequiresPausedState\": \"Watch evaluation requires an active paused state.\",\n"
+        "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"xAsset action breakpoints require xasset-bootstrap mode.\",\n"
+        "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"Manifest is empty or invalid.\",\n"
@@ -2127,6 +2138,79 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_host_debug_errors_localize_without_changing_command_tokens(const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_debug_error_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+
+    const fs::path startup_path = temp_root / "main.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(
+        startup_path,
+        "LOCAL nValue\n"
+        "nValue = 1\n"
+        "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=DebugErrorLocalization\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "break:add:not-a-breakpoint"
+            },
+            temp_root);
+        expect(process.exit_code == 5,
+               "#2391: en-US invalid breakpoint diagnostics should keep the debug error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2391: en-US invalid breakpoint diagnostics should preserve machine-readable status");
+        expect(
+            process.stdout_text.find("error: Invalid breakpoint command: break:add:not-a-breakpoint") !=
+                std::string::npos,
+            "#2391: en-US invalid breakpoint diagnostics should remain stable");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "break:add:not-a-breakpoint"
+            },
+            temp_root);
+        expect(process.exit_code == 5,
+               "#2391: pseudo-localized invalid breakpoint diagnostics should keep the debug error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2391: pseudo-localized invalid breakpoint diagnostics should preserve machine-readable status");
+        expect(process.stdout_text.find("[!! ") != std::string::npos,
+               "#2391: pseudo-localized invalid breakpoint diagnostics should decorate prose");
+        expect(process.stdout_text.find("break:add:not-a-breakpoint") != std::string::npos,
+               "#2391: pseudo-localized invalid breakpoint diagnostics should preserve debug command tokens");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -2156,6 +2240,7 @@ int main(int argc, char** argv) {
     test_runtime_host_rejects_bridge_descriptor_identity_mismatch(argv[1]);
     test_runtime_host_rejects_bridge_descriptor_metadata_mismatch(argv[1]);
     test_runtime_host_usage_text_localizes_without_changing_cli_tokens(argv[1]);
+    test_runtime_host_debug_errors_localize_without_changing_command_tokens(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
