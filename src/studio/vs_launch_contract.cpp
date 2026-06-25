@@ -9455,116 +9455,196 @@ LaunchParseResult parse_launch_arguments(
             "--display-value-object")};
     }
     if (result.request.selected_back_color_object && !result.request.selected_back_color_available) {
-        return {.ok = false, .error = "An object selected-back-color assignment requires --selected-back-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "selected-back-color",
+            "--selected-back-color")};
     }
     if (result.request.selected_back_color_object && result.request.selected_back_color < 0) {
-        return {.ok = false, .error = "An object selected-back-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "selected-back-color",
+            "value")};
     }
     if (result.request.selected_back_color_object && result.request.selected_back_color_objects.empty()) {
-        return {.ok = false, .error = "An object selected-back-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "selected-back-color")};
     }
     if (!result.request.selected_back_color_object &&
         (result.request.selected_back_color_available ||
          !result.request.selected_back_color_objects.empty())) {
-        return {.ok = false, .error = "Selected-back-color arguments can only be used with --selected-back-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Selected-back-color",
+            "--selected-back-color-object")};
     }
     if (result.request.selected_fore_color_object && !result.request.selected_fore_color_available) {
-        return {.ok = false, .error = "An object selected-fore-color assignment requires --selected-fore-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "selected-fore-color",
+            "--selected-fore-color")};
     }
     if (result.request.selected_fore_color_object && result.request.selected_fore_color < 0) {
-        return {.ok = false, .error = "An object selected-fore-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "selected-fore-color",
+            "value")};
     }
     if (result.request.selected_fore_color_object && result.request.selected_fore_color_objects.empty()) {
-        return {.ok = false, .error = "An object selected-fore-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "selected-fore-color")};
     }
     if (!result.request.selected_fore_color_object &&
         (result.request.selected_fore_color_available ||
          !result.request.selected_fore_color_objects.empty())) {
-        return {.ok = false, .error = "Selected-fore-color arguments can only be used with --selected-fore-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Selected-fore-color",
+            "--selected-fore-color-object")};
     }
     if (result.request.selected_item_back_color_object && !result.request.selected_item_back_color_available) {
-        return {.ok = false, .error = "An object selected-item-back-color assignment requires --selected-item-back-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "selected-item-back-color",
+            "--selected-item-back-color")};
     }
     if (result.request.selected_item_back_color_object && result.request.selected_item_back_color < 0) {
-        return {.ok = false, .error = "An object selected-item-back-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "selected-item-back-color",
+            "value")};
     }
     if (result.request.selected_item_back_color_object && result.request.selected_item_back_color_objects.empty()) {
-        return {.ok = false, .error = "An object selected-item-back-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "selected-item-back-color")};
     }
     if (!result.request.selected_item_back_color_object &&
         (result.request.selected_item_back_color_available ||
          !result.request.selected_item_back_color_objects.empty())) {
-        return {.ok = false, .error = "Selected-item-back-color arguments can only be used with --selected-item-back-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Selected-item-back-color",
+            "--selected-item-back-color-object")};
     }
     if (result.request.selected_item_fore_color_object && !result.request.selected_item_fore_color_available) {
-        return {.ok = false, .error = "An object selected-item-fore-color assignment requires --selected-item-fore-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "selected-item-fore-color",
+            "--selected-item-fore-color")};
     }
     if (result.request.selected_item_fore_color_object && result.request.selected_item_fore_color < 0) {
-        return {.ok = false, .error = "An object selected-item-fore-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "selected-item-fore-color",
+            "value")};
     }
     if (result.request.selected_item_fore_color_object && result.request.selected_item_fore_color_objects.empty()) {
-        return {.ok = false, .error = "An object selected-item-fore-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "selected-item-fore-color")};
     }
     if (!result.request.selected_item_fore_color_object &&
         (result.request.selected_item_fore_color_available ||
          !result.request.selected_item_fore_color_objects.empty())) {
-        return {.ok = false, .error = "Selected-item-fore-color arguments can only be used with --selected-item-fore-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Selected-item-fore-color",
+            "--selected-item-fore-color-object")};
     }
     if (result.request.disabled_item_back_color_object && !result.request.disabled_item_back_color_available) {
-        return {.ok = false, .error = "An object disabled-item-back-color assignment requires --disabled-item-back-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "disabled-item-back-color",
+            "--disabled-item-back-color")};
     }
     if (result.request.disabled_item_back_color_object && result.request.disabled_item_back_color < 0) {
-        return {.ok = false, .error = "An object disabled-item-back-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "disabled-item-back-color",
+            "value")};
     }
     if (result.request.disabled_item_back_color_object && result.request.disabled_item_back_color_objects.empty()) {
-        return {.ok = false, .error = "An object disabled-item-back-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "disabled-item-back-color")};
     }
     if (!result.request.disabled_item_back_color_object &&
         (result.request.disabled_item_back_color_available ||
          !result.request.disabled_item_back_color_objects.empty())) {
-        return {.ok = false, .error = "Disabled-item-back-color arguments can only be used with --disabled-item-back-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Disabled-item-back-color",
+            "--disabled-item-back-color-object")};
     }
     if (result.request.disabled_item_fore_color_object && !result.request.disabled_item_fore_color_available) {
-        return {.ok = false, .error = "An object disabled-item-fore-color assignment requires --disabled-item-fore-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "disabled-item-fore-color",
+            "--disabled-item-fore-color")};
     }
     if (result.request.disabled_item_fore_color_object && result.request.disabled_item_fore_color < 0) {
-        return {.ok = false, .error = "An object disabled-item-fore-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "disabled-item-fore-color",
+            "value")};
     }
     if (result.request.disabled_item_fore_color_object && result.request.disabled_item_fore_color_objects.empty()) {
-        return {.ok = false, .error = "An object disabled-item-fore-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "disabled-item-fore-color")};
     }
     if (!result.request.disabled_item_fore_color_object &&
         (result.request.disabled_item_fore_color_available ||
          !result.request.disabled_item_fore_color_objects.empty())) {
-        return {.ok = false, .error = "Disabled-item-fore-color arguments can only be used with --disabled-item-fore-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Disabled-item-fore-color",
+            "--disabled-item-fore-color-object")};
     }
     if (result.request.item_back_color_object && !result.request.item_back_color_available) {
-        return {.ok = false, .error = "An object item-back-color assignment requires --item-back-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "item-back-color",
+            "--item-back-color")};
     }
     if (result.request.item_back_color_object && result.request.item_back_color < 0) {
-        return {.ok = false, .error = "An object item-back-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "item-back-color",
+            "value")};
     }
     if (result.request.item_back_color_object && result.request.item_back_color_objects.empty()) {
-        return {.ok = false, .error = "An object item-back-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "item-back-color")};
     }
     if (!result.request.item_back_color_object &&
         (result.request.item_back_color_available ||
          !result.request.item_back_color_objects.empty())) {
-        return {.ok = false, .error = "Item-back-color arguments can only be used with --item-back-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Item-back-color",
+            "--item-back-color-object")};
     }
     if (result.request.item_fore_color_object && !result.request.item_fore_color_available) {
-        return {.ok = false, .error = "An object item-fore-color assignment requires --item-fore-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "item-fore-color",
+            "--item-fore-color")};
     }
     if (result.request.item_fore_color_object && result.request.item_fore_color < 0) {
-        return {.ok = false, .error = "An object item-fore-color assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "item-fore-color",
+            "value")};
     }
     if (result.request.item_fore_color_object && result.request.item_fore_color_objects.empty()) {
-        return {.ok = false, .error = "An object item-fore-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "item-fore-color")};
     }
     if (!result.request.item_fore_color_object &&
         (result.request.item_fore_color_available ||
          !result.request.item_fore_color_objects.empty())) {
-        return {.ok = false, .error = "Item-fore-color arguments can only be used with --item-fore-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Item-fore-color",
+            "--item-fore-color-object")};
     }
     if (result.request.highlight_back_color_object && !result.request.highlight_back_color_available) {
         return {.ok = false, .error = "An object highlight-back-color assignment requires --highlight-back-color."};

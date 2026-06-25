@@ -4637,6 +4637,124 @@ void test_studio_host_launch_bound_list_numeric_diagnostics_localize(const std::
     }
 }
 
+void test_studio_host_launch_list_item_color_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_list_item_color_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--selected-back-color-object",
+            "--selected-back-color", "255",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2438: default selected-back-color diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object selected-back-color assignment requires at least one target selector.",
+        "#2438: default selected-back-color diagnostics should preserve en-US missing-target prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--selected-fore-color-object",
+            "--selected-fore-color-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2438: pseudo-localized selected-fore-color missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2438: pseudo-localized selected-fore-color missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--selected-fore-color",
+        "#2438: pseudo-localized selected-fore-color missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object selected-fore-color assignment requires --selected-fore-color.",
+        "#2438: pseudo-localized selected-fore-color missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--selected-item-back-color-object",
+            "--selected-item-back-color", "-1",
+            "--selected-item-back-color-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2438: pseudo-localized selected-item-back-color non-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2438: pseudo-localized selected-item-back-color non-negative diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "value",
+        "#2438: pseudo-localized selected-item-back-color non-negative diagnostics should preserve value placeholder");
+    expect_not_contains(process.stdout_text,
+        "An object selected-item-back-color assignment requires a non-negative value.",
+        "#2438: pseudo-localized selected-item-back-color non-negative diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--disabled-item-fore-color-object",
+            "--disabled-item-fore-color", "128",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2438: pseudo-localized disabled-item-fore-color missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2438: pseudo-localized disabled-item-fore-color missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object disabled-item-fore-color assignment requires at least one target selector.",
+        "#2438: pseudo-localized disabled-item-fore-color missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--item-fore-color", "255",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2438: pseudo-localized item-fore-color stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2438: pseudo-localized item-fore-color stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--item-fore-color-object",
+        "#2438: pseudo-localized item-fore-color stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Item-fore-color arguments can only be used with --item-fore-color-object.",
+        "#2438: pseudo-localized item-fore-color stray-argument diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -118157,6 +118275,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_row_list_diagnostics_localize(argv[1]);
     test_studio_host_launch_deleted_state_diagnostics_localize(argv[1]);
     test_studio_host_launch_bound_list_numeric_diagnostics_localize(argv[1]);
+    test_studio_host_launch_list_item_color_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
