@@ -3473,6 +3473,28 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
         "An object form set class assignment requires at least one target selector.",
         "#2426: default object metadata diagnostics should preserve en-US prose");
 
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--form-set-class-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2487: default form-set-class target object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --form-set-class-target-object-name.",
+        "#2487: default form-set-class target object-name missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--whats-this-button-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2487: default whats-this-button target unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --whats-this-button-target-unique-id.",
+        "#2487: default whats-this-button target unique-id missing diagnostics should preserve en-US prose");
+
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
         studio_host_path,
@@ -3516,6 +3538,74 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
     expect_not_contains(process.stdout_text,
         "Whats-this-button arguments can only be used with --whats-this-button-object.",
         "#2426: pseudo-localized stray-argument diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--default-file-path"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2487: pseudo-localized default-file-path missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2487: pseudo-localized default-file-path missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--default-file-path",
+        "#2487: pseudo-localized default-file-path missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --default-file-path.",
+        "#2487: pseudo-localized default-file-path missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--tab-orientation", "left"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2487: pseudo-localized tab-orientation integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2487: pseudo-localized tab-orientation integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--tab-orientation",
+        "#2487: pseudo-localized tab-orientation integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --tab-orientation value must be an integer.",
+        "#2487: pseudo-localized tab-orientation integer diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--help-context-id", "-1"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2487: pseudo-localized help-context-id not-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2487: pseudo-localized help-context-id not-negative diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--help-context-id",
+        "#2487: pseudo-localized help-context-id not-negative diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --help-context-id value must not be negative.",
+        "#2487: pseudo-localized help-context-id not-negative diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--whats-this-help", "maybe"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2487: pseudo-localized whats-this-help logical diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2487: pseudo-localized whats-this-help logical diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--whats-this-help",
+        "#2487: pseudo-localized whats-this-help logical diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --whats-this-help value must be a logical value.",
+        "#2487: pseudo-localized whats-this-help logical diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

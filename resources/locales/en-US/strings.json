@@ -79,6 +79,7 @@
   "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize": "Anchor selectors can only be used with {alignOption} or {resizeOption}.",
   "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired": "Field values must use {syntax} syntax.",
   "StudioHost.LaunchParse.Error.IntegerValueRequired": "The {option} value must be an integer.",
+  "StudioHost.LaunchParse.Error.LogicalValueRequired": "The {option} value must be a logical value.",
   "StudioHost.LaunchParse.Error.MissingValueAfterOption": "Missing value after {option}.",
   "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands": "Object commands cannot be combined with property commands.",
   "StudioHost.LaunchParse.Error.NonNegativeValueRequired": "The {option} value must be non-negative.",

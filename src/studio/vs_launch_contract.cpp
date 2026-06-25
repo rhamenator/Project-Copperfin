@@ -183,6 +183,16 @@ std::string localized_true_false_value_required(
         });
 }
 
+std::string localized_logical_value_required(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.LogicalValueRequired",
+        {
+            {"option", std::string(option)}
+        });
+}
+
 std::string localized_deleted_state_requires_target_selector(const localization::LocalizedCatalog& catalog) {
     return catalog.translate("StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector");
 }
@@ -338,6 +348,7 @@ std::string localized_object_action_arguments_require_mode(
 }
 
 bool parse_form_set_class_argument(const std::string& argument,
+                                   const localization::LocalizedCatalog& catalog,
                                    const std::vector<std::string>& args,
                                    std::size_t& index,
                                    LaunchParseResult& result,
@@ -349,7 +360,7 @@ bool parse_form_set_class_argument(const std::string& argument,
 
     if (argument == "--form-set-class") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --form-set-class.";
+            error = localized_missing_value_after_option(catalog, "--form-set-class");
             return true;
         }
         result.request.form_set_class = args[++index];
@@ -359,7 +370,7 @@ bool parse_form_set_class_argument(const std::string& argument,
 
     if (argument == "--form-set-class-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --form-set-class-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--form-set-class-target-object-name");
             return true;
         }
         result.request.form_set_class_objects.push_back({
@@ -372,7 +383,7 @@ bool parse_form_set_class_argument(const std::string& argument,
 
     if (argument == "--form-set-class-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --form-set-class-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--form-set-class-target-unique-id");
             return true;
         }
         result.request.form_set_class_objects.push_back({
@@ -387,6 +398,7 @@ bool parse_form_set_class_argument(const std::string& argument,
 }
 
 bool parse_default_file_path_argument(const std::string& argument,
+                                      const localization::LocalizedCatalog& catalog,
                                       const std::vector<std::string>& args,
                                       std::size_t& index,
                                       LaunchParseResult& result,
@@ -398,7 +410,7 @@ bool parse_default_file_path_argument(const std::string& argument,
 
     if (argument == "--default-file-path") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --default-file-path.";
+            error = localized_missing_value_after_option(catalog, "--default-file-path");
             return true;
         }
         result.request.default_file_path = args[++index];
@@ -408,7 +420,7 @@ bool parse_default_file_path_argument(const std::string& argument,
 
     if (argument == "--default-file-path-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --default-file-path-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--default-file-path-target-object-name");
             return true;
         }
         result.request.default_file_path_objects.push_back({
@@ -421,7 +433,7 @@ bool parse_default_file_path_argument(const std::string& argument,
 
     if (argument == "--default-file-path-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --default-file-path-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--default-file-path-target-unique-id");
             return true;
         }
         result.request.default_file_path_objects.push_back({
@@ -436,6 +448,7 @@ bool parse_default_file_path_argument(const std::string& argument,
 }
 
 bool parse_initial_selected_alias_argument(const std::string& argument,
+                                           const localization::LocalizedCatalog& catalog,
                                            const std::vector<std::string>& args,
                                            std::size_t& index,
                                            LaunchParseResult& result,
@@ -447,7 +460,7 @@ bool parse_initial_selected_alias_argument(const std::string& argument,
 
     if (argument == "--initial-selected-alias") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --initial-selected-alias.";
+            error = localized_missing_value_after_option(catalog, "--initial-selected-alias");
             return true;
         }
         result.request.initial_selected_alias = args[++index];
@@ -457,7 +470,7 @@ bool parse_initial_selected_alias_argument(const std::string& argument,
 
     if (argument == "--initial-selected-alias-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --initial-selected-alias-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--initial-selected-alias-target-object-name");
             return true;
         }
         result.request.initial_selected_alias_objects.push_back({
@@ -470,7 +483,7 @@ bool parse_initial_selected_alias_argument(const std::string& argument,
 
     if (argument == "--initial-selected-alias-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --initial-selected-alias-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--initial-selected-alias-target-unique-id");
             return true;
         }
         result.request.initial_selected_alias_objects.push_back({
@@ -485,6 +498,7 @@ bool parse_initial_selected_alias_argument(const std::string& argument,
 }
 
 bool parse_tab_orientation_argument(const std::string& argument,
+                                    const localization::LocalizedCatalog& catalog,
                                     const std::vector<std::string>& args,
                                     std::size_t& index,
                                     LaunchParseResult& result,
@@ -496,16 +510,16 @@ bool parse_tab_orientation_argument(const std::string& argument,
 
     if (argument == "--tab-orientation") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --tab-orientation.";
+            error = localized_missing_value_after_option(catalog, "--tab-orientation");
             return true;
         }
         int tab_orientation = 0;
         if (!parse_int_value(args[++index], tab_orientation)) {
-            error = "The --tab-orientation value must be an integer.";
+            error = localized_integer_value_required(catalog, "--tab-orientation");
             return true;
         }
         if (tab_orientation < 0) {
-            error = "The --tab-orientation value must not be negative.";
+            error = localized_not_negative_value_required(catalog, "--tab-orientation");
             return true;
         }
         result.request.tab_orientation = tab_orientation;
@@ -515,7 +529,7 @@ bool parse_tab_orientation_argument(const std::string& argument,
 
     if (argument == "--tab-orientation-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --tab-orientation-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--tab-orientation-target-object-name");
             return true;
         }
         result.request.tab_orientation_objects.push_back({
@@ -528,7 +542,7 @@ bool parse_tab_orientation_argument(const std::string& argument,
 
     if (argument == "--tab-orientation-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --tab-orientation-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--tab-orientation-target-unique-id");
             return true;
         }
         result.request.tab_orientation_objects.push_back({
@@ -543,6 +557,7 @@ bool parse_tab_orientation_argument(const std::string& argument,
 }
 
 bool parse_display_orientation_argument(const std::string& argument,
+                                        const localization::LocalizedCatalog& catalog,
                                         const std::vector<std::string>& args,
                                         std::size_t& index,
                                         LaunchParseResult& result,
@@ -554,16 +569,16 @@ bool parse_display_orientation_argument(const std::string& argument,
 
     if (argument == "--display-orientation") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --display-orientation.";
+            error = localized_missing_value_after_option(catalog, "--display-orientation");
             return true;
         }
         int display_orientation = 0;
         if (!parse_int_value(args[++index], display_orientation)) {
-            error = "The --display-orientation value must be an integer.";
+            error = localized_integer_value_required(catalog, "--display-orientation");
             return true;
         }
         if (display_orientation < 0) {
-            error = "The --display-orientation value must not be negative.";
+            error = localized_not_negative_value_required(catalog, "--display-orientation");
             return true;
         }
         result.request.display_orientation = display_orientation;
@@ -573,7 +588,7 @@ bool parse_display_orientation_argument(const std::string& argument,
 
     if (argument == "--display-orientation-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --display-orientation-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--display-orientation-target-object-name");
             return true;
         }
         result.request.display_orientation_objects.push_back({
@@ -586,7 +601,7 @@ bool parse_display_orientation_argument(const std::string& argument,
 
     if (argument == "--display-orientation-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --display-orientation-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--display-orientation-target-unique-id");
             return true;
         }
         result.request.display_orientation_objects.push_back({
@@ -601,6 +616,7 @@ bool parse_display_orientation_argument(const std::string& argument,
 }
 
 bool parse_help_context_id_argument(const std::string& argument,
+                                    const localization::LocalizedCatalog& catalog,
                                     const std::vector<std::string>& args,
                                     std::size_t& index,
                                     LaunchParseResult& result,
@@ -612,16 +628,16 @@ bool parse_help_context_id_argument(const std::string& argument,
 
     if (argument == "--help-context-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --help-context-id.";
+            error = localized_missing_value_after_option(catalog, "--help-context-id");
             return true;
         }
         int help_context_id = 0;
         if (!parse_int_value(args[++index], help_context_id)) {
-            error = "The --help-context-id value must be an integer.";
+            error = localized_integer_value_required(catalog, "--help-context-id");
             return true;
         }
         if (help_context_id < 0) {
-            error = "The --help-context-id value must not be negative.";
+            error = localized_not_negative_value_required(catalog, "--help-context-id");
             return true;
         }
         result.request.help_context_id = help_context_id;
@@ -631,7 +647,7 @@ bool parse_help_context_id_argument(const std::string& argument,
 
     if (argument == "--help-context-id-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --help-context-id-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--help-context-id-target-object-name");
             return true;
         }
         result.request.help_context_id_objects.push_back({
@@ -644,7 +660,7 @@ bool parse_help_context_id_argument(const std::string& argument,
 
     if (argument == "--help-context-id-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --help-context-id-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--help-context-id-target-unique-id");
             return true;
         }
         result.request.help_context_id_objects.push_back({
@@ -659,6 +675,7 @@ bool parse_help_context_id_argument(const std::string& argument,
 }
 
 bool parse_whats_this_help_id_argument(const std::string& argument,
+                                       const localization::LocalizedCatalog& catalog,
                                        const std::vector<std::string>& args,
                                        std::size_t& index,
                                        LaunchParseResult& result,
@@ -670,16 +687,16 @@ bool parse_whats_this_help_id_argument(const std::string& argument,
 
     if (argument == "--whats-this-help-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-help-id.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-help-id");
             return true;
         }
         int whats_this_help_id = 0;
         if (!parse_int_value(args[++index], whats_this_help_id)) {
-            error = "The --whats-this-help-id value must be an integer.";
+            error = localized_integer_value_required(catalog, "--whats-this-help-id");
             return true;
         }
         if (whats_this_help_id < 0) {
-            error = "The --whats-this-help-id value must not be negative.";
+            error = localized_not_negative_value_required(catalog, "--whats-this-help-id");
             return true;
         }
         result.request.whats_this_help_id = whats_this_help_id;
@@ -689,7 +706,7 @@ bool parse_whats_this_help_id_argument(const std::string& argument,
 
     if (argument == "--whats-this-help-id-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-help-id-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-help-id-target-object-name");
             return true;
         }
         result.request.whats_this_help_id_objects.push_back({
@@ -702,7 +719,7 @@ bool parse_whats_this_help_id_argument(const std::string& argument,
 
     if (argument == "--whats-this-help-id-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-help-id-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-help-id-target-unique-id");
             return true;
         }
         result.request.whats_this_help_id_objects.push_back({
@@ -717,6 +734,7 @@ bool parse_whats_this_help_id_argument(const std::string& argument,
 }
 
 bool parse_whats_this_help_argument(const std::string& argument,
+                                    const localization::LocalizedCatalog& catalog,
                                     const std::vector<std::string>& args,
                                     std::size_t& index,
                                     LaunchParseResult& result,
@@ -728,12 +746,12 @@ bool parse_whats_this_help_argument(const std::string& argument,
 
     if (argument == "--whats-this-help") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-help.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-help");
             return true;
         }
         const auto value = parse_bool_value(args[++index]);
         if (!value.has_value()) {
-            error = "The --whats-this-help value must be a logical value.";
+            error = localized_logical_value_required(catalog, "--whats-this-help");
             return true;
         }
         result.request.whats_this_help = *value;
@@ -743,7 +761,7 @@ bool parse_whats_this_help_argument(const std::string& argument,
 
     if (argument == "--whats-this-help-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-help-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-help-target-object-name");
             return true;
         }
         result.request.whats_this_help_objects.push_back({
@@ -756,7 +774,7 @@ bool parse_whats_this_help_argument(const std::string& argument,
 
     if (argument == "--whats-this-help-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-help-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-help-target-unique-id");
             return true;
         }
         result.request.whats_this_help_objects.push_back({
@@ -771,6 +789,7 @@ bool parse_whats_this_help_argument(const std::string& argument,
 }
 
 bool parse_whats_this_button_argument(const std::string& argument,
+                                      const localization::LocalizedCatalog& catalog,
                                       const std::vector<std::string>& args,
                                       std::size_t& index,
                                       LaunchParseResult& result,
@@ -782,12 +801,12 @@ bool parse_whats_this_button_argument(const std::string& argument,
 
     if (argument == "--whats-this-button") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-button.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-button");
             return true;
         }
         const auto value = parse_bool_value(args[++index]);
         if (!value.has_value()) {
-            error = "The --whats-this-button value must be a logical value.";
+            error = localized_logical_value_required(catalog, "--whats-this-button");
             return true;
         }
         result.request.whats_this_button = *value;
@@ -797,7 +816,7 @@ bool parse_whats_this_button_argument(const std::string& argument,
 
     if (argument == "--whats-this-button-target-object-name") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-button-target-object-name.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-button-target-object-name");
             return true;
         }
         result.request.whats_this_button_objects.push_back({
@@ -810,7 +829,7 @@ bool parse_whats_this_button_argument(const std::string& argument,
 
     if (argument == "--whats-this-button-target-unique-id") {
         if ((index + 1U) >= args.size()) {
-            error = "Missing value after --whats-this-button-target-unique-id.";
+            error = localized_missing_value_after_option(catalog, "--whats-this-button-target-unique-id");
             return true;
         }
         result.request.whats_this_button_objects.push_back({
@@ -1000,55 +1019,55 @@ LaunchParseResult parse_launch_arguments(
         const std::string& argument = args[index];
         std::string parsed_argument_error;
 
-        if (parse_form_set_class_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_form_set_class_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_default_file_path_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_default_file_path_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_initial_selected_alias_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_initial_selected_alias_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_tab_orientation_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_tab_orientation_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_display_orientation_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_display_orientation_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_help_context_id_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_help_context_id_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_whats_this_help_id_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_whats_this_help_id_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_whats_this_help_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_whats_this_help_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
             continue;
         }
-        if (parse_whats_this_button_argument(argument, args, index, result, parsed_argument_error)) {
+        if (parse_whats_this_button_argument(argument, catalog, args, index, result, parsed_argument_error)) {
             if (!parsed_argument_error.empty()) {
                 return {.ok = false, .error = parsed_argument_error};
             }
