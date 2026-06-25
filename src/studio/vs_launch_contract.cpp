@@ -6342,7 +6342,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--closable-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --closable-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--closable-target-object-name")};
             }
             result.request.closable_objects.push_back({
                 .record_index = 0U,
@@ -6354,7 +6354,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--closable-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --closable-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--closable-target-unique-id")};
             }
             result.request.closable_objects.push_back({
                 .record_index = 0U,
@@ -6366,7 +6366,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--control-box-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --control-box-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--control-box-target-object-name")};
             }
             result.request.control_box_objects.push_back({
                 .record_index = 0U,
@@ -6378,7 +6378,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--control-box-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --control-box-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--control-box-target-unique-id")};
             }
             result.request.control_box_objects.push_back({
                 .record_index = 0U,
@@ -6390,7 +6390,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--allow-output-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --allow-output-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--allow-output-target-object-name")};
             }
             result.request.allow_output_objects.push_back({
                 .record_index = 0U,
@@ -6402,7 +6402,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--allow-output-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --allow-output-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--allow-output-target-unique-id")};
             }
             result.request.allow_output_objects.push_back({
                 .record_index = 0U,
@@ -6414,7 +6414,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-center-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-center-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-center-target-object-name")};
             }
             result.request.auto_center_objects.push_back({
                 .record_index = 0U,
@@ -6426,7 +6426,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-center-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-center-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-center-target-unique-id")};
             }
             result.request.auto_center_objects.push_back({
                 .record_index = 0U,
@@ -6438,7 +6438,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-verb-menu-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-verb-menu-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-verb-menu-target-object-name")};
             }
             result.request.auto_verb_menu_objects.push_back({
                 .record_index = 0U,
@@ -6450,7 +6450,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-verb-menu-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-verb-menu-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-verb-menu-target-unique-id")};
             }
             result.request.auto_verb_menu_objects.push_back({
                 .record_index = 0U,
@@ -6462,7 +6462,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--bind-controls-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --bind-controls-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--bind-controls-target-object-name")};
             }
             result.request.bind_controls_objects.push_back({
                 .record_index = 0U,
@@ -6474,7 +6474,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--bind-controls-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --bind-controls-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--bind-controls-target-unique-id")};
             }
             result.request.bind_controls_objects.push_back({
                 .record_index = 0U,
@@ -6486,7 +6486,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--desktop-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --desktop-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--desktop-target-object-name")};
             }
             result.request.desktop_objects.push_back({
                 .record_index = 0U,
@@ -6498,7 +6498,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--desktop-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --desktop-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--desktop-target-unique-id")};
             }
             result.request.desktop_objects.push_back({
                 .record_index = 0U,
@@ -6510,7 +6510,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--key-preview-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --key-preview-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--key-preview-target-object-name")};
             }
             result.request.key_preview_objects.push_back({
                 .record_index = 0U,
@@ -6522,7 +6522,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--key-preview-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --key-preview-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--key-preview-target-unique-id")};
             }
             result.request.key_preview_objects.push_back({
                 .record_index = 0U,
@@ -6534,7 +6534,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mac-desktop-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mac-desktop-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mac-desktop-target-object-name")};
             }
             result.request.mac_desktop_objects.push_back({
                 .record_index = 0U,
@@ -6546,7 +6546,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mac-desktop-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mac-desktop-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mac-desktop-target-unique-id")};
             }
             result.request.mac_desktop_objects.push_back({
                 .record_index = 0U,
@@ -6558,7 +6558,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-button-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-button-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-button-target-object-name")};
             }
             result.request.max_button_objects.push_back({
                 .record_index = 0U,
@@ -6570,7 +6570,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-button-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-button-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-button-target-unique-id")};
             }
             result.request.max_button_objects.push_back({
                 .record_index = 0U,
@@ -6582,7 +6582,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-button-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-button-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-button-target-object-name")};
             }
             result.request.min_button_objects.push_back({
                 .record_index = 0U,
@@ -6594,7 +6594,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-button-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-button-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-button-target-unique-id")};
             }
             result.request.min_button_objects.push_back({
                 .record_index = 0U,
