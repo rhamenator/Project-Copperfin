@@ -277,11 +277,13 @@ std::string localized_request_requires_selector(
 std::string localized_request_item_requires_option_after_target(
     const localization::LocalizedCatalog& catalog,
     std::string_view item_name,
+    std::string_view selector_name,
     std::string_view option) {
     return catalog.translate(
         "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector",
         {
             {"itemName", std::string(item_name)},
+            {"selectorName", std::string(selector_name)},
             {"option", std::string(option)}
         });
 }
@@ -9757,15 +9759,16 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.deleted_states && result.request.deleted_state_objects.empty()) {
         return {.ok = false, .error = localized_request_requires_selector(
             catalog,
-            "deleted-states",
-            "target")};
+            catalog.translate("StudioHost.LaunchParse.Request.DeletedStates"),
+            catalog.translate("StudioHost.LaunchParse.Selector.Target"))};
     }
     if (result.request.deleted_states) {
         for (const auto& object : result.request.deleted_state_objects) {
             if (!object.deleted_available) {
                 return {.ok = false, .error = localized_request_item_requires_option_after_target(
                     catalog,
-                    "deleted-states",
+                    catalog.translate("StudioHost.LaunchParse.Request.DeletedStates"),
+                    catalog.translate("StudioHost.LaunchParse.Selector.Target"),
                     "--deleted-state")};
             }
         }
@@ -9773,13 +9776,13 @@ LaunchParseResult parse_launch_arguments(
     if (!result.request.deleted_states && !result.request.deleted_state_objects.empty()) {
         return {.ok = false, .error = localized_request_arguments_require_mode(
             catalog,
-            "Deleted-state target",
+            catalog.translate("StudioHost.LaunchParse.Request.DeletedStateTargetTitle"),
             "--deleted-states")};
     }
     if (result.request.subtree_deleted_state && !result.request.subtree_deleted_available) {
         return {.ok = false, .error = localized_request_requires_option(
             catalog,
-            "subtree deleted-state",
+            catalog.translate("StudioHost.LaunchParse.Request.SubtreeDeletedState"),
             "--subtree-deleted")};
     }
     if (result.request.subtree_deleted_state &&
@@ -9787,13 +9790,13 @@ LaunchParseResult parse_launch_arguments(
         result.request.unique_id.empty()) {
         return {.ok = false, .error = localized_request_requires_selector(
             catalog,
-            "subtree deleted-state",
-            "root")};
+            catalog.translate("StudioHost.LaunchParse.Request.SubtreeDeletedState"),
+            catalog.translate("StudioHost.LaunchParse.Selector.Root"))};
     }
     if (!result.request.subtree_deleted_state && result.request.subtree_deleted_available) {
         return {.ok = false, .error = localized_request_arguments_require_mode(
             catalog,
-            "Subtree deleted-state",
+            catalog.translate("StudioHost.LaunchParse.Request.SubtreeDeletedStateTitle"),
             "--subtree-deleted-state")};
     }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {

@@ -5188,8 +5188,11 @@ void test_studio_host_launch_deleted_state_diagnostics_localize(const std::strin
         "--deleted-state",
         "#2436: pseudo-localized deleted-state item diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
-        "A deleted-states item requires --deleted-state after its target selector.",
-        "#2436: pseudo-localized deleted-state item diagnostics should not fall back to raw English prose");
+        " deleted-states item ",
+        "#2514: pseudo-localized deleted-state item diagnostics should not preserve raw request label prose");
+    expect_not_contains(process.stdout_text,
+        " target selector",
+        "#2514: pseudo-localized deleted-state item diagnostics should not preserve raw selector label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5210,7 +5213,7 @@ void test_studio_host_launch_deleted_state_diagnostics_localize(const std::strin
         "#2436: pseudo-localized deleted-state target mode diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Deleted-state target arguments can only be used with --deleted-states.",
-        "#2436: pseudo-localized deleted-state target mode diagnostics should not fall back to raw English prose");
+        "#2514: pseudo-localized deleted-state target mode diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5230,8 +5233,8 @@ void test_studio_host_launch_deleted_state_diagnostics_localize(const std::strin
         "--subtree-deleted",
         "#2436: pseudo-localized subtree missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
-        "A subtree deleted-state request requires --subtree-deleted.",
-        "#2436: pseudo-localized subtree missing-option diagnostics should not fall back to raw English prose");
+        " subtree deleted-state request ",
+        "#2514: pseudo-localized subtree missing-option diagnostics should not preserve raw request label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5248,12 +5251,12 @@ void test_studio_host_launch_deleted_state_diagnostics_localize(const std::strin
     expect_contains(process.stdout_text,
         "[!! ",
         "#2436: pseudo-localized subtree root diagnostics should decorate human-facing prose");
-    expect_contains(process.stdout_text,
-        "root",
-        "#2436: pseudo-localized subtree root diagnostics should preserve selector placeholder");
     expect_not_contains(process.stdout_text,
-        "A subtree deleted-state request requires at least one root selector.",
-        "#2436: pseudo-localized subtree root diagnostics should not fall back to raw English prose");
+        " subtree deleted-state request ",
+        "#2514: pseudo-localized subtree root diagnostics should not preserve raw request label prose");
+    expect_not_contains(process.stdout_text,
+        " root selector",
+        "#2514: pseudo-localized subtree root diagnostics should not preserve raw selector label prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
