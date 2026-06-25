@@ -2494,7 +2494,63 @@ parse_selection_builder_dispatch_catalog_arguments(
     return result;
 }
 
-EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(const std::vector<std::string>& args) {
+std::string editor_action_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.EditorActionParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string editor_action_parse_unknown_selection_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.EditorActionParse.Error.UnknownSelectionContextToken",
+        {{"token", token}});
+}
+
+std::string editor_action_parse_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.EditorActionParse.Error.NonNegativeInteger",
+        {{"option", option}});
+}
+
+std::string editor_action_parse_boolean_value_required(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.EditorActionParse.Error.BooleanValueRequired",
+        {
+            {"option", option},
+            {"trueValue", "true"},
+            {"falseValue", "false"}
+        });
+}
+
+std::string editor_action_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.EditorActionParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string editor_action_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     EditorActionLaunchPlanParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--editor-action-launch-plan") != args.end();
@@ -2511,7 +2567,7 @@ EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(cons
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2527,7 +2583,7 @@ EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(cons
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2538,7 +2594,7 @@ EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(cons
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2552,7 +2608,7 @@ EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(cons
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -2560,26 +2616,28 @@ EditorActionLaunchPlanParseResult parse_editor_action_launch_plan_arguments(cons
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
         } else {
-            fail("Unknown editor-action-launch-plan option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-launch-plan", argument));
         }
     }
 
     if (result.ok && result.request.action_id.empty()) {
-        fail("No editor action id was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoEditorActionId"));
     }
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 EditorActionLaunchCatalogParseResult
-parse_editor_action_launch_catalog_arguments(const std::vector<std::string>& args) {
+parse_editor_action_launch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     EditorActionLaunchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--editor-action-launch-catalog") != args.end();
@@ -2596,7 +2654,7 @@ parse_editor_action_launch_catalog_arguments(const std::vector<std::string>& arg
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2610,7 +2668,7 @@ parse_editor_action_launch_catalog_arguments(const std::vector<std::string>& arg
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2621,7 +2679,7 @@ parse_editor_action_launch_catalog_arguments(const std::vector<std::string>& arg
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2635,7 +2693,7 @@ parse_editor_action_launch_catalog_arguments(const std::vector<std::string>& arg
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -2643,22 +2701,23 @@ parse_editor_action_launch_catalog_arguments(const std::vector<std::string>& arg
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
         } else {
-            fail("Unknown editor-action-launch-catalog option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-launch-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 EditorActionInvocationAdmissionParseResult parse_editor_action_invocation_admission_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     EditorActionInvocationAdmissionParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -2676,7 +2735,7 @@ EditorActionInvocationAdmissionParseResult parse_editor_action_invocation_admiss
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2692,7 +2751,7 @@ EditorActionInvocationAdmissionParseResult parse_editor_action_invocation_admiss
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2703,7 +2762,7 @@ EditorActionInvocationAdmissionParseResult parse_editor_action_invocation_admiss
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2717,7 +2776,7 @@ EditorActionInvocationAdmissionParseResult parse_editor_action_invocation_admiss
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -2725,7 +2784,7 @@ EditorActionInvocationAdmissionParseResult parse_editor_action_invocation_admiss
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -2733,26 +2792,28 @@ EditorActionInvocationAdmissionParseResult parse_editor_action_invocation_admiss
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocation value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-invocation"));
                 continue;
             }
             result.admit_editor_invocation = admitted;
         } else {
-            fail("Unknown editor-action-invocation-admission option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-invocation-admission", argument));
         }
     }
 
     if (result.ok && result.request.action_id.empty()) {
-        fail("No editor action id was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoEditorActionId"));
     }
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 EditorActionInvocationAdmissionCatalogParseResult
-parse_editor_action_invocation_admission_catalog_arguments(const std::vector<std::string>& args) {
+parse_editor_action_invocation_admission_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     EditorActionInvocationAdmissionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested =
@@ -2770,7 +2831,7 @@ parse_editor_action_invocation_admission_catalog_arguments(const std::vector<std
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2784,7 +2845,7 @@ parse_editor_action_invocation_admission_catalog_arguments(const std::vector<std
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2795,7 +2856,7 @@ parse_editor_action_invocation_admission_catalog_arguments(const std::vector<std
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2809,7 +2870,7 @@ parse_editor_action_invocation_admission_catalog_arguments(const std::vector<std
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -2817,7 +2878,7 @@ parse_editor_action_invocation_admission_catalog_arguments(const std::vector<std
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -2825,22 +2886,24 @@ parse_editor_action_invocation_admission_catalog_arguments(const std::vector<std
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocation value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-invocation"));
                 continue;
             }
             result.request.admit_editor_invocations = admitted;
         } else {
-            fail("Unknown editor-action-invocation-admission-catalog option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-invocation-admission-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
-EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std::vector<std::string>& args) {
+EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     EditorActionDispatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--editor-action-dispatch") != args.end();
@@ -2857,7 +2920,7 @@ EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2873,7 +2936,7 @@ EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2884,7 +2947,7 @@ EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2898,7 +2961,7 @@ EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -2906,7 +2969,7 @@ EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -2914,25 +2977,27 @@ EditorActionDispatchParseResult parse_editor_action_dispatch_arguments(const std
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocation value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-invocation"));
                 continue;
             }
             result.admit_editor_invocation = admitted;
         } else {
-            fail("Unknown editor-action-dispatch option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-dispatch", argument));
         }
     }
 
     if (result.ok && result.request.action_id.empty()) {
-        fail("No editor action id was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoEditorActionId"));
     }
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
-EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::vector<std::string>& args) {
+EditorActionExecuteParseResult parse_editor_action_execute_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     EditorActionExecuteParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--editor-action-execute") != args.end();
@@ -2949,7 +3014,7 @@ EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2965,7 +3030,7 @@ EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2976,7 +3041,7 @@ EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2990,7 +3055,7 @@ EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -2998,7 +3063,7 @@ EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -3006,7 +3071,7 @@ EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocation value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-invocation"));
                 continue;
             }
             result.admit_editor_invocation = admitted;
@@ -3014,30 +3079,31 @@ EditorActionExecuteParseResult parse_editor_action_execute_arguments(const std::
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-action-execution value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-action-execution"));
                 continue;
             }
             result.admit_execution = admitted;
         } else if (argument == "--editor-action-launch-command") {
             result.launch_command = require_value(argument);
         } else {
-            fail("Unknown editor-action-execute option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-execute", argument));
         }
     }
 
     if (result.ok && result.request.action_id.empty()) {
-        fail("No editor action id was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoEditorActionId"));
     }
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     if (result.ok && result.launch_command.empty()) {
-        fail("No editor action launch command was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoEditorActionLaunchCommand"));
     }
     return result;
 }
 
 EditorActionDispatchCatalogParseResult parse_editor_action_dispatch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     EditorActionDispatchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -3055,7 +3121,7 @@ EditorActionDispatchCatalogParseResult parse_editor_action_dispatch_catalog_argu
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3069,7 +3135,7 @@ EditorActionDispatchCatalogParseResult parse_editor_action_dispatch_catalog_argu
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3080,7 +3146,7 @@ EditorActionDispatchCatalogParseResult parse_editor_action_dispatch_catalog_argu
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3094,7 +3160,7 @@ EditorActionDispatchCatalogParseResult parse_editor_action_dispatch_catalog_argu
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -3102,7 +3168,7 @@ EditorActionDispatchCatalogParseResult parse_editor_action_dispatch_catalog_argu
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -3110,22 +3176,23 @@ EditorActionDispatchCatalogParseResult parse_editor_action_dispatch_catalog_argu
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocation value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-invocation"));
                 continue;
             }
             result.request.admit_editor_invocations = admitted;
         } else {
-            fail("Unknown editor-action-dispatch-catalog option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-dispatch-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_execution_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     EditorActionDispatchExecutionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -3144,7 +3211,7 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(editor_action_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3158,7 +3225,7 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(editor_action_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3169,7 +3236,7 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3183,7 +3250,7 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -3191,7 +3258,7 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(editor_action_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -3199,7 +3266,7 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocation value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-invocation"));
                 continue;
             }
             result.request.admit_editor_invocations = admitted;
@@ -3207,17 +3274,17 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-action-execution value must be true or false.");
+                fail(editor_action_parse_boolean_value_required(catalog, "--admit-editor-action-execution"));
                 continue;
             }
             result.request.admit_execution = admitted;
         } else {
-            fail("Unknown editor-action-dispatch-execution-catalog option: " + argument);
+            fail(editor_action_parse_unknown_option(catalog, "editor-action-dispatch-execution-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(editor_action_parse_message(catalog, "StudioHost.EditorActionParse.Error.NoSelectionContext"));
     }
     return result;
 }
@@ -21963,7 +22030,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto editor_action_launch_parse = parse_editor_action_launch_plan_arguments(args);
+    const auto editor_action_launch_parse = parse_editor_action_launch_plan_arguments(catalog, args);
     if (editor_action_launch_parse.requested) {
         if (!editor_action_launch_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionLaunchPlanResult{
@@ -21990,7 +22057,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto editor_action_launch_catalog_parse = parse_editor_action_launch_catalog_arguments(args);
+    const auto editor_action_launch_catalog_parse = parse_editor_action_launch_catalog_arguments(catalog, args);
     if (editor_action_launch_catalog_parse.requested) {
         if (!editor_action_launch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionLaunchCatalogResult{
@@ -22024,7 +22091,7 @@ int main(int argc, char** argv) {
     }
 
     const auto editor_action_invocation_admission_parse =
-        parse_editor_action_invocation_admission_arguments(args);
+        parse_editor_action_invocation_admission_arguments(catalog, args);
     if (editor_action_invocation_admission_parse.requested) {
         if (!editor_action_invocation_admission_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionInvocationAdmissionResult{
@@ -22070,7 +22137,7 @@ int main(int argc, char** argv) {
     }
 
     const auto editor_action_invocation_admission_catalog_parse =
-        parse_editor_action_invocation_admission_catalog_arguments(args);
+        parse_editor_action_invocation_admission_catalog_arguments(catalog, args);
     if (editor_action_invocation_admission_catalog_parse.requested) {
         if (!editor_action_invocation_admission_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionInvocationAdmissionCatalogResult{
@@ -22103,7 +22170,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto editor_action_dispatch_parse = parse_editor_action_dispatch_arguments(args);
+    const auto editor_action_dispatch_parse = parse_editor_action_dispatch_arguments(catalog, args);
     if (editor_action_dispatch_parse.requested) {
         if (!editor_action_dispatch_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionDispatchResult{
@@ -22165,7 +22232,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto editor_action_execute_parse = parse_editor_action_execute_arguments(args);
+    const auto editor_action_execute_parse = parse_editor_action_execute_arguments(catalog, args);
     if (editor_action_execute_parse.requested) {
         if (!editor_action_execute_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionDispatchExecutionResult{
@@ -22304,7 +22371,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto editor_action_dispatch_catalog_parse = parse_editor_action_dispatch_catalog_arguments(args);
+    const auto editor_action_dispatch_catalog_parse = parse_editor_action_dispatch_catalog_arguments(catalog, args);
     if (editor_action_dispatch_catalog_parse.requested) {
         if (!editor_action_dispatch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionDispatchCatalogResult{
@@ -22338,7 +22405,7 @@ int main(int argc, char** argv) {
     }
 
     const auto editor_action_dispatch_execution_catalog_parse =
-        parse_editor_action_dispatch_execution_catalog_arguments(args);
+        parse_editor_action_dispatch_execution_catalog_arguments(catalog, args);
     if (editor_action_dispatch_execution_catalog_parse.requested) {
         if (!editor_action_dispatch_execution_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioEditorActionDispatchExecutionCatalogResult{
