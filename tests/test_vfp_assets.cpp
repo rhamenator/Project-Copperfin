@@ -252,6 +252,9 @@ void test_dbf_cdx_header_errors_resolve_through_localization_catalog() {
             "File is smaller than the minimum DBF header size (32 bytes).",
         "#2379: DBF header short-input error should resolve through the en-US catalog");
     expect(
+        english_catalog.translate("Vfp.DbfHeader.Version.VisualFoxPro") == "Visual FoxPro",
+        "#2494: DBF header version descriptions should resolve through the en-US catalog");
+    expect(
         english_catalog.translate("Vfp.CdxHeader.Error.InvalidValues") ==
             "Header values do not look like a CDX-family index file.",
         "#2379: CDX invalid-header error should resolve through the en-US catalog");
@@ -259,6 +262,28 @@ void test_dbf_cdx_header_errors_resolve_through_localization_catalog() {
         pseudo_catalog.translate("Vfp.DbfHeader.Error.ShortHeader") !=
             english_catalog.translate("Vfp.DbfHeader.Error.ShortHeader"),
         "#2379: DBF header errors should be pseudo-localizable");
+
+    const auto parsed_result = copperfin::vfp::parse_dbf_header(make_vfp_header());
+    expect(parsed_result.ok, "#2494: DBF header parse should remain valid before version localization checks");
+    expect(parsed_result.header.version == 0x30U, "#2494: DBF header version byte should remain invariant");
+    expect(
+        parsed_result.header.version_description(english_catalog) == "Visual FoxPro",
+        "#2494: DBF header version description should preserve default en-US prose");
+    expect(
+        parsed_result.header.version_description(pseudo_catalog).find("[!! ") != std::string::npos,
+        "#2494: DBF header version description should route through pseudo-localization");
+    expect(
+        parsed_result.header.version_description(pseudo_catalog).find("Visual FoxPro") == std::string::npos,
+        "#2494: pseudo-localized DBF header version description should not fall back to raw English prose");
+
+    copperfin::vfp::DbfHeader unknown_header;
+    unknown_header.version = 0x7FU;
+    expect(
+        unknown_header.version_description(english_catalog) == "Unknown",
+        "#2494: unknown DBF header version description should preserve default en-US prose");
+    expect(
+        unknown_header.version_description(pseudo_catalog).find("[!! ") != std::string::npos,
+        "#2494: unknown DBF header version description should route through pseudo-localization");
 
     const auto cdx_result = copperfin::vfp::parse_cdx_header({0x00U, 0x04U}, 2U);
     expect(!cdx_result.ok, "parse_cdx_header should reject short input");

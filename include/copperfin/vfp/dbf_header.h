@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
+
 namespace copperfin::vfp {
 
 struct DbfHeader {
@@ -24,6 +28,7 @@ struct DbfHeader {
     [[nodiscard]] bool has_structural_cdx() const;
     [[nodiscard]] bool has_memo_file() const;
     [[nodiscard]] std::string version_description() const;
+    [[nodiscard]] std::string version_description(const localization::LocalizedCatalog& catalog) const;
     [[nodiscard]] std::string last_update_iso8601() const;
 };
 

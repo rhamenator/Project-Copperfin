@@ -42,6 +42,10 @@ std::string dbf_header_text(std::string_view key) {
     return dbf_header_catalog().translate(key);
 }
 
+std::string dbf_header_text(const localization::LocalizedCatalog& catalog, std::string_view key) {
+    return catalog.translate(key);
+}
+
 }  // namespace
 
 bool DbfHeader::looks_like_dbf() const {
@@ -65,31 +69,35 @@ bool DbfHeader::has_memo_file() const {
 }
 
 std::string DbfHeader::version_description() const {
+    return version_description(dbf_header_catalog());
+}
+
+std::string DbfHeader::version_description(const localization::LocalizedCatalog& catalog) const {
     switch (version) {
         case 0x02U:
-            return "FoxBASE";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.Foxbase");
         case 0x03U:
-            return "dBASE III or compatible";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIiiCompatible");
         case 0x30U:
-            return "Visual FoxPro";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.VisualFoxPro");
         case 0x31U:
-            return "Visual FoxPro with autoincrement";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.VisualFoxProAutoincrement");
         case 0x32U:
-            return "Visual FoxPro varbinary/varchar";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar");
         case 0x43U:
-            return "dBASE IV SQL table";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIvSqlTable");
         case 0x63U:
-            return "dBASE IV system file";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIvSystemFile");
         case 0x83U:
-            return "dBASE III with memo";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIiiMemo");
         case 0x8BU:
-            return "dBASE IV with memo";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIvMemo");
         case 0xCBU:
-            return "dBASE IV with memo and SQL";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.DbaseIvMemoSql");
         case 0xF5U:
-            return "FoxPro with memo";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.FoxProMemo");
         default:
-            return "Unknown";
+            return dbf_header_text(catalog, "Vfp.DbfHeader.Version.Unknown");
     }
 }
 
