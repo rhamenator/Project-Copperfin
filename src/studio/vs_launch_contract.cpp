@@ -4619,7 +4619,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mouse-icon-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mouse-icon-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mouse-icon-target-object-name")};
             }
             result.request.mouse_icon_objects.push_back({
                 .record_index = 0U,
@@ -4631,7 +4631,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mouse-icon-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mouse-icon-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mouse-icon-target-unique-id")};
             }
             result.request.mouse_icon_objects.push_back({
                 .record_index = 0U,
@@ -4643,7 +4643,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--drag-icon-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --drag-icon-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--drag-icon-target-object-name")};
             }
             result.request.drag_icon_objects.push_back({
                 .record_index = 0U,
@@ -4655,7 +4655,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--drag-icon-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --drag-icon-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--drag-icon-target-unique-id")};
             }
             result.request.drag_icon_objects.push_back({
                 .record_index = 0U,
@@ -4667,7 +4667,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--drag-mode-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --drag-mode-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--drag-mode-target-object-name")};
             }
             result.request.drag_mode_objects.push_back({
                 .record_index = 0U,
@@ -4679,7 +4679,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--drag-mode-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --drag-mode-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--drag-mode-target-unique-id")};
             }
             result.request.drag_mode_objects.push_back({
                 .record_index = 0U,
@@ -4691,7 +4691,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drag-mode-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drag-mode-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drag-mode-target-object-name")};
             }
             result.request.ole_drag_mode_objects.push_back({
                 .record_index = 0U,
@@ -4703,7 +4703,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drag-mode-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drag-mode-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drag-mode-target-unique-id")};
             }
             result.request.ole_drag_mode_objects.push_back({
                 .record_index = 0U,
@@ -4715,7 +4715,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-mode-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-mode-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-mode-target-object-name")};
             }
             result.request.ole_drop_mode_objects.push_back({
                 .record_index = 0U,
@@ -4727,7 +4727,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-mode-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-mode-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-mode-target-unique-id")};
             }
             result.request.ole_drop_mode_objects.push_back({
                 .record_index = 0U,

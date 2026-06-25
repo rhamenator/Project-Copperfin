@@ -7429,6 +7429,97 @@ void test_studio_host_launch_media_target_selector_value_diagnostics_localize(
     }
 }
 
+void test_studio_host_launch_mouse_drag_target_selector_value_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_mouse_drag_target_selector_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--mouse-icon-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2469: default mouse-icon-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --mouse-icon-target-object-name.",
+        "#2469: default mouse-icon-target-object-name missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--drag-mode-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2469: default drag-mode-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --drag-mode-target-unique-id.",
+        "#2469: default drag-mode-target-unique-id missing diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--drag-icon-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2469: pseudo-localized drag-icon-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2469: pseudo-localized drag-icon-target-object-name missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--drag-icon-target-object-name",
+        "#2469: pseudo-localized drag-icon-target-object-name missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --drag-icon-target-object-name.",
+        "#2469: pseudo-localized drag-icon-target-object-name missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--ole-drag-mode-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2469: pseudo-localized ole-drag-mode-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2469: pseudo-localized ole-drag-mode-target-unique-id missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--ole-drag-mode-target-unique-id",
+        "#2469: pseudo-localized ole-drag-mode-target-unique-id missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --ole-drag-mode-target-unique-id.",
+        "#2469: pseudo-localized ole-drag-mode-target-unique-id missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--ole-drop-mode-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2469: pseudo-localized ole-drop-mode-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2469: pseudo-localized ole-drop-mode-target-object-name missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--ole-drop-mode-target-object-name",
+        "#2469: pseudo-localized ole-drop-mode-target-object-name missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --ole-drop-mode-target-object-name.",
+        "#2469: pseudo-localized ole-drop-mode-target-object-name missing diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -120980,6 +121071,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_layout_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_state_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_media_target_selector_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_mouse_drag_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
