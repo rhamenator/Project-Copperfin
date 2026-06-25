@@ -1112,6 +1112,55 @@ void test_dbf_table_creation_errors_resolve_through_localization_catalog() {
         "#2382: invalid Y field width should preserve the default localized placeholder output");
 }
 
+void test_dbf_table_schema_mutation_errors_resolve_through_localization_catalog() {
+    namespace fs = std::filesystem;
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists") ==
+            "The target field already exists.",
+        "#2383: DBF table duplicate-field schema error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.DropLastField") ==
+            "Cannot drop the last field from a DBF table.",
+        "#2383: DBF table last-field drop error should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists") !=
+            english_catalog.translate("Vfp.DbfTable.Error.TargetFieldExists"),
+        "#2383: DBF table schema mutation errors should be pseudo-localizable");
+
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_localized_schema_error_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "localized_schema_error.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"ALPHA"}});
+    expect(create_result.ok, "#2383: localized schema validation fixture should be created");
+
+    const auto duplicate_result = copperfin::vfp::add_dbf_table_field(
+        table_path.string(),
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U});
+    expect(!duplicate_result.ok, "#2383: duplicate DBF fields should be rejected");
+    expect(
+        duplicate_result.error == "The target field already exists.",
+        "#2383: duplicate DBF fields should preserve the default localized error");
+
+    const auto drop_result = copperfin::vfp::drop_dbf_table_field(table_path.string(), "NAME");
+    expect(!drop_result.ok, "#2383: dropping the last DBF field should be rejected");
+    expect(
+        drop_result.error == "Cannot drop the last field from a DBF table.",
+        "#2383: last-field drop should preserve the default localized error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_memo_sidecar_version_mismatch_is_diagnosed() {
     // GAP-02: malformed memo sidecar headers must not crash parsing.
     // If payload decoding fails, the reader should surface a stable placeholder.
@@ -1564,6 +1613,7 @@ int main() {
     test_dbf_record_width_mismatch_field_sum_is_rejected();
     test_dbf_table_record_value_errors_resolve_through_localization_catalog();
     test_dbf_table_creation_errors_resolve_through_localization_catalog();
+    test_dbf_table_schema_mutation_errors_resolve_through_localization_catalog();
     test_memo_sidecar_version_mismatch_is_diagnosed();
     test_dbf_field_name_without_null_terminator_is_tolerated();
     test_currency_field_boundary_values();

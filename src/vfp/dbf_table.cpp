@@ -1351,7 +1351,7 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
 
     const std::string normalized_new_name = lowercase_copy(trim_both(field.name));
     if (normalized_new_name.empty()) {
-        return {.ok = false, .error = "Field names cannot be empty.", .record_count = table_result.table.records.size()};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.FieldNameRequired"), .record_count = table_result.table.records.size()};
     }
     const auto duplicate = std::find_if(
         table_result.table.fields.begin(),
@@ -1360,7 +1360,7 @@ DbfWriteResult add_dbf_table_field(const std::string& path, const DbfFieldDescri
             return lowercase_copy(trim_both(existing.name)) == normalized_new_name;
         });
     if (duplicate != table_result.table.fields.end()) {
-        return {.ok = false, .error = "The target field already exists.", .record_count = table_result.table.records.size()};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldExists"), .record_count = table_result.table.records.size()};
     }
 
     std::vector<DbfFieldDescriptor> fields = table_result.table.fields;
@@ -1416,12 +1416,12 @@ DbfWriteResult drop_dbf_table_field(const std::string& path, const std::string& 
         table_result.table.fields.end(),
         [&](const DbfFieldDescriptor& candidate) {
             return lowercase_copy(trim_both(candidate.name)) == normalized_field_name;
-        });
+    });
     if (field == table_result.table.fields.end()) {
-        return {.ok = false, .error = "The target field was not found.", .record_count = table_result.table.records.size()};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFound"), .record_count = table_result.table.records.size()};
     }
     if (table_result.table.fields.size() <= 1U) {
-        return {.ok = false, .error = "Cannot drop the last field from a DBF table.", .record_count = table_result.table.records.size()};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DropLastField"), .record_count = table_result.table.records.size()};
     }
 
     const std::size_t field_index = static_cast<std::size_t>(std::distance(table_result.table.fields.begin(), field));
@@ -1484,9 +1484,9 @@ DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDesc
         table_result.table.fields.end(),
         [&](const DbfFieldDescriptor& candidate) {
             return lowercase_copy(trim_both(candidate.name)) == normalized_field_name;
-        });
+    });
     if (existing == table_result.table.fields.end()) {
-        return {.ok = false, .error = "The target field was not found.", .record_count = table_result.table.records.size()};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFound"), .record_count = table_result.table.records.size()};
     }
 
     std::vector<DbfFieldDescriptor> fields = table_result.table.fields;
