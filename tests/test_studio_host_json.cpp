@@ -1807,6 +1807,134 @@ void test_studio_host_toolbox_batch_dispatch_plan_parse_diagnostics_localize(con
     }
 }
 
+void test_studio_host_selection_toolbox_create_plan_parse_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_selection_toolbox_create_plan_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--selection-toolbox-create-plan", "textbox", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2415: default selection-toolbox-create-plan diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2415: default selection-toolbox-create-plan diagnostics should preserve JSON status");
+    expect_contains(process.stdout_text,
+        "\"selectionToolboxCreatePlan\": null",
+        "#2415: default selection-toolbox-create-plan diagnostics should preserve JSON contracts");
+    expect_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2415: default selection-toolbox-create-plan diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--selection-toolbox-create-plan", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2415: pseudo-localized selection-toolbox-create-plan missing-item diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2415: pseudo-localized selection-toolbox-create-plan missing-item diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "--selection-toolbox-create-plan",
+        "#2415: pseudo-localized selection-toolbox-create-plan missing-item diagnostics should preserve option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value for --selection-toolbox-create-plan.",
+        "#2415: pseudo-localized selection-toolbox-create-plan missing-item diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-create-plan", "textbox",
+            "--path", "forms/customer.scx",
+            "--selection-context", "visual_object",
+            "--field-value", "caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2415: pseudo-localized selection-toolbox-create-plan field diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2415: pseudo-localized selection-toolbox-create-plan field diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "name=value",
+        "#2415: pseudo-localized selection-toolbox-create-plan field diagnostics should preserve assignment syntax");
+    expect_not_contains(process.stdout_text,
+        "Toolbox field values must use name=value syntax.",
+        "#2415: pseudo-localized selection-toolbox-create-plan field diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-create-dispatch-plan", "textbox",
+            "--path", "forms/customer.scx",
+            "--selection-context", "visual_object",
+            "--admit-create-operation", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan admission diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "\"selectionToolboxCreateDispatchPlan\": {",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan diagnostics should preserve JSON contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan admission diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "--admit-create-operation",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan admission diagnostics should preserve option names");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan admission diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan admission diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --admit-create-operation value must be true or false.",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan admission diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-create-dispatch-plan", "textbox",
+            "--path", "forms/customer.scx",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan context diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan context diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "unknown",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan context diagnostics should preserve context tokens");
+    expect_not_contains(process.stdout_text,
+        "Unknown selection context token: unknown",
+        "#2415: pseudo-localized selection-toolbox-create-dispatch-plan context diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_designer_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -115427,6 +115555,7 @@ int main(int argc, char** argv) {
     test_studio_host_toolbox_dispatch_create_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_batch_dispatch_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_batch_dispatch_plan_parse_diagnostics_localize(argv[1]);
+    test_studio_host_selection_toolbox_create_plan_parse_diagnostics_localize(argv[1]);
     test_studio_host_designer_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
