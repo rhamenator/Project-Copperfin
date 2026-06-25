@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/xasset_methods.h"
 
 #include <algorithm>
@@ -38,6 +39,43 @@ bool has_action_id(
     return std::any_of(actions.begin(), actions.end(), [&](const auto& action) {
         return action.action_id == expected_action_id;
     });
+}
+
+void test_xasset_executable_model_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") ==
+            "Asset does not have a table preview.",
+        "#2392: missing table-preview xAsset diagnostic should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Runtime.XAsset.Error.UnsupportedExecutableFamily") ==
+            "Asset family is not a supported executable xAsset.",
+        "#2392: unsupported executable xAsset diagnostic should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") !=
+            english_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing"),
+        "#2392: missing table-preview xAsset diagnostic should be pseudo-localizable");
+
+    copperfin::studio::StudioDocumentModel missing_preview;
+    missing_preview.kind = copperfin::studio::StudioAssetKind::form;
+    missing_preview.table_preview_available = false;
+    const auto missing_preview_model = copperfin::runtime::build_xasset_executable_model(missing_preview);
+    expect(!missing_preview_model.ok, "#2392: xAsset model without table preview should fail");
+    expect(
+        missing_preview_model.error == "Asset does not have a table preview.",
+        "#2392: xAsset model should preserve default localized missing table-preview diagnostic");
+
+    copperfin::studio::StudioDocumentModel unsupported_family;
+    unsupported_family.kind = copperfin::studio::StudioAssetKind::project;
+    unsupported_family.table_preview_available = true;
+    const auto unsupported_family_model = copperfin::runtime::build_xasset_executable_model(unsupported_family);
+    expect(!unsupported_family_model.ok, "#2392: unsupported executable xAsset family should fail");
+    expect(
+        unsupported_family_model.error == "Asset family is not a supported executable xAsset.",
+        "#2392: xAsset model should preserve default localized unsupported-family diagnostic");
 }
 
 const copperfin::runtime::XAssetMethod* find_method(
@@ -840,6 +878,7 @@ void test_build_real_menu_xasset_executable_model() {
 }  // namespace
 
 int main() {
+    test_xasset_executable_model_errors_resolve_through_localization_catalog();
     test_build_xasset_executable_model();
     test_build_class_library_xasset_executable_model();
     test_form_root_object_path_ignores_comments_and_data_environment();

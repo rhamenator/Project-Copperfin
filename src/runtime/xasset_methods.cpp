@@ -1,4 +1,5 @@
 #include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/localization/localization.h"
 
 #include <algorithm>
 #include <cctype>
@@ -9,6 +10,14 @@
 namespace copperfin::runtime {
 
 namespace {
+
+std::string xasset_text(
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog.translate(key, placeholders);
+}
 
 const copperfin::vfp::DbfRecordValue* find_value(
     const copperfin::vfp::DbfRecord& record,
@@ -508,7 +517,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
     model.asset_path = document.path;
 
     if (!document.table_preview_available) {
-        model.error = "Asset does not have a table preview.";
+        model.error = xasset_text("Runtime.XAsset.Error.TablePreviewMissing");
         return model;
     }
 
@@ -519,7 +528,7 @@ XAssetExecutableModel build_xasset_executable_model(const studio::StudioDocument
         document.kind == studio::StudioAssetKind::label ||
         document.kind == studio::StudioAssetKind::menu;
     if (!supported_family) {
-        model.error = "Asset family is not a supported executable xAsset.";
+        model.error = xasset_text("Runtime.XAsset.Error.UnsupportedExecutableFamily");
         return model;
     }
 
