@@ -81,6 +81,7 @@
   "StudioHost.LaunchParse.Error.IntegerValueRequired": "The {option} value must be an integer.",
   "StudioHost.LaunchParse.Error.MissingValueAfterOption": "Missing value after {option}.",
   "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands": "Object commands cannot be combined with property commands.",
+  "StudioHost.LaunchParse.Error.NonNegativeValueRequired": "The {option} value must be non-negative.",
   "StudioHost.LaunchParse.Error.NumericValueRequired": "The {option} value must be numeric.",
   "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode": "{propertyName} arguments can only be used with {option}.",
   "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode": "{actionName} arguments can only be used with {option}.",

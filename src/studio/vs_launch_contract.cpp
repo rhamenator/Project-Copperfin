@@ -151,6 +151,16 @@ std::string localized_integer_value_required(
         });
 }
 
+std::string localized_non_negative_value_required(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+        {
+            {"option", std::string(option)}
+        });
+}
+
 std::string localized_true_false_value_required(
     const localization::LocalizedCatalog& catalog,
     std::string_view option) {
@@ -2537,14 +2547,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--drag-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --drag-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--drag-mode")};
             }
             int drag_mode = 0;
             if (!parse_int_value(args[++index], drag_mode)) {
-                return {.ok = false, .error = "The --drag-mode value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--drag-mode")};
             }
             if (drag_mode < 0) {
-                return {.ok = false, .error = "The --drag-mode value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--drag-mode")};
             }
             result.request.drag_mode = drag_mode;
             result.request.drag_mode_available = true;
@@ -2553,14 +2563,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drag-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drag-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drag-mode")};
             }
             int ole_drag_mode = 0;
             if (!parse_int_value(args[++index], ole_drag_mode)) {
-                return {.ok = false, .error = "The --ole-drag-mode value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--ole-drag-mode")};
             }
             if (ole_drag_mode < 0) {
-                return {.ok = false, .error = "The --ole-drag-mode value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--ole-drag-mode")};
             }
             result.request.ole_drag_mode = ole_drag_mode;
             result.request.ole_drag_mode_available = true;
@@ -2569,14 +2579,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-mode")};
             }
             int ole_drop_mode = 0;
             if (!parse_int_value(args[++index], ole_drop_mode)) {
-                return {.ok = false, .error = "The --ole-drop-mode value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--ole-drop-mode")};
             }
             if (ole_drop_mode < 0) {
-                return {.ok = false, .error = "The --ole-drop-mode value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--ole-drop-mode")};
             }
             result.request.ole_drop_mode = ole_drop_mode;
             result.request.ole_drop_mode_available = true;
@@ -2585,14 +2595,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-effects") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-effects."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-effects")};
             }
             int ole_drop_effects = 0;
             if (!parse_int_value(args[++index], ole_drop_effects)) {
-                return {.ok = false, .error = "The --ole-drop-effects value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--ole-drop-effects")};
             }
             if (ole_drop_effects < 0) {
-                return {.ok = false, .error = "The --ole-drop-effects value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--ole-drop-effects")};
             }
             result.request.ole_drop_effects = ole_drop_effects;
             result.request.ole_drop_effects_available = true;
@@ -2601,14 +2611,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drop-text-insertion") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drop-text-insertion."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drop-text-insertion")};
             }
             int ole_drop_text_insertion = 0;
             if (!parse_int_value(args[++index], ole_drop_text_insertion)) {
-                return {.ok = false, .error = "The --ole-drop-text-insertion value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--ole-drop-text-insertion")};
             }
             if (ole_drop_text_insertion < 0) {
-                return {.ok = false, .error = "The --ole-drop-text-insertion value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--ole-drop-text-insertion")};
             }
             result.request.ole_drop_text_insertion = ole_drop_text_insertion;
             result.request.ole_drop_text_insertion_available = true;
