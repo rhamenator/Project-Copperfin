@@ -2787,14 +2787,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-line-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-line-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-line-color")};
             }
             int grid_line_color = 0;
             if (!parse_int_value(args[++index], grid_line_color)) {
-                return {.ok = false, .error = "The --grid-line-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--grid-line-color")};
             }
             if (grid_line_color < 0) {
-                return {.ok = false, .error = "The --grid-line-color value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--grid-line-color")};
             }
             result.request.grid_line_color = grid_line_color;
             result.request.grid_line_color_available = true;
@@ -2803,14 +2803,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--header-height") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --header-height."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--header-height")};
             }
             int header_height = 0;
             if (!parse_int_value(args[++index], header_height)) {
-                return {.ok = false, .error = "The --header-height value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--header-height")};
             }
             if (header_height < 0) {
-                return {.ok = false, .error = "The --header-height value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--header-height")};
             }
             result.request.header_height = header_height;
             result.request.header_height_available = true;
@@ -2819,14 +2819,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--row-height") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --row-height."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--row-height")};
             }
             int row_height = 0;
             if (!parse_int_value(args[++index], row_height)) {
-                return {.ok = false, .error = "The --row-height value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--row-height")};
             }
             if (row_height < 0) {
-                return {.ok = false, .error = "The --row-height value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--row-height")};
             }
             result.request.row_height = row_height;
             result.request.row_height_available = true;
@@ -2835,14 +2835,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--lock-columns") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --lock-columns."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--lock-columns")};
             }
             int lock_columns = 0;
             if (!parse_int_value(args[++index], lock_columns)) {
-                return {.ok = false, .error = "The --lock-columns value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--lock-columns")};
             }
             if (lock_columns < 0) {
-                return {.ok = false, .error = "The --lock-columns value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--lock-columns")};
             }
             result.request.lock_columns = lock_columns;
             result.request.lock_columns_available = true;
@@ -2851,14 +2851,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--lock-columns-left") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --lock-columns-left."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--lock-columns-left")};
             }
             int lock_columns_left = 0;
             if (!parse_int_value(args[++index], lock_columns_left)) {
-                return {.ok = false, .error = "The --lock-columns-left value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--lock-columns-left")};
             }
             if (lock_columns_left < 0) {
-                return {.ok = false, .error = "The --lock-columns-left value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--lock-columns-left")};
             }
             result.request.lock_columns_left = lock_columns_left;
             result.request.lock_columns_left_available = true;
@@ -2867,14 +2867,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-line-width") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-line-width."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-line-width")};
             }
             int grid_line_width = 0;
             if (!parse_int_value(args[++index], grid_line_width)) {
-                return {.ok = false, .error = "The --grid-line-width value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--grid-line-width")};
             }
             if (grid_line_width < 0) {
-                return {.ok = false, .error = "The --grid-line-width value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--grid-line-width")};
             }
             result.request.grid_line_width = grid_line_width;
             result.request.grid_line_width_available = true;
@@ -2883,14 +2883,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-lines") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-lines."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-lines")};
             }
             int grid_lines = 0;
             if (!parse_int_value(args[++index], grid_lines)) {
-                return {.ok = false, .error = "The --grid-lines value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--grid-lines")};
             }
             if (grid_lines < 0) {
-                return {.ok = false, .error = "The --grid-lines value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--grid-lines")};
             }
             result.request.grid_lines = grid_lines;
             result.request.grid_lines_available = true;
@@ -2899,14 +2899,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-row-line-width") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-row-line-width."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-row-line-width")};
             }
             int highlight_row_line_width = 0;
             if (!parse_int_value(args[++index], highlight_row_line_width)) {
-                return {.ok = false, .error = "The --highlight-row-line-width value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--highlight-row-line-width")};
             }
             if (highlight_row_line_width < 0) {
-                return {.ok = false, .error = "The --highlight-row-line-width value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--highlight-row-line-width")};
             }
             result.request.highlight_row_line_width = highlight_row_line_width;
             result.request.highlight_row_line_width_available = true;
