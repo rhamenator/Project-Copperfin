@@ -6359,6 +6359,7 @@ VisualObjectDuplicateSubtreeParseResult parse_visual_object_duplicate_subtree_ar
 }
 
 VisualObjectRenameBatchParseResult parse_visual_object_rename_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualObjectRenameBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -6374,7 +6375,9 @@ VisualObjectRenameBatchParseResult parse_visual_object_rename_batch_arguments(
 
     auto current_object = [&]() -> copperfin::vfp::VisualObjectRenameBatchItem* {
         if (result.request.objects.empty()) {
-            fail("Visual object rename batch item options require a preceding selected-object selector.");
+            fail(visual_object_parse_message(
+                catalog,
+                "StudioHost.VisualObjectParse.Error.RenameBatchItemRequiresSelectedObject"));
             return nullptr;
         }
         return &result.request.objects.back();
@@ -6384,7 +6387,7 @@ VisualObjectRenameBatchParseResult parse_visual_object_rename_batch_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6401,7 +6404,7 @@ VisualObjectRenameBatchParseResult parse_visual_object_rename_batch_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --selected-record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--selected-record"));
                 continue;
             }
             result.request.objects.push_back({
@@ -6455,20 +6458,21 @@ VisualObjectRenameBatchParseResult parse_visual_object_rename_batch_arguments(
                 object->new_unique_id = require_value(argument);
             }
         } else {
-            fail("Unknown visual-object-rename-batch option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-rename-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.objects.empty()) {
-        fail("No visual object renames were provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoRenameOperations"));
     }
     return result;
 }
 
 VisualObjectReorderBatchParseResult parse_visual_object_reorder_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualObjectReorderBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -6484,7 +6488,9 @@ VisualObjectReorderBatchParseResult parse_visual_object_reorder_batch_arguments(
 
     auto current_object = [&]() -> copperfin::vfp::VisualObjectReorderBatchItem* {
         if (result.request.objects.empty()) {
-            fail("Visual object reorder batch item options require a preceding selected-object selector.");
+            fail(visual_object_parse_message(
+                catalog,
+                "StudioHost.VisualObjectParse.Error.ReorderBatchItemRequiresSelectedObject"));
             return nullptr;
         }
         return &result.request.objects.back();
@@ -6494,7 +6500,7 @@ VisualObjectReorderBatchParseResult parse_visual_object_reorder_batch_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6511,7 +6517,7 @@ VisualObjectReorderBatchParseResult parse_visual_object_reorder_batch_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --selected-record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--selected-record"));
                 continue;
             }
             result.request.objects.push_back({
@@ -6553,20 +6559,20 @@ VisualObjectReorderBatchParseResult parse_visual_object_reorder_batch_arguments(
                 object->target_unique_id = require_value(argument);
             }
         } else {
-            fail("Unknown visual-object-reorder-batch option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-reorder-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.objects.empty()) {
-        fail("No visual object reorders were provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoReorderOperations"));
     }
     if (result.ok) {
         for (const auto& object : result.request.objects) {
             if (object.placement.empty()) {
-                fail("No visual object placement was provided.");
+                fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoObjectPlacement"));
                 break;
             }
         }
@@ -6575,6 +6581,7 @@ VisualObjectReorderBatchParseResult parse_visual_object_reorder_batch_arguments(
 }
 
 VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualObjectUpdateBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -6590,7 +6597,9 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
 
     auto current_object = [&]() -> copperfin::vfp::VisualObjectBatchEditItem* {
         if (result.request.objects.empty()) {
-            fail("Visual object update batch property options require a preceding selected-object selector.");
+            fail(visual_object_parse_message(
+                catalog,
+                "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyOptionsRequireSelectedObject"));
             return nullptr;
         }
         return &result.request.objects.back();
@@ -6602,7 +6611,9 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
             return nullptr;
         }
         if (object->properties.empty()) {
-            fail("Visual object update batch property values require a preceding --property-name.");
+            fail(catalog.translate(
+                "StudioHost.VisualObjectParse.Error.UpdateBatchPropertyValuesRequirePropertyName",
+                {{"propertyNameOption", "--property-name"}}));
             return nullptr;
         }
         return &object->properties.back();
@@ -6612,7 +6623,7 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6629,7 +6640,7 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --selected-record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--selected-record"));
                 continue;
             }
             result.request.objects.push_back({
@@ -6664,15 +6675,15 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
                 property->property_value = require_value(argument);
             }
         } else {
-            fail("Unknown visual-object-update-batch option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-update-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.objects.empty()) {
-        fail("No visual object edits were provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoUpdateOperations"));
     }
     return result;
 }
@@ -23247,7 +23258,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_rename_batch_parse = parse_visual_object_rename_batch_arguments(args);
+    const auto visual_object_rename_batch_parse = parse_visual_object_rename_batch_arguments(catalog, args);
     if (visual_object_rename_batch_parse.requested) {
         if (!visual_object_rename_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23277,7 +23288,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_reorder_batch_parse = parse_visual_object_reorder_batch_arguments(args);
+    const auto visual_object_reorder_batch_parse = parse_visual_object_reorder_batch_arguments(catalog, args);
     if (visual_object_reorder_batch_parse.requested) {
         if (!visual_object_reorder_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23337,7 +23348,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_update_batch_parse = parse_visual_object_update_batch_arguments(args);
+    const auto visual_object_update_batch_parse = parse_visual_object_update_batch_arguments(catalog, args);
     if (visual_object_update_batch_parse.requested) {
         if (!visual_object_update_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
