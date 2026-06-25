@@ -70,6 +70,8 @@
   "StudioHost.ToolboxParse.Error.NoToolboxItemIds": "No toolbox item ids were provided.",
   "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand": "No toolbox launch command was provided.",
   "StudioHost.ToolboxParse.Error.NonNegativeInteger": "The {option} value must be a non-negative integer.",
+  "StudioHost.ToolboxParse.Error.SelectionBatchCreateItemRequiresToolboxItem": "Selection toolbox batch create item options require a preceding {toolboxItemOption}.",
+  "StudioHost.ToolboxParse.Error.SelectionBatchItemRequiresToolboxItem": "Selection toolbox batch item options require a preceding {toolboxItemOption}.",
   "StudioHost.ToolboxParse.Error.UnknownOption": "Unknown {commandName} option: {argument}",
   "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken": "Unknown selection context token: {token}",
   "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken": "Unknown toolbox context token: {token}",
