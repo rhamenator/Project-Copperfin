@@ -4883,7 +4883,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-width-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-width-target-object-name")};
             }
             result.request.draw_width_objects.push_back({
                 .record_index = 0U,
@@ -4895,7 +4895,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-width-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-width-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-width-target-unique-id")};
             }
             result.request.draw_width_objects.push_back({
                 .record_index = 0U,
@@ -4907,7 +4907,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--fill-style-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --fill-style-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--fill-style-target-object-name")};
             }
             result.request.fill_style_objects.push_back({
                 .record_index = 0U,
@@ -4919,7 +4919,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--fill-style-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --fill-style-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--fill-style-target-unique-id")};
             }
             result.request.fill_style_objects.push_back({
                 .record_index = 0U,
@@ -4931,7 +4931,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--scale-mode-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --scale-mode-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--scale-mode-target-object-name")};
             }
             result.request.scale_mode_objects.push_back({
                 .record_index = 0U,
@@ -4943,7 +4943,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--scale-mode-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --scale-mode-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--scale-mode-target-unique-id")};
             }
             result.request.scale_mode_objects.push_back({
                 .record_index = 0U,
@@ -4955,7 +4955,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--buffer-mode-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --buffer-mode-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--buffer-mode-target-object-name")};
             }
             result.request.buffer_mode_objects.push_back({
                 .record_index = 0U,
@@ -4967,7 +4967,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--buffer-mode-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --buffer-mode-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--buffer-mode-target-unique-id")};
             }
             result.request.buffer_mode_objects.push_back({
                 .record_index = 0U,
@@ -4979,7 +4979,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--buffer-mode-override-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --buffer-mode-override-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--buffer-mode-override-target-object-name")};
             }
             result.request.buffer_mode_override_objects.push_back({
                 .record_index = 0U,
@@ -4991,7 +4991,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--buffer-mode-override-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --buffer-mode-override-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--buffer-mode-override-target-unique-id")};
             }
             result.request.buffer_mode_override_objects.push_back({
                 .record_index = 0U,
@@ -5003,7 +5003,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--data-session-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --data-session-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--data-session-target-object-name")};
             }
             result.request.data_session_objects.push_back({
                 .record_index = 0U,
@@ -5015,7 +5015,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--data-session-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --data-session-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--data-session-target-unique-id")};
             }
             result.request.data_session_objects.push_back({
                 .record_index = 0U,
