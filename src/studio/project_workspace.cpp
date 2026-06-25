@@ -195,54 +195,71 @@ struct ProjectTypeDescriptor {
 ProjectTypeDescriptor describe_project_item(
     const std::string& type_code,
     const std::string& extension,
-    const std::string& item_name) {
+    const std::string& item_name,
+    const localization::LocalizedCatalog& catalog) {
     if (type_code == "H") {
-        return {"Project Header", "project", "Project", "TYPE"};
+        return {
+            project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.ProjectHeader"),
+            "project",
+            project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Project"),
+            "TYPE"};
     }
 
     if (extension == ".scx") {
-        return {"Form", "forms", "Forms", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Form"), "forms", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Forms"), "NAME"};
     }
     if (extension == ".vcx") {
-        return {"Class Library", "classes", "Class Libraries", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.ClassLibrary"), "classes", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.ClassLibraries"), "NAME"};
     }
     if (extension == ".frx") {
-        return {"Report", "reports", "Reports", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Report"), "reports", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Reports"), "NAME"};
     }
     if (extension == ".lbx") {
-        return {"Label", "labels", "Labels", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Label"), "labels", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Labels"), "NAME"};
     }
     if (extension == ".mnx") {
-        return {"Menu", "menus", "Menus", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Menu"), "menus", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Menus"), "NAME"};
     }
     if (extension == ".prg") {
-        return {"Program", "programs", "Programs", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Program"), "programs", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Programs"), "NAME"};
     }
     if (extension == ".dbc") {
-        return {"Database", "databases", "Databases", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Database"), "databases", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Databases"), "NAME"};
     }
     if (extension == ".dbf") {
-        return {"Table", "tables", "Tables", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Table"), "tables", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Tables"), "NAME"};
     }
     if (extension == ".qpr") {
-        return {"Query", "queries", "Queries", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Query"), "queries", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Queries"), "NAME"};
     }
     if (extension == ".h" || extension == ".hpp" || extension == ".ch") {
-        return {"Header", "code", "Code", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Header"), "code", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Code"), "NAME"};
     }
     if (extension == ".dll" || extension == ".ocx") {
-        return {"Library", "libraries", "Libraries", "NAME"};
+        return {project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.Library"), "libraries", project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.Libraries"), "NAME"};
     }
 
     if (type_code == "K") {
-        return {"Project Item", "project_items", "Project Items", "TYPE"};
+        return {
+            project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.ProjectItem"),
+            "project_items",
+            project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.ProjectItems"),
+            "TYPE"};
     }
 
     if (!item_name.empty()) {
-        return {"Project Item", "other_assets", "Other Assets", "NAME"};
+        return {
+            project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.ProjectItem"),
+            "other_assets",
+            project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.OtherAssets"),
+            "NAME"};
     }
 
-    return {"Project Record", "other_records", "Other Records", {}};
+    return {
+        project_workspace_text(catalog, "Studio.ProjectWorkspace.ItemType.ProjectRecord"),
+        "other_records",
+        project_workspace_text(catalog, "Studio.ProjectWorkspace.Group.OtherRecords"),
+        {}};
 }
 
 std::string default_output_path(const StudioDocumentModel& document, const std::string& project_title) {
@@ -397,7 +414,7 @@ StudioProjectWorkspace build_project_workspace(
         const std::string key = trim_copy(value_or_empty(record, "KEY"));
         const std::string comments = trim_copy(value_or_empty(record, "COMMENTS"));
         const std::string relative_path = fallback_relative_path(document, name);
-        const ProjectTypeDescriptor descriptor = describe_project_item(type_code, extension_of(name), name);
+        const ProjectTypeDescriptor descriptor = describe_project_item(type_code, extension_of(name), name, catalog);
         const std::uint32_t name_memo_block_number = memo_block_number_or_zero(record, "NAME");
 
         StudioProjectEntry entry;

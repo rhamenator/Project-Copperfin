@@ -111,6 +111,33 @@ void test_build_project_workspace() {
     expect(
         pseudo_workspace.build_plan.build_target_memo_block_number == 4U,
         "#2495: pseudo-localized build target should preserve memo provenance");
+    expect(
+        !pseudo_workspace.entries.empty() && pseudo_workspace.entries[0].type_code == "H",
+        "#2496: pseudo-localized project entry should preserve type codes");
+    expect(
+        !pseudo_workspace.entries.empty() && pseudo_workspace.entries[0].type_title.find("[!! ") != std::string::npos,
+        "#2496: pseudo-localized project header type title should route through the catalog");
+    expect(
+        !pseudo_workspace.entries.empty() && pseudo_workspace.entries[0].type_title.find("Project Header") == std::string::npos,
+        "#2496: pseudo-localized project header type title should not fall back to raw English prose");
+    expect(
+        !pseudo_workspace.entries.empty() && pseudo_workspace.entries[0].group_id == "project",
+        "#2496: pseudo-localized project entry should preserve group ids");
+    expect(
+        !pseudo_workspace.entries.empty() && pseudo_workspace.entries[0].group_title.find("[!! ") != std::string::npos,
+        "#2496: pseudo-localized project group title should route through the catalog");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].type_title.find("[!! ") != std::string::npos,
+        "#2496: pseudo-localized program type title should route through the catalog");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].group_id == "programs",
+        "#2496: pseudo-localized program entry should preserve group ids");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].type_title_field_index == 1U,
+        "#2496: pseudo-localized project type title should preserve field provenance");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].type_title_memo_block_number == 11U,
+        "#2496: pseudo-localized project type title should preserve memo provenance");
     expect(workspace.build_plan.startup_item == "main.prg", "build plan should choose the main program as startup item");
     expect(workspace.build_plan.startup_item_field_index == 1U, "#681: build plan startup item provenance should retain selected NAME field ordinal");
     expect(workspace.build_plan.startup_item_memo_block_number == 11U, "#715: build plan startup items should inherit selected entry NAME memo block provenance");
@@ -139,6 +166,8 @@ void test_build_project_workspace() {
     expect(workspace.entries[0].type_field_index == 0U, "#662: project header type field ordinal should be preserved");
     expect(workspace.entries[0].type_memo_block_number == 0U, "#715: non-memo TYPE fields should expose memo block zero");
     expect(!workspace.entries[0].deleted, "#685: live project entries should preserve non-deleted state");
+    expect(workspace.entries[0].type_title == "Project Header", "#2496: project header type title should preserve en-US prose");
+    expect(workspace.entries[0].group_title == "Project", "#2496: project header group title should preserve en-US prose");
     expect(workspace.entries[0].type_title_field_index == 0U, "#680: TYPE-derived project entry classification provenance should be preserved");
     expect(workspace.entries[0].type_title_memo_block_number == 0U, "#715: TYPE-derived classifications should inherit TYPE memo block provenance");
     expect(workspace.entries[0].group_id_field_index == 0U, "#680: TYPE-derived project group id provenance should be preserved");
