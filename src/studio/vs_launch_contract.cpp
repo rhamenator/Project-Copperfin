@@ -10171,173 +10171,189 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.highlight_back_color_object && !result.request.highlight_back_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "highlight-back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor"),
             "--highlight-back-color")};
     }
     if (result.request.highlight_back_color_object && result.request.highlight_back_color < 0) {
         return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
             catalog,
-            "highlight-back-color",
-            "value")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor"),
+            catalog.translate("StudioHost.LaunchParse.Value.Value"))};
     }
     if (result.request.highlight_back_color_object && result.request.highlight_back_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "highlight-back-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightBackColor"))};
     }
     if (!result.request.highlight_back_color_object &&
         (result.request.highlight_back_color_available ||
          !result.request.highlight_back_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Highlight-back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightBackColorTitle"),
             "--highlight-back-color-object")};
     }
     if (result.request.highlight_fore_color_object && !result.request.highlight_fore_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "highlight-fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor"),
             "--highlight-fore-color")};
     }
     if (result.request.highlight_fore_color_object && result.request.highlight_fore_color < 0) {
         return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
             catalog,
-            "highlight-fore-color",
-            "value")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor"),
+            catalog.translate("StudioHost.LaunchParse.Value.Value"))};
     }
     if (result.request.highlight_fore_color_object && result.request.highlight_fore_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "highlight-fore-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightForeColor"))};
     }
     if (!result.request.highlight_fore_color_object &&
         (result.request.highlight_fore_color_available ||
          !result.request.highlight_fore_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Highlight-fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightForeColorTitle"),
             "--highlight-fore-color-object")};
     }
     if (result.request.back_color_object && !result.request.back_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackColor"),
             "--back-color")};
     }
     if (result.request.back_color_object && result.request.back_color < 0) {
         return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
             catalog,
-            "back-color",
-            "value")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackColor"),
+            catalog.translate("StudioHost.LaunchParse.Value.Value"))};
     }
     if (result.request.back_color_object && result.request.back_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "back-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackColor"))};
     }
     if (!result.request.back_color_object &&
         (result.request.back_color_available ||
          !result.request.back_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackColorTitle"),
             "--back-color-object")};
     }
     if (result.request.fore_color_object && !result.request.fore_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ForeColor"),
             "--fore-color")};
     }
     if (result.request.fore_color_object && result.request.fore_color < 0) {
         return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
             catalog,
-            "fore-color",
-            "value")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ForeColor"),
+            catalog.translate("StudioHost.LaunchParse.Value.Value"))};
     }
     if (result.request.fore_color_object && result.request.fore_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "fore-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ForeColor"))};
     }
     if (!result.request.fore_color_object &&
         (result.request.fore_color_available ||
          !result.request.fore_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ForeColorTitle"),
             "--fore-color-object")};
     }
     if (result.request.disabled_back_color_object && !result.request.disabled_back_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "disabled-back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor"),
             "--disabled-back-color")};
     }
     if (result.request.disabled_back_color_object && result.request.disabled_back_color < 0) {
         return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
             catalog,
-            "disabled-back-color",
-            "value")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor"),
+            catalog.translate("StudioHost.LaunchParse.Value.Value"))};
     }
     if (result.request.disabled_back_color_object && result.request.disabled_back_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "disabled-back-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor"))};
     }
     if (!result.request.disabled_back_color_object &&
         (result.request.disabled_back_color_available ||
          !result.request.disabled_back_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Disabled-back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledBackColorTitle"),
             "--disabled-back-color-object")};
     }
     if (result.request.disabled_fore_color_object && !result.request.disabled_fore_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "disabled-fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor"),
             "--disabled-fore-color")};
     }
     if (result.request.disabled_fore_color_object && result.request.disabled_fore_color < 0) {
         return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
             catalog,
-            "disabled-fore-color",
-            "value")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor"),
+            catalog.translate("StudioHost.LaunchParse.Value.Value"))};
     }
     if (result.request.disabled_fore_color_object && result.request.disabled_fore_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "disabled-fore-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor"))};
     }
     if (!result.request.disabled_fore_color_object &&
         (result.request.disabled_fore_color_available ||
          !result.request.disabled_fore_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Disabled-fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledForeColorTitle"),
             "--disabled-fore-color-object")};
     }
     if (result.request.dynamic_back_color_object && !result.request.dynamic_back_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor"),
             "--dynamic-back-color")};
     }
     if (result.request.dynamic_back_color_object && result.request.dynamic_back_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-back-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor"))};
     }
     if (!result.request.dynamic_back_color_object &&
         (result.request.dynamic_back_color_available ||
          !result.request.dynamic_back_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-back-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicBackColorTitle"),
             "--dynamic-back-color-object")};
     }
     if (result.request.dynamic_fore_color_object && !result.request.dynamic_fore_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor"),
             "--dynamic-fore-color")};
     }
     if (result.request.dynamic_fore_color_object && result.request.dynamic_fore_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-fore-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor"))};
     }
     if (!result.request.dynamic_fore_color_object &&
         (result.request.dynamic_fore_color_available ||
          !result.request.dynamic_fore_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-fore-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle"),
             "--dynamic-fore-color-object")};
     }
     if (result.request.closable_object && !result.request.closable_available) {
