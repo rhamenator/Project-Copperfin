@@ -8684,92 +8684,142 @@ LaunchParseResult parse_launch_arguments(
             "--data-session-object")};
     }
     if (result.request.grid_line_color_object && !result.request.grid_line_color_available) {
-        return {.ok = false, .error = "An object grid-line-color assignment requires --grid-line-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "grid-line-color",
+            "--grid-line-color")};
     }
     if (result.request.grid_line_color_object && result.request.grid_line_color_objects.empty()) {
-        return {.ok = false, .error = "An object grid-line-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "grid-line-color")};
     }
     if (!result.request.grid_line_color_object &&
         (result.request.grid_line_color_available ||
          !result.request.grid_line_color_objects.empty())) {
-        return {.ok = false, .error = "Grid-line-color arguments can only be used with --grid-line-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Grid-line-color",
+            "--grid-line-color-object")};
     }
     if (result.request.header_height_object && !result.request.header_height_available) {
-        return {.ok = false, .error = "An object header-height assignment requires --header-height."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "header-height",
+            "--header-height")};
     }
     if (result.request.header_height_object && result.request.header_height_objects.empty()) {
-        return {.ok = false, .error = "An object header-height assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "header-height")};
     }
     if (!result.request.header_height_object &&
         (result.request.header_height_available ||
          !result.request.header_height_objects.empty())) {
-        return {.ok = false, .error = "Header-height arguments can only be used with --header-height-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Header-height",
+            "--header-height-object")};
     }
     if (result.request.row_height_object && !result.request.row_height_available) {
-        return {.ok = false, .error = "An object row-height assignment requires --row-height."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "row-height",
+            "--row-height")};
     }
     if (result.request.row_height_object && result.request.row_height_objects.empty()) {
-        return {.ok = false, .error = "An object row-height assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "row-height")};
     }
     if (!result.request.row_height_object &&
         (result.request.row_height_available ||
          !result.request.row_height_objects.empty())) {
-        return {.ok = false, .error = "Row-height arguments can only be used with --row-height-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Row-height",
+            "--row-height-object")};
     }
     if (result.request.lock_columns_object && !result.request.lock_columns_available) {
-        return {.ok = false, .error = "An object lock-columns assignment requires --lock-columns."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "lock-columns",
+            "--lock-columns")};
     }
     if (result.request.lock_columns_object && result.request.lock_columns_objects.empty()) {
-        return {.ok = false, .error = "An object lock-columns assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "lock-columns")};
     }
     if (!result.request.lock_columns_object &&
         (result.request.lock_columns_available ||
          !result.request.lock_columns_objects.empty())) {
-        return {.ok = false, .error = "Lock-columns arguments can only be used with --lock-columns-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Lock-columns",
+            "--lock-columns-object")};
     }
     if (result.request.lock_columns_left_object && !result.request.lock_columns_left_available) {
-        return {.ok = false, .error = "An object lock-columns-left assignment requires --lock-columns-left."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "lock-columns-left",
+            "--lock-columns-left")};
     }
     if (result.request.lock_columns_left_object && result.request.lock_columns_left_objects.empty()) {
-        return {.ok = false, .error = "An object lock-columns-left assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "lock-columns-left")};
     }
     if (!result.request.lock_columns_left_object &&
         (result.request.lock_columns_left_available ||
          !result.request.lock_columns_left_objects.empty())) {
-        return {.ok = false, .error = "Lock-columns-left arguments can only be used with --lock-columns-left-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Lock-columns-left",
+            "--lock-columns-left-object")};
     }
     if (result.request.grid_line_width_object && !result.request.grid_line_width_available) {
-        return {.ok = false, .error = "An object grid-line-width assignment requires --grid-line-width."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "grid-line-width",
+            "--grid-line-width")};
     }
     if (result.request.grid_line_width_object && result.request.grid_line_width_objects.empty()) {
-        return {.ok = false, .error = "An object grid-line-width assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "grid-line-width")};
     }
     if (!result.request.grid_line_width_object &&
         (result.request.grid_line_width_available ||
          !result.request.grid_line_width_objects.empty())) {
-        return {.ok = false, .error = "Grid-line-width arguments can only be used with --grid-line-width-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Grid-line-width",
+            "--grid-line-width-object")};
     }
     if (result.request.grid_lines_object && !result.request.grid_lines_available) {
-        return {.ok = false, .error = "An object grid-lines assignment requires --grid-lines."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "grid-lines",
+            "--grid-lines")};
     }
     if (result.request.grid_lines_object && result.request.grid_lines_objects.empty()) {
-        return {.ok = false, .error = "An object grid-lines assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "grid-lines")};
     }
     if (!result.request.grid_lines_object &&
         (result.request.grid_lines_available ||
          !result.request.grid_lines_objects.empty())) {
-        return {.ok = false, .error = "Grid-lines arguments can only be used with --grid-lines-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Grid-lines",
+            "--grid-lines-object")};
     }
     if (result.request.highlight_row_line_width_object && !result.request.highlight_row_line_width_available) {
-        return {.ok = false, .error = "An object highlight-row-line-width assignment requires --highlight-row-line-width."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "highlight-row-line-width",
+            "--highlight-row-line-width")};
     }
     if (result.request.highlight_row_line_width_object && result.request.highlight_row_line_width_objects.empty()) {
-        return {.ok = false, .error = "An object highlight-row-line-width assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "highlight-row-line-width")};
     }
     if (!result.request.highlight_row_line_width_object &&
         (result.request.highlight_row_line_width_available ||
          !result.request.highlight_row_line_width_objects.empty())) {
-        return {.ok = false, .error = "Highlight-row-line-width arguments can only be used with --highlight-row-line-width-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Highlight-row-line-width",
+            "--highlight-row-line-width-object")};
     }
     if (result.request.partition_object && !result.request.partition_available) {
         return {.ok = false, .error = "An object partition assignment requires --partition."};
