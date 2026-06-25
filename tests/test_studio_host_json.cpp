@@ -2510,6 +2510,147 @@ void test_studio_host_visual_method_delete_rename_parse_diagnostics_localize(
     }
 }
 
+void test_studio_host_visual_method_copy_move_parse_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_visual_method_copy_move_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-copy", "--method-name", "When", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2409: default visual-method copy parser diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2409: default visual-method copy parser diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"visualMethodCopy\": null",
+        "#2409: default visual-method copy parser diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2409: default visual-method copy parser diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-copy", "--path", "forms/customer.scx", "--source-record", "-1", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2409: pseudo-localized copy invalid-source-record diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodCopy\": null",
+        "#2409: pseudo-localized copy invalid-source-record diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2409: pseudo-localized copy invalid-source-record diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--source-record",
+        "#2409: pseudo-localized copy invalid-source-record diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --source-record value must be a non-negative integer.",
+        "#2409: pseudo-localized copy invalid-source-record diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-copy",
+            "--path", "forms/customer.scx",
+            "--method-name", "When",
+            "--replace-existing", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2409: pseudo-localized copy invalid-boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2409: pseudo-localized copy invalid-boolean diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--replace-existing",
+        "#2409: pseudo-localized copy invalid-boolean diagnostics should preserve CLI option names");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2409: pseudo-localized copy invalid-boolean diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2409: pseudo-localized copy invalid-boolean diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --replace-existing value must be true or false.",
+        "#2409: pseudo-localized copy invalid-boolean diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-copy-batch", "--path", "forms/customer.scx", "--target-record", "1", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2409: pseudo-localized copy-batch item-order diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodCopyBatch\": null",
+        "#2409: pseudo-localized copy-batch item-order diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2409: pseudo-localized copy-batch item-order diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--method-name",
+        "#2409: pseudo-localized copy-batch item-order diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Visual method copy batch item options require a preceding --method-name.",
+        "#2409: pseudo-localized copy-batch item-order diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-move-batch", "--path", "forms/customer.scx", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2409: pseudo-localized move-batch missing-items diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodMoveBatch\": null",
+        "#2409: pseudo-localized move-batch missing-items diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2409: pseudo-localized move-batch missing-items diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No method moves were provided.",
+        "#2409: pseudo-localized move-batch missing-items diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-move", "--path", "forms/customer.scx", "--target-record", "-1", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2409: pseudo-localized move invalid-target-record diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodMove\": null",
+        "#2409: pseudo-localized move invalid-target-record diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2409: pseudo-localized move invalid-target-record diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--target-record",
+        "#2409: pseudo-localized move invalid-target-record diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --target-record value must be a non-negative integer.",
+        "#2409: pseudo-localized move invalid-target-record diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -114655,6 +114796,7 @@ int main(int argc, char** argv) {
     test_studio_host_visual_object_rename_reorder_update_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_method_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_method_delete_rename_parse_diagnostics_localize(argv[1]);
+    test_studio_host_visual_method_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);

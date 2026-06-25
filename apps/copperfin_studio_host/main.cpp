@@ -7214,7 +7214,9 @@ VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(
     return result;
 }
 
-VisualMethodCopyParseResult parse_visual_method_copy_arguments(const std::vector<std::string>& args) {
+VisualMethodCopyParseResult parse_visual_method_copy_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodCopyParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-copy") != args.end();
@@ -7231,7 +7233,7 @@ VisualMethodCopyParseResult parse_visual_method_copy_arguments(const std::vector
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7248,7 +7250,7 @@ VisualMethodCopyParseResult parse_visual_method_copy_arguments(const std::vector
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --source-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--source-record"));
                 continue;
             }
             result.request.source_record_index = record_index;
@@ -7263,7 +7265,7 @@ VisualMethodCopyParseResult parse_visual_method_copy_arguments(const std::vector
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --target-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--target-record"));
                 continue;
             }
             result.request.target_record_index = record_index;
@@ -7277,25 +7279,33 @@ VisualMethodCopyParseResult parse_visual_method_copy_arguments(const std::vector
             const std::string token = require_value(argument);
             bool replace_existing = false;
             if (!parse_bool_token(token, replace_existing)) {
-                fail("The --replace-existing value must be true or false.");
+                fail(catalog.translate(
+                    "StudioHost.VisualMethodParse.Error.BooleanValue",
+                    {
+                        {"option", "--replace-existing"},
+                        {"trueToken", "true"},
+                        {"falseToken", "false"}
+                    }));
                 continue;
             }
             result.request.replace_existing = replace_existing;
         } else {
-            fail("Unknown visual-method-copy option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-copy", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.method_name_provided) {
-        fail("No method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodName"));
     }
     return result;
 }
 
-VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(const std::vector<std::string>& args) {
+VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodCopyBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-copy-batch") != args.end();
@@ -7310,7 +7320,9 @@ VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(const 
 
     auto current_method = [&]() -> copperfin::vfp::VisualObjectMethodCopyBatchItem* {
         if (result.request.methods.empty()) {
-            fail("Visual method copy batch item options require a preceding --method-name.");
+            fail(catalog.translate(
+                "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+                {{"methodNameOption", "--method-name"}}));
             return nullptr;
         }
         return &result.request.methods.back();
@@ -7320,7 +7332,7 @@ VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(const 
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7349,7 +7361,7 @@ VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(const 
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --source-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--source-record"));
                 continue;
             }
             if (auto* method = current_method()) {
@@ -7367,7 +7379,7 @@ VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(const 
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --target-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--target-record"));
                 continue;
             }
             if (auto* method = current_method()) {
@@ -7389,27 +7401,35 @@ VisualMethodCopyBatchParseResult parse_visual_method_copy_batch_arguments(const 
             const std::string token = require_value(argument);
             bool replace_existing = false;
             if (!parse_bool_token(token, replace_existing)) {
-                fail("The --replace-existing value must be true or false.");
+                fail(catalog.translate(
+                    "StudioHost.VisualMethodParse.Error.BooleanValue",
+                    {
+                        {"option", "--replace-existing"},
+                        {"trueToken", "true"},
+                        {"falseToken", "false"}
+                    }));
                 continue;
             }
             if (auto* method = current_method()) {
                 method->replace_existing = replace_existing;
             }
         } else {
-            fail("Unknown visual-method-copy-batch option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-copy-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.methods.empty()) {
-        fail("No method copies were provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodCopies"));
     }
     return result;
 }
 
-VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(const std::vector<std::string>& args) {
+VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodMoveBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-move-batch") != args.end();
@@ -7424,7 +7444,9 @@ VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(const 
 
     auto current_method = [&]() -> copperfin::vfp::VisualObjectMethodMoveBatchItem* {
         if (result.request.methods.empty()) {
-            fail("Visual method move batch item options require a preceding --method-name.");
+            fail(catalog.translate(
+                "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+                {{"methodNameOption", "--method-name"}}));
             return nullptr;
         }
         return &result.request.methods.back();
@@ -7434,7 +7456,7 @@ VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(const 
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7463,7 +7485,7 @@ VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(const 
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --source-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--source-record"));
                 continue;
             }
             if (auto* method = current_method()) {
@@ -7481,7 +7503,7 @@ VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(const 
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --target-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--target-record"));
                 continue;
             }
             if (auto* method = current_method()) {
@@ -7503,27 +7525,35 @@ VisualMethodMoveBatchParseResult parse_visual_method_move_batch_arguments(const 
             const std::string token = require_value(argument);
             bool replace_existing = false;
             if (!parse_bool_token(token, replace_existing)) {
-                fail("The --replace-existing value must be true or false.");
+                fail(catalog.translate(
+                    "StudioHost.VisualMethodParse.Error.BooleanValue",
+                    {
+                        {"option", "--replace-existing"},
+                        {"trueToken", "true"},
+                        {"falseToken", "false"}
+                    }));
                 continue;
             }
             if (auto* method = current_method()) {
                 method->replace_existing = replace_existing;
             }
         } else {
-            fail("Unknown visual-method-move-batch option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-move-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.methods.empty()) {
-        fail("No method moves were provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodMoves"));
     }
     return result;
 }
 
-VisualMethodMoveParseResult parse_visual_method_move_arguments(const std::vector<std::string>& args) {
+VisualMethodMoveParseResult parse_visual_method_move_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodMoveParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-move") != args.end();
@@ -7540,7 +7570,7 @@ VisualMethodMoveParseResult parse_visual_method_move_arguments(const std::vector
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7557,7 +7587,7 @@ VisualMethodMoveParseResult parse_visual_method_move_arguments(const std::vector
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --source-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--source-record"));
                 continue;
             }
             result.request.source_record_index = record_index;
@@ -7572,7 +7602,7 @@ VisualMethodMoveParseResult parse_visual_method_move_arguments(const std::vector
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --target-record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--target-record"));
                 continue;
             }
             result.request.target_record_index = record_index;
@@ -7586,20 +7616,26 @@ VisualMethodMoveParseResult parse_visual_method_move_arguments(const std::vector
             const std::string token = require_value(argument);
             bool replace_existing = false;
             if (!parse_bool_token(token, replace_existing)) {
-                fail("The --replace-existing value must be true or false.");
+                fail(catalog.translate(
+                    "StudioHost.VisualMethodParse.Error.BooleanValue",
+                    {
+                        {"option", "--replace-existing"},
+                        {"trueToken", "true"},
+                        {"falseToken", "false"}
+                    }));
                 continue;
             }
             result.request.replace_existing = replace_existing;
         } else {
-            fail("Unknown visual-method-move option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-move", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.method_name_provided) {
-        fail("No method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodName"));
     }
     return result;
 }
@@ -22964,7 +23000,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_copy_batch_parse = parse_visual_method_copy_batch_arguments(args);
+    const auto visual_method_copy_batch_parse = parse_visual_method_copy_batch_arguments(catalog, args);
     if (visual_method_copy_batch_parse.requested) {
         if (!visual_method_copy_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -22994,7 +23030,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_move_batch_parse = parse_visual_method_move_batch_arguments(args);
+    const auto visual_method_move_batch_parse = parse_visual_method_move_batch_arguments(catalog, args);
     if (visual_method_move_batch_parse.requested) {
         if (!visual_method_move_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23024,7 +23060,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_move_parse = parse_visual_method_move_arguments(args);
+    const auto visual_method_move_parse = parse_visual_method_move_arguments(catalog, args);
     if (visual_method_move_parse.requested) {
         if (!visual_method_move_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23054,7 +23090,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_copy_parse = parse_visual_method_copy_arguments(args);
+    const auto visual_method_copy_parse = parse_visual_method_copy_arguments(catalog, args);
     if (visual_method_copy_parse.requested) {
         if (!visual_method_copy_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
