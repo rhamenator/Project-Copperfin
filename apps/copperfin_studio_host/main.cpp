@@ -3453,7 +3453,70 @@ ToolboxPaletteLaunchCatalogParseResult parse_toolbox_palette_launch_catalog_argu
     return result;
 }
 
+std::string toolbox_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.ToolboxParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string toolbox_parse_unknown_selection_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.ToolboxParse.Error.UnknownSelectionContextToken",
+        {{"token", token}});
+}
+
+std::string toolbox_parse_unknown_toolbox_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.ToolboxParse.Error.UnknownToolboxContextToken",
+        {{"token", token}});
+}
+
+std::string toolbox_parse_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.ToolboxParse.Error.NonNegativeInteger",
+        {{"option", option}});
+}
+
+std::string toolbox_parse_boolean_value_required(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.ToolboxParse.Error.BooleanValueRequired",
+        {
+            {"option", option},
+            {"trueValue", "true"},
+            {"falseValue", "false"}
+        });
+}
+
+std::string toolbox_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.ToolboxParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string toolbox_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
 ToolboxInvocationAdmissionParseResult parse_toolbox_invocation_admission_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     ToolboxInvocationAdmissionParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -3471,7 +3534,7 @@ ToolboxInvocationAdmissionParseResult parse_toolbox_invocation_admission_argumen
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3485,7 +3548,7 @@ ToolboxInvocationAdmissionParseResult parse_toolbox_invocation_admission_argumen
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3496,7 +3559,7 @@ ToolboxInvocationAdmissionParseResult parse_toolbox_invocation_admission_argumen
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3508,22 +3571,24 @@ ToolboxInvocationAdmissionParseResult parse_toolbox_invocation_admission_argumen
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.admit_palette_invocation = admitted;
         } else {
-            fail("Unknown toolbox-invocation-admission option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-invocation-admission", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
-ToolboxDispatchParseResult parse_toolbox_dispatch_arguments(const std::vector<std::string>& args) {
+ToolboxDispatchParseResult parse_toolbox_dispatch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxDispatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-dispatch") != args.end();
@@ -3540,7 +3605,7 @@ ToolboxDispatchParseResult parse_toolbox_dispatch_arguments(const std::vector<st
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3554,7 +3619,7 @@ ToolboxDispatchParseResult parse_toolbox_dispatch_arguments(const std::vector<st
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3565,7 +3630,7 @@ ToolboxDispatchParseResult parse_toolbox_dispatch_arguments(const std::vector<st
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3577,22 +3642,24 @@ ToolboxDispatchParseResult parse_toolbox_dispatch_arguments(const std::vector<st
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.admit_palette_invocation = admitted;
         } else {
-            fail("Unknown toolbox-dispatch option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-dispatch", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
-ToolboxExecuteParseResult parse_toolbox_execute_arguments(const std::vector<std::string>& args) {
+ToolboxExecuteParseResult parse_toolbox_execute_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxExecuteParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-execute") != args.end();
@@ -3609,7 +3676,7 @@ ToolboxExecuteParseResult parse_toolbox_execute_arguments(const std::vector<std:
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3623,7 +3690,7 @@ ToolboxExecuteParseResult parse_toolbox_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3634,7 +3701,7 @@ ToolboxExecuteParseResult parse_toolbox_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3646,7 +3713,7 @@ ToolboxExecuteParseResult parse_toolbox_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.admit_palette_invocation = admitted;
@@ -3654,22 +3721,22 @@ ToolboxExecuteParseResult parse_toolbox_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-execution value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-toolbox-execution"));
                 continue;
             }
             result.admit_execution = admitted;
         } else if (argument == "--toolbox-launch-command") {
             result.launch_command = require_value(argument);
         } else {
-            fail("Unknown toolbox-execute option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-execute", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoSelectionContext"));
     }
     if (result.ok && result.launch_command.empty()) {
-        fail("No toolbox launch command was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxLaunchCommand"));
     }
     return result;
 }
@@ -7425,6 +7492,7 @@ VisualMethodReorderBatchParseResult parse_visual_method_reorder_batch_arguments(
 }
 
 ToolboxInvocationAdmissionCatalogParseResult parse_toolbox_invocation_admission_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     ToolboxInvocationAdmissionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -7443,7 +7511,7 @@ ToolboxInvocationAdmissionCatalogParseResult parse_toolbox_invocation_admission_
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7457,7 +7525,7 @@ ToolboxInvocationAdmissionCatalogParseResult parse_toolbox_invocation_admission_
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -7468,7 +7536,7 @@ ToolboxInvocationAdmissionCatalogParseResult parse_toolbox_invocation_admission_
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7480,23 +7548,25 @@ ToolboxInvocationAdmissionCatalogParseResult parse_toolbox_invocation_admission_
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.request.admit_palette_invocation = admitted;
         } else {
-            fail("Unknown toolbox-invocation-admission-catalog option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-invocation-admission-catalog", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No toolbox context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxContext"));
     }
     return result;
 }
 
 SelectionToolboxInvocationAdmissionCatalogParseResult
-parse_selection_toolbox_invocation_admission_catalog_arguments(const std::vector<std::string>& args) {
+parse_selection_toolbox_invocation_admission_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     SelectionToolboxInvocationAdmissionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested =
@@ -7514,7 +7584,7 @@ parse_selection_toolbox_invocation_admission_catalog_arguments(const std::vector
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7528,7 +7598,7 @@ parse_selection_toolbox_invocation_admission_catalog_arguments(const std::vector
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -7539,7 +7609,7 @@ parse_selection_toolbox_invocation_admission_catalog_arguments(const std::vector
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7551,22 +7621,24 @@ parse_selection_toolbox_invocation_admission_catalog_arguments(const std::vector
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.request.admit_palette_invocation = admitted;
         } else {
-            fail("Unknown selection-toolbox-invocation-admission-catalog option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "selection-toolbox-invocation-admission-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
-ToolboxDispatchCatalogParseResult parse_toolbox_dispatch_catalog_arguments(const std::vector<std::string>& args) {
+ToolboxDispatchCatalogParseResult parse_toolbox_dispatch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxDispatchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-dispatch-catalog") != args.end();
@@ -7583,7 +7655,7 @@ ToolboxDispatchCatalogParseResult parse_toolbox_dispatch_catalog_arguments(const
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7597,7 +7669,7 @@ ToolboxDispatchCatalogParseResult parse_toolbox_dispatch_catalog_arguments(const
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -7608,7 +7680,7 @@ ToolboxDispatchCatalogParseResult parse_toolbox_dispatch_catalog_arguments(const
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7620,22 +7692,23 @@ ToolboxDispatchCatalogParseResult parse_toolbox_dispatch_catalog_arguments(const
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.request.admit_palette_invocation = admitted;
         } else {
-            fail("Unknown toolbox-dispatch-catalog option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-dispatch-catalog", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No toolbox context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxContext"));
     }
     return result;
 }
 
 ToolboxDispatchExecutionCatalogParseResult parse_toolbox_dispatch_execution_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     ToolboxDispatchExecutionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -7653,7 +7726,7 @@ ToolboxDispatchExecutionCatalogParseResult parse_toolbox_dispatch_execution_cata
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7667,7 +7740,7 @@ ToolboxDispatchExecutionCatalogParseResult parse_toolbox_dispatch_execution_cata
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -7678,7 +7751,7 @@ ToolboxDispatchExecutionCatalogParseResult parse_toolbox_dispatch_execution_cata
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7690,7 +7763,7 @@ ToolboxDispatchExecutionCatalogParseResult parse_toolbox_dispatch_execution_cata
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.request.admit_palette_invocation = admitted;
@@ -7698,23 +7771,25 @@ ToolboxDispatchExecutionCatalogParseResult parse_toolbox_dispatch_execution_cata
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-execution value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-toolbox-execution"));
                 continue;
             }
             result.request.admit_execution = admitted;
         } else {
-            fail("Unknown toolbox-dispatch-execution-catalog option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-dispatch-execution-catalog", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No toolbox context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxContext"));
     }
     return result;
 }
 
 SelectionToolboxDispatchExecutionCatalogParseResult
-parse_selection_toolbox_dispatch_execution_catalog_arguments(const std::vector<std::string>& args) {
+parse_selection_toolbox_dispatch_execution_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     SelectionToolboxDispatchExecutionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--selection-toolbox-dispatch-execution-catalog")
@@ -7732,7 +7807,7 @@ parse_selection_toolbox_dispatch_execution_catalog_arguments(const std::vector<s
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7746,7 +7821,7 @@ parse_selection_toolbox_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -7757,7 +7832,7 @@ parse_selection_toolbox_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7769,7 +7844,7 @@ parse_selection_toolbox_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.request.admit_palette_invocation = admitted;
@@ -7777,22 +7852,23 @@ parse_selection_toolbox_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-execution value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-toolbox-execution"));
                 continue;
             }
             result.request.admit_execution = admitted;
         } else {
-            fail("Unknown selection-toolbox-dispatch-execution-catalog option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "selection-toolbox-dispatch-execution-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 SelectionToolboxDispatchCatalogParseResult parse_selection_toolbox_dispatch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     SelectionToolboxDispatchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -7810,7 +7886,7 @@ SelectionToolboxDispatchCatalogParseResult parse_selection_toolbox_dispatch_cata
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7824,7 +7900,7 @@ SelectionToolboxDispatchCatalogParseResult parse_selection_toolbox_dispatch_cata
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -7835,7 +7911,7 @@ SelectionToolboxDispatchCatalogParseResult parse_selection_toolbox_dispatch_cata
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7847,17 +7923,17 @@ SelectionToolboxDispatchCatalogParseResult parse_selection_toolbox_dispatch_cata
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.request.admit_palette_invocation = admitted;
         } else {
-            fail("Unknown selection-toolbox-dispatch-catalog option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "selection-toolbox-dispatch-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoSelectionContext"));
     }
     return result;
 }
@@ -23707,7 +23783,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto toolbox_invocation_admission_parse = parse_toolbox_invocation_admission_arguments(args);
+    const auto toolbox_invocation_admission_parse = parse_toolbox_invocation_admission_arguments(catalog, args);
     if (toolbox_invocation_admission_parse.requested) {
         if (!toolbox_invocation_admission_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxInvocationAdmissionResult{
@@ -23753,7 +23829,7 @@ int main(int argc, char** argv) {
     }
 
     const auto toolbox_invocation_admission_catalog_parse =
-        parse_toolbox_invocation_admission_catalog_arguments(args);
+        parse_toolbox_invocation_admission_catalog_arguments(catalog, args);
     if (toolbox_invocation_admission_catalog_parse.requested) {
         if (!toolbox_invocation_admission_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxInvocationAdmissionCatalogResult{
@@ -23794,7 +23870,7 @@ int main(int argc, char** argv) {
     }
 
     const auto selection_toolbox_invocation_admission_catalog_parse =
-        parse_selection_toolbox_invocation_admission_catalog_arguments(args);
+        parse_selection_toolbox_invocation_admission_catalog_arguments(catalog, args);
     if (selection_toolbox_invocation_admission_catalog_parse.requested) {
         if (!selection_toolbox_invocation_admission_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioSelectionToolboxInvocationAdmissionCatalogResult{
@@ -23835,7 +23911,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto toolbox_dispatch_parse = parse_toolbox_dispatch_arguments(args);
+    const auto toolbox_dispatch_parse = parse_toolbox_dispatch_arguments(catalog, args);
     if (toolbox_dispatch_parse.requested) {
         if (!toolbox_dispatch_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxDispatchResult{
@@ -23897,7 +23973,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto toolbox_execute_parse = parse_toolbox_execute_arguments(args);
+    const auto toolbox_execute_parse = parse_toolbox_execute_arguments(catalog, args);
     if (toolbox_execute_parse.requested) {
         if (!toolbox_execute_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxDispatchExecutionResult{
@@ -24018,7 +24094,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto toolbox_dispatch_catalog_parse = parse_toolbox_dispatch_catalog_arguments(args);
+    const auto toolbox_dispatch_catalog_parse = parse_toolbox_dispatch_catalog_arguments(catalog, args);
     if (toolbox_dispatch_catalog_parse.requested) {
         if (!toolbox_dispatch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxDispatchCatalogResult{
@@ -24059,7 +24135,7 @@ int main(int argc, char** argv) {
     }
 
     const auto toolbox_dispatch_execution_catalog_parse =
-        parse_toolbox_dispatch_execution_catalog_arguments(args);
+        parse_toolbox_dispatch_execution_catalog_arguments(catalog, args);
     if (toolbox_dispatch_execution_catalog_parse.requested) {
         if (!toolbox_dispatch_execution_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxDispatchExecutionCatalogResult{
@@ -24101,7 +24177,7 @@ int main(int argc, char** argv) {
     }
 
     const auto selection_toolbox_dispatch_execution_catalog_parse =
-        parse_selection_toolbox_dispatch_execution_catalog_arguments(args);
+        parse_selection_toolbox_dispatch_execution_catalog_arguments(catalog, args);
     if (selection_toolbox_dispatch_execution_catalog_parse.requested) {
         if (!selection_toolbox_dispatch_execution_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioSelectionToolboxDispatchExecutionCatalogResult{
@@ -24144,7 +24220,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto selection_toolbox_dispatch_catalog_parse = parse_selection_toolbox_dispatch_catalog_arguments(args);
+    const auto selection_toolbox_dispatch_catalog_parse = parse_selection_toolbox_dispatch_catalog_arguments(catalog, args);
     if (selection_toolbox_dispatch_catalog_parse.requested) {
         if (!selection_toolbox_dispatch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioSelectionToolboxDispatchCatalogResult{
