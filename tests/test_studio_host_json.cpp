@@ -3500,6 +3500,49 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
         studio_host_path,
         {
             "--path", "forms/customer.scx",
+            "--clear-property",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2504: pseudo-localized clear-property required option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2504: pseudo-localized clear-property required option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--property-name",
+        "#2504: pseudo-localized clear-property required option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "A property clear requires --property-name.",
+        "#2504: pseudo-localized clear-property required option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--rename-property",
+            "--property-name", "Caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2504: pseudo-localized rename-property new-name diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2504: pseudo-localized rename-property new-name diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--new-property-name",
+        "#2504: pseudo-localized rename-property new-name diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "A property rename requires --new-property-name.",
+        "#2504: pseudo-localized rename-property new-name diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
             "--default-file-path-object",
             "--default-file-path-target-unique-id", "one-guid",
             "--json"

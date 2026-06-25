@@ -440,6 +440,18 @@ std::string localized_property_command_requires_option(
         });
 }
 
+std::string localized_property_command_clear(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.PropertyCommand.Clear");
+}
+
+std::string localized_property_command_rename(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.PropertyCommand.Rename");
+}
+
+std::string localized_property_command_update(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.PropertyCommand.Update");
+}
+
 std::string localized_no_asset_path_provided(const localization::LocalizedCatalog& catalog) {
     return catalog.translate("StudioHost.LaunchParse.Error.NoAssetPathProvided");
 }
@@ -8384,16 +8396,28 @@ LaunchParseResult parse_launch_arguments(
     }
 
     if (result.request.apply_property_update && result.request.property_name.empty()) {
-        return {.ok = false, .error = localized_property_command_requires_option(catalog, "update", "--property-name")};
+        return {.ok = false, .error = localized_property_command_requires_option(
+            catalog,
+            localized_property_command_update(catalog),
+            "--property-name")};
     }
     if (result.request.clear_property && result.request.property_name.empty()) {
-        return {.ok = false, .error = localized_property_command_requires_option(catalog, "clear", "--property-name")};
+        return {.ok = false, .error = localized_property_command_requires_option(
+            catalog,
+            localized_property_command_clear(catalog),
+            "--property-name")};
     }
     if (result.request.rename_property && result.request.property_name.empty()) {
-        return {.ok = false, .error = localized_property_command_requires_option(catalog, "rename", "--property-name")};
+        return {.ok = false, .error = localized_property_command_requires_option(
+            catalog,
+            localized_property_command_rename(catalog),
+            "--property-name")};
     }
     if (result.request.rename_property && result.request.new_property_name.empty()) {
-        return {.ok = false, .error = localized_property_command_requires_option(catalog, "rename", "--new-property-name")};
+        return {.ok = false, .error = localized_property_command_requires_option(
+            catalog,
+            localized_property_command_rename(catalog),
+            "--new-property-name")};
     }
     if (result.request.rename_object &&
         result.request.new_object_name.empty() &&
