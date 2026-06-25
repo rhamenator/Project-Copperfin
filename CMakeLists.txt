@@ -59,6 +59,7 @@ add_library(cf_platform_profile
     src/platform/database_model.cpp
     src/platform/extensibility_model.cpp
     src/platform/federation_execution.cpp
+    src/platform/localized_text.cpp
     src/platform/query_translator.cpp
 )
 
@@ -72,6 +73,8 @@ if(MSVC)
 else()
     target_compile_options(cf_platform_profile PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+target_link_libraries(cf_platform_profile PRIVATE cf_localization)
 
 add_library(cf_vfp_assets
     src/vfp/asset_inspector.cpp

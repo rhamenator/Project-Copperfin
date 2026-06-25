@@ -1,5 +1,7 @@
 #include "copperfin/platform/federation_execution.h"
 
+#include "localized_text.h"
+
 #include <algorithm>
 #include <cctype>
 
@@ -140,8 +142,9 @@ FederationExecutionPlan build_federation_execution_plan(const FederationExecutio
         if (plan.planning_policy_allows_ai) {
             const auto* plan_mode = request.planning_policy.require_ai_assistance ? "required" : "optional";
             plan.ok = false;
-            plan.error = "Planner is not yet implemented for " + std::string(plan_mode) +
-                " AI policy. Deterministic translation failed: " + translation.error;
+            plan.error = platform_text(
+                "Platform.FederationExecution.Error.AiPlannerNotImplemented",
+                {{"planMode", plan_mode}, {"translationError", translation.error}});
             plan.execution_command = format_ai_fallback_command(plan.connector, plan.target, request.fox_sql);
         } else {
             plan.ok = false;

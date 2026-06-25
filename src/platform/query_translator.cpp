@@ -1,5 +1,7 @@
 #include "copperfin/platform/query_translator.h"
 
+#include "localized_text.h"
+
 #include <array>
 #include <algorithm>
 #include <cctype>
@@ -666,7 +668,7 @@ QueryTranslationResult translate_fox_sql_to_backend(
         return {.ok = false,
                 .translated_sql = {},
                 .projection_fields = {},
-                .error = "Only first-pass SELECT...FROM SQL translation is supported."};
+                .error = platform_text("Platform.QueryTranslator.Error.SelectFromOnly")};
     }
 
     std::string translated = fox_sql;

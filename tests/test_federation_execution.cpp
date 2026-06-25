@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/platform/federation_execution.h"
 
 #include <cstdlib>
@@ -85,6 +86,11 @@ void test_plan_allows_ai_fallback_metadata() {
     expect(plan.planning_policy_allows_ai, "policy should report AI as allowed");
     expect(!plan.deterministic_translation_succeeded, "deterministic translation should be marked failed");
     expect(plan.execution_command.find("connector.plan_query(") == 0, "fallback plan should expose connector plan_query intent");
+    expect(
+        plan.error ==
+            "Planner is not yet implemented for optional AI policy. Deterministic translation failed: "
+            "Only first-pass SELECT...FROM SQL translation is supported.",
+        "#2389: optional AI fallback should preserve the default localized planner diagnostic");
 }
 
 void test_plan_requires_ai_fallback_metadata() {
@@ -101,6 +107,26 @@ void test_plan_requires_ai_fallback_metadata() {
     expect(plan.planning_policy_allows_ai, "required AI policy should report AI allowed");
     expect(!plan.deterministic_translation_succeeded, "deterministic translation should still be marked failed");
     expect(plan.planning_policy_audit_enabled, "required AI policy should preserve default audit setting");
+}
+
+void test_platform_federation_diagnostics_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const copperfin::localization::PlaceholderMap placeholders{
+        {"planMode", "required"},
+        {"translationError", "Only first-pass SELECT...FROM SQL translation is supported."}
+    };
+    expect(
+        english_catalog.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders) ==
+            "Planner is not yet implemented for required AI policy. Deterministic translation failed: "
+            "Only first-pass SELECT...FROM SQL translation is supported.",
+        "#2389: federation diagnostics should preserve named placeholders");
+    expect(
+        pseudo_catalog.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders) !=
+            english_catalog.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders),
+        "#2389: federation diagnostics should be pseudo-localizable");
 }
 
 void test_plan_tracks_policy_audit_toggle() {
@@ -139,6 +165,7 @@ int main() {
     test_plan_rejects_with_ai_policy_disabled();
     test_plan_allows_ai_fallback_metadata();
     test_plan_requires_ai_fallback_metadata();
+    test_platform_federation_diagnostics_resolve_through_localization_catalog();
     test_plan_tracks_policy_audit_toggle();
     test_plan_exposes_projection_fields();
 

@@ -19,6 +19,8 @@
   "Error.UnknownLocale": "Unknown locale: {locale}",
   "Help.LocaleOption": "Select the user-interface locale.",
   "Inspect.Usage": "Usage: {commandName} [{localeOption} {localeValue}] {assetPathArgument}",
+  "Platform.FederationExecution.Error.AiPlannerNotImplemented": "Planner is not yet implemented for {planMode} AI policy. Deterministic translation failed: {translationError}",
+  "Platform.QueryTranslator.Error.SelectFromOnly": "Only first-pass SELECT...FROM SQL translation is supported.",
   "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed": "Unable to create bridge response directory.",
   "RuntimeHost.Bridge.Error.PrgStartupRequired": "Bridge invocation currently requires a PRG startup source.",
   "RuntimeHost.Bridge.Error.RequestArtifactNotFound": "Bridge request artifact not found.",

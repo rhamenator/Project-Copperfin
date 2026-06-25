@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/platform/query_translator.h"
 
 #include <cstdlib>
@@ -36,6 +37,24 @@ void test_basic_translation() {
         copperfin::platform::FederationBackend::postgresql,
         "DELETE FROM customer");
     expect(!rejected.ok, "non-select SQL should be rejected in first-pass deterministic translator");
+    expect(
+        rejected.error == "Only first-pass SELECT...FROM SQL translation is supported.",
+        "#2389: query translator rejection should preserve the default localized diagnostic");
+}
+
+void test_platform_query_diagnostics_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly") ==
+            "Only first-pass SELECT...FROM SQL translation is supported.",
+        "#2389: query translator diagnostics should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly") !=
+            english_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly"),
+        "#2389: platform query diagnostics should be pseudo-localizable");
 }
 
 void test_case_variants_and_whitespace_variants() {
@@ -225,6 +244,7 @@ void test_projection_metadata_handles_wildcard() {
 
 int main() {
     test_basic_translation();
+    test_platform_query_diagnostics_resolve_through_localization_catalog();
     test_case_variants_and_whitespace_variants();
     test_iif_is_translated_to_case_when();
     test_nested_iif_is_translated_recursively();
