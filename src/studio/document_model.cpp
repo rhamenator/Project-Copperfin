@@ -15,11 +15,18 @@ namespace copperfin::studio {
 namespace {
 
 std::string document_text(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    return catalog.translate(key, placeholders);
+}
+
+std::string document_text(
     std::string_view key,
     const localization::PlaceholderMap& placeholders = {}) {
     static const localization::LocalizedCatalog catalog =
         localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog.translate(key, placeholders);
+    return document_text(catalog, key, placeholders);
 }
 
 std::string filename_of(const std::string& path) {
@@ -582,7 +589,9 @@ std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind) {
     return {};
 }
 
-std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentModel& document) {
+std::vector<StudioObjectSnapshot> build_object_snapshot(
+    const StudioDocumentModel& document,
+    const localization::LocalizedCatalog& catalog) {
     std::vector<StudioObjectSnapshot> objects;
     if (!document.table_preview_available) {
         return objects;
@@ -695,7 +704,10 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
                 break;
         }
         if (snapshot.title.empty()) {
-            snapshot.title = "Record " + std::to_string(record.record_index);
+            snapshot.title = document_text(
+                catalog,
+                "Studio.DocumentModel.Fallback.RecordTitle",
+                {{"recordIndex", std::to_string(record.record_index)}});
         }
 
         for (std::size_t field_index = 0U; field_index < record.values.size(); ++field_index) {
@@ -772,6 +784,12 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
     }
 
     return objects;
+}
+
+std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentModel& document) {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return build_object_snapshot(document, catalog);
 }
 
 StudioOpenResult open_document(const StudioOpenRequest& request) {

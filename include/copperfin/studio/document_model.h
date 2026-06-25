@@ -9,6 +9,10 @@
 #include <string>
 #include <vector>
 
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
+
 namespace copperfin::studio {
 
 enum class StudioAssetKind {
@@ -872,6 +876,9 @@ struct StudioOpenResult {
 [[nodiscard]] const char* studio_asset_kind_name(StudioAssetKind kind);
 [[nodiscard]] std::string infer_sidecar_path(const std::string& path, StudioAssetKind kind);
 [[nodiscard]] std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentModel& document);
+[[nodiscard]] std::vector<StudioObjectSnapshot> build_object_snapshot(
+    const StudioDocumentModel& document,
+    const localization::LocalizedCatalog& catalog);
 StudioOpenResult open_document(const StudioOpenRequest& request);
 
 }  // namespace copperfin::studio
