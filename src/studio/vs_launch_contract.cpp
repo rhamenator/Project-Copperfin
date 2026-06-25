@@ -10928,7 +10928,12 @@ LaunchParseResult parse_launch_arguments(
     }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {
-        return {.ok = false, .error = "Anchor selectors can only be used with --align-object or --resize-object."};
+        return {.ok = false, .error = catalog.translate(
+            "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+            {
+                {"alignOption", "--align-object"},
+                {"resizeOption", "--resize-object"}
+            })};
     }
     const int property_command_count =
         (result.request.apply_property_update ? 1 : 0) +
@@ -11114,13 +11119,13 @@ LaunchParseResult parse_launch_arguments(
         (result.request.always_on_bottom_object ? 1 : 0) +
         (result.request.ungroup_object ? 1 : 0);
     if (property_command_count > 1) {
-        return {.ok = false, .error = "Only one property command can be used at a time."};
+        return {.ok = false, .error = catalog.translate("StudioHost.LaunchParse.Error.SinglePropertyCommand")};
     }
     if (object_command_count > 1) {
-        return {.ok = false, .error = "Only one object command can be used at a time."};
+        return {.ok = false, .error = catalog.translate("StudioHost.LaunchParse.Error.SingleObjectCommand")};
     }
     if (object_command_count > 0 && property_command_count > 0) {
-        return {.ok = false, .error = "Object commands cannot be combined with property commands."};
+        return {.ok = false, .error = catalog.translate("StudioHost.LaunchParse.Error.MixedObjectPropertyCommands")};
     }
 
     result.ok = true;

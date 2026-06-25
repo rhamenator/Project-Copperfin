@@ -5633,6 +5633,95 @@ void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::strin
     }
 }
 
+void test_studio_host_launch_command_mode_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_command_mode_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--anchor-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2448: default anchor selector mode diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Anchor selectors can only be used with --align-object or --resize-object.",
+        "#2448: default anchor selector mode diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--set-property",
+            "--clear-property",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2448: pseudo-localized duplicate property command diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2448: pseudo-localized duplicate property command diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "Only one property command can be used at a time.",
+        "#2448: pseudo-localized duplicate property command diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--delete-object",
+            "--restore-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2448: pseudo-localized duplicate object command diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2448: pseudo-localized duplicate object command diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "Only one object command can be used at a time.",
+        "#2448: pseudo-localized duplicate object command diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--delete-object",
+            "--clear-property",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2448: pseudo-localized mixed command diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2448: pseudo-localized mixed command diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "Object commands cannot be combined with property commands.",
+        "#2448: pseudo-localized mixed command diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -119163,6 +119252,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_max_auto_diagnostics_localize(argv[1]);
     test_studio_host_launch_selection_marker_diagnostics_localize(argv[1]);
     test_studio_host_launch_sizing_zorder_diagnostics_localize(argv[1]);
+    test_studio_host_launch_command_mode_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
