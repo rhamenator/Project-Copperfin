@@ -3543,6 +3543,27 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
         studio_host_path,
         {
             "--path", "forms/customer.scx",
+            "--form-set-class-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2506: pseudo-localized form-set-class missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2506: pseudo-localized form-set-class missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--form-set-class",
+        "#2506: pseudo-localized form-set-class missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "form set class",
+        "#2506: pseudo-localized form-set-class missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
             "--default-file-path-object",
             "--default-file-path-target-unique-id", "one-guid",
             "--json"
@@ -3560,6 +3581,9 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
     expect_not_contains(process.stdout_text,
         "An object default file path assignment requires --default-file-path.",
         "#2426: pseudo-localized missing-option diagnostics should not fall back to raw English prose");
+    expect_not_contains(process.stdout_text,
+        "default file path",
+        "#2506: pseudo-localized default-file-path diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -3581,6 +3605,9 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
     expect_not_contains(process.stdout_text,
         "Whats-this-button arguments can only be used with --whats-this-button-object.",
         "#2426: pseudo-localized stray-argument diagnostics should not fall back to raw English prose");
+    expect_not_contains(process.stdout_text,
+        "Whats-this-button",
+        "#2506: pseudo-localized whats-this-button diagnostics should not preserve raw title label prose");
 
     process = run_process_capture(
         studio_host_path,
