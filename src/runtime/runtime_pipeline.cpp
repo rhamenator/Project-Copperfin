@@ -1,4 +1,5 @@
 #include "copperfin/runtime/runtime_pipeline.h"
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "prg_engine_internal.h"
 #include "copperfin/security/sha256.h"
@@ -17,6 +18,14 @@
 namespace copperfin::runtime {
 
 namespace {
+
+std::string runtime_text(
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog.translate(key, placeholders);
+}
 
 std::string sanitize_file_name(const std::string& value) {
     std::string sanitized;
@@ -127,13 +136,13 @@ std::string dotnet_parity_tier_name(copperfin::platform::DotNetParityTier tier) 
 bool write_text_file(const std::filesystem::path& path, const std::string& contents, std::string& error) {
     std::ofstream output(path, std::ios::binary);
     if (!output) {
-        error = "Unable to create file: " + path.string();
+        error = runtime_text("Runtime.Package.Error.CreateFileFailed", {{"path", path.string()}});
         return false;
     }
 
     output << contents;
     if (!output.good()) {
-        error = "Unable to write file: " + path.string();
+        error = runtime_text("Runtime.Package.Error.WriteFileFailed", {{"path", path.string()}});
         return false;
     }
 
@@ -150,7 +159,7 @@ std::string read_text_file(const std::filesystem::path& path) {
 std::string read_binary_file(const std::filesystem::path& path, std::string& error) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        error = "Unable to open file: " + path.string();
+        error = runtime_text("Runtime.Package.Error.OpenFileFailed", {{"path", path.string()}});
         return {};
     }
 
@@ -4045,21 +4054,21 @@ bool copy_file_if_exists(
     const std::filesystem::path& destination,
     std::string& error) {
     if (!std::filesystem::exists(source)) {
-        error = "Source file does not exist: " + source.string();
+        error = runtime_text("Runtime.Package.Error.SourceFileMissing", {{"path", source.string()}});
         return false;
     }
 
     std::error_code directory_error;
     std::filesystem::create_directories(destination.parent_path(), directory_error);
     if (directory_error) {
-        error = "Unable to create directory: " + destination.parent_path().string();
+        error = runtime_text("Runtime.Package.Error.CreateDirectoryFailed", {{"path", destination.parent_path().string()}});
         return false;
     }
 
     std::error_code copy_error;
     std::filesystem::copy_file(source, destination, std::filesystem::copy_options::overwrite_existing, copy_error);
     if (copy_error) {
-        error = "Unable to copy file to: " + destination.string();
+        error = runtime_text("Runtime.Package.Error.CopyFileFailed", {{"path", destination.string()}});
         return false;
     }
 
@@ -4071,7 +4080,7 @@ bool validate_runtime_host_source_path(
     const std::string& runtime_host_source_path,
     std::string& error) {
     if (runtime_host_source_path.empty()) {
-        error = "Runtime host source path is empty.";
+        error = runtime_text("Runtime.Package.Error.RuntimeHostSourcePathEmpty");
         return false;
     }
 
@@ -4079,12 +4088,12 @@ bool validate_runtime_host_source_path(
     std::error_code canonical_error;
     source = std::filesystem::weakly_canonical(source, canonical_error);
     if (canonical_error) {
-        error = "Unable to resolve runtime host source path.";
+        error = runtime_text("Runtime.Package.Error.RuntimeHostSourcePathResolveFailed");
         return false;
     }
 
     if (!std::filesystem::exists(source) || !std::filesystem::is_regular_file(source)) {
-        error = "Runtime host source path does not point to a regular file.";
+        error = runtime_text("Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile");
         return false;
     }
 
@@ -4095,12 +4104,12 @@ bool validate_runtime_host_source_path(
         const std::string expected_file_name = "copperfin_runtime_host";
 #endif
         if (!source.is_absolute()) {
-            error = "Security-enabled packaging requires an absolute runtime host source path.";
+            error = runtime_text("Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath");
             return false;
         }
 
         if (lowercase_copy(source.filename().string()) != expected_file_name) {
-            error = "Security-enabled packaging requires canonical runtime host binary name.";
+            error = runtime_text("Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName");
             return false;
         }
     }
@@ -4786,22 +4795,22 @@ RuntimeMaterializeResult materialize_runtime_package(
     const platform::ExtensibilityProfile& extensibility_profile,
     const std::string& runtime_host_source_path) {
     if (!plan.ok) {
-        return {.ok = false, .error = "Package plan is not valid."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
 
     std::error_code directory_error;
     std::filesystem::create_directories(plan.package_root, directory_error);
     if (directory_error) {
-        return {.ok = false, .error = "Unable to create package root."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreatePackageRootFailed")};
     }
     std::filesystem::create_directories(plan.content_root, directory_error);
     if (directory_error) {
-        return {.ok = false, .error = "Unable to create content root."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateContentRootFailed")};
     }
     if (plan.emit_dotnet_launcher) {
         std::filesystem::create_directories(std::filesystem::path(plan.launcher_project_path).parent_path(), directory_error);
         if (directory_error) {
-            return {.ok = false, .error = "Unable to create launcher directory."};
+            return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateLauncherDirectoryFailed")};
         }
     }
 
@@ -4841,7 +4850,7 @@ RuntimeMaterializeResult materialize_runtime_package(
     if (is_library_output_kind(plan.output_kind)) {
         std::filesystem::create_directories(std::filesystem::path(plan.native_wrapper_source_path).parent_path(), directory_error);
         if (directory_error) {
-            return {.ok = false, .error = "Unable to create native wrapper directory."};
+            return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperDirectoryFailed")};
         }
         if (!write_text_file(plan.module_definition_path, build_module_definition_source(materialized_plan), error)) {
             return {.ok = false, .error = error};
@@ -4994,13 +5003,13 @@ RuntimeBuildResult build_runtime_package_primary_output(
     const security::NativeSecurityProfile& security_profile,
     const platform::ExtensibilityProfile& extensibility_profile) {
     if (!plan.ok) {
-        return {.ok = false, .error = "Package plan is not valid."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PlanInvalid")};
     }
     if (!is_library_output_kind(plan.output_kind)) {
-        return {.ok = false, .error = "Primary-output builds are only supported for library-output packages."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput")};
     }
     if (!std::filesystem::exists(plan.native_wrapper_cmake_path)) {
-        return {.ok = false, .error = "Native wrapper CMake metadata is missing."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperCMakeMissing")};
     }
 
     RuntimePackagePlan built_plan = plan;
@@ -5014,14 +5023,14 @@ RuntimeBuildResult build_runtime_package_primary_output(
     std::filesystem::remove(plan.launcher_output_path, ignored);
     std::filesystem::create_directories(build_root, ignored);
     if (ignored) {
-        return {.ok = false, .error = "Unable to create native wrapper build directory."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed")};
     }
 
     const std::string configure_command =
         "cmake -S \"" + source_root.string() + "\" -B \"" + build_root.string() + "\" > \"" +
         configure_log_path.string() + "\" 2>&1";
     if (std::system(configure_command.c_str()) != 0) {
-        error = "native wrapper primary-output configure failed";
+        error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed");
         if (std::filesystem::exists(configure_log_path)) {
             error += ":\n" + read_text_file(configure_log_path);
         }
@@ -5031,7 +5040,7 @@ RuntimeBuildResult build_runtime_package_primary_output(
     const std::string build_command =
         "cmake --build \"" + build_root.string() + "\" > \"" + build_log_path.string() + "\" 2>&1";
     if (std::system(build_command.c_str()) != 0) {
-        error = "native wrapper primary-output build failed";
+        error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed");
         if (std::filesystem::exists(build_log_path)) {
             error += ":\n" + read_text_file(build_log_path);
         }
@@ -5039,7 +5048,7 @@ RuntimeBuildResult build_runtime_package_primary_output(
     }
 
     if (!std::filesystem::exists(plan.launcher_output_path)) {
-        return {.ok = false, .error = "native wrapper primary-output build did not materialize the requested output path."};
+        return {.ok = false, .error = runtime_text("Runtime.Package.Error.NativeWrapperPrimaryOutputMissing")};
     }
 
     built_plan.primary_output_materialized = true;

@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/platform/extensibility_model.h"
 #include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/security/security_model.h"
@@ -5643,6 +5644,51 @@ void test_debug_source_roots_preserve_source_first_and_content_second_order() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Runtime.Package.Error.PlanInvalid") == "Package plan is not valid.",
+        "#2390: runtime package invalid-plan diagnostics should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput") ==
+            "Primary-output builds are only supported for library-output packages.",
+        "#2390: primary-output diagnostics should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Runtime.Package.Error.SourceFileMissing", {{"path", "missing.prg"}}) ==
+            "Source file does not exist: missing.prg",
+        "#2390: runtime package diagnostics should preserve path placeholders");
+    expect(
+        pseudo_catalog.translate("Runtime.Package.Error.PlanInvalid") !=
+            english_catalog.translate("Runtime.Package.Error.PlanInvalid"),
+        "#2390: runtime package diagnostics should be pseudo-localizable");
+
+    const copperfin::runtime::RuntimePackagePlan invalid_plan{};
+    const auto materialize_result = copperfin::runtime::materialize_runtime_package(
+        invalid_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        "runtime-host-fixture");
+    expect(!materialize_result.ok, "invalid runtime package plan should not materialize");
+    expect(
+        materialize_result.error == "Package plan is not valid.",
+        "#2390: materialize_runtime_package should preserve the default localized invalid-plan diagnostic");
+
+    copperfin::runtime::RuntimePackagePlan executable_plan{};
+    executable_plan.ok = true;
+    executable_plan.output_kind = copperfin::runtime::BuildOutputKind::executable;
+    const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
+        executable_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile());
+    expect(!build_result.ok, "primary-output build should reject executable package plans");
+    expect(
+        build_result.error == "Primary-output builds are only supported for library-output packages.",
+        "#2390: primary-output build should preserve the default localized unsupported-kind diagnostic");
+}
+
 }  // namespace
 
 int main() {
@@ -5670,6 +5716,7 @@ int main() {
     test_manifest_asset_lines_include_copy_state_contract();
     test_debug_source_roots_are_unique_when_source_and_content_paths_match();
     test_debug_source_roots_preserve_source_first_and_content_second_order();
+    test_runtime_package_diagnostics_resolve_through_localization_catalog();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";
