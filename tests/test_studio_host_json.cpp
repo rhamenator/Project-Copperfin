@@ -3858,6 +3858,67 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
 
     process = run_process_capture(
         studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--grid-line-color-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2510: pseudo-localized grid-line-color missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2510: pseudo-localized grid-line-color missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--grid-line-color",
+        "#2510: pseudo-localized grid-line-color missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " grid-line-color ",
+        "#2510: pseudo-localized grid-line-color missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--header-height-object",
+            "--header-height", "32",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2510: pseudo-localized header-height target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2510: pseudo-localized header-height target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        " header-height ",
+        "#2510: pseudo-localized header-height target diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--lock-columns-left-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2510: pseudo-localized lock-columns-left stray diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2510: pseudo-localized lock-columns-left stray diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--lock-columns-left-object",
+        "#2510: pseudo-localized lock-columns-left stray diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Lock-columns-left arguments",
+        "#2510: pseudo-localized lock-columns-left diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
         {"--json", "--default-file-path"},
         temp_root);
 
