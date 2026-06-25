@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/platform/database_model.h"
 #include "copperfin/platform/extensibility_model.h"
@@ -24,6 +25,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -38,212 +40,256 @@
 
 namespace {
 
-void print_usage() {
-    std::cout << "Usage: copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--align-object|--resize-object|--distribute-object|--snap-object|--nudge-object|--tab-order-object|--tab-stop-object|--visibility-object|--enabled-object|--read-only-object|--locked-object|--caption-object|--picture-object|--down-picture-object|--disabled-picture-object|--ole-drag-picture-object|--mouse-icon-object|--drag-icon-object|--drag-mode-object|--ole-drag-mode-object|--tooltip-text-object|--status-bar-text-object|--control-source-object|--input-mask-object|--format-object|--row-source-object|--row-source-type-object|--bound-column-object|--column-count-object|--style-object|--list-index-object|--left-column-object|--auto-center-object|--auto-size-object|--auto-release-object|--continuous-scroll-object|--dockable-object|--clip-controls-object|--sparse-object|--lock-screen-object|--allow-cell-selection-object|--delete-mark-object|--record-mark-object|--split-bar-object|--highlight-row-object|--panel-link-object|--allow-header-sizing-object|--allow-row-sizing-object|--resizable-object|--add-line-feeds-object|--always-on-top-object|--always-on-bottom-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--alignment-mode <mode>] [--resize-mode <width|height|size>] [--distribution-mode <horizontal|vertical>] [--snap-mode <horizontal|vertical|both>] [--nudge-mode <horizontal|vertical|both>] [--grid-width <n>] [--grid-height <n>] [--delta-hpos <n>] [--delta-vpos <n>] [--starting-tab-index <n>] [--tab-stop <true|false>] [--visible <true|false>] [--enabled <true|false>] [--object-read-only <true|false>] [--locked <true|false>] [--caption <value>] [--picture <value>] [--down-picture <value>] [--disabled-picture <value>] [--ole-drag-picture <value>] [--mouse-icon <value>] [--drag-icon <value>] [--drag-mode <n>] [--ole-drag-mode <n>] [--tooltip-text <value>] [--status-bar-text <value>] [--control-source <value>] [--input-mask <value>] [--format <value>] [--row-source <value>] [--row-source-type <n>] [--bound-column <n>] [--column-count <n>] [--style <n>] [--list-index <n>] [--left-column <n>] [--auto-center <true|false>] [--auto-size <true|false>] [--auto-release <true|false>] [--continuous-scroll <true|false>] [--dockable <true|false>] [--clip-controls <true|false>] [--sparse <true|false>] [--lock-screen <true|false>] [--allow-cell-selection <true|false>] [--delete-mark <true|false>] [--record-mark <true|false>] [--split-bar <true|false>] [--highlight-row <true|false>] [--panel-link <true|false>] [--allow-header-sizing <true|false>] [--allow-row-sizing <true|false>] [--resizable <true|false>] [--add-line-feeds <true|false>] [--always-on-top <true|false>] [--always-on-bottom <true|false>] [--anchor-object-name <name>] [--anchor-unique-id <id>] [--align-target-object-name <name>] [--align-target-unique-id <id>] [--resize-target-object-name <name>] [--resize-target-unique-id <id>] [--distribute-target-object-name <name>] [--distribute-target-unique-id <id>] [--snap-target-object-name <name>] [--snap-target-unique-id <id>] [--nudge-target-object-name <name>] [--nudge-target-unique-id <id>] [--tab-order-target-object-name <name>] [--tab-order-target-unique-id <id>] [--tab-stop-target-object-name <name>] [--tab-stop-target-unique-id <id>] [--visibility-target-object-name <name>] [--visibility-target-unique-id <id>] [--enabled-target-object-name <name>] [--enabled-target-unique-id <id>] [--read-only-target-object-name <name>] [--read-only-target-unique-id <id>] [--locked-target-object-name <name>] [--locked-target-unique-id <id>] [--caption-target-object-name <name>] [--caption-target-unique-id <id>] [--picture-target-object-name <name>] [--picture-target-unique-id <id>] [--down-picture-target-object-name <name>] [--down-picture-target-unique-id <id>] [--disabled-picture-target-object-name <name>] [--disabled-picture-target-unique-id <id>] [--ole-drag-picture-target-object-name <name>] [--ole-drag-picture-target-unique-id <id>] [--mouse-icon-target-object-name <name>] [--mouse-icon-target-unique-id <id>] [--drag-icon-target-object-name <name>] [--drag-icon-target-unique-id <id>] [--drag-mode-target-object-name <name>] [--drag-mode-target-unique-id <id>] [--ole-drag-mode-target-object-name <name>] [--ole-drag-mode-target-unique-id <id>] [--tooltip-text-target-object-name <name>] [--tooltip-text-target-unique-id <id>] [--status-bar-text-target-object-name <name>] [--status-bar-text-target-unique-id <id>] [--control-source-target-object-name <name>] [--control-source-target-unique-id <id>] [--input-mask-target-object-name <name>] [--input-mask-target-unique-id <id>] [--format-target-object-name <name>] [--format-target-unique-id <id>] [--row-source-target-object-name <name>] [--row-source-target-unique-id <id>] [--row-source-type-target-object-name <name>] [--row-source-type-target-unique-id <id>] [--bound-column-target-object-name <name>] [--bound-column-target-unique-id <id>] [--column-count-target-object-name <name>] [--column-count-target-unique-id <id>] [--style-target-object-name <name>] [--style-target-unique-id <id>] [--list-index-target-object-name <name>] [--list-index-target-unique-id <id>] [--left-column-target-object-name <name>] [--left-column-target-unique-id <id>] [--auto-center-target-object-name <name>] [--auto-center-target-unique-id <id>] [--auto-size-target-object-name <name>] [--auto-size-target-unique-id <id>] [--auto-release-target-object-name <name>] [--auto-release-target-unique-id <id>] [--continuous-scroll-target-object-name <name>] [--continuous-scroll-target-unique-id <id>] [--dockable-target-object-name <name>] [--dockable-target-unique-id <id>] [--clip-controls-target-object-name <name>] [--clip-controls-target-unique-id <id>] [--sparse-target-object-name <name>] [--sparse-target-unique-id <id>] [--lock-screen-target-object-name <name>] [--lock-screen-target-unique-id <id>] [--allow-cell-selection-target-object-name <name>] [--allow-cell-selection-target-unique-id <id>] [--delete-mark-target-object-name <name>] [--delete-mark-target-unique-id <id>] [--record-mark-target-object-name <name>] [--record-mark-target-unique-id <id>] [--split-bar-target-object-name <name>] [--split-bar-target-unique-id <id>] [--highlight-row-target-object-name <name>] [--highlight-row-target-unique-id <id>] [--panel-link-target-object-name <name>] [--panel-link-target-unique-id <id>] [--allow-header-sizing-target-object-name <name>] [--allow-header-sizing-target-unique-id <id>] [--allow-row-sizing-target-object-name <name>] [--allow-row-sizing-target-unique-id <id>] [--resizable-target-object-name <name>] [--resizable-target-unique-id <id>] [--add-line-feeds-target-object-name <name>] [--add-line-feeds-target-unique-id <id>] [--always-on-top-target-object-name <name>] [--always-on-top-target-unique-id <id>] [--always-on-bottom-target-object-name <name>] [--always-on-bottom-target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-list --path <asset> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-children --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-descendants --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-ancestors --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-duplicate-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-duplicate-subtree --path <asset> (--record <n>|--object-name <name>|--unique-id <id>) --replacement-source-unique-id <id> --new-object-name <name> --new-name <name> --new-unique-id <id> ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-rename-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-reorder-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) --placement <front|back|before|after> [--target-object-name <name>] [--target-unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-reparent-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-object-update-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) --property-name <name> --property-value <value> ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-update --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --method-kind <procedure|function> --method-source <text> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-delete --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-delete-batch --path <asset> --method-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-rename --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --new-method-name <name> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-rename-batch --path <asset> --method-name <name> --new-method-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-copy --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-copy-batch --path <asset> --method-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-move --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-move-batch --path <asset> --method-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-reorder --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --placement <first|last|before|after> [--relative-method-name <name>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-method-reorder-batch --path <asset> --method-name <name> --placement <first|last|before|after> [--record <n>] [--object-name <name>] [--unique-id <id>] [--relative-method-name <name>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-update-batch --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> --property-value <value> ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-filter --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--property-filter-text <text>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-clear --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-clear-batch --path <asset> --property-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-copy --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --property-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-copy-batch --path <asset> --property-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-move --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --property-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-move-batch --path <asset> --property-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-rename --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> --new-property-name <name> [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-rename-batch --path <asset> --property-name <name> --new-property-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-reorder --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> --placement <first|last|before|after> [--relative-property-name <name>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --visual-property-reorder-batch --path <asset> --property-name <name> --placement <first|last|before|after> [--relative-property-name <name>] [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-launch-plan <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-launch-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --selection-builder-launch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-invocation-admission <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-invocation-admission-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --selection-builder-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-dispatch <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-execute <id> (--builder-context <token>|--selection-context <token>) --builder-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--admit-builder-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-dispatch-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --builder-dispatch-execution-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--admit-builder-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --selection-builder-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --selection-builder-dispatch-execution-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--admit-builder-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-launch-plan <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-launch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-invocation-admission <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-dispatch <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-execute <id> --selection-context <token> --editor-action-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--admit-editor-action-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --editor-action-dispatch-execution-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--admit-editor-action-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-palette-query --toolbox-context <token> [--toolbox-search <text>] [--toolbox-category <text>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-palette-launch-plan --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-palette-launch-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-invocation-admission --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-invocation-admission-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --selection-toolbox-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-dispatch --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-execute --selection-context <token> --toolbox-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--admit-toolbox-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-dispatch-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --toolbox-dispatch-execution-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--admit-toolbox-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --selection-toolbox-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --selection-toolbox-dispatch-execution-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--admit-toolbox-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-launch-surfaces --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-invocation-admission --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-dispatch --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-execute --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--admit-designer-execution <true|false>] [--editor-action-launch-command <command>] [--builder-launch-command <command>] [--toolbox-launch-command <command>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-launch-surface-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-invocation-admission-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-dispatch-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --designer-dispatch-execution-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--admit-designer-execution <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-plan <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-plan <id> --selection-context <token> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-from-dispatch-plan <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-from-dispatch <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-dispatch-plan <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-dispatch-plan <id> --selection-context <token> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-dispatch-from-dispatch-plan <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] [--admit-palette-invocation <true|false>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch-plan --toolbox-item <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-batch-plan --selection-context <token> --toolbox-item <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-batch --selection-context <token> --toolbox-item <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch-from-dispatch-plan --toolbox-item <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] ... [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch-from-dispatch --toolbox-item <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] ... [--admit-palette-invocation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch-dispatch-plan --toolbox-item <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-batch-dispatch-plan --selection-context <token> --toolbox-item <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch-dispatch-from-dispatch-plan --toolbox-item <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] ... [--admit-palette-invocation <true|false>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-plan-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-plan-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch-plan-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-batch-plan-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-dispatch-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-dispatch-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch-dispatch-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create-batch-dispatch-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create-batch --toolbox-item <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "   or: copperfin_studio_host --path <asset> --selection-toolbox-create <id> --selection-context <token> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]\n";
-    std::cout << "Display-value object: --display-value-object --display-value <value> [--display-value-target-object-name <name>] [--display-value-target-unique-id <id>]\n";
-    std::cout << "Selected-back-color object: --selected-back-color-object --selected-back-color <n> [--selected-back-color-target-object-name <name>] [--selected-back-color-target-unique-id <id>]\n";
-    std::cout << "Selected-fore-color object: --selected-fore-color-object --selected-fore-color <n> [--selected-fore-color-target-object-name <name>] [--selected-fore-color-target-unique-id <id>]\n";
-    std::cout << "Selected-item-back-color object: --selected-item-back-color-object --selected-item-back-color <n> [--selected-item-back-color-target-object-name <name>] [--selected-item-back-color-target-unique-id <id>]\n";
-    std::cout << "Selected-item-fore-color object: --selected-item-fore-color-object --selected-item-fore-color <n> [--selected-item-fore-color-target-object-name <name>] [--selected-item-fore-color-target-unique-id <id>]\n";
-    std::cout << "Disabled-item-back-color object: --disabled-item-back-color-object --disabled-item-back-color <n> [--disabled-item-back-color-target-object-name <name>] [--disabled-item-back-color-target-unique-id <id>]\n";
-    std::cout << "Disabled-item-fore-color object: --disabled-item-fore-color-object --disabled-item-fore-color <n> [--disabled-item-fore-color-target-object-name <name>] [--disabled-item-fore-color-target-unique-id <id>]\n";
-    std::cout << "Item-back-color object: --item-back-color-object --item-back-color <n> [--item-back-color-target-object-name <name>] [--item-back-color-target-unique-id <id>]\n";
-    std::cout << "Item-fore-color object: --item-fore-color-object --item-fore-color <n> [--item-fore-color-target-object-name <name>] [--item-fore-color-target-unique-id <id>]\n";
-    std::cout << "Highlight-back-color object: --highlight-back-color-object --highlight-back-color <n> [--highlight-back-color-target-object-name <name>] [--highlight-back-color-target-unique-id <id>]\n";
-    std::cout << "Highlight-fore-color object: --highlight-fore-color-object --highlight-fore-color <n> [--highlight-fore-color-target-object-name <name>] [--highlight-fore-color-target-unique-id <id>]\n";
-    std::cout << "Back-color object: --back-color-object --back-color <n> [--back-color-target-object-name <name>] [--back-color-target-unique-id <id>]\n";
-    std::cout << "Fore-color object: --fore-color-object --fore-color <n> [--fore-color-target-object-name <name>] [--fore-color-target-unique-id <id>]\n";
-    std::cout << "Disabled-back-color object: --disabled-back-color-object --disabled-back-color <n> [--disabled-back-color-target-object-name <name>] [--disabled-back-color-target-unique-id <id>]\n";
-    std::cout << "Disabled-fore-color object: --disabled-fore-color-object --disabled-fore-color <n> [--disabled-fore-color-target-object-name <name>] [--disabled-fore-color-target-unique-id <id>]\n";
-    std::cout << "Dynamic-back-color object: --dynamic-back-color-object --dynamic-back-color <expr> [--dynamic-back-color-target-object-name <name>] [--dynamic-back-color-target-unique-id <id>]\n";
-    std::cout << "Dynamic-fore-color object: --dynamic-fore-color-object --dynamic-fore-color <expr> [--dynamic-fore-color-target-object-name <name>] [--dynamic-fore-color-target-unique-id <id>]\n";
-    std::cout << "OLE drop-mode object: --ole-drop-mode-object --ole-drop-mode <n> [--ole-drop-mode-target-object-name <name>] [--ole-drop-mode-target-unique-id <id>]\n";
-    std::cout << "OLE drop-effects object: --ole-drop-effects-object --ole-drop-effects <n> [--ole-drop-effects-target-object-name <name>] [--ole-drop-effects-target-unique-id <id>]\n";
-    std::cout << "OLE drop text-insertion object: --ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]\n";
-    std::cout << "Hide-selection object: --hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]\n";
-    std::cout << "Bind-controls object: --bind-controls-object --bind-controls <true|false> [--bind-controls-target-object-name <name>] [--bind-controls-target-unique-id <id>]\n";
-    std::cout << "Auto-verb-menu object: --auto-verb-menu-object --auto-verb-menu <true|false> [--auto-verb-menu-target-object-name <name>] [--auto-verb-menu-target-unique-id <id>]\n";
-    std::cout << "Desktop object: --desktop-object --desktop <true|false> [--desktop-target-object-name <name>] [--desktop-target-unique-id <id>]\n";
-    std::cout << "Key-preview object: --key-preview-object --key-preview <true|false> [--key-preview-target-object-name <name>] [--key-preview-target-unique-id <id>]\n";
-    std::cout << "Mac-desktop object: --mac-desktop-object --mac-desktop <true|false> [--mac-desktop-target-object-name <name>] [--mac-desktop-target-unique-id <id>]\n";
-    std::cout << "Max-button object: --max-button-object --max-button <true|false> [--max-button-target-object-name <name>] [--max-button-target-unique-id <id>]\n";
-    std::cout << "Min-button object: --min-button-object --min-button <true|false> [--min-button-target-object-name <name>] [--min-button-target-unique-id <id>]\n";
-    std::cout << "Min-height object: --min-height-object --min-height <n> [--min-height-target-object-name <name>] [--min-height-target-unique-id <id>]\n";
-    std::cout << "Min-width object: --min-width-object --min-width <n> [--min-width-target-object-name <name>] [--min-width-target-unique-id <id>]\n";
-    std::cout << "Max-height object: --max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]\n";
-    std::cout << "Movable object: --movable-object --movable <true|false> [--movable-target-object-name <name>] [--movable-target-unique-id <id>]\n";
-    std::cout << "Half-height-caption object: --half-height-caption-object --half-height-caption <true|false> [--half-height-caption-target-object-name <name>] [--half-height-caption-target-unique-id <id>]\n";
-    std::cout << "Link-master object: --link-master-object --link-master <value> [--link-master-target-object-name <name>] [--link-master-target-unique-id <id>]\n";
-    std::cout << "MDI-form object: --mdi-form-object --mdi-form <true|false> [--mdi-form-target-object-name <name>] [--mdi-form-target-unique-id <id>]\n";
-    std::cout << "Back-style object: --back-style-object --back-style <n> [--back-style-target-object-name <name>] [--back-style-target-unique-id <id>]\n";
-    std::cout << "Border-style object: --border-style-object --border-style <n> [--border-style-target-object-name <name>] [--border-style-target-unique-id <id>]\n";
-    std::cout << "Border-width object: --border-width-object --border-width <n> [--border-width-target-object-name <name>] [--border-width-target-unique-id <id>]\n";
-    std::cout << "Border-color object: --border-color-object --border-color <n> [--border-color-target-object-name <name>] [--border-color-target-unique-id <id>]\n";
-    std::cout << "Special-effect object: --special-effect-object --special-effect <n> [--special-effect-target-object-name <name>] [--special-effect-target-unique-id <id>]\n";
-    std::cout << "Scroll-bars object: --scroll-bars-object --scroll-bars <n> [--scroll-bars-target-object-name <name>] [--scroll-bars-target-unique-id <id>]\n";
-    std::cout << "Window-state object: --window-state-object --window-state <n> [--window-state-target-object-name <name>] [--window-state-target-unique-id <id>]\n";
-    std::cout << "Show-window object: --show-window-object --show-window <n> [--show-window-target-object-name <name>] [--show-window-target-unique-id <id>]\n";
-    std::cout << "Title-bar object: --title-bar-object --title-bar <n> [--title-bar-target-object-name <name>] [--title-bar-target-unique-id <id>]\n";
-    std::cout << "Mouse-pointer object: --mouse-pointer-object --mouse-pointer <n> [--mouse-pointer-target-object-name <name>] [--mouse-pointer-target-unique-id <id>]\n";
-    std::cout << "Picture-margin object: --picture-margin-object --picture-margin <n> [--picture-margin-target-object-name <name>] [--picture-margin-target-unique-id <id>]\n";
-    std::cout << "Picture-position object: --picture-position-object --picture-position <n> [--picture-position-target-object-name <name>] [--picture-position-target-unique-id <id>]\n";
-    std::cout << "Picture-spacing object: --picture-spacing-object --picture-spacing <n> [--picture-spacing-target-object-name <name>] [--picture-spacing-target-unique-id <id>]\n";
-    std::cout << "Picture-selection-display object: --picture-selection-display-object --picture-selection-display <n> [--picture-selection-display-target-object-name <name>] [--picture-selection-display-target-unique-id <id>]\n";
-    std::cout << "Dynamic-input-mask object: --dynamic-input-mask-object --dynamic-input-mask <expr> [--dynamic-input-mask-target-object-name <name>] [--dynamic-input-mask-target-unique-id <id>]\n";
-    std::cout << "Dynamic-line-height object: --dynamic-line-height-object --dynamic-line-height <expr> [--dynamic-line-height-target-object-name <name>] [--dynamic-line-height-target-unique-id <id>]\n";
-    std::cout << "Dynamic-alignment object: --dynamic-alignment-object --dynamic-alignment <expr> [--dynamic-alignment-target-object-name <name>] [--dynamic-alignment-target-unique-id <id>]\n";
-    std::cout << "Font-name object: --font-name-object --font-name <value> [--font-name-target-object-name <name>] [--font-name-target-unique-id <id>]\n";
-    std::cout << "Font-size object: --font-size-object --font-size <n> [--font-size-target-object-name <name>] [--font-size-target-unique-id <id>]\n";
-    std::cout << "Font-bold object: --font-bold-object --font-bold <true|false> [--font-bold-target-object-name <name>] [--font-bold-target-unique-id <id>]\n";
-    std::cout << "Font-italic object: --font-italic-object --font-italic <true|false> [--font-italic-target-object-name <name>] [--font-italic-target-unique-id <id>]\n";
-    std::cout << "Font-underline object: --font-underline-object --font-underline <true|false> [--font-underline-target-object-name <name>] [--font-underline-target-unique-id <id>]\n";
-    std::cout << "Font-strikethru object: --font-strikethru-object --font-strikethru <true|false> [--font-strikethru-target-object-name <name>] [--font-strikethru-target-unique-id <id>]\n";
-    std::cout << "Font-outline object: --font-outline-object --font-outline <true|false> [--font-outline-target-object-name <name>] [--font-outline-target-unique-id <id>]\n";
-    std::cout << "Font-shadow object: --font-shadow-object --font-shadow <true|false> [--font-shadow-target-object-name <name>] [--font-shadow-target-unique-id <id>]\n";
-    std::cout << "Max-width object: --max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]\n";
-    std::cout << "Max-left object: --max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]\n";
-    std::cout << "Max-top object: --max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]\n";
-    std::cout << "Button-count object: --button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]\n";
-    std::cout << "Curvature object: --curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]\n";
-    std::cout << "Draw-mode object: --draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]\n";
-    std::cout << "Draw-style object: --draw-style-object --draw-style <n> [--draw-style-target-object-name <name>] [--draw-style-target-unique-id <id>]\n";
-    std::cout << "Draw-width object: --draw-width-object --draw-width <n> [--draw-width-target-object-name <name>] [--draw-width-target-unique-id <id>]\n";
-    std::cout << "Fill-style object: --fill-style-object --fill-style <n> [--fill-style-target-object-name <name>] [--fill-style-target-unique-id <id>]\n";
-    std::cout << "Scale-mode object: --scale-mode-object --scale-mode <n> [--scale-mode-target-object-name <name>] [--scale-mode-target-unique-id <id>]\n";
-    std::cout << "Buffer-mode object: --buffer-mode-object --buffer-mode <n> [--buffer-mode-target-object-name <name>] [--buffer-mode-target-unique-id <id>]\n";
-    std::cout << "Buffer-mode-override object: --buffer-mode-override-object --buffer-mode-override <n> [--buffer-mode-override-target-object-name <name>] [--buffer-mode-override-target-unique-id <id>]\n";
-    std::cout << "Data-session object: --data-session-object --data-session <n> [--data-session-target-object-name <name>] [--data-session-target-unique-id <id>]\n";
-    std::cout << "Grid-line-color object: --grid-line-color-object --grid-line-color <n> [--grid-line-color-target-object-name <name>] [--grid-line-color-target-unique-id <id>]\n";
-    std::cout << "Header-height object: --header-height-object --header-height <n> [--header-height-target-object-name <name>] [--header-height-target-unique-id <id>]\n";
-    std::cout << "Row-height object: --row-height-object --row-height <n> [--row-height-target-object-name <name>] [--row-height-target-unique-id <id>]\n";
-    std::cout << "Lock-columns object: --lock-columns-object --lock-columns <n> [--lock-columns-target-object-name <name>] [--lock-columns-target-unique-id <id>]\n";
-    std::cout << "Lock-columns-left object: --lock-columns-left-object --lock-columns-left <n> [--lock-columns-left-target-object-name <name>] [--lock-columns-left-target-unique-id <id>]\n";
-    std::cout << "Grid-line-width object: --grid-line-width-object --grid-line-width <n> [--grid-line-width-target-object-name <name>] [--grid-line-width-target-unique-id <id>]\n";
-    std::cout << "Grid-lines object: --grid-lines-object --grid-lines <n> [--grid-lines-target-object-name <name>] [--grid-lines-target-unique-id <id>]\n";
-    std::cout << "Highlight-row-line-width object: --highlight-row-line-width-object --highlight-row-line-width <n> [--highlight-row-line-width-target-object-name <name>] [--highlight-row-line-width-target-unique-id <id>]\n";
-    std::cout << "Partition object: --partition-object --partition <n> [--partition-target-object-name <name>] [--partition-target-unique-id <id>]\n";
-    std::cout << "Record-source-type object: --record-source-type-object --record-source-type <n> [--record-source-type-target-object-name <name>] [--record-source-type-target-unique-id <id>]\n";
-    std::cout << "Column-order object: --column-order-object --column-order <n> [--column-order-target-object-name <name>] [--column-order-target-unique-id <id>]\n";
-    std::cout << "Highlight-style object: --highlight-style-object --highlight-style <n> [--highlight-style-target-object-name <name>] [--highlight-style-target-unique-id <id>]\n";
-    std::cout << "Child-order object: --child-order-object --child-order <n> [--child-order-target-object-name <name>] [--child-order-target-unique-id <id>]\n";
-    std::cout << "Fill-color object: --fill-color-object --fill-color <n> [--fill-color-target-object-name <name>] [--fill-color-target-unique-id <id>]\n";
-    std::cout << "List-item-id object: --list-item-id-object --list-item-id <n> [--list-item-id-target-object-name <name>] [--list-item-id-target-unique-id <id>]\n";
-    std::cout << "Tab-orientation object: --tab-orientation-object --tab-orientation <n> [--tab-orientation-target-object-name <name>] [--tab-orientation-target-unique-id <id>]\n";
-    std::cout << "Display-orientation object: --display-orientation-object --display-orientation <n> [--display-orientation-target-object-name <name>] [--display-orientation-target-unique-id <id>]\n";
-    std::cout << "Help-context-id object: --help-context-id-object --help-context-id <n> [--help-context-id-target-object-name <name>] [--help-context-id-target-unique-id <id>]\n";
-    std::cout << "WhatsThis help-ID object: --whats-this-help-id-object --whats-this-help-id <n> [--whats-this-help-id-target-object-name <name>] [--whats-this-help-id-target-unique-id <id>]\n";
-    std::cout << "WhatsThis help object: --whats-this-help-object --whats-this-help <true|false> [--whats-this-help-target-object-name <name>] [--whats-this-help-target-unique-id <id>]\n";
-    std::cout << "WhatsThis button object: --whats-this-button-object --whats-this-button <true|false> [--whats-this-button-target-object-name <name>] [--whats-this-button-target-unique-id <id>]\n";
-    std::cout << "Record-source object: --record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]\n";
-    std::cout << "Form-set-class object: --form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]\n";
-    std::cout << "Default-file-path object: --default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]\n";
-    std::cout << "Initial-selected-alias object: --initial-selected-alias-object --initial-selected-alias <value> [--initial-selected-alias-target-object-name <name>] [--initial-selected-alias-target-unique-id <id>]\n";
-    std::cout << "   or: copperfin_studio_host --list-subsystems [--json]\n";
-    std::cout << "   or: copperfin_studio_host <asset>\n";
-    std::cout << "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment\n";
+copperfin::localization::LocalizedCatalog load_localization(const char* executable_path) {
+    const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(
+        executable_path == nullptr ? std::filesystem::path{} : std::filesystem::path(executable_path));
+    return copperfin::localization::load_catalogs(
+        locale_root,
+        copperfin::localization::select_locale());
+}
+
+void print_primary_usage_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view usage_template) {
+    std::cout << catalog.translate(
+        "StudioHost.Usage.Primary",
+        {{"usageTemplate", std::string(usage_template)}}) << "\n";
+}
+
+void print_alternate_usage_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view usage_template) {
+    std::cout << catalog.translate(
+        "StudioHost.Usage.Alternate",
+        {{"usageTemplate", std::string(usage_template)}}) << "\n";
+}
+
+void print_object_usage_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view object_name,
+    std::string_view usage_template) {
+    std::cout << catalog.translate(
+        "StudioHost.Usage.ObjectEntry",
+        {
+            {"objectName", std::string(object_name)},
+            {"usageTemplate", std::string(usage_template)}
+        }) << "\n";
+}
+
+void print_selection_context_tokens_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view selection_context_tokens) {
+    std::cout << catalog.translate(
+        "StudioHost.Usage.SelectionContextTokens",
+        {{"selectionContextTokens", std::string(selection_context_tokens)}}) << "\n";
+}
+
+void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
+    print_primary_usage_line(catalog, "copperfin_studio_host --path <asset> [--from-vs] [--read-only] [--json] [--selection-context <token>] [--delete-object|--restore-object|--duplicate-object|--rename-object|--reparent-object|--reorder-object|--group-object|--align-object|--resize-object|--distribute-object|--snap-object|--nudge-object|--tab-order-object|--tab-stop-object|--visibility-object|--enabled-object|--read-only-object|--locked-object|--caption-object|--picture-object|--down-picture-object|--disabled-picture-object|--ole-drag-picture-object|--mouse-icon-object|--drag-icon-object|--drag-mode-object|--ole-drag-mode-object|--tooltip-text-object|--status-bar-text-object|--control-source-object|--input-mask-object|--format-object|--row-source-object|--row-source-type-object|--bound-column-object|--column-count-object|--style-object|--list-index-object|--left-column-object|--auto-center-object|--auto-size-object|--auto-release-object|--continuous-scroll-object|--dockable-object|--clip-controls-object|--sparse-object|--lock-screen-object|--allow-cell-selection-object|--delete-mark-object|--record-mark-object|--split-bar-object|--highlight-row-object|--panel-link-object|--allow-header-sizing-object|--allow-row-sizing-object|--resizable-object|--add-line-feeds-object|--always-on-top-object|--always-on-bottom-object|--ungroup-object] [--set-property|--clear-property|--rename-property --record <n> --object-name <name> --unique-id <id> --property-name <name> --property-value <value> --new-property-name <name>] [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] [--placement <front|back|before|after>] [--target-object-name <name>] [--target-unique-id <id>] [--group-child-object-name <name>] [--group-child-unique-id <id>] [--field-value <name=value>] [--alignment-mode <mode>] [--resize-mode <width|height|size>] [--distribution-mode <horizontal|vertical>] [--snap-mode <horizontal|vertical|both>] [--nudge-mode <horizontal|vertical|both>] [--grid-width <n>] [--grid-height <n>] [--delta-hpos <n>] [--delta-vpos <n>] [--starting-tab-index <n>] [--tab-stop <true|false>] [--visible <true|false>] [--enabled <true|false>] [--object-read-only <true|false>] [--locked <true|false>] [--caption <value>] [--picture <value>] [--down-picture <value>] [--disabled-picture <value>] [--ole-drag-picture <value>] [--mouse-icon <value>] [--drag-icon <value>] [--drag-mode <n>] [--ole-drag-mode <n>] [--tooltip-text <value>] [--status-bar-text <value>] [--control-source <value>] [--input-mask <value>] [--format <value>] [--row-source <value>] [--row-source-type <n>] [--bound-column <n>] [--column-count <n>] [--style <n>] [--list-index <n>] [--left-column <n>] [--auto-center <true|false>] [--auto-size <true|false>] [--auto-release <true|false>] [--continuous-scroll <true|false>] [--dockable <true|false>] [--clip-controls <true|false>] [--sparse <true|false>] [--lock-screen <true|false>] [--allow-cell-selection <true|false>] [--delete-mark <true|false>] [--record-mark <true|false>] [--split-bar <true|false>] [--highlight-row <true|false>] [--panel-link <true|false>] [--allow-header-sizing <true|false>] [--allow-row-sizing <true|false>] [--resizable <true|false>] [--add-line-feeds <true|false>] [--always-on-top <true|false>] [--always-on-bottom <true|false>] [--anchor-object-name <name>] [--anchor-unique-id <id>] [--align-target-object-name <name>] [--align-target-unique-id <id>] [--resize-target-object-name <name>] [--resize-target-unique-id <id>] [--distribute-target-object-name <name>] [--distribute-target-unique-id <id>] [--snap-target-object-name <name>] [--snap-target-unique-id <id>] [--nudge-target-object-name <name>] [--nudge-target-unique-id <id>] [--tab-order-target-object-name <name>] [--tab-order-target-unique-id <id>] [--tab-stop-target-object-name <name>] [--tab-stop-target-unique-id <id>] [--visibility-target-object-name <name>] [--visibility-target-unique-id <id>] [--enabled-target-object-name <name>] [--enabled-target-unique-id <id>] [--read-only-target-object-name <name>] [--read-only-target-unique-id <id>] [--locked-target-object-name <name>] [--locked-target-unique-id <id>] [--caption-target-object-name <name>] [--caption-target-unique-id <id>] [--picture-target-object-name <name>] [--picture-target-unique-id <id>] [--down-picture-target-object-name <name>] [--down-picture-target-unique-id <id>] [--disabled-picture-target-object-name <name>] [--disabled-picture-target-unique-id <id>] [--ole-drag-picture-target-object-name <name>] [--ole-drag-picture-target-unique-id <id>] [--mouse-icon-target-object-name <name>] [--mouse-icon-target-unique-id <id>] [--drag-icon-target-object-name <name>] [--drag-icon-target-unique-id <id>] [--drag-mode-target-object-name <name>] [--drag-mode-target-unique-id <id>] [--ole-drag-mode-target-object-name <name>] [--ole-drag-mode-target-unique-id <id>] [--tooltip-text-target-object-name <name>] [--tooltip-text-target-unique-id <id>] [--status-bar-text-target-object-name <name>] [--status-bar-text-target-unique-id <id>] [--control-source-target-object-name <name>] [--control-source-target-unique-id <id>] [--input-mask-target-object-name <name>] [--input-mask-target-unique-id <id>] [--format-target-object-name <name>] [--format-target-unique-id <id>] [--row-source-target-object-name <name>] [--row-source-target-unique-id <id>] [--row-source-type-target-object-name <name>] [--row-source-type-target-unique-id <id>] [--bound-column-target-object-name <name>] [--bound-column-target-unique-id <id>] [--column-count-target-object-name <name>] [--column-count-target-unique-id <id>] [--style-target-object-name <name>] [--style-target-unique-id <id>] [--list-index-target-object-name <name>] [--list-index-target-unique-id <id>] [--left-column-target-object-name <name>] [--left-column-target-unique-id <id>] [--auto-center-target-object-name <name>] [--auto-center-target-unique-id <id>] [--auto-size-target-object-name <name>] [--auto-size-target-unique-id <id>] [--auto-release-target-object-name <name>] [--auto-release-target-unique-id <id>] [--continuous-scroll-target-object-name <name>] [--continuous-scroll-target-unique-id <id>] [--dockable-target-object-name <name>] [--dockable-target-unique-id <id>] [--clip-controls-target-object-name <name>] [--clip-controls-target-unique-id <id>] [--sparse-target-object-name <name>] [--sparse-target-unique-id <id>] [--lock-screen-target-object-name <name>] [--lock-screen-target-unique-id <id>] [--allow-cell-selection-target-object-name <name>] [--allow-cell-selection-target-unique-id <id>] [--delete-mark-target-object-name <name>] [--delete-mark-target-unique-id <id>] [--record-mark-target-object-name <name>] [--record-mark-target-unique-id <id>] [--split-bar-target-object-name <name>] [--split-bar-target-unique-id <id>] [--highlight-row-target-object-name <name>] [--highlight-row-target-unique-id <id>] [--panel-link-target-object-name <name>] [--panel-link-target-unique-id <id>] [--allow-header-sizing-target-object-name <name>] [--allow-header-sizing-target-unique-id <id>] [--allow-row-sizing-target-object-name <name>] [--allow-row-sizing-target-unique-id <id>] [--resizable-target-object-name <name>] [--resizable-target-unique-id <id>] [--add-line-feeds-target-object-name <name>] [--add-line-feeds-target-unique-id <id>] [--always-on-top-target-object-name <name>] [--always-on-top-target-unique-id <id>] [--always-on-bottom-target-object-name <name>] [--always-on-bottom-target-unique-id <id>] [--line <n>] [--column <n>] [--symbol <name>]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-list --path <asset> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-children --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-descendants --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-ancestors --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-duplicate-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-duplicate-subtree --path <asset> (--record <n>|--object-name <name>|--unique-id <id>) --replacement-source-unique-id <id> --new-object-name <name> --new-name <name> --new-unique-id <id> ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-rename-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--new-object-name <name>] [--new-name <name>] [--new-unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-reorder-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) --placement <front|back|before|after> [--target-object-name <name>] [--target-unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-reparent-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) [--parent-name <name>] [--parent-unique-id <id>] [--clear-parent] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-object-update-batch --path <asset> (--selected-record <n>|--selected-object-name <name>|--selected-unique-id <id>) --property-name <name> --property-value <value> ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-update --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --method-kind <procedure|function> --method-source <text> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-delete --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-delete-batch --path <asset> --method-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-rename --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --new-method-name <name> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-rename-batch --path <asset> --method-name <name> --new-method-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-copy --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-copy-batch --path <asset> --method-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-move --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --method-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-move-batch --path <asset> --method-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-method-name <name>] [--replace-existing <true|false>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-reorder --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --method-name <name> --placement <first|last|before|after> [--relative-method-name <name>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-method-reorder-batch --path <asset> --method-name <name> --placement <first|last|before|after> [--record <n>] [--object-name <name>] [--unique-id <id>] [--relative-method-name <name>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-list --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-query --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-update-batch --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> --property-value <value> ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-filter --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] [--property-filter-text <text>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-clear --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-clear-batch --path <asset> --property-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-copy --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --property-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-copy-batch --path <asset> --property-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-move --path <asset> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] --property-name <name> [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-move-batch --path <asset> --property-name <name> [--source-record <n>] [--source-object-name <name>] [--source-unique-id <id>] [--target-record <n>] [--target-object-name <name>] [--target-unique-id <id>] [--target-property-name <name>] [--replace-existing <true|false>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-rename --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> --new-property-name <name> [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-rename-batch --path <asset> --property-name <name> --new-property-name <name> [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-reorder --path <asset> [--record <n>] [--object-name <name>] [--unique-id <id>] --property-name <name> --placement <first|last|before|after> [--relative-property-name <name>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --visual-property-reorder-batch --path <asset> --property-name <name> --placement <first|last|before|after> [--relative-property-name <name>] [--record <n>] [--object-name <name>] [--unique-id <id>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-launch-plan <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-launch-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --selection-builder-launch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-invocation-admission <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-invocation-admission-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --selection-builder-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-dispatch <id> (--builder-context <token>|--selection-context <token>) [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-execute <id> (--builder-context <token>|--selection-context <token>) --builder-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--admit-builder-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-dispatch-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --builder-dispatch-execution-catalog --builder-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--admit-builder-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --selection-builder-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --selection-builder-dispatch-execution-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-ui-launch <true|false>] [--admit-builder-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-launch-plan <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-launch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-invocation-admission <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-dispatch <id> --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-execute <id> --selection-context <token> --editor-action-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--admit-editor-action-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --editor-action-dispatch-execution-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocation <true|false>] [--admit-editor-action-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-palette-query --toolbox-context <token> [--toolbox-search <text>] [--toolbox-category <text>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-palette-launch-plan --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-palette-launch-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-invocation-admission --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-invocation-admission-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --selection-toolbox-invocation-admission-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-dispatch --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-execute --selection-context <token> --toolbox-launch-command <command> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--admit-toolbox-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-dispatch-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --toolbox-dispatch-execution-catalog --toolbox-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--admit-toolbox-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --selection-toolbox-dispatch-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --selection-toolbox-dispatch-execution-catalog --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--admit-palette-invocation <true|false>] [--admit-toolbox-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-launch-surfaces --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-invocation-admission --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-dispatch --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-execute --selection-context <token> [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--admit-designer-execution <true|false>] [--editor-action-launch-command <command>] [--builder-launch-command <command>] [--toolbox-launch-command <command>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-launch-surface-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-invocation-admission-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-dispatch-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --designer-dispatch-execution-catalog [--path <asset>] [--record <n>] [--object-name <name>] [--unique-id <id>] [--symbol <name>] [--line <n>] [--column <n>] [--admit-editor-invocations <true|false>] [--admit-builder-invocations <true|false>] [--admit-toolbox-invocation <true|false>] [--admit-designer-execution <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-plan <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-plan <id> --selection-context <token> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-from-dispatch-plan <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-from-dispatch <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-dispatch-plan <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-dispatch-plan <id> --selection-context <token> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-dispatch-from-dispatch-plan <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] [--admit-palette-invocation <true|false>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch-plan --toolbox-item <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-batch-plan --selection-context <token> --toolbox-item <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-batch --selection-context <token> --toolbox-item <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch-from-dispatch-plan --toolbox-item <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] ... [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch-from-dispatch --toolbox-item <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] ... [--admit-palette-invocation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch-dispatch-plan --toolbox-item <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-batch-dispatch-plan --selection-context <token> --toolbox-item <id> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch-dispatch-from-dispatch-plan --toolbox-item <id> --selection-context <token> [--record <n>] [--object-name <selected>] [--unique-id <selected>] [--create-object-name <name>] [--create-unique-id <id>] [--create-parent-name <name>] [--field-value <name=value>] ... [--admit-palette-invocation <true|false>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-plan-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-plan-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch-plan-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-batch-plan-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-dispatch-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-dispatch-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch-dispatch-catalog --toolbox-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create-batch-dispatch-catalog --selection-context <token> [--parent-name <name>] [--field-value <name=value>] [--admit-create-operation <true|false>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create-batch --toolbox-item <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] ... [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --toolbox-create <id> [--toolbox-context <token>] [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --path <asset> --selection-toolbox-create <id> --selection-context <token> [--object-name <name>] [--unique-id <id>] [--parent-name <name>] [--field-value <name=value>] [--json]");
+    print_object_usage_line(catalog, "Display-value", "--display-value-object --display-value <value> [--display-value-target-object-name <name>] [--display-value-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Selected-back-color", "--selected-back-color-object --selected-back-color <n> [--selected-back-color-target-object-name <name>] [--selected-back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Selected-fore-color", "--selected-fore-color-object --selected-fore-color <n> [--selected-fore-color-target-object-name <name>] [--selected-fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Selected-item-back-color", "--selected-item-back-color-object --selected-item-back-color <n> [--selected-item-back-color-target-object-name <name>] [--selected-item-back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Selected-item-fore-color", "--selected-item-fore-color-object --selected-item-fore-color <n> [--selected-item-fore-color-target-object-name <name>] [--selected-item-fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Disabled-item-back-color", "--disabled-item-back-color-object --disabled-item-back-color <n> [--disabled-item-back-color-target-object-name <name>] [--disabled-item-back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Disabled-item-fore-color", "--disabled-item-fore-color-object --disabled-item-fore-color <n> [--disabled-item-fore-color-target-object-name <name>] [--disabled-item-fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Item-back-color", "--item-back-color-object --item-back-color <n> [--item-back-color-target-object-name <name>] [--item-back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Item-fore-color", "--item-fore-color-object --item-fore-color <n> [--item-fore-color-target-object-name <name>] [--item-fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Highlight-back-color", "--highlight-back-color-object --highlight-back-color <n> [--highlight-back-color-target-object-name <name>] [--highlight-back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Highlight-fore-color", "--highlight-fore-color-object --highlight-fore-color <n> [--highlight-fore-color-target-object-name <name>] [--highlight-fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Back-color", "--back-color-object --back-color <n> [--back-color-target-object-name <name>] [--back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Fore-color", "--fore-color-object --fore-color <n> [--fore-color-target-object-name <name>] [--fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Disabled-back-color", "--disabled-back-color-object --disabled-back-color <n> [--disabled-back-color-target-object-name <name>] [--disabled-back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Disabled-fore-color", "--disabled-fore-color-object --disabled-fore-color <n> [--disabled-fore-color-target-object-name <name>] [--disabled-fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Dynamic-back-color", "--dynamic-back-color-object --dynamic-back-color <expr> [--dynamic-back-color-target-object-name <name>] [--dynamic-back-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Dynamic-fore-color", "--dynamic-fore-color-object --dynamic-fore-color <expr> [--dynamic-fore-color-target-object-name <name>] [--dynamic-fore-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "OLE drop-mode", "--ole-drop-mode-object --ole-drop-mode <n> [--ole-drop-mode-target-object-name <name>] [--ole-drop-mode-target-unique-id <id>]");
+    print_object_usage_line(catalog, "OLE drop-effects", "--ole-drop-effects-object --ole-drop-effects <n> [--ole-drop-effects-target-object-name <name>] [--ole-drop-effects-target-unique-id <id>]");
+    print_object_usage_line(catalog, "OLE drop text-insertion", "--ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Hide-selection", "--hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Bind-controls", "--bind-controls-object --bind-controls <true|false> [--bind-controls-target-object-name <name>] [--bind-controls-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Auto-verb-menu", "--auto-verb-menu-object --auto-verb-menu <true|false> [--auto-verb-menu-target-object-name <name>] [--auto-verb-menu-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Desktop", "--desktop-object --desktop <true|false> [--desktop-target-object-name <name>] [--desktop-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Key-preview", "--key-preview-object --key-preview <true|false> [--key-preview-target-object-name <name>] [--key-preview-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Mac-desktop", "--mac-desktop-object --mac-desktop <true|false> [--mac-desktop-target-object-name <name>] [--mac-desktop-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Max-button", "--max-button-object --max-button <true|false> [--max-button-target-object-name <name>] [--max-button-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Min-button", "--min-button-object --min-button <true|false> [--min-button-target-object-name <name>] [--min-button-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Min-height", "--min-height-object --min-height <n> [--min-height-target-object-name <name>] [--min-height-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Min-width", "--min-width-object --min-width <n> [--min-width-target-object-name <name>] [--min-width-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Max-height", "--max-height-object --max-height <n> [--max-height-target-object-name <name>] [--max-height-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Movable", "--movable-object --movable <true|false> [--movable-target-object-name <name>] [--movable-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Half-height-caption", "--half-height-caption-object --half-height-caption <true|false> [--half-height-caption-target-object-name <name>] [--half-height-caption-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Link-master", "--link-master-object --link-master <value> [--link-master-target-object-name <name>] [--link-master-target-unique-id <id>]");
+    print_object_usage_line(catalog, "MDI-form", "--mdi-form-object --mdi-form <true|false> [--mdi-form-target-object-name <name>] [--mdi-form-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Back-style", "--back-style-object --back-style <n> [--back-style-target-object-name <name>] [--back-style-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Border-style", "--border-style-object --border-style <n> [--border-style-target-object-name <name>] [--border-style-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Border-width", "--border-width-object --border-width <n> [--border-width-target-object-name <name>] [--border-width-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Border-color", "--border-color-object --border-color <n> [--border-color-target-object-name <name>] [--border-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Special-effect", "--special-effect-object --special-effect <n> [--special-effect-target-object-name <name>] [--special-effect-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Scroll-bars", "--scroll-bars-object --scroll-bars <n> [--scroll-bars-target-object-name <name>] [--scroll-bars-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Window-state", "--window-state-object --window-state <n> [--window-state-target-object-name <name>] [--window-state-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Show-window", "--show-window-object --show-window <n> [--show-window-target-object-name <name>] [--show-window-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Title-bar", "--title-bar-object --title-bar <n> [--title-bar-target-object-name <name>] [--title-bar-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Mouse-pointer", "--mouse-pointer-object --mouse-pointer <n> [--mouse-pointer-target-object-name <name>] [--mouse-pointer-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Picture-margin", "--picture-margin-object --picture-margin <n> [--picture-margin-target-object-name <name>] [--picture-margin-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Picture-position", "--picture-position-object --picture-position <n> [--picture-position-target-object-name <name>] [--picture-position-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Picture-spacing", "--picture-spacing-object --picture-spacing <n> [--picture-spacing-target-object-name <name>] [--picture-spacing-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Picture-selection-display", "--picture-selection-display-object --picture-selection-display <n> [--picture-selection-display-target-object-name <name>] [--picture-selection-display-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Dynamic-input-mask", "--dynamic-input-mask-object --dynamic-input-mask <expr> [--dynamic-input-mask-target-object-name <name>] [--dynamic-input-mask-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Dynamic-line-height", "--dynamic-line-height-object --dynamic-line-height <expr> [--dynamic-line-height-target-object-name <name>] [--dynamic-line-height-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Dynamic-alignment", "--dynamic-alignment-object --dynamic-alignment <expr> [--dynamic-alignment-target-object-name <name>] [--dynamic-alignment-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-name", "--font-name-object --font-name <value> [--font-name-target-object-name <name>] [--font-name-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-size", "--font-size-object --font-size <n> [--font-size-target-object-name <name>] [--font-size-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-bold", "--font-bold-object --font-bold <true|false> [--font-bold-target-object-name <name>] [--font-bold-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-italic", "--font-italic-object --font-italic <true|false> [--font-italic-target-object-name <name>] [--font-italic-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-underline", "--font-underline-object --font-underline <true|false> [--font-underline-target-object-name <name>] [--font-underline-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-strikethru", "--font-strikethru-object --font-strikethru <true|false> [--font-strikethru-target-object-name <name>] [--font-strikethru-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-outline", "--font-outline-object --font-outline <true|false> [--font-outline-target-object-name <name>] [--font-outline-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Font-shadow", "--font-shadow-object --font-shadow <true|false> [--font-shadow-target-object-name <name>] [--font-shadow-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Max-width", "--max-width-object --max-width <n> [--max-width-target-object-name <name>] [--max-width-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Max-left", "--max-left-object --max-left <n> [--max-left-target-object-name <name>] [--max-left-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Max-top", "--max-top-object --max-top <n> [--max-top-target-object-name <name>] [--max-top-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Button-count", "--button-count-object --button-count <n> [--button-count-target-object-name <name>] [--button-count-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Curvature", "--curvature-object --curvature <n> [--curvature-target-object-name <name>] [--curvature-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Draw-mode", "--draw-mode-object --draw-mode <n> [--draw-mode-target-object-name <name>] [--draw-mode-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Draw-style", "--draw-style-object --draw-style <n> [--draw-style-target-object-name <name>] [--draw-style-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Draw-width", "--draw-width-object --draw-width <n> [--draw-width-target-object-name <name>] [--draw-width-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Fill-style", "--fill-style-object --fill-style <n> [--fill-style-target-object-name <name>] [--fill-style-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Scale-mode", "--scale-mode-object --scale-mode <n> [--scale-mode-target-object-name <name>] [--scale-mode-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Buffer-mode", "--buffer-mode-object --buffer-mode <n> [--buffer-mode-target-object-name <name>] [--buffer-mode-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Buffer-mode-override", "--buffer-mode-override-object --buffer-mode-override <n> [--buffer-mode-override-target-object-name <name>] [--buffer-mode-override-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Data-session", "--data-session-object --data-session <n> [--data-session-target-object-name <name>] [--data-session-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Grid-line-color", "--grid-line-color-object --grid-line-color <n> [--grid-line-color-target-object-name <name>] [--grid-line-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Header-height", "--header-height-object --header-height <n> [--header-height-target-object-name <name>] [--header-height-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Row-height", "--row-height-object --row-height <n> [--row-height-target-object-name <name>] [--row-height-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Lock-columns", "--lock-columns-object --lock-columns <n> [--lock-columns-target-object-name <name>] [--lock-columns-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Lock-columns-left", "--lock-columns-left-object --lock-columns-left <n> [--lock-columns-left-target-object-name <name>] [--lock-columns-left-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Grid-line-width", "--grid-line-width-object --grid-line-width <n> [--grid-line-width-target-object-name <name>] [--grid-line-width-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Grid-lines", "--grid-lines-object --grid-lines <n> [--grid-lines-target-object-name <name>] [--grid-lines-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Highlight-row-line-width", "--highlight-row-line-width-object --highlight-row-line-width <n> [--highlight-row-line-width-target-object-name <name>] [--highlight-row-line-width-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Partition", "--partition-object --partition <n> [--partition-target-object-name <name>] [--partition-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Record-source-type", "--record-source-type-object --record-source-type <n> [--record-source-type-target-object-name <name>] [--record-source-type-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Column-order", "--column-order-object --column-order <n> [--column-order-target-object-name <name>] [--column-order-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Highlight-style", "--highlight-style-object --highlight-style <n> [--highlight-style-target-object-name <name>] [--highlight-style-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Child-order", "--child-order-object --child-order <n> [--child-order-target-object-name <name>] [--child-order-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Fill-color", "--fill-color-object --fill-color <n> [--fill-color-target-object-name <name>] [--fill-color-target-unique-id <id>]");
+    print_object_usage_line(catalog, "List-item-id", "--list-item-id-object --list-item-id <n> [--list-item-id-target-object-name <name>] [--list-item-id-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Tab-orientation", "--tab-orientation-object --tab-orientation <n> [--tab-orientation-target-object-name <name>] [--tab-orientation-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Display-orientation", "--display-orientation-object --display-orientation <n> [--display-orientation-target-object-name <name>] [--display-orientation-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Help-context-id", "--help-context-id-object --help-context-id <n> [--help-context-id-target-object-name <name>] [--help-context-id-target-unique-id <id>]");
+    print_object_usage_line(catalog, "WhatsThis help-ID", "--whats-this-help-id-object --whats-this-help-id <n> [--whats-this-help-id-target-object-name <name>] [--whats-this-help-id-target-unique-id <id>]");
+    print_object_usage_line(catalog, "WhatsThis help", "--whats-this-help-object --whats-this-help <true|false> [--whats-this-help-target-object-name <name>] [--whats-this-help-target-unique-id <id>]");
+    print_object_usage_line(catalog, "WhatsThis button", "--whats-this-button-object --whats-this-button <true|false> [--whats-this-button-target-object-name <name>] [--whats-this-button-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Record-source", "--record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Form-set-class", "--form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Default-file-path", "--default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]");
+    print_object_usage_line(catalog, "Initial-selected-alias", "--initial-selected-alias-object --initial-selected-alias <value> [--initial-selected-alias-target-object-name <name>] [--initial-selected-alias-target-unique-id <id>]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host --list-subsystems [--json]");
+    print_alternate_usage_line(catalog, "copperfin_studio_host <asset>");
+    print_selection_context_tokens_line(catalog, "visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment");
 }
 
 std::string json_escape(const std::string& value) {
@@ -21200,6 +21246,8 @@ int main(int argc, char** argv) {
         std::cerr << "warning: " << hardening.message << "\n";
     }
 
+    const auto catalog = load_localization(argc > 0 ? argv[0] : nullptr);
+
     std::vector<std::string> args;
     args.reserve(argc > 1 ? static_cast<std::size_t>(argc - 1) : 0U);
     for (int index = 1; index < argc; ++index) {
@@ -21229,7 +21277,7 @@ int main(int argc, char** argv) {
                 print_json_builder_launch_plan_result(result);
             } else {
                 print_text_builder_launch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21283,7 +21331,7 @@ int main(int argc, char** argv) {
                 print_json_builder_launch_catalog_result(result);
             } else {
                 print_text_builder_launch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21317,7 +21365,7 @@ int main(int argc, char** argv) {
                 print_json_selection_builder_launch_catalog_result(result);
             } else {
                 print_text_selection_builder_launch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21344,7 +21392,7 @@ int main(int argc, char** argv) {
                 print_json_builder_invocation_admission_result(result);
             } else {
                 print_text_builder_invocation_admission_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21415,7 +21463,7 @@ int main(int argc, char** argv) {
                 print_json_builder_invocation_admission_catalog_result(result);
             } else {
                 print_text_builder_invocation_admission_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21449,7 +21497,7 @@ int main(int argc, char** argv) {
                 print_json_selection_builder_invocation_admission_catalog_result(result);
             } else {
                 print_text_selection_builder_invocation_admission_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21476,7 +21524,7 @@ int main(int argc, char** argv) {
                 print_json_builder_dispatch_result(result);
             } else {
                 print_text_builder_dispatch_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21562,7 +21610,7 @@ int main(int argc, char** argv) {
                 print_json_builder_execution_result(result, builder_execute_parse.launch_command, {});
             } else {
                 print_text_builder_execution_result(result, builder_execute_parse.launch_command, {});
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21705,7 +21753,7 @@ int main(int argc, char** argv) {
                 print_json_builder_dispatch_catalog_result(result);
             } else {
                 print_text_builder_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21739,7 +21787,7 @@ int main(int argc, char** argv) {
                 print_json_builder_dispatch_execution_catalog_result(result);
             } else {
                 print_text_builder_dispatch_execution_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21773,7 +21821,7 @@ int main(int argc, char** argv) {
                 print_json_selection_builder_dispatch_execution_catalog_result(result);
             } else {
                 print_text_selection_builder_dispatch_execution_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21807,7 +21855,7 @@ int main(int argc, char** argv) {
                 print_json_selection_builder_dispatch_catalog_result(result);
             } else {
                 print_text_selection_builder_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21834,7 +21882,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_launch_plan_result(result);
             } else {
                 print_text_editor_action_launch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21867,7 +21915,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_launch_catalog_result(result);
             } else {
                 print_text_editor_action_launch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21895,7 +21943,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_invocation_admission_result(result);
             } else {
                 print_text_editor_action_invocation_admission_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21947,7 +21995,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_invocation_admission_catalog_result(result);
             } else {
                 print_text_editor_action_invocation_admission_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -21974,7 +22022,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_dispatch_result(result);
             } else {
                 print_text_editor_action_dispatch_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22041,7 +22089,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_execution_result(result, editor_action_execute_parse.launch_command, {});
             } else {
                 print_text_editor_action_execution_result(result, editor_action_execute_parse.launch_command, {});
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22181,7 +22229,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_dispatch_catalog_result(result);
             } else {
                 print_text_editor_action_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22215,7 +22263,7 @@ int main(int argc, char** argv) {
                 print_json_editor_action_dispatch_execution_catalog_result(result);
             } else {
                 print_text_editor_action_dispatch_execution_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22243,7 +22291,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodReorderBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22273,7 +22321,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodReorder");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22303,7 +22351,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodDeleteBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22333,7 +22381,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodRenameBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22363,7 +22411,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodCopyBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22393,7 +22441,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodMoveBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22423,7 +22471,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodMove");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22453,7 +22501,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodCopy");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22483,7 +22531,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodRename");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22513,7 +22561,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualMethodDelete");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22543,7 +22591,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status);
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22575,7 +22623,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_query_result(result);
             } else {
                 print_text_visual_method_query_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22604,7 +22652,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_list_result(result);
             } else {
                 print_text_visual_method_list_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22632,7 +22680,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualObjectDuplicateBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22672,7 +22720,7 @@ int main(int argc, char** argv) {
             } else {
                 std::cout << "status: error\n";
                 std::cout << "error: " << result.error << "\n";
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22709,7 +22757,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualObjectRenameBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22739,7 +22787,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualObjectReorderBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22769,7 +22817,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualObjectReparentBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22799,7 +22847,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualObjectUpdateBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22829,7 +22877,7 @@ int main(int argc, char** argv) {
                 print_json_visual_object_ancestors_result(result);
             } else {
                 print_text_visual_object_ancestors_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22858,7 +22906,7 @@ int main(int argc, char** argv) {
                 print_json_visual_object_descendants_result(result);
             } else {
                 print_text_visual_object_descendants_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22887,7 +22935,7 @@ int main(int argc, char** argv) {
                 print_json_visual_object_children_result(result);
             } else {
                 print_text_visual_object_children_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22914,7 +22962,7 @@ int main(int argc, char** argv) {
                 print_json_visual_object_list_result(result);
             } else {
                 print_text_visual_object_list_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22942,7 +22990,7 @@ int main(int argc, char** argv) {
                 print_json_visual_property_list_result(result);
             } else {
                 print_text_visual_property_list_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -22974,7 +23022,7 @@ int main(int argc, char** argv) {
                 print_json_visual_property_query_result(result);
             } else {
                 print_text_visual_property_query_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23002,7 +23050,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyUpdateBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23032,7 +23080,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyClear");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23062,7 +23110,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyClearBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23092,7 +23140,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyCopy");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23122,7 +23170,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyCopyBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23152,7 +23200,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyMove");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23182,7 +23230,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyMoveBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23212,7 +23260,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyRename");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23242,7 +23290,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyRenameBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23272,7 +23320,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyReorder");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23302,7 +23350,7 @@ int main(int argc, char** argv) {
                 print_json_visual_method_update_result(result, undo_status, "visualPropertyReorderBatch");
             } else {
                 print_text_visual_method_update_result(result, undo_status);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23337,7 +23385,7 @@ int main(int argc, char** argv) {
                 print_json_visual_property_filter_result(result);
             } else {
                 print_text_visual_property_filter_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23370,7 +23418,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_palette_query_result(result);
             } else {
                 print_text_toolbox_palette_query_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23397,7 +23445,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_palette_launch_plan_result(result);
             } else {
                 print_text_toolbox_palette_launch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23429,7 +23477,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_palette_launch_catalog_result(result);
             } else {
                 print_text_toolbox_palette_launch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23456,7 +23504,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_invocation_admission_result(result);
             } else {
                 print_text_toolbox_invocation_admission_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23515,7 +23563,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_invocation_admission_catalog_result(result);
             } else {
                 print_text_toolbox_invocation_admission_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23557,7 +23605,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_invocation_admission_catalog_result(result);
             } else {
                 print_text_selection_toolbox_invocation_admission_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23584,7 +23632,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_dispatch_result(result);
             } else {
                 print_text_toolbox_dispatch_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23651,7 +23699,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
             } else {
                 print_text_toolbox_execution_result(result, toolbox_execute_parse.launch_command, {});
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23780,7 +23828,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_dispatch_catalog_result(result);
             } else {
                 print_text_toolbox_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23822,7 +23870,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_dispatch_execution_catalog_result(result);
             } else {
                 print_text_toolbox_dispatch_execution_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23866,7 +23914,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_dispatch_execution_catalog_result(result);
             } else {
                 print_text_selection_toolbox_dispatch_execution_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23908,7 +23956,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_dispatch_catalog_result(result);
             } else {
                 print_text_selection_toolbox_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23935,7 +23983,7 @@ int main(int argc, char** argv) {
                 print_json_designer_launch_surfaces_result(result);
             } else {
                 print_text_designer_launch_surfaces_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -23962,7 +24010,7 @@ int main(int argc, char** argv) {
                 print_json_designer_invocation_admission_result(result);
             } else {
                 print_text_designer_invocation_admission_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24009,7 +24057,7 @@ int main(int argc, char** argv) {
                 print_json_designer_dispatch_result(result);
             } else {
                 print_text_designer_dispatch_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24098,7 +24146,7 @@ int main(int argc, char** argv) {
             const auto result = failed_execution(designer_execute_parse.error);
             print_designer_execution(result, nullptr);
             if (!designer_execute_parse.output_json) {
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24203,7 +24251,7 @@ int main(int argc, char** argv) {
                 print_json_designer_dispatch_execution_catalog_result(result);
             } else {
                 print_text_designer_dispatch_execution_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24231,7 +24279,7 @@ int main(int argc, char** argv) {
                 print_json_designer_dispatch_catalog_result(result);
             } else {
                 print_text_designer_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24260,7 +24308,7 @@ int main(int argc, char** argv) {
                 print_json_designer_invocation_admission_catalog_result(result);
             } else {
                 print_text_designer_invocation_admission_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24288,7 +24336,7 @@ int main(int argc, char** argv) {
                 print_json_designer_launch_surface_catalog_result(result);
             } else {
                 print_text_designer_launch_surface_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24321,7 +24369,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_batch_plan_catalog_result(result);
             } else {
                 print_text_toolbox_create_batch_plan_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24357,7 +24405,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_batch_plan_catalog_result(result);
             } else {
                 print_text_selection_toolbox_create_batch_plan_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24392,7 +24440,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_batch_dispatch_catalog_result(result);
             } else {
                 print_text_toolbox_create_batch_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24429,7 +24477,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_batch_dispatch_catalog_result(result);
             } else {
                 print_text_selection_toolbox_create_batch_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24463,7 +24511,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_dispatch_catalog_result(result);
             } else {
                 print_text_toolbox_create_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24499,7 +24547,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_dispatch_catalog_result(result);
             } else {
                 print_text_selection_toolbox_create_dispatch_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24533,7 +24581,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_plan_catalog_result(result);
             } else {
                 print_text_toolbox_create_plan_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24569,7 +24617,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_plan_catalog_result(result);
             } else {
                 print_text_selection_toolbox_create_plan_catalog_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24596,7 +24644,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_batch_plan_result(result);
             } else {
                 print_text_toolbox_create_batch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24632,7 +24680,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_batch_plan_result(result);
             } else {
                 print_text_selection_toolbox_create_batch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24671,7 +24719,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_batch_dispatch_plan_result(result);
             } else {
                 print_text_selection_toolbox_create_batch_dispatch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24713,7 +24761,7 @@ int main(int argc, char** argv) {
             } else {
                 print_text_toolbox_create_batch_from_dispatch_result(result);
                 if (exit_code == 2) {
-                    print_usage();
+                    print_usage(catalog);
                 }
             }
             return exit_code;
@@ -24770,7 +24818,7 @@ int main(int argc, char** argv) {
             } else {
                 print_text_toolbox_create_batch_plan_result(result);
                 if (exit_code == 2) {
-                    print_usage();
+                    print_usage(catalog);
                 }
             }
             return exit_code;
@@ -24828,7 +24876,7 @@ int main(int argc, char** argv) {
             } else {
                 print_text_toolbox_create_batch_dispatch_plan_result(result);
                 if (exit_code == 2) {
-                    print_usage();
+                    print_usage(catalog);
                 }
             }
             return exit_code;
@@ -24885,7 +24933,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_batch_dispatch_plan_result(result);
             } else {
                 print_text_toolbox_create_batch_dispatch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -24945,7 +24993,7 @@ int main(int argc, char** argv) {
             } else {
                 print_text_toolbox_create_from_dispatch_result(result);
                 if (exit_code == 2) {
-                    print_usage();
+                    print_usage(catalog);
                 }
             }
             return exit_code;
@@ -25000,7 +25048,7 @@ int main(int argc, char** argv) {
             } else {
                 print_text_toolbox_create_plan_result(result);
                 if (exit_code == 2) {
-                    print_usage();
+                    print_usage(catalog);
                 }
             }
             return exit_code;
@@ -25056,7 +25104,7 @@ int main(int argc, char** argv) {
             } else {
                 print_text_toolbox_create_dispatch_plan_result(result);
                 if (exit_code == 2) {
-                    print_usage();
+                    print_usage(catalog);
                 }
             }
             return exit_code;
@@ -25112,7 +25160,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_dispatch_plan_result(result);
             } else {
                 print_text_toolbox_create_dispatch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25166,7 +25214,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_dispatch_plan_result(result);
             } else {
                 print_text_selection_toolbox_create_dispatch_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25195,7 +25243,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_batch_result(result);
             } else {
                 print_text_toolbox_create_batch_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25229,7 +25277,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_batch_result(result);
             } else {
                 print_text_selection_toolbox_create_batch_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25261,7 +25309,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_plan_result(result);
             } else {
                 print_text_selection_toolbox_create_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25288,7 +25336,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_plan_result(result);
             } else {
                 print_text_toolbox_create_plan_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25322,7 +25370,7 @@ int main(int argc, char** argv) {
                 print_json_selection_toolbox_create_result(result);
             } else {
                 print_text_selection_toolbox_create_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25352,7 +25400,7 @@ int main(int argc, char** argv) {
                 print_json_toolbox_create_result(result);
             } else {
                 print_text_toolbox_create_result(result);
-                print_usage();
+                print_usage(catalog);
             }
             return 2;
         }
@@ -25371,12 +25419,12 @@ int main(int argc, char** argv) {
     if (!parse_result.ok) {
         std::cout << "status: error\n";
         std::cout << "error: " << parse_result.error << "\n";
-        print_usage();
+        print_usage(catalog);
         return 2;
     }
 
     if (parse_result.show_help) {
-        print_usage();
+        print_usage(catalog);
         return 0;
     }
 

@@ -25,6 +25,58 @@ int failures = 0;
 #define COPPERFIN_TEST_FAILURE_COMMAND "/bin/false"
 #endif
 
+std::string getenv_value(const std::string& name) {
+#ifdef _WIN32
+    char* value = nullptr;
+    std::size_t value_size = 0;
+    if (_dupenv_s(&value, &value_size, name.c_str()) != 0 || value == nullptr) {
+        return {};
+    }
+    std::string result(value);
+    std::free(value);
+    return result;
+#else
+    const char* value = std::getenv(name.c_str());
+    if (value == nullptr) {
+        return {};
+    }
+    return value;
+#endif
+}
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s((name + "=").c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    std::string original;
+    bool had_original = false;
+
+    explicit ScopedEnvironmentValue(const std::string& environment_name)
+        : name(environment_name),
+          original(getenv_value(name)) {
+        had_original = !original.empty();
+        set_env_value(name, "", false);
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original, had_original);
+    }
+};
+
 void expect(bool condition, const std::string& message) {
     if (!condition) {
         std::cerr << "FAIL: " << message << "\n";
@@ -678,15 +730,42 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
 
-    const auto process = run_process_capture(studio_host_path, {}, temp_root);
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(studio_host_path, {}, temp_root);
 
     expect(process.exit_code == 2, "#1409: no-argument studio host invocation should return usage failure");
+    expect_contains(process.stdout_text,
+        "Usage: copperfin_studio_host --path <asset>",
+        "#2394: default studio host usage should preserve en-US CLI text");
     expect_contains(process.stdout_text,
         "--selection-builder-dispatch-execution-catalog",
         "#1409: studio host usage should advertise selected builder execution catalog");
     expect_contains(process.stdout_text,
         "--selection-toolbox-dispatch-execution-catalog",
         "#1409: studio host usage should advertise selected toolbox execution catalog");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(studio_host_path, {}, temp_root);
+
+    expect(process.exit_code == 2,
+        "#2394: pseudo-localized no-argument studio host invocation should preserve usage failure");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2394: pseudo-localized studio host usage should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "copperfin_studio_host",
+        "#2394: pseudo-localized studio host usage should preserve command name");
+    expect_contains(process.stdout_text,
+        "--path",
+        "#2394: pseudo-localized studio host usage should preserve CLI flags");
+    expect_contains(process.stdout_text,
+        "<true|false>",
+        "#2394: pseudo-localized studio host usage should preserve invariant value placeholders");
+    expect_contains(process.stdout_text,
+        "--selection-toolbox-dispatch-execution-catalog",
+        "#2394: pseudo-localized studio host usage should preserve catalog command tokens");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
