@@ -2884,6 +2884,156 @@ void test_studio_host_toolbox_dispatch_catalog_parse_diagnostics_localize(const 
     }
 }
 
+void test_studio_host_toolbox_batch_dispatch_catalog_parse_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_batch_dispatch_catalog_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch-dispatch-catalog",
+            "--path", "forms/customer.scx",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2423: default toolbox-create-batch-dispatch-catalog diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2423: default toolbox-create-batch-dispatch-catalog diagnostics should preserve JSON status");
+    expect_contains(process.stdout_text,
+        "No toolbox context was provided.",
+        "#2423: default toolbox-create-batch-dispatch-catalog diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--path", "forms/customer.scx",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2423: default selection-toolbox-create-batch-dispatch-catalog diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "No selection context was provided.",
+        "#2423: default selection-toolbox-create-batch-dispatch-catalog diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch-dispatch-catalog",
+            "--path", "forms/customer.scx",
+            "--toolbox-context", "form",
+            "--admit-create-operation", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog admission diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog admission diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "--admit-create-operation",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog admission diagnostics should preserve option names");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog admission diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog admission diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --admit-create-operation value must be true or false.",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog admission diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch-dispatch-catalog",
+            "--path", "forms/customer.scx",
+            "--toolbox-context", "form",
+            "--field-value", "caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog field diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog field diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "name=value",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog field diagnostics should preserve assignment syntax");
+    expect_not_contains(process.stdout_text,
+        "Toolbox field values must use name=value syntax.",
+        "#2423: pseudo-localized toolbox-create-batch-dispatch-catalog field diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--path", "forms/customer.scx",
+            "--selection-context", "unknown",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog selection-context diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog selection-context diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "unknown",
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog selection-context diagnostics should preserve context tokens");
+    expect_not_contains(process.stdout_text,
+        "Unknown selection context token: unknown",
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog selection-context diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--selection-toolbox-create-batch-dispatch-catalog",
+            "--path", "forms/customer.scx",
+            "--selection-context", "visual_object",
+            "--toolbox-context", "form",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog unknown-option diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog unknown-option diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "selection-toolbox-create-batch-dispatch-catalog",
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog unknown-option diagnostics should preserve command names");
+    expect_contains(process.stdout_text,
+        "--toolbox-context",
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog unknown-option diagnostics should preserve option names");
+    expect_not_contains(process.stdout_text,
+        "Unknown selection-toolbox-create-batch-dispatch-catalog option: --toolbox-context",
+        "#2423: pseudo-localized selection-toolbox-create-batch-dispatch-catalog unknown-option diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_designer_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -116512,6 +116662,7 @@ int main(int argc, char** argv) {
     test_studio_host_toolbox_batch_plan_catalog_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_plan_catalog_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_dispatch_catalog_parse_diagnostics_localize(argv[1]);
+    test_studio_host_toolbox_batch_dispatch_catalog_parse_diagnostics_localize(argv[1]);
     test_studio_host_designer_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
