@@ -1,5 +1,7 @@
 #include "copperfin/vfp/dbf_table.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <array>
 #include <cctype>
@@ -10,6 +12,7 @@
 #include <limits>
 #include <optional>
 #include <sstream>
+#include <string_view>
 #include <unordered_map>
 
 namespace copperfin::vfp {
@@ -72,6 +75,16 @@ void write_be_u32(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uin
     bytes[offset + 1U] = static_cast<std::uint8_t>((value >> 16U) & 0xFFU);
     bytes[offset + 2U] = static_cast<std::uint8_t>((value >> 8U) & 0xFFU);
     bytes[offset + 3U] = static_cast<std::uint8_t>(value & 0xFFU);
+}
+
+const localization::LocalizedCatalog& dbf_table_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string dbf_table_text(std::string_view key) {
+    return dbf_table_catalog().translate(key);
 }
 
 std::string trim_right(std::string text) {
@@ -500,7 +513,7 @@ DbfWriteResult write_memo_field_bytes(
     const std::string& value,
     std::size_t record_count) {
     if ((field_offset + 4U) > table_bytes.size()) {
-        return {.ok = false, .error = "Record data is truncated.", .record_count = record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"), .record_count = record_count};
     }
 
     const std::string memo_value = value;
@@ -562,13 +575,13 @@ DbfWriteResult write_field_bytes(
     const RawFieldDescriptor& field,
     const std::string& value) {
     if (record_index >= header.record_count) {
-        return {.ok = false, .error = "Record index is out of range.", .record_count = header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header.record_count};
     }
 
     const std::size_t record_offset = header.header_length + (record_index * header.record_length);
     const std::size_t field_offset = record_offset + field.offset;
     if ((field_offset + field.length) > table_bytes.size()) {
-        return {.ok = false, .error = "Record data is truncated.", .record_count = header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"), .record_count = header.record_count};
     }
 
     std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset), field.length, static_cast<std::uint8_t>(' '));
@@ -583,7 +596,7 @@ DbfWriteResult write_field_bytes(
             }
             const std::string text = trim_both(value);
             if (text.size() > field.length) {
-                return {.ok = false, .error = "Character value is too large for the target field.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CharacterValueTooLarge"), .record_count = header.record_count};
             }
             std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
             break;
@@ -596,7 +609,7 @@ DbfWriteResult write_field_bytes(
             const std::string text = trim_both(value);
             if (!text.empty()) {
                 if (text.size() > field.length) {
-                    return {.ok = false, .error = "Numeric value is too large for the target field.", .record_count = header.record_count};
+                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.NumericValueTooLarge"), .record_count = header.record_count};
                 }
                 const auto padding = static_cast<std::ptrdiff_t>(field.length - text.size());
                 std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset) + padding);
@@ -610,7 +623,7 @@ DbfWriteResult write_field_bytes(
             }
             const auto logical_value = normalize_logical_value(value);
             if (!logical_value.has_value()) {
-                return {.ok = false, .error = "Logical fields only accept true/false values.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.LogicalValueInvalid"), .record_count = header.record_count};
             }
             table_bytes[field_offset] = static_cast<std::uint8_t>(*logical_value);
             break;
@@ -622,7 +635,7 @@ DbfWriteResult write_field_bytes(
             std::string text = trim_both(value);
             text.erase(std::remove(text.begin(), text.end(), '-'), text.end());
             if (!text.empty() && text.size() != 8U) {
-                return {.ok = false, .error = "Date values must be empty or formatted as YYYYMMDD/YYYY-MM-DD.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DateValueInvalid"), .record_count = header.record_count};
             }
             std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
             break;
@@ -642,10 +655,10 @@ DbfWriteResult write_field_bytes(
                 try {
                     parsed = std::stod(text, &consumed);
                 } catch (const std::exception&) {
-                    return {.ok = false, .error = "Double fields only accept numeric values.", .record_count = header.record_count};
+                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DoubleValueInvalid"), .record_count = header.record_count};
                 }
                 if (consumed != text.size()) {
-                    return {.ok = false, .error = "Double fields only accept numeric values.", .record_count = header.record_count};
+                    return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DoubleValueInvalid"), .record_count = header.record_count};
                 }
             }
 
@@ -657,7 +670,7 @@ DbfWriteResult write_field_bytes(
         case 'V':
         case 'Q': {
             if (field.length < 2U) {
-                return {.ok = false, .error = "V/Q fields require a width of at least 2 bytes.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.VqFieldWidthTooSmall"), .record_count = header.record_count};
             }
 
             std::fill_n(
@@ -676,7 +689,7 @@ DbfWriteResult write_field_bytes(
 
             const std::size_t payload_capacity = static_cast<std::size_t>(field.length - 1U);
             if (text.size() > payload_capacity) {
-                return {.ok = false, .error = "V/Q value is too large for the target field.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.VqValueTooLarge"), .record_count = header.record_count};
             }
 
             std::copy(text.begin(), text.end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
@@ -699,14 +712,14 @@ DbfWriteResult write_field_bytes(
             try {
                 parsed = std::stoll(text, &consumed, 10);
             } catch (const std::exception&) {
-                return {.ok = false, .error = "Integer fields only accept whole-number values.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.IntegerValueInvalid"), .record_count = header.record_count};
             }
             if (consumed != text.size()) {
-                return {.ok = false, .error = "Integer fields only accept whole-number values.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.IntegerValueInvalid"), .record_count = header.record_count};
             }
             if (parsed < static_cast<long long>(std::numeric_limits<std::int32_t>::min()) ||
                 parsed > static_cast<long long>(std::numeric_limits<std::int32_t>::max())) {
-                return {.ok = false, .error = "Integer value is too large for the target field.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.IntegerValueTooLarge"), .record_count = header.record_count};
             }
 
             write_le_u32(table_bytes, field_offset, static_cast<std::uint32_t>(static_cast<std::int32_t>(parsed)));
@@ -719,7 +732,7 @@ DbfWriteResult write_field_bytes(
             }
             const auto scaled = parse_scaled_currency_value(value);
             if (!scaled.has_value()) {
-                return {.ok = false, .error = "Currency fields only accept signed decimal values with up to four fractional digits.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.CurrencyValueInvalid"), .record_count = header.record_count};
             }
             write_le_i64(table_bytes, field_offset, *scaled);
             break;
@@ -732,7 +745,7 @@ DbfWriteResult write_field_bytes(
             }
             const auto datetime = parse_datetime_storage_value(value);
             if (!datetime.has_value()) {
-                return {.ok = false, .error = "DateTime fields currently accept values formatted as 'julian:<day> millis:<milliseconds>'.", .record_count = header.record_count};
+                return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.DateTimeValueInvalid"), .record_count = header.record_count};
             }
             write_le_u32(table_bytes, field_offset, datetime->first);
             write_le_u32(table_bytes, field_offset + 4U, datetime->second);
@@ -749,7 +762,7 @@ DbfWriteResult write_field_bytes(
             const auto opaque_bytes = parse_opaque_field_bytes(value, field.length);
             if (!opaque_bytes.has_value()) {
                 return {.ok = false,
-                        .error = "Opaque/binary fields require either raw text that fits the field width or a 0x-prefixed hex payload.",
+                        .error = dbf_table_text("Vfp.DbfTable.Error.OpaqueValueInvalid"),
                         .record_count = header.record_count};
             }
             std::copy(opaque_bytes->begin(), opaque_bytes->end(), table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset));
@@ -766,7 +779,7 @@ DbfWriteResult append_blank_record_bytes(
     const std::vector<RawFieldDescriptor>& fields) {
     const std::size_t insert_offset = header.header_length + (static_cast<std::size_t>(header.record_count) * header.record_length);
     if (insert_offset > table_bytes.size()) {
-        return {.ok = false, .error = "Table data is truncated.", .record_count = header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableDataTruncated"), .record_count = header.record_count};
     }
 
     const bool had_eof_marker = !table_bytes.empty() && table_bytes.back() == 0x1AU;
@@ -781,7 +794,7 @@ DbfWriteResult append_blank_record_bytes(
     for (const auto& field : fields) {
         const std::size_t field_offset = record_offset + field.offset;
         if ((field_offset + field.length) > table_bytes.size()) {
-            return {.ok = false, .error = "Table field layout exceeds the record size.", .record_count = header.record_count};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordLayoutExceedsSize"), .record_count = header.record_count};
         }
 
         switch (field.type) {
