@@ -84,6 +84,8 @@ target_include_directories(cf_vfp_assets
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+target_link_libraries(cf_vfp_assets PUBLIC cf_localization)
+
 if(MSVC)
     target_compile_options(cf_vfp_assets PRIVATE /W4 /permissive-)
 else()

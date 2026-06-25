@@ -1,6 +1,8 @@
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
@@ -24594,9 +24596,32 @@ void test_update_visual_object_property_round_trips_project_and_database_assets(
     exercise_asset("dbc", ".dbc", ".dct", "Database");
 }
 
+void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(english_catalog.translate("VisualAssetEditor.Object.RecordUnavailable") ==
+               "The requested object record is not currently available." &&
+               english_catalog.translate("VisualAssetEditor.Object.UniqueIdNotFound") ==
+                   "No visual object with the requested unique id was found." &&
+               english_catalog.translate("VisualAssetEditor.Method.NotFound") ==
+                   "The requested method was not found." &&
+               english_catalog.translate("VisualAssetEditor.Property.TargetObjectAlreadyHasProperty") ==
+                   "The target object already has the requested property." &&
+               english_catalog.translate("VisualAssetEditor.Identity.ReplacementFieldMissing") ==
+                   "The requested replacement identity field is not present in the asset." &&
+               english_catalog.translate("VisualAssetEditor.Field.NotFound") ==
+                   "The requested field was not found in the asset." &&
+               pseudo_catalog.translate("VisualAssetEditor.Object.RecordUnavailable").starts_with("[!! ") &&
+               pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! "),
+           "#2373: visual asset editor lookup and identity prose should resolve through localizable catalog keys");
+}
+
 }  // namespace
 
 int main() {
+    test_visual_asset_editor_errors_resolve_through_localization_catalog();
     test_update_visual_object_property_rewrites_properties_memo();
     test_update_visual_object_properties_updates_selected_geometry_fields();
     test_update_visual_object_properties_rolls_back_failed_batches();

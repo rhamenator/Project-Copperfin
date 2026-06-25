@@ -1,5 +1,6 @@
 #include "copperfin/vfp/visual_asset_editor.h"
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_header.h"
 #include "copperfin/vfp/dbf_table.h"
 
@@ -25,6 +26,18 @@
 namespace copperfin::vfp {
 
 namespace {
+
+const copperfin::localization::LocalizedCatalog& visual_asset_editor_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string visual_asset_text(std::string_view key) {
+    return visual_asset_editor_catalog().translate(key);
+}
 
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint32_t>(bytes[offset]) |
@@ -501,8 +514,8 @@ VisualAssetEditResult reorder_visual_methods_blob(
     const auto source_result = find_unique_visual_method_index(
         methods,
         requested_method_name,
-        "The requested method was not found.",
-        "The requested method name is ambiguous.",
+        visual_asset_text("VisualAssetEditor.Method.NotFound"),
+        visual_asset_text("VisualAssetEditor.Method.Ambiguous"),
         source_index);
     if (!source_result.ok) {
         return source_result;
@@ -519,18 +532,18 @@ VisualAssetEditResult reorder_visual_methods_blob(
         insert_index = methods.size();
     } else if (normalized_placement == "before" || normalized_placement == "after") {
         if (trim_both(relative_method_name).empty()) {
-            return {.ok = false, .error = "No relative method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.RelativeNameRequired")};
         }
         if (normalize_visual_object_name(relative_method_name) == normalize_visual_object_name(requested_method_name)) {
-            return {.ok = false, .error = "The source method cannot be positioned relative to itself."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.SourceRelativeToSelf")};
         }
 
         std::size_t relative_index = 0U;
         const auto relative_result = find_unique_visual_method_index(
             methods,
             relative_method_name,
-            "The relative method was not found.",
-            "The relative method name is ambiguous.",
+            visual_asset_text("VisualAssetEditor.Method.RelativeNotFound"),
+            visual_asset_text("VisualAssetEditor.Method.RelativeAmbiguous"),
             relative_index);
         if (!relative_result.ok) {
             return relative_result;
@@ -579,8 +592,8 @@ VisualAssetEditResult reorder_visual_property_assignments(
     const auto source_result = find_unique_visual_property_assignment_index(
         assignments,
         requested_property_name,
-        "The requested property was not found.",
-        "The requested property name is ambiguous.",
+        visual_asset_text("VisualAssetEditor.Property.NotFound"),
+        visual_asset_text("VisualAssetEditor.Property.Ambiguous"),
         source_index);
     if (!source_result.ok) {
         return source_result;
@@ -597,18 +610,18 @@ VisualAssetEditResult reorder_visual_property_assignments(
         insert_index = assignments.size();
     } else if (normalized_placement == "before" || normalized_placement == "after") {
         if (trim_both(relative_property_name).empty()) {
-            return {.ok = false, .error = "No relative property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired")};
         }
         if (normalize_visual_property_name(relative_property_name) == normalize_visual_property_name(requested_property_name)) {
-            return {.ok = false, .error = "The source property cannot be positioned relative to itself."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceRelativeToSelf")};
         }
 
         std::size_t relative_index = 0U;
         const auto relative_result = find_unique_visual_property_assignment_index(
             assignments,
             relative_property_name,
-            "The relative property was not found.",
-            "The relative property name is ambiguous.",
+            visual_asset_text("VisualAssetEditor.Property.RelativeNotFound"),
+            visual_asset_text("VisualAssetEditor.Property.RelativeAmbiguous"),
             relative_index);
         if (!relative_result.ok) {
             return relative_result;
@@ -681,7 +694,7 @@ VisualAssetEditResult rename_visual_method_in_blob(
         const std::string normalized_declaration_name = normalize_visual_object_name(declaration_name);
         if (normalized_declaration_name == normalized_new_name &&
             normalized_declaration_name != normalized_requested_name) {
-            return {.ok = false, .error = "The requested target method already exists."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetExists")};
         }
         if (normalized_declaration_name == normalized_requested_name) {
             source_line_indexes.push_back(line_index);
@@ -689,17 +702,17 @@ VisualAssetEditResult rename_visual_method_in_blob(
     }
 
     if (source_line_indexes.empty()) {
-        return {.ok = false, .error = "The requested method was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NotFound")};
     }
     if (source_line_indexes.size() > 1U) {
-        return {.ok = false, .error = "The requested method name is ambiguous."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.Ambiguous")};
     }
 
     const std::string trimmed_line = trim_both(existing_lines[source_line_indexes.front()]);
     std::string declaration_kind;
     std::string declaration_name;
     if (!parse_visual_method_declaration(trimmed_line, declaration_kind, declaration_name)) {
-        return {.ok = false, .error = "The requested method declaration could not be parsed."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.DeclarationParseFailed")};
     }
     existing_lines[source_line_indexes.front()] = declaration_kind + " " + trim_both(new_method_name);
     updated_blob = serialize_visual_lines(existing_lines);
@@ -777,11 +790,11 @@ VisualObjectDuplicateResult reject_identity_collision(
     }
     if (!find_field_index(table, field_name).has_value()) {
         return failed_visual_object_duplicate_result(
-            "The requested replacement identity field is not present in the asset.");
+            visual_asset_text("VisualAssetEditor.Identity.ReplacementFieldMissing"));
     }
     if (!find_matching_record_indexes(table, field_name, normalize_visual_object_name(requested_value)).empty()) {
         return failed_visual_object_duplicate_result(
-            "The requested replacement identity already exists in the asset.");
+            visual_asset_text("VisualAssetEditor.Identity.ReplacementExists"));
     }
     return {
         .ok = true,
@@ -803,14 +816,14 @@ VisualAssetEditResult reject_identity_collision_excluding_record(
         return {.ok = true, .error = {}};
     }
     if (!find_field_index(table, field_name).has_value()) {
-        return {.ok = false, .error = "The requested identity field is not present in the asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Identity.FieldMissing")};
     }
     const auto matches = find_matching_record_indexes(table, field_name, normalized_value);
     const auto collision = std::find_if(matches.begin(), matches.end(), [&](std::size_t record_index) {
         return record_index != excluded_record_index;
     });
     if (collision != matches.end()) {
-        return {.ok = false, .error = "The requested identity value already exists in the asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Identity.ValueExists")};
     }
     return {.ok = true, .error = {}};
 }
@@ -1168,10 +1181,10 @@ VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditR
             "UNIQUEID",
             requested_unique_id);
         if (matches.empty()) {
-            return {.ok = false, .error = "No visual object with the requested unique id was found."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.UniqueIdNotFound")};
         }
         if (matches.size() > 1U) {
-            return {.ok = false, .error = "The requested visual object unique id is ambiguous."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.UniqueIdAmbiguous")};
         }
 
         record_index = matches.front();
@@ -1199,10 +1212,10 @@ VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditR
     }
 
     if (matches.empty()) {
-        return {.ok = false, .error = "No visual object with the requested name was found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NameNotFound")};
     }
     if (matches.size() > 1U) {
-        return {.ok = false, .error = "The requested visual object name is ambiguous."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NameAmbiguous")};
     }
 
     record_index = matches.front();
@@ -1225,10 +1238,10 @@ VisualAssetEditResult resolve_visual_object_record_index_from_records(
             }
         }
         if (matches.empty()) {
-            return {.ok = false, .error = "No visual object with the requested unique id was found."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.UniqueIdNotFound")};
         }
         if (matches.size() > 1U) {
-            return {.ok = false, .error = "The requested visual object unique id is ambiguous."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.UniqueIdAmbiguous")};
         }
 
         record_index = matches.front();
@@ -1262,10 +1275,10 @@ VisualAssetEditResult resolve_visual_object_record_index_from_records(
     }
 
     if (matches.empty()) {
-        return {.ok = false, .error = "No visual object with the requested name was found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NameNotFound")};
     }
     if (matches.size() > 1U) {
-        return {.ok = false, .error = "The requested visual object name is ambiguous."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NameAmbiguous")};
     }
 
     record_index = matches.front();
@@ -1291,7 +1304,7 @@ VisualAssetEditResult apply_visual_object_reorder_to_records(
         return source_resolution;
     }
     if (source_record_index >= records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     std::size_t target_record_index = 0U;
@@ -1309,10 +1322,10 @@ VisualAssetEditResult apply_visual_object_reorder_to_records(
             return target_resolution;
         }
         if (target_record_index >= records.size()) {
-            return {.ok = false, .error = "The requested target record is not currently available."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TargetRecordUnavailable")};
         }
         if (target_record_index == source_record_index) {
-            return {.ok = false, .error = "A visual object cannot be reordered relative to itself."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReorderRelativeToSelf")};
         }
     }
 
@@ -1330,7 +1343,7 @@ VisualAssetEditResult apply_visual_object_reorder_to_records(
     } else if (placement == "before" || placement == "after") {
         const auto target = std::find(order.begin(), order.end(), target_record_index);
         if (target == order.end()) {
-            return {.ok = false, .error = "The requested target record is not currently available."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TargetRecordUnavailable")};
         }
         insert_position = static_cast<std::size_t>(std::distance(order.begin(), target));
         if (placement == "after") {
@@ -1702,7 +1715,7 @@ VisualAssetEditResult apply_visual_object_property_change(
         return {.ok = false, .error = table_result.error};
     }
     if (record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto table_bytes = read_binary_file(request.path);
@@ -1741,7 +1754,7 @@ VisualAssetEditResult apply_visual_object_property_change(
     }
 
     if (!is_property_blob_asset_path(request.path)) {
-        return {.ok = false, .error = "The requested property is not exposed as a writable field on this asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NotWritableField")};
     }
 
     const auto& record = table_result.table.records[record_index];
@@ -1818,7 +1831,7 @@ VisualAssetEditResult replace_memo_field_value(
         return field.name == field_name;
     });
     if (field_it == fields.end()) {
-        return {.ok = false, .error = "The target field was not found in the asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Field.TargetNotFound")};
     }
     if (field_it->type != 'M') {
         return {.ok = false, .error = "The target field is not a memo-backed field."};
@@ -2175,7 +2188,7 @@ VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopy
         return {.ok = false, .error = target_property.error};
     }
     if (target_property.exists && !request.replace_existing) {
-        return {.ok = false, .error = "The target object already has the requested property."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetObjectAlreadyHasProperty")};
     }
 
     auto copy_result = update_visual_object_property({
@@ -2294,10 +2307,10 @@ VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMove
     }
     if (target_property.record_index == source_property.record_index &&
         normalize_visual_property_name(target_property_name) == normalize_visual_property_name(source_property.property_name)) {
-        return {.ok = false, .error = "The source property cannot be moved onto itself."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceMoveToSelf")};
     }
     if (target_property.exists && !request.replace_existing) {
-        return {.ok = false, .error = "The target object already has the requested property."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetObjectAlreadyHasProperty")};
     }
 
     const auto copy_result = copy_visual_object_property({
@@ -2416,7 +2429,7 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
         return {.ok = false, .error = "No target property name was provided."};
     }
     if (normalize_visual_property_name(source_property_name) == normalize_visual_property_name(target_property_name)) {
-        return {.ok = false, .error = "The source property cannot be renamed to itself."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceRenameToSelf")};
     }
 
     std::size_t record_index = 0U;
@@ -2437,7 +2450,7 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
         return {.ok = false, .error = table_result.error};
     }
     if (record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto table_bytes = read_binary_file(request.path);
@@ -2451,11 +2464,11 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
         return normalize_visual_property_name(field.name) == normalized_source;
     });
     if (direct_field_it != fields.end()) {
-        return {.ok = false, .error = "Direct DBF-backed fields cannot be renamed per object."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.DirectFieldRenameUnsupported")};
     }
 
     if (!is_property_blob_asset_path(request.path)) {
-        return {.ok = false, .error = "The requested property is not exposed as a renameable memo-backed property on this asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NotRenameableMemo")};
     }
 
     const auto& record = table_result.table.records[record_index];
@@ -2610,7 +2623,7 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
         return {.ok = false, .error = table_result.error};
     }
     if (record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto table_bytes = read_binary_file(request.path);
@@ -2626,16 +2639,16 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
         });
     };
     if (is_direct_field_name(request.property_name)) {
-        return {.ok = false, .error = "Direct DBF-backed fields cannot be reordered per object."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.DirectFieldReorderUnsupported")};
     }
     if ((placement == "before" || placement == "after") &&
         !trim_both(request.relative_property_name).empty() &&
         is_direct_field_name(request.relative_property_name)) {
-        return {.ok = false, .error = "Direct DBF-backed fields cannot be reordered per object."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.DirectFieldReorderUnsupported")};
     }
 
     if (!is_property_blob_asset_path(request.path)) {
-        return {.ok = false, .error = "The requested property is not exposed as a reorderable memo-backed property on this asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NotReorderableMemo")};
     }
 
     const auto* properties_field = find_record_value(table_result.table.records[record_index], "PROPERTIES");
@@ -2705,10 +2718,11 @@ VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropert
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No relative property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired") +
+                        " Rollback failed: " + rollback_result.error
                 };
             }
-            return {.ok = false, .error = "No relative property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired")};
         }
 
         const auto result = reorder_visual_object_property({
@@ -2855,7 +2869,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
     if (record_index >= table_result.table.records.size()) {
         return {
             .ok = false,
-            .error = "The requested object record is not currently available.",
+            .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable"),
             .record_index = 0U,
             .record_deleted = false,
             .properties = {}
@@ -3047,7 +3061,7 @@ VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChi
     if (parent_record_index >= table_result.table.records.size()) {
         return {
             .ok = false,
-            .error = "The requested parent record is not currently available.",
+            .error = visual_asset_text("VisualAssetEditor.Object.ParentRecordUnavailable"),
             .parent_record_index = 0U,
             .parent_name = {},
             .children = {}
@@ -3129,7 +3143,7 @@ VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObj
     if (parent_record_index >= table_result.table.records.size()) {
         return {
             .ok = false,
-            .error = "The requested parent record is not currently available.",
+            .error = visual_asset_text("VisualAssetEditor.Object.ParentRecordUnavailable"),
             .parent_record_index = 0U,
             .parent_name = {},
             .descendants = {}
@@ -3231,7 +3245,7 @@ VisualObjectAncestorsListResult list_visual_object_ancestors(const VisualObjectA
     if (record_index >= table.records.size()) {
         return {
             .ok = false,
-            .error = "The requested object record is not currently available.",
+            .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable"),
             .record_index = 0U,
             .ancestors = {}
         };
@@ -3262,7 +3276,7 @@ VisualObjectAncestorsListResult list_visual_object_ancestors(const VisualObjectA
         if (parent_matches.size() > 1U) {
             return {
                 .ok = false,
-                .error = "The selected object's parent name is ambiguous.",
+                .error = visual_asset_text("VisualAssetEditor.Object.ParentNameAmbiguous"),
                 .record_index = 0U,
                 .ancestors = {}
             };
@@ -3336,7 +3350,7 @@ VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethod
     if (record_index >= table_result.table.records.size()) {
         return {
             .ok = false,
-            .error = "The requested object record is not currently available.",
+            .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable"),
             .record_index = 0U,
             .record_deleted = false,
             .methods = {}
@@ -3417,7 +3431,7 @@ VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMetho
     if (record_index >= table_result.table.records.size()) {
         return {
             .ok = false,
-            .error = "The requested object record is not currently available.",
+            .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable"),
             .exists = false,
             .record_index = 0U,
             .record_deleted = false,
@@ -3451,7 +3465,7 @@ VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMetho
     if (matches.size() > 1U) {
         return {
             .ok = false,
-            .error = "The requested method name is ambiguous.",
+            .error = visual_asset_text("VisualAssetEditor.Method.Ambiguous"),
             .exists = false,
             .record_index = record_index,
             .record_deleted = record.deleted,
@@ -3505,7 +3519,7 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
         return {.ok = false, .error = table_result.error};
     }
     if (record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
@@ -3559,7 +3573,7 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         return {.ok = false, .error = table_result.error};
     }
     if (record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
@@ -3573,17 +3587,17 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
         return normalize_visual_object_name(method.method_name) == normalized_method_name;
     });
     if (matching_count == 0) {
-        return {.ok = false, .error = "The requested method was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NotFound")};
     }
     if (matching_count > 1) {
-        return {.ok = false, .error = "The requested method name is ambiguous."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.Ambiguous")};
     }
 
     const auto [deleted, updated_blob] = delete_visual_method_from_blob(
         methods_field->display_value,
         request.method_name);
     if (!deleted) {
-        return {.ok = false, .error = "The requested method was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NotFound")};
     }
 
     auto update_result = update_visual_object_property({
@@ -3682,7 +3696,7 @@ VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRename
         return {.ok = false, .error = table_result.error};
     }
     if (record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
@@ -3794,7 +3808,7 @@ VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequ
         return {.ok = false, .error = source_method.error};
     }
     if (!source_method.exists) {
-        return {.ok = false, .error = "The source method was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.SourceNotFound")};
     }
 
     const std::string target_method_name = request.target_method_name.empty()
@@ -3811,7 +3825,7 @@ VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequ
         return {.ok = false, .error = target_method.error};
     }
     if (target_method.exists && !request.replace_existing) {
-        return {.ok = false, .error = "The target object already has a method with the requested name."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetObjectAlreadyHasMethod")};
     }
 
     return update_visual_object_method({
@@ -3909,7 +3923,7 @@ VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequ
         return {.ok = false, .error = source_method.error};
     }
     if (!source_method.exists) {
-        return {.ok = false, .error = "The source method was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.SourceNotFound")};
     }
 
     const std::string target_method_name = request.target_method_name.empty()
@@ -3927,10 +3941,10 @@ VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequ
     }
     if (target_method.record_index == source_method.record_index &&
         normalize_visual_object_name(target_method_name) == normalize_visual_object_name(source_method.method.method_name)) {
-        return {.ok = false, .error = "The source method cannot be moved onto itself."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.SourceMoveToSelf")};
     }
     if (target_method.exists && !request.replace_existing) {
-        return {.ok = false, .error = "The target object already has a method with the requested name."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetObjectAlreadyHasMethod")};
     }
 
     const auto copy_result = copy_visual_object_method({
@@ -4061,7 +4075,7 @@ VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReord
         return {.ok = false, .error = table_result.error};
     }
     if (record_index >= table_result.table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
@@ -4173,7 +4187,8 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
     }
     const auto& table = table_result.table;
     if (source_record_index >= table.records.size()) {
-        return failed_visual_object_duplicate_result("The requested object record is not currently available.");
+        return failed_visual_object_duplicate_result(
+            visual_asset_text("VisualAssetEditor.Object.RecordUnavailable"));
     }
 
     const auto reject_missing_replacement_field = [&](const std::string& field_name, const std::string& value) -> VisualObjectDuplicateResult {
@@ -4188,7 +4203,7 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
             };
         }
         return failed_visual_object_duplicate_result(
-            "The requested replacement identity field is not present in the asset.");
+            visual_asset_text("VisualAssetEditor.Identity.ReplacementFieldMissing"));
     };
     for (const auto& check : {
              reject_missing_replacement_field("OBJNAME", request.new_object_name),
@@ -4252,7 +4267,7 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
     const auto duplicated_table_result = parse_dbf_table_from_file(request.path, duplicate_record_index + 1U);
     if (!duplicated_table_result.ok || duplicate_record_index >= duplicated_table_result.table.records.size()) {
         return failed_visual_object_duplicate_result(
-            duplicated_table_result.ok ? "The duplicated visual object record is not currently available." :
+            duplicated_table_result.ok ? visual_asset_text("VisualAssetEditor.Object.DuplicatedRecordUnavailable") :
                                          duplicated_table_result.error);
     }
     const auto duplicated_object = created_visual_object_from_record(
@@ -4379,7 +4394,8 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
     }
     const auto& table = table_result.table;
     if (root_record_index >= table.records.size()) {
-        return failed_visual_object_subtree_duplicate_result("The requested object record is not currently available.");
+        return failed_visual_object_subtree_duplicate_result(
+            visual_asset_text("VisualAssetEditor.Object.RecordUnavailable"));
     }
 
     const auto require_field = [&](const std::string& field_name) -> VisualObjectSubtreeDuplicateResult {
@@ -4387,7 +4403,7 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
             return empty_visual_object_subtree_duplicate_result();
         }
         return failed_visual_object_subtree_duplicate_result(
-            "The requested replacement identity field is not present in the asset.");
+            visual_asset_text("VisualAssetEditor.Identity.ReplacementFieldMissing"));
     };
     for (const auto& check : {require_field("OBJNAME"), require_field("NAME"), require_field("UNIQUEID"), require_field("PARENT")}) {
         if (!check.ok) {
@@ -4440,7 +4456,8 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
             return failed_visual_object_subtree_duplicate_result("Every copied row must expose a UNIQUEID.");
         }
         if (unique_in_replacements(source_unique_id) != 1) {
-            return failed_visual_object_subtree_duplicate_result("Missing or ambiguous subtree replacement identity.");
+            return failed_visual_object_subtree_duplicate_result(
+                visual_asset_text("VisualAssetEditor.Identity.SubtreeReplacementMissingOrAmbiguous"));
         }
 
         const auto* replacement = find_subtree_duplicate_replacement(request.replacements, source_unique_id);
@@ -4448,7 +4465,8 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
             trim_both(replacement->new_object_name).empty() ||
             trim_both(replacement->new_name).empty() ||
             trim_both(replacement->new_unique_id).empty()) {
-            return failed_visual_object_subtree_duplicate_result("Missing subtree replacement identity data.");
+            return failed_visual_object_subtree_duplicate_result(
+                visual_asset_text("VisualAssetEditor.Identity.SubtreeReplacementDataMissing"));
         }
 
         const auto* parent = find_record_value(table.records[record_index], "PARENT");
@@ -4484,11 +4502,11 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
             }
             if (!find_matching_record_indexes(table, field_name, normalized_value).empty()) {
                 return failed_visual_object_subtree_duplicate_result(
-                    "The requested replacement identity already exists in the asset.");
+                    visual_asset_text("VisualAssetEditor.Identity.ReplacementExists"));
             }
             if (std::find(normalized_values.begin(), normalized_values.end(), normalized_value) != normalized_values.end()) {
                 return failed_visual_object_subtree_duplicate_result(
-                    "The requested replacement identity is duplicated within the copied subtree.");
+                    visual_asset_text("VisualAssetEditor.Identity.ReplacementDuplicatedInSubtree"));
             }
             normalized_values.push_back(normalized_value);
         }
@@ -4559,7 +4577,7 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
     const auto copied_table_result = parse_dbf_table_from_file(request.path, copied_root_record_index + 1U);
     if (!copied_table_result.ok || copied_root_record_index >= copied_table_result.table.records.size()) {
         return failed_visual_object_subtree_duplicate_result(
-            copied_table_result.ok ? "The copied root visual object record is not currently available." :
+            copied_table_result.ok ? visual_asset_text("VisualAssetEditor.Object.CopiedRootRecordUnavailable") :
                                      copied_table_result.error);
     }
     const auto copied_root = created_visual_object_from_record(
@@ -4614,11 +4632,11 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
     std::vector<std::string> created_values(table.fields.size());
     for (const auto& field_value : request.field_values) {
         if (trim_both(field_value.property_name).empty()) {
-            return failed_visual_object_create_result("Field names cannot be empty.");
+            return failed_visual_object_create_result(visual_asset_text("VisualAssetEditor.Field.NameRequired"));
         }
         const auto field_index = find_field_index(table, field_value.property_name);
         if (!field_index.has_value()) {
-            return failed_visual_object_create_result("The requested field was not found in the asset.");
+            return failed_visual_object_create_result(visual_asset_text("VisualAssetEditor.Field.NotFound"));
         }
         created_values[*field_index] = field_value.property_value;
     }
@@ -4669,7 +4687,8 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
     const auto created_table_result = parse_dbf_table_from_file(request.path, created_record_index + 1U);
     if (!created_table_result.ok || created_record_index >= created_table_result.table.records.size()) {
         return failed_visual_object_create_result(
-            created_table_result.ok ? "The created visual object record is not currently available." : created_table_result.error);
+            created_table_result.ok ? visual_asset_text("VisualAssetEditor.Object.CreatedRecordUnavailable") :
+                                      created_table_result.error);
     }
     const auto& created_record = created_table_result.table.records[created_record_index];
     const auto* created_unique_id = find_record_value(created_record, "UNIQUEID");
@@ -4716,11 +4735,11 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
         std::vector<std::string> created_values(table.fields.size());
         for (const auto& field_value : object.field_values) {
             if (trim_both(field_value.property_name).empty()) {
-                return failed_visual_object_create_batch_result("Field names cannot be empty.");
+                return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Field.NameRequired"));
             }
             const auto field_index = find_field_index(table, field_value.property_name);
             if (!field_index.has_value()) {
-                return failed_visual_object_create_batch_result("The requested field was not found in the asset.");
+                return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Field.NotFound"));
             }
             created_values[*field_index] = field_value.property_value;
         }
@@ -4743,7 +4762,7 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
             });
             if (collision != records.end()) {
                 return failed_visual_object_create_batch_result(
-                    "The requested replacement identity already exists in the asset.");
+                    visual_asset_text("VisualAssetEditor.Identity.ReplacementExists"));
             }
         }
 
@@ -4788,7 +4807,7 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
     for (const auto created_record_index : created_record_indexes) {
         if (created_record_index >= created_table_result.table.records.size()) {
             return failed_visual_object_create_batch_result(
-                "A created visual object record is not currently available.");
+                visual_asset_text("VisualAssetEditor.Object.CreatedBatchRecordUnavailable"));
         }
         created_objects.push_back(
             created_visual_object_from_record(created_table_result.table.records[created_record_index], created_record_index));
@@ -5081,7 +5100,8 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         return failed_visual_object_ungroup_result(table_result.error);
     }
     if (container_record_index >= table_result.table.records.size()) {
-        return failed_visual_object_ungroup_result("The requested container record is not currently available.");
+        return failed_visual_object_ungroup_result(
+            visual_asset_text("VisualAssetEditor.Object.ContainerRecordUnavailable"));
     }
 
     const std::string container_name = visual_object_record_name(table_result.table.records[container_record_index]);
@@ -7501,7 +7521,7 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
             return {.ok = false, .error = table_result.error};
         }
         if (parent_record_index >= table_result.table.records.size()) {
-            return {.ok = false, .error = "The requested parent record is not currently available."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ParentRecordUnavailable")};
         }
 
         std::vector<std::size_t> visited_parent_record_indexes;
@@ -7609,7 +7629,7 @@ VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& requ
         return {.ok = false, .error = "No asset path was provided."};
     }
     if (!request.update_object_name && !request.update_name && !request.update_unique_id) {
-        return {.ok = false, .error = "No identity fields were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Identity.FieldsRequired")};
     }
 
     std::size_t record_index = 0U;
@@ -7631,14 +7651,14 @@ VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& requ
     }
     const auto& table = table_result.table;
     if (record_index >= table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
 
     const auto require_field = [&](const std::string& field_name) -> VisualAssetEditResult {
         if (find_field_index(table, field_name).has_value()) {
             return {.ok = true, .error = {}};
         }
-        return {.ok = false, .error = "The requested identity field is not present in the asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Identity.FieldMissing")};
     };
     for (const auto& check : {
              request.update_object_name ? require_field("OBJNAME") : VisualAssetEditResult{.ok = true, .error = {}},
@@ -7784,7 +7804,7 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
             return target_resolution;
         }
         if (target_record_index == source_record_index) {
-            return {.ok = false, .error = "A visual object cannot be reordered relative to itself."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReorderRelativeToSelf")};
         }
     }
 
@@ -7794,10 +7814,10 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
     }
     const auto& table = table_result.table;
     if (source_record_index >= table.records.size()) {
-        return {.ok = false, .error = "The requested object record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")};
     }
     if ((placement == "before" || placement == "after") && target_record_index >= table.records.size()) {
-        return {.ok = false, .error = "The requested target record is not currently available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TargetRecordUnavailable")};
     }
 
     std::vector<std::vector<std::string>> records;
@@ -7829,7 +7849,7 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
     } else if (placement == "before" || placement == "after") {
         const auto target = std::find(order.begin(), order.end(), target_record_index);
         if (target == order.end()) {
-            return {.ok = false, .error = "The requested target record is not currently available."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TargetRecordUnavailable")};
         }
         insert_position = static_cast<std::size_t>(std::distance(order.begin(), target));
         if (placement == "after") {
@@ -7993,7 +8013,7 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
         const auto table_result = parse_dbf_table_from_file(request.path, record_index + 1U);
         if (!table_result.ok || record_index >= table_result.table.records.size()) {
             const std::string error = table_result.ok
-                ? "The requested object record is not currently available."
+                ? visual_asset_text("VisualAssetEditor.Object.RecordUnavailable")
                 : table_result.error;
             const auto rollback_result = rollback_applied_states();
             if (!rollback_result.ok) {
