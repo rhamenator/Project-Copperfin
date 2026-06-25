@@ -3518,7 +3518,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-input-mask") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-input-mask."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-input-mask")};
             }
             result.request.dynamic_input_mask = args[++index];
             result.request.dynamic_input_mask_available = true;
@@ -3527,7 +3527,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-line-height") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-line-height."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-line-height")};
             }
             result.request.dynamic_line_height = args[++index];
             result.request.dynamic_line_height_available = true;
@@ -3536,7 +3536,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-alignment") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-alignment."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-alignment")};
             }
             result.request.dynamic_alignment = args[++index];
             result.request.dynamic_alignment_available = true;
@@ -3545,7 +3545,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-current-control") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-current-control."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-current-control")};
             }
             result.request.dynamic_current_control = args[++index];
             result.request.dynamic_current_control_available = true;
@@ -3554,7 +3554,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-name")};
             }
             result.request.dynamic_font_name = args[++index];
             result.request.dynamic_font_name_available = true;
@@ -3563,7 +3563,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-size") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-size."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-size")};
             }
             result.request.dynamic_font_size = args[++index];
             result.request.dynamic_font_size_available = true;
@@ -3572,7 +3572,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-bold") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-bold."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-bold")};
             }
             result.request.dynamic_font_bold = args[++index];
             result.request.dynamic_font_bold_available = true;
@@ -3581,7 +3581,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-italic") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-italic."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-italic")};
             }
             result.request.dynamic_font_italic = args[++index];
             result.request.dynamic_font_italic_available = true;
@@ -3590,7 +3590,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-underline") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-underline."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-underline")};
             }
             result.request.dynamic_font_underline = args[++index];
             result.request.dynamic_font_underline_available = true;
@@ -3599,7 +3599,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-strikethru") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-strikethru."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-strikethru")};
             }
             result.request.dynamic_font_strikethru = args[++index];
             result.request.dynamic_font_strikethru_available = true;
@@ -3608,7 +3608,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-outline") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-outline."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-outline")};
             }
             result.request.dynamic_font_outline = args[++index];
             result.request.dynamic_font_outline_available = true;
@@ -3617,7 +3617,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-shadow") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-shadow."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-shadow")};
             }
             result.request.dynamic_font_shadow = args[++index];
             result.request.dynamic_font_shadow_available = true;
