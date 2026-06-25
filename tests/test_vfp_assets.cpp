@@ -44,6 +44,26 @@ bool has_validation_issue(
         });
 }
 
+const copperfin::vfp::AssetValidationIssue* find_validation_issue(
+    const copperfin::vfp::AssetInspectionResult& result,
+    const std::string& code,
+    const std::string& path_suffix = {}) {
+    const auto found = std::find_if(
+        result.validation_issues.begin(),
+        result.validation_issues.end(),
+        [&](const copperfin::vfp::AssetValidationIssue& issue) {
+            if (issue.code != code) {
+                return false;
+            }
+            if (path_suffix.empty()) {
+                return true;
+            }
+            return issue.path.size() >= path_suffix.size() &&
+                   issue.path.ends_with(path_suffix);
+        });
+    return found == result.validation_issues.end() ? nullptr : &(*found);
+}
+
 std::vector<std::uint8_t> make_vfp_header() {
     std::vector<std::uint8_t> bytes(32U, 0U);
     bytes[0] = 0x30U;
@@ -272,6 +292,7 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap path_placeholder{{"path", "missing.dbc"}};
+    const copperfin::localization::PlaceholderMap error_placeholder{{"error", "inner parse failure"}};
 
     expect(
         english_catalog.translate("Vfp.AssetInspector.Error.PathMissing") == "Path does not exist.",
@@ -284,6 +305,18 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
         pseudo_catalog.translate("Vfp.AssetInspector.Error.PathMissing") !=
             english_catalog.translate("Vfp.AssetInspector.Error.PathMissing"),
         "#2386: asset inspector errors should be pseudo-localizable");
+    expect(
+        english_catalog.translate("Vfp.AssetInspector.Validation.DbfHeaderLengthExceedsFileSize") ==
+            "The DBF header length exceeds the file size.",
+        "#2387: DBF validation messages should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.AssetInspector.Validation.IndexCompanionParseFailed", error_placeholder) ==
+            "A companion index file exists but could not be parsed: inner parse failure",
+        "#2387: asset inspector validation messages should preserve named placeholders");
+    expect(
+        pseudo_catalog.translate("Vfp.AssetInspector.Validation.MemoSidecarMissing") !=
+            english_catalog.translate("Vfp.AssetInspector.Validation.MemoSidecarMissing"),
+        "#2387: asset inspector validation messages should be pseudo-localizable");
 
     const fs::path temp_path = fs::temp_directory_path() / "copperfin_missing_asset_for_localization.dbc";
     std::error_code ignored;
@@ -906,6 +939,13 @@ void test_inspect_asset_reports_dbf_storage_validation_findings() {
     expect(
         has_validation_issue(short_header_result, "dbf.header_length_exceeds_file_size", "short_header.dbf"),
         "inspect_asset should report when the DBF header length exceeds the file size");
+    const auto* short_header_issue =
+        find_validation_issue(short_header_result, "dbf.header_length_exceeds_file_size", "short_header.dbf");
+    expect(
+        short_header_issue != nullptr &&
+            short_header_issue->severity == copperfin::vfp::AssetValidationSeverity::error &&
+            short_header_issue->message == "The DBF header length exceeds the file size.",
+        "#2387: DBF storage validation output should preserve code, severity, and default message text");
 
     const fs::path truncated_records_path = temp_dir / "truncated_records.dbf";
     std::vector<std::uint8_t> truncated_bytes(100U, 0U);
@@ -946,6 +986,14 @@ void test_inspect_asset_reports_missing_companions_and_unparseable_indexes() {
     expect(
         has_validation_issue(form_result, "memo.sidecar_missing", "missing_sidecar.sct"),
         "inspect_asset should report a missing SCX memo sidecar");
+    const auto* missing_sidecar_issue =
+        find_validation_issue(form_result, "memo.sidecar_missing", "missing_sidecar.sct");
+    expect(
+        missing_sidecar_issue != nullptr &&
+            missing_sidecar_issue->severity == copperfin::vfp::AssetValidationSeverity::error &&
+            missing_sidecar_issue->message ==
+                "The DBF-family asset expects a memo sidecar file, but the sidecar is missing.",
+        "#2387: memo sidecar validation output should preserve code, severity, and default message text");
 
     const fs::path table_path = temp_dir / "broken_index.dbf";
     const fs::path bad_cdx_path = temp_dir / "broken_index.cdx";
@@ -965,6 +1013,13 @@ void test_inspect_asset_reports_missing_companions_and_unparseable_indexes() {
     expect(
         has_validation_issue(table_result, "index.companion_parse_failed", "broken_index.cdx"),
         "inspect_asset should report malformed companion indexes as structured validation findings");
+    const auto* bad_index_issue =
+        find_validation_issue(table_result, "index.companion_parse_failed", "broken_index.cdx");
+    expect(
+        bad_index_issue != nullptr &&
+            bad_index_issue->severity == copperfin::vfp::AssetValidationSeverity::warning &&
+            bad_index_issue->message.starts_with("A companion index file exists but could not be parsed: "),
+        "#2387: companion index validation output should preserve placeholders and invariant severity");
 
     const fs::path indexed_table_path = temp_dir / "missing_structural_index.dbf";
     {
@@ -1063,6 +1118,12 @@ void test_inspect_asset_reports_malformed_memo_sidecar_findings() {
     expect(
         has_validation_issue(out_of_range_result, "memo.pointer_out_of_range", "pointer_out_of_range.sct"),
         "inspect_asset should report memo pointers that fall outside the sidecar range");
+    const auto* pointer_issue =
+        find_validation_issue(out_of_range_result, "memo.pointer_out_of_range", "pointer_out_of_range.sct");
+    expect(
+        pointer_issue != nullptr &&
+            pointer_issue->message == "A memo field points to a block outside the available sidecar range.",
+        "#2387: memo pointer validation output should preserve default message text");
 
     const fs::path truncated_form_path = temp_dir / "payload_truncated.scx";
     const fs::path truncated_sidecar_path = temp_dir / "payload_truncated.sct";
@@ -1133,6 +1194,12 @@ void test_inspect_asset_reports_dbf_descriptor_validation_findings() {
     expect(
         has_validation_issue(record_layout_result, "dbf.field_layout_overlap", "record_layout.dbf"),
         "inspect_asset should report overlapping DBF field descriptors");
+    const auto* overlap_issue =
+        find_validation_issue(record_layout_result, "dbf.field_layout_overlap", "record_layout.dbf");
+    expect(
+        overlap_issue != nullptr &&
+            overlap_issue->message == "The DBF contains overlapping field descriptors.",
+        "#2387: descriptor validation output should preserve default message text");
     expect(
         has_validation_issue(record_layout_result, "dbf.field_layout_overflow", "record_layout.dbf"),
         "inspect_asset should report field descriptors that overflow the declared record length");

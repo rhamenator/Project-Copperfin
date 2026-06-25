@@ -267,7 +267,9 @@ void extract_database_container_metadata(
             AssetValidationSeverity::warning,
             "dbc.catalog_parse_failed",
             path,
-            "The DBC header parsed, but first-pass catalog metadata could not be loaded: " + table_result.error);
+            asset_inspector_text(
+                "Vfp.AssetInspector.Validation.DbcCatalogParseFailed",
+                {{"error", table_result.error}}));
         return;
     }
 
@@ -320,7 +322,7 @@ void extract_database_container_metadata(
             AssetValidationSeverity::warning,
             "dbc.catalog_empty",
             path,
-            "The DBC catalog loaded but no first-pass object metadata rows were detected.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbcCatalogEmpty"));
         return;
     }
 
@@ -507,7 +509,7 @@ void validate_dbf_storage(
             AssetValidationSeverity::error,
             "dbf.header_length_exceeds_file_size",
             path,
-            "The DBF header length exceeds the file size.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfHeaderLengthExceedsFileSize"));
         return;
     }
 
@@ -521,7 +523,7 @@ void validate_dbf_storage(
             AssetValidationSeverity::error,
             "dbf.record_storage_truncated",
             path,
-            "The DBF record storage is shorter than the header record-count and record-length values require.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfRecordStorageTruncated"));
         return;
     }
 
@@ -532,7 +534,7 @@ void validate_dbf_storage(
             AssetValidationSeverity::warning,
             "dbf.record_storage_length_mismatch",
             path,
-            "The DBF file contains extra bytes beyond the header-declared record storage.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfRecordStorageLengthMismatch"));
     }
 }
 
@@ -552,7 +554,7 @@ void validate_dbf_field_descriptors(
             AssetValidationSeverity::error,
             "dbf.descriptor_terminator_missing",
             path,
-            "The DBF header does not leave room for a field-descriptor terminator.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfDescriptorTerminatorNoRoom"));
         return;
     }
 
@@ -566,7 +568,7 @@ void validate_dbf_field_descriptors(
             AssetValidationSeverity::error,
             "dbf.descriptor_terminator_missing",
             path,
-            "The DBF header does not contain a field-descriptor terminator within the declared header length.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfDescriptorTerminatorMissing"));
         return;
     }
 
@@ -578,7 +580,7 @@ void validate_dbf_field_descriptors(
             AssetValidationSeverity::error,
             "dbf.descriptor_span_misaligned",
             path,
-            "The DBF field-descriptor span is not aligned to whole 32-byte descriptors.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned"));
         return;
     }
 
@@ -588,7 +590,7 @@ void validate_dbf_field_descriptors(
             AssetValidationSeverity::warning,
             "dbf.header_length_descriptor_mismatch",
             path,
-            "The DBF header length does not match the field-descriptor terminator position.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfHeaderLengthDescriptorMismatch"));
     }
 
     const auto fields = read_raw_field_descriptors(std::vector<std::uint8_t>(table_bytes.begin(), table_bytes.begin() + static_cast<std::ptrdiff_t>(terminator_offset + 1U)));
@@ -614,7 +616,7 @@ void validate_dbf_field_descriptors(
                 AssetValidationSeverity::error,
                 "dbf.field_name_blank",
                 path,
-                "The DBF contains a blank field name.");
+                asset_inspector_text("Vfp.AssetInspector.Validation.DbfFieldNameBlank"));
         } else {
             const std::string normalized_name = uppercase_copy(trimmed_name);
             if (!seen_names.insert(normalized_name).second) {
@@ -623,7 +625,7 @@ void validate_dbf_field_descriptors(
                     AssetValidationSeverity::error,
                     "dbf.field_name_duplicate",
                     path,
-                    "The DBF contains duplicate field names.");
+                    asset_inspector_text("Vfp.AssetInspector.Validation.DbfFieldNameDuplicate"));
             }
 
             const bool valid_name =
@@ -636,7 +638,7 @@ void validate_dbf_field_descriptors(
                     AssetValidationSeverity::warning,
                     "dbf.field_name_invalid",
                     path,
-                    "The DBF contains a field name that is blank, too long, or uses invalid identifier characters.");
+                    asset_inspector_text("Vfp.AssetInspector.Validation.DbfFieldNameInvalid"));
             }
         }
 
@@ -646,7 +648,7 @@ void validate_dbf_field_descriptors(
                 AssetValidationSeverity::error,
                 "dbf.field_offset_invalid",
                 path,
-                "The DBF contains a field descriptor with an invalid record offset.");
+                asset_inspector_text("Vfp.AssetInspector.Validation.DbfFieldOffsetInvalid"));
         }
 
         const std::uint32_t field_end = field.offset + static_cast<std::uint32_t>(field.length);
@@ -656,7 +658,7 @@ void validate_dbf_field_descriptors(
                 AssetValidationSeverity::error,
                 "dbf.field_layout_overflow",
                 path,
-                "The DBF contains a field descriptor that extends past the declared record length.");
+                asset_inspector_text("Vfp.AssetInspector.Validation.DbfFieldLayoutOverflow"));
         }
 
         computed_record_length += static_cast<std::uint32_t>(field.length);
@@ -671,7 +673,7 @@ void validate_dbf_field_descriptors(
                 AssetValidationSeverity::error,
                 "dbf.field_layout_overlap",
                 path,
-                "The DBF contains overlapping field descriptors.");
+                asset_inspector_text("Vfp.AssetInspector.Validation.DbfFieldLayoutOverlap"));
             break;
         }
     }
@@ -682,7 +684,7 @@ void validate_dbf_field_descriptors(
             AssetValidationSeverity::warning,
             "dbf.record_length_mismatch",
             path,
-            "The DBF header record length does not match the descriptor-derived field layout.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.DbfRecordLengthMismatch"));
     }
 }
 
@@ -702,7 +704,7 @@ void validate_expected_companions(
                     AssetValidationSeverity::error,
                     "memo.sidecar_missing",
                     memo_path,
-                    "The DBF-family asset expects a memo sidecar file, but the sidecar is missing.");
+                    asset_inspector_text("Vfp.AssetInspector.Validation.MemoSidecarMissing"));
             }
         }
     }
@@ -721,7 +723,7 @@ void validate_expected_companions(
             AssetValidationSeverity::error,
             "index.structural_sidecar_missing",
             path,
-            "The DBF-family asset expects a structural/production index companion, but no matching companion file was found.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.IndexStructuralSidecarMissing"));
     }
 }
 
@@ -753,7 +755,7 @@ void validate_memo_sidecar(
             AssetValidationSeverity::error,
             "memo.sidecar_header_truncated",
             resolved_memo_path_text,
-            "The memo sidecar is too short to contain a valid header.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated"));
         return;
     }
 
@@ -764,7 +766,7 @@ void validate_memo_sidecar(
             AssetValidationSeverity::error,
             "memo.block_size_invalid",
             resolved_memo_path_text,
-            "The memo sidecar declares an invalid zero block size.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.MemoBlockSizeInvalid"));
         return;
     }
 
@@ -774,7 +776,7 @@ void validate_memo_sidecar(
             AssetValidationSeverity::error,
             "memo.sidecar_shorter_than_block_size",
             resolved_memo_path_text,
-            "The memo sidecar is shorter than its declared block size.");
+            asset_inspector_text("Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize"));
         return;
     }
 
@@ -818,7 +820,7 @@ void validate_memo_sidecar(
                 AssetValidationSeverity::error,
                 "memo.pointer_out_of_range",
                 resolved_memo_path_text,
-                "A memo field points to a block outside the available sidecar range.");
+                asset_inspector_text("Vfp.AssetInspector.Validation.MemoPointerOutOfRange"));
             continue;
         }
 
@@ -830,7 +832,7 @@ void validate_memo_sidecar(
                 AssetValidationSeverity::error,
                 "memo.payload_truncated",
                 resolved_memo_path_text,
-                "A referenced memo payload extends beyond the available sidecar bytes.");
+                asset_inspector_text("Vfp.AssetInspector.Validation.MemoPayloadTruncated"));
         }
     }
 }
@@ -983,7 +985,9 @@ AssetInspectionResult inspect_asset(const std::string& path) {
                 AssetValidationSeverity::warning,
                 "index.companion_parse_failed",
                 resolved_companion_index_text,
-                "A companion index file exists but could not be parsed: " + index_result.error);
+                asset_inspector_text(
+                    "Vfp.AssetInspector.Validation.IndexCompanionParseFailed",
+                    {{"error", index_result.error}}));
         }
     }
 
