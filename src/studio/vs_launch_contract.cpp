@@ -138,6 +138,54 @@ std::string localized_object_arguments_require_mode(
         });
 }
 
+std::string localized_object_action_requires_option(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view action_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectActionRequiresOption",
+        {
+            {"actionName", std::string(action_name)},
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_object_action_requires_either_option(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view action_name,
+    std::string_view first_option,
+    std::string_view second_option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectActionRequiresEitherOption",
+        {
+            {"actionName", std::string(action_name)},
+            {"firstOption", std::string(first_option)},
+            {"secondOption", std::string(second_option)}
+        });
+}
+
+std::string localized_object_action_requires_target(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view action_name) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector",
+        {
+            {"actionName", std::string(action_name)}
+        });
+}
+
+std::string localized_object_action_arguments_require_mode(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view action_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+        {
+            {"actionName", std::string(action_name)},
+            {"option", std::string(option)}
+        });
+}
+
 bool parse_form_set_class_argument(const std::string& argument,
                                    const std::vector<std::string>& args,
                                    std::size_t& index,
@@ -8037,73 +8085,111 @@ LaunchParseResult parse_launch_arguments(
         return {.ok = false, .error = "Grouped child selectors can only be used with --group-object."};
     }
     if (result.request.align_object && result.request.alignment_mode.empty()) {
-        return {.ok = false, .error = "An object alignment requires --alignment-mode."};
+        return {.ok = false, .error = localized_object_action_requires_option(
+            catalog,
+            "alignment",
+            "--alignment-mode")};
     }
     if (result.request.align_object &&
         result.request.anchor_object_name.empty() &&
         result.request.anchor_unique_id.empty()) {
-        return {.ok = false, .error = "An object alignment requires --anchor-object-name or --anchor-unique-id."};
+        return {.ok = false, .error = localized_object_action_requires_either_option(
+            catalog,
+            "alignment",
+            "--anchor-object-name",
+            "--anchor-unique-id")};
     }
     if (result.request.align_object && result.request.align_objects.empty()) {
-        return {.ok = false, .error = "An object alignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_action_requires_target(catalog, "alignment")};
     }
     if (!result.request.align_object &&
         (!result.request.alignment_mode.empty() ||
          !result.request.align_objects.empty())) {
-        return {.ok = false, .error = "Alignment arguments can only be used with --align-object."};
+        return {.ok = false, .error = localized_object_action_arguments_require_mode(
+            catalog,
+            "Alignment",
+            "--align-object")};
     }
     if (result.request.resize_object && result.request.resize_mode.empty()) {
-        return {.ok = false, .error = "An object resize requires --resize-mode."};
+        return {.ok = false, .error = localized_object_action_requires_option(
+            catalog,
+            "resize",
+            "--resize-mode")};
     }
     if (result.request.resize_object &&
         result.request.anchor_object_name.empty() &&
         result.request.anchor_unique_id.empty()) {
-        return {.ok = false, .error = "An object resize requires --anchor-object-name or --anchor-unique-id."};
+        return {.ok = false, .error = localized_object_action_requires_either_option(
+            catalog,
+            "resize",
+            "--anchor-object-name",
+            "--anchor-unique-id")};
     }
     if (result.request.resize_object && result.request.resize_objects.empty()) {
-        return {.ok = false, .error = "An object resize requires at least one target selector."};
+        return {.ok = false, .error = localized_object_action_requires_target(catalog, "resize")};
     }
     if (!result.request.resize_object &&
         (!result.request.resize_mode.empty() ||
          !result.request.resize_objects.empty())) {
-        return {.ok = false, .error = "Resize arguments can only be used with --resize-object."};
+        return {.ok = false, .error = localized_object_action_arguments_require_mode(
+            catalog,
+            "Resize",
+            "--resize-object")};
     }
     if (result.request.distribute_object && result.request.distribution_mode.empty()) {
-        return {.ok = false, .error = "An object distribution requires --distribution-mode."};
+        return {.ok = false, .error = localized_object_action_requires_option(
+            catalog,
+            "distribution",
+            "--distribution-mode")};
     }
     if (result.request.distribute_object && result.request.distribute_objects.empty()) {
-        return {.ok = false, .error = "An object distribution requires at least one target selector."};
+        return {.ok = false, .error = localized_object_action_requires_target(catalog, "distribution")};
     }
     if (!result.request.distribute_object &&
         (!result.request.distribution_mode.empty() ||
          !result.request.distribute_objects.empty())) {
-        return {.ok = false, .error = "Distribution arguments can only be used with --distribute-object."};
+        return {.ok = false, .error = localized_object_action_arguments_require_mode(
+            catalog,
+            "Distribution",
+            "--distribute-object")};
     }
     if (result.request.snap_object && result.request.snap_mode.empty()) {
-        return {.ok = false, .error = "An object snap requires --snap-mode."};
+        return {.ok = false, .error = localized_object_action_requires_option(
+            catalog,
+            "snap",
+            "--snap-mode")};
     }
     if (result.request.snap_object && result.request.snap_objects.empty()) {
-        return {.ok = false, .error = "An object snap requires at least one target selector."};
+        return {.ok = false, .error = localized_object_action_requires_target(catalog, "snap")};
     }
     if (!result.request.snap_object &&
         (!result.request.snap_mode.empty() ||
          result.request.grid_width != 0.0 ||
          result.request.grid_height != 0.0 ||
          !result.request.snap_objects.empty())) {
-        return {.ok = false, .error = "Snap arguments can only be used with --snap-object."};
+        return {.ok = false, .error = localized_object_action_arguments_require_mode(
+            catalog,
+            "Snap",
+            "--snap-object")};
     }
     if (result.request.nudge_object && result.request.nudge_mode.empty()) {
-        return {.ok = false, .error = "An object nudge requires --nudge-mode."};
+        return {.ok = false, .error = localized_object_action_requires_option(
+            catalog,
+            "nudge",
+            "--nudge-mode")};
     }
     if (result.request.nudge_object && result.request.nudge_objects.empty()) {
-        return {.ok = false, .error = "An object nudge requires at least one target selector."};
+        return {.ok = false, .error = localized_object_action_requires_target(catalog, "nudge")};
     }
     if (!result.request.nudge_object &&
         (!result.request.nudge_mode.empty() ||
          result.request.delta_hpos != 0.0 ||
          result.request.delta_vpos != 0.0 ||
          !result.request.nudge_objects.empty())) {
-        return {.ok = false, .error = "Nudge arguments can only be used with --nudge-object."};
+        return {.ok = false, .error = localized_object_action_arguments_require_mode(
+            catalog,
+            "Nudge",
+            "--nudge-object")};
     }
     if (result.request.tab_order_object && result.request.tab_order_objects.empty()) {
         return {.ok = false, .error = "An object tab-order assignment requires at least one target selector."};

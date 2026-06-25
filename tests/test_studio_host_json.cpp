@@ -3522,6 +3522,101 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
     }
 }
 
+void test_studio_host_launch_layout_action_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_layout_action_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--align-object",
+            "--alignment-mode", "left",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2427: default layout action diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object alignment requires --anchor-object-name or --anchor-unique-id.",
+        "#2427: default layout action diagnostics should preserve en-US either-option prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--distribute-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2427: pseudo-localized missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2427: pseudo-localized missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--distribution-mode",
+        "#2427: pseudo-localized missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object distribution requires --distribution-mode.",
+        "#2427: pseudo-localized missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--resize-object",
+            "--resize-mode", "match-width",
+            "--anchor-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2427: pseudo-localized missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2427: pseudo-localized missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object resize requires at least one target selector.",
+        "#2427: pseudo-localized missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--snap-mode", "grid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2427: pseudo-localized stray-mode diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2427: pseudo-localized stray-mode diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--snap-object",
+        "#2427: pseudo-localized stray-mode diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Snap arguments can only be used with --snap-object.",
+        "#2427: pseudo-localized stray-mode diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -117031,6 +117126,7 @@ int main(int argc, char** argv) {
     test_studio_host_toolbox_direct_create_parse_diagnostics_localize(argv[1]);
     test_studio_host_designer_parse_diagnostics_localize(argv[1]);
     test_studio_host_launch_object_metadata_diagnostics_localize(argv[1]);
+    test_studio_host_launch_layout_action_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
