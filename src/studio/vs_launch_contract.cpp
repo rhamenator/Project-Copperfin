@@ -126,6 +126,18 @@ std::string localized_object_assignment_requires_target(
         });
 }
 
+std::string localized_object_assignment_requires_non_negative_value(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view property_name,
+    std::string_view value_name) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+        {
+            {"propertyName", std::string(property_name)},
+            {"valueName", std::string(value_name)}
+        });
+}
+
 std::string localized_object_arguments_require_mode(
     const localization::LocalizedCatalog& catalog,
     std::string_view property_name,
@@ -8192,48 +8204,72 @@ LaunchParseResult parse_launch_arguments(
             "--nudge-object")};
     }
     if (result.request.tab_order_object && result.request.tab_order_objects.empty()) {
-        return {.ok = false, .error = "An object tab-order assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "tab-order")};
     }
     if (result.request.tab_order_object && result.request.starting_tab_index < 0) {
-        return {.ok = false, .error = "An object tab-order assignment requires a non-negative starting tab index."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "tab-order",
+            "starting tab index")};
     }
     if (!result.request.tab_order_object &&
         (result.request.starting_tab_index_available ||
          !result.request.tab_order_objects.empty())) {
-        return {.ok = false, .error = "Tab-order arguments can only be used with --tab-order-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Tab-order",
+            "--tab-order-object")};
     }
     if (result.request.tab_stop_object && !result.request.tab_stop_available) {
-        return {.ok = false, .error = "An object tab-stop assignment requires --tab-stop."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "tab-stop",
+            "--tab-stop")};
     }
     if (result.request.tab_stop_object && result.request.tab_stop_objects.empty()) {
-        return {.ok = false, .error = "An object tab-stop assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "tab-stop")};
     }
     if (!result.request.tab_stop_object &&
         (result.request.tab_stop_available ||
          !result.request.tab_stop_objects.empty())) {
-        return {.ok = false, .error = "Tab-stop arguments can only be used with --tab-stop-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Tab-stop",
+            "--tab-stop-object")};
     }
     if (result.request.visibility_object && !result.request.visible_available) {
-        return {.ok = false, .error = "An object visibility assignment requires --visible."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "visibility",
+            "--visible")};
     }
     if (result.request.visibility_object && result.request.visibility_objects.empty()) {
-        return {.ok = false, .error = "An object visibility assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "visibility")};
     }
     if (!result.request.visibility_object &&
         (result.request.visible_available ||
          !result.request.visibility_objects.empty())) {
-        return {.ok = false, .error = "Visibility arguments can only be used with --visibility-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Visibility",
+            "--visibility-object")};
     }
     if (result.request.enabled_object && !result.request.enabled_available) {
-        return {.ok = false, .error = "An object enabled assignment requires --enabled."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "enabled",
+            "--enabled")};
     }
     if (result.request.enabled_object && result.request.enabled_objects.empty()) {
-        return {.ok = false, .error = "An object enabled assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "enabled")};
     }
     if (!result.request.enabled_object &&
         (result.request.enabled_available ||
          !result.request.enabled_objects.empty())) {
-        return {.ok = false, .error = "Enabled arguments can only be used with --enabled-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Enabled",
+            "--enabled-object")};
     }
     if (result.request.read_only_object && !result.request.object_read_only_available) {
         return {.ok = false, .error = "An object read-only assignment requires --object-read-only."};
