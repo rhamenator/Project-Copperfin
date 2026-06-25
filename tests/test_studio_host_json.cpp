@@ -2651,6 +2651,106 @@ void test_studio_host_visual_method_copy_move_parse_diagnostics_localize(
     }
 }
 
+void test_studio_host_visual_method_reorder_parse_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_visual_method_reorder_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-reorder", "--method-name", "When", "--placement", "after", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2410: default visual-method reorder parser diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2410: default visual-method reorder parser diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"visualMethodReorder\": null",
+        "#2410: default visual-method reorder parser diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2410: default visual-method reorder parser diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-reorder", "--path", "forms/customer.scx", "--record", "-1", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2410: pseudo-localized reorder invalid-record diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2410: pseudo-localized reorder invalid-record diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record",
+        "#2410: pseudo-localized reorder invalid-record diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --record value must be a non-negative integer.",
+        "#2410: pseudo-localized reorder invalid-record diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-reorder", "--path", "forms/customer.scx", "--method-name", "When", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2410: pseudo-localized reorder missing-placement diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2410: pseudo-localized reorder missing-placement diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No method placement was provided.",
+        "#2410: pseudo-localized reorder missing-placement diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-reorder-batch", "--path", "forms/customer.scx", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2410: pseudo-localized reorder-batch missing-items diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodReorderBatch\": null",
+        "#2410: pseudo-localized reorder-batch missing-items diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2410: pseudo-localized reorder-batch missing-items diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No method reorders were provided.",
+        "#2410: pseudo-localized reorder-batch missing-items diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-reorder-batch", "--path", "forms/customer.scx", "--placement", "after", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2410: pseudo-localized reorder-batch item-order diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2410: pseudo-localized reorder-batch item-order diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--method-name",
+        "#2410: pseudo-localized reorder-batch item-order diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Visual method reorder batch item options require a preceding --method-name.",
+        "#2410: pseudo-localized reorder-batch item-order diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -114797,6 +114897,7 @@ int main(int argc, char** argv) {
     test_studio_host_visual_method_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_method_delete_rename_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_method_copy_move_parse_diagnostics_localize(argv[1]);
+    test_studio_host_visual_method_reorder_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);

@@ -7640,7 +7640,9 @@ VisualMethodMoveParseResult parse_visual_method_move_arguments(
     return result;
 }
 
-VisualMethodReorderParseResult parse_visual_method_reorder_arguments(const std::vector<std::string>& args) {
+VisualMethodReorderParseResult parse_visual_method_reorder_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodReorderParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-reorder") != args.end();
@@ -7657,7 +7659,7 @@ VisualMethodReorderParseResult parse_visual_method_reorder_arguments(const std::
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7674,7 +7676,7 @@ VisualMethodReorderParseResult parse_visual_method_reorder_arguments(const std::
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7691,23 +7693,25 @@ VisualMethodReorderParseResult parse_visual_method_reorder_arguments(const std::
         } else if (argument == "--relative-method-name") {
             result.request.relative_method_name = require_value(argument);
         } else {
-            fail("Unknown visual-method-reorder option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-reorder", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.method_name_provided) {
-        fail("No method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodName"));
     }
     if (result.ok && !result.placement_provided) {
-        fail("No method placement was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodPlacement"));
     }
     return result;
 }
 
-VisualMethodReorderBatchParseResult parse_visual_method_reorder_batch_arguments(const std::vector<std::string>& args) {
+VisualMethodReorderBatchParseResult parse_visual_method_reorder_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodReorderBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-reorder-batch") != args.end();
@@ -7722,7 +7726,9 @@ VisualMethodReorderBatchParseResult parse_visual_method_reorder_batch_arguments(
 
     auto current_method = [&]() -> copperfin::vfp::VisualObjectMethodReorderBatchItem* {
         if (result.request.methods.empty()) {
-            fail("Visual method reorder batch item options require a preceding --method-name.");
+            fail(catalog.translate(
+                "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+                {{"methodNameOption", "--method-name"}}));
             return nullptr;
         }
         return &result.request.methods.back();
@@ -7732,7 +7738,7 @@ VisualMethodReorderBatchParseResult parse_visual_method_reorder_batch_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7762,7 +7768,7 @@ VisualMethodReorderBatchParseResult parse_visual_method_reorder_batch_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             if (auto* method = current_method()) {
@@ -7781,20 +7787,20 @@ VisualMethodReorderBatchParseResult parse_visual_method_reorder_batch_arguments(
                 method->relative_method_name = require_value(argument);
             }
         } else {
-            fail("Unknown visual-method-reorder-batch option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-reorder-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.methods.empty()) {
-        fail("No method reorders were provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodReorders"));
     }
     if (result.ok) {
         for (const auto& method : result.request.methods) {
             if (method.placement.empty()) {
-                fail("No method placement was provided.");
+                fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodPlacement"));
                 break;
             }
         }
@@ -22880,7 +22886,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_reorder_batch_parse = parse_visual_method_reorder_batch_arguments(args);
+    const auto visual_method_reorder_batch_parse = parse_visual_method_reorder_batch_arguments(catalog, args);
     if (visual_method_reorder_batch_parse.requested) {
         if (!visual_method_reorder_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -22910,7 +22916,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_reorder_parse = parse_visual_method_reorder_arguments(args);
+    const auto visual_method_reorder_parse = parse_visual_method_reorder_arguments(catalog, args);
     if (visual_method_reorder_parse.requested) {
         if (!visual_method_reorder_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
