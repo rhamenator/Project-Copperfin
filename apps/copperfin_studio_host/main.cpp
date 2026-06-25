@@ -3741,7 +3741,63 @@ ToolboxExecuteParseResult parse_toolbox_execute_arguments(
     return result;
 }
 
-DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(const std::vector<std::string>& args) {
+std::string designer_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.DesignerParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string designer_parse_unknown_selection_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.DesignerParse.Error.UnknownSelectionContextToken",
+        {{"token", token}});
+}
+
+std::string designer_parse_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.DesignerParse.Error.NonNegativeInteger",
+        {{"option", option}});
+}
+
+std::string designer_parse_boolean_value_required(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.DesignerParse.Error.BooleanValueRequired",
+        {
+            {"option", option},
+            {"trueValue", "true"},
+            {"falseValue", "false"}
+        });
+}
+
+std::string designer_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.DesignerParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string designer_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     DesignerLaunchSurfacesParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--designer-launch-surfaces") != args.end();
@@ -3758,7 +3814,7 @@ DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(const
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3772,7 +3828,7 @@ DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(const
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(designer_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3783,7 +3839,7 @@ DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(const
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3797,7 +3853,7 @@ DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(const
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -3805,22 +3861,23 @@ DesignerLaunchSurfacesParseResult parse_designer_launch_surfaces_arguments(const
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
         } else {
-            fail("Unknown designer-launch-surfaces option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-launch-surfaces", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(designer_parse_message(catalog, "StudioHost.DesignerParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     DesignerInvocationAdmissionParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -3838,7 +3895,7 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3852,7 +3909,7 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(designer_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3863,7 +3920,7 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3877,7 +3934,7 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -3885,7 +3942,7 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -3893,7 +3950,7 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-editor-invocations"));
                 continue;
             }
             result.admit_editor_invocations = admitted;
@@ -3901,7 +3958,7 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-builder-invocations"));
                 continue;
             }
             result.admit_builder_invocations = admitted;
@@ -3909,22 +3966,23 @@ DesignerInvocationAdmissionParseResult parse_designer_invocation_admission_argum
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-invocation value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-toolbox-invocation"));
                 continue;
             }
             result.admit_toolbox_invocation = admitted;
         } else {
-            fail("Unknown designer-invocation-admission option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-invocation-admission", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(designer_parse_message(catalog, "StudioHost.DesignerParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 DesignerDispatchParseResult parse_designer_dispatch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     DesignerDispatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -3942,7 +4000,7 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3956,7 +4014,7 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(designer_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3967,7 +4025,7 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3981,7 +4039,7 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -3989,7 +4047,7 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -3997,7 +4055,7 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-editor-invocations"));
                 continue;
             }
             result.admit_editor_invocations = admitted;
@@ -4005,7 +4063,7 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-builder-invocations"));
                 continue;
             }
             result.admit_builder_invocations = admitted;
@@ -4013,22 +4071,24 @@ DesignerDispatchParseResult parse_designer_dispatch_arguments(
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-invocation value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-toolbox-invocation"));
                 continue;
             }
             result.admit_toolbox_invocation = admitted;
         } else {
-            fail("Unknown designer-dispatch option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-dispatch", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(designer_parse_message(catalog, "StudioHost.DesignerParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
-DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<std::string>& args) {
+DesignerExecuteParseResult parse_designer_execute_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     DesignerExecuteParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--designer-execute") != args.end();
@@ -4045,7 +4105,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4059,7 +4119,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(designer_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -4070,7 +4130,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4084,7 +4144,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -4092,7 +4152,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -4100,7 +4160,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-editor-invocations"));
                 continue;
             }
             result.admit_editor_invocations = admitted;
@@ -4108,7 +4168,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-builder-invocations"));
                 continue;
             }
             result.admit_builder_invocations = admitted;
@@ -4116,7 +4176,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-invocation value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-toolbox-invocation"));
                 continue;
             }
             result.admit_toolbox_invocation = admitted;
@@ -4124,7 +4184,7 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-designer-execution value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-designer-execution"));
                 continue;
             }
             result.admit_execution = admitted;
@@ -4135,26 +4195,27 @@ DesignerExecuteParseResult parse_designer_execute_arguments(const std::vector<st
         } else if (argument == "--toolbox-launch-command") {
             result.toolbox_launch_command = require_value(argument);
         } else {
-            fail("Unknown designer-execute option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-execute", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(designer_parse_message(catalog, "StudioHost.DesignerParse.Error.NoSelectionContext"));
     }
     if (result.ok && result.admit_editor_invocations && result.editor_action_launch_command.empty()) {
-        fail("No designer editor action launch command was provided.");
+        fail(designer_parse_message(catalog, "StudioHost.DesignerParse.Error.NoDesignerEditorActionLaunchCommand"));
     }
     if (result.ok && result.admit_builder_invocations && result.builder_launch_command.empty()) {
-        fail("No designer builder launch command was provided.");
+        fail(designer_parse_message(catalog, "StudioHost.DesignerParse.Error.NoDesignerBuilderLaunchCommand"));
     }
     if (result.ok && result.admit_toolbox_invocation && result.toolbox_launch_command.empty()) {
-        fail("No designer toolbox launch command was provided.");
+        fail(designer_parse_message(catalog, "StudioHost.DesignerParse.Error.NoDesignerToolboxLaunchCommand"));
     }
     return result;
 }
 
 DesignerLaunchSurfaceCatalogParseResult parse_designer_launch_surface_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     DesignerLaunchSurfaceCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -4172,7 +4233,7 @@ DesignerLaunchSurfaceCatalogParseResult parse_designer_launch_surface_catalog_ar
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4188,7 +4249,7 @@ DesignerLaunchSurfaceCatalogParseResult parse_designer_launch_surface_catalog_ar
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4202,7 +4263,7 @@ DesignerLaunchSurfaceCatalogParseResult parse_designer_launch_surface_catalog_ar
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -4210,18 +4271,19 @@ DesignerLaunchSurfaceCatalogParseResult parse_designer_launch_surface_catalog_ar
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
         } else {
-            fail("Unknown designer-launch-surface-catalog option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-launch-surface-catalog", argument));
         }
     }
     return result;
 }
 
 DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admission_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     DesignerInvocationAdmissionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -4240,7 +4302,7 @@ DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admissio
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4256,7 +4318,7 @@ DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admissio
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4270,7 +4332,7 @@ DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admissio
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -4278,7 +4340,7 @@ DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admissio
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -4286,7 +4348,7 @@ DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admissio
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-editor-invocations"));
                 continue;
             }
             result.admit_editor_invocations = admitted;
@@ -4295,7 +4357,7 @@ DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admissio
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-builder-invocations"));
                 continue;
             }
             result.admit_builder_invocations = admitted;
@@ -4304,19 +4366,20 @@ DesignerInvocationAdmissionCatalogParseResult parse_designer_invocation_admissio
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-invocation value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-toolbox-invocation"));
                 continue;
             }
             result.admit_toolbox_invocation = admitted;
             result.request.admit_toolbox_invocation = admitted;
         } else {
-            fail("Unknown designer-invocation-admission-catalog option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-invocation-admission-catalog", argument));
         }
     }
     return result;
 }
 
 DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     DesignerDispatchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -4335,7 +4398,7 @@ DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4351,7 +4414,7 @@ DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4365,7 +4428,7 @@ DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -4373,7 +4436,7 @@ DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -4381,7 +4444,7 @@ DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-editor-invocations"));
                 continue;
             }
             result.admit_editor_invocations = admitted;
@@ -4390,7 +4453,7 @@ DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-builder-invocations"));
                 continue;
             }
             result.admit_builder_invocations = admitted;
@@ -4399,19 +4462,20 @@ DesignerDispatchCatalogParseResult parse_designer_dispatch_catalog_arguments(
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-invocation value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-toolbox-invocation"));
                 continue;
             }
             result.admit_toolbox_invocation = admitted;
             result.request.admit_toolbox_invocation = admitted;
         } else {
-            fail("Unknown designer-dispatch-catalog option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-dispatch-catalog", argument));
         }
     }
     return result;
 }
 
 DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     DesignerDispatchExecutionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -4430,7 +4494,7 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(designer_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4446,7 +4510,7 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4460,7 +4524,7 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
             const std::string token = require_value(argument);
             std::size_t line = 0U;
             if (!parse_size_t_token(token, line)) {
-                fail("The --line value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--line"));
                 continue;
             }
             result.request.line = line;
@@ -4468,7 +4532,7 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
             const std::string token = require_value(argument);
             std::size_t column = 0U;
             if (!parse_size_t_token(token, column)) {
-                fail("The --column value must be a non-negative integer.");
+                fail(designer_parse_non_negative_integer(catalog, "--column"));
                 continue;
             }
             result.request.column = column;
@@ -4476,7 +4540,7 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-editor-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-editor-invocations"));
                 continue;
             }
             result.admit_editor_invocations = admitted;
@@ -4485,7 +4549,7 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-invocations value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-builder-invocations"));
                 continue;
             }
             result.admit_builder_invocations = admitted;
@@ -4494,7 +4558,7 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-toolbox-invocation value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-toolbox-invocation"));
                 continue;
             }
             result.admit_toolbox_invocation = admitted;
@@ -4503,13 +4567,13 @@ DesignerDispatchExecutionCatalogParseResult parse_designer_dispatch_execution_ca
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-designer-execution value must be true or false.");
+                fail(designer_parse_boolean_value_required(catalog, "--admit-designer-execution"));
                 continue;
             }
             result.admit_designer_execution = admitted;
             result.request.admit_execution = admitted;
         } else {
-            fail("Unknown designer-dispatch-execution-catalog option: " + argument);
+            fail(designer_parse_unknown_option(catalog, "designer-dispatch-execution-catalog", argument));
         }
     }
     return result;
@@ -24262,7 +24326,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto designer_launch_surfaces_parse = parse_designer_launch_surfaces_arguments(args);
+    const auto designer_launch_surfaces_parse = parse_designer_launch_surfaces_arguments(catalog, args);
     if (designer_launch_surfaces_parse.requested) {
         if (!designer_launch_surfaces_parse.ok) {
             const auto result = copperfin::studio::StudioDesignerLaunchSurfacePlanResult{
@@ -24289,7 +24353,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto designer_invocation_admission_parse = parse_designer_invocation_admission_arguments(args);
+    const auto designer_invocation_admission_parse = parse_designer_invocation_admission_arguments(catalog, args);
     if (designer_invocation_admission_parse.requested) {
         if (!designer_invocation_admission_parse.ok) {
             const auto result = copperfin::studio::StudioDesignerInvocationAdmissionResult{
@@ -24336,7 +24400,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto designer_dispatch_parse = parse_designer_dispatch_arguments(args);
+    const auto designer_dispatch_parse = parse_designer_dispatch_arguments(catalog, args);
     if (designer_dispatch_parse.requested) {
         if (!designer_dispatch_parse.ok) {
             const auto result = copperfin::studio::StudioDesignerDispatchResult{
@@ -24400,7 +24464,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto designer_execute_parse = parse_designer_execute_arguments(args);
+    const auto designer_execute_parse = parse_designer_execute_arguments(catalog, args);
     if (designer_execute_parse.requested) {
         auto print_designer_execution = [&](
             const copperfin::studio::StudioDesignerDispatchExecutionResult& result,
@@ -24525,7 +24589,7 @@ int main(int argc, char** argv) {
     }
 
     const auto designer_dispatch_execution_catalog_parse =
-        parse_designer_dispatch_execution_catalog_arguments(args);
+        parse_designer_dispatch_execution_catalog_arguments(catalog, args);
     if (designer_dispatch_execution_catalog_parse.requested) {
         if (!designer_dispatch_execution_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioDesignerDispatchExecutionCatalogResult{
@@ -24557,7 +24621,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto designer_dispatch_catalog_parse = parse_designer_dispatch_catalog_arguments(args);
+    const auto designer_dispatch_catalog_parse = parse_designer_dispatch_catalog_arguments(catalog, args);
     if (designer_dispatch_catalog_parse.requested) {
         if (!designer_dispatch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioDesignerDispatchCatalogResult{
@@ -24586,7 +24650,7 @@ int main(int argc, char** argv) {
     }
 
     const auto designer_invocation_admission_catalog_parse =
-        parse_designer_invocation_admission_catalog_arguments(args);
+        parse_designer_invocation_admission_catalog_arguments(catalog, args);
     if (designer_invocation_admission_catalog_parse.requested) {
         if (!designer_invocation_admission_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioDesignerInvocationAdmissionCatalogResult{
@@ -24614,7 +24678,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto designer_launch_surface_catalog_parse = parse_designer_launch_surface_catalog_arguments(args);
+    const auto designer_launch_surface_catalog_parse = parse_designer_launch_surface_catalog_arguments(catalog, args);
     if (designer_launch_surface_catalog_parse.requested) {
         if (!designer_launch_surface_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioDesignerLaunchSurfaceCatalogResult{
