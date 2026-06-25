@@ -4482,7 +4482,7 @@ VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualO
         const auto* unique_id = find_record_value(table.records[record_index], "UNIQUEID");
         const std::string source_unique_id = unique_id == nullptr ? std::string{} : trim_both(unique_id->display_value);
         if (source_unique_id.empty()) {
-            return failed_visual_object_subtree_duplicate_result("Every copied row must expose a UNIQUEID.");
+            return failed_visual_object_subtree_duplicate_result(visual_asset_text("VisualAssetEditor.Identity.CopiedRowFieldRequired", {{"fieldName", "UNIQUEID"}}));
         }
         if (unique_in_replacements(source_unique_id) != 1) {
             return failed_visual_object_subtree_duplicate_result(
@@ -5055,7 +5055,7 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
     const std::string container_name = visual_object_record_name(table_result.table.records[create_result.record_index]);
     if (container_name.empty()) {
         restore_original_asset();
-        return failed_visual_object_group_result("The group container does not expose an object name.");
+        return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Object.GroupContainerNameMissing"));
     }
 
     std::vector<VisualObjectReparentBatchItem> reparent_items;
@@ -5138,7 +5138,7 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         table_result.table.records[container_record_index],
         container_record_index);
     if (container_name.empty()) {
-        return failed_visual_object_ungroup_result("The selected container does not expose an object name.");
+        return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Object.SelectedContainerNameMissing"));
     }
     const auto* parent_value = find_record_value(table_result.table.records[container_record_index], "PARENT");
     const std::string container_parent_name = parent_value == nullptr ? std::string{} : trim_both(parent_value->display_value);
@@ -5156,7 +5156,7 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         return failed_visual_object_ungroup_result(children_result.error);
     }
     if (children_result.children.empty()) {
-        return failed_visual_object_ungroup_result("The selected container has no child objects to ungroup.");
+        return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Object.SelectedContainerChildrenRequired"));
     }
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);

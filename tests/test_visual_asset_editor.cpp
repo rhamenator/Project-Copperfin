@@ -24656,13 +24656,20 @@ void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
                    "VisualAssetEditor.Undo.PropertyLabel",
                    {{"propertyName", "Caption"}}) ==
                    "Property Caption" &&
+               english_catalog.translate(
+                   "VisualAssetEditor.Identity.CopiedRowFieldRequired",
+                   {{"fieldName", "UNIQUEID"}}) ==
+                   "Every copied row must expose a UNIQUEID." &&
+               english_catalog.translate("VisualAssetEditor.Object.SelectedContainerChildrenRequired") ==
+                   "The selected container has no child objects to ungroup." &&
                pseudo_catalog.translate("VisualAssetEditor.Object.RecordUnavailable").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Geometry.RequiredFieldsMissing").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Object.EditBatchRequired").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText").starts_with("[!! ") &&
-               pseudo_catalog.translate("VisualAssetEditor.Storage.MemoSidecarOpenFailed").starts_with("[!! "),
-           "#2373/#2374/#2375/#2376/#2377: visual asset editor prose should resolve through localizable catalog keys");
+               pseudo_catalog.translate("VisualAssetEditor.Storage.MemoSidecarOpenFailed").starts_with("[!! ") &&
+               pseudo_catalog.translate("VisualAssetEditor.Object.GroupContainerNameMissing").starts_with("[!! "),
+           "#2373/#2374/#2375/#2376/#2377/#2378: visual asset editor prose should resolve through localizable catalog keys");
 }
 
 }  // namespace
