@@ -1948,7 +1948,9 @@ VisualAssetEditResult set_visual_object_text_property(
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for " + property_label + " assignment."};
+        return {.ok = false, .error = visual_asset_text(
+            "VisualAssetEditor.Object.PropertyAssignmentSelectionRequired",
+            {{"propertyLabel", property_label}})};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -1968,8 +1970,9 @@ VisualAssetEditResult set_visual_object_text_property(
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for " +
-                property_label + " assignment."};
+            return {.ok = false, .error = visual_asset_text(
+                "VisualAssetEditor.Object.PropertyAssignmentDuplicate",
+                {{"propertyLabel", property_label}})};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -2004,7 +2007,9 @@ VisualAssetEditResult set_visual_object_scalar_property(
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for " + property_label + " assignment."};
+        return {.ok = false, .error = visual_asset_text(
+            "VisualAssetEditor.Object.PropertyAssignmentSelectionRequired",
+            {{"propertyLabel", property_label}})};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -2024,8 +2029,9 @@ VisualAssetEditResult set_visual_object_scalar_property(
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for " +
-                property_label + " assignment."};
+            return {.ok = false, .error = visual_asset_text(
+                "VisualAssetEditor.Object.PropertyAssignmentDuplicate",
+                {{"propertyLabel", property_label}})};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -5487,7 +5493,7 @@ VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequ
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for tab-order assignment."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TabOrderSelectionDuplicate")};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -5538,7 +5544,7 @@ VisualAssetEditResult set_visual_object_tab_stop(const VisualObjectTabStopReques
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for tab-stop assignment."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TabStopSelectionDuplicate")};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -5589,7 +5595,7 @@ VisualAssetEditResult set_visual_object_visibility(const VisualObjectVisibilityR
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for visibility assignment."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.VisibilitySelectionDuplicate")};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -5640,7 +5646,7 @@ VisualAssetEditResult set_visual_object_enabled(const VisualObjectEnabledRequest
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for enabled-state assignment."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.EnabledSelectionDuplicate")};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -5691,7 +5697,7 @@ VisualAssetEditResult set_visual_object_read_only(const VisualObjectReadOnlyRequ
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for read-only assignment."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReadOnlySelectionDuplicate")};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -5742,7 +5748,7 @@ VisualAssetEditResult set_visual_object_locked(const VisualObjectLockedRequest& 
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
-            return {.ok = false, .error = "The same visual object was selected more than once for locked-state assignment."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.LockedSelectionDuplicate")};
         }
         resolved_record_indexes.push_back(property_result.record_index);
 
@@ -5770,7 +5776,7 @@ VisualAssetEditResult set_visual_object_caption(const VisualObjectCaptionRequest
         request.path,
         request.objects,
         "Caption",
-        "caption",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Caption"),
         request.caption);
 }
 
@@ -5779,7 +5785,7 @@ VisualAssetEditResult set_visual_object_tooltip_text(const VisualObjectToolTipTe
         request.path,
         request.objects,
         "ToolTipText",
-        "tooltip text",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ToolTipText"),
         request.tooltip_text);
 }
 
@@ -5788,7 +5794,7 @@ VisualAssetEditResult set_visual_object_status_bar_text(const VisualObjectStatus
         request.path,
         request.objects,
         "StatusBarText",
-        "status-bar text",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.StatusBarText"),
         request.status_bar_text);
 }
 
@@ -5797,7 +5803,7 @@ VisualAssetEditResult set_visual_object_control_source(const VisualObjectControl
         request.path,
         request.objects,
         "ControlSource",
-        "control-source",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ControlSource"),
         request.control_source);
 }
 
@@ -5806,7 +5812,7 @@ VisualAssetEditResult set_visual_object_current_control(const VisualObjectCurren
         request.path,
         request.objects,
         "CurrentControl",
-        "current control",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.CurrentControl"),
         request.current_control);
 }
 
@@ -5815,7 +5821,7 @@ VisualAssetEditResult set_visual_object_closable(const VisualObjectClosableReque
         request.path,
         request.objects,
         "Closable",
-        "closable",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Closable"),
         request.closable ? ".T." : ".F.");
 }
 
@@ -5824,7 +5830,7 @@ VisualAssetEditResult set_visual_object_control_box(const VisualObjectControlBox
         request.path,
         request.objects,
         "ControlBox",
-        "control-box",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ControlBox"),
         request.control_box ? ".T." : ".F.");
 }
 
@@ -5833,7 +5839,7 @@ VisualAssetEditResult set_visual_object_allow_output(const VisualObjectAllowOutp
         request.path,
         request.objects,
         "AllowOutput",
-        "allow-output",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AllowOutput"),
         request.allow_output ? ".T." : ".F.");
 }
 
@@ -5842,7 +5848,7 @@ VisualAssetEditResult set_visual_object_auto_center(const VisualObjectAutoCenter
         request.path,
         request.objects,
         "AutoCenter",
-        "auto-center",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AutoCenter"),
         request.auto_center ? ".T." : ".F.");
 }
 
@@ -5851,7 +5857,7 @@ VisualAssetEditResult set_visual_object_auto_size(const VisualObjectAutoSizeRequ
         request.path,
         request.objects,
         "AutoSize",
-        "auto-size",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AutoSize"),
         request.auto_size ? ".T." : ".F.");
 }
 
@@ -5860,7 +5866,7 @@ VisualAssetEditResult set_visual_object_auto_release(const VisualObjectAutoRelea
         request.path,
         request.objects,
         "AutoRelease",
-        "auto-release",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AutoRelease"),
         request.auto_release ? ".T." : ".F.");
 }
 
@@ -5869,7 +5875,7 @@ VisualAssetEditResult set_visual_object_auto_verb_menu(const VisualObjectAutoVer
         request.path,
         request.objects,
         "AutoVerbMenu",
-        "auto-verb-menu",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AutoVerbMenu"),
         request.auto_verb_menu ? ".T." : ".F.");
 }
 
@@ -5878,7 +5884,7 @@ VisualAssetEditResult set_visual_object_bind_controls(const VisualObjectBindCont
         request.path,
         request.objects,
         "BindControls",
-        "bind-controls",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BindControls"),
         request.bind_controls ? ".T." : ".F.");
 }
 
@@ -5887,7 +5893,7 @@ VisualAssetEditResult set_visual_object_clip_controls(const VisualObjectClipCont
         request.path,
         request.objects,
         "ClipControls",
-        "clip-controls",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ClipControls"),
         request.clip_controls ? ".T." : ".F.");
 }
 
@@ -5896,7 +5902,7 @@ VisualAssetEditResult set_visual_object_dockable(const VisualObjectDockableReque
         request.path,
         request.objects,
         "Dockable",
-        "dockable",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Dockable"),
         request.dockable ? ".T." : ".F.");
 }
 
@@ -5905,7 +5911,7 @@ VisualAssetEditResult set_visual_object_continuous_scroll(const VisualObjectCont
         request.path,
         request.objects,
         "ContinuousScroll",
-        "continuous-scroll",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ContinuousScroll"),
         request.continuous_scroll ? ".T." : ".F.");
 }
 
@@ -5914,7 +5920,7 @@ VisualAssetEditResult set_visual_object_desktop(const VisualObjectDesktopRequest
         request.path,
         request.objects,
         "Desktop",
-        "desktop",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Desktop"),
         request.desktop ? ".T." : ".F.");
 }
 
@@ -5923,7 +5929,7 @@ VisualAssetEditResult set_visual_object_key_preview(const VisualObjectKeyPreview
         request.path,
         request.objects,
         "KeyPreview",
-        "key-preview",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.KeyPreview"),
         request.key_preview ? ".T." : ".F.");
 }
 
@@ -5932,7 +5938,7 @@ VisualAssetEditResult set_visual_object_mac_desktop(const VisualObjectMacDesktop
         request.path,
         request.objects,
         "MacDesktop",
-        "Mac desktop",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MacDesktop"),
         request.mac_desktop ? ".T." : ".F.");
 }
 
@@ -5941,7 +5947,7 @@ VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRe
         request.path,
         request.objects,
         "MaxButton",
-        "max-button",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MaxButton"),
         request.max_button ? ".T." : ".F.");
 }
 
@@ -5954,7 +5960,7 @@ VisualAssetEditResult set_visual_object_max_height(const VisualObjectMaxHeightRe
         request.path,
         request.objects,
         "MaxHeight",
-        "max-height",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MaxHeight"),
         std::to_string(request.max_height));
 }
 
@@ -5967,7 +5973,7 @@ VisualAssetEditResult set_visual_object_max_width(const VisualObjectMaxWidthRequ
         request.path,
         request.objects,
         "MaxWidth",
-        "max-width",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MaxWidth"),
         std::to_string(request.max_width));
 }
 
@@ -5980,7 +5986,7 @@ VisualAssetEditResult set_visual_object_max_left(const VisualObjectMaxLeftReques
         request.path,
         request.objects,
         "MaxLeft",
-        "max-left",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MaxLeft"),
         std::to_string(request.max_left));
 }
 
@@ -5993,7 +5999,7 @@ VisualAssetEditResult set_visual_object_max_top(const VisualObjectMaxTopRequest&
         request.path,
         request.objects,
         "MaxTop",
-        "max-top",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MaxTop"),
         std::to_string(request.max_top));
 }
 
@@ -6002,7 +6008,7 @@ VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRe
         request.path,
         request.objects,
         "MinButton",
-        "min-button",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MinButton"),
         request.min_button ? ".T." : ".F.");
 }
 
@@ -6015,7 +6021,7 @@ VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRe
         request.path,
         request.objects,
         "MinHeight",
-        "min-height",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MinHeight"),
         std::to_string(request.min_height));
 }
 
@@ -6028,7 +6034,7 @@ VisualAssetEditResult set_visual_object_min_width(const VisualObjectMinWidthRequ
         request.path,
         request.objects,
         "MinWidth",
-        "min-width",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MinWidth"),
         std::to_string(request.min_width));
 }
 
@@ -6037,7 +6043,7 @@ VisualAssetEditResult set_visual_object_movable(const VisualObjectMovableRequest
         request.path,
         request.objects,
         "Movable",
-        "movable",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Movable"),
         request.movable ? ".T." : ".F.");
 }
 
@@ -6047,7 +6053,7 @@ VisualAssetEditResult set_visual_object_half_height_caption(
         request.path,
         request.objects,
         "HalfHeightCaption",
-        "half-height-caption",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HalfHeightCaption"),
         request.half_height_caption ? ".T." : ".F.");
 }
 
@@ -6056,7 +6062,7 @@ VisualAssetEditResult set_visual_object_mdi_form(const VisualObjectMdiFormReques
         request.path,
         request.objects,
         "MDIForm",
-        "MDI form",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MDIForm"),
         request.mdi_form ? ".T." : ".F.");
 }
 
@@ -6065,7 +6071,7 @@ VisualAssetEditResult set_visual_object_whats_this_button(const VisualObjectWhat
         request.path,
         request.objects,
         "WhatsThisButton",
-        "WhatsThis button",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.WhatsThisButton"),
         request.whats_this_button ? ".T." : ".F.");
 }
 
@@ -6074,7 +6080,7 @@ VisualAssetEditResult set_visual_object_whats_this_help(const VisualObjectWhatsT
         request.path,
         request.objects,
         "WhatsThisHelp",
-        "WhatsThis help",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.WhatsThisHelp"),
         request.whats_this_help ? ".T." : ".F.");
 }
 
@@ -6087,7 +6093,7 @@ VisualAssetEditResult set_visual_object_whats_this_help_id(const VisualObjectWha
         request.path,
         request.objects,
         "WhatsThisHelpID",
-        "WhatsThis help ID",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.WhatsThisHelpID"),
         std::to_string(request.whats_this_help_id));
 }
 
@@ -6100,7 +6106,7 @@ VisualAssetEditResult set_visual_object_help_context_id(const VisualObjectHelpCo
         request.path,
         request.objects,
         "HelpContextID",
-        "help-context ID",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HelpContextID"),
         std::to_string(request.help_context_id));
 }
 
@@ -6113,7 +6119,7 @@ VisualAssetEditResult set_visual_object_display_orientation(const VisualObjectDi
         request.path,
         request.objects,
         "DisplayOrientation",
-        "display orientation",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DisplayOrientation"),
         std::to_string(request.display_orientation));
 }
 
@@ -6126,7 +6132,7 @@ VisualAssetEditResult set_visual_object_tab_orientation(const VisualObjectTabOri
         request.path,
         request.objects,
         "TabOrientation",
-        "tab orientation",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.TabOrientation"),
         std::to_string(request.tab_orientation));
 }
 
@@ -6139,7 +6145,7 @@ VisualAssetEditResult set_visual_object_list_item_id(const VisualObjectListItemI
         request.path,
         request.objects,
         "ListItemID",
-        "list-item ID",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ListItemID"),
         std::to_string(request.list_item_id));
 }
 
@@ -6148,7 +6154,7 @@ VisualAssetEditResult set_visual_object_lock_screen(const VisualObjectLockScreen
         request.path,
         request.objects,
         "LockScreen",
-        "lock-screen",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.LockScreen"),
         request.lock_screen ? ".T." : ".F.");
 }
 
@@ -6157,7 +6163,7 @@ VisualAssetEditResult set_visual_object_hide_selection(const VisualObjectHideSel
         request.path,
         request.objects,
         "HideSelection",
-        "hide-selection",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HideSelection"),
         request.hide_selection ? ".T." : ".F.");
 }
 
@@ -6166,7 +6172,7 @@ VisualAssetEditResult set_visual_object_allow_cell_selection(const VisualObjectA
         request.path,
         request.objects,
         "AllowCellSelection",
-        "allow-cell-selection",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AllowCellSelection"),
         request.allow_cell_selection ? ".T." : ".F.");
 }
 
@@ -6175,7 +6181,7 @@ VisualAssetEditResult set_visual_object_delete_mark(const VisualObjectDeleteMark
         request.path,
         request.objects,
         "DeleteMark",
-        "delete-mark",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DeleteMark"),
         request.delete_mark ? ".T." : ".F.");
 }
 
@@ -6184,7 +6190,7 @@ VisualAssetEditResult set_visual_object_record_mark(const VisualObjectRecordMark
         request.path,
         request.objects,
         "RecordMark",
-        "record-mark",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.RecordMark"),
         request.record_mark ? ".T." : ".F.");
 }
 
@@ -6193,7 +6199,7 @@ VisualAssetEditResult set_visual_object_split_bar(const VisualObjectSplitBarRequ
         request.path,
         request.objects,
         "SplitBar",
-        "split-bar",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.SplitBar"),
         request.split_bar ? ".T." : ".F.");
 }
 
@@ -6202,7 +6208,7 @@ VisualAssetEditResult set_visual_object_highlight_row(const VisualObjectHighligh
         request.path,
         request.objects,
         "HighlightRow",
-        "highlight-row",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HighlightRow"),
         request.highlight_row ? ".T." : ".F.");
 }
 
@@ -6211,7 +6217,7 @@ VisualAssetEditResult set_visual_object_panel_link(const VisualObjectPanelLinkRe
         request.path,
         request.objects,
         "PanelLink",
-        "panel-link",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.PanelLink"),
         request.panel_link ? ".T." : ".F.");
 }
 
@@ -6220,7 +6226,7 @@ VisualAssetEditResult set_visual_object_allow_header_sizing(const VisualObjectAl
         request.path,
         request.objects,
         "AllowHeaderSizing",
-        "allow-header-sizing",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AllowHeaderSizing"),
         request.allow_header_sizing ? ".T." : ".F.");
 }
 
@@ -6229,7 +6235,7 @@ VisualAssetEditResult set_visual_object_allow_row_sizing(const VisualObjectAllow
         request.path,
         request.objects,
         "AllowRowSizing",
-        "allow-row-sizing",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AllowRowSizing"),
         request.allow_row_sizing ? ".T." : ".F.");
 }
 
@@ -6238,7 +6244,7 @@ VisualAssetEditResult set_visual_object_resizable(const VisualObjectResizableReq
         request.path,
         request.objects,
         "Resizable",
-        "resizable",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Resizable"),
         request.resizable ? ".T." : ".F.");
 }
 
@@ -6247,7 +6253,7 @@ VisualAssetEditResult set_visual_object_sparse(const VisualObjectSparseRequest& 
         request.path,
         request.objects,
         "Sparse",
-        "sparse",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Sparse"),
         request.sparse ? ".T." : ".F.");
 }
 
@@ -6256,7 +6262,7 @@ VisualAssetEditResult set_visual_object_add_line_feeds(const VisualObjectAddLine
         request.path,
         request.objects,
         "AddLineFeeds",
-        "add-line-feeds",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AddLineFeeds"),
         request.add_line_feeds ? ".T." : ".F.");
 }
 
@@ -6265,7 +6271,7 @@ VisualAssetEditResult set_visual_object_always_on_top(const VisualObjectAlwaysOn
         request.path,
         request.objects,
         "AlwaysOnTop",
-        "always-on-top",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AlwaysOnTop"),
         request.always_on_top ? ".T." : ".F.");
 }
 
@@ -6274,7 +6280,7 @@ VisualAssetEditResult set_visual_object_always_on_bottom(const VisualObjectAlway
         request.path,
         request.objects,
         "AlwaysOnBottom",
-        "always-on-bottom",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.AlwaysOnBottom"),
         request.always_on_bottom ? ".T." : ".F.");
 }
 
@@ -6283,7 +6289,7 @@ VisualAssetEditResult set_visual_object_picture(const VisualObjectPictureRequest
         request.path,
         request.objects,
         "Picture",
-        "picture",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Picture"),
         request.picture);
 }
 
@@ -6292,7 +6298,7 @@ VisualAssetEditResult set_visual_object_down_picture(const VisualObjectDownPictu
         request.path,
         request.objects,
         "DownPicture",
-        "down-picture",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DownPicture"),
         request.down_picture);
 }
 
@@ -6301,7 +6307,7 @@ VisualAssetEditResult set_visual_object_disabled_picture(const VisualObjectDisab
         request.path,
         request.objects,
         "DisabledPicture",
-        "disabled-picture",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DisabledPicture"),
         request.disabled_picture);
 }
 
@@ -6310,7 +6316,7 @@ VisualAssetEditResult set_visual_object_ole_drag_picture(const VisualObjectOleDr
         request.path,
         request.objects,
         "OLEDragPicture",
-        "OLE drag-picture",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.OLEDragPicture"),
         request.ole_drag_picture);
 }
 
@@ -6319,7 +6325,7 @@ VisualAssetEditResult set_visual_object_mouse_icon(const VisualObjectMouseIconRe
         request.path,
         request.objects,
         "MouseIcon",
-        "mouse-icon",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MouseIcon"),
         request.mouse_icon);
 }
 
@@ -6328,7 +6334,7 @@ VisualAssetEditResult set_visual_object_drag_icon(const VisualObjectDragIconRequ
         request.path,
         request.objects,
         "DragIcon",
-        "drag-icon",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DragIcon"),
         request.drag_icon);
 }
 
@@ -6341,7 +6347,7 @@ VisualAssetEditResult set_visual_object_drag_mode(const VisualObjectDragModeRequ
         request.path,
         request.objects,
         "DragMode",
-        "drag-mode",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DragMode"),
         std::to_string(request.drag_mode));
 }
 
@@ -6354,7 +6360,7 @@ VisualAssetEditResult set_visual_object_ole_drag_mode(const VisualObjectOleDragM
         request.path,
         request.objects,
         "OLEDragMode",
-        "OLE drag-mode",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.OLEDragMode"),
         std::to_string(request.ole_drag_mode));
 }
 
@@ -6367,7 +6373,7 @@ VisualAssetEditResult set_visual_object_ole_drop_mode(const VisualObjectOleDropM
         request.path,
         request.objects,
         "OLEDropMode",
-        "OLE drop-mode",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.OLEDropMode"),
         std::to_string(request.ole_drop_mode));
 }
 
@@ -6380,7 +6386,7 @@ VisualAssetEditResult set_visual_object_ole_drop_effects(const VisualObjectOleDr
         request.path,
         request.objects,
         "OLEDropEffects",
-        "OLE drop-effects",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.OLEDropEffects"),
         std::to_string(request.ole_drop_effects));
 }
 
@@ -6394,7 +6400,7 @@ VisualAssetEditResult set_visual_object_ole_drop_text_insertion(
         request.path,
         request.objects,
         "OLEDropTextInsertion",
-        "OLE drop text-insertion",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.OLEDropTextInsertion"),
         std::to_string(request.ole_drop_text_insertion));
 }
 
@@ -6407,7 +6413,7 @@ VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRe
         request.path,
         request.objects,
         "BackStyle",
-        "back-style",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BackStyle"),
         std::to_string(request.back_style));
 }
 
@@ -6420,7 +6426,7 @@ VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderSty
         request.path,
         request.objects,
         "BorderStyle",
-        "border-style",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BorderStyle"),
         std::to_string(request.border_style));
 }
 
@@ -6433,7 +6439,7 @@ VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWid
         request.path,
         request.objects,
         "BorderWidth",
-        "border-width",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BorderWidth"),
         std::to_string(request.border_width));
 }
 
@@ -6446,7 +6452,7 @@ VisualAssetEditResult set_visual_object_border_color(const VisualObjectBorderCol
         request.path,
         request.objects,
         "BorderColor",
-        "border-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BorderColor"),
         std::to_string(request.border_color));
 }
 
@@ -6459,7 +6465,7 @@ VisualAssetEditResult set_visual_object_grid_line_color(const VisualObjectGridLi
         request.path,
         request.objects,
         "GridLineColor",
-        "grid-line-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.GridLineColor"),
         std::to_string(request.grid_line_color));
 }
 
@@ -6472,7 +6478,7 @@ VisualAssetEditResult set_visual_object_grid_line_width(const VisualObjectGridLi
         request.path,
         request.objects,
         "GridLineWidth",
-        "grid-line-width",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.GridLineWidth"),
         std::to_string(request.grid_line_width));
 }
 
@@ -6485,7 +6491,7 @@ VisualAssetEditResult set_visual_object_grid_lines(const VisualObjectGridLinesRe
         request.path,
         request.objects,
         "GridLines",
-        "grid-lines",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.GridLines"),
         std::to_string(request.grid_lines));
 }
 
@@ -6499,7 +6505,7 @@ VisualAssetEditResult set_visual_object_highlight_row_line_width(
         request.path,
         request.objects,
         "HighlightRowLineWidth",
-        "highlight-row-line-width",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HighlightRowLineWidth"),
         std::to_string(request.highlight_row_line_width));
 }
 
@@ -6512,7 +6518,7 @@ VisualAssetEditResult set_visual_object_highlight_style(const VisualObjectHighli
         request.path,
         request.objects,
         "HighlightStyle",
-        "highlight-style",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HighlightStyle"),
         std::to_string(request.highlight_style));
 }
 
@@ -6525,7 +6531,7 @@ VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHe
         request.path,
         request.objects,
         "HeaderHeight",
-        "header-height",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HeaderHeight"),
         std::to_string(request.header_height));
 }
 
@@ -6538,7 +6544,7 @@ VisualAssetEditResult set_visual_object_row_height(const VisualObjectRowHeightRe
         request.path,
         request.objects,
         "RowHeight",
-        "row-height",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.RowHeight"),
         std::to_string(request.row_height));
 }
 
@@ -6551,7 +6557,7 @@ VisualAssetEditResult set_visual_object_lock_columns(const VisualObjectLockColum
         request.path,
         request.objects,
         "LockColumns",
-        "lock-columns",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.LockColumns"),
         std::to_string(request.lock_columns));
 }
 
@@ -6564,7 +6570,7 @@ VisualAssetEditResult set_visual_object_lock_columns_left(const VisualObjectLock
         request.path,
         request.objects,
         "LockColumnsLeft",
-        "lock-columns-left",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.LockColumnsLeft"),
         std::to_string(request.lock_columns_left));
 }
 
@@ -6573,7 +6579,7 @@ VisualAssetEditResult set_visual_object_record_source(const VisualObjectRecordSo
         request.path,
         request.objects,
         "RecordSource",
-        "record-source",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.RecordSource"),
         request.record_source);
 }
 
@@ -6582,7 +6588,7 @@ VisualAssetEditResult set_visual_object_link_master(const VisualObjectLinkMaster
         request.path,
         request.objects,
         "LinkMaster",
-        "link-master",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.LinkMaster"),
         request.link_master);
 }
 
@@ -6591,7 +6597,7 @@ VisualAssetEditResult set_visual_object_initial_selected_alias(const VisualObjec
         request.path,
         request.objects,
         "InitialSelectedAlias",
-        "initial-selected alias",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.InitialSelectedAlias"),
         request.initial_selected_alias);
 }
 
@@ -6600,7 +6606,7 @@ VisualAssetEditResult set_visual_object_default_file_path(const VisualObjectDefa
         request.path,
         request.objects,
         "DefaultFilePath",
-        "default file path",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DefaultFilePath"),
         request.default_file_path);
 }
 
@@ -6609,7 +6615,7 @@ VisualAssetEditResult set_visual_object_form_set_class(const VisualObjectFormSet
         request.path,
         request.objects,
         "FormSetClass",
-        "form-set class",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FormSetClass"),
         request.form_set_class);
 }
 
@@ -6622,7 +6628,7 @@ VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRec
         request.path,
         request.objects,
         "RecordSourceType",
-        "record-source-type",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.RecordSourceType"),
         std::to_string(request.record_source_type));
 }
 
@@ -6635,7 +6641,7 @@ VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionReq
         request.path,
         request.objects,
         "Partition",
-        "partition",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Partition"),
         std::to_string(request.partition));
 }
 
@@ -6648,7 +6654,7 @@ VisualAssetEditResult set_visual_object_column_order(const VisualObjectColumnOrd
         request.path,
         request.objects,
         "ColumnOrder",
-        "column-order",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ColumnOrder"),
         std::to_string(request.column_order));
 }
 
@@ -6661,7 +6667,7 @@ VisualAssetEditResult set_visual_object_child_order(const VisualObjectChildOrder
         request.path,
         request.objects,
         "ChildOrder",
-        "child-order",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ChildOrder"),
         std::to_string(request.child_order));
 }
 
@@ -6674,7 +6680,7 @@ VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecial
         request.path,
         request.objects,
         "SpecialEffect",
-        "special-effect",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.SpecialEffect"),
         std::to_string(request.special_effect));
 }
 
@@ -6687,7 +6693,7 @@ VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureReq
         request.path,
         request.objects,
         "Curvature",
-        "curvature",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Curvature"),
         std::to_string(request.curvature));
 }
 
@@ -6700,7 +6706,7 @@ VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequ
         request.path,
         request.objects,
         "DrawMode",
-        "draw-mode",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DrawMode"),
         std::to_string(request.draw_mode));
 }
 
@@ -6713,7 +6719,7 @@ VisualAssetEditResult set_visual_object_draw_style(const VisualObjectDrawStyleRe
         request.path,
         request.objects,
         "DrawStyle",
-        "draw-style",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DrawStyle"),
         std::to_string(request.draw_style));
 }
 
@@ -6726,7 +6732,7 @@ VisualAssetEditResult set_visual_object_draw_width(const VisualObjectDrawWidthRe
         request.path,
         request.objects,
         "DrawWidth",
-        "draw-width",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DrawWidth"),
         std::to_string(request.draw_width));
 }
 
@@ -6739,7 +6745,7 @@ VisualAssetEditResult set_visual_object_fill_color(const VisualObjectFillColorRe
         request.path,
         request.objects,
         "FillColor",
-        "fill-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FillColor"),
         std::to_string(request.fill_color));
 }
 
@@ -6752,7 +6758,7 @@ VisualAssetEditResult set_visual_object_fill_style(const VisualObjectFillStyleRe
         request.path,
         request.objects,
         "FillStyle",
-        "fill-style",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FillStyle"),
         std::to_string(request.fill_style));
 }
 
@@ -6765,7 +6771,7 @@ VisualAssetEditResult set_visual_object_buffer_mode(const VisualObjectBufferMode
         request.path,
         request.objects,
         "BufferMode",
-        "buffer-mode",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BufferMode"),
         std::to_string(request.buffer_mode));
 }
 
@@ -6779,7 +6785,7 @@ VisualAssetEditResult set_visual_object_buffer_mode_override(
         request.path,
         request.objects,
         "BufferModeOverride",
-        "buffer-mode-override",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BufferModeOverride"),
         std::to_string(request.buffer_mode_override));
 }
 
@@ -6792,7 +6798,7 @@ VisualAssetEditResult set_visual_object_data_session(const VisualObjectDataSessi
         request.path,
         request.objects,
         "DataSession",
-        "data-session",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DataSession"),
         std::to_string(request.data_session));
 }
 
@@ -6805,7 +6811,7 @@ VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRe
         request.path,
         request.objects,
         "ScaleMode",
-        "scale-mode",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ScaleMode"),
         std::to_string(request.scale_mode));
 }
 
@@ -6818,7 +6824,7 @@ VisualAssetEditResult set_visual_object_scroll_bars(const VisualObjectScrollBars
         request.path,
         request.objects,
         "ScrollBars",
-        "scroll-bars",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ScrollBars"),
         std::to_string(request.scroll_bars));
 }
 
@@ -6831,7 +6837,7 @@ VisualAssetEditResult set_visual_object_window_state(const VisualObjectWindowSta
         request.path,
         request.objects,
         "WindowState",
-        "window-state",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.WindowState"),
         std::to_string(request.window_state));
 }
 
@@ -6844,7 +6850,7 @@ VisualAssetEditResult set_visual_object_show_window(const VisualObjectShowWindow
         request.path,
         request.objects,
         "ShowWindow",
-        "show-window",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ShowWindow"),
         std::to_string(request.show_window));
 }
 
@@ -6857,7 +6863,7 @@ VisualAssetEditResult set_visual_object_title_bar(const VisualObjectTitleBarRequ
         request.path,
         request.objects,
         "TitleBar",
-        "title-bar",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.TitleBar"),
         std::to_string(request.title_bar));
 }
 
@@ -6870,7 +6876,7 @@ VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePoi
         request.path,
         request.objects,
         "MousePointer",
-        "mouse-pointer",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MousePointer"),
         std::to_string(request.mouse_pointer));
 }
 
@@ -6883,7 +6889,7 @@ VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPicture
         request.path,
         request.objects,
         "PictureMargin",
-        "picture-margin",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.PictureMargin"),
         std::to_string(request.picture_margin));
 }
 
@@ -6896,7 +6902,7 @@ VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPictu
         request.path,
         request.objects,
         "PicturePosition",
-        "picture-position",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.PicturePosition"),
         std::to_string(request.picture_position));
 }
 
@@ -6909,7 +6915,7 @@ VisualAssetEditResult set_visual_object_picture_spacing(const VisualObjectPictur
         request.path,
         request.objects,
         "PictureSpacing",
-        "picture-spacing",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.PictureSpacing"),
         std::to_string(request.picture_spacing));
 }
 
@@ -6923,7 +6929,7 @@ VisualAssetEditResult set_visual_object_picture_selection_display(
         request.path,
         request.objects,
         "PictureSelectionDisplay",
-        "picture-selection-display",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.PictureSelectionDisplay"),
         std::to_string(request.picture_selection_display));
 }
 
@@ -6932,7 +6938,7 @@ VisualAssetEditResult set_visual_object_input_mask(const VisualObjectInputMaskRe
         request.path,
         request.objects,
         "InputMask",
-        "input-mask",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.InputMask"),
         request.input_mask);
 }
 
@@ -6941,7 +6947,7 @@ VisualAssetEditResult set_visual_object_dynamic_input_mask(const VisualObjectDyn
         request.path,
         request.objects,
         "DynamicInputMask",
-        "dynamic input mask",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicInputMask"),
         request.dynamic_input_mask);
 }
 
@@ -6950,7 +6956,7 @@ VisualAssetEditResult set_visual_object_dynamic_line_height(const VisualObjectDy
         request.path,
         request.objects,
         "DynamicLineHeight",
-        "dynamic line height",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicLineHeight"),
         request.dynamic_line_height);
 }
 
@@ -6959,7 +6965,7 @@ VisualAssetEditResult set_visual_object_format(const VisualObjectFormatRequest& 
         request.path,
         request.objects,
         "Format",
-        "format",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Format"),
         request.format);
 }
 
@@ -6968,7 +6974,7 @@ VisualAssetEditResult set_visual_object_font_name(const VisualObjectFontNameRequ
         request.path,
         request.objects,
         "FontName",
-        "font name",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontName"),
         request.font_name);
 }
 
@@ -6981,7 +6987,7 @@ VisualAssetEditResult set_visual_object_font_size(const VisualObjectFontSizeRequ
         request.path,
         request.objects,
         "FontSize",
-        "font size",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontSize"),
         format_visual_geometry_number(request.font_size));
 }
 
@@ -6990,7 +6996,7 @@ VisualAssetEditResult set_visual_object_font_bold(const VisualObjectFontBoldRequ
         request.path,
         request.objects,
         "FontBold",
-        "font bold",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontBold"),
         request.font_bold ? ".T." : ".F.");
 }
 
@@ -6999,7 +7005,7 @@ VisualAssetEditResult set_visual_object_font_italic(const VisualObjectFontItalic
         request.path,
         request.objects,
         "FontItalic",
-        "font italic",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontItalic"),
         request.font_italic ? ".T." : ".F.");
 }
 
@@ -7008,7 +7014,7 @@ VisualAssetEditResult set_visual_object_font_underline(const VisualObjectFontUnd
         request.path,
         request.objects,
         "FontUnderline",
-        "font underline",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontUnderline"),
         request.font_underline ? ".T." : ".F.");
 }
 
@@ -7017,7 +7023,7 @@ VisualAssetEditResult set_visual_object_font_strikethru(const VisualObjectFontSt
         request.path,
         request.objects,
         "FontStrikethru",
-        "font strikethru",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontStrikethru"),
         request.font_strikethru ? ".T." : ".F.");
 }
 
@@ -7026,7 +7032,7 @@ VisualAssetEditResult set_visual_object_font_outline(const VisualObjectFontOutli
         request.path,
         request.objects,
         "FontOutline",
-        "font outline",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontOutline"),
         request.font_outline ? ".T." : ".F.");
 }
 
@@ -7035,7 +7041,7 @@ VisualAssetEditResult set_visual_object_font_shadow(const VisualObjectFontShadow
         request.path,
         request.objects,
         "FontShadow",
-        "font shadow",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.FontShadow"),
         request.font_shadow ? ".T." : ".F.");
 }
 
@@ -7044,7 +7050,7 @@ VisualAssetEditResult set_visual_object_dynamic_alignment(const VisualObjectDyna
         request.path,
         request.objects,
         "DynamicAlignment",
-        "dynamic alignment",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicAlignment"),
         request.dynamic_alignment);
 }
 
@@ -7054,7 +7060,7 @@ VisualAssetEditResult set_visual_object_dynamic_current_control(
         request.path,
         request.objects,
         "DynamicCurrentControl",
-        "dynamic current control",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicCurrentControl"),
         request.dynamic_current_control);
 }
 
@@ -7063,7 +7069,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_name(const VisualObjectDyna
         request.path,
         request.objects,
         "DynamicFontName",
-        "dynamic font name",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontName"),
         request.dynamic_font_name);
 }
 
@@ -7072,7 +7078,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_size(const VisualObjectDyna
         request.path,
         request.objects,
         "DynamicFontSize",
-        "dynamic font size",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontSize"),
         request.dynamic_font_size);
 }
 
@@ -7081,7 +7087,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_bold(const VisualObjectDyna
         request.path,
         request.objects,
         "DynamicFontBold",
-        "dynamic font bold",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontBold"),
         request.dynamic_font_bold);
 }
 
@@ -7090,7 +7096,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_italic(const VisualObjectDy
         request.path,
         request.objects,
         "DynamicFontItalic",
-        "dynamic font italic",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontItalic"),
         request.dynamic_font_italic);
 }
 
@@ -7099,7 +7105,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_underline(const VisualObjec
         request.path,
         request.objects,
         "DynamicFontUnderline",
-        "dynamic font underline",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontUnderline"),
         request.dynamic_font_underline);
 }
 
@@ -7108,7 +7114,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_strikethru(const VisualObje
         request.path,
         request.objects,
         "DynamicFontStrikethru",
-        "dynamic font strikethru",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontStrikethru"),
         request.dynamic_font_strikethru);
 }
 
@@ -7117,7 +7123,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_outline(const VisualObjectD
         request.path,
         request.objects,
         "DynamicFontOutline",
-        "dynamic font outline",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontOutline"),
         request.dynamic_font_outline);
 }
 
@@ -7126,7 +7132,7 @@ VisualAssetEditResult set_visual_object_dynamic_font_shadow(const VisualObjectDy
         request.path,
         request.objects,
         "DynamicFontShadow",
-        "dynamic font shadow",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicFontShadow"),
         request.dynamic_font_shadow);
 }
 
@@ -7135,7 +7141,7 @@ VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRe
         request.path,
         request.objects,
         "RowSource",
-        "row-source",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.RowSource"),
         request.row_source);
 }
 
@@ -7148,7 +7154,7 @@ VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSou
         request.path,
         request.objects,
         "RowSourceType",
-        "row-source type",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.RowSourceType"),
         std::to_string(request.row_source_type));
 }
 
@@ -7161,7 +7167,7 @@ VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColu
         request.path,
         request.objects,
         "BoundColumn",
-        "bound-column",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BoundColumn"),
         std::to_string(request.bound_column));
 }
 
@@ -7174,7 +7180,7 @@ VisualAssetEditResult set_visual_object_button_count(const VisualObjectButtonCou
         request.path,
         request.objects,
         "ButtonCount",
-        "button-count",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ButtonCount"),
         std::to_string(request.button_count));
 }
 
@@ -7187,7 +7193,7 @@ VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCou
         request.path,
         request.objects,
         "ColumnCount",
-        "column-count",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ColumnCount"),
         std::to_string(request.column_count));
 }
 
@@ -7196,7 +7202,7 @@ VisualAssetEditResult set_visual_object_column_widths(const VisualObjectColumnWi
         request.path,
         request.objects,
         "ColumnWidths",
-        "column-widths",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ColumnWidths"),
         request.column_widths);
 }
 
@@ -7205,7 +7211,7 @@ VisualAssetEditResult set_visual_object_column_lines(const VisualObjectColumnLin
         request.path,
         request.objects,
         "ColumnLines",
-        "column-lines",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ColumnLines"),
         request.column_lines ? ".T." : ".F.");
 }
 
@@ -7214,7 +7220,7 @@ VisualAssetEditResult set_visual_object_integral_height(const VisualObjectIntegr
         request.path,
         request.objects,
         "IntegralHeight",
-        "integral-height",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.IntegralHeight"),
         request.integral_height ? ".T." : ".F.");
 }
 
@@ -7223,7 +7229,7 @@ VisualAssetEditResult set_visual_object_incremental_search(const VisualObjectInc
         request.path,
         request.objects,
         "IncrementalSearch",
-        "incremental-search",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.IncrementalSearch"),
         request.incremental_search ? ".T." : ".F.");
 }
 
@@ -7232,7 +7238,7 @@ VisualAssetEditResult set_visual_object_multi_select(const VisualObjectMultiSele
         request.path,
         request.objects,
         "MultiSelect",
-        "multi-select",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.MultiSelect"),
         request.multi_select ? ".T." : ".F.");
 }
 
@@ -7245,7 +7251,7 @@ VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& re
         request.path,
         request.objects,
         "Style",
-        "style",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.Style"),
         std::to_string(request.style));
 }
 
@@ -7258,7 +7264,7 @@ VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRe
         request.path,
         request.objects,
         "ListIndex",
-        "list-index",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ListIndex"),
         std::to_string(request.list_index));
 }
 
@@ -7271,7 +7277,7 @@ VisualAssetEditResult set_visual_object_left_column(const VisualObjectLeftColumn
         request.path,
         request.objects,
         "LeftColumn",
-        "left-column",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.LeftColumn"),
         std::to_string(request.left_column));
 }
 
@@ -7280,7 +7286,7 @@ VisualAssetEditResult set_visual_object_display_value(const VisualObjectDisplayV
         request.path,
         request.objects,
         "DisplayValue",
-        "display-value",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DisplayValue"),
         request.display_value);
 }
 
@@ -7293,7 +7299,7 @@ VisualAssetEditResult set_visual_object_selected_back_color(const VisualObjectSe
         request.path,
         request.objects,
         "SelectedBackColor",
-        "selected back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.SelectedBackColor"),
         std::to_string(request.selected_back_color));
 }
 
@@ -7306,7 +7312,7 @@ VisualAssetEditResult set_visual_object_selected_fore_color(const VisualObjectSe
         request.path,
         request.objects,
         "SelectedForeColor",
-        "selected fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.SelectedForeColor"),
         std::to_string(request.selected_fore_color));
 }
 
@@ -7320,7 +7326,7 @@ VisualAssetEditResult set_visual_object_selected_item_back_color(
         request.path,
         request.objects,
         "SelectedItemBackColor",
-        "selected-item back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.SelectedItemBackColor"),
         std::to_string(request.selected_item_back_color));
 }
 
@@ -7334,7 +7340,7 @@ VisualAssetEditResult set_visual_object_selected_item_fore_color(
         request.path,
         request.objects,
         "SelectedItemForeColor",
-        "selected-item fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.SelectedItemForeColor"),
         std::to_string(request.selected_item_fore_color));
 }
 
@@ -7348,7 +7354,7 @@ VisualAssetEditResult set_visual_object_disabled_item_back_color(
         request.path,
         request.objects,
         "DisabledItemBackColor",
-        "disabled-item back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DisabledItemBackColor"),
         std::to_string(request.disabled_item_back_color));
 }
 
@@ -7362,7 +7368,7 @@ VisualAssetEditResult set_visual_object_disabled_item_fore_color(
         request.path,
         request.objects,
         "DisabledItemForeColor",
-        "disabled-item fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DisabledItemForeColor"),
         std::to_string(request.disabled_item_fore_color));
 }
 
@@ -7376,7 +7382,7 @@ VisualAssetEditResult set_visual_object_item_back_color(
         request.path,
         request.objects,
         "ItemBackColor",
-        "item back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ItemBackColor"),
         std::to_string(request.item_back_color));
 }
 
@@ -7390,7 +7396,7 @@ VisualAssetEditResult set_visual_object_item_fore_color(
         request.path,
         request.objects,
         "ItemForeColor",
-        "item fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ItemForeColor"),
         std::to_string(request.item_fore_color));
 }
 
@@ -7404,7 +7410,7 @@ VisualAssetEditResult set_visual_object_highlight_back_color(
         request.path,
         request.objects,
         "HighlightBackColor",
-        "highlight back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HighlightBackColor"),
         std::to_string(request.highlight_back_color));
 }
 
@@ -7418,7 +7424,7 @@ VisualAssetEditResult set_visual_object_highlight_fore_color(
         request.path,
         request.objects,
         "HighlightForeColor",
-        "highlight fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.HighlightForeColor"),
         std::to_string(request.highlight_fore_color));
 }
 
@@ -7432,7 +7438,7 @@ VisualAssetEditResult set_visual_object_back_color(
         request.path,
         request.objects,
         "BackColor",
-        "back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.BackColor"),
         std::to_string(request.back_color));
 }
 
@@ -7446,7 +7452,7 @@ VisualAssetEditResult set_visual_object_fore_color(
         request.path,
         request.objects,
         "ForeColor",
-        "fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.ForeColor"),
         std::to_string(request.fore_color));
 }
 
@@ -7460,7 +7466,7 @@ VisualAssetEditResult set_visual_object_disabled_back_color(
         request.path,
         request.objects,
         "DisabledBackColor",
-        "disabled back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DisabledBackColor"),
         std::to_string(request.disabled_back_color));
 }
 
@@ -7474,7 +7480,7 @@ VisualAssetEditResult set_visual_object_disabled_fore_color(
         request.path,
         request.objects,
         "DisabledForeColor",
-        "disabled fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DisabledForeColor"),
         std::to_string(request.disabled_fore_color));
 }
 
@@ -7484,7 +7490,7 @@ VisualAssetEditResult set_visual_object_dynamic_back_color(
         request.path,
         request.objects,
         "DynamicBackColor",
-        "dynamic back-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicBackColor"),
         request.dynamic_back_color);
 }
 
@@ -7494,7 +7500,7 @@ VisualAssetEditResult set_visual_object_dynamic_fore_color(
         request.path,
         request.objects,
         "DynamicForeColor",
-        "dynamic fore-color",
+        visual_asset_text("VisualAssetEditor.PropertyLabel.DynamicForeColor"),
         request.dynamic_fore_color);
 }
 

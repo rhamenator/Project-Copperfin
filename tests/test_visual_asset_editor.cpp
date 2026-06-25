@@ -24632,11 +24632,24 @@ void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
                    "VisualAssetEditor.Operation.RollbackFailed",
                    {{"error", "No property name was provided."}, {"rollbackError", "undo failed"}}) ==
                    "No property name was provided. Rollback failed: undo failed" &&
+               english_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText") ==
+                   "tooltip text" &&
+               english_catalog.translate(
+                   "VisualAssetEditor.Object.PropertyAssignmentSelectionRequired",
+                   {{"propertyLabel", english_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText")}}) ==
+                   "No visual objects were selected for tooltip text assignment." &&
+               english_catalog.translate(
+                   "VisualAssetEditor.Object.PropertyAssignmentDuplicate",
+                   {{"propertyLabel", english_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText")}}) ==
+                   "The same visual object was selected more than once for tooltip text assignment." &&
+               english_catalog.translate("VisualAssetEditor.Object.TabStopSelectionDuplicate") ==
+                   "The same visual object was selected more than once for tab-stop assignment." &&
                pseudo_catalog.translate("VisualAssetEditor.Object.RecordUnavailable").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Geometry.RequiredFieldsMissing").starts_with("[!! ") &&
-               pseudo_catalog.translate("VisualAssetEditor.Object.EditBatchRequired").starts_with("[!! "),
-           "#2373/#2374/#2375: visual asset editor prose should resolve through localizable catalog keys");
+               pseudo_catalog.translate("VisualAssetEditor.Object.EditBatchRequired").starts_with("[!! ") &&
+               pseudo_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText").starts_with("[!! "),
+           "#2373/#2374/#2375/#2376: visual asset editor prose should resolve through localizable catalog keys");
 }
 
 }  // namespace

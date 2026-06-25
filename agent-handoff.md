@@ -15,9 +15,9 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2367`, builder and wizard registry display title, description, launch validation, and launch catalog error localization for report/label designer-facing builder discovery paths.
-- Last shipped localization child: `#2375`, visual asset editor empty path, empty property/method/object batch operations, unsupported method/property placement, unsupported visual object mode/placement operations, reparent selector/self/descendant validation, and rollback-failure prose routed through the portable C++ localization catalog while preserving operation tokens, placement/mode tokens, property identifiers, DBF field names, record indexes, and JSON contracts.
+- Last shipped localization child: `#2376`, shared visual asset editor text/scalar property assignment empty-selection, duplicate-selection, and property-label display prose routed through the portable C++ localization catalog while preserving VFP property identifiers, DBF field names, boolean literals, record indexes, and JSON contracts.
 - Current lane: continue prompt-sized localization cleanup under `#2348` until the obvious repo-wide user-facing string backlog is handled, then return to E3/#24 report/label designer fidelity and section-aware host surfaces.
-- Next action: inspect live GitHub children under `#2348`; the likely next prompt-sized localization child is visual asset editor dynamic property-label assignment prose in `src/vfp/visual_asset_editor.cpp` if no higher-weight open child exists. Return to `#24` only after the localization cleanup pass is complete or blocked.
+- Next action: inspect live GitHub children under `#2348`; pick the highest-weight open prompt-sized localization child, or create the next child under `#2348` if no prompt-sized child fits and the user-facing string backlog remains obvious. Return to `#24` only after the localization cleanup pass is complete or blocked.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.
 - Localization/release-readiness slices under `#2348`/`#113` have shipped through `#2352` and `#1856`; continue them only if live issue state makes them higher priority than E3/#24.
 
