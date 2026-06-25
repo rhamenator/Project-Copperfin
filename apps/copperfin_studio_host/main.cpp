@@ -4649,7 +4649,51 @@ ToolboxPaletteQueryParseResult parse_toolbox_palette_query_arguments(
     return result;
 }
 
-VisualPropertyFilterParseResult parse_visual_property_filter_arguments(const std::vector<std::string>& args) {
+std::string visual_property_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.VisualPropertyParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string visual_property_parse_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
+        {{"option", option}});
+}
+
+std::string visual_property_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.VisualPropertyParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string visual_property_parse_batch_item_requires_property_name(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(
+        key,
+        {{"propertyNameOption", "--property-name"}});
+}
+
+std::string visual_property_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+VisualPropertyFilterParseResult parse_visual_property_filter_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualPropertyFilterParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-property-filter") != args.end();
@@ -4666,7 +4710,7 @@ VisualPropertyFilterParseResult parse_visual_property_filter_arguments(const std
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_property_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4683,7 +4727,7 @@ VisualPropertyFilterParseResult parse_visual_property_filter_arguments(const std
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_property_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4694,17 +4738,19 @@ VisualPropertyFilterParseResult parse_visual_property_filter_arguments(const std
         } else if (argument == "--property-filter-text") {
             result.request.search_text = require_value(argument);
         } else {
-            fail("Unknown visual-property-filter option: " + argument);
+            fail(visual_property_parse_unknown_option(catalog, "visual-property-filter", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoAssetPath"));
     }
     return result;
 }
 
-VisualPropertyQueryParseResult parse_visual_property_query_arguments(const std::vector<std::string>& args) {
+VisualPropertyQueryParseResult parse_visual_property_query_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualPropertyQueryParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-property-query") != args.end();
@@ -4721,7 +4767,7 @@ VisualPropertyQueryParseResult parse_visual_property_query_arguments(const std::
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_property_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4738,7 +4784,7 @@ VisualPropertyQueryParseResult parse_visual_property_query_arguments(const std::
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_property_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4750,20 +4796,21 @@ VisualPropertyQueryParseResult parse_visual_property_query_arguments(const std::
             result.request.property_name = require_value(argument);
             result.property_name_provided = !result.request.property_name.empty();
         } else {
-            fail("Unknown visual-property-query option: " + argument);
+            fail(visual_property_parse_unknown_option(catalog, "visual-property-query", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.property_name_provided) {
-        fail("No property name was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoPropertyName"));
     }
     return result;
 }
 
 VisualPropertyUpdateBatchParseResult parse_visual_property_update_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualPropertyUpdateBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -4781,7 +4828,9 @@ VisualPropertyUpdateBatchParseResult parse_visual_property_update_batch_argument
 
     auto current_property = [&]() -> copperfin::vfp::VisualObjectPropertyChange* {
         if (result.request.properties.empty()) {
-            fail("Visual property update batch item options require a preceding --property-name.");
+            fail(visual_property_parse_batch_item_requires_property_name(
+                catalog,
+                "StudioHost.VisualPropertyParse.Error.UpdateBatchItemRequiresPropertyName"));
             return nullptr;
         }
         return &result.request.properties.back();
@@ -4791,7 +4840,7 @@ VisualPropertyUpdateBatchParseResult parse_visual_property_update_batch_argument
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_property_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4810,7 +4859,7 @@ VisualPropertyUpdateBatchParseResult parse_visual_property_update_batch_argument
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_property_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4828,20 +4877,22 @@ VisualPropertyUpdateBatchParseResult parse_visual_property_update_batch_argument
                 property->property_value = require_value(argument);
             }
         } else {
-            fail("Unknown visual-property-update-batch option: " + argument);
+            fail(visual_property_parse_unknown_option(catalog, "visual-property-update-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.properties.empty()) {
-        fail("No property changes were provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoPropertyChanges"));
     }
     return result;
 }
 
-VisualPropertyClearParseResult parse_visual_property_clear_arguments(const std::vector<std::string>& args) {
+VisualPropertyClearParseResult parse_visual_property_clear_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualPropertyClearParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-property-clear") != args.end();
@@ -4858,7 +4909,7 @@ VisualPropertyClearParseResult parse_visual_property_clear_arguments(const std::
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_property_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4875,7 +4926,7 @@ VisualPropertyClearParseResult parse_visual_property_clear_arguments(const std::
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_property_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -4887,20 +4938,21 @@ VisualPropertyClearParseResult parse_visual_property_clear_arguments(const std::
             result.request.property_name = require_value(argument);
             result.property_name_provided = !result.request.property_name.empty();
         } else {
-            fail("Unknown visual-property-clear option: " + argument);
+            fail(visual_property_parse_unknown_option(catalog, "visual-property-clear", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.property_name_provided) {
-        fail("No property name was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoPropertyName"));
     }
     return result;
 }
 
 VisualPropertyClearBatchParseResult parse_visual_property_clear_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualPropertyClearBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -4916,7 +4968,9 @@ VisualPropertyClearBatchParseResult parse_visual_property_clear_batch_arguments(
 
     auto current_property = [&]() -> copperfin::vfp::VisualObjectPropertyClearBatchItem* {
         if (result.request.properties.empty()) {
-            fail("Visual property clear batch item options require a preceding --property-name.");
+            fail(visual_property_parse_batch_item_requires_property_name(
+                catalog,
+                "StudioHost.VisualPropertyParse.Error.ClearBatchItemRequiresPropertyName"));
             return nullptr;
         }
         return &result.request.properties.back();
@@ -4926,7 +4980,7 @@ VisualPropertyClearBatchParseResult parse_visual_property_clear_batch_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_property_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4950,7 +5004,7 @@ VisualPropertyClearBatchParseResult parse_visual_property_clear_batch_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_property_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             if (auto* property = current_property()) {
@@ -4965,15 +5019,15 @@ VisualPropertyClearBatchParseResult parse_visual_property_clear_batch_arguments(
                 property->unique_id = require_value(argument);
             }
         } else {
-            fail("Unknown visual-property-clear-batch option: " + argument);
+            fail(visual_property_parse_unknown_option(catalog, "visual-property-clear-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.properties.empty()) {
-        fail("No property clears were provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoPropertyClears"));
     }
     return result;
 }
@@ -23360,7 +23414,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_property_query_parse = parse_visual_property_query_arguments(args);
+    const auto visual_property_query_parse = parse_visual_property_query_arguments(catalog, args);
     if (visual_property_query_parse.requested) {
         if (!visual_property_query_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectPropertyQueryResult{
@@ -23392,7 +23446,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_property_update_batch_parse = parse_visual_property_update_batch_arguments(args);
+    const auto visual_property_update_batch_parse = parse_visual_property_update_batch_arguments(catalog, args);
     if (visual_property_update_batch_parse.requested) {
         if (!visual_property_update_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23422,7 +23476,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_property_clear_parse = parse_visual_property_clear_arguments(args);
+    const auto visual_property_clear_parse = parse_visual_property_clear_arguments(catalog, args);
     if (visual_property_clear_parse.requested) {
         if (!visual_property_clear_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23452,7 +23506,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_property_clear_batch_parse = parse_visual_property_clear_batch_arguments(args);
+    const auto visual_property_clear_batch_parse = parse_visual_property_clear_batch_arguments(catalog, args);
     if (visual_property_clear_batch_parse.requested) {
         if (!visual_property_clear_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23722,7 +23776,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_property_filter_parse = parse_visual_property_filter_arguments(args);
+    const auto visual_property_filter_parse = parse_visual_property_filter_arguments(catalog, args);
     if (visual_property_filter_parse.requested) {
         if (!visual_property_filter_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectPropertyListFilterResult{
