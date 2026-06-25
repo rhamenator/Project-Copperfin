@@ -703,7 +703,7 @@ VisualAssetEditResult rename_visual_method_in_blob(
     const std::string normalized_requested_name = normalize_visual_object_name(requested_method_name);
     const std::string normalized_new_name = normalize_visual_object_name(new_method_name);
     if (normalized_requested_name.empty() || normalized_new_name.empty()) {
-        return {.ok = false, .error = "Method names cannot be empty."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NamesCannotBeEmpty")};
     }
 
     std::vector<std::string> existing_lines = split_visual_lines(existing_blob);
@@ -967,7 +967,7 @@ VisualAssetEditResult read_visual_object_geometry(
         }
         const auto parsed_value = parse_visual_geometry_number(property_result.value);
         if (!parsed_value.has_value()) {
-            return {.ok = false, .error = "The selected object geometry is not numeric."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.ObjectGeometryNotNumeric")};
         }
         output = *parsed_value;
         return {.ok = true, .error = {}};
@@ -1008,7 +1008,7 @@ VisualAssetEditResult read_visual_object_geometry_coordinate(
 
     const auto parsed_value = parse_visual_geometry_number(property_result.value);
     if (!parsed_value.has_value()) {
-        return {.ok = false, .error = "The selected object distribution coordinate is not numeric."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.DistributionCoordinateNotNumeric")};
     }
     coordinate = *parsed_value;
     return {.ok = true, .error = {}};
@@ -1433,7 +1433,7 @@ VisualAssetEditResult replace_non_memo_field_value(
     const std::string& new_value) {
     auto table_bytes = read_binary_file(table_path);
     if (table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
     }
 
     const auto header_result = parse_dbf_header(table_bytes);
@@ -1442,14 +1442,14 @@ VisualAssetEditResult replace_non_memo_field_value(
     }
 
     if (record_index >= header_result.header.record_count) {
-        return {.ok = false, .error = "Record index is out of range for the asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.RecordIndexOutOfRange")};
     }
 
     const std::size_t record_offset = header_result.header.header_length +
                                       (record_index * header_result.header.record_length);
     const std::size_t field_offset = record_offset + field.offset;
     if ((field_offset + field.length) > table_bytes.size()) {
-        return {.ok = false, .error = "Record data is truncated."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.RecordDataTruncated")};
     }
 
     std::fill_n(table_bytes.begin() + static_cast<std::ptrdiff_t>(field_offset), field.length, static_cast<std::uint8_t>(' '));
@@ -1458,7 +1458,7 @@ VisualAssetEditResult replace_non_memo_field_value(
         case 'C': {
             const std::string text = trim_both(new_value);
             if (text.size() > field.length) {
-                return {.ok = false, .error = "Character value is too large for the target field."};
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.CharacterValueTooLarge")};
             }
             std::copy(text.begin(),
                       text.end(),
@@ -1472,7 +1472,7 @@ VisualAssetEditResult replace_non_memo_field_value(
                 break;
             }
             if (text.size() > field.length) {
-                return {.ok = false, .error = "Numeric value is too large for the target field."};
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.NumericValueTooLarge")};
             }
             const auto padding = static_cast<std::ptrdiff_t>(field.length - text.size());
             std::copy(text.begin(),
@@ -1483,17 +1483,17 @@ VisualAssetEditResult replace_non_memo_field_value(
         case 'L': {
             const auto logical_value = normalize_logical_value(new_value);
             if (!logical_value.has_value()) {
-                return {.ok = false, .error = "Logical fields only accept true/false values."};
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.LogicalValueRequired")};
             }
             table_bytes[field_offset] = static_cast<std::uint8_t>(*logical_value);
             break;
         }
         default:
-            return {.ok = false, .error = "Direct updates are not implemented for this field type yet."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.DirectFieldUpdateUnsupported")};
     }
 
     if (!write_binary_file(table_path, table_bytes)) {
-        return {.ok = false, .error = "Unable to write the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed")};
     }
 
     return {.ok = true, .error = {}};
@@ -1619,7 +1619,7 @@ bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUn
     const auto entries_directory = visual_asset_undo_entries_directory(path);
     std::filesystem::create_directories(entries_directory, fs_error);
     if (fs_error) {
-        error = "Unable to create the visual asset undo journal.";
+        error = visual_asset_text("VisualAssetEditor.Undo.CreateJournalFailed");
         return false;
     }
 
@@ -1637,7 +1637,7 @@ bool record_visual_asset_undo_entry(const std::string& path, const VisualAssetUn
     file_name << std::setw(20) << std::setfill('0') << next_index << ".bin";
     const auto entry_path = entries_directory / file_name.str();
     if (!write_visual_asset_undo_entry(entry_path, entry)) {
-        error = "Unable to persist the visual asset undo journal.";
+        error = visual_asset_text("VisualAssetEditor.Undo.PersistJournalFailed");
         return false;
     }
 
@@ -1744,7 +1744,7 @@ VisualAssetEditResult apply_visual_object_property_change(
 
     const auto table_bytes = read_binary_file(request.path);
     if (table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
     }
 
     const auto fields = read_raw_field_descriptors(table_bytes);
@@ -1753,10 +1753,10 @@ VisualAssetEditResult apply_visual_object_property_change(
         if (record_undo_entry) {
             const auto property_state = read_current_visual_property_state(request.path, record_index, request.property_name);
             if (!property_state.has_value()) {
-                return {.ok = false, .error = "Unable to read the current property value for undo."};
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.CurrentPropertyReadFailed")};
             }
             if (!property_state->direct_field) {
-                return {.ok = false, .error = "Property lookup mismatch while recording undo."};
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.PropertyLookupMismatch")};
             }
             if (property_state->exists && property_state->value == request.property_value) {
                 return {.ok = true, .error = {}};
@@ -1768,7 +1768,7 @@ VisualAssetEditResult apply_visual_object_property_change(
                     .property_name = request.property_name,
                     .prior_value = property_state->value,
                     .prior_value_exists = property_state->exists,
-                    .label = "Property " + request.property_name
+                    .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}})
                 }, error)) {
                 return {.ok = false, .error = error};
             }
@@ -1786,7 +1786,7 @@ VisualAssetEditResult apply_visual_object_property_change(
         return value.field_name == "PROPERTIES";
     });
     if (properties_it == record.values.end()) {
-        return {.ok = false, .error = "The object does not expose a PROPERTIES memo field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.MemoFieldMissing", {{"fieldName", "PROPERTIES"}})};
     }
 
     auto assignments = parse_visual_property_blob(properties_it->display_value);
@@ -1811,7 +1811,7 @@ VisualAssetEditResult apply_visual_object_property_change(
                 .property_name = request.property_name,
                 .prior_value = prior_value,
                 .prior_value_exists = exists,
-                .label = "Property " + request.property_name
+                .label = visual_asset_text("VisualAssetEditor.Undo.PropertyLabel", {{"propertyName", request.property_name}})
             }, error)) {
             return {.ok = false, .error = error};
         }
@@ -1841,7 +1841,7 @@ VisualAssetEditResult replace_memo_field_value(
     const std::string& new_value) {
     auto table_bytes = read_binary_file(table_path);
     if (table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
     }
 
     const auto header_result = parse_dbf_header(table_bytes);
@@ -1858,33 +1858,33 @@ VisualAssetEditResult replace_memo_field_value(
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Field.TargetNotFound")};
     }
     if (field_it->type != 'M') {
-        return {.ok = false, .error = "The target field is not a memo-backed field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TargetFieldMemoRequired")};
     }
 
     if (record_index >= header_result.header.record_count) {
-        return {.ok = false, .error = "Record index is out of range for the asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.RecordIndexOutOfRange")};
     }
 
     const std::size_t record_offset = header_result.header.header_length +
                                       (record_index * header_result.header.record_length);
     const std::size_t field_offset = record_offset + field_it->offset;
     if ((field_offset + 4U) > table_bytes.size()) {
-        return {.ok = false, .error = "Record data is truncated."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.RecordDataTruncated")};
     }
 
     const std::string memo_path = infer_memo_sidecar_path(table_path);
     if (memo_path.empty()) {
-        return {.ok = false, .error = "No memo sidecar path could be inferred for the asset."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarPathMissing")};
     }
 
     auto memo_bytes = read_binary_file(memo_path);
     if (memo_bytes.size() < 8U) {
-        return {.ok = false, .error = "Unable to open the memo sidecar."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarOpenFailed")};
     }
 
     const std::uint16_t block_size = read_be_u16(memo_bytes, 6U);
     if (block_size == 0U) {
-        return {.ok = false, .error = "Memo sidecar block size is invalid."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarBlockSizeInvalid")};
     }
 
     std::uint32_t block_number = read_le_u32(table_bytes, field_offset);
@@ -1901,7 +1901,7 @@ VisualAssetEditResult replace_memo_field_value(
 
     const std::uint32_t next_free_block = read_be_u32(memo_bytes, 0U);
     if (next_free_block == 0U) {
-        return {.ok = false, .error = "Memo sidecar next-free-block pointer is invalid."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarNextFreeBlockInvalid")};
     }
 
     const auto required_bytes = static_cast<std::size_t>(8U + new_value.size());
@@ -1929,10 +1929,10 @@ VisualAssetEditResult replace_memo_field_value(
     write_le_u32(table_bytes, field_offset, next_free_block);
 
     if (!write_binary_file(memo_path, memo_bytes)) {
-        return {.ok = false, .error = "Unable to write the memo sidecar."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.MemoSidecarWriteFailed")};
     }
     if (!write_binary_file(table_path, table_bytes)) {
-        return {.ok = false, .error = "Unable to write the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableWriteFailed")};
     }
 
     return {.ok = true, .error = {}};
@@ -2201,7 +2201,7 @@ VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopy
         return {.ok = false, .error = source_property.error};
     }
     if (!source_property.exists) {
-        return {.ok = false, .error = "The source property was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceNotFound")};
     }
 
     const std::string target_property_name = request.target_property_name.empty()
@@ -2319,7 +2319,7 @@ VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMove
         return {.ok = false, .error = source_property.error};
     }
     if (!source_property.exists) {
-        return {.ok = false, .error = "The source property was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceNotFound")};
     }
 
     const std::string target_property_name = request.target_property_name.empty()
@@ -2485,7 +2485,7 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
 
     const auto table_bytes = read_binary_file(request.path);
     if (table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
     }
 
     const std::string normalized_source = normalize_visual_property_name(source_property_name);
@@ -2506,7 +2506,7 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
         return value.field_name == "PROPERTIES";
     });
     if (properties_it == record.values.end()) {
-        return {.ok = false, .error = "The selected object does not expose a PROPERTIES memo field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "PROPERTIES"}})};
     }
 
     auto assignments = parse_visual_property_blob(properties_it->display_value);
@@ -2526,13 +2526,13 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
     }
 
     if (source_count == 0U) {
-        return {.ok = false, .error = "The source property was not found."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceNotFound")};
     }
     if (source_count > 1U) {
-        return {.ok = false, .error = "The source property is ambiguous in the selected object."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceAmbiguousInObject")};
     }
     if (target_exists) {
-        return {.ok = false, .error = "The target property already exists in the selected object."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetExistsInObject")};
     }
 
     std::string error;
@@ -2541,7 +2541,7 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
             .property_name = "PROPERTIES",
             .prior_value = properties_it->display_value,
             .prior_value_exists = true,
-            .label = "Rename property " + source_property_name
+            .label = visual_asset_text("VisualAssetEditor.Undo.RenamePropertyLabel", {{"propertyName", source_property_name}})
         }, error)) {
         return {.ok = false, .error = error};
     }
@@ -2658,7 +2658,7 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
 
     const auto table_bytes = read_binary_file(request.path);
     if (table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
     }
 
     const auto fields = read_raw_field_descriptors(table_bytes);
@@ -2683,7 +2683,7 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
 
     const auto* properties_field = find_record_value(table_result.table.records[record_index], "PROPERTIES");
     if (properties_field == nullptr) {
-        return {.ok = false, .error = "The selected object does not expose a PROPERTIES memo field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "PROPERTIES"}})};
     }
 
     auto assignments = parse_visual_property_blob(properties_field->display_value);
@@ -2833,7 +2833,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
     if (!property_state.has_value()) {
         return {
             .ok = false,
-            .error = "Unable to read the requested property.",
+            .error = visual_asset_text("VisualAssetEditor.Property.ReadFailed"),
             .exists = false,
             .direct_field = false,
             .record_index = 0U,
@@ -3101,7 +3101,7 @@ VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChi
     if (parent_name.empty()) {
         return {
             .ok = false,
-            .error = "The selected parent does not expose an object name.",
+            .error = visual_asset_text("VisualAssetEditor.Object.ParentNameMissing"),
             .parent_record_index = 0U,
             .parent_name = {},
             .children = {}
@@ -3184,7 +3184,7 @@ VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObj
     if (parent_name.empty()) {
         return {
             .ok = false,
-            .error = "The selected parent does not expose an object name.",
+            .error = visual_asset_text("VisualAssetEditor.Object.ParentNameMissing"),
             .parent_record_index = 0U,
             .parent_name = {},
             .descendants = {}
@@ -3314,7 +3314,7 @@ VisualObjectAncestorsListResult list_visual_object_ancestors(const VisualObjectA
         if (parent_record_index >= visited.size() || visited[parent_record_index]) {
             return {
                 .ok = false,
-                .error = "The selected object's parent chain contains a cycle.",
+                .error = visual_asset_text("VisualAssetEditor.Object.ParentChainCycle"),
                 .record_index = 0U,
                 .ancestors = {}
             };
@@ -3473,7 +3473,7 @@ VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMetho
     if (methods_field == nullptr) {
         return {
             .ok = false,
-            .error = "The selected object does not expose a METHODS memo field.",
+            .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "METHODS"}}),
             .exists = false,
             .record_index = record_index,
             .record_deleted = record.deleted,
@@ -3553,7 +3553,7 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
     if (methods_field == nullptr) {
-        return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "METHODS"}})};
     }
 
     const std::string updated_blob = update_visual_methods_blob(
@@ -3607,7 +3607,7 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
     if (methods_field == nullptr) {
-        return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "METHODS"}})};
     }
 
     const std::string normalized_method_name = normalize_visual_object_name(request.method_name);
@@ -3730,7 +3730,7 @@ VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRename
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
     if (methods_field == nullptr) {
-        return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "METHODS"}})};
     }
 
     std::string updated_blob;
@@ -4109,7 +4109,7 @@ VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReord
 
     const auto* methods_field = find_record_value(table_result.table.records[record_index], "METHODS");
     if (methods_field == nullptr) {
-        return {.ok = false, .error = "The selected object does not expose a METHODS memo field."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedMemoFieldMissing", {{"fieldName", "METHODS"}})};
     }
 
     std::string updated_blob;
@@ -4323,7 +4323,7 @@ VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDupl
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return failed_visual_object_duplicate_batch_result("Unable to open the visual asset table.");
+        return failed_visual_object_duplicate_batch_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -4801,7 +4801,7 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return failed_visual_object_create_batch_result("Unable to open the visual asset table.");
+        return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -5022,7 +5022,7 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return failed_visual_object_group_result("Unable to open the visual asset table.");
+        return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -5161,7 +5161,7 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return failed_visual_object_ungroup_result("Unable to open the visual asset table.");
+        return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed"));
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -5489,7 +5489,7 @@ VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequ
             return {.ok = false, .error = property_result.error};
         }
         if (!property_result.exists) {
-            return {.ok = false, .error = "The selected object does not expose a TABINDEX field."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedFieldMissing", {{"fieldName", "TABINDEX"}})};
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
@@ -5540,7 +5540,7 @@ VisualAssetEditResult set_visual_object_tab_stop(const VisualObjectTabStopReques
             return {.ok = false, .error = property_result.error};
         }
         if (!property_result.exists) {
-            return {.ok = false, .error = "The selected object does not expose a TABSTOP field or property."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedFieldOrPropertyMissing", {{"fieldName", "TABSTOP"}})};
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
@@ -5591,7 +5591,7 @@ VisualAssetEditResult set_visual_object_visibility(const VisualObjectVisibilityR
             return {.ok = false, .error = property_result.error};
         }
         if (!property_result.exists) {
-            return {.ok = false, .error = "The selected object does not expose a VISIBLE field or property."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedFieldOrPropertyMissing", {{"fieldName", "VISIBLE"}})};
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
@@ -5642,7 +5642,7 @@ VisualAssetEditResult set_visual_object_enabled(const VisualObjectEnabledRequest
             return {.ok = false, .error = property_result.error};
         }
         if (!property_result.exists) {
-            return {.ok = false, .error = "The selected object does not expose an ENABLED field or property."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedFieldOrPropertyMissing", {{"fieldName", "ENABLED"}})};
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
@@ -5693,7 +5693,7 @@ VisualAssetEditResult set_visual_object_read_only(const VisualObjectReadOnlyRequ
             return {.ok = false, .error = property_result.error};
         }
         if (!property_result.exists) {
-            return {.ok = false, .error = "The selected object does not expose a READONLY field or property."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedFieldOrPropertyMissing", {{"fieldName", "READONLY"}})};
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
@@ -5744,7 +5744,7 @@ VisualAssetEditResult set_visual_object_locked(const VisualObjectLockedRequest& 
             return {.ok = false, .error = property_result.error};
         }
         if (!property_result.exists) {
-            return {.ok = false, .error = "The selected object does not expose a LOCKED field or property."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SelectedFieldOrPropertyMissing", {{"fieldName", "LOCKED"}})};
         }
         if (std::find(resolved_record_indexes.begin(), resolved_record_indexes.end(), property_result.record_index) !=
             resolved_record_indexes.end()) {
@@ -7561,7 +7561,7 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
                     visited_parent_record_indexes.begin(),
                     visited_parent_record_indexes.end(),
                     parent_chain_record_index) != visited_parent_record_indexes.end()) {
-                return {.ok = false, .error = "The selected parent object's parent chain contains a cycle."};
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ParentObjectChainCycle")};
             }
             visited_parent_record_indexes.push_back(parent_chain_record_index);
             if (parent_chain_record_index == source_record_index) {
@@ -7592,7 +7592,7 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
 
         parent_name = visual_object_record_name(table_result.table.records[parent_record_index]);
         if (parent_name.empty()) {
-            return {.ok = false, .error = "The selected parent does not expose an object name."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ParentNameMissing")};
         }
     }
 
@@ -7937,7 +7937,7 @@ VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchReque
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
     if (original_table_bytes.empty()) {
-        return {.ok = false, .error = "Unable to open the visual asset table."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Storage.TableOpenFailed")};
     }
     const std::string memo_path = infer_memo_sidecar_path(request.path);
     const std::vector<std::uint8_t> original_memo_bytes = memo_path.empty()
@@ -8218,12 +8218,12 @@ VisualAssetEditResult undo_visual_object_property(const std::string& path) {
 
     const auto files = list_visual_asset_undo_entry_files(path);
     if (files.empty()) {
-        return {.ok = false, .error = "No visual asset undo history is available."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.HistoryUnavailable")};
     }
 
     const auto entry = read_visual_asset_undo_entry(files.back());
     if (!entry.has_value()) {
-        return {.ok = false, .error = "Unable to read the visual asset undo journal."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Undo.JournalReadFailed")};
     }
 
     const auto result = apply_visual_object_property_change(

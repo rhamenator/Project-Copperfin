@@ -24644,12 +24644,25 @@ void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
                    "The same visual object was selected more than once for tooltip text assignment." &&
                english_catalog.translate("VisualAssetEditor.Object.TabStopSelectionDuplicate") ==
                    "The same visual object was selected more than once for tab-stop assignment." &&
+               english_catalog.translate("VisualAssetEditor.Storage.TableOpenFailed") ==
+                   "Unable to open the visual asset table." &&
+               english_catalog.translate("VisualAssetEditor.Undo.PropertyLookupMismatch") ==
+                   "Property lookup mismatch while recording undo." &&
+               english_catalog.translate(
+                   "VisualAssetEditor.Object.SelectedFieldOrPropertyMissing",
+                   {{"fieldName", "TABSTOP"}}) ==
+                   "The selected object does not expose a TABSTOP field or property." &&
+               english_catalog.translate(
+                   "VisualAssetEditor.Undo.PropertyLabel",
+                   {{"propertyName", "Caption"}}) ==
+                   "Property Caption" &&
                pseudo_catalog.translate("VisualAssetEditor.Object.RecordUnavailable").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Geometry.RequiredFieldsMissing").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Object.EditBatchRequired").starts_with("[!! ") &&
-               pseudo_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText").starts_with("[!! "),
-           "#2373/#2374/#2375/#2376: visual asset editor prose should resolve through localizable catalog keys");
+               pseudo_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText").starts_with("[!! ") &&
+               pseudo_catalog.translate("VisualAssetEditor.Storage.MemoSidecarOpenFailed").starts_with("[!! "),
+           "#2373/#2374/#2375/#2376/#2377: visual asset editor prose should resolve through localizable catalog keys");
 }
 
 }  // namespace
