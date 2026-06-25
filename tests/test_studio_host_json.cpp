@@ -5801,6 +5801,88 @@ void test_studio_host_launch_core_value_diagnostics_localize(const std::string& 
     }
 }
 
+void test_studio_host_launch_layout_state_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_layout_state_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--alignment-mode"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2450: default alignment-mode missing value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --alignment-mode.",
+        "#2450: default alignment-mode missing value diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--grid-width", "wide"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2450: pseudo-localized grid-width numeric diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2450: pseudo-localized grid-width numeric diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--grid-width",
+        "#2450: pseudo-localized grid-width numeric diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --grid-width value must be numeric.",
+        "#2450: pseudo-localized grid-width numeric diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--starting-tab-index", "first"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2450: pseudo-localized starting-tab-index integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2450: pseudo-localized starting-tab-index integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--starting-tab-index",
+        "#2450: pseudo-localized starting-tab-index integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --starting-tab-index value must be an integer.",
+        "#2450: pseudo-localized starting-tab-index integer diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--locked", "maybe"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2450: pseudo-localized locked boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2450: pseudo-localized locked boolean diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2450: pseudo-localized locked boolean diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2450: pseudo-localized locked boolean diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --locked value must be true or false.",
+        "#2450: pseudo-localized locked boolean diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -119333,6 +119415,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_sizing_zorder_diagnostics_localize(argv[1]);
     test_studio_host_launch_command_mode_diagnostics_localize(argv[1]);
     test_studio_host_launch_core_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_layout_state_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

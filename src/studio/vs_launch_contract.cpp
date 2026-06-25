@@ -131,6 +131,38 @@ std::string localized_unsigned_integer_value_required(
         });
 }
 
+std::string localized_numeric_value_required(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.NumericValueRequired",
+        {
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_integer_value_required(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.IntegerValueRequired",
+        {
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_true_false_value_required(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.TrueFalseValueRequired",
+        {
+            {"option", std::string(option)},
+            {"trueValue", "true"},
+            {"falseValue", "false"}
+        });
+}
+
 std::string localized_field_value_name_value_syntax_required(const localization::LocalizedCatalog& catalog) {
     return catalog.translate(
         "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
@@ -2056,7 +2088,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--alignment-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --alignment-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--alignment-mode")};
             }
             result.request.alignment_mode = args[++index];
             continue;
@@ -2064,7 +2096,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--resize-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --resize-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--resize-mode")};
             }
             result.request.resize_mode = args[++index];
             continue;
@@ -2072,7 +2104,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--distribution-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --distribution-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--distribution-mode")};
             }
             result.request.distribution_mode = args[++index];
             continue;
@@ -2080,7 +2112,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--snap-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --snap-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--snap-mode")};
             }
             result.request.snap_mode = args[++index];
             continue;
@@ -2088,7 +2120,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--nudge-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --nudge-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--nudge-mode")};
             }
             result.request.nudge_mode = args[++index];
             continue;
@@ -2096,11 +2128,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-width") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-width."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-width")};
             }
             double grid_width = 0.0;
             if (!parse_double_value(args[++index], grid_width)) {
-                return {.ok = false, .error = "The --grid-width value must be numeric."};
+                return {.ok = false, .error = localized_numeric_value_required(catalog, "--grid-width")};
             }
             result.request.grid_width = grid_width;
             continue;
@@ -2108,11 +2140,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-height") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-height."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-height")};
             }
             double grid_height = 0.0;
             if (!parse_double_value(args[++index], grid_height)) {
-                return {.ok = false, .error = "The --grid-height value must be numeric."};
+                return {.ok = false, .error = localized_numeric_value_required(catalog, "--grid-height")};
             }
             result.request.grid_height = grid_height;
             continue;
@@ -2120,11 +2152,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--delta-hpos") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --delta-hpos."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--delta-hpos")};
             }
             double delta_hpos = 0.0;
             if (!parse_double_value(args[++index], delta_hpos)) {
-                return {.ok = false, .error = "The --delta-hpos value must be numeric."};
+                return {.ok = false, .error = localized_numeric_value_required(catalog, "--delta-hpos")};
             }
             result.request.delta_hpos = delta_hpos;
             continue;
@@ -2132,11 +2164,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--delta-vpos") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --delta-vpos."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--delta-vpos")};
             }
             double delta_vpos = 0.0;
             if (!parse_double_value(args[++index], delta_vpos)) {
-                return {.ok = false, .error = "The --delta-vpos value must be numeric."};
+                return {.ok = false, .error = localized_numeric_value_required(catalog, "--delta-vpos")};
             }
             result.request.delta_vpos = delta_vpos;
             continue;
@@ -2144,11 +2176,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--starting-tab-index") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --starting-tab-index."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--starting-tab-index")};
             }
             int starting_tab_index = 0;
             if (!parse_int_value(args[++index], starting_tab_index)) {
-                return {.ok = false, .error = "The --starting-tab-index value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--starting-tab-index")};
             }
             result.request.starting_tab_index = starting_tab_index;
             result.request.starting_tab_index_available = true;
@@ -2157,11 +2189,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--tab-stop") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --tab-stop."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--tab-stop")};
             }
             const auto tab_stop = parse_bool_value(args[++index]);
             if (!tab_stop.has_value()) {
-                return {.ok = false, .error = "The --tab-stop value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--tab-stop")};
             }
             result.request.tab_stop = *tab_stop;
             result.request.tab_stop_available = true;
@@ -2170,11 +2202,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--visible") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --visible."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--visible")};
             }
             const auto visible = parse_bool_value(args[++index]);
             if (!visible.has_value()) {
-                return {.ok = false, .error = "The --visible value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--visible")};
             }
             result.request.visible = *visible;
             result.request.visible_available = true;
@@ -2183,11 +2215,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--enabled") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --enabled."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--enabled")};
             }
             const auto enabled = parse_bool_value(args[++index]);
             if (!enabled.has_value()) {
-                return {.ok = false, .error = "The --enabled value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--enabled")};
             }
             result.request.enabled = *enabled;
             result.request.enabled_available = true;
@@ -2196,11 +2228,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--object-read-only") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --object-read-only."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--object-read-only")};
             }
             const auto object_read_only = parse_bool_value(args[++index]);
             if (!object_read_only.has_value()) {
-                return {.ok = false, .error = "The --object-read-only value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--object-read-only")};
             }
             result.request.object_read_only = *object_read_only;
             result.request.object_read_only_available = true;
@@ -2209,11 +2241,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--locked") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --locked."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--locked")};
             }
             const auto locked = parse_bool_value(args[++index]);
             if (!locked.has_value()) {
-                return {.ok = false, .error = "The --locked value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--locked")};
             }
             result.request.locked = *locked;
             result.request.locked_available = true;
