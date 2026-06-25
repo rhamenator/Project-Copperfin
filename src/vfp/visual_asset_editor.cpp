@@ -51,6 +51,18 @@ std::string visual_asset_property_non_negative_text(std::string property_name) {
         {{"propertyName", std::move(property_name)}});
 }
 
+std::string visual_asset_rollback_failed_text(std::string error, std::string rollback_error) {
+    return visual_asset_text(
+        "VisualAssetEditor.Operation.RollbackFailed",
+        {{"error", std::move(error)}, {"rollbackError", std::move(rollback_error)}});
+}
+
+std::string visual_asset_target_rollback_failed_text(std::string error, std::string rollback_error) {
+    return visual_asset_text(
+        "VisualAssetEditor.Operation.TargetRollbackFailed",
+        {{"error", std::move(error)}, {"rollbackError", std::move(rollback_error)}});
+}
+
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint32_t>(bytes[offset]) |
            (static_cast<std::uint32_t>(bytes[offset + 1]) << 8U) |
@@ -562,7 +574,7 @@ VisualAssetEditResult reorder_visual_methods_blob(
         }
         insert_index = normalized_placement == "before" ? relative_index : relative_index + 1U;
     } else {
-        return {.ok = false, .error = "Unknown method placement was requested."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.PlacementUnsupported")};
     }
 
     methods.insert(
@@ -640,7 +652,7 @@ VisualAssetEditResult reorder_visual_property_assignments(
         }
         insert_index = normalized_placement == "before" ? relative_index : relative_index + 1U;
     } else {
-        return {.ok = false, .error = "Unknown property placement was requested."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.PlacementUnsupported")};
     }
 
     assignments.insert(
@@ -1210,7 +1222,7 @@ VisualAssetEditResult resolve_visual_object_record_index(const VisualObjectEditR
 
     const std::string requested_name = normalize_visual_object_name(request.object_name);
     if (requested_name.empty()) {
-        return {.ok = false, .error = "No object name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NameRequired")};
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
@@ -1267,7 +1279,7 @@ VisualAssetEditResult resolve_visual_object_record_index_from_records(
 
     const std::string requested_name = normalize_visual_object_name(object_name);
     if (requested_name.empty()) {
-        return {.ok = false, .error = "No object name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NameRequired")};
     }
 
     std::vector<std::size_t> matches;
@@ -1302,7 +1314,7 @@ VisualAssetEditResult apply_visual_object_reorder_to_records(
     const VisualObjectReorderBatchItem& request) {
     const std::string placement = normalize_visual_property_name(request.placement);
     if (placement != "front" && placement != "back" && placement != "before" && placement != "after") {
-        return {.ok = false, .error = "Unsupported visual object placement."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.PlacementUnsupported")};
     }
 
     std::size_t source_record_index = 0U;
@@ -1322,7 +1334,7 @@ VisualAssetEditResult apply_visual_object_reorder_to_records(
     std::size_t target_record_index = 0U;
     if (placement == "before" || placement == "after") {
         if (trim_both(request.target_object_name).empty() && trim_both(request.target_unique_id).empty()) {
-            return {.ok = false, .error = "No target object selector was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TargetSelectorRequired")};
         }
         const auto target_resolution = resolve_visual_object_record_index_from_records(
             records,
@@ -1710,10 +1722,10 @@ VisualAssetEditResult apply_visual_object_property_change(
     bool record_undo_entry,
     bool remove_property_if_missing) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (trim_both(request.property_name).empty()) {
-        return {.ok = false, .error = "No property name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
     }
 
     std::size_t record_index = 0U;
@@ -1933,7 +1945,7 @@ VisualAssetEditResult set_visual_object_text_property(
     const std::string& property_label,
     const std::string& text) {
     if (path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (objects.empty()) {
         return {.ok = false, .error = "No visual objects were selected for " + property_label + " assignment."};
@@ -1989,7 +2001,7 @@ VisualAssetEditResult set_visual_object_scalar_property(
     const std::string& property_label,
     const std::string& property_value) {
     if (path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (objects.empty()) {
         return {.ok = false, .error = "No visual objects were selected for " + property_label + " assignment."};
@@ -2116,10 +2128,10 @@ VisualAssetEditResult clear_visual_object_property(const VisualObjectPropertyCle
 
 VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyClearBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.properties.empty()) {
-        return {.ok = false, .error = "No property clears were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ClearBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -2139,10 +2151,10 @@ VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyC
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
         }
 
         const auto result = clear_visual_object_property({
@@ -2157,7 +2169,7 @@ VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyC
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -2169,7 +2181,7 @@ VisualAssetEditResult clear_visual_object_properties(const VisualObjectPropertyC
 
 VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopyRequest& request) {
     if (!request.target_property_name.empty() && trim_both(request.target_property_name).empty()) {
-        return {.ok = false, .error = "No target property name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
     }
 
     const auto source_property = query_visual_object_property({
@@ -2219,10 +2231,10 @@ VisualAssetEditResult copy_visual_object_property(const VisualObjectPropertyCopy
 
 VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCopyBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.properties.empty()) {
-        return {.ok = false, .error = "No property copies were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.CopyBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -2242,20 +2254,20 @@ VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCo
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
         }
         if (!property.target_property_name.empty() && trim_both(property.target_property_name).empty()) {
             const auto rollback_result = rollback_batch_copies();
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No target property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.TargetNameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No target property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
         }
 
         const auto result = copy_visual_object_property({
@@ -2275,7 +2287,7 @@ VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCo
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -2287,7 +2299,7 @@ VisualAssetEditResult copy_visual_object_properties(const VisualObjectPropertyCo
 
 VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMoveRequest& request) {
     if (!request.target_property_name.empty() && trim_both(request.target_property_name).empty()) {
-        return {.ok = false, .error = "No target property name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
     }
 
     const auto source_property = query_visual_object_property({
@@ -2351,7 +2363,7 @@ VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMove
     if (!clear_result.ok) {
         const auto rollback_result = undo_visual_object_property(request.path);
         if (!rollback_result.ok) {
-            return {.ok = false, .error = clear_result.error + " Target rollback failed: " + rollback_result.error};
+            return {.ok = false, .error = visual_asset_target_rollback_failed_text(clear_result.error, rollback_result.error)};
         }
         return {.ok = false, .error = clear_result.error};
     }
@@ -2361,10 +2373,10 @@ VisualAssetEditResult move_visual_object_property(const VisualObjectPropertyMove
 
 VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMoveBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.properties.empty()) {
-        return {.ok = false, .error = "No property moves were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.MoveBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -2384,20 +2396,20 @@ VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMo
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
         }
         if (!property.target_property_name.empty() && trim_both(property.target_property_name).empty()) {
             const auto rollback_result = rollback_batch_moves();
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No target property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.TargetNameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No target property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
         }
 
         const auto result = move_visual_object_property({
@@ -2417,7 +2429,7 @@ VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMo
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -2429,16 +2441,16 @@ VisualAssetEditResult move_visual_object_properties(const VisualObjectPropertyMo
 
 VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRenameRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
 
     const std::string source_property_name = trim_both(request.property_name);
     const std::string target_property_name = trim_both(request.new_property_name);
     if (source_property_name.empty()) {
-        return {.ok = false, .error = "No property name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
     }
     if (target_property_name.empty()) {
-        return {.ok = false, .error = "No target property name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
     }
     if (normalize_visual_property_name(source_property_name) == normalize_visual_property_name(target_property_name)) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.SourceRenameToSelf")};
@@ -2542,10 +2554,10 @@ VisualAssetEditResult rename_visual_object_property(const VisualObjectPropertyRe
 
 VisualAssetEditResult rename_visual_object_properties(const VisualObjectPropertyRenameBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.properties.empty()) {
-        return {.ok = false, .error = "No property renames were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.RenameBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -2565,20 +2577,20 @@ VisualAssetEditResult rename_visual_object_properties(const VisualObjectProperty
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
         }
         if (trim_both(property.new_property_name).empty()) {
             const auto rollback_result = rollback_batch_renames();
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No target property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.TargetNameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No target property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.TargetNameRequired")};
         }
 
         const auto result = rename_visual_object_property({
@@ -2594,7 +2606,7 @@ VisualAssetEditResult rename_visual_object_properties(const VisualObjectProperty
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -2606,15 +2618,15 @@ VisualAssetEditResult rename_visual_object_properties(const VisualObjectProperty
 
 VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyReorderRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (trim_both(request.property_name).empty()) {
-        return {.ok = false, .error = "No property name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
     }
 
     const std::string placement = normalize_visual_property_name(request.placement);
     if (placement != "first" && placement != "last" && placement != "before" && placement != "after") {
-        return {.ok = false, .error = "Unknown property placement was requested."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.PlacementUnsupported")};
     }
 
     std::size_t record_index = 0U;
@@ -2694,10 +2706,10 @@ VisualAssetEditResult reorder_visual_object_property(const VisualObjectPropertyR
 
 VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropertyReorderBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.properties.empty()) {
-        return {.ok = false, .error = "No property reorders were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ReorderBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -2717,10 +2729,10 @@ VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropert
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No property name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No property name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.NameRequired")};
         }
 
         const std::string placement = normalize_visual_property_name(property.placement);
@@ -2730,8 +2742,7 @@ VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropert
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired") +
-                        " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired"), rollback_result.error)
                 };
             }
             return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.RelativeNameRequired")};
@@ -2751,7 +2762,7 @@ VisualAssetEditResult reorder_visual_object_properties(const VisualObjectPropert
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -2765,7 +2776,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
     if (request.path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .exists = false,
             .direct_field = false,
             .record_index = 0U,
@@ -2777,7 +2788,7 @@ VisualObjectPropertyQueryResult query_visual_object_property(const VisualObjectP
     if (trim_both(request.property_name).empty()) {
         return {
             .ok = false,
-            .error = "No property name was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Property.NameRequired"),
             .exists = false,
             .direct_field = false,
             .record_index = 0U,
@@ -2842,7 +2853,7 @@ VisualObjectPropertyListResult list_visual_object_properties(const VisualObjectP
     if (request.path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .record_index = 0U,
             .record_deleted = false,
             .properties = {}
@@ -3003,7 +3014,7 @@ VisualObjectListResult list_visual_objects(const std::string& path) {
     if (path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .objects = {}
         };
     }
@@ -3034,7 +3045,7 @@ VisualObjectChildrenListResult list_visual_object_children(const VisualObjectChi
     if (request.path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .parent_record_index = 0U,
             .parent_name = {},
             .children = {}
@@ -3116,7 +3127,7 @@ VisualObjectDescendantsListResult list_visual_object_descendants(const VisualObj
     if (request.path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .parent_record_index = 0U,
             .parent_name = {},
             .descendants = {}
@@ -3220,7 +3231,7 @@ VisualObjectAncestorsListResult list_visual_object_ancestors(const VisualObjectA
     if (request.path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .record_index = 0U,
             .ancestors = {}
         };
@@ -3323,7 +3334,7 @@ VisualObjectMethodListResult list_visual_object_methods(const VisualObjectMethod
     if (request.path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .record_index = 0U,
             .record_deleted = false,
             .methods = {}
@@ -3391,7 +3402,7 @@ VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMetho
     if (request.path.empty()) {
         return {
             .ok = false,
-            .error = "No asset path was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"),
             .exists = false,
             .record_index = 0U,
             .record_deleted = false,
@@ -3401,7 +3412,7 @@ VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMetho
     if (trim_both(request.method_name).empty()) {
         return {
             .ok = false,
-            .error = "No method name was provided.",
+            .error = visual_asset_text("VisualAssetEditor.Method.NameRequired"),
             .exists = false,
             .record_index = 0U,
             .record_deleted = false,
@@ -3507,10 +3518,10 @@ VisualObjectMethodQueryResult query_visual_object_method(const VisualObjectMetho
 
 VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (trim_both(request.method_name).empty()) {
-        return {.ok = false, .error = "No method name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
     }
 
     std::size_t record_index = 0U;
@@ -3561,10 +3572,10 @@ VisualAssetEditResult update_visual_object_method(const VisualObjectMethodEditRe
 
 VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDeleteRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (trim_both(request.method_name).empty()) {
-        return {.ok = false, .error = "No method name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
     }
 
     std::size_t record_index = 0U;
@@ -3628,10 +3639,10 @@ VisualAssetEditResult delete_visual_object_method(const VisualObjectMethodDelete
 
 VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDeleteBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.methods.empty()) {
-        return {.ok = false, .error = "No method deletes were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.DeleteBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -3651,10 +3662,10 @@ VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDelet
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
         }
 
         const auto result = delete_visual_object_method({
@@ -3669,7 +3680,7 @@ VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDelet
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -3681,13 +3692,13 @@ VisualAssetEditResult delete_visual_object_methods(const VisualObjectMethodDelet
 
 VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRenameRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (trim_both(request.method_name).empty()) {
-        return {.ok = false, .error = "No method name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
     }
     if (trim_both(request.new_method_name).empty()) {
-        return {.ok = false, .error = "No target method name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetNameRequired")};
     }
 
     std::size_t record_index = 0U;
@@ -3742,10 +3753,10 @@ VisualAssetEditResult rename_visual_object_method(const VisualObjectMethodRename
 
 VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenameBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.methods.empty()) {
-        return {.ok = false, .error = "No method renames were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.RenameBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -3765,20 +3776,20 @@ VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenam
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
         }
         if (trim_both(method.new_method_name).empty()) {
             const auto rollback_result = rollback_batch_renames();
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No target method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.TargetNameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No target method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetNameRequired")};
         }
 
         const auto result = rename_visual_object_method({
@@ -3794,7 +3805,7 @@ VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenam
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -3806,7 +3817,7 @@ VisualAssetEditResult rename_visual_object_methods(const VisualObjectMethodRenam
 
 VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequest& request) {
     if (!request.target_method_name.empty() && trim_both(request.target_method_name).empty()) {
-        return {.ok = false, .error = "No target method name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetNameRequired")};
     }
 
     const auto source_method = query_visual_object_method({
@@ -3853,10 +3864,10 @@ VisualAssetEditResult copy_visual_object_method(const VisualObjectMethodCopyRequ
 
 VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.methods.empty()) {
-        return {.ok = false, .error = "No method copies were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.CopyBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -3876,20 +3887,20 @@ VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBat
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
         }
         if (!method.target_method_name.empty() && trim_both(method.target_method_name).empty()) {
             const auto rollback_result = rollback_batch_copies();
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No target method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.TargetNameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No target method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetNameRequired")};
         }
 
         const auto result = copy_visual_object_method({
@@ -3909,7 +3920,7 @@ VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBat
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -3921,7 +3932,7 @@ VisualAssetEditResult copy_visual_object_methods(const VisualObjectMethodCopyBat
 
 VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequest& request) {
     if (!request.target_method_name.empty() && trim_both(request.target_method_name).empty()) {
-        return {.ok = false, .error = "No target method name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetNameRequired")};
     }
 
     const auto source_method = query_visual_object_method({
@@ -3985,7 +3996,7 @@ VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequ
     if (!delete_result.ok) {
         const auto rollback_result = undo_visual_object_property(request.path);
         if (!rollback_result.ok) {
-            return {.ok = false, .error = delete_result.error + " Target rollback failed: " + rollback_result.error};
+            return {.ok = false, .error = visual_asset_target_rollback_failed_text(delete_result.error, rollback_result.error)};
         }
         return {.ok = false, .error = delete_result.error};
     }
@@ -3995,10 +4006,10 @@ VisualAssetEditResult move_visual_object_method(const VisualObjectMethodMoveRequ
 
 VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.methods.empty()) {
-        return {.ok = false, .error = "No method moves were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.MoveBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -4018,20 +4029,20 @@ VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBat
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
         }
         if (!method.target_method_name.empty() && trim_both(method.target_method_name).empty()) {
             const auto rollback_result = rollback_batch_moves();
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No target method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.TargetNameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No target method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.TargetNameRequired")};
         }
 
         const auto result = move_visual_object_method({
@@ -4051,7 +4062,7 @@ VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBat
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -4063,10 +4074,10 @@ VisualAssetEditResult move_visual_object_methods(const VisualObjectMethodMoveBat
 
 VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReorderRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (trim_both(request.method_name).empty()) {
-        return {.ok = false, .error = "No method name was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
     }
 
     std::size_t record_index = 0U;
@@ -4122,10 +4133,10 @@ VisualAssetEditResult reorder_visual_object_method(const VisualObjectMethodReord
 
 VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReorderBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.methods.empty()) {
-        return {.ok = false, .error = "No method reorders were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.ReorderBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -4145,10 +4156,10 @@ VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReor
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = "No method name was provided. Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Method.NameRequired"), rollback_result.error)
                 };
             }
-            return {.ok = false, .error = "No method name was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Method.NameRequired")};
         }
 
         const auto result = reorder_visual_object_method({
@@ -4165,7 +4176,7 @@ VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReor
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -4177,7 +4188,7 @@ VisualAssetEditResult reorder_visual_object_methods(const VisualObjectMethodReor
 
 VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateRequest& request) {
     if (request.path.empty()) {
-        return failed_visual_object_duplicate_result("No asset path was provided.");
+        return failed_visual_object_duplicate_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
 
     std::size_t source_record_index = 0U;
@@ -4298,10 +4309,10 @@ VisualObjectDuplicateResult duplicate_visual_object(const VisualObjectDuplicateR
 
 VisualObjectDuplicateBatchResult duplicate_visual_objects(const VisualObjectDuplicateBatchRequest& request) {
     if (request.path.empty()) {
-        return failed_visual_object_duplicate_batch_result("No asset path was provided.");
+        return failed_visual_object_duplicate_batch_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
     if (request.objects.empty()) {
-        return failed_visual_object_duplicate_batch_result("No visual object duplicates were provided.");
+        return failed_visual_object_duplicate_batch_result(visual_asset_text("VisualAssetEditor.Object.DuplicateBatchRequired"));
     }
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
@@ -4381,10 +4392,10 @@ VisualObjectSubtreeDuplicateResult empty_visual_object_subtree_duplicate_result(
 
 VisualObjectSubtreeDuplicateResult duplicate_visual_object_subtree(const VisualObjectSubtreeDuplicateRequest& request) {
     if (request.path.empty()) {
-        return failed_visual_object_subtree_duplicate_result("No asset path was provided.");
+        return failed_visual_object_subtree_duplicate_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
     if (request.replacements.empty()) {
-        return failed_visual_object_subtree_duplicate_result("No subtree replacement identities were provided.");
+        return failed_visual_object_subtree_duplicate_result(visual_asset_text("VisualAssetEditor.Identity.SubtreeReplacementBatchRequired"));
     }
 
     std::size_t root_record_index = 0U;
@@ -4629,10 +4640,10 @@ VisualObjectCreateBatchResult failed_visual_object_create_batch_result(std::stri
 
 VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& request) {
     if (request.path.empty()) {
-        return failed_visual_object_create_result("No asset path was provided.");
+        return failed_visual_object_create_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
     if (request.field_values.empty()) {
-        return failed_visual_object_create_result("No field values were provided.");
+        return failed_visual_object_create_result(visual_asset_text("VisualAssetEditor.Object.FieldValuesRequired"));
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
@@ -4718,10 +4729,10 @@ VisualObjectCreateResult create_visual_object(const VisualObjectCreateRequest& r
 
 VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatchRequest& request) {
     if (request.path.empty()) {
-        return failed_visual_object_create_batch_result("No asset path was provided.");
+        return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
     if (request.objects.empty()) {
-        return failed_visual_object_create_batch_result("No visual object creates were provided.");
+        return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Object.CreateBatchRequired"));
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
@@ -4741,7 +4752,7 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
     created_record_indexes.reserve(request.objects.size());
     for (const auto& object : request.objects) {
         if (object.field_values.empty()) {
-            return failed_visual_object_create_batch_result("No field values were provided.");
+            return failed_visual_object_create_batch_result(visual_asset_text("VisualAssetEditor.Object.FieldValuesRequired"));
         }
 
         std::vector<std::string> created_values(table.fields.size());
@@ -4835,10 +4846,10 @@ VisualObjectCreateBatchResult create_visual_objects(const VisualObjectCreateBatc
 
 VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object alignment targets were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.AlignmentTargetsRequired")};
     }
 
     const std::string mode = normalize_visual_property_name(request.mode);
@@ -4848,7 +4859,7 @@ VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& r
         mode != "bottom" &&
         mode != "horizontal-center" &&
         mode != "vertical-center") {
-        return {.ok = false, .error = "Unsupported visual object alignment mode."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.AlignmentModeUnsupported")};
     }
 
     VisualObjectGeometry anchor_geometry;
@@ -4916,15 +4927,15 @@ VisualAssetEditResult align_visual_objects(const VisualObjectAlignmentRequest& r
 
 VisualAssetEditResult resize_visual_objects(const VisualObjectResizeRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object resize targets were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ResizeTargetsRequired")};
     }
 
     const std::string mode = normalize_visual_property_name(request.mode);
     if (mode != "width" && mode != "height" && mode != "size") {
-        return {.ok = false, .error = "Unsupported visual object resize mode."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ResizeModeUnsupported")};
     }
 
     VisualObjectGeometry anchor_geometry;
@@ -4994,13 +5005,13 @@ VisualObjectGroupResult failed_visual_object_group_result(std::string error) {
 
 VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& request) {
     if (request.path.empty()) {
-        return failed_visual_object_group_result("No asset path was provided.");
+        return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
     if (request.container_field_values.empty()) {
-        return failed_visual_object_group_result("No group container field values were provided.");
+        return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Object.GroupContainerFieldsRequired"));
     }
     if (request.objects.empty()) {
-        return failed_visual_object_group_result("No visual objects were selected for grouping.");
+        return failed_visual_object_group_result(visual_asset_text("VisualAssetEditor.Object.GroupSelectionRequired"));
     }
 
     const std::vector<std::uint8_t> original_table_bytes = read_binary_file(request.path);
@@ -5091,7 +5102,7 @@ VisualObjectUngroupResult failed_visual_object_ungroup_result(std::string error)
 
 VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest& request) {
     if (request.path.empty()) {
-        return failed_visual_object_ungroup_result("No asset path was provided.");
+        return failed_visual_object_ungroup_result(visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired"));
     }
 
     std::size_t container_record_index = 0U;
@@ -5202,7 +5213,8 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
         const auto rollback_result = rollback_reparents();
         restore_original_asset();
         if (!rollback_result.ok) {
-            return failed_visual_object_ungroup_result(delete_result.error + " Rollback failed: " + rollback_result.error);
+            return failed_visual_object_ungroup_result(
+                visual_asset_rollback_failed_text(delete_result.error, rollback_result.error));
         }
         return failed_visual_object_ungroup_result(delete_result.error);
     }
@@ -5223,7 +5235,7 @@ VisualObjectUngroupResult ungroup_visual_object(const VisualObjectUngroupRequest
 
 VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.size() < 3U) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.DistributionTargetCountRequired")};
@@ -5236,7 +5248,7 @@ VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequ
     } else if (mode == "vertical") {
         property_name = "VPOS";
     } else {
-        return {.ok = false, .error = "Unsupported visual object distribution mode."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.DistributionModeUnsupported")};
     }
 
     struct DistributionItem {
@@ -5302,17 +5314,17 @@ VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequ
 
 VisualAssetEditResult snap_visual_objects_to_grid(const VisualObjectSnapToGridRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for grid snapping."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.SnapSelectionRequired")};
     }
 
     const std::string mode = normalize_visual_property_name(request.mode);
     const bool snap_horizontal = mode == "horizontal" || mode == "both";
     const bool snap_vertical = mode == "vertical" || mode == "both";
     if (!snap_horizontal && !snap_vertical) {
-        return {.ok = false, .error = "Unsupported visual object grid snapping mode."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.GridSnappingModeUnsupported")};
     }
     if (snap_horizontal && request.grid_width <= 0.0) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.GridWidthPositiveRequired")};
@@ -5376,17 +5388,17 @@ VisualAssetEditResult snap_visual_objects_to_grid(const VisualObjectSnapToGridRe
 
 VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for nudging."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NudgeSelectionRequired")};
     }
 
     const std::string mode = normalize_visual_property_name(request.mode);
     const bool nudge_horizontal = mode == "horizontal" || mode == "both";
     const bool nudge_vertical = mode == "vertical" || mode == "both";
     if (!nudge_horizontal && !nudge_vertical) {
-        return {.ok = false, .error = "Unsupported visual object nudge mode."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.NudgeModeUnsupported")};
     }
     if (nudge_horizontal && std::abs(request.delta_hpos) < 0.0000001) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.HorizontalNudgeDeltaRequired")};
@@ -5446,10 +5458,10 @@ VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& reque
 
 VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for tab-order assignment."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TabOrderSelectionRequired")};
     }
     if (request.starting_tab_index < 0) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.StartingTabIndexNonNegativeRequired")};
@@ -5500,10 +5512,10 @@ VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequ
 
 VisualAssetEditResult set_visual_object_tab_stop(const VisualObjectTabStopRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for tab-stop assignment."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TabStopSelectionRequired")};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -5551,10 +5563,10 @@ VisualAssetEditResult set_visual_object_tab_stop(const VisualObjectTabStopReques
 
 VisualAssetEditResult set_visual_object_visibility(const VisualObjectVisibilityRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for visibility assignment."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.VisibilitySelectionRequired")};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -5602,10 +5614,10 @@ VisualAssetEditResult set_visual_object_visibility(const VisualObjectVisibilityR
 
 VisualAssetEditResult set_visual_object_enabled(const VisualObjectEnabledRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for enabled-state assignment."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.EnabledSelectionRequired")};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -5653,10 +5665,10 @@ VisualAssetEditResult set_visual_object_enabled(const VisualObjectEnabledRequest
 
 VisualAssetEditResult set_visual_object_read_only(const VisualObjectReadOnlyRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for read-only assignment."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReadOnlySelectionRequired")};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -5704,10 +5716,10 @@ VisualAssetEditResult set_visual_object_read_only(const VisualObjectReadOnlyRequ
 
 VisualAssetEditResult set_visual_object_locked(const VisualObjectLockedRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual objects were selected for locked-state assignment."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.LockedSelectionRequired")};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -7488,7 +7500,7 @@ VisualAssetEditResult set_visual_object_dynamic_fore_color(
 
 VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
 
     std::size_t source_record_index = 0U;
@@ -7507,7 +7519,7 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
     std::string parent_name;
     if (!request.clear_parent) {
         if (trim_both(request.parent_object_name).empty() && trim_both(request.parent_unique_id).empty()) {
-            return {.ok = false, .error = "No parent object selector was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ParentSelectorRequired")};
         }
 
         std::size_t parent_record_index = 0U;
@@ -7523,7 +7535,7 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
             return parent_resolution;
         }
         if (parent_record_index == source_record_index) {
-            return {.ok = false, .error = "A visual object cannot be reparented to itself."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReparentSelfUnsupported")};
         }
 
         const auto table_result = parse_dbf_table_from_file(
@@ -7547,7 +7559,7 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
             }
             visited_parent_record_indexes.push_back(parent_chain_record_index);
             if (parent_chain_record_index == source_record_index) {
-                return {.ok = false, .error = "A visual object cannot be reparented to one of its descendants."};
+                return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReparentDescendantUnsupported")};
             }
 
             const auto* parent_chain_record = find_visual_object_record_by_record_index(
@@ -7594,10 +7606,10 @@ VisualAssetEditResult reparent_visual_object(const VisualObjectReparentRequest& 
 
 VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object reparent operations were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReparentBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -7626,7 +7638,7 @@ VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchReq
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -7638,7 +7650,7 @@ VisualAssetEditResult reparent_visual_objects(const VisualObjectReparentBatchReq
 
 VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (!request.update_object_name && !request.update_name && !request.update_unique_id) {
         return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Identity.FieldsRequired")};
@@ -7731,10 +7743,10 @@ VisualAssetEditResult rename_visual_object(const VisualObjectRenameRequest& requ
 
 VisualAssetEditResult rename_visual_objects(const VisualObjectRenameBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object renames were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.RenameBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -7766,7 +7778,7 @@ VisualAssetEditResult rename_visual_objects(const VisualObjectRenameBatchRequest
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return result;
@@ -7778,12 +7790,12 @@ VisualAssetEditResult rename_visual_objects(const VisualObjectRenameBatchRequest
 
 VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
 
     const std::string placement = normalize_visual_property_name(request.placement);
     if (placement != "front" && placement != "back" && placement != "before" && placement != "after") {
-        return {.ok = false, .error = "Unsupported visual object placement."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.PlacementUnsupported")};
     }
 
     std::size_t source_record_index = 0U;
@@ -7802,7 +7814,7 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
     std::size_t target_record_index = 0U;
     if (placement == "before" || placement == "after") {
         if (trim_both(request.target_object_name).empty() && trim_both(request.target_unique_id).empty()) {
-            return {.ok = false, .error = "No target object selector was provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.TargetSelectorRequired")};
         }
         const auto target_resolution = resolve_visual_object_record_index({
             .path = request.path,
@@ -7898,10 +7910,10 @@ VisualAssetEditResult reorder_visual_object(const VisualObjectReorderRequest& re
 
 VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object reorders were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.ReorderBatchRequired")};
     }
 
     const auto table_result = parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
@@ -7953,7 +7965,7 @@ VisualAssetEditResult reorder_visual_objects(const VisualObjectReorderBatchReque
 
 VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedStateRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
 
     std::size_t record_index = 0U;
@@ -7979,10 +7991,10 @@ VisualAssetEditResult set_visual_object_deleted_state(const VisualObjectDeletedS
 
 VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeletedStateBatchRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object deleted-state changes were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.DeletedStateBatchRequired")};
     }
 
     struct AppliedDeletedState {
@@ -8016,7 +8028,7 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = resolution.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(resolution.error, rollback_result.error)
                 };
             }
             return resolution;
@@ -8031,7 +8043,7 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(error, rollback_result.error)
                 };
             }
             return {.ok = false, .error = error};
@@ -8048,7 +8060,7 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
             if (!rollback_result.ok) {
                 return {
                     .ok = false,
-                    .error = result.error + " Rollback failed: " + rollback_result.error
+                    .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                 };
             }
             return {.ok = false, .error = result.error};
@@ -8061,7 +8073,7 @@ VisualAssetEditResult set_visual_object_deleted_states(const VisualObjectDeleted
 
 VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObjectSubtreeDeletedStateRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
 
     std::size_t root_record_index = 0U;
@@ -8112,7 +8124,7 @@ VisualAssetEditResult set_visual_object_subtree_deleted_state(const VisualObject
 
 VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEditRequest& request) {
     if (request.properties.empty()) {
-        return {.ok = false, .error = "No property changes were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -8131,7 +8143,7 @@ VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEdi
                 if (!rollback_result.ok) {
                     return {
                         .ok = false,
-                        .error = result.error + " Rollback failed: " + rollback_result.error
+                        .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                     };
                 }
             }
@@ -8144,10 +8156,10 @@ VisualAssetEditResult update_visual_object_properties(const VisualObjectMultiEdi
 
 VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
     if (request.objects.empty()) {
-        return {.ok = false, .error = "No visual object edits were provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Object.EditBatchRequired")};
     }
 
     const std::size_t initial_undo_depth = list_visual_asset_undo_entry_files(request.path).size();
@@ -8158,11 +8170,11 @@ VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequ
                 if (!rollback_result.ok) {
                     return {
                         .ok = false,
-                        .error = "No property changes were provided. Rollback failed: " + rollback_result.error
+                        .error = visual_asset_rollback_failed_text(visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired"), rollback_result.error)
                     };
                 }
             }
-            return {.ok = false, .error = "No property changes were provided."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.ChangeBatchRequired")};
         }
 
         const auto result = update_visual_object_properties({
@@ -8178,7 +8190,7 @@ VisualAssetEditResult update_visual_object_batch(const VisualObjectBatchEditRequ
                 if (!rollback_result.ok) {
                     return {
                         .ok = false,
-                        .error = result.error + " Rollback failed: " + rollback_result.error
+                        .error = visual_asset_rollback_failed_text(result.error, rollback_result.error)
                     };
                 }
             }
@@ -8195,7 +8207,7 @@ VisualAssetUndoStatus query_visual_object_undo(const std::string& path) {
 
 VisualAssetEditResult undo_visual_object_property(const std::string& path) {
     if (path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Operation.AssetPathRequired")};
     }
 
     const auto files = list_visual_asset_undo_entry_files(path);

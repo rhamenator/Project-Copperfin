@@ -24618,10 +24618,25 @@ void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
                english_catalog.translate(
                    "VisualAssetEditor.Property.NonNegativeRequired",
                    {{"propertyName", "BackColor"}}) == "BackColor must not be negative." &&
+               english_catalog.translate("VisualAssetEditor.Operation.AssetPathRequired") ==
+                   "No asset path was provided." &&
+               english_catalog.translate("VisualAssetEditor.Object.AlignmentTargetsRequired") ==
+                   "No visual object alignment targets were provided." &&
+               english_catalog.translate("VisualAssetEditor.Object.GridSnappingModeUnsupported") ==
+                   "Unsupported visual object grid snapping mode." &&
+               english_catalog.translate("VisualAssetEditor.Method.PlacementUnsupported") ==
+                   "Unknown method placement was requested." &&
+               english_catalog.translate("VisualAssetEditor.Property.ChangeBatchRequired") ==
+                   "No property changes were provided." &&
+               english_catalog.translate(
+                   "VisualAssetEditor.Operation.RollbackFailed",
+                   {{"error", "No property name was provided."}, {"rollbackError", "undo failed"}}) ==
+                   "No property name was provided. Rollback failed: undo failed" &&
                pseudo_catalog.translate("VisualAssetEditor.Object.RecordUnavailable").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! ") &&
-               pseudo_catalog.translate("VisualAssetEditor.Geometry.RequiredFieldsMissing").starts_with("[!! "),
-           "#2373/#2374: visual asset editor prose should resolve through localizable catalog keys");
+               pseudo_catalog.translate("VisualAssetEditor.Geometry.RequiredFieldsMissing").starts_with("[!! ") &&
+               pseudo_catalog.translate("VisualAssetEditor.Object.EditBatchRequired").starts_with("[!! "),
+           "#2373/#2374/#2375: visual asset editor prose should resolve through localizable catalog keys");
 }
 
 }  // namespace
