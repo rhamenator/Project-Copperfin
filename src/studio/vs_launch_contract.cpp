@@ -9323,85 +9323,136 @@ LaunchParseResult parse_launch_arguments(
             "--row-source-type-object")};
     }
     if (result.request.bound_column_object && !result.request.bound_column_available) {
-        return {.ok = false, .error = "An object bound-column assignment requires --bound-column."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "bound-column",
+            "--bound-column")};
     }
     if (result.request.bound_column_object && result.request.bound_column < 0) {
-        return {.ok = false, .error = "An object bound-column assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "bound-column",
+            "value")};
     }
     if (result.request.bound_column_object && result.request.bound_column_objects.empty()) {
-        return {.ok = false, .error = "An object bound-column assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "bound-column")};
     }
     if (!result.request.bound_column_object &&
         (result.request.bound_column_available ||
          !result.request.bound_column_objects.empty())) {
-        return {.ok = false, .error = "Bound-column arguments can only be used with --bound-column-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Bound-column",
+            "--bound-column-object")};
     }
     if (result.request.column_count_object && !result.request.column_count_available) {
-        return {.ok = false, .error = "An object column-count assignment requires --column-count."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "column-count",
+            "--column-count")};
     }
     if (result.request.column_count_object && result.request.column_count < 0) {
-        return {.ok = false, .error = "An object column-count assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "column-count",
+            "value")};
     }
     if (result.request.column_count_object && result.request.column_count_objects.empty()) {
-        return {.ok = false, .error = "An object column-count assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "column-count")};
     }
     if (!result.request.column_count_object &&
         (result.request.column_count_available ||
          !result.request.column_count_objects.empty())) {
-        return {.ok = false, .error = "Column-count arguments can only be used with --column-count-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Column-count",
+            "--column-count-object")};
     }
     if (result.request.style_object && !result.request.style_available) {
-        return {.ok = false, .error = "An object style assignment requires --style."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "style",
+            "--style")};
     }
     if (result.request.style_object && result.request.style < 0) {
-        return {.ok = false, .error = "An object style assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "style",
+            "value")};
     }
     if (result.request.style_object && result.request.style_objects.empty()) {
-        return {.ok = false, .error = "An object style assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "style")};
     }
     if (!result.request.style_object &&
         (result.request.style_available ||
          !result.request.style_objects.empty())) {
-        return {.ok = false, .error = "Style arguments can only be used with --style-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Style",
+            "--style-object")};
     }
     if (result.request.list_index_object && !result.request.list_index_available) {
-        return {.ok = false, .error = "An object list-index assignment requires --list-index."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "list-index",
+            "--list-index")};
     }
     if (result.request.list_index_object && result.request.list_index < 0) {
-        return {.ok = false, .error = "An object list-index assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "list-index",
+            "value")};
     }
     if (result.request.list_index_object && result.request.list_index_objects.empty()) {
-        return {.ok = false, .error = "An object list-index assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "list-index")};
     }
     if (!result.request.list_index_object &&
         (result.request.list_index_available ||
          !result.request.list_index_objects.empty())) {
-        return {.ok = false, .error = "List-index arguments can only be used with --list-index-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "List-index",
+            "--list-index-object")};
     }
     if (result.request.left_column_object && !result.request.left_column_available) {
-        return {.ok = false, .error = "An object left-column assignment requires --left-column."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "left-column",
+            "--left-column")};
     }
     if (result.request.left_column_object && result.request.left_column < 0) {
-        return {.ok = false, .error = "An object left-column assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "left-column",
+            "value")};
     }
     if (result.request.left_column_object && result.request.left_column_objects.empty()) {
-        return {.ok = false, .error = "An object left-column assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "left-column")};
     }
     if (!result.request.left_column_object &&
         (result.request.left_column_available ||
          !result.request.left_column_objects.empty())) {
-        return {.ok = false, .error = "Left-column arguments can only be used with --left-column-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Left-column",
+            "--left-column-object")};
     }
     if (result.request.display_value_object && !result.request.display_value_available) {
-        return {.ok = false, .error = "An object display-value assignment requires --display-value."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "display-value",
+            "--display-value")};
     }
     if (result.request.display_value_object && result.request.display_value_objects.empty()) {
-        return {.ok = false, .error = "An object display-value assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "display-value")};
     }
     if (!result.request.display_value_object &&
         (result.request.display_value_available ||
          !result.request.display_value_objects.empty())) {
-        return {.ok = false, .error = "Display-value arguments can only be used with --display-value-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Display-value",
+            "--display-value-object")};
     }
     if (result.request.selected_back_color_object && !result.request.selected_back_color_available) {
         return {.ok = false, .error = "An object selected-back-color assignment requires --selected-back-color."};
