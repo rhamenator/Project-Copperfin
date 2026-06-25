@@ -1697,6 +1697,164 @@ void test_studio_host_visual_property_copy_move_parse_diagnostics_localize(const
     }
 }
 
+void test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_visual_property_rename_reorder_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-rename",
+            "--path", "forms/customer.scx",
+            "--property-name", "Caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2403: default visual-property rename parser diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2403: default visual-property rename parser diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"visualPropertyRename\": null",
+        "#2403: default visual-property rename parser diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "No target property name was provided.",
+        "#2403: default visual-property rename parser diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-rename",
+            "--path", "forms/customer.scx",
+            "--property-name", "Caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2403: pseudo-localized missing-target-name diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2403: pseudo-localized missing-target-name diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"visualPropertyRename\": null",
+        "#2403: pseudo-localized missing-target-name diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2403: pseudo-localized missing-target-name diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No target property name was provided.",
+        "#2403: pseudo-localized missing-target-name diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", "forms/customer.scx",
+            "--property-name", "Caption",
+            "--record", "-1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2403: pseudo-localized invalid-record diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2403: pseudo-localized invalid-record diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record",
+        "#2403: pseudo-localized invalid-record diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --record value must be a non-negative integer.",
+        "#2403: pseudo-localized invalid-record diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-property-reorder", "--path", "forms/customer.scx", "--unexpected", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2403: pseudo-localized unknown-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2403: pseudo-localized unknown-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "visual-property-reorder",
+        "#2403: pseudo-localized unknown-option diagnostics should preserve command names");
+    expect_contains(process.stdout_text,
+        "--unexpected",
+        "#2403: pseudo-localized unknown-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Unknown visual-property-reorder option: --unexpected",
+        "#2403: pseudo-localized unknown-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-property-rename-batch", "--path", "forms/customer.scx", "--new-property-name", "Text", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2403: pseudo-localized rename-batch item diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2403: pseudo-localized rename-batch item diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--property-name",
+        "#2403: pseudo-localized rename-batch item diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Visual property rename batch item options require a preceding --property-name.",
+        "#2403: pseudo-localized rename-batch item diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-property-reorder",
+            "--path", "forms/customer.scx",
+            "--property-name", "Caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2403: pseudo-localized missing-placement diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2403: pseudo-localized missing-placement diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No property placement was provided.",
+        "#2403: pseudo-localized missing-placement diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-property-reorder-batch", "--path", "forms/customer.scx", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2403: pseudo-localized empty-reorder-batch diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2403: pseudo-localized empty-reorder-batch diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No property reorders were provided.",
+        "#2403: pseudo-localized empty-reorder-batch diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -113837,6 +113995,7 @@ int main(int argc, char** argv) {
     test_studio_host_designer_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
+    test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
