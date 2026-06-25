@@ -8066,6 +8066,97 @@ void test_studio_host_launch_row_source_list_target_selector_value_diagnostics_l
     }
 }
 
+void test_studio_host_launch_row_source_type_list_index_target_selector_value_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_row_source_type_list_index_target_selector_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--row-source-type-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2476: default row-source-type-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --row-source-type-target-object-name.",
+        "#2476: default row-source-type-target-object-name missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--display-value-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2476: default display-value-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --display-value-target-unique-id.",
+        "#2476: default display-value-target-unique-id missing diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--bound-column-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2476: pseudo-localized bound-column-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2476: pseudo-localized bound-column-target-unique-id missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--bound-column-target-unique-id",
+        "#2476: pseudo-localized bound-column-target-unique-id missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --bound-column-target-unique-id.",
+        "#2476: pseudo-localized bound-column-target-unique-id missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--style-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2476: pseudo-localized style-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2476: pseudo-localized style-target-object-name missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--style-target-object-name",
+        "#2476: pseudo-localized style-target-object-name missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --style-target-object-name.",
+        "#2476: pseudo-localized style-target-object-name missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--left-column-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2476: pseudo-localized left-column-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2476: pseudo-localized left-column-target-unique-id missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--left-column-target-unique-id",
+        "#2476: pseudo-localized left-column-target-unique-id missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --left-column-target-unique-id.",
+        "#2476: pseudo-localized left-column-target-unique-id missing diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -121624,6 +121715,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_partition_list_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_record_source_text_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_row_source_list_target_selector_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_row_source_type_list_index_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

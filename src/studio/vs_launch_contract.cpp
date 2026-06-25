@@ -5786,7 +5786,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--row-source-type-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --row-source-type-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--row-source-type-target-object-name")};
             }
             result.request.row_source_type_objects.push_back({
                 .record_index = 0U,
@@ -5798,7 +5798,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--row-source-type-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --row-source-type-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--row-source-type-target-unique-id")};
             }
             result.request.row_source_type_objects.push_back({
                 .record_index = 0U,
@@ -5810,7 +5810,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--bound-column-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --bound-column-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--bound-column-target-object-name")};
             }
             result.request.bound_column_objects.push_back({
                 .record_index = 0U,
@@ -5822,7 +5822,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--bound-column-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --bound-column-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--bound-column-target-unique-id")};
             }
             result.request.bound_column_objects.push_back({
                 .record_index = 0U,
@@ -5834,7 +5834,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--column-count-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --column-count-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--column-count-target-object-name")};
             }
             result.request.column_count_objects.push_back({
                 .record_index = 0U,
@@ -5846,7 +5846,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--column-count-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --column-count-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--column-count-target-unique-id")};
             }
             result.request.column_count_objects.push_back({
                 .record_index = 0U,
@@ -5858,7 +5858,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--style-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --style-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--style-target-object-name")};
             }
             result.request.style_objects.push_back({
                 .record_index = 0U,
@@ -5870,7 +5870,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--style-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --style-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--style-target-unique-id")};
             }
             result.request.style_objects.push_back({
                 .record_index = 0U,
@@ -5882,7 +5882,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--list-index-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --list-index-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--list-index-target-object-name")};
             }
             result.request.list_index_objects.push_back({
                 .record_index = 0U,
@@ -5894,7 +5894,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--list-index-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --list-index-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--list-index-target-unique-id")};
             }
             result.request.list_index_objects.push_back({
                 .record_index = 0U,
@@ -5906,7 +5906,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--left-column-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --left-column-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--left-column-target-object-name")};
             }
             result.request.left_column_objects.push_back({
                 .record_index = 0U,
@@ -5918,7 +5918,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--left-column-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --left-column-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--left-column-target-unique-id")};
             }
             result.request.left_column_objects.push_back({
                 .record_index = 0U,
@@ -5930,7 +5930,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--display-value-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --display-value-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--display-value-target-object-name")};
             }
             result.request.display_value_objects.push_back({
                 .record_index = 0U,
@@ -5942,7 +5942,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--display-value-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --display-value-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--display-value-target-unique-id")};
             }
             result.request.display_value_objects.push_back({
                 .record_index = 0U,
