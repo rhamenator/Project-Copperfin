@@ -4440,6 +4440,28 @@ void test_studio_host_launch_text_binding_diagnostics_localize(const std::string
         studio_host_path,
         {
             "--path", "forms/customer.scx",
+            "--format-object",
+            "--format-target-object-name", "txtName",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2505: pseudo-localized format-object missing-format diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2505: pseudo-localized format-object missing-format diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--format",
+        "#2505: pseudo-localized format-object missing-format diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object format assignment requires --format.",
+        "#2505: pseudo-localized format-object missing-format diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
             "--format", "@!",
             "--json"
         },
@@ -5994,6 +6016,27 @@ void test_studio_host_launch_command_mode_diagnostics_localize(const std::string
     expect_not_contains(process.stdout_text,
         "An object reparent requires --parent-name, --parent-unique-id, or --clear-parent.",
         "#2502: pseudo-localized reparent-object required option diagnostics should not fall back to raw English list grammar");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--reorder-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2505: pseudo-localized reorder-object required option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2505: pseudo-localized reorder-object required option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--placement",
+        "#2505: pseudo-localized reorder-object required option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object reorder requires --placement.",
+        "#2505: pseudo-localized reorder-object required option diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
