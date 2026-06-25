@@ -5958,7 +5958,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-back-color-target-object-name")};
             }
             result.request.selected_back_color_objects.push_back({
                 .record_index = 0U,
@@ -5970,7 +5970,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-back-color-target-unique-id")};
             }
             result.request.selected_back_color_objects.push_back({
                 .record_index = 0U,
@@ -5982,7 +5982,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-fore-color-target-object-name")};
             }
             result.request.selected_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -5994,7 +5994,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-fore-color-target-unique-id")};
             }
             result.request.selected_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6006,7 +6006,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-item-back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-item-back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-item-back-color-target-object-name")};
             }
             result.request.selected_item_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6018,7 +6018,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-item-back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-item-back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-item-back-color-target-unique-id")};
             }
             result.request.selected_item_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6030,7 +6030,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-item-fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-item-fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-item-fore-color-target-object-name")};
             }
             result.request.selected_item_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6042,7 +6042,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-item-fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-item-fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-item-fore-color-target-unique-id")};
             }
             result.request.selected_item_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6054,7 +6054,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-item-back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-item-back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-item-back-color-target-object-name")};
             }
             result.request.disabled_item_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6066,7 +6066,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-item-back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-item-back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-item-back-color-target-unique-id")};
             }
             result.request.disabled_item_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6078,7 +6078,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-item-fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-item-fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-item-fore-color-target-object-name")};
             }
             result.request.disabled_item_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6090,7 +6090,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-item-fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-item-fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-item-fore-color-target-unique-id")};
             }
             result.request.disabled_item_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6102,7 +6102,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--item-back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --item-back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--item-back-color-target-object-name")};
             }
             result.request.item_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6114,7 +6114,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--item-back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --item-back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--item-back-color-target-unique-id")};
             }
             result.request.item_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6126,7 +6126,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--item-fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --item-fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--item-fore-color-target-object-name")};
             }
             result.request.item_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6138,7 +6138,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--item-fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --item-fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--item-fore-color-target-unique-id")};
             }
             result.request.item_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6150,7 +6150,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-back-color-target-object-name")};
             }
             result.request.highlight_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6162,7 +6162,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-back-color-target-unique-id")};
             }
             result.request.highlight_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6174,7 +6174,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-fore-color-target-object-name")};
             }
             result.request.highlight_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6186,7 +6186,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-fore-color-target-unique-id")};
             }
             result.request.highlight_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6198,7 +6198,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--back-color-target-object-name")};
             }
             result.request.back_color_objects.push_back({
                 .record_index = 0U,
@@ -6210,7 +6210,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--back-color-target-unique-id")};
             }
             result.request.back_color_objects.push_back({
                 .record_index = 0U,
@@ -6222,7 +6222,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--fore-color-target-object-name")};
             }
             result.request.fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6234,7 +6234,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--fore-color-target-unique-id")};
             }
             result.request.fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6246,7 +6246,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-back-color-target-object-name")};
             }
             result.request.disabled_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6258,7 +6258,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-back-color-target-unique-id")};
             }
             result.request.disabled_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6270,7 +6270,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-fore-color-target-object-name")};
             }
             result.request.disabled_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6282,7 +6282,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-fore-color-target-unique-id")};
             }
             result.request.disabled_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6294,7 +6294,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-back-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-back-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-back-color-target-object-name")};
             }
             result.request.dynamic_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6306,7 +6306,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-back-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-back-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-back-color-target-unique-id")};
             }
             result.request.dynamic_back_color_objects.push_back({
                 .record_index = 0U,
@@ -6318,7 +6318,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-fore-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-fore-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-fore-color-target-object-name")};
             }
             result.request.dynamic_fore_color_objects.push_back({
                 .record_index = 0U,
@@ -6330,7 +6330,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-fore-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-fore-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-fore-color-target-unique-id")};
             }
             result.request.dynamic_fore_color_objects.push_back({
                 .record_index = 0U,
