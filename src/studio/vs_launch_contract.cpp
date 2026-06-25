@@ -3027,7 +3027,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--display-value") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --display-value."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--display-value")};
             }
             result.request.display_value = args[++index];
             result.request.display_value_available = true;
@@ -3036,7 +3036,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-back-color")};
             }
             result.request.dynamic_back_color = args[++index];
             result.request.dynamic_back_color_available = true;
@@ -3045,7 +3045,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-fore-color")};
             }
             result.request.dynamic_fore_color = args[++index];
             result.request.dynamic_fore_color_available = true;
