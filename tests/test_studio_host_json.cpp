@@ -2256,6 +2256,140 @@ void test_studio_host_visual_object_rename_reorder_update_parse_diagnostics_loca
     }
 }
 
+void test_studio_host_visual_method_core_parse_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_visual_method_core_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-list", "--record", "0", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2407: default visual-method list parser diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2407: default visual-method list parser diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"visualMethodList\": null",
+        "#2407: default visual-method list parser diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2407: default visual-method list parser diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-list", "--path", "forms/customer.scx", "--record", "-1", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2407: pseudo-localized visual-method list invalid-record diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2407: pseudo-localized visual-method list invalid-record diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record",
+        "#2407: pseudo-localized visual-method list invalid-record diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --record value must be a non-negative integer.",
+        "#2407: pseudo-localized visual-method list invalid-record diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-query", "--path", "forms/customer.scx", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2407: pseudo-localized visual-method query missing-name diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodQuery\": null",
+        "#2407: pseudo-localized visual-method query missing-name diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2407: pseudo-localized visual-method query missing-name diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No method name was provided.",
+        "#2407: pseudo-localized visual-method query missing-name diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-update",
+            "--path", "forms/customer.scx",
+            "--method-name", "When",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2407: pseudo-localized visual-method update missing-kind diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodUpdate\": null",
+        "#2407: pseudo-localized visual-method update missing-kind diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2407: pseudo-localized visual-method update missing-kind diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No method kind was provided.",
+        "#2407: pseudo-localized visual-method update missing-kind diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-method-update",
+            "--path", "forms/customer.scx",
+            "--method-name", "When",
+            "--method-kind", "procedure",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2407: pseudo-localized visual-method update missing-source diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2407: pseudo-localized visual-method update missing-source diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No method source was provided.",
+        "#2407: pseudo-localized visual-method update missing-source diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-method-delete", "--path", "forms/customer.scx", "--bogus", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2407: pseudo-localized visual-method delete unknown-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"visualMethodDelete\": null",
+        "#2407: pseudo-localized visual-method delete unknown-option diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2407: pseudo-localized visual-method delete unknown-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "visual-method-delete",
+        "#2407: pseudo-localized visual-method delete unknown-option diagnostics should preserve command names");
+    expect_contains(process.stdout_text,
+        "--bogus",
+        "#2407: pseudo-localized visual-method delete unknown-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Unknown visual-method-delete option: --bogus",
+        "#2407: pseudo-localized visual-method delete unknown-option diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
         {.name = "OBJNAME", .type = 'C', .length = 24U},
@@ -114399,6 +114533,7 @@ int main(int argc, char** argv) {
     test_studio_host_visual_list_navigation_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_object_reparent_duplicate_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_object_rename_reorder_update_parse_diagnostics_localize(argv[1]);
+    test_studio_host_visual_method_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);

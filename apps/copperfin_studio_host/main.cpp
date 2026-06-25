@@ -6688,7 +6688,43 @@ VisualObjectUpdateBatchParseResult parse_visual_object_update_batch_arguments(
     return result;
 }
 
-VisualMethodListParseResult parse_visual_method_list_arguments(const std::vector<std::string>& args) {
+std::string visual_method_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.VisualMethodParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string visual_method_parse_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+        {{"option", option}});
+}
+
+std::string visual_method_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.VisualMethodParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string visual_method_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+VisualMethodListParseResult parse_visual_method_list_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodListParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-list") != args.end();
@@ -6705,7 +6741,7 @@ VisualMethodListParseResult parse_visual_method_list_arguments(const std::vector
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6722,7 +6758,7 @@ VisualMethodListParseResult parse_visual_method_list_arguments(const std::vector
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -6731,17 +6767,19 @@ VisualMethodListParseResult parse_visual_method_list_arguments(const std::vector
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown visual-method-list option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-list", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     return result;
 }
 
-VisualMethodQueryParseResult parse_visual_method_query_arguments(const std::vector<std::string>& args) {
+VisualMethodQueryParseResult parse_visual_method_query_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodQueryParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-query") != args.end();
@@ -6758,7 +6796,7 @@ VisualMethodQueryParseResult parse_visual_method_query_arguments(const std::vect
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6775,7 +6813,7 @@ VisualMethodQueryParseResult parse_visual_method_query_arguments(const std::vect
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -6787,20 +6825,22 @@ VisualMethodQueryParseResult parse_visual_method_query_arguments(const std::vect
             result.request.method_name = require_value(argument);
             result.method_name_provided = !result.request.method_name.empty();
         } else {
-            fail("Unknown visual-method-query option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-query", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.method_name_provided) {
-        fail("No method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodName"));
     }
     return result;
 }
 
-VisualMethodUpdateParseResult parse_visual_method_update_arguments(const std::vector<std::string>& args) {
+VisualMethodUpdateParseResult parse_visual_method_update_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodUpdateParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-update") != args.end();
@@ -6817,7 +6857,7 @@ VisualMethodUpdateParseResult parse_visual_method_update_arguments(const std::ve
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6834,7 +6874,7 @@ VisualMethodUpdateParseResult parse_visual_method_update_arguments(const std::ve
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -6852,26 +6892,28 @@ VisualMethodUpdateParseResult parse_visual_method_update_arguments(const std::ve
             result.request.source_text = require_value(argument);
             result.method_source_provided = !result.request.source_text.empty();
         } else {
-            fail("Unknown visual-method-update option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-update", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.method_name_provided) {
-        fail("No method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodName"));
     }
     if (result.ok && !result.method_kind_provided) {
-        fail("No method kind was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodKind"));
     }
     if (result.ok && !result.method_source_provided) {
-        fail("No method source was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodSource"));
     }
     return result;
 }
 
-VisualMethodDeleteParseResult parse_visual_method_delete_arguments(const std::vector<std::string>& args) {
+VisualMethodDeleteParseResult parse_visual_method_delete_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodDeleteParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-delete") != args.end();
@@ -6888,7 +6930,7 @@ VisualMethodDeleteParseResult parse_visual_method_delete_arguments(const std::ve
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6905,7 +6947,7 @@ VisualMethodDeleteParseResult parse_visual_method_delete_arguments(const std::ve
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -6917,15 +6959,15 @@ VisualMethodDeleteParseResult parse_visual_method_delete_arguments(const std::ve
             result.request.method_name = require_value(argument);
             result.method_name_provided = !result.request.method_name.empty();
         } else {
-            fail("Unknown visual-method-delete option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-delete", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.method_name_provided) {
-        fail("No method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodName"));
     }
     return result;
 }
@@ -23062,7 +23104,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_delete_parse = parse_visual_method_delete_arguments(args);
+    const auto visual_method_delete_parse = parse_visual_method_delete_arguments(catalog, args);
     if (visual_method_delete_parse.requested) {
         if (!visual_method_delete_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23092,7 +23134,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_update_parse = parse_visual_method_update_arguments(args);
+    const auto visual_method_update_parse = parse_visual_method_update_arguments(catalog, args);
     if (visual_method_update_parse.requested) {
         if (!visual_method_update_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23122,7 +23164,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_query_parse = parse_visual_method_query_arguments(args);
+    const auto visual_method_query_parse = parse_visual_method_query_arguments(catalog, args);
     if (visual_method_query_parse.requested) {
         if (!visual_method_query_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectMethodQueryResult{
@@ -23152,7 +23194,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_list_parse = parse_visual_method_list_arguments(args);
+    const auto visual_method_list_parse = parse_visual_method_list_arguments(catalog, args);
     if (visual_method_list_parse.requested) {
         if (!visual_method_list_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectMethodListResult{
