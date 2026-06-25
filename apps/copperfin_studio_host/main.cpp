@@ -8255,7 +8255,9 @@ SelectionToolboxDispatchCatalogParseResult parse_selection_toolbox_dispatch_cata
     return result;
 }
 
-ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(const std::vector<std::string>& args) {
+ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxCreatePlanParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-create-plan") != args.end();
@@ -8272,7 +8274,7 @@ ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(const std::vect
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -8290,7 +8292,7 @@ ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(const std::vect
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.request.toolbox_context_provided = true;
@@ -8305,7 +8307,9 @@ ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(const std::vect
             const std::string assignment = require_value(argument);
             const auto separator = assignment.find('=');
             if (separator == std::string::npos || separator == 0U) {
-                fail("Toolbox field values must use name=value syntax.");
+                fail(catalog.translate(
+                    "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+                    {{"assignmentSyntax", "name=value"}}));
                 continue;
             }
             result.request.field_values.push_back({
@@ -8313,20 +8317,21 @@ ToolboxCreatePlanParseResult parse_toolbox_create_plan_arguments(const std::vect
                 .property_value = assignment.substr(separator + 1U)
             });
         } else {
-            fail("Unknown toolbox-create-plan option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-create-plan", argument));
         }
     }
 
     if (result.ok && result.request.path.empty()) {
-        fail("No asset path was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.toolbox_item_id.empty()) {
-        fail("No toolbox item id was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxItemId"));
     }
     return result;
 }
 
 ToolboxCreateFromDispatchPlanParseResult parse_toolbox_create_from_dispatch_plan_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     ToolboxCreateFromDispatchPlanParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -8344,7 +8349,7 @@ ToolboxCreateFromDispatchPlanParseResult parse_toolbox_create_from_dispatch_plan
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -8362,7 +8367,7 @@ ToolboxCreateFromDispatchPlanParseResult parse_toolbox_create_from_dispatch_plan
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -8371,7 +8376,7 @@ ToolboxCreateFromDispatchPlanParseResult parse_toolbox_create_from_dispatch_plan
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.launch_request.record_index = record_index;
@@ -8389,7 +8394,9 @@ ToolboxCreateFromDispatchPlanParseResult parse_toolbox_create_from_dispatch_plan
             const std::string assignment = require_value(argument);
             const auto separator = assignment.find('=');
             if (separator == std::string::npos || separator == 0U) {
-                fail("Toolbox field values must use name=value syntax.");
+                fail(catalog.translate(
+                    "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+                    {{"assignmentSyntax", "name=value"}}));
                 continue;
             }
             result.create_request.field_values.push_back({
@@ -8400,23 +8407,23 @@ ToolboxCreateFromDispatchPlanParseResult parse_toolbox_create_from_dispatch_plan
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-palette-invocation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-palette-invocation"));
                 continue;
             }
             result.admit_palette_invocation = admitted;
         } else {
-            fail("Unknown toolbox-create-from-dispatch-plan option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-create-from-dispatch-plan", argument));
         }
     }
 
     if (result.ok && result.launch_request.asset_path.empty()) {
-        fail("No asset path was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoAssetPath"));
     }
     if (result.ok && result.create_request.toolbox_item_id.empty()) {
-        fail("No toolbox item id was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxItemId"));
     }
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoSelectionContext"));
     }
     return result;
 }
@@ -25643,7 +25650,8 @@ int main(int argc, char** argv) {
         return create_result.ok ? 0 : 4;
     }
 
-    const auto toolbox_create_from_dispatch_plan_parse = parse_toolbox_create_from_dispatch_plan_arguments(args);
+    const auto toolbox_create_from_dispatch_plan_parse =
+        parse_toolbox_create_from_dispatch_plan_arguments(catalog, args);
     if (toolbox_create_from_dispatch_plan_parse.requested) {
         auto print_create_plan_error = [&](const std::string& error, const int exit_code) {
             const auto result = copperfin::studio::StudioToolboxObjectCreatePlanResult{
@@ -25932,7 +25940,7 @@ int main(int argc, char** argv) {
         return plan_result.ok ? 0 : 4;
     }
 
-    const auto toolbox_create_plan_parse = parse_toolbox_create_plan_arguments(args);
+    const auto toolbox_create_plan_parse = parse_toolbox_create_plan_arguments(catalog, args);
     if (toolbox_create_plan_parse.requested) {
         if (!toolbox_create_plan_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxObjectCreatePlanResult{
