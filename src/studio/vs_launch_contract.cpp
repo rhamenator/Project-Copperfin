@@ -8512,114 +8512,176 @@ LaunchParseResult parse_launch_arguments(
             "--ole-drop-text-insertion-object")};
     }
     if (result.request.button_count_object && !result.request.button_count_available) {
-        return {.ok = false, .error = "An object button-count assignment requires --button-count."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "button-count",
+            "--button-count")};
     }
     if (result.request.button_count_object && result.request.button_count_objects.empty()) {
-        return {.ok = false, .error = "An object button-count assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "button-count")};
     }
     if (!result.request.button_count_object &&
         (result.request.button_count_available ||
          !result.request.button_count_objects.empty())) {
-        return {.ok = false, .error = "Button-count arguments can only be used with --button-count-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Button-count",
+            "--button-count-object")};
     }
     if (result.request.curvature_object && !result.request.curvature_available) {
-        return {.ok = false, .error = "An object curvature assignment requires --curvature."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "curvature",
+            "--curvature")};
     }
     if (result.request.curvature_object && result.request.curvature_objects.empty()) {
-        return {.ok = false, .error = "An object curvature assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "curvature")};
     }
     if (!result.request.curvature_object &&
         (result.request.curvature_available ||
          !result.request.curvature_objects.empty())) {
-        return {.ok = false, .error = "Curvature arguments can only be used with --curvature-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Curvature",
+            "--curvature-object")};
     }
     if (result.request.draw_mode_object && !result.request.draw_mode_available) {
-        return {.ok = false, .error = "An object draw-mode assignment requires --draw-mode."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "draw-mode",
+            "--draw-mode")};
     }
     if (result.request.draw_mode_object && result.request.draw_mode_objects.empty()) {
-        return {.ok = false, .error = "An object draw-mode assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "draw-mode")};
     }
     if (!result.request.draw_mode_object &&
         (result.request.draw_mode_available ||
          !result.request.draw_mode_objects.empty())) {
-        return {.ok = false, .error = "Draw-mode arguments can only be used with --draw-mode-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Draw-mode",
+            "--draw-mode-object")};
     }
     if (result.request.draw_style_object && !result.request.draw_style_available) {
-        return {.ok = false, .error = "An object draw-style assignment requires --draw-style."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "draw-style",
+            "--draw-style")};
     }
     if (result.request.draw_style_object && result.request.draw_style_objects.empty()) {
-        return {.ok = false, .error = "An object draw-style assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "draw-style")};
     }
     if (!result.request.draw_style_object &&
         (result.request.draw_style_available ||
          !result.request.draw_style_objects.empty())) {
-        return {.ok = false, .error = "Draw-style arguments can only be used with --draw-style-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Draw-style",
+            "--draw-style-object")};
     }
     if (result.request.draw_width_object && !result.request.draw_width_available) {
-        return {.ok = false, .error = "An object draw-width assignment requires --draw-width."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "draw-width",
+            "--draw-width")};
     }
     if (result.request.draw_width_object && result.request.draw_width_objects.empty()) {
-        return {.ok = false, .error = "An object draw-width assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "draw-width")};
     }
     if (!result.request.draw_width_object &&
         (result.request.draw_width_available ||
          !result.request.draw_width_objects.empty())) {
-        return {.ok = false, .error = "Draw-width arguments can only be used with --draw-width-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Draw-width",
+            "--draw-width-object")};
     }
     if (result.request.fill_style_object && !result.request.fill_style_available) {
-        return {.ok = false, .error = "An object fill-style assignment requires --fill-style."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "fill-style",
+            "--fill-style")};
     }
     if (result.request.fill_style_object && result.request.fill_style_objects.empty()) {
-        return {.ok = false, .error = "An object fill-style assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "fill-style")};
     }
     if (!result.request.fill_style_object &&
         (result.request.fill_style_available ||
          !result.request.fill_style_objects.empty())) {
-        return {.ok = false, .error = "Fill-style arguments can only be used with --fill-style-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Fill-style",
+            "--fill-style-object")};
     }
     if (result.request.scale_mode_object && !result.request.scale_mode_available) {
-        return {.ok = false, .error = "An object scale-mode assignment requires --scale-mode."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "scale-mode",
+            "--scale-mode")};
     }
     if (result.request.scale_mode_object && result.request.scale_mode_objects.empty()) {
-        return {.ok = false, .error = "An object scale-mode assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "scale-mode")};
     }
     if (!result.request.scale_mode_object &&
         (result.request.scale_mode_available ||
          !result.request.scale_mode_objects.empty())) {
-        return {.ok = false, .error = "Scale-mode arguments can only be used with --scale-mode-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Scale-mode",
+            "--scale-mode-object")};
     }
     if (result.request.buffer_mode_object && !result.request.buffer_mode_available) {
-        return {.ok = false, .error = "An object buffer-mode assignment requires --buffer-mode."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "buffer-mode",
+            "--buffer-mode")};
     }
     if (result.request.buffer_mode_object && result.request.buffer_mode_objects.empty()) {
-        return {.ok = false, .error = "An object buffer-mode assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "buffer-mode")};
     }
     if (!result.request.buffer_mode_object &&
         (result.request.buffer_mode_available ||
          !result.request.buffer_mode_objects.empty())) {
-        return {.ok = false, .error = "Buffer-mode arguments can only be used with --buffer-mode-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Buffer-mode",
+            "--buffer-mode-object")};
     }
     if (result.request.buffer_mode_override_object && !result.request.buffer_mode_override_available) {
-        return {.ok = false, .error = "An object buffer-mode-override assignment requires --buffer-mode-override."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "buffer-mode-override",
+            "--buffer-mode-override")};
     }
     if (result.request.buffer_mode_override_object && result.request.buffer_mode_override_objects.empty()) {
-        return {.ok = false, .error = "An object buffer-mode-override assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "buffer-mode-override")};
     }
     if (!result.request.buffer_mode_override_object &&
         (result.request.buffer_mode_override_available ||
          !result.request.buffer_mode_override_objects.empty())) {
-        return {.ok = false, .error = "Buffer-mode-override arguments can only be used with --buffer-mode-override-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Buffer-mode-override",
+            "--buffer-mode-override-object")};
     }
     if (result.request.data_session_object && !result.request.data_session_available) {
-        return {.ok = false, .error = "An object data-session assignment requires --data-session."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "data-session",
+            "--data-session")};
     }
     if (result.request.data_session_object && result.request.data_session_objects.empty()) {
-        return {.ok = false, .error = "An object data-session assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "data-session")};
     }
     if (!result.request.data_session_object &&
         (result.request.data_session_available ||
          !result.request.data_session_objects.empty())) {
-        return {.ok = false, .error = "Data-session arguments can only be used with --data-session-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Data-session",
+            "--data-session-object")};
     }
     if (result.request.grid_line_color_object && !result.request.grid_line_color_available) {
         return {.ok = false, .error = "An object grid-line-color assignment requires --grid-line-color."};
