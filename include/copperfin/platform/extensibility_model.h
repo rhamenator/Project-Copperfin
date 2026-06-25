@@ -93,5 +93,9 @@ struct ExtensibilityProfile {
 [[nodiscard]] DotNetInteropCallDecision evaluate_dotnet_interop_call(
     const ExtensibilityProfile& profile,
     const DotNetInteropCallRequest& request);
+[[nodiscard]] DotNetInteropCallDecision evaluate_dotnet_interop_call(
+    const ExtensibilityProfile& profile,
+    const DotNetInteropCallRequest& request,
+    const localization::LocalizedCatalog& catalog);
 
 }  // namespace copperfin::platform

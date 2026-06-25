@@ -123,19 +123,26 @@ ExtensibilityProfile default_extensibility_profile() {
 DotNetInteropCallDecision evaluate_dotnet_interop_call(
     const ExtensibilityProfile& profile,
     const DotNetInteropCallRequest& request) {
+    return evaluate_dotnet_interop_call(profile, request, extensibility_profile_catalog());
+}
+
+DotNetInteropCallDecision evaluate_dotnet_interop_call(
+    const ExtensibilityProfile& profile,
+    const DotNetInteropCallRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     DotNetInteropCallDecision decision;
 
     if (!profile.dotnet_output.available) {
         decision.decision = DotNetInteropDecision::fallback_native;
         decision.execution_path = "native";
-        decision.reason = "dotnet output profile unavailable";
+        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.DotNetProfileUnavailable");
         return decision;
     }
 
     if (request.capability_id.empty()) {
         decision.decision = DotNetInteropDecision::reject;
         decision.execution_path = "none";
-        decision.reason = "capability id is required";
+        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityIdRequired");
         return decision;
     }
 
@@ -143,36 +150,36 @@ DotNetInteropCallDecision evaluate_dotnet_interop_call(
     if (contains_case_sensitive(rules.denylist, request.capability_id)) {
         decision.decision = DotNetInteropDecision::reject;
         decision.execution_path = "none";
-        decision.reason = "capability denied by policy allowlist/denylist";
+        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityDeniedByPolicy");
         return decision;
     }
 
     if (!rules.allowlist.empty() && !contains_case_sensitive(rules.allowlist, request.capability_id)) {
         decision.decision = DotNetInteropDecision::fallback_native;
         decision.execution_path = "native";
-        decision.reason = "capability not in allowlist";
+        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityNotInAllowlist");
         return decision;
     }
 
     if (request.security_sensitive && request.untrusted_input && request.requires_reflection && !rules.allow_reflection_for_untrusted) {
         decision.decision = DotNetInteropDecision::reject;
         decision.execution_path = "none";
-        decision.reason = "reflection on untrusted input is blocked";
+        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.ReflectionOnUntrustedInputDenied");
         return decision;
     }
 
     if (request.estimated_latency_ms > rules.max_in_process_latency_budget_ms) {
         decision.decision = DotNetInteropDecision::fallback_native;
         decision.execution_path = "native";
-        decision.reason = "estimated latency exceeds in-process policy budget";
+        decision.reason = extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.EstimatedLatencyExceedsBudget");
         return decision;
     }
 
     decision.decision = DotNetInteropDecision::allow;
     decision.execution_path = "dotnet";
     decision.reason = rules.require_policy_audit
-        ? "allowed by policy with audit-required path"
-        : "allowed by policy";
+        ? extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedWithAuditRequired")
+        : extensibility_text(catalog, "Platform.Extensibility.DotNetInteropDecision.CapabilityAllowedByPolicy");
     return decision;
 }
 

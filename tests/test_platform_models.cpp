@@ -186,6 +186,12 @@ void test_dotnet_interop_policy_gateway() {
     expect(
         allowed.decision == copperfin::platform::DotNetInteropDecision::allow,
         "policy gateway should allow listed .NET parity capabilities within budget");
+    expect(
+        allowed.execution_path == "dotnet",
+        "#2493: allowed .NET interop execution path should remain invariant");
+    expect(
+        allowed.reason == "allowed by policy with audit-required path",
+        "#2493: allowed .NET interop reason should preserve default en-US prose");
 
     const auto denied = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
@@ -198,6 +204,12 @@ void test_dotnet_interop_policy_gateway() {
     expect(
         denied.decision == copperfin::platform::DotNetInteropDecision::reject,
         "policy gateway should reject denylisted capabilities");
+    expect(
+        denied.execution_path == "none",
+        "#2493: denylisted .NET interop execution path should remain invariant");
+    expect(
+        denied.reason == "capability denied by policy allowlist/denylist",
+        "#2493: denylisted .NET interop reason should preserve default en-US prose");
 
     const auto fallback = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
@@ -210,6 +222,114 @@ void test_dotnet_interop_policy_gateway() {
     expect(
         fallback.decision == copperfin::platform::DotNetInteropDecision::fallback_native,
         "policy gateway should fall back to native when estimated latency exceeds budget");
+    expect(
+        fallback.execution_path == "native",
+        "#2493: latency fallback execution path should remain invariant");
+    expect(
+        fallback.reason == "estimated latency exceeds in-process policy budget",
+        "#2493: latency fallback reason should preserve default en-US prose");
+
+    auto unavailable_profile = profile;
+    unavailable_profile.dotnet_output.available = false;
+    const auto unavailable = copperfin::platform::evaluate_dotnet_interop_call(
+        unavailable_profile,
+        copperfin::platform::DotNetInteropCallRequest{.capability_id = "task-primitives"});
+    expect(
+        unavailable.reason == "dotnet output profile unavailable",
+        "#2493: unavailable .NET output reason should preserve default en-US prose");
+
+    const auto empty_capability = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{});
+    expect(
+        empty_capability.reason == "capability id is required",
+        "#2493: empty capability reason should preserve default en-US prose");
+
+    const auto not_allowlisted = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{.capability_id = "legacy-helper"});
+    expect(
+        not_allowlisted.reason == "capability not in allowlist",
+        "#2493: non-allowlisted capability reason should preserve default en-US prose");
+
+    const auto reflection_denied = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .estimated_latency_ms = 5U,
+            .requires_reflection = true,
+            .untrusted_input = true,
+            .security_sensitive = true});
+    expect(
+        reflection_denied.reason == "reflection on untrusted input is blocked",
+        "#2493: untrusted reflection reason should preserve default en-US prose");
+
+    auto unaudited_profile = profile;
+    unaudited_profile.dotnet_output.policy.require_policy_audit = false;
+    const auto unaudited_allowed = copperfin::platform::evaluate_dotnet_interop_call(
+        unaudited_profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .estimated_latency_ms = 10U});
+    expect(
+        unaudited_allowed.reason == "allowed by policy",
+        "#2493: unaudited allowed reason should preserve default en-US prose");
+
+    const auto pseudo_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    const auto pseudo_allowed = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .estimated_latency_ms = 10U},
+        pseudo_catalog);
+    expect(
+        pseudo_allowed.decision == copperfin::platform::DotNetInteropDecision::allow,
+        "#2493: pseudo-localized allowed decision enum should remain invariant");
+    expect(
+        pseudo_allowed.execution_path == "dotnet",
+        "#2493: pseudo-localized allowed execution path should remain invariant");
+    expect(
+        pseudo_allowed.reason.find("[!! ") != std::string::npos,
+        "#2493: pseudo-localized allowed reason should route through the catalog");
+    expect(
+        pseudo_allowed.reason.find("allowed by policy with audit-required path") == std::string::npos,
+        "#2493: pseudo-localized allowed reason should not fall back to raw English prose");
+
+    const auto pseudo_denied = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "unsafe-reflection-load",
+            .estimated_latency_ms = 5U,
+            .requires_reflection = true,
+            .untrusted_input = true,
+            .security_sensitive = true},
+        pseudo_catalog);
+    expect(
+        pseudo_denied.decision == copperfin::platform::DotNetInteropDecision::reject,
+        "#2493: pseudo-localized denied decision enum should remain invariant");
+    expect(
+        pseudo_denied.execution_path == "none",
+        "#2493: pseudo-localized denied execution path should remain invariant");
+    expect(
+        pseudo_denied.reason.find("[!! ") != std::string::npos,
+        "#2493: pseudo-localized denied reason should route through the catalog");
+
+    const auto pseudo_fallback = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "json-helpers",
+            .estimated_latency_ms = 250U},
+        pseudo_catalog);
+    expect(
+        pseudo_fallback.decision == copperfin::platform::DotNetInteropDecision::fallback_native,
+        "#2493: pseudo-localized fallback decision enum should remain invariant");
+    expect(
+        pseudo_fallback.execution_path == "native",
+        "#2493: pseudo-localized fallback execution path should remain invariant");
+    expect(
+        pseudo_fallback.reason.find("[!! ") != std::string::npos,
+        "#2493: pseudo-localized fallback reason should route through the catalog");
 }
 
 void test_default_database_profile() {
