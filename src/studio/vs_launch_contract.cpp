@@ -3894,11 +3894,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--delete-mark") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --delete-mark."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--delete-mark")};
             }
             const auto delete_mark = parse_bool_value(args[++index]);
             if (!delete_mark.has_value()) {
-                return {.ok = false, .error = "The --delete-mark value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--delete-mark")};
             }
             result.request.delete_mark = *delete_mark;
             result.request.delete_mark_available = true;
@@ -3907,11 +3907,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--record-mark") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --record-mark."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--record-mark")};
             }
             const auto record_mark = parse_bool_value(args[++index]);
             if (!record_mark.has_value()) {
-                return {.ok = false, .error = "The --record-mark value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--record-mark")};
             }
             result.request.record_mark = *record_mark;
             result.request.record_mark_available = true;
@@ -3920,11 +3920,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--split-bar") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --split-bar."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--split-bar")};
             }
             const auto split_bar = parse_bool_value(args[++index]);
             if (!split_bar.has_value()) {
-                return {.ok = false, .error = "The --split-bar value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--split-bar")};
             }
             result.request.split_bar = *split_bar;
             result.request.split_bar_available = true;
@@ -3933,11 +3933,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-row") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-row."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-row")};
             }
             const auto highlight_row = parse_bool_value(args[++index]);
             if (!highlight_row.has_value()) {
-                return {.ok = false, .error = "The --highlight-row value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--highlight-row")};
             }
             result.request.highlight_row = *highlight_row;
             result.request.highlight_row_available = true;
@@ -3946,11 +3946,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--panel-link") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --panel-link."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--panel-link")};
             }
             const auto panel_link = parse_bool_value(args[++index]);
             if (!panel_link.has_value()) {
-                return {.ok = false, .error = "The --panel-link value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--panel-link")};
             }
             result.request.panel_link = *panel_link;
             result.request.panel_link_available = true;
@@ -3959,11 +3959,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--allow-header-sizing") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --allow-header-sizing."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--allow-header-sizing")};
             }
             const auto allow_header_sizing = parse_bool_value(args[++index]);
             if (!allow_header_sizing.has_value()) {
-                return {.ok = false, .error = "The --allow-header-sizing value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--allow-header-sizing")};
             }
             result.request.allow_header_sizing = *allow_header_sizing;
             result.request.allow_header_sizing_available = true;
@@ -3972,11 +3972,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--allow-row-sizing") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --allow-row-sizing."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--allow-row-sizing")};
             }
             const auto allow_row_sizing = parse_bool_value(args[++index]);
             if (!allow_row_sizing.has_value()) {
-                return {.ok = false, .error = "The --allow-row-sizing value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--allow-row-sizing")};
             }
             result.request.allow_row_sizing = *allow_row_sizing;
             result.request.allow_row_sizing_available = true;
@@ -3985,11 +3985,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--resizable") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --resizable."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--resizable")};
             }
             const auto resizable = parse_bool_value(args[++index]);
             if (!resizable.has_value()) {
-                return {.ok = false, .error = "The --resizable value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--resizable")};
             }
             result.request.resizable = *resizable;
             result.request.resizable_available = true;
@@ -3998,11 +3998,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--add-line-feeds") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --add-line-feeds."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--add-line-feeds")};
             }
             const auto add_line_feeds = parse_bool_value(args[++index]);
             if (!add_line_feeds.has_value()) {
-                return {.ok = false, .error = "The --add-line-feeds value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--add-line-feeds")};
             }
             result.request.add_line_feeds = *add_line_feeds;
             result.request.add_line_feeds_available = true;
@@ -4011,11 +4011,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--always-on-top") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --always-on-top."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--always-on-top")};
             }
             const auto always_on_top = parse_bool_value(args[++index]);
             if (!always_on_top.has_value()) {
-                return {.ok = false, .error = "The --always-on-top value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--always-on-top")};
             }
             result.request.always_on_top = *always_on_top;
             result.request.always_on_top_available = true;
@@ -4024,11 +4024,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--always-on-bottom") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --always-on-bottom."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--always-on-bottom")};
             }
             const auto always_on_bottom = parse_bool_value(args[++index]);
             if (!always_on_bottom.has_value()) {
-                return {.ok = false, .error = "The --always-on-bottom value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--always-on-bottom")};
             }
             result.request.always_on_bottom = *always_on_bottom;
             result.request.always_on_bottom_available = true;
