@@ -3776,6 +3776,88 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
 
     process = run_process_capture(
         studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--button-count-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2509: pseudo-localized button-count missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2509: pseudo-localized button-count missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--button-count",
+        "#2509: pseudo-localized button-count missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " button-count ",
+        "#2509: pseudo-localized button-count missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--curvature-object",
+            "--curvature", "5",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2509: pseudo-localized curvature target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2509: pseudo-localized curvature target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        " curvature ",
+        "#2509: pseudo-localized curvature target diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--draw-mode", "1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2509: pseudo-localized draw-mode stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2509: pseudo-localized draw-mode stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--draw-mode-object",
+        "#2509: pseudo-localized draw-mode stray-argument diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Draw-mode arguments",
+        "#2509: pseudo-localized draw-mode stray-argument diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--buffer-mode-override-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2509: pseudo-localized buffer-mode-override stray diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2509: pseudo-localized buffer-mode-override stray diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--buffer-mode-override-object",
+        "#2509: pseudo-localized buffer-mode-override stray diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Buffer-mode-override arguments",
+        "#2509: pseudo-localized buffer-mode-override diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
         {"--json", "--default-file-path"},
         temp_root);
 

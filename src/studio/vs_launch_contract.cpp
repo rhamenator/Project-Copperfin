@@ -8989,173 +8989,191 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.button_count_object && !result.request.button_count_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "button-count",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ButtonCount"),
             "--button-count")};
     }
     if (result.request.button_count_object && result.request.button_count_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "button-count")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ButtonCount"))};
     }
     if (!result.request.button_count_object &&
         (result.request.button_count_available ||
          !result.request.button_count_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Button-count",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ButtonCountTitle"),
             "--button-count-object")};
     }
     if (result.request.curvature_object && !result.request.curvature_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "curvature",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Curvature"),
             "--curvature")};
     }
     if (result.request.curvature_object && result.request.curvature_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "curvature")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Curvature"))};
     }
     if (!result.request.curvature_object &&
         (result.request.curvature_available ||
          !result.request.curvature_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Curvature",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.CurvatureTitle"),
             "--curvature-object")};
     }
     if (result.request.draw_mode_object && !result.request.draw_mode_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "draw-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawMode"),
             "--draw-mode")};
     }
     if (result.request.draw_mode_object && result.request.draw_mode_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "draw-mode")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawMode"))};
     }
     if (!result.request.draw_mode_object &&
         (result.request.draw_mode_available ||
          !result.request.draw_mode_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Draw-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawModeTitle"),
             "--draw-mode-object")};
     }
     if (result.request.draw_style_object && !result.request.draw_style_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "draw-style",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawStyle"),
             "--draw-style")};
     }
     if (result.request.draw_style_object && result.request.draw_style_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "draw-style")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawStyle"))};
     }
     if (!result.request.draw_style_object &&
         (result.request.draw_style_available ||
          !result.request.draw_style_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Draw-style",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawStyleTitle"),
             "--draw-style-object")};
     }
     if (result.request.draw_width_object && !result.request.draw_width_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "draw-width",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawWidth"),
             "--draw-width")};
     }
     if (result.request.draw_width_object && result.request.draw_width_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "draw-width")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawWidth"))};
     }
     if (!result.request.draw_width_object &&
         (result.request.draw_width_available ||
          !result.request.draw_width_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Draw-width",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawWidthTitle"),
             "--draw-width-object")};
     }
     if (result.request.fill_style_object && !result.request.fill_style_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "fill-style",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillStyle"),
             "--fill-style")};
     }
     if (result.request.fill_style_object && result.request.fill_style_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "fill-style")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillStyle"))};
     }
     if (!result.request.fill_style_object &&
         (result.request.fill_style_available ||
          !result.request.fill_style_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Fill-style",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillStyleTitle"),
             "--fill-style-object")};
     }
     if (result.request.scale_mode_object && !result.request.scale_mode_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "scale-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ScaleMode"),
             "--scale-mode")};
     }
     if (result.request.scale_mode_object && result.request.scale_mode_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "scale-mode")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ScaleMode"))};
     }
     if (!result.request.scale_mode_object &&
         (result.request.scale_mode_available ||
          !result.request.scale_mode_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Scale-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ScaleModeTitle"),
             "--scale-mode-object")};
     }
     if (result.request.buffer_mode_object && !result.request.buffer_mode_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "buffer-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferMode"),
             "--buffer-mode")};
     }
     if (result.request.buffer_mode_object && result.request.buffer_mode_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "buffer-mode")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferMode"))};
     }
     if (!result.request.buffer_mode_object &&
         (result.request.buffer_mode_available ||
          !result.request.buffer_mode_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Buffer-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferModeTitle"),
             "--buffer-mode-object")};
     }
     if (result.request.buffer_mode_override_object && !result.request.buffer_mode_override_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "buffer-mode-override",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride"),
             "--buffer-mode-override")};
     }
     if (result.request.buffer_mode_override_object && result.request.buffer_mode_override_objects.empty()) {
         return {.ok = false, .error = localized_object_assignment_requires_target(
             catalog,
-            "buffer-mode-override")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride"))};
     }
     if (!result.request.buffer_mode_override_object &&
         (result.request.buffer_mode_override_available ||
          !result.request.buffer_mode_override_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Buffer-mode-override",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle"),
             "--buffer-mode-override-object")};
     }
     if (result.request.data_session_object && !result.request.data_session_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "data-session",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DataSession"),
             "--data-session")};
     }
     if (result.request.data_session_object && result.request.data_session_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "data-session")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DataSession"))};
     }
     if (!result.request.data_session_object &&
         (result.request.data_session_available ||
          !result.request.data_session_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Data-session",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DataSessionTitle"),
             "--data-session-object")};
     }
     if (result.request.grid_line_color_object && !result.request.grid_line_color_available) {
