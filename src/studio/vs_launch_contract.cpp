@@ -4219,7 +4219,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--anchor-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --anchor-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--anchor-object-name")};
             }
             result.request.anchor_object_name = args[++index];
             continue;
@@ -4227,7 +4227,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--anchor-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --anchor-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--anchor-unique-id")};
             }
             result.request.anchor_unique_id = args[++index];
             continue;
@@ -4235,7 +4235,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--align-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --align-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--align-target-object-name")};
             }
             result.request.align_objects.push_back({
                 .record_index = 0U,
@@ -4247,7 +4247,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--align-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --align-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--align-target-unique-id")};
             }
             result.request.align_objects.push_back({
                 .record_index = 0U,
@@ -4259,7 +4259,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--resize-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --resize-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--resize-target-object-name")};
             }
             result.request.resize_objects.push_back({
                 .record_index = 0U,
@@ -4271,7 +4271,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--resize-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --resize-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--resize-target-unique-id")};
             }
             result.request.resize_objects.push_back({
                 .record_index = 0U,
@@ -4283,7 +4283,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--distribute-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --distribute-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--distribute-target-object-name")};
             }
             result.request.distribute_objects.push_back({
                 .record_index = 0U,
@@ -4295,7 +4295,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--distribute-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --distribute-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--distribute-target-unique-id")};
             }
             result.request.distribute_objects.push_back({
                 .record_index = 0U,
@@ -4307,7 +4307,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--snap-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --snap-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--snap-target-object-name")};
             }
             result.request.snap_objects.push_back({
                 .record_index = 0U,
@@ -4319,7 +4319,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--snap-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --snap-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--snap-target-unique-id")};
             }
             result.request.snap_objects.push_back({
                 .record_index = 0U,
@@ -4331,7 +4331,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--nudge-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --nudge-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--nudge-target-object-name")};
             }
             result.request.nudge_objects.push_back({
                 .record_index = 0U,
@@ -4343,7 +4343,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--nudge-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --nudge-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--nudge-target-unique-id")};
             }
             result.request.nudge_objects.push_back({
                 .record_index = 0U,
