@@ -9216,6 +9216,7 @@ SelectionToolboxCreateDispatchPlanParseResult parse_selection_toolbox_create_dis
 }
 
 ToolboxCreateDispatchPlanParseResult parse_toolbox_create_dispatch_plan_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     ToolboxCreateDispatchPlanParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -9233,7 +9234,7 @@ ToolboxCreateDispatchPlanParseResult parse_toolbox_create_dispatch_plan_argument
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -9251,7 +9252,7 @@ ToolboxCreateDispatchPlanParseResult parse_toolbox_create_dispatch_plan_argument
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.request.toolbox_context_provided = true;
@@ -9266,7 +9267,9 @@ ToolboxCreateDispatchPlanParseResult parse_toolbox_create_dispatch_plan_argument
             const std::string assignment = require_value(argument);
             const auto separator = assignment.find('=');
             if (separator == std::string::npos || separator == 0U) {
-                fail("Toolbox field values must use name=value syntax.");
+                fail(catalog.translate(
+                    "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+                    {{"assignmentSyntax", "name=value"}}));
                 continue;
             }
             result.request.field_values.push_back({
@@ -9277,25 +9280,27 @@ ToolboxCreateDispatchPlanParseResult parse_toolbox_create_dispatch_plan_argument
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-create-operation value must be true or false.");
+                fail(toolbox_parse_boolean_value_required(catalog, "--admit-create-operation"));
                 continue;
             }
             result.admit_create_operation = admitted;
         } else {
-            fail("Unknown toolbox-create-dispatch-plan option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-create-dispatch-plan", argument));
         }
     }
 
     if (result.ok && result.request.path.empty()) {
-        fail("No asset path was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.toolbox_item_id.empty()) {
-        fail("No toolbox item id was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxItemId"));
     }
     return result;
 }
 
-ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(const std::vector<std::string>& args) {
+ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxCreateBatchPlanParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-create-batch-plan") != args.end();
@@ -9310,7 +9315,7 @@ ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(cons
 
     auto require_current_item = [&]() -> copperfin::studio::StudioToolboxObjectCreateBatchItem* {
         if (result.request.items.empty()) {
-            fail("Toolbox batch item options require a preceding --toolbox-item.");
+            fail(toolbox_parse_batch_item_requires_toolbox_item(catalog));
             return nullptr;
         }
         return &result.request.items.back();
@@ -9320,7 +9325,7 @@ ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(cons
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -9336,7 +9341,7 @@ ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(cons
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.request.toolbox_context_provided = true;
@@ -9373,7 +9378,9 @@ ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(cons
             const std::string assignment = require_value(argument);
             const auto separator = assignment.find('=');
             if (separator == std::string::npos || separator == 0U) {
-                fail("Toolbox field values must use name=value syntax.");
+                fail(catalog.translate(
+                    "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+                    {{"assignmentSyntax", "name=value"}}));
                 continue;
             }
             item->field_values.push_back({
@@ -9381,15 +9388,15 @@ ToolboxCreateBatchPlanParseResult parse_toolbox_create_batch_plan_arguments(cons
                 .property_value = assignment.substr(separator + 1U)
             });
         } else {
-            fail("Unknown toolbox-create-batch-plan option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-create-batch-plan", argument));
         }
     }
 
     if (result.ok && result.request.path.empty()) {
-        fail("No asset path was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.items.empty()) {
-        fail("No toolbox item ids were provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxItemIds"));
     }
     return result;
 }
@@ -25339,7 +25346,7 @@ int main(int argc, char** argv) {
         return catalog_result.ok ? 0 : 4;
     }
 
-    const auto toolbox_create_batch_plan_parse = parse_toolbox_create_batch_plan_arguments(args);
+    const auto toolbox_create_batch_plan_parse = parse_toolbox_create_batch_plan_arguments(catalog, args);
     if (toolbox_create_batch_plan_parse.requested) {
         if (!toolbox_create_batch_plan_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxObjectCreateBatchPlanResult{
@@ -25857,7 +25864,7 @@ int main(int argc, char** argv) {
         return create_dispatch_result.ok ? 0 : 4;
     }
 
-    const auto toolbox_create_dispatch_plan_parse = parse_toolbox_create_dispatch_plan_arguments(args);
+    const auto toolbox_create_dispatch_plan_parse = parse_toolbox_create_dispatch_plan_arguments(catalog, args);
     if (toolbox_create_dispatch_plan_parse.requested) {
         if (!toolbox_create_dispatch_plan_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxObjectCreateDispatchResult{
