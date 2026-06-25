@@ -7086,7 +7086,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-input-mask-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-input-mask-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-input-mask-target-object-name")};
             }
             result.request.dynamic_input_mask_objects.push_back({
                 .record_index = 0U,
@@ -7098,7 +7098,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-input-mask-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-input-mask-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-input-mask-target-unique-id")};
             }
             result.request.dynamic_input_mask_objects.push_back({
                 .record_index = 0U,
@@ -7110,7 +7110,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-line-height-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-line-height-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-line-height-target-object-name")};
             }
             result.request.dynamic_line_height_objects.push_back({
                 .record_index = 0U,
@@ -7122,7 +7122,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-line-height-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-line-height-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-line-height-target-unique-id")};
             }
             result.request.dynamic_line_height_objects.push_back({
                 .record_index = 0U,
@@ -7134,7 +7134,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-alignment-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-alignment-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-alignment-target-object-name")};
             }
             result.request.dynamic_alignment_objects.push_back({
                 .record_index = 0U,
@@ -7146,7 +7146,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-alignment-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-alignment-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-alignment-target-unique-id")};
             }
             result.request.dynamic_alignment_objects.push_back({
                 .record_index = 0U,
@@ -7158,7 +7158,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-current-control-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-current-control-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-current-control-target-object-name")};
             }
             result.request.dynamic_current_control_objects.push_back({
                 .record_index = 0U,
@@ -7170,7 +7170,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-current-control-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-current-control-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-current-control-target-unique-id")};
             }
             result.request.dynamic_current_control_objects.push_back({
                 .record_index = 0U,
@@ -7182,7 +7182,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-name-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-name-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-name-target-object-name")};
             }
             result.request.dynamic_font_name_objects.push_back({
                 .record_index = 0U,
@@ -7194,7 +7194,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-name-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-name-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-name-target-unique-id")};
             }
             result.request.dynamic_font_name_objects.push_back({
                 .record_index = 0U,
@@ -7206,7 +7206,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-size-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-size-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-size-target-object-name")};
             }
             result.request.dynamic_font_size_objects.push_back({
                 .record_index = 0U,
@@ -7218,7 +7218,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-size-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-size-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-size-target-unique-id")};
             }
             result.request.dynamic_font_size_objects.push_back({
                 .record_index = 0U,
@@ -7230,7 +7230,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-bold-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-bold-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-bold-target-object-name")};
             }
             result.request.dynamic_font_bold_objects.push_back({
                 .record_index = 0U,
@@ -7242,7 +7242,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-bold-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-bold-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-bold-target-unique-id")};
             }
             result.request.dynamic_font_bold_objects.push_back({
                 .record_index = 0U,
@@ -7254,7 +7254,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-italic-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-italic-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-italic-target-object-name")};
             }
             result.request.dynamic_font_italic_objects.push_back({
                 .record_index = 0U,
@@ -7266,7 +7266,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-italic-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-italic-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-italic-target-unique-id")};
             }
             result.request.dynamic_font_italic_objects.push_back({
                 .record_index = 0U,
@@ -7278,7 +7278,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-underline-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-underline-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-underline-target-object-name")};
             }
             result.request.dynamic_font_underline_objects.push_back({
                 .record_index = 0U,
@@ -7290,7 +7290,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-underline-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-underline-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-underline-target-unique-id")};
             }
             result.request.dynamic_font_underline_objects.push_back({
                 .record_index = 0U,
@@ -7302,7 +7302,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-strikethru-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-strikethru-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-strikethru-target-object-name")};
             }
             result.request.dynamic_font_strikethru_objects.push_back({
                 .record_index = 0U,
@@ -7314,7 +7314,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-strikethru-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-strikethru-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-strikethru-target-unique-id")};
             }
             result.request.dynamic_font_strikethru_objects.push_back({
                 .record_index = 0U,
@@ -7326,7 +7326,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-outline-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-outline-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-outline-target-object-name")};
             }
             result.request.dynamic_font_outline_objects.push_back({
                 .record_index = 0U,
@@ -7338,7 +7338,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-outline-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-outline-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-outline-target-unique-id")};
             }
             result.request.dynamic_font_outline_objects.push_back({
                 .record_index = 0U,
@@ -7350,7 +7350,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-shadow-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-shadow-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-shadow-target-object-name")};
             }
             result.request.dynamic_font_shadow_objects.push_back({
                 .record_index = 0U,
@@ -7362,7 +7362,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--dynamic-font-shadow-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --dynamic-font-shadow-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--dynamic-font-shadow-target-unique-id")};
             }
             result.request.dynamic_font_shadow_objects.push_back({
                 .record_index = 0U,
