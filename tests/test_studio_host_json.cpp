@@ -5722,6 +5722,85 @@ void test_studio_host_launch_command_mode_diagnostics_localize(const std::string
     }
 }
 
+void test_studio_host_launch_core_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_core_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--path"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2449: default missing path value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --path.",
+        "#2449: default missing path value diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--selection-context", "bogus_context"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2449: pseudo-localized selection-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2449: pseudo-localized selection-context diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "visual_object",
+        "#2449: pseudo-localized selection-context diagnostics should preserve selection-context tokens");
+    expect_not_contains(process.stdout_text,
+        "The --selection-context value must be visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.",
+        "#2449: pseudo-localized selection-context diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--record", "not-a-number"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2449: pseudo-localized record integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2449: pseudo-localized record integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record",
+        "#2449: pseudo-localized record integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --record value must be an unsigned integer.",
+        "#2449: pseudo-localized record integer diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--field-value", "missing-name-value-separator"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2449: pseudo-localized field-value syntax diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2449: pseudo-localized field-value syntax diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "name=value",
+        "#2449: pseudo-localized field-value syntax diagnostics should preserve syntax token");
+    expect_not_contains(process.stdout_text,
+        "Field values must use name=value syntax.",
+        "#2449: pseudo-localized field-value syntax diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -119253,6 +119332,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_selection_marker_diagnostics_localize(argv[1]);
     test_studio_host_launch_sizing_zorder_diagnostics_localize(argv[1]);
     test_studio_host_launch_command_mode_diagnostics_localize(argv[1]);
+    test_studio_host_launch_core_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

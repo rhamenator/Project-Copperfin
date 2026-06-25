@@ -93,15 +93,50 @@ std::optional<StudioEditorSelectionContext> parse_selection_context_token(std::s
     return std::nullopt;
 }
 
-std::string selection_context_error() {
-    return "The --selection-context value must be visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.";
-}
-
 const localization::LocalizedCatalog& default_launch_catalog() {
     static const localization::LocalizedCatalog catalog = localization::load_catalogs(
         localization::resolve_catalog_root(),
         localization::default_locale);
     return catalog;
+}
+
+std::string localized_missing_value_after_option(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.MissingValueAfterOption",
+        {
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_selection_context_error(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.SelectionContextValueRequired",
+        {
+            {"option", "--selection-context"},
+            {"allowedValues",
+                "visual_object, visual_method, container_object, class_designer, report_expression, "
+                "label_expression, menu_item, project_item, or data_environment"}
+        });
+}
+
+std::string localized_unsigned_integer_value_required(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.UnsignedIntegerValueRequired",
+        {
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_field_value_name_value_syntax_required(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
+        {
+            {"syntax", "name=value"}
+        });
 }
 
 std::string localized_object_assignment_requires_option(
@@ -1852,7 +1887,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--path") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --path."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--path")};
             }
             result.request.path = args[++index];
             continue;
@@ -1860,7 +1895,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--symbol") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --symbol."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--symbol")};
             }
             result.request.symbol = args[++index];
             continue;
@@ -1868,11 +1903,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selection-context") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selection-context."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selection-context")};
             }
             const auto selection_context = parse_selection_context_token(args[++index]);
             if (!selection_context.has_value()) {
-                return {.ok = false, .error = selection_context_error()};
+                return {.ok = false, .error = localized_selection_context_error(catalog)};
             }
             result.request.designer_selection_contexts.push_back(*selection_context);
             continue;
@@ -1880,11 +1915,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--record") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --record."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--record")};
             }
             std::size_t record_index = 0;
             if (!parse_size_value(args[++index], record_index)) {
-                return {.ok = false, .error = "The --record value must be an unsigned integer."};
+                return {.ok = false, .error = localized_unsigned_integer_value_required(catalog, "--record")};
             }
             result.request.record_index = record_index;
             result.request.selection_record_available = true;
@@ -1893,7 +1928,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--property-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --property-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--property-name")};
             }
             result.request.property_name = args[++index];
             continue;
@@ -1901,7 +1936,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--property-value") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --property-value."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--property-value")};
             }
             result.request.property_value = args[++index];
             continue;
@@ -1909,7 +1944,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--new-property-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --new-property-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--new-property-name")};
             }
             result.request.new_property_name = args[++index];
             continue;
@@ -1917,7 +1952,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--new-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --new-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--new-object-name")};
             }
             result.request.new_object_name = args[++index];
             continue;
@@ -1925,7 +1960,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--new-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --new-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--new-name")};
             }
             result.request.new_name = args[++index];
             continue;
@@ -1933,7 +1968,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--new-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --new-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--new-unique-id")};
             }
             result.request.new_unique_id = args[++index];
             continue;
@@ -1941,7 +1976,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--parent-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --parent-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--parent-name")};
             }
             result.request.parent_name = args[++index];
             continue;
@@ -1949,7 +1984,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--parent-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --parent-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--parent-unique-id")};
             }
             result.request.parent_unique_id = args[++index];
             continue;
@@ -1957,7 +1992,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--placement") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --placement."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--placement")};
             }
             result.request.placement = args[++index];
             continue;
@@ -1965,7 +2000,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--target-object-name")};
             }
             result.request.target_object_name = args[++index];
             continue;
@@ -1973,7 +2008,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--target-unique-id")};
             }
             result.request.target_unique_id = args[++index];
             continue;
@@ -1981,7 +2016,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--group-child-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --group-child-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--group-child-object-name")};
             }
             result.request.group_objects.push_back({
                 .record_index = 0U,
@@ -1993,7 +2028,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--group-child-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --group-child-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--group-child-unique-id")};
             }
             result.request.group_objects.push_back({
                 .record_index = 0U,
@@ -2005,12 +2040,12 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--field-value") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --field-value."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--field-value")};
             }
             const std::string assignment = args[++index];
             const auto separator = assignment.find('=');
             if (separator == std::string::npos || separator == 0U) {
-                return {.ok = false, .error = "Field values must use name=value syntax."};
+                return {.ok = false, .error = localized_field_value_name_value_syntax_required(catalog)};
             }
             result.request.field_values.push_back({
                 .property_name = assignment.substr(0U, separator),
