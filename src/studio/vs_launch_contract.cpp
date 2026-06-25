@@ -9962,114 +9962,147 @@ LaunchParseResult parse_launch_arguments(
             "--min-button-object")};
     }
     if (result.request.min_height_object && !result.request.min_height_available) {
-        return {.ok = false, .error = "An object min-height assignment requires --min-height."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "min-height", "--min-height")};
     }
     if (result.request.min_height_object && result.request.min_height_objects.empty()) {
-        return {.ok = false, .error = "An object min-height assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "min-height")};
     }
     if (!result.request.min_height_object &&
         (result.request.min_height_available ||
          !result.request.min_height_objects.empty())) {
-        return {.ok = false, .error = "Min-height arguments can only be used with --min-height-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Min-height",
+            "--min-height-object")};
     }
     if (result.request.min_width_object && !result.request.min_width_available) {
-        return {.ok = false, .error = "An object min-width assignment requires --min-width."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "min-width", "--min-width")};
     }
     if (result.request.min_width_object && result.request.min_width_objects.empty()) {
-        return {.ok = false, .error = "An object min-width assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "min-width")};
     }
     if (!result.request.min_width_object &&
         (result.request.min_width_available ||
          !result.request.min_width_objects.empty())) {
-        return {.ok = false, .error = "Min-width arguments can only be used with --min-width-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Min-width",
+            "--min-width-object")};
     }
     if (result.request.max_height_object && !result.request.max_height_available) {
-        return {.ok = false, .error = "An object max-height assignment requires --max-height."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "max-height", "--max-height")};
     }
     if (result.request.max_height_object && result.request.max_height_objects.empty()) {
-        return {.ok = false, .error = "An object max-height assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "max-height")};
     }
     if (!result.request.max_height_object &&
         (result.request.max_height_available ||
          !result.request.max_height_objects.empty())) {
-        return {.ok = false, .error = "Max-height arguments can only be used with --max-height-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Max-height",
+            "--max-height-object")};
     }
     if (result.request.movable_object && !result.request.movable_available) {
-        return {.ok = false, .error = "An object movable assignment requires --movable."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "movable", "--movable")};
     }
     if (result.request.movable_object && result.request.movable_objects.empty()) {
-        return {.ok = false, .error = "An object movable assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "movable")};
     }
     if (!result.request.movable_object &&
         (result.request.movable_available ||
          !result.request.movable_objects.empty())) {
-        return {.ok = false, .error = "Movable arguments can only be used with --movable-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Movable",
+            "--movable-object")};
     }
     if (result.request.half_height_caption_object && !result.request.half_height_caption_available) {
-        return {.ok = false, .error = "An object half-height-caption assignment requires --half-height-caption."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "half-height-caption",
+            "--half-height-caption")};
     }
     if (result.request.half_height_caption_object && result.request.half_height_caption_objects.empty()) {
-        return {.ok = false, .error = "An object half-height-caption assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "half-height-caption")};
     }
     if (!result.request.half_height_caption_object &&
         (result.request.half_height_caption_available ||
          !result.request.half_height_caption_objects.empty())) {
-        return {.ok = false, .error = "Half-height-caption arguments can only be used with --half-height-caption-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Half-height-caption",
+            "--half-height-caption-object")};
     }
     if (result.request.mdi_form_object && !result.request.mdi_form_available) {
-        return {.ok = false, .error = "An object MDI-form assignment requires --mdi-form."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "MDI-form", "--mdi-form")};
     }
     if (result.request.mdi_form_object && result.request.mdi_form_objects.empty()) {
-        return {.ok = false, .error = "An object MDI-form assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "MDI-form")};
     }
     if (!result.request.mdi_form_object &&
         (result.request.mdi_form_available ||
          !result.request.mdi_form_objects.empty())) {
-        return {.ok = false, .error = "MDI-form arguments can only be used with --mdi-form-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "MDI-form",
+            "--mdi-form-object")};
     }
     if (result.request.back_style_object && !result.request.back_style_available) {
-        return {.ok = false, .error = "An object back-style assignment requires --back-style."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "back-style", "--back-style")};
     }
     if (result.request.back_style_object && result.request.back_style_objects.empty()) {
-        return {.ok = false, .error = "An object back-style assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "back-style")};
     }
     if (!result.request.back_style_object &&
         (result.request.back_style_available ||
          !result.request.back_style_objects.empty())) {
-        return {.ok = false, .error = "Back-style arguments can only be used with --back-style-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Back-style",
+            "--back-style-object")};
     }
     if (result.request.border_style_object && !result.request.border_style_available) {
-        return {.ok = false, .error = "An object border-style assignment requires --border-style."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "border-style", "--border-style")};
     }
     if (result.request.border_style_object && result.request.border_style_objects.empty()) {
-        return {.ok = false, .error = "An object border-style assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "border-style")};
     }
     if (!result.request.border_style_object &&
         (result.request.border_style_available ||
          !result.request.border_style_objects.empty())) {
-        return {.ok = false, .error = "Border-style arguments can only be used with --border-style-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Border-style",
+            "--border-style-object")};
     }
     if (result.request.border_width_object && !result.request.border_width_available) {
-        return {.ok = false, .error = "An object border-width assignment requires --border-width."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "border-width", "--border-width")};
     }
     if (result.request.border_width_object && result.request.border_width_objects.empty()) {
-        return {.ok = false, .error = "An object border-width assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "border-width")};
     }
     if (!result.request.border_width_object &&
         (result.request.border_width_available ||
          !result.request.border_width_objects.empty())) {
-        return {.ok = false, .error = "Border-width arguments can only be used with --border-width-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Border-width",
+            "--border-width-object")};
     }
     if (result.request.border_color_object && !result.request.border_color_available) {
-        return {.ok = false, .error = "An object border-color assignment requires --border-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "border-color", "--border-color")};
     }
     if (result.request.border_color_object && result.request.border_color_objects.empty()) {
-        return {.ok = false, .error = "An object border-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "border-color")};
     }
     if (!result.request.border_color_object &&
         (result.request.border_color_available ||
          !result.request.border_color_objects.empty())) {
-        return {.ok = false, .error = "Border-color arguments can only be used with --border-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Border-color",
+            "--border-color-object")};
     }
     if (result.request.special_effect_object && !result.request.special_effect_available) {
         return {.ok = false, .error = "An object special-effect assignment requires --special-effect."};
