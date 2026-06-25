@@ -4037,11 +4037,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-back-color")};
             }
             int selected_back_color = 0;
             if (!parse_int_value(args[++index], selected_back_color)) {
-                return {.ok = false, .error = "The --selected-back-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--selected-back-color")};
             }
             result.request.selected_back_color = selected_back_color;
             result.request.selected_back_color_available = true;
@@ -4050,11 +4050,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-fore-color")};
             }
             int selected_fore_color = 0;
             if (!parse_int_value(args[++index], selected_fore_color)) {
-                return {.ok = false, .error = "The --selected-fore-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--selected-fore-color")};
             }
             result.request.selected_fore_color = selected_fore_color;
             result.request.selected_fore_color_available = true;
@@ -4063,11 +4063,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-item-back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-item-back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-item-back-color")};
             }
             int selected_item_back_color = 0;
             if (!parse_int_value(args[++index], selected_item_back_color)) {
-                return {.ok = false, .error = "The --selected-item-back-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--selected-item-back-color")};
             }
             result.request.selected_item_back_color = selected_item_back_color;
             result.request.selected_item_back_color_available = true;
@@ -4076,11 +4076,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--selected-item-fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --selected-item-fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--selected-item-fore-color")};
             }
             int selected_item_fore_color = 0;
             if (!parse_int_value(args[++index], selected_item_fore_color)) {
-                return {.ok = false, .error = "The --selected-item-fore-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--selected-item-fore-color")};
             }
             result.request.selected_item_fore_color = selected_item_fore_color;
             result.request.selected_item_fore_color_available = true;
@@ -4089,11 +4089,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-item-back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-item-back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-item-back-color")};
             }
             int disabled_item_back_color = 0;
             if (!parse_int_value(args[++index], disabled_item_back_color)) {
-                return {.ok = false, .error = "The --disabled-item-back-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--disabled-item-back-color")};
             }
             result.request.disabled_item_back_color = disabled_item_back_color;
             result.request.disabled_item_back_color_available = true;
@@ -4102,11 +4102,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-item-fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-item-fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-item-fore-color")};
             }
             int disabled_item_fore_color = 0;
             if (!parse_int_value(args[++index], disabled_item_fore_color)) {
-                return {.ok = false, .error = "The --disabled-item-fore-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--disabled-item-fore-color")};
             }
             result.request.disabled_item_fore_color = disabled_item_fore_color;
             result.request.disabled_item_fore_color_available = true;
@@ -4115,11 +4115,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--item-back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --item-back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--item-back-color")};
             }
             int item_back_color = 0;
             if (!parse_int_value(args[++index], item_back_color)) {
-                return {.ok = false, .error = "The --item-back-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--item-back-color")};
             }
             result.request.item_back_color = item_back_color;
             result.request.item_back_color_available = true;
@@ -4128,11 +4128,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--item-fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --item-fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--item-fore-color")};
             }
             int item_fore_color = 0;
             if (!parse_int_value(args[++index], item_fore_color)) {
-                return {.ok = false, .error = "The --item-fore-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--item-fore-color")};
             }
             result.request.item_fore_color = item_fore_color;
             result.request.item_fore_color_available = true;
@@ -4141,11 +4141,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-back-color")};
             }
             int highlight_back_color = 0;
             if (!parse_int_value(args[++index], highlight_back_color)) {
-                return {.ok = false, .error = "The --highlight-back-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--highlight-back-color")};
             }
             result.request.highlight_back_color = highlight_back_color;
             result.request.highlight_back_color_available = true;
@@ -4154,11 +4154,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-fore-color")};
             }
             int highlight_fore_color = 0;
             if (!parse_int_value(args[++index], highlight_fore_color)) {
-                return {.ok = false, .error = "The --highlight-fore-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--highlight-fore-color")};
             }
             result.request.highlight_fore_color = highlight_fore_color;
             result.request.highlight_fore_color_available = true;
@@ -4167,11 +4167,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--back-color")};
             }
             int back_color = 0;
             if (!parse_int_value(args[++index], back_color)) {
-                return {.ok = false, .error = "The --back-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--back-color")};
             }
             result.request.back_color = back_color;
             result.request.back_color_available = true;
@@ -4180,11 +4180,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--fore-color")};
             }
             int fore_color = 0;
             if (!parse_int_value(args[++index], fore_color)) {
-                return {.ok = false, .error = "The --fore-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--fore-color")};
             }
             result.request.fore_color = fore_color;
             result.request.fore_color_available = true;
@@ -4193,11 +4193,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-back-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-back-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-back-color")};
             }
             int disabled_back_color = 0;
             if (!parse_int_value(args[++index], disabled_back_color)) {
-                return {.ok = false, .error = "The --disabled-back-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--disabled-back-color")};
             }
             result.request.disabled_back_color = disabled_back_color;
             result.request.disabled_back_color_available = true;
@@ -4206,11 +4206,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-fore-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-fore-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-fore-color")};
             }
             int disabled_fore_color = 0;
             if (!parse_int_value(args[++index], disabled_fore_color)) {
-                return {.ok = false, .error = "The --disabled-fore-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--disabled-fore-color")};
             }
             result.request.disabled_fore_color = disabled_fore_color;
             result.request.disabled_fore_color_available = true;

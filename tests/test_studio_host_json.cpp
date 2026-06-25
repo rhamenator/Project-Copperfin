@@ -7066,6 +7066,96 @@ void test_studio_host_launch_marker_sizing_zorder_value_diagnostics_localize(
     }
 }
 
+void test_studio_host_launch_color_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_color_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--selected-back-color"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2465: default selected-back-color missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --selected-back-color.",
+        "#2465: default selected-back-color missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--selected-item-fore-color", "blue"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2465: default selected-item-fore-color integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "The --selected-item-fore-color value must be an integer.",
+        "#2465: default selected-item-fore-color integer diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--disabled-item-back-color"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2465: pseudo-localized disabled-item-back-color missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2465: pseudo-localized disabled-item-back-color missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--disabled-item-back-color",
+        "#2465: pseudo-localized disabled-item-back-color missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --disabled-item-back-color.",
+        "#2465: pseudo-localized disabled-item-back-color missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--highlight-fore-color", "bright"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2465: pseudo-localized highlight-fore-color integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2465: pseudo-localized highlight-fore-color integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--highlight-fore-color",
+        "#2465: pseudo-localized highlight-fore-color integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --highlight-fore-color value must be an integer.",
+        "#2465: pseudo-localized highlight-fore-color integer diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--disabled-fore-color", "dim"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2465: pseudo-localized disabled-fore-color integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2465: pseudo-localized disabled-fore-color integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--disabled-fore-color",
+        "#2465: pseudo-localized disabled-fore-color integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --disabled-fore-color value must be an integer.",
+        "#2465: pseudo-localized disabled-fore-color integer diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -120613,6 +120703,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_font_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_max_auto_selection_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_marker_sizing_zorder_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_color_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
