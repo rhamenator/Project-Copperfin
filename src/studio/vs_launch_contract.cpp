@@ -8837,139 +8837,153 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.ole_drag_picture_object && !result.request.ole_drag_picture_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "OLE drag-picture",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDragPicture"),
             "--ole-drag-picture")};
     }
     if (result.request.ole_drag_picture_object && result.request.ole_drag_picture_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drag-picture")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDragPicture"))};
     }
     if (!result.request.ole_drag_picture_object &&
         (result.request.ole_drag_picture_available ||
          !result.request.ole_drag_picture_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "OLE drag-picture",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDragPictureTitle"),
             "--ole-drag-picture-object")};
     }
     if (result.request.mouse_icon_object && !result.request.mouse_icon_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "mouse-icon",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MouseIcon"),
             "--mouse-icon")};
     }
     if (result.request.mouse_icon_object && result.request.mouse_icon_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "mouse-icon")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MouseIcon"))};
     }
     if (!result.request.mouse_icon_object &&
         (result.request.mouse_icon_available ||
          !result.request.mouse_icon_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Mouse-icon",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle"),
             "--mouse-icon-object")};
     }
     if (result.request.drag_icon_object && !result.request.drag_icon_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "drag-icon",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DragIcon"),
             "--drag-icon")};
     }
     if (result.request.drag_icon_object && result.request.drag_icon_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "drag-icon")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DragIcon"))};
     }
     if (!result.request.drag_icon_object &&
         (result.request.drag_icon_available ||
          !result.request.drag_icon_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Drag-icon",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DragIconTitle"),
             "--drag-icon-object")};
     }
     if (result.request.drag_mode_object && !result.request.drag_mode_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "drag-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DragMode"),
             "--drag-mode")};
     }
     if (result.request.drag_mode_object && result.request.drag_mode_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "drag-mode")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DragMode"))};
     }
     if (!result.request.drag_mode_object &&
         (result.request.drag_mode_available ||
          !result.request.drag_mode_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Drag-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DragModeTitle"),
             "--drag-mode-object")};
     }
     if (result.request.ole_drag_mode_object && !result.request.ole_drag_mode_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "OLE drag-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDragMode"),
             "--ole-drag-mode")};
     }
     if (result.request.ole_drag_mode_object && result.request.ole_drag_mode_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drag-mode")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDragMode"))};
     }
     if (!result.request.ole_drag_mode_object &&
         (result.request.ole_drag_mode_available ||
          !result.request.ole_drag_mode_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "OLE drag-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle"),
             "--ole-drag-mode-object")};
     }
     if (result.request.ole_drop_mode_object && !result.request.ole_drop_mode_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "OLE drop-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropMode"),
             "--ole-drop-mode")};
     }
     if (result.request.ole_drop_mode_object && result.request.ole_drop_mode_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drop-mode")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropMode"))};
     }
     if (!result.request.ole_drop_mode_object &&
         (result.request.ole_drop_mode_available ||
          !result.request.ole_drop_mode_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "OLE drop-mode",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropModeTitle"),
             "--ole-drop-mode-object")};
     }
     if (result.request.ole_drop_effects_object && !result.request.ole_drop_effects_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "OLE drop-effects",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropEffects"),
             "--ole-drop-effects")};
     }
     if (result.request.ole_drop_effects_object && result.request.ole_drop_effects_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "OLE drop-effects")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropEffects"))};
     }
     if (!result.request.ole_drop_effects_object &&
         (result.request.ole_drop_effects_available ||
          !result.request.ole_drop_effects_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "OLE drop-effects",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropEffectsTitle"),
             "--ole-drop-effects-object")};
     }
     if (result.request.ole_drop_text_insertion_object && !result.request.ole_drop_text_insertion_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "OLE drop text-insertion",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion"),
             "--ole-drop-text-insertion")};
     }
     if (result.request.ole_drop_text_insertion_object && result.request.ole_drop_text_insertion_objects.empty()) {
         return {.ok = false, .error = localized_object_assignment_requires_target(
             catalog,
-            "OLE drop text-insertion")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion"))};
     }
     if (!result.request.ole_drop_text_insertion_object &&
         (result.request.ole_drop_text_insertion_available ||
          !result.request.ole_drop_text_insertion_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "OLE drop text-insertion",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertionTitle"),
             "--ole-drop-text-insertion-object")};
     }
     if (result.request.button_count_object && !result.request.button_count_available) {

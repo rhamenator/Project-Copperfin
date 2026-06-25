@@ -3694,6 +3694,88 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
 
     process = run_process_capture(
         studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--ole-drag-picture-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2508: pseudo-localized OLE drag-picture missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2508: pseudo-localized OLE drag-picture missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--ole-drag-picture",
+        "#2508: pseudo-localized OLE drag-picture missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " OLE drag-picture ",
+        "#2508: pseudo-localized OLE drag-picture missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--mouse-icon-object",
+            "--mouse-icon", "cursor.ico",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2508: pseudo-localized mouse-icon target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2508: pseudo-localized mouse-icon target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        " mouse-icon ",
+        "#2508: pseudo-localized mouse-icon target diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--drag-mode", "1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2508: pseudo-localized drag-mode stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2508: pseudo-localized drag-mode stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--drag-mode-object",
+        "#2508: pseudo-localized drag-mode stray-argument diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Drag-mode arguments",
+        "#2508: pseudo-localized drag-mode stray-argument diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--ole-drop-text-insertion-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2508: pseudo-localized OLE drop text-insertion stray diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2508: pseudo-localized OLE drop text-insertion stray diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--ole-drop-text-insertion-object",
+        "#2508: pseudo-localized OLE drop text-insertion stray diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "OLE drop text-insertion arguments",
+        "#2508: pseudo-localized OLE drop text-insertion diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
         {"--json", "--default-file-path"},
         temp_root);
 
