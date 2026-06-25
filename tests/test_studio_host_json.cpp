@@ -1538,6 +1538,142 @@ void test_studio_host_toolbox_dispatch_create_parse_diagnostics_localize(const s
     }
 }
 
+void test_studio_host_toolbox_batch_dispatch_parse_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_batch_dispatch_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-create-batch-from-dispatch-plan", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2413: default toolbox-create-batch-from-dispatch-plan diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2413: default toolbox-create-batch-from-dispatch-plan diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"toolboxCreateBatchPlan\": null",
+        "#2413: default toolbox-create-batch-from-dispatch-plan diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2413: default toolbox-create-batch-from-dispatch-plan diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch-from-dispatch-plan",
+            "--path", "forms/customer.scx",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2413: pseudo-localized batch-from-dispatch-plan empty-item diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "\"toolboxCreateBatchPlan\": null",
+        "#2413: pseudo-localized batch-from-dispatch-plan empty-item diagnostics should preserve JSON contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2413: pseudo-localized batch-from-dispatch-plan empty-item diagnostics should decorate prose");
+    expect_not_contains(process.stdout_text,
+        "No toolbox item ids were provided.",
+        "#2413: pseudo-localized batch-from-dispatch-plan empty-item diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch-from-dispatch-plan",
+            "--path", "forms/customer.scx",
+            "--selection-context", "visual_object",
+            "--create-object-name", "txtName",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2413: pseudo-localized batch-from-dispatch-plan orphan-item diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2413: pseudo-localized batch-from-dispatch-plan orphan-item diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "--toolbox-item",
+        "#2413: pseudo-localized batch-from-dispatch-plan orphan-item diagnostics should preserve option names");
+    expect_not_contains(process.stdout_text,
+        "Toolbox batch item options require a preceding --toolbox-item.",
+        "#2413: pseudo-localized batch-from-dispatch-plan orphan-item diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch-from-dispatch",
+            "--path", "forms/customer.scx",
+            "--selection-context", "visual_object",
+            "--toolbox-item", "textbox",
+            "--field-value", "caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2413: pseudo-localized batch-from-dispatch field diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "\"toolboxCreateBatchFromDispatch\": {",
+        "#2413: pseudo-localized batch-from-dispatch field diagnostics should preserve JSON contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2413: pseudo-localized batch-from-dispatch field diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "name=value",
+        "#2413: pseudo-localized batch-from-dispatch field diagnostics should preserve assignment syntax");
+    expect_not_contains(process.stdout_text,
+        "Toolbox field values must use name=value syntax.",
+        "#2413: pseudo-localized batch-from-dispatch field diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch-from-dispatch",
+            "--path", "forms/customer.scx",
+            "--selection-context", "visual_object",
+            "--toolbox-item", "textbox",
+            "--admit-palette-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2413: pseudo-localized batch-from-dispatch admission diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2413: pseudo-localized batch-from-dispatch admission diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "--admit-palette-invocation",
+        "#2413: pseudo-localized batch-from-dispatch admission diagnostics should preserve option names");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2413: pseudo-localized batch-from-dispatch admission diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2413: pseudo-localized batch-from-dispatch admission diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --admit-palette-invocation value must be true or false.",
+        "#2413: pseudo-localized batch-from-dispatch admission diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_designer_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -115156,6 +115292,7 @@ int main(int argc, char** argv) {
     test_studio_host_toolbox_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_create_plan_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_dispatch_create_parse_diagnostics_localize(argv[1]);
+    test_studio_host_toolbox_batch_dispatch_parse_diagnostics_localize(argv[1]);
     test_studio_host_designer_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
