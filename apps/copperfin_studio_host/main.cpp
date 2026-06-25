@@ -5848,6 +5848,13 @@ std::string visual_object_parse_message(
     return catalog.translate(key);
 }
 
+std::string visual_object_parse_subtree_replacement_requires_source(
+    const copperfin::localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.VisualObjectParse.Error.SubtreeReplacementRequiresSourceUniqueId",
+        {{"replacementSourceUniqueIdOption", "--replacement-source-unique-id"}});
+}
+
 VisualObjectListParseResult parse_visual_object_list_arguments(
     const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
@@ -6057,6 +6064,7 @@ VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(
 }
 
 VisualObjectReparentBatchParseResult parse_visual_object_reparent_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualObjectReparentBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -6072,7 +6080,9 @@ VisualObjectReparentBatchParseResult parse_visual_object_reparent_batch_argument
 
     auto current_object = [&]() -> copperfin::vfp::VisualObjectReparentBatchItem* {
         if (result.request.objects.empty()) {
-            fail("Visual object reparent batch item options require a preceding selected-object selector.");
+            fail(visual_object_parse_message(
+                catalog,
+                "StudioHost.VisualObjectParse.Error.ReparentBatchItemRequiresSelectedObject"));
             return nullptr;
         }
         return &result.request.objects.back();
@@ -6082,7 +6092,7 @@ VisualObjectReparentBatchParseResult parse_visual_object_reparent_batch_argument
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6099,7 +6109,7 @@ VisualObjectReparentBatchParseResult parse_visual_object_reparent_batch_argument
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --selected-record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--selected-record"));
                 continue;
             }
             result.request.objects.push_back({
@@ -6141,20 +6151,21 @@ VisualObjectReparentBatchParseResult parse_visual_object_reparent_batch_argument
                 object->clear_parent = true;
             }
         } else {
-            fail("Unknown visual-object-reparent-batch option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-reparent-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.objects.empty()) {
-        fail("No visual object reparent operations were provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoReparentOperations"));
     }
     return result;
 }
 
 VisualObjectDuplicateBatchParseResult parse_visual_object_duplicate_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualObjectDuplicateBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -6170,7 +6181,9 @@ VisualObjectDuplicateBatchParseResult parse_visual_object_duplicate_batch_argume
 
     auto current_object = [&]() -> copperfin::vfp::VisualObjectDuplicateBatchItem* {
         if (result.request.objects.empty()) {
-            fail("Visual object duplicate batch item options require a preceding selected-object selector.");
+            fail(visual_object_parse_message(
+                catalog,
+                "StudioHost.VisualObjectParse.Error.DuplicateBatchItemRequiresSelectedObject"));
             return nullptr;
         }
         return &result.request.objects.back();
@@ -6180,7 +6193,7 @@ VisualObjectDuplicateBatchParseResult parse_visual_object_duplicate_batch_argume
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6197,7 +6210,7 @@ VisualObjectDuplicateBatchParseResult parse_visual_object_duplicate_batch_argume
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --selected-record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--selected-record"));
                 continue;
             }
             result.request.objects.push_back({
@@ -6239,20 +6252,21 @@ VisualObjectDuplicateBatchParseResult parse_visual_object_duplicate_batch_argume
                 object->new_unique_id = require_value(argument);
             }
         } else {
-            fail("Unknown visual-object-duplicate-batch option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-duplicate-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.objects.empty()) {
-        fail("No visual object duplicates were provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoDuplicateOperations"));
     }
     return result;
 }
 
 VisualObjectDuplicateSubtreeParseResult parse_visual_object_duplicate_subtree_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     VisualObjectDuplicateSubtreeParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -6268,7 +6282,7 @@ VisualObjectDuplicateSubtreeParseResult parse_visual_object_duplicate_subtree_ar
 
     auto current_replacement = [&]() -> copperfin::vfp::VisualObjectSubtreeDuplicateReplacement* {
         if (result.request.replacements.empty()) {
-            fail("Subtree duplicate replacement options require a preceding replacement source unique id.");
+            fail(visual_object_parse_subtree_replacement_requires_source(catalog));
             return nullptr;
         }
         return &result.request.replacements.back();
@@ -6278,7 +6292,7 @@ VisualObjectDuplicateSubtreeParseResult parse_visual_object_duplicate_subtree_ar
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -6295,7 +6309,7 @@ VisualObjectDuplicateSubtreeParseResult parse_visual_object_duplicate_subtree_ar
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -6326,18 +6340,20 @@ VisualObjectDuplicateSubtreeParseResult parse_visual_object_duplicate_subtree_ar
                 replacement->new_unique_id = require_value(argument);
             }
         } else {
-            fail("Unknown visual-object-duplicate-subtree option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-duplicate-subtree", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.root_selector_provided) {
-        fail("No root object selector was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoRootObjectSelector"));
     }
     if (result.ok && result.request.replacements.empty()) {
-        fail("No subtree replacement identities were provided.");
+        fail(visual_object_parse_message(
+            catalog,
+            "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities"));
     }
     return result;
 }
@@ -23154,7 +23170,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_duplicate_batch_parse = parse_visual_object_duplicate_batch_arguments(args);
+    const auto visual_object_duplicate_batch_parse = parse_visual_object_duplicate_batch_arguments(catalog, args);
     if (visual_object_duplicate_batch_parse.requested) {
         if (!visual_object_duplicate_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23189,7 +23205,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_duplicate_subtree_parse = parse_visual_object_duplicate_subtree_arguments(args);
+    const auto visual_object_duplicate_subtree_parse = parse_visual_object_duplicate_subtree_arguments(catalog, args);
     if (visual_object_duplicate_subtree_parse.requested) {
         if (!visual_object_duplicate_subtree_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectSubtreeDuplicateResult{
@@ -23291,7 +23307,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_reparent_batch_parse = parse_visual_object_reparent_batch_arguments(args);
+    const auto visual_object_reparent_batch_parse = parse_visual_object_reparent_batch_arguments(catalog, args);
     if (visual_object_reparent_batch_parse.requested) {
         if (!visual_object_reparent_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{

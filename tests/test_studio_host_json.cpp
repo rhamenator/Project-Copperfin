@@ -1980,6 +1980,146 @@ void test_studio_host_visual_list_navigation_parse_diagnostics_localize(const st
     }
 }
 
+void test_studio_host_visual_object_reparent_duplicate_parse_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_visual_object_reparent_duplicate_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--visual-object-reparent-batch", "--selected-unique-id", "textbox-guid", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2405: default visual-object reparent parser diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2405: default visual-object reparent parser diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"visualObjectReparentBatch\": null",
+        "#2405: default visual-object reparent parser diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2405: default visual-object reparent parser diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-object-reparent-batch", "--selected-unique-id", "textbox-guid", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2405: pseudo-localized reparent missing-path diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2405: pseudo-localized reparent missing-path diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"visualObjectReparentBatch\": null",
+        "#2405: pseudo-localized reparent missing-path diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2405: pseudo-localized reparent missing-path diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2405: pseudo-localized reparent missing-path diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-object-duplicate-batch", "--path", "forms/customer.scx", "--selected-record", "-1", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2405: pseudo-localized duplicate invalid-record diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2405: pseudo-localized duplicate invalid-record diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--selected-record",
+        "#2405: pseudo-localized duplicate invalid-record diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --selected-record value must be a non-negative integer.",
+        "#2405: pseudo-localized duplicate invalid-record diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-object-duplicate-batch", "--path", "forms/customer.scx", "--new-name", "copy", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2405: pseudo-localized duplicate item-order diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2405: pseudo-localized duplicate item-order diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "Visual object duplicate batch item options require a preceding selected-object selector.",
+        "#2405: pseudo-localized duplicate item-order diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-object-duplicate-subtree", "--path", "forms/customer.scx", "--record", "-1", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2405: pseudo-localized subtree invalid-root-record diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2405: pseudo-localized subtree invalid-root-record diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record",
+        "#2405: pseudo-localized subtree invalid-root-record diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --record value must be a non-negative integer.",
+        "#2405: pseudo-localized subtree invalid-root-record diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--visual-object-duplicate-subtree", "--path", "forms/customer.scx", "--unique-id", "root-guid", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2405: pseudo-localized subtree missing-replacements diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2405: pseudo-localized subtree missing-replacements diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No subtree replacement identities were provided.",
+        "#2405: pseudo-localized subtree missing-replacements diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--visual-object-duplicate-subtree",
+            "--path", "forms/customer.scx",
+            "--unique-id", "root-guid",
+            "--new-name", "copy",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2405: pseudo-localized subtree replacement-order diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2405: pseudo-localized subtree replacement-order diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--replacement-source-unique-id",
+        "#2405: pseudo-localized subtree replacement-order diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Subtree duplicate replacement options require a preceding --replacement-source-unique-id.",
+        "#2405: pseudo-localized subtree replacement-order diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -90271,7 +90411,7 @@ void test_studio_host_json_duplicates_visual_object_subtrees(const std::string& 
     expect(option_before_replacement_process.exit_code == 2,
         "#1451: visual object duplicate-subtree JSON should reject replacement options before source ids");
     expect_contains(option_before_replacement_process.stdout_text,
-        "Subtree duplicate replacement options require a preceding replacement source unique id.",
+        "Subtree duplicate replacement options require a preceding --replacement-source-unique-id.",
         "#1451: option-before-replacement visual object duplicate-subtree JSON should report parser errors");
 
     const auto invalid_record_process = run_process_capture(
@@ -114122,6 +114262,7 @@ int main(int argc, char** argv) {
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_list_navigation_parse_diagnostics_localize(argv[1]);
+    test_studio_host_visual_object_reparent_duplicate_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);
