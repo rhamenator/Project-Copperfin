@@ -3919,6 +3919,67 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
 
     process = run_process_capture(
         studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--partition-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2511: pseudo-localized partition missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2511: pseudo-localized partition missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--partition",
+        "#2511: pseudo-localized partition missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " partition ",
+        "#2511: pseudo-localized partition missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--column-order-object",
+            "--column-order", "1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2511: pseudo-localized column-order target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2511: pseudo-localized column-order target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        " column-order ",
+        "#2511: pseudo-localized column-order target diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--highlight-style-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2511: pseudo-localized highlight-style stray diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2511: pseudo-localized highlight-style stray diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--highlight-style-object",
+        "#2511: pseudo-localized highlight-style stray diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "HighlightStyle arguments",
+        "#2511: pseudo-localized highlight-style diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
         {"--json", "--default-file-path"},
         temp_root);
 

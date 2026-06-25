@@ -9331,122 +9331,134 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.partition_object && !result.request.partition_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "partition",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Partition"),
             "--partition")};
     }
     if (result.request.partition_object && result.request.partition_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "partition")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Partition"))};
     }
     if (!result.request.partition_object &&
         (result.request.partition_available ||
          !result.request.partition_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Partition",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PartitionTitle"),
             "--partition-object")};
     }
     if (result.request.record_source_type_object && !result.request.record_source_type_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "record-source-type",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSourceType"),
             "--record-source-type")};
     }
     if (result.request.record_source_type_object && result.request.record_source_type_objects.empty()) {
         return {.ok = false, .error = localized_object_assignment_requires_target(
             catalog,
-            "record-source-type")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSourceType"))};
     }
     if (!result.request.record_source_type_object &&
         (result.request.record_source_type_available ||
          !result.request.record_source_type_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "RecordSourceType",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle"),
             "--record-source-type-object")};
     }
     if (result.request.column_order_object && !result.request.column_order_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "column-order",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnOrder"),
             "--column-order")};
     }
     if (result.request.column_order_object && result.request.column_order_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "column-order")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnOrder"))};
     }
     if (!result.request.column_order_object &&
         (result.request.column_order_available ||
          !result.request.column_order_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "ColumnOrder",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle"),
             "--column-order-object")};
     }
     if (result.request.highlight_style_object && !result.request.highlight_style_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "highlight-style",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightStyle"),
             "--highlight-style")};
     }
     if (result.request.highlight_style_object && result.request.highlight_style_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "highlight-style")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightStyle"))};
     }
     if (!result.request.highlight_style_object &&
         (result.request.highlight_style_available ||
          !result.request.highlight_style_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "HighlightStyle",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle"),
             "--highlight-style-object")};
     }
     if (result.request.child_order_object && !result.request.child_order_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "child-order",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ChildOrder"),
             "--child-order")};
     }
     if (result.request.child_order_object && result.request.child_order_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "child-order")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ChildOrder"))};
     }
     if (!result.request.child_order_object &&
         (result.request.child_order_available ||
          !result.request.child_order_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "ChildOrder",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle"),
             "--child-order-object")};
     }
     if (result.request.fill_color_object && !result.request.fill_color_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "fill-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillColor"),
             "--fill-color")};
     }
     if (result.request.fill_color_object && result.request.fill_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "fill-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillColor"))};
     }
     if (!result.request.fill_color_object &&
         (result.request.fill_color_available ||
          !result.request.fill_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "FillColor",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillColorTitle"),
             "--fill-color-object")};
     }
     if (result.request.list_item_id_object && !result.request.list_item_id_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "list-item-id",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ListItemId"),
             "--list-item-id")};
     }
     if (result.request.list_item_id_object && result.request.list_item_id_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "list-item-id")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ListItemId"))};
     }
     if (!result.request.list_item_id_object &&
         (result.request.list_item_id_available ||
          !result.request.list_item_id_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "ListItemId",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle"),
             "--list-item-id-object")};
     }
     if (result.request.record_source_object && !result.request.record_source_available) {
