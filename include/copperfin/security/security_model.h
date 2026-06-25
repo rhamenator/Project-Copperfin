@@ -3,6 +3,10 @@
 #include <string>
 #include <vector>
 
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
+
 namespace copperfin::security {
 
 struct NativePermission {
@@ -51,5 +55,7 @@ struct NativeSecurityProfile {
 };
 
 [[nodiscard]] NativeSecurityProfile default_native_security_profile();
+[[nodiscard]] NativeSecurityProfile default_native_security_profile(
+    const localization::LocalizedCatalog& catalog);
 
 }  // namespace copperfin::security

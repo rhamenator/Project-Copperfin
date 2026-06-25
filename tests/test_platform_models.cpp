@@ -1,10 +1,12 @@
 #include "copperfin/platform/database_model.h"
 #include "copperfin/platform/extensibility_model.h"
+#include "copperfin/localization/localization.h"
 #include "copperfin/security/security_model.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 namespace {
 
@@ -29,11 +31,56 @@ void test_default_security_profile() {
         return role.id == "security-admin";
     });
     expect(security_admin != profile.roles.end(), "security profile should include a security administrator role");
+    if (security_admin != profile.roles.end()) {
+        expect(
+            security_admin->title == "Security Administrator",
+            "#2490: default security role title should preserve en-US prose");
+        expect(
+            security_admin->description == "Owns identity mapping, role policy, and trust settings.",
+            "#2490: default security role description should preserve en-US prose");
+    }
 
     const auto ai_permission = std::find_if(profile.permissions.begin(), profile.permissions.end(), [](const auto& permission) {
         return permission.id == "ai.mcp";
     });
     expect(ai_permission != profile.permissions.end(), "security profile should include MCP/AI permissions");
+    if (ai_permission != profile.permissions.end()) {
+        expect(
+            ai_permission->title == "Use MCP And AI Tools",
+            "#2490: default security permission title should preserve en-US prose");
+    }
+
+    expect(
+        profile.mode == "optional native security with platform RBAC",
+        "#2490: default security profile mode should preserve en-US prose");
+    expect(
+        profile.package_policy == "signed packages, signed extensions, explicit trust manifests",
+        "#2490: default security package policy should preserve en-US prose");
+
+    const auto pseudo_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    const auto pseudo_profile = copperfin::security::default_native_security_profile(pseudo_catalog);
+    expect(
+        pseudo_profile.mode.find("[!! ") != std::string::npos,
+        "#2490: pseudo-localized security profile mode should route through the catalog");
+    expect(
+        pseudo_profile.permissions.size() == profile.permissions.size(),
+        "#2490: pseudo-localized security profile should preserve permission counts");
+    expect(
+        !pseudo_profile.permissions.empty() && pseudo_profile.permissions[0].id == "project.open",
+        "#2490: pseudo-localized security profile should preserve permission ids");
+    expect(
+        !pseudo_profile.permissions.empty() && pseudo_profile.permissions[0].title.find("[!! ") != std::string::npos,
+        "#2490: pseudo-localized permission titles should route through the catalog");
+    expect(
+        !pseudo_profile.permissions.empty() && pseudo_profile.permissions[0].title.find("Open Project") == std::string::npos,
+        "#2490: pseudo-localized permission titles should not fall back to raw English prose");
+    expect(
+        pseudo_profile.identity_providers.size() > 1U && pseudo_profile.identity_providers[1].kind == "windows",
+        "#2490: pseudo-localized security profile should preserve identity provider kind values");
+    expect(
+        !pseudo_profile.audit_events.empty() && pseudo_profile.audit_events[0] == "login.identity_resolved",
+        "#2490: pseudo-localized security profile should preserve audit event ids");
 }
 
 void test_default_extensibility_profile() {
