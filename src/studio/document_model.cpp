@@ -1,5 +1,6 @@
 #include "copperfin/studio/document_model.h"
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
 #include <algorithm>
@@ -12,6 +13,14 @@
 namespace copperfin::studio {
 
 namespace {
+
+std::string document_text(
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog.translate(key, placeholders);
+}
 
 std::string filename_of(const std::string& path) {
     const std::size_t separator = path.find_last_of("/\\");
@@ -767,7 +776,7 @@ std::vector<StudioObjectSnapshot> build_object_snapshot(const StudioDocumentMode
 
 StudioOpenResult open_document(const StudioOpenRequest& request) {
     if (request.path.empty()) {
-        return {.ok = false, .error = "No path was provided."};
+        return {.ok = false, .error = document_text("Studio.DocumentOpen.Error.PathRequired")};
     }
 
     const vfp::AssetInspectionResult inspection = vfp::inspect_asset(request.path);

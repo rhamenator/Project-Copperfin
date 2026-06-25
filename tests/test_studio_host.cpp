@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/studio/vs_launch_contract.h"
 #include "copperfin/vfp/dbf_table.h"
@@ -20,6 +21,26 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+void test_open_document_path_error_resolves_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Studio.DocumentOpen.Error.PathRequired") == "No path was provided.",
+        "#2393: missing document path diagnostic should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Studio.DocumentOpen.Error.PathRequired") !=
+            english_catalog.translate("Studio.DocumentOpen.Error.PathRequired"),
+        "#2393: missing document path diagnostic should be pseudo-localizable");
+
+    const auto result = copperfin::studio::open_document({});
+    expect(!result.ok, "#2393: open_document should reject missing paths");
+    expect(
+        result.error == "No path was provided.",
+        "#2393: open_document should preserve default localized missing path diagnostic");
 }
 
 template <typename Descriptor>
@@ -17500,6 +17521,7 @@ void test_open_document_includes_prg_static_diagnostics() {
 }  // namespace
 
 int main() {
+    test_open_document_path_error_resolves_through_localization_catalog();
     test_parse_launch_arguments();
     test_parse_launch_arguments_rejects_numeric_selector_errors();
     test_parse_launch_arguments_for_clear_property();

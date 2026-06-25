@@ -555,6 +555,7 @@
   "Studio.BuilderDispatch.Execution.Error.ExecutorRequired": "A builder dispatch execution request requires an executor.",
   "Studio.BuilderDispatch.Execution.Error.NonExecutedDispatchRequired": "A builder dispatch execution request requires a non-executed dispatch.",
   "Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired": "A builder dispatch execution request requires a validated builder id.",
+  "Studio.DocumentOpen.Error.PathRequired": "No path was provided.",
   "Studio.SelectionBuilderDispatch.Error.DispatchCatalogRequiresBuilder": "A selection-context builder dispatch catalog request requires at least one builder.",
   "Studio.SelectionBuilderDispatch.Error.ExecutionCatalogRequiresBuilder": "A selection-context builder dispatch execution catalog request requires at least one builder.",
   "Studio.SelectionBuilderInvocationAdmission.Error.CatalogRequiresBuilder": "A selection-context builder invocation admission catalog request requires at least one builder.",
