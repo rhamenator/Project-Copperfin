@@ -5443,6 +5443,101 @@ void test_studio_host_launch_max_auto_diagnostics_localize(const std::string& st
     }
 }
 
+void test_studio_host_launch_selection_marker_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_selection_marker_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--lock-screen-object",
+            "--lock-screen", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2446: default lock-screen diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object lock-screen assignment requires at least one target selector.",
+        "#2446: default lock-screen diagnostics should preserve en-US missing-target prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--hide-selection-object",
+            "--hide-selection-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2446: pseudo-localized hide-selection missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2446: pseudo-localized hide-selection missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--hide-selection",
+        "#2446: pseudo-localized hide-selection missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object hide-selection assignment requires --hide-selection.",
+        "#2446: pseudo-localized hide-selection missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--highlight-row-object",
+            "--highlight-row", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2446: pseudo-localized highlight-row missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2446: pseudo-localized highlight-row missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object highlight-row assignment requires at least one target selector.",
+        "#2446: pseudo-localized highlight-row missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--allow-row-sizing", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--allow-row-sizing-object",
+        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Allow-row-sizing arguments can only be used with --allow-row-sizing-object.",
+        "#2446: pseudo-localized allow-row-sizing stray-argument diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -118971,6 +119066,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_dynamic_expression_diagnostics_localize(argv[1]);
     test_studio_host_launch_font_diagnostics_localize(argv[1]);
     test_studio_host_launch_max_auto_diagnostics_localize(argv[1]);
+    test_studio_host_launch_selection_marker_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

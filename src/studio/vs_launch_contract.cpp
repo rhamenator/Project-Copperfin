@@ -10716,114 +10716,153 @@ LaunchParseResult parse_launch_arguments(
             "--sparse-object")};
     }
     if (result.request.lock_screen_object && !result.request.lock_screen_available) {
-        return {.ok = false, .error = "An object lock-screen assignment requires --lock-screen."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "lock-screen", "--lock-screen")};
     }
     if (result.request.lock_screen_object && result.request.lock_screen_objects.empty()) {
-        return {.ok = false, .error = "An object lock-screen assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "lock-screen")};
     }
     if (!result.request.lock_screen_object &&
         (result.request.lock_screen_available ||
          !result.request.lock_screen_objects.empty())) {
-        return {.ok = false, .error = "Lock-screen arguments can only be used with --lock-screen-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Lock-screen",
+            "--lock-screen-object")};
     }
     if (result.request.allow_cell_selection_object && !result.request.allow_cell_selection_available) {
-        return {.ok = false, .error = "An object allow-cell-selection assignment requires --allow-cell-selection."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "allow-cell-selection",
+            "--allow-cell-selection")};
     }
     if (result.request.allow_cell_selection_object && result.request.allow_cell_selection_objects.empty()) {
-        return {.ok = false, .error = "An object allow-cell-selection assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-cell-selection")};
     }
     if (!result.request.allow_cell_selection_object &&
         (result.request.allow_cell_selection_available ||
          !result.request.allow_cell_selection_objects.empty())) {
-        return {.ok = false, .error = "Allow-cell-selection arguments can only be used with --allow-cell-selection-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Allow-cell-selection",
+            "--allow-cell-selection-object")};
     }
     if (result.request.hide_selection_object && !result.request.hide_selection_available) {
-        return {.ok = false, .error = "An object hide-selection assignment requires --hide-selection."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "hide-selection", "--hide-selection")};
     }
     if (result.request.hide_selection_object && result.request.hide_selection_objects.empty()) {
-        return {.ok = false, .error = "An object hide-selection assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "hide-selection")};
     }
     if (!result.request.hide_selection_object &&
         (result.request.hide_selection_available ||
          !result.request.hide_selection_objects.empty())) {
-        return {.ok = false, .error = "Hide-selection arguments can only be used with --hide-selection-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Hide-selection",
+            "--hide-selection-object")};
     }
     if (result.request.delete_mark_object && !result.request.delete_mark_available) {
-        return {.ok = false, .error = "An object delete-mark assignment requires --delete-mark."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "delete-mark", "--delete-mark")};
     }
     if (result.request.delete_mark_object && result.request.delete_mark_objects.empty()) {
-        return {.ok = false, .error = "An object delete-mark assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "delete-mark")};
     }
     if (!result.request.delete_mark_object &&
         (result.request.delete_mark_available ||
          !result.request.delete_mark_objects.empty())) {
-        return {.ok = false, .error = "Delete-mark arguments can only be used with --delete-mark-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Delete-mark",
+            "--delete-mark-object")};
     }
     if (result.request.record_mark_object && !result.request.record_mark_available) {
-        return {.ok = false, .error = "An object record-mark assignment requires --record-mark."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "record-mark", "--record-mark")};
     }
     if (result.request.record_mark_object && result.request.record_mark_objects.empty()) {
-        return {.ok = false, .error = "An object record-mark assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "record-mark")};
     }
     if (!result.request.record_mark_object &&
         (result.request.record_mark_available ||
          !result.request.record_mark_objects.empty())) {
-        return {.ok = false, .error = "Record-mark arguments can only be used with --record-mark-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Record-mark",
+            "--record-mark-object")};
     }
     if (result.request.split_bar_object && !result.request.split_bar_available) {
-        return {.ok = false, .error = "An object split-bar assignment requires --split-bar."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "split-bar", "--split-bar")};
     }
     if (result.request.split_bar_object && result.request.split_bar_objects.empty()) {
-        return {.ok = false, .error = "An object split-bar assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "split-bar")};
     }
     if (!result.request.split_bar_object &&
         (result.request.split_bar_available ||
          !result.request.split_bar_objects.empty())) {
-        return {.ok = false, .error = "Split-bar arguments can only be used with --split-bar-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Split-bar",
+            "--split-bar-object")};
     }
     if (result.request.highlight_row_object && !result.request.highlight_row_available) {
-        return {.ok = false, .error = "An object highlight-row assignment requires --highlight-row."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "highlight-row", "--highlight-row")};
     }
     if (result.request.highlight_row_object && result.request.highlight_row_objects.empty()) {
-        return {.ok = false, .error = "An object highlight-row assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "highlight-row")};
     }
     if (!result.request.highlight_row_object &&
         (result.request.highlight_row_available ||
          !result.request.highlight_row_objects.empty())) {
-        return {.ok = false, .error = "Highlight-row arguments can only be used with --highlight-row-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Highlight-row",
+            "--highlight-row-object")};
     }
     if (result.request.panel_link_object && !result.request.panel_link_available) {
-        return {.ok = false, .error = "An object panel-link assignment requires --panel-link."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "panel-link", "--panel-link")};
     }
     if (result.request.panel_link_object && result.request.panel_link_objects.empty()) {
-        return {.ok = false, .error = "An object panel-link assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "panel-link")};
     }
     if (!result.request.panel_link_object &&
         (result.request.panel_link_available ||
          !result.request.panel_link_objects.empty())) {
-        return {.ok = false, .error = "Panel-link arguments can only be used with --panel-link-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Panel-link",
+            "--panel-link-object")};
     }
     if (result.request.allow_header_sizing_object && !result.request.allow_header_sizing_available) {
-        return {.ok = false, .error = "An object allow-header-sizing assignment requires --allow-header-sizing."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "allow-header-sizing",
+            "--allow-header-sizing")};
     }
     if (result.request.allow_header_sizing_object && result.request.allow_header_sizing_objects.empty()) {
-        return {.ok = false, .error = "An object allow-header-sizing assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-header-sizing")};
     }
     if (!result.request.allow_header_sizing_object &&
         (result.request.allow_header_sizing_available ||
          !result.request.allow_header_sizing_objects.empty())) {
-        return {.ok = false, .error = "Allow-header-sizing arguments can only be used with --allow-header-sizing-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Allow-header-sizing",
+            "--allow-header-sizing-object")};
     }
     if (result.request.allow_row_sizing_object && !result.request.allow_row_sizing_available) {
-        return {.ok = false, .error = "An object allow-row-sizing assignment requires --allow-row-sizing."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "allow-row-sizing",
+            "--allow-row-sizing")};
     }
     if (result.request.allow_row_sizing_object && result.request.allow_row_sizing_objects.empty()) {
-        return {.ok = false, .error = "An object allow-row-sizing assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-row-sizing")};
     }
     if (!result.request.allow_row_sizing_object &&
         (result.request.allow_row_sizing_available ||
          !result.request.allow_row_sizing_objects.empty())) {
-        return {.ok = false, .error = "Allow-row-sizing arguments can only be used with --allow-row-sizing-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Allow-row-sizing",
+            "--allow-row-sizing-object")};
     }
     if (result.request.resizable_object && !result.request.resizable_available) {
         return {.ok = false, .error = "An object resizable assignment requires --resizable."};
