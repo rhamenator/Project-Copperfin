@@ -5130,12 +5130,12 @@ void test_studio_host_launch_row_list_diagnostics_localize(const std::string& st
     expect_contains(process.stdout_text,
         "[!! ",
         "#2435: pseudo-localized row-source-type non-negative diagnostics should decorate human-facing prose");
-    expect_contains(process.stdout_text,
-        "value",
-        "#2435: pseudo-localized row-source-type non-negative diagnostics should preserve value placeholder");
     expect_not_contains(process.stdout_text,
-        "An object row-source-type assignment requires a non-negative value.",
-        "#2435: pseudo-localized row-source-type non-negative diagnostics should not fall back to raw English prose");
+        " row-source-type assignment ",
+        "#2515: pseudo-localized row-source-type non-negative diagnostics should not preserve raw label prose");
+    expect_not_contains(process.stdout_text,
+        " value.",
+        "#2515: pseudo-localized row-source-type non-negative diagnostics should not preserve raw value label prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -5310,8 +5310,8 @@ void test_studio_host_launch_bound_list_numeric_diagnostics_localize(const std::
         "--column-count",
         "#2437: pseudo-localized column-count missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
-        "An object column-count assignment requires --column-count.",
-        "#2437: pseudo-localized column-count missing-option diagnostics should not fall back to raw English prose");
+        " column-count assignment ",
+        "#2515: pseudo-localized column-count missing-option diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5329,12 +5329,12 @@ void test_studio_host_launch_bound_list_numeric_diagnostics_localize(const std::
     expect_contains(process.stdout_text,
         "[!! ",
         "#2437: pseudo-localized style non-negative diagnostics should decorate human-facing prose");
-    expect_contains(process.stdout_text,
-        "value",
-        "#2437: pseudo-localized style non-negative diagnostics should preserve value placeholder");
     expect_not_contains(process.stdout_text,
-        "An object style assignment requires a non-negative value.",
-        "#2437: pseudo-localized style non-negative diagnostics should not fall back to raw English prose");
+        " style assignment ",
+        "#2515: pseudo-localized style non-negative diagnostics should not preserve raw label prose");
+    expect_not_contains(process.stdout_text,
+        " value.",
+        "#2515: pseudo-localized style non-negative diagnostics should not preserve raw value label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5352,8 +5352,8 @@ void test_studio_host_launch_bound_list_numeric_diagnostics_localize(const std::
         "[!! ",
         "#2437: pseudo-localized display-value missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
-        "An object display-value assignment requires at least one target selector.",
-        "#2437: pseudo-localized display-value missing-target diagnostics should not fall back to raw English prose");
+        " display-value assignment ",
+        "#2515: pseudo-localized display-value missing-target diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5374,7 +5374,7 @@ void test_studio_host_launch_bound_list_numeric_diagnostics_localize(const std::
         "#2437: pseudo-localized left-column stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Left-column arguments can only be used with --left-column-object.",
-        "#2437: pseudo-localized left-column stray-argument diagnostics should not fall back to raw English prose");
+        "#2515: pseudo-localized left-column stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
