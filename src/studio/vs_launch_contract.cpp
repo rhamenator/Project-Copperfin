@@ -8272,70 +8272,106 @@ LaunchParseResult parse_launch_arguments(
             "--enabled-object")};
     }
     if (result.request.read_only_object && !result.request.object_read_only_available) {
-        return {.ok = false, .error = "An object read-only assignment requires --object-read-only."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "read-only",
+            "--object-read-only")};
     }
     if (result.request.read_only_object && result.request.read_only_objects.empty()) {
-        return {.ok = false, .error = "An object read-only assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "read-only")};
     }
     if (!result.request.read_only_object &&
         (result.request.object_read_only_available ||
          !result.request.read_only_objects.empty())) {
-        return {.ok = false, .error = "Read-only arguments can only be used with --read-only-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Read-only",
+            "--read-only-object")};
     }
     if (result.request.locked_object && !result.request.locked_available) {
-        return {.ok = false, .error = "An object locked assignment requires --locked."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "locked",
+            "--locked")};
     }
     if (result.request.locked_object && result.request.locked_objects.empty()) {
-        return {.ok = false, .error = "An object locked assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "locked")};
     }
     if (!result.request.locked_object &&
         (result.request.locked_available ||
          !result.request.locked_objects.empty())) {
-        return {.ok = false, .error = "Locked arguments can only be used with --locked-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Locked",
+            "--locked-object")};
     }
     if (result.request.caption_object && !result.request.caption_available) {
-        return {.ok = false, .error = "An object caption assignment requires --caption."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "caption",
+            "--caption")};
     }
     if (result.request.caption_object && result.request.caption_objects.empty()) {
-        return {.ok = false, .error = "An object caption assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "caption")};
     }
     if (!result.request.caption_object &&
         (result.request.caption_available ||
          !result.request.caption_objects.empty())) {
-        return {.ok = false, .error = "Caption arguments can only be used with --caption-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Caption",
+            "--caption-object")};
     }
     if (result.request.picture_object && !result.request.picture_available) {
-        return {.ok = false, .error = "An object picture assignment requires --picture."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "picture",
+            "--picture")};
     }
     if (result.request.picture_object && result.request.picture_objects.empty()) {
-        return {.ok = false, .error = "An object picture assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "picture")};
     }
     if (!result.request.picture_object &&
         (result.request.picture_available ||
          !result.request.picture_objects.empty())) {
-        return {.ok = false, .error = "Picture arguments can only be used with --picture-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Picture",
+            "--picture-object")};
     }
     if (result.request.down_picture_object && !result.request.down_picture_available) {
-        return {.ok = false, .error = "An object down-picture assignment requires --down-picture."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "down-picture",
+            "--down-picture")};
     }
     if (result.request.down_picture_object && result.request.down_picture_objects.empty()) {
-        return {.ok = false, .error = "An object down-picture assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "down-picture")};
     }
     if (!result.request.down_picture_object &&
         (result.request.down_picture_available ||
          !result.request.down_picture_objects.empty())) {
-        return {.ok = false, .error = "Down-picture arguments can only be used with --down-picture-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Down-picture",
+            "--down-picture-object")};
     }
     if (result.request.disabled_picture_object && !result.request.disabled_picture_available) {
-        return {.ok = false, .error = "An object disabled-picture assignment requires --disabled-picture."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "disabled-picture",
+            "--disabled-picture")};
     }
     if (result.request.disabled_picture_object && result.request.disabled_picture_objects.empty()) {
-        return {.ok = false, .error = "An object disabled-picture assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "disabled-picture")};
     }
     if (!result.request.disabled_picture_object &&
         (result.request.disabled_picture_available ||
          !result.request.disabled_picture_objects.empty())) {
-        return {.ok = false, .error = "Disabled-picture arguments can only be used with --disabled-picture-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Disabled-picture",
+            "--disabled-picture-object")};
     }
     if (result.request.ole_drag_picture_object && !result.request.ole_drag_picture_available) {
         return {.ok = false, .error = "An object OLE drag-picture assignment requires --ole-drag-picture."};
