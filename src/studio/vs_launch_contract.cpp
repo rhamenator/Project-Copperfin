@@ -2254,7 +2254,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--caption") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --caption."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--caption")};
             }
             result.request.caption = args[++index];
             result.request.caption_available = true;
@@ -2263,7 +2263,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--picture") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --picture."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--picture")};
             }
             result.request.picture = args[++index];
             result.request.picture_available = true;
@@ -2272,7 +2272,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--down-picture") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --down-picture."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--down-picture")};
             }
             result.request.down_picture = args[++index];
             result.request.down_picture_available = true;
@@ -2281,7 +2281,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--disabled-picture") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --disabled-picture."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--disabled-picture")};
             }
             result.request.disabled_picture = args[++index];
             result.request.disabled_picture_available = true;
@@ -2290,7 +2290,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--ole-drag-picture") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --ole-drag-picture."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--ole-drag-picture")};
             }
             result.request.ole_drag_picture = args[++index];
             result.request.ole_drag_picture_available = true;
@@ -2299,7 +2299,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mouse-icon") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mouse-icon."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mouse-icon")};
             }
             result.request.mouse_icon = args[++index];
             result.request.mouse_icon_available = true;
@@ -2308,7 +2308,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--drag-icon") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --drag-icon."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--drag-icon")};
             }
             result.request.drag_icon = args[++index];
             result.request.drag_icon_available = true;
@@ -2317,7 +2317,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--record-source") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --record-source."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--record-source")};
             }
             result.request.record_source = args[++index];
             result.request.record_source_available = true;
@@ -2326,7 +2326,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--tooltip-text") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --tooltip-text."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--tooltip-text")};
             }
             result.request.tooltip_text = args[++index];
             result.request.tooltip_text_available = true;
@@ -2335,7 +2335,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--status-bar-text") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --status-bar-text."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--status-bar-text")};
             }
             result.request.status_bar_text = args[++index];
             result.request.status_bar_text_available = true;
@@ -2344,7 +2344,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--link-master") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --link-master."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--link-master")};
             }
             result.request.link_master = args[++index];
             result.request.link_master_available = true;
@@ -2353,7 +2353,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--control-source") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --control-source."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--control-source")};
             }
             result.request.control_source = args[++index];
             result.request.control_source_available = true;
@@ -2362,7 +2362,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--current-control") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --current-control."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--current-control")};
             }
             result.request.current_control = args[++index];
             result.request.current_control_available = true;
@@ -2371,7 +2371,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--input-mask") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --input-mask."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--input-mask")};
             }
             result.request.input_mask = args[++index];
             result.request.input_mask_available = true;
@@ -2380,7 +2380,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--format") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --format."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--format")};
             }
             result.request.format = args[++index];
             result.request.format_available = true;
@@ -2389,7 +2389,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--row-source") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --row-source."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--row-source")};
             }
             result.request.row_source = args[++index];
             result.request.row_source_available = true;
@@ -2398,7 +2398,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--column-widths") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --column-widths."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--column-widths")};
             }
             result.request.column_widths = args[++index];
             result.request.column_widths_available = true;
@@ -2407,11 +2407,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--column-lines") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --column-lines."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--column-lines")};
             }
             const auto column_lines = parse_bool_value(args[++index]);
             if (!column_lines.has_value()) {
-                return {.ok = false, .error = "The --column-lines value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--column-lines")};
             }
             result.request.column_lines = *column_lines;
             result.request.column_lines_available = true;
@@ -2420,11 +2420,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--integral-height") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --integral-height."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--integral-height")};
             }
             const auto integral_height = parse_bool_value(args[++index]);
             if (!integral_height.has_value()) {
-                return {.ok = false, .error = "The --integral-height value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--integral-height")};
             }
             result.request.integral_height = *integral_height;
             result.request.integral_height_available = true;
@@ -2433,11 +2433,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--incremental-search") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --incremental-search."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--incremental-search")};
             }
             const auto incremental_search = parse_bool_value(args[++index]);
             if (!incremental_search.has_value()) {
-                return {.ok = false, .error = "The --incremental-search value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--incremental-search")};
             }
             result.request.incremental_search = *incremental_search;
             result.request.incremental_search_available = true;
