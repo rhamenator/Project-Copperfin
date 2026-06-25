@@ -2627,14 +2627,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--button-count") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --button-count."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--button-count")};
             }
             int button_count = 0;
             if (!parse_int_value(args[++index], button_count)) {
-                return {.ok = false, .error = "The --button-count value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--button-count")};
             }
             if (button_count < 0) {
-                return {.ok = false, .error = "The --button-count value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--button-count")};
             }
             result.request.button_count = button_count;
             result.request.button_count_available = true;
@@ -2643,14 +2643,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--curvature") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --curvature."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--curvature")};
             }
             int curvature = 0;
             if (!parse_int_value(args[++index], curvature)) {
-                return {.ok = false, .error = "The --curvature value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--curvature")};
             }
             if (curvature < 0) {
-                return {.ok = false, .error = "The --curvature value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--curvature")};
             }
             result.request.curvature = curvature;
             result.request.curvature_available = true;
@@ -2659,14 +2659,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-mode")};
             }
             int draw_mode = 0;
             if (!parse_int_value(args[++index], draw_mode)) {
-                return {.ok = false, .error = "The --draw-mode value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--draw-mode")};
             }
             if (draw_mode < 0) {
-                return {.ok = false, .error = "The --draw-mode value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--draw-mode")};
             }
             result.request.draw_mode = draw_mode;
             result.request.draw_mode_available = true;
@@ -2675,14 +2675,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-style") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-style."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-style")};
             }
             int draw_style = 0;
             if (!parse_int_value(args[++index], draw_style)) {
-                return {.ok = false, .error = "The --draw-style value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--draw-style")};
             }
             if (draw_style < 0) {
-                return {.ok = false, .error = "The --draw-style value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--draw-style")};
             }
             result.request.draw_style = draw_style;
             result.request.draw_style_available = true;
@@ -2691,14 +2691,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--draw-width") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --draw-width."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--draw-width")};
             }
             int draw_width = 0;
             if (!parse_int_value(args[++index], draw_width)) {
-                return {.ok = false, .error = "The --draw-width value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--draw-width")};
             }
             if (draw_width < 0) {
-                return {.ok = false, .error = "The --draw-width value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--draw-width")};
             }
             result.request.draw_width = draw_width;
             result.request.draw_width_available = true;
@@ -2707,14 +2707,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--fill-style") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --fill-style."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--fill-style")};
             }
             int fill_style = 0;
             if (!parse_int_value(args[++index], fill_style)) {
-                return {.ok = false, .error = "The --fill-style value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--fill-style")};
             }
             if (fill_style < 0) {
-                return {.ok = false, .error = "The --fill-style value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--fill-style")};
             }
             result.request.fill_style = fill_style;
             result.request.fill_style_available = true;
@@ -2723,14 +2723,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--scale-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --scale-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--scale-mode")};
             }
             int scale_mode = 0;
             if (!parse_int_value(args[++index], scale_mode)) {
-                return {.ok = false, .error = "The --scale-mode value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--scale-mode")};
             }
             if (scale_mode < 0) {
-                return {.ok = false, .error = "The --scale-mode value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--scale-mode")};
             }
             result.request.scale_mode = scale_mode;
             result.request.scale_mode_available = true;
@@ -2739,14 +2739,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--buffer-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --buffer-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--buffer-mode")};
             }
             int buffer_mode = 0;
             if (!parse_int_value(args[++index], buffer_mode)) {
-                return {.ok = false, .error = "The --buffer-mode value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--buffer-mode")};
             }
             if (buffer_mode < 0) {
-                return {.ok = false, .error = "The --buffer-mode value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--buffer-mode")};
             }
             result.request.buffer_mode = buffer_mode;
             result.request.buffer_mode_available = true;
@@ -2755,14 +2755,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--buffer-mode-override") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --buffer-mode-override."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--buffer-mode-override")};
             }
             int buffer_mode_override = 0;
             if (!parse_int_value(args[++index], buffer_mode_override)) {
-                return {.ok = false, .error = "The --buffer-mode-override value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--buffer-mode-override")};
             }
             if (buffer_mode_override < 0) {
-                return {.ok = false, .error = "The --buffer-mode-override value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--buffer-mode-override")};
             }
             result.request.buffer_mode_override = buffer_mode_override;
             result.request.buffer_mode_override_available = true;
@@ -2771,14 +2771,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--data-session") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --data-session."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--data-session")};
             }
             int data_session = 0;
             if (!parse_int_value(args[++index], data_session)) {
-                return {.ok = false, .error = "The --data-session value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--data-session")};
             }
             if (data_session < 0) {
-                return {.ok = false, .error = "The --data-session value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--data-session")};
             }
             result.request.data_session = data_session;
             result.request.data_session_available = true;
