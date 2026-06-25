@@ -1489,7 +1489,82 @@ bool parse_editor_selection_context_token(
     return false;
 }
 
-BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(const std::vector<std::string>& args) {
+std::string builder_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.BuilderParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string builder_parse_unknown_builder_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.BuilderParse.Error.UnknownBuilderContextToken",
+        {{"token", token}});
+}
+
+std::string builder_parse_unknown_selection_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.BuilderParse.Error.UnknownSelectionContextToken",
+        {{"token", token}});
+}
+
+std::string builder_parse_record_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.BuilderParse.Error.RecordNonNegativeInteger",
+        {{"option", "--record"}});
+}
+
+std::string builder_parse_boolean_value_required(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.BuilderParse.Error.BooleanValueRequired",
+        {
+            {"option", option},
+            {"trueValue", "true"},
+            {"falseValue", "false"}
+        });
+}
+
+std::string builder_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.BuilderParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string builder_parse_context_conflict(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& request_name) {
+    return catalog.translate(
+        "StudioHost.BuilderParse.Error.ContextConflict",
+        {
+            {"requestName", request_name},
+            {"builderContextOption", "--builder-context"},
+            {"selectionContextOption", "--selection-context"}
+        });
+}
+
+std::string builder_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     BuilderLaunchPlanParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--builder-launch-plan") != args.end();
@@ -1506,7 +1581,7 @@ BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(const std::vect
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -1522,7 +1597,7 @@ BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(const std::vect
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -1531,7 +1606,7 @@ BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(const std::vect
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -1542,7 +1617,7 @@ BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(const std::vect
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -1551,23 +1626,25 @@ BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(const std::vect
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown builder-launch-plan option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-launch-plan", argument));
         }
     }
 
     if (result.ok && result.request.builder_id.empty()) {
-        fail("No builder id was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail("Builder launch-plan requests cannot provide both --builder-context and --selection-context.");
+        fail(builder_parse_context_conflict(catalog, "Builder launch-plan"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
-        fail("No builder or selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));
     }
     return result;
 }
 
-BuilderLaunchCatalogParseResult parse_builder_launch_catalog_arguments(const std::vector<std::string>& args) {
+BuilderLaunchCatalogParseResult parse_builder_launch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     BuilderLaunchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--builder-launch-catalog") != args.end();
@@ -1584,7 +1661,7 @@ BuilderLaunchCatalogParseResult parse_builder_launch_catalog_arguments(const std
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -1598,7 +1675,7 @@ BuilderLaunchCatalogParseResult parse_builder_launch_catalog_arguments(const std
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -1609,7 +1686,7 @@ BuilderLaunchCatalogParseResult parse_builder_launch_catalog_arguments(const std
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -1618,18 +1695,20 @@ BuilderLaunchCatalogParseResult parse_builder_launch_catalog_arguments(const std
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown builder-launch-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-launch-catalog", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No builder context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderContext"));
     }
     return result;
 }
 
 SelectionBuilderLaunchCatalogParseResult
-parse_selection_builder_launch_catalog_arguments(const std::vector<std::string>& args) {
+parse_selection_builder_launch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     SelectionBuilderLaunchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--selection-builder-launch-catalog") != args.end();
@@ -1646,7 +1725,7 @@ parse_selection_builder_launch_catalog_arguments(const std::vector<std::string>&
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -1660,7 +1739,7 @@ parse_selection_builder_launch_catalog_arguments(const std::vector<std::string>&
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -1671,7 +1750,7 @@ parse_selection_builder_launch_catalog_arguments(const std::vector<std::string>&
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -1680,17 +1759,18 @@ parse_selection_builder_launch_catalog_arguments(const std::vector<std::string>&
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown selection-builder-launch-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "selection-builder-launch-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 BuilderInvocationAdmissionParseResult parse_builder_invocation_admission_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     BuilderInvocationAdmissionParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -1708,7 +1788,7 @@ BuilderInvocationAdmissionParseResult parse_builder_invocation_admission_argumen
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -1724,7 +1804,7 @@ BuilderInvocationAdmissionParseResult parse_builder_invocation_admission_argumen
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -1733,7 +1813,7 @@ BuilderInvocationAdmissionParseResult parse_builder_invocation_admission_argumen
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -1744,7 +1824,7 @@ BuilderInvocationAdmissionParseResult parse_builder_invocation_admission_argumen
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -1756,28 +1836,29 @@ BuilderInvocationAdmissionParseResult parse_builder_invocation_admission_argumen
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.admit_ui_launch = admitted;
         } else {
-            fail("Unknown builder-invocation-admission option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-invocation-admission", argument));
         }
     }
 
     if (result.ok && result.request.builder_id.empty()) {
-        fail("No builder id was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail("Builder invocation-admission requests cannot provide both --builder-context and --selection-context.");
+        fail(builder_parse_context_conflict(catalog, "Builder invocation-admission"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
-        fail("No builder or selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));
     }
     return result;
 }
 
 BuilderInvocationAdmissionCatalogParseResult parse_builder_invocation_admission_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     BuilderInvocationAdmissionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -1796,7 +1877,7 @@ BuilderInvocationAdmissionCatalogParseResult parse_builder_invocation_admission_
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -1810,7 +1891,7 @@ BuilderInvocationAdmissionCatalogParseResult parse_builder_invocation_admission_
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -1821,7 +1902,7 @@ BuilderInvocationAdmissionCatalogParseResult parse_builder_invocation_admission_
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -1833,23 +1914,24 @@ BuilderInvocationAdmissionCatalogParseResult parse_builder_invocation_admission_
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.request.admit_ui_launches = admitted;
         } else {
-            fail("Unknown builder-invocation-admission-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-invocation-admission-catalog", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No builder context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderContext"));
     }
     return result;
 }
 
 SelectionBuilderInvocationAdmissionCatalogParseResult
 parse_selection_builder_invocation_admission_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     SelectionBuilderInvocationAdmissionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -1868,7 +1950,7 @@ parse_selection_builder_invocation_admission_catalog_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -1882,7 +1964,7 @@ parse_selection_builder_invocation_admission_catalog_arguments(
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -1893,7 +1975,7 @@ parse_selection_builder_invocation_admission_catalog_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -1905,22 +1987,24 @@ parse_selection_builder_invocation_admission_catalog_arguments(
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.request.admit_ui_launches = admitted;
         } else {
-            fail("Unknown selection-builder-invocation-admission-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "selection-builder-invocation-admission-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
-BuilderDispatchParseResult parse_builder_dispatch_arguments(const std::vector<std::string>& args) {
+BuilderDispatchParseResult parse_builder_dispatch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     BuilderDispatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--builder-dispatch") != args.end();
@@ -1937,7 +2021,7 @@ BuilderDispatchParseResult parse_builder_dispatch_arguments(const std::vector<st
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -1953,7 +2037,7 @@ BuilderDispatchParseResult parse_builder_dispatch_arguments(const std::vector<st
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -1962,7 +2046,7 @@ BuilderDispatchParseResult parse_builder_dispatch_arguments(const std::vector<st
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -1973,7 +2057,7 @@ BuilderDispatchParseResult parse_builder_dispatch_arguments(const std::vector<st
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -1985,28 +2069,30 @@ BuilderDispatchParseResult parse_builder_dispatch_arguments(const std::vector<st
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.admit_ui_launch = admitted;
         } else {
-            fail("Unknown builder-dispatch option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-dispatch", argument));
         }
     }
 
     if (result.ok && result.request.builder_id.empty()) {
-        fail("No builder id was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail("Builder dispatch requests cannot provide both --builder-context and --selection-context.");
+        fail(builder_parse_context_conflict(catalog, "Builder dispatch"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
-        fail("No builder or selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));
     }
     return result;
 }
 
-BuilderExecuteParseResult parse_builder_execute_arguments(const std::vector<std::string>& args) {
+BuilderExecuteParseResult parse_builder_execute_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     BuilderExecuteParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--builder-execute") != args.end();
@@ -2023,7 +2109,7 @@ BuilderExecuteParseResult parse_builder_execute_arguments(const std::vector<std:
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2039,7 +2125,7 @@ BuilderExecuteParseResult parse_builder_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -2048,7 +2134,7 @@ BuilderExecuteParseResult parse_builder_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2059,7 +2145,7 @@ BuilderExecuteParseResult parse_builder_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2071,7 +2157,7 @@ BuilderExecuteParseResult parse_builder_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.admit_ui_launch = admitted;
@@ -2079,33 +2165,35 @@ BuilderExecuteParseResult parse_builder_execute_arguments(const std::vector<std:
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-execution value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-builder-execution"));
                 continue;
             }
             result.admit_execution = admitted;
         } else if (argument == "--builder-launch-command") {
             result.launch_command = require_value(argument);
         } else {
-            fail("Unknown builder-execute option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-execute", argument));
         }
     }
 
     if (result.ok && result.request.builder_id.empty()) {
-        fail("No builder id was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail("Builder execute requests cannot provide both --builder-context and --selection-context.");
+        fail(builder_parse_context_conflict(catalog, "Builder execute"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
-        fail("No builder or selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));
     }
     if (result.ok && result.launch_command.empty()) {
-        fail("No builder launch command was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderLaunchCommand"));
     }
     return result;
 }
 
-BuilderDispatchCatalogParseResult parse_builder_dispatch_catalog_arguments(const std::vector<std::string>& args) {
+BuilderDispatchCatalogParseResult parse_builder_dispatch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     BuilderDispatchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--builder-dispatch-catalog") != args.end();
@@ -2122,7 +2210,7 @@ BuilderDispatchCatalogParseResult parse_builder_dispatch_catalog_arguments(const
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2136,7 +2224,7 @@ BuilderDispatchCatalogParseResult parse_builder_dispatch_catalog_arguments(const
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -2147,7 +2235,7 @@ BuilderDispatchCatalogParseResult parse_builder_dispatch_catalog_arguments(const
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2159,22 +2247,23 @@ BuilderDispatchCatalogParseResult parse_builder_dispatch_catalog_arguments(const
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.request.admit_ui_launches = admitted;
         } else {
-            fail("Unknown builder-dispatch-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-dispatch-catalog", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No builder context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderContext"));
     }
     return result;
 }
 
 BuilderDispatchExecutionCatalogParseResult parse_builder_dispatch_execution_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     BuilderDispatchExecutionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -2192,7 +2281,7 @@ BuilderDispatchExecutionCatalogParseResult parse_builder_dispatch_execution_cata
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2206,7 +2295,7 @@ BuilderDispatchExecutionCatalogParseResult parse_builder_dispatch_execution_cata
             const std::string token = require_value(argument);
             copperfin::studio::StudioBuilderContext parsed_context{};
             if (!parse_builder_context_token(token, parsed_context)) {
-                fail("Unknown builder context token: " + token);
+                fail(builder_parse_unknown_builder_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -2217,7 +2306,7 @@ BuilderDispatchExecutionCatalogParseResult parse_builder_dispatch_execution_cata
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2229,7 +2318,7 @@ BuilderDispatchExecutionCatalogParseResult parse_builder_dispatch_execution_cata
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.request.admit_ui_launches = admitted;
@@ -2237,23 +2326,25 @@ BuilderDispatchExecutionCatalogParseResult parse_builder_dispatch_execution_cata
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-execution value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-builder-execution"));
                 continue;
             }
             result.request.admit_execution = admitted;
         } else {
-            fail("Unknown builder-dispatch-execution-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "builder-dispatch-execution-catalog", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No builder context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderContext"));
     }
     return result;
 }
 
 SelectionBuilderDispatchExecutionCatalogParseResult
-parse_selection_builder_dispatch_execution_catalog_arguments(const std::vector<std::string>& args) {
+parse_selection_builder_dispatch_execution_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     SelectionBuilderDispatchExecutionCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--selection-builder-dispatch-execution-catalog")
@@ -2271,7 +2362,7 @@ parse_selection_builder_dispatch_execution_catalog_arguments(const std::vector<s
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2285,7 +2376,7 @@ parse_selection_builder_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2296,7 +2387,7 @@ parse_selection_builder_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2308,7 +2399,7 @@ parse_selection_builder_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.request.admit_ui_launches = admitted;
@@ -2316,23 +2407,25 @@ parse_selection_builder_dispatch_execution_catalog_arguments(const std::vector<s
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-builder-execution value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-builder-execution"));
                 continue;
             }
             result.request.admit_execution = admitted;
         } else {
-            fail("Unknown selection-builder-dispatch-execution-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "selection-builder-dispatch-execution-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 SelectionBuilderDispatchCatalogParseResult
-parse_selection_builder_dispatch_catalog_arguments(const std::vector<std::string>& args) {
+parse_selection_builder_dispatch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     SelectionBuilderDispatchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--selection-builder-dispatch-catalog") != args.end();
@@ -2349,7 +2442,7 @@ parse_selection_builder_dispatch_catalog_arguments(const std::vector<std::string
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(builder_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -2363,7 +2456,7 @@ parse_selection_builder_dispatch_catalog_arguments(const std::vector<std::string
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(builder_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -2374,7 +2467,7 @@ parse_selection_builder_dispatch_catalog_arguments(const std::vector<std::string
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(builder_parse_record_non_negative_integer(catalog));
                 continue;
             }
             result.request.record_index = record_index;
@@ -2386,17 +2479,17 @@ parse_selection_builder_dispatch_catalog_arguments(const std::vector<std::string
             const std::string token = require_value(argument);
             bool admitted = false;
             if (!parse_bool_token(token, admitted)) {
-                fail("The --admit-ui-launch value must be true or false.");
+                fail(builder_parse_boolean_value_required(catalog, "--admit-ui-launch"));
                 continue;
             }
             result.request.admit_ui_launches = admitted;
         } else {
-            fail("Unknown selection-builder-dispatch-catalog option: " + argument);
+            fail(builder_parse_unknown_option(catalog, "selection-builder-dispatch-catalog", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoSelectionContext"));
     }
     return result;
 }
@@ -21265,7 +21358,7 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    const auto builder_launch_parse = parse_builder_launch_plan_arguments(args);
+    const auto builder_launch_parse = parse_builder_launch_plan_arguments(catalog, args);
     if (builder_launch_parse.requested) {
         if (!builder_launch_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderLaunchPlanResult{
@@ -21313,7 +21406,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto builder_launch_catalog_parse = parse_builder_launch_catalog_arguments(args);
+    const auto builder_launch_catalog_parse = parse_builder_launch_catalog_arguments(catalog, args);
     if (builder_launch_catalog_parse.requested) {
         if (!builder_launch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderLaunchCatalogResult{
@@ -21347,7 +21440,7 @@ int main(int argc, char** argv) {
     }
 
     const auto selection_builder_launch_catalog_parse =
-        parse_selection_builder_launch_catalog_arguments(args);
+        parse_selection_builder_launch_catalog_arguments(catalog, args);
     if (selection_builder_launch_catalog_parse.requested) {
         if (!selection_builder_launch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioSelectionBuilderLaunchCatalogResult{
@@ -21380,7 +21473,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto builder_invocation_admission_parse = parse_builder_invocation_admission_arguments(args);
+    const auto builder_invocation_admission_parse = parse_builder_invocation_admission_arguments(catalog, args);
     if (builder_invocation_admission_parse.requested) {
         if (!builder_invocation_admission_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderInvocationAdmissionResult{
@@ -21445,7 +21538,7 @@ int main(int argc, char** argv) {
     }
 
     const auto builder_invocation_admission_catalog_parse =
-        parse_builder_invocation_admission_catalog_arguments(args);
+        parse_builder_invocation_admission_catalog_arguments(catalog, args);
     if (builder_invocation_admission_catalog_parse.requested) {
         if (!builder_invocation_admission_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderInvocationAdmissionCatalogResult{
@@ -21479,7 +21572,7 @@ int main(int argc, char** argv) {
     }
 
     const auto selection_builder_invocation_admission_catalog_parse =
-        parse_selection_builder_invocation_admission_catalog_arguments(args);
+        parse_selection_builder_invocation_admission_catalog_arguments(catalog, args);
     if (selection_builder_invocation_admission_catalog_parse.requested) {
         if (!selection_builder_invocation_admission_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioSelectionBuilderInvocationAdmissionCatalogResult{
@@ -21512,7 +21605,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto builder_dispatch_parse = parse_builder_dispatch_arguments(args);
+    const auto builder_dispatch_parse = parse_builder_dispatch_arguments(catalog, args);
     if (builder_dispatch_parse.requested) {
         if (!builder_dispatch_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderDispatchResult{
@@ -21593,7 +21686,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto builder_execute_parse = parse_builder_execute_arguments(args);
+    const auto builder_execute_parse = parse_builder_execute_arguments(catalog, args);
     if (builder_execute_parse.requested) {
         if (!builder_execute_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderDispatchExecutionResult{
@@ -21735,7 +21828,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto builder_dispatch_catalog_parse = parse_builder_dispatch_catalog_arguments(args);
+    const auto builder_dispatch_catalog_parse = parse_builder_dispatch_catalog_arguments(catalog, args);
     if (builder_dispatch_catalog_parse.requested) {
         if (!builder_dispatch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderDispatchCatalogResult{
@@ -21769,7 +21862,7 @@ int main(int argc, char** argv) {
     }
 
     const auto builder_dispatch_execution_catalog_parse =
-        parse_builder_dispatch_execution_catalog_arguments(args);
+        parse_builder_dispatch_execution_catalog_arguments(catalog, args);
     if (builder_dispatch_execution_catalog_parse.requested) {
         if (!builder_dispatch_execution_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioBuilderDispatchExecutionCatalogResult{
@@ -21803,7 +21896,7 @@ int main(int argc, char** argv) {
     }
 
     const auto selection_builder_dispatch_execution_catalog_parse =
-        parse_selection_builder_dispatch_execution_catalog_arguments(args);
+        parse_selection_builder_dispatch_execution_catalog_arguments(catalog, args);
     if (selection_builder_dispatch_execution_catalog_parse.requested) {
         if (!selection_builder_dispatch_execution_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioSelectionBuilderDispatchExecutionCatalogResult{
@@ -21837,7 +21930,7 @@ int main(int argc, char** argv) {
     }
 
     const auto selection_builder_dispatch_catalog_parse =
-        parse_selection_builder_dispatch_catalog_arguments(args);
+        parse_selection_builder_dispatch_catalog_arguments(catalog, args);
     if (selection_builder_dispatch_catalog_parse.requested) {
         if (!selection_builder_dispatch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioSelectionBuilderDispatchCatalogResult{
