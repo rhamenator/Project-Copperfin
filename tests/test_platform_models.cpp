@@ -96,11 +96,27 @@ void test_default_extensibility_profile() {
         return language.id == "python";
     });
     expect(python != profile.languages.end(), "extensibility profile should include Python as a sidecar story");
+    if (python != profile.languages.end()) {
+        expect(
+            python->title == "Python Sidecar And Analytics Jobs",
+            "#2492: default Python language title should preserve en-US prose");
+        expect(
+            python->trust_boundary == "restricted external process boundary",
+            "#2492: default Python trust boundary should preserve en-US prose");
+    }
 
     const auto mcp = std::find_if(profile.ai_features.begin(), profile.ai_features.end(), [](const auto& feature) {
         return feature.id == "mcp-host";
     });
     expect(mcp != profile.ai_features.end(), "extensibility profile should include MCP hosting");
+    if (mcp != profile.ai_features.end()) {
+        expect(
+            mcp->title == "MCP Host Facility",
+            "#2492: default MCP feature title should preserve en-US prose");
+    }
+    expect(
+        profile.dotnet_output.primary_story.find("native executables") != std::string::npos,
+        "#2492: default .NET output story should preserve en-US prose");
 
     const auto deny_capability = std::find_if(
         profile.dotnet_output.parity_matrix.begin(),
@@ -112,6 +128,48 @@ void test_default_extensibility_profile() {
     expect(
         deny_capability != profile.dotnet_output.parity_matrix.end(),
         "extensibility parity matrix should include explicit intentionally-not-supported capabilities");
+    if (deny_capability != profile.dotnet_output.parity_matrix.end()) {
+        expect(
+            deny_capability->title == "Arbitrary reflection-based assembly loading",
+            "#2492: default .NET parity capability title should preserve en-US prose");
+        expect(
+            !deny_capability->reason_tags.empty() && deny_capability->reason_tags[0] == "security",
+            "#2492: default .NET parity reason tags should remain invariant");
+    }
+
+    const auto pseudo_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    const auto pseudo_profile = copperfin::platform::default_extensibility_profile(pseudo_catalog);
+    expect(
+        pseudo_profile.languages.size() == profile.languages.size(),
+        "#2492: pseudo-localized extensibility profile should preserve language counts");
+    expect(
+        !pseudo_profile.languages.empty() && pseudo_profile.languages[0].id == "xbase",
+        "#2492: pseudo-localized extensibility profile should preserve language ids");
+    expect(
+        !pseudo_profile.languages.empty() && pseudo_profile.languages[0].title.find("[!! ") != std::string::npos,
+        "#2492: pseudo-localized language titles should route through the catalog");
+    expect(
+        !pseudo_profile.languages.empty() &&
+            pseudo_profile.languages[0].title.find("Native Copperfin/xBase Runtime") == std::string::npos,
+        "#2492: pseudo-localized language titles should not fall back to raw English prose");
+    expect(
+        !pseudo_profile.ai_features.empty() && pseudo_profile.ai_features[0].id == "mcp-host",
+        "#2492: pseudo-localized extensibility profile should preserve AI feature ids");
+    expect(
+        !pseudo_profile.ai_features.empty() && pseudo_profile.ai_features[0].title.find("[!! ") != std::string::npos,
+        "#2492: pseudo-localized AI feature titles should route through the catalog");
+    expect(
+        !pseudo_profile.dotnet_output.parity_matrix.empty() &&
+            pseudo_profile.dotnet_output.parity_matrix[0].id == "task-primitives",
+        "#2492: pseudo-localized extensibility profile should preserve .NET parity ids");
+    expect(
+        !pseudo_profile.dotnet_output.parity_matrix.empty() &&
+            pseudo_profile.dotnet_output.parity_matrix[0].title.find("[!! ") != std::string::npos,
+        "#2492: pseudo-localized .NET parity titles should route through the catalog");
+    expect(
+        !pseudo_profile.guardrails.empty() && pseudo_profile.guardrails[0].find("[!! ") != std::string::npos,
+        "#2492: pseudo-localized extensibility guardrails should route through the catalog");
 }
 
 void test_dotnet_interop_policy_gateway() {

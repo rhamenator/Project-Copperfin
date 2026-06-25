@@ -1,5 +1,7 @@
 #include "copperfin/platform/extensibility_model.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 
 namespace copperfin::platform {
@@ -10,35 +12,46 @@ bool contains_case_sensitive(const std::vector<std::string>& values, const std::
     return std::find(values.begin(), values.end(), candidate) != values.end();
 }
 
+const localization::LocalizedCatalog& extensibility_profile_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string extensibility_text(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
 }  // namespace
 
-ExtensibilityProfile default_extensibility_profile() {
+ExtensibilityProfile default_extensibility_profile(const localization::LocalizedCatalog& catalog) {
     ExtensibilityProfile profile;
     profile.available = true;
 
     profile.languages = {
-        {"xbase", "Native Copperfin/xBase Runtime", "native", "trusted core", "Primary runtime and build target for FoxPro-style applications.", true},
-        {"dotnet", ".NET Managed Components", "hosted interop", "policy-managed interop", "Managed assemblies can be called from Copperfin and Copperfin logic can be surfaced as .NET-consumable outputs.", true},
-        {"c-abi", "Native C ABI Modules", "binary plugin", "signed plugin boundary", "Performance-sensitive extensions can be linked or loaded through stable native interfaces.", false},
-        {"rust", "Rust Native Components", "native library", "signed plugin boundary", "Rust is acceptable for safety-sensitive helpers behind stable native interfaces.", false},
-        {"python", "Python Sidecar And Analytics Jobs", "out-of-process sidecar", "restricted external process boundary", "Python support is positioned as a sidecar or job facility for data science and automation, not the trusted core.", false},
-        {"r", "R Analytics And Statistical Jobs", "out-of-process sidecar", "restricted external process boundary", "R support is positioned as a sidecar or job facility for statistical computing, reporting, and reproducible data-science workflows.", false}
+        {"xbase", extensibility_text(catalog, "Platform.Extensibility.Language.Xbase.Title"), extensibility_text(catalog, "Platform.Extensibility.Language.Xbase.IntegrationMode"), extensibility_text(catalog, "Platform.Extensibility.Language.Xbase.TrustBoundary"), extensibility_text(catalog, "Platform.Extensibility.Language.Xbase.OutputStory"), true},
+        {"dotnet", extensibility_text(catalog, "Platform.Extensibility.Language.DotNet.Title"), extensibility_text(catalog, "Platform.Extensibility.Language.DotNet.IntegrationMode"), extensibility_text(catalog, "Platform.Extensibility.Language.DotNet.TrustBoundary"), extensibility_text(catalog, "Platform.Extensibility.Language.DotNet.OutputStory"), true},
+        {"c-abi", extensibility_text(catalog, "Platform.Extensibility.Language.CAbi.Title"), extensibility_text(catalog, "Platform.Extensibility.Language.CAbi.IntegrationMode"), extensibility_text(catalog, "Platform.Extensibility.Language.CAbi.TrustBoundary"), extensibility_text(catalog, "Platform.Extensibility.Language.CAbi.OutputStory"), false},
+        {"rust", extensibility_text(catalog, "Platform.Extensibility.Language.Rust.Title"), extensibility_text(catalog, "Platform.Extensibility.Language.Rust.IntegrationMode"), extensibility_text(catalog, "Platform.Extensibility.Language.Rust.TrustBoundary"), extensibility_text(catalog, "Platform.Extensibility.Language.Rust.OutputStory"), false},
+        {"python", extensibility_text(catalog, "Platform.Extensibility.Language.Python.Title"), extensibility_text(catalog, "Platform.Extensibility.Language.Python.IntegrationMode"), extensibility_text(catalog, "Platform.Extensibility.Language.Python.TrustBoundary"), extensibility_text(catalog, "Platform.Extensibility.Language.Python.OutputStory"), false},
+        {"r", extensibility_text(catalog, "Platform.Extensibility.Language.R.Title"), extensibility_text(catalog, "Platform.Extensibility.Language.R.IntegrationMode"), extensibility_text(catalog, "Platform.Extensibility.Language.R.TrustBoundary"), extensibility_text(catalog, "Platform.Extensibility.Language.R.OutputStory"), false}
     };
 
     profile.ai_features = {
-        {"mcp-host", "MCP Host Facility", "Expose Copperfin tools through an MCP host so developers can use preferred AI models and assistants.", "policy-managed external tool boundary", false},
-        {"ai-assist", "AI-Assisted Developer Workflow", "Optional vibe-coding and code-intelligence helpers for designers, migration, and diagnostics.", "policy-managed external tool boundary", false},
-        {"local-models", "Local Or Enterprise AI Backends", "Use local or enterprise-approved models rather than forcing one hosted provider.", "policy-managed external tool boundary", false},
-        {"model-selection", "User-Selected AI Models", "Let developers choose the model used for AI debugging and assistance instead of hard-coding one provider or model family.", "policy-managed external tool boundary", false},
-        {"ai-debug-assist", "AI Debugging Assistance", "Allow developers to send debugger context, stack traces, and runtime telemetry to an approved assistant workflow for optional debugging help.", "policy-managed external tool boundary", false}
+        {"mcp-host", extensibility_text(catalog, "Platform.Extensibility.AiFeature.McpHost.Title"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.McpHost.Description"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.McpHost.TrustBoundary"), false},
+        {"ai-assist", extensibility_text(catalog, "Platform.Extensibility.AiFeature.AiAssist.Title"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.AiAssist.Description"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.AiAssist.TrustBoundary"), false},
+        {"local-models", extensibility_text(catalog, "Platform.Extensibility.AiFeature.LocalModels.Title"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.LocalModels.Description"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.LocalModels.TrustBoundary"), false},
+        {"model-selection", extensibility_text(catalog, "Platform.Extensibility.AiFeature.ModelSelection.Title"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.ModelSelection.Description"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.ModelSelection.TrustBoundary"), false},
+        {"ai-debug-assist", extensibility_text(catalog, "Platform.Extensibility.AiFeature.AiDebugAssist.Title"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.AiDebugAssist.Description"), extensibility_text(catalog, "Platform.Extensibility.AiFeature.AiDebugAssist.TrustBoundary"), false}
     };
 
     profile.dotnet_output.available = true;
     profile.dotnet_output.native_host_executables = true;
     profile.dotnet_output.managed_wrappers = true;
     profile.dotnet_output.nuget_sdk = true;
-    profile.dotnet_output.primary_story =
-        "Copperfin applications should be able to ship as native executables with first-class .NET compatibility, and selected modules should be exposable as managed wrappers or NuGet-consumable SDK outputs.";
+    profile.dotnet_output.primary_story = extensibility_text(catalog, "Platform.Extensibility.DotNetOutput.PrimaryStory");
     profile.dotnet_output.policy.allowlist = {
         "task-primitives",
         "json-helpers",
@@ -57,50 +70,54 @@ ExtensibilityProfile default_extensibility_profile() {
     profile.dotnet_output.parity_matrix = {
         DotNetParityCapability{
             .id = "task-primitives",
-            .title = "Task/Async primitives",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.TaskPrimitives.Title"),
             .tier = DotNetParityTier::adapted,
-            .rationale = "Expose async/await-style behavior through FP/VFP-friendly command and function facades.",
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.TaskPrimitives.Rationale"),
             .verification_reference = "#272",
             .reason_tags = {"ergonomics", "performance"}},
         DotNetParityCapability{
             .id = "json-helpers",
-            .title = "JSON projection helpers",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.JsonHelpers.Title"),
             .tier = DotNetParityTier::adapted,
-            .rationale = "Provide high-value JSON conversion features while preserving native null/blank semantics.",
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.JsonHelpers.Rationale"),
             .verification_reference = "#280",
             .reason_tags = {"ergonomics"}},
         DotNetParityCapability{
             .id = "unsafe-reflection-load",
-            .title = "Arbitrary reflection-based assembly loading",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Title"),
             .tier = DotNetParityTier::intentionally_not_supported,
-            .rationale = "Rejected due to trust-boundary and policy-audit risks.",
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.UnsafeReflectionLoad.Rationale"),
             .verification_reference = "#279",
             .reason_tags = {"security", "legacy_hazard"}},
         DotNetParityCapability{
             .id = "insecure-binary-deserialization",
-            .title = "Legacy insecure binary deserialization flows",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Title"),
             .tier = DotNetParityTier::intentionally_not_supported,
-            .rationale = "Rejected due to known unsafe behavior and exploit history.",
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.InsecureBinaryDeserialization.Rationale"),
             .verification_reference = "#279",
             .reason_tags = {"security", "legacy_hazard"}},
         DotNetParityCapability{
             .id = "legacy-cas-interop",
-            .title = "Code Access Security-era behavior emulation",
+            .title = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.LegacyCasInterop.Title"),
             .tier = DotNetParityTier::intentionally_not_supported,
-            .rationale = "Rejected because emulating retired CAS behavior adds complexity with little user value.",
+            .rationale = extensibility_text(catalog, "Platform.Extensibility.DotNetParity.LegacyCasInterop.Rationale"),
             .verification_reference = "#275",
             .reason_tags = {"performance", "legacy_hazard"}}
     };
 
     profile.guardrails = {
-        "The trusted execution core stays native-first and security-first.",
-        ".NET interop is first-class, but managed loading is policy-controlled and auditable.",
-        "Python and R are supported through sidecars or job runners, not as the product core.",
-        "MCP and AI tooling are opt-in developer features with audit, provider policy, and user-selected model controls.",
-        "Release outputs must preserve a clear .NET consumption story even when the executable is native."
+        extensibility_text(catalog, "Platform.Extensibility.Guardrail.NativeFirstCore"),
+        extensibility_text(catalog, "Platform.Extensibility.Guardrail.DotNetPolicyControlled"),
+        extensibility_text(catalog, "Platform.Extensibility.Guardrail.SidecarLanguages"),
+        extensibility_text(catalog, "Platform.Extensibility.Guardrail.AiToolingOptIn"),
+        extensibility_text(catalog, "Platform.Extensibility.Guardrail.ReleaseOutputDotNetStory")
     };
 
     return profile;
+}
+
+ExtensibilityProfile default_extensibility_profile() {
+    return default_extensibility_profile(extensibility_profile_catalog());
 }
 
 DotNetInteropCallDecision evaluate_dotnet_interop_call(

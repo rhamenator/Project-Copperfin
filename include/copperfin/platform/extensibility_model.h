@@ -3,6 +3,10 @@
 #include <string>
 #include <vector>
 
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
+
 namespace copperfin::platform {
 
 enum class DotNetParityTier {
@@ -84,6 +88,8 @@ struct ExtensibilityProfile {
 };
 
 [[nodiscard]] ExtensibilityProfile default_extensibility_profile();
+[[nodiscard]] ExtensibilityProfile default_extensibility_profile(
+    const localization::LocalizedCatalog& catalog);
 [[nodiscard]] DotNetInteropCallDecision evaluate_dotnet_interop_call(
     const ExtensibilityProfile& profile,
     const DotNetInteropCallRequest& request);
