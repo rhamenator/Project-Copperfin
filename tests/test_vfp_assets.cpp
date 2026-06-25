@@ -266,6 +266,42 @@ void test_asset_family_detection() {
     expect(asset_family_from_path("sample.xyz") == AssetFamily::unknown, "unknown extension should stay unknown");
 }
 
+void test_asset_inspector_errors_resolve_through_localization_catalog() {
+    namespace fs = std::filesystem;
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap path_placeholder{{"path", "missing.dbc"}};
+
+    expect(
+        english_catalog.translate("Vfp.AssetInspector.Error.PathMissing") == "Path does not exist.",
+        "#2386: asset inspector missing-path error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.AssetInspector.Error.DbcPathMissing", path_placeholder) ==
+            "DBC path does not exist: missing.dbc",
+        "#2386: DBC export missing-path error should preserve named placeholders");
+    expect(
+        pseudo_catalog.translate("Vfp.AssetInspector.Error.PathMissing") !=
+            english_catalog.translate("Vfp.AssetInspector.Error.PathMissing"),
+        "#2386: asset inspector errors should be pseudo-localizable");
+
+    const fs::path temp_path = fs::temp_directory_path() / "copperfin_missing_asset_for_localization.dbc";
+    std::error_code ignored;
+    fs::remove(temp_path, ignored);
+
+    const auto inspect_result = copperfin::vfp::inspect_asset(temp_path.string());
+    expect(!inspect_result.ok, "#2386: inspect_asset should reject missing paths");
+    expect(
+        inspect_result.error == "Path does not exist.",
+        "#2386: inspect_asset should preserve the default localized missing-path error");
+
+    const auto export_result = copperfin::vfp::export_database_as_json(temp_path.string(), 10U);
+    expect(!export_result.ok, "#2386: export_database_as_json should reject missing DBC paths");
+    expect(
+        export_result.error == "DBC path does not exist: " + temp_path.string(),
+        "#2386: export_database_as_json should preserve the default localized missing-DBC error");
+}
+
 void test_parse_index_probe_for_cdx() {
     const auto bytes = make_synthetic_cdx_family_bytes(true, true);
 
@@ -1363,6 +1399,7 @@ int main() {
     test_parse_dbf_header_rejects_short_input();
     test_dbf_cdx_header_errors_resolve_through_localization_catalog();
     test_asset_family_detection();
+    test_asset_inspector_errors_resolve_through_localization_catalog();
     test_parse_index_probe_for_cdx();
     test_parse_index_probe_for_dcx();
     test_parse_index_probe_for_cdx_prefers_tag_page_local_expressions();

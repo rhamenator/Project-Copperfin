@@ -1,4 +1,5 @@
 #include "copperfin/vfp/asset_inspector.h"
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 
 #include <algorithm>
@@ -11,11 +12,24 @@
 #include <optional>
 #include <set>
 #include <sstream>
+#include <string_view>
 #include <vector>
 
 namespace copperfin::vfp {
 
 namespace {
+
+const localization::LocalizedCatalog& asset_inspector_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string asset_inspector_text(
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    return asset_inspector_catalog().translate(key, placeholders);
+}
 
 std::string lowercase_extension(const std::filesystem::path& path) {
     std::string ext = path.extension().string();
@@ -909,7 +923,7 @@ AssetInspectionResult inspect_asset(const std::string& path) {
 
     if (!std::filesystem::exists(path)) {
         result.ok = false;
-        result.error = "Path does not exist.";
+        result.error = asset_inspector_text("Vfp.AssetInspector.Error.PathMissing");
         return result;
     }
 
@@ -1269,18 +1283,29 @@ DatabaseExportResult export_database_as_json(
     namespace fs = std::filesystem;
 
     if (!fs::exists(dbc_path)) {
-        return {.ok = false, .error = "DBC path does not exist: " + dbc_path};
+        return {
+            .ok = false,
+            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcPathMissing", {{"path", dbc_path}})
+        };
     }
 
     // Load the raw DBC bytes for direct field-pointer extraction
     const std::vector<std::uint8_t> dbc_bytes = read_binary_file(dbc_path);
     if (dbc_bytes.empty()) {
-        return {.ok = false, .error = "Unable to read DBC file: " + dbc_path};
+        return {
+            .ok = false,
+            .error = asset_inspector_text("Vfp.AssetInspector.Error.DbcReadFailed", {{"path", dbc_path}})
+        };
     }
 
     const DbfParseResult header_result = parse_dbf_header(dbc_bytes);
     if (!header_result.ok) {
-        return {.ok = false, .error = "DBC header parse failed: " + header_result.error};
+        return {
+            .ok = false,
+            .error = asset_inspector_text(
+                "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
+                {{"error", header_result.error}})
+        };
     }
 
     // Determine the .DCT memo sidecar path
