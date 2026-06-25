@@ -24662,13 +24662,16 @@ void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
                    "Every copied row must expose a UNIQUEID." &&
                english_catalog.translate("VisualAssetEditor.Object.SelectedContainerChildrenRequired") ==
                    "The selected container has no child objects to ungroup." &&
+               english_catalog.translate("VisualAssetEditor.Object.GroupContainerUnavailable") ==
+                   "The created group container is not available." &&
                pseudo_catalog.translate("VisualAssetEditor.Object.RecordUnavailable").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Geometry.RequiredFieldsMissing").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Object.EditBatchRequired").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.PropertyLabel.ToolTipText").starts_with("[!! ") &&
                pseudo_catalog.translate("VisualAssetEditor.Storage.MemoSidecarOpenFailed").starts_with("[!! ") &&
-               pseudo_catalog.translate("VisualAssetEditor.Object.GroupContainerNameMissing").starts_with("[!! "),
+               pseudo_catalog.translate("VisualAssetEditor.Object.GroupContainerNameMissing").starts_with("[!! ") &&
+               pseudo_catalog.translate("VisualAssetEditor.Object.GroupContainerUnavailable").starts_with("[!! "),
            "#2373/#2374/#2375/#2376/#2377/#2378: visual asset editor prose should resolve through localizable catalog keys");
 }
 

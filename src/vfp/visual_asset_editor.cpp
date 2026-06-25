@@ -5049,7 +5049,7 @@ VisualObjectGroupResult group_visual_objects(const VisualObjectGroupRequest& req
     if (!table_result.ok || create_result.record_index >= table_result.table.records.size()) {
         restore_original_asset();
         return failed_visual_object_group_result(
-            table_result.ok ? "The created group container is not available." : table_result.error);
+            table_result.ok ? visual_asset_text("VisualAssetEditor.Object.GroupContainerUnavailable") : table_result.error);
     }
 
     const std::string container_name = visual_object_record_name(table_result.table.records[create_result.record_index]);

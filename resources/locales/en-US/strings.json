@@ -639,6 +639,7 @@
   "VisualAssetEditor.Object.GroupContainerNameMissing": "The group container does not expose an object name.",
   "VisualAssetEditor.Object.GroupContainerFieldsRequired": "No group container field values were provided.",
   "VisualAssetEditor.Object.GroupSelectionRequired": "No visual objects were selected for grouping.",
+  "VisualAssetEditor.Object.GroupContainerUnavailable": "The created group container is not available.",
   "VisualAssetEditor.Object.LockedSelectionDuplicate": "The same visual object was selected more than once for locked-state assignment.",
   "VisualAssetEditor.Object.LockedSelectionRequired": "No visual objects were selected for locked-state assignment.",
   "VisualAssetEditor.Object.NameAmbiguous": "The requested visual object name is ambiguous.",
