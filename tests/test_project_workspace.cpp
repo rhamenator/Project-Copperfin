@@ -351,6 +351,27 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
     expect(workspace.build_plan.build_target_memo_block_number == 0U,
            "#714: fallback build-plan target should expose memo block zero");
     expect(workspace.entries[1].name == "Record 1", "#694: unresolved memo names should use the synthetic entry fallback");
+    const auto pseudo_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    const auto pseudo_workspace = copperfin::studio::build_project_workspace(document, pseudo_catalog);
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].record_index == 1U,
+        "#2497: pseudo-localized fallback record title should preserve record index metadata");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].name.find("[!! ") != std::string::npos,
+        "#2497: fallback record title should route through pseudo-localization");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].name.find("Record 1") == std::string::npos,
+        "#2497: pseudo-localized fallback record title should not fall back to raw English prose");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].name.find("1") != std::string::npos,
+        "#2497: fallback record title should preserve the named recordIndex placeholder value");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].name_field_index == 1U,
+        "#2497: pseudo-localized fallback record title should preserve name field provenance");
+    expect(
+        pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].name_memo_block_number == 920U,
+        "#2497: pseudo-localized fallback record title should preserve name memo provenance");
     expect(workspace.entries[1].name_field_index == 1U, "#694: unresolved memo name fields should retain source provenance");
     expect(workspace.entries[1].name_memo_block_number == 920U, "#715: unresolved entry names should retain source memo block provenance");
     expect(workspace.entries[1].relative_path.empty(), "#694: unresolved memo names should not become relative paths");

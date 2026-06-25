@@ -1013,6 +1013,7 @@
   "Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl": "x64 Windows ActiveX control",
   "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary": "x64 Windows dynamic-link library",
   "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable": "x64 Windows executable",
+  "Studio.ProjectWorkspace.Fallback.RecordTitle": "Record {recordIndex}",
   "Studio.ProjectWorkspace.Group.ClassLibraries": "Class Libraries",
   "Studio.ProjectWorkspace.Group.Code": "Code",
   "Studio.ProjectWorkspace.Group.Databases": "Databases",

@@ -20,8 +20,9 @@ const localization::LocalizedCatalog& project_workspace_catalog() {
 
 std::string project_workspace_text(
     const localization::LocalizedCatalog& catalog,
-    std::string_view key) {
-    return catalog.translate(key);
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    return catalog.translate(key, placeholders);
 }
 
 const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_view field_name) {
@@ -420,7 +421,12 @@ StudioProjectWorkspace build_project_workspace(
         StudioProjectEntry entry;
         entry.record_index = record.record_index;
         entry.deleted = record.deleted;
-        entry.name = name.empty() ? ("Record " + std::to_string(record.record_index)) : name;
+        entry.name = name.empty()
+            ? project_workspace_text(
+                catalog,
+                "Studio.ProjectWorkspace.Fallback.RecordTitle",
+                {{"recordIndex", std::to_string(record.record_index)}})
+            : name;
         entry.name_field_index = field_index_or_missing(record, "NAME");
         entry.name_memo_block_number = name_memo_block_number;
         entry.relative_path = relative_path;
