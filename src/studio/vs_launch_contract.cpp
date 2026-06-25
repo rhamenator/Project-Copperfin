@@ -9819,114 +9819,147 @@ LaunchParseResult parse_launch_arguments(
             "--dynamic-fore-color-object")};
     }
     if (result.request.closable_object && !result.request.closable_available) {
-        return {.ok = false, .error = "An object closable assignment requires --closable."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "closable", "--closable")};
     }
     if (result.request.closable_object && result.request.closable_objects.empty()) {
-        return {.ok = false, .error = "An object closable assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "closable")};
     }
     if (!result.request.closable_object &&
         (result.request.closable_available ||
          !result.request.closable_objects.empty())) {
-        return {.ok = false, .error = "Closable arguments can only be used with --closable-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Closable",
+            "--closable-object")};
     }
     if (result.request.control_box_object && !result.request.control_box_available) {
-        return {.ok = false, .error = "An object control-box assignment requires --control-box."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "control-box", "--control-box")};
     }
     if (result.request.control_box_object && result.request.control_box_objects.empty()) {
-        return {.ok = false, .error = "An object control-box assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "control-box")};
     }
     if (!result.request.control_box_object &&
         (result.request.control_box_available ||
          !result.request.control_box_objects.empty())) {
-        return {.ok = false, .error = "Control-box arguments can only be used with --control-box-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Control-box",
+            "--control-box-object")};
     }
     if (result.request.allow_output_object && !result.request.allow_output_available) {
-        return {.ok = false, .error = "An object allow-output assignment requires --allow-output."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "allow-output", "--allow-output")};
     }
     if (result.request.allow_output_object && result.request.allow_output_objects.empty()) {
-        return {.ok = false, .error = "An object allow-output assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-output")};
     }
     if (!result.request.allow_output_object &&
         (result.request.allow_output_available ||
          !result.request.allow_output_objects.empty())) {
-        return {.ok = false, .error = "Allow-output arguments can only be used with --allow-output-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Allow-output",
+            "--allow-output-object")};
     }
     if (result.request.bind_controls_object && !result.request.bind_controls_available) {
-        return {.ok = false, .error = "An object bind-controls assignment requires --bind-controls."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "bind-controls", "--bind-controls")};
     }
     if (result.request.bind_controls_object && result.request.bind_controls_objects.empty()) {
-        return {.ok = false, .error = "An object bind-controls assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "bind-controls")};
     }
     if (!result.request.bind_controls_object &&
         (result.request.bind_controls_available ||
          !result.request.bind_controls_objects.empty())) {
-        return {.ok = false, .error = "Bind-controls arguments can only be used with --bind-controls-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Bind-controls",
+            "--bind-controls-object")};
     }
     if (result.request.auto_verb_menu_object && !result.request.auto_verb_menu_available) {
-        return {.ok = false, .error = "An object auto-verb-menu assignment requires --auto-verb-menu."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "auto-verb-menu",
+            "--auto-verb-menu")};
     }
     if (result.request.auto_verb_menu_object && result.request.auto_verb_menu_objects.empty()) {
-        return {.ok = false, .error = "An object auto-verb-menu assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "auto-verb-menu")};
     }
     if (!result.request.auto_verb_menu_object &&
         (result.request.auto_verb_menu_available ||
          !result.request.auto_verb_menu_objects.empty())) {
-        return {.ok = false, .error = "Auto-verb-menu arguments can only be used with --auto-verb-menu-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Auto-verb-menu",
+            "--auto-verb-menu-object")};
     }
     if (result.request.desktop_object && !result.request.desktop_available) {
-        return {.ok = false, .error = "An object desktop assignment requires --desktop."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "desktop", "--desktop")};
     }
     if (result.request.desktop_object && result.request.desktop_objects.empty()) {
-        return {.ok = false, .error = "An object desktop assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "desktop")};
     }
     if (!result.request.desktop_object &&
         (result.request.desktop_available ||
          !result.request.desktop_objects.empty())) {
-        return {.ok = false, .error = "Desktop arguments can only be used with --desktop-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Desktop",
+            "--desktop-object")};
     }
     if (result.request.key_preview_object && !result.request.key_preview_available) {
-        return {.ok = false, .error = "An object key-preview assignment requires --key-preview."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "key-preview", "--key-preview")};
     }
     if (result.request.key_preview_object && result.request.key_preview_objects.empty()) {
-        return {.ok = false, .error = "An object key-preview assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "key-preview")};
     }
     if (!result.request.key_preview_object &&
         (result.request.key_preview_available ||
          !result.request.key_preview_objects.empty())) {
-        return {.ok = false, .error = "Key-preview arguments can only be used with --key-preview-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Key-preview",
+            "--key-preview-object")};
     }
     if (result.request.mac_desktop_object && !result.request.mac_desktop_available) {
-        return {.ok = false, .error = "An object mac-desktop assignment requires --mac-desktop."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "mac-desktop", "--mac-desktop")};
     }
     if (result.request.mac_desktop_object && result.request.mac_desktop_objects.empty()) {
-        return {.ok = false, .error = "An object mac-desktop assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "mac-desktop")};
     }
     if (!result.request.mac_desktop_object &&
         (result.request.mac_desktop_available ||
          !result.request.mac_desktop_objects.empty())) {
-        return {.ok = false, .error = "Mac-desktop arguments can only be used with --mac-desktop-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Mac-desktop",
+            "--mac-desktop-object")};
     }
     if (result.request.max_button_object && !result.request.max_button_available) {
-        return {.ok = false, .error = "An object max-button assignment requires --max-button."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "max-button", "--max-button")};
     }
     if (result.request.max_button_object && result.request.max_button_objects.empty()) {
-        return {.ok = false, .error = "An object max-button assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "max-button")};
     }
     if (!result.request.max_button_object &&
         (result.request.max_button_available ||
          !result.request.max_button_objects.empty())) {
-        return {.ok = false, .error = "Max-button arguments can only be used with --max-button-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Max-button",
+            "--max-button-object")};
     }
     if (result.request.min_button_object && !result.request.min_button_available) {
-        return {.ok = false, .error = "An object min-button assignment requires --min-button."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "min-button", "--min-button")};
     }
     if (result.request.min_button_object && result.request.min_button_objects.empty()) {
-        return {.ok = false, .error = "An object min-button assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "min-button")};
     }
     if (!result.request.min_button_object &&
         (result.request.min_button_available ||
          !result.request.min_button_objects.empty())) {
-        return {.ok = false, .error = "Min-button arguments can only be used with --min-button-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Min-button",
+            "--min-button-object")};
     }
     if (result.request.min_height_object && !result.request.min_height_available) {
         return {.ok = false, .error = "An object min-height assignment requires --min-height."};
