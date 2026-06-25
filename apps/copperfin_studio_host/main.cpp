@@ -5759,7 +5759,9 @@ VisualPropertyReorderBatchParseResult parse_visual_property_reorder_batch_argume
     return result;
 }
 
-VisualPropertyListParseResult parse_visual_property_list_arguments(const std::vector<std::string>& args) {
+VisualPropertyListParseResult parse_visual_property_list_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualPropertyListParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-property-list") != args.end();
@@ -5776,7 +5778,7 @@ VisualPropertyListParseResult parse_visual_property_list_arguments(const std::ve
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_property_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -5793,7 +5795,7 @@ VisualPropertyListParseResult parse_visual_property_list_arguments(const std::ve
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_property_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -5802,17 +5804,53 @@ VisualPropertyListParseResult parse_visual_property_list_arguments(const std::ve
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown visual-property-list option: " + argument);
+            fail(visual_property_parse_unknown_option(catalog, "visual-property-list", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_property_parse_message(catalog, "StudioHost.VisualPropertyParse.Error.NoAssetPath"));
     }
     return result;
 }
 
-VisualObjectListParseResult parse_visual_object_list_arguments(const std::vector<std::string>& args) {
+std::string visual_object_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.VisualObjectParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string visual_object_parse_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.VisualObjectParse.Error.NonNegativeInteger",
+        {{"option", option}});
+}
+
+std::string visual_object_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.VisualObjectParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string visual_object_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+VisualObjectListParseResult parse_visual_object_list_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualObjectListParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-object-list") != args.end();
@@ -5829,7 +5867,7 @@ VisualObjectListParseResult parse_visual_object_list_arguments(const std::vector
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -5843,17 +5881,19 @@ VisualObjectListParseResult parse_visual_object_list_arguments(const std::vector
             result.path = require_value(argument);
             result.path_provided = !result.path.empty();
         } else {
-            fail("Unknown visual-object-list option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-list", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     return result;
 }
 
-VisualObjectChildrenParseResult parse_visual_object_children_arguments(const std::vector<std::string>& args) {
+VisualObjectChildrenParseResult parse_visual_object_children_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualObjectChildrenParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-object-children") != args.end();
@@ -5870,7 +5910,7 @@ VisualObjectChildrenParseResult parse_visual_object_children_arguments(const std
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -5887,7 +5927,7 @@ VisualObjectChildrenParseResult parse_visual_object_children_arguments(const std
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -5896,17 +5936,19 @@ VisualObjectChildrenParseResult parse_visual_object_children_arguments(const std
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown visual-object-children option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-children", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     return result;
 }
 
-VisualObjectDescendantsParseResult parse_visual_object_descendants_arguments(const std::vector<std::string>& args) {
+VisualObjectDescendantsParseResult parse_visual_object_descendants_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualObjectDescendantsParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-object-descendants") != args.end();
@@ -5923,7 +5965,7 @@ VisualObjectDescendantsParseResult parse_visual_object_descendants_arguments(con
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -5940,7 +5982,7 @@ VisualObjectDescendantsParseResult parse_visual_object_descendants_arguments(con
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -5949,17 +5991,19 @@ VisualObjectDescendantsParseResult parse_visual_object_descendants_arguments(con
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown visual-object-descendants option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-descendants", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     return result;
 }
 
-VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(const std::vector<std::string>& args) {
+VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualObjectAncestorsParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-object-ancestors") != args.end();
@@ -5976,7 +6020,7 @@ VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(const s
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_object_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -5993,7 +6037,7 @@ VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(const s
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_object_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -6002,12 +6046,12 @@ VisualObjectAncestorsParseResult parse_visual_object_ancestors_arguments(const s
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown visual-object-ancestors option: " + argument);
+            fail(visual_object_parse_unknown_option(catalog, "visual-object-ancestors", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_object_parse_message(catalog, "StudioHost.VisualObjectParse.Error.NoAssetPath"));
     }
     return result;
 }
@@ -23307,7 +23351,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_ancestors_parse = parse_visual_object_ancestors_arguments(args);
+    const auto visual_object_ancestors_parse = parse_visual_object_ancestors_arguments(catalog, args);
     if (visual_object_ancestors_parse.requested) {
         if (!visual_object_ancestors_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectAncestorsListResult{
@@ -23335,7 +23379,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_descendants_parse = parse_visual_object_descendants_arguments(args);
+    const auto visual_object_descendants_parse = parse_visual_object_descendants_arguments(catalog, args);
     if (visual_object_descendants_parse.requested) {
         if (!visual_object_descendants_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectDescendantsListResult{
@@ -23364,7 +23408,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_children_parse = parse_visual_object_children_arguments(args);
+    const auto visual_object_children_parse = parse_visual_object_children_arguments(catalog, args);
     if (visual_object_children_parse.requested) {
         if (!visual_object_children_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectChildrenListResult{
@@ -23393,7 +23437,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_object_list_parse = parse_visual_object_list_arguments(args);
+    const auto visual_object_list_parse = parse_visual_object_list_arguments(catalog, args);
     if (visual_object_list_parse.requested) {
         if (!visual_object_list_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectListResult{
@@ -23419,7 +23463,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_property_list_parse = parse_visual_property_list_arguments(args);
+    const auto visual_property_list_parse = parse_visual_property_list_arguments(catalog, args);
     if (visual_property_list_parse.requested) {
         if (!visual_property_list_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectPropertyListResult{
