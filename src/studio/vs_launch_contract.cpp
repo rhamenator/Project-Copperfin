@@ -10257,114 +10257,174 @@ LaunchParseResult parse_launch_arguments(
             "--picture-selection-display-object")};
     }
     if (result.request.dynamic_input_mask_object && !result.request.dynamic_input_mask_available) {
-        return {.ok = false, .error = "An object dynamic-input-mask assignment requires --dynamic-input-mask."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-input-mask",
+            "--dynamic-input-mask")};
     }
     if (result.request.dynamic_input_mask_object && result.request.dynamic_input_mask_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-input-mask assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-input-mask")};
     }
     if (!result.request.dynamic_input_mask_object &&
         (result.request.dynamic_input_mask_available ||
          !result.request.dynamic_input_mask_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-input-mask arguments can only be used with --dynamic-input-mask-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-input-mask",
+            "--dynamic-input-mask-object")};
     }
     if (result.request.dynamic_line_height_object && !result.request.dynamic_line_height_available) {
-        return {.ok = false, .error = "An object dynamic-line-height assignment requires --dynamic-line-height."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-line-height",
+            "--dynamic-line-height")};
     }
     if (result.request.dynamic_line_height_object && result.request.dynamic_line_height_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-line-height assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-line-height")};
     }
     if (!result.request.dynamic_line_height_object &&
         (result.request.dynamic_line_height_available ||
          !result.request.dynamic_line_height_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-line-height arguments can only be used with --dynamic-line-height-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-line-height",
+            "--dynamic-line-height-object")};
     }
     if (result.request.dynamic_alignment_object && !result.request.dynamic_alignment_available) {
-        return {.ok = false, .error = "An object dynamic-alignment assignment requires --dynamic-alignment."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-alignment",
+            "--dynamic-alignment")};
     }
     if (result.request.dynamic_alignment_object && result.request.dynamic_alignment_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-alignment assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-alignment")};
     }
     if (!result.request.dynamic_alignment_object &&
         (result.request.dynamic_alignment_available ||
          !result.request.dynamic_alignment_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-alignment arguments can only be used with --dynamic-alignment-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-alignment",
+            "--dynamic-alignment-object")};
     }
     if (result.request.dynamic_current_control_object && !result.request.dynamic_current_control_available) {
-        return {.ok = false, .error = "An object dynamic-current-control assignment requires --dynamic-current-control."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-current-control",
+            "--dynamic-current-control")};
     }
     if (result.request.dynamic_current_control_object && result.request.dynamic_current_control_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-current-control assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-current-control")};
     }
     if (!result.request.dynamic_current_control_object &&
         (result.request.dynamic_current_control_available ||
          !result.request.dynamic_current_control_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-current-control arguments can only be used with --dynamic-current-control-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-current-control",
+            "--dynamic-current-control-object")};
     }
     if (result.request.dynamic_font_name_object && !result.request.dynamic_font_name_available) {
-        return {.ok = false, .error = "An object dynamic-font-name assignment requires --dynamic-font-name."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-name",
+            "--dynamic-font-name")};
     }
     if (result.request.dynamic_font_name_object && result.request.dynamic_font_name_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-name assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-name")};
     }
     if (!result.request.dynamic_font_name_object &&
         (result.request.dynamic_font_name_available ||
          !result.request.dynamic_font_name_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-name arguments can only be used with --dynamic-font-name-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-name",
+            "--dynamic-font-name-object")};
     }
     if (result.request.dynamic_font_size_object && !result.request.dynamic_font_size_available) {
-        return {.ok = false, .error = "An object dynamic-font-size assignment requires --dynamic-font-size."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-size",
+            "--dynamic-font-size")};
     }
     if (result.request.dynamic_font_size_object && result.request.dynamic_font_size_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-size assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-size")};
     }
     if (!result.request.dynamic_font_size_object &&
         (result.request.dynamic_font_size_available ||
          !result.request.dynamic_font_size_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-size arguments can only be used with --dynamic-font-size-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-size",
+            "--dynamic-font-size-object")};
     }
     if (result.request.dynamic_font_bold_object && !result.request.dynamic_font_bold_available) {
-        return {.ok = false, .error = "An object dynamic-font-bold assignment requires --dynamic-font-bold."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-bold",
+            "--dynamic-font-bold")};
     }
     if (result.request.dynamic_font_bold_object && result.request.dynamic_font_bold_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-bold assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-bold")};
     }
     if (!result.request.dynamic_font_bold_object &&
         (result.request.dynamic_font_bold_available ||
          !result.request.dynamic_font_bold_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-bold arguments can only be used with --dynamic-font-bold-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-bold",
+            "--dynamic-font-bold-object")};
     }
     if (result.request.dynamic_font_italic_object && !result.request.dynamic_font_italic_available) {
-        return {.ok = false, .error = "An object dynamic-font-italic assignment requires --dynamic-font-italic."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-italic",
+            "--dynamic-font-italic")};
     }
     if (result.request.dynamic_font_italic_object && result.request.dynamic_font_italic_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-italic assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-italic")};
     }
     if (!result.request.dynamic_font_italic_object &&
         (result.request.dynamic_font_italic_available ||
          !result.request.dynamic_font_italic_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-italic arguments can only be used with --dynamic-font-italic-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-italic",
+            "--dynamic-font-italic-object")};
     }
     if (result.request.dynamic_font_underline_object && !result.request.dynamic_font_underline_available) {
-        return {.ok = false, .error = "An object dynamic-font-underline assignment requires --dynamic-font-underline."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-underline",
+            "--dynamic-font-underline")};
     }
     if (result.request.dynamic_font_underline_object && result.request.dynamic_font_underline_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-underline assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-underline")};
     }
     if (!result.request.dynamic_font_underline_object &&
         (result.request.dynamic_font_underline_available ||
          !result.request.dynamic_font_underline_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-underline arguments can only be used with --dynamic-font-underline-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-underline",
+            "--dynamic-font-underline-object")};
     }
     if (result.request.dynamic_font_strikethru_object && !result.request.dynamic_font_strikethru_available) {
-        return {.ok = false, .error = "An object dynamic-font-strikethru assignment requires --dynamic-font-strikethru."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-strikethru",
+            "--dynamic-font-strikethru")};
     }
     if (result.request.dynamic_font_strikethru_object && result.request.dynamic_font_strikethru_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-strikethru assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-strikethru")};
     }
     if (!result.request.dynamic_font_strikethru_object &&
         (result.request.dynamic_font_strikethru_available ||
          !result.request.dynamic_font_strikethru_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-strikethru arguments can only be used with --dynamic-font-strikethru-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-strikethru",
+            "--dynamic-font-strikethru-object")};
     }
     if (result.request.dynamic_font_outline_object && !result.request.dynamic_font_outline_available) {
         return {.ok = false, .error = "An object dynamic-font-outline assignment requires --dynamic-font-outline."};
