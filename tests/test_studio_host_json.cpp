@@ -3980,6 +3980,67 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
 
     process = run_process_capture(
         studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--record-source-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2512: pseudo-localized record-source missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2512: pseudo-localized record-source missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record-source",
+        "#2512: pseudo-localized record-source missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " record source ",
+        "#2512: pseudo-localized record-source missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--tooltip-text-object",
+            "--tooltip-text", "Save the record",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2512: pseudo-localized tooltip-text target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2512: pseudo-localized tooltip-text target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        " tooltip text ",
+        "#2512: pseudo-localized tooltip-text target diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--control-source-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2512: pseudo-localized control-source stray diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2512: pseudo-localized control-source stray diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--control-source-object",
+        "#2512: pseudo-localized control-source stray diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Control-source arguments",
+        "#2512: pseudo-localized control-source diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
         {"--json", "--default-file-path"},
         temp_root);
 

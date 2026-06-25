@@ -9464,18 +9464,20 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.record_source_object && !result.request.record_source_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "record source",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSource"),
             "--record-source")};
     }
     if (result.request.record_source_object && result.request.record_source_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "record source")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSource"))};
     }
     if (!result.request.record_source_object &&
         (result.request.record_source_available ||
          !result.request.record_source_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Record source",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle"),
             "--record-source-object")};
     }
     if (const auto form_set_class_error = validate_form_set_class_request(result.request, catalog)) {
@@ -9508,103 +9510,115 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "tooltip text",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.TooltipText"),
             "--tooltip-text")};
     }
     if (result.request.tooltip_text_object && result.request.tooltip_text_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "tooltip text")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.TooltipText"))};
     }
     if (!result.request.tooltip_text_object &&
         (result.request.tooltip_text_available ||
          !result.request.tooltip_text_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Tooltip text",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.TooltipTextTitle"),
             "--tooltip-text-object")};
     }
     if (result.request.status_bar_text_object && !result.request.status_bar_text_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "status-bar text",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.StatusBarText"),
             "--status-bar-text")};
     }
     if (result.request.status_bar_text_object && result.request.status_bar_text_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "status-bar text")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.StatusBarText"))};
     }
     if (!result.request.status_bar_text_object &&
         (result.request.status_bar_text_available ||
          !result.request.status_bar_text_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Status-bar text",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.StatusBarTextTitle"),
             "--status-bar-text-object")};
     }
     if (result.request.link_master_object && !result.request.link_master_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "link-master",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.LinkMaster"),
             "--link-master")};
     }
     if (result.request.link_master_object && result.request.link_master_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "link-master")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.LinkMaster"))};
     }
     if (!result.request.link_master_object &&
         (result.request.link_master_available ||
          !result.request.link_master_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Link-master",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.LinkMasterTitle"),
             "--link-master-object")};
     }
     if (result.request.control_source_object && !result.request.control_source_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "control-source",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ControlSource"),
             "--control-source")};
     }
     if (result.request.control_source_object && result.request.control_source_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "control-source")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ControlSource"))};
     }
     if (!result.request.control_source_object &&
         (result.request.control_source_available ||
          !result.request.control_source_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Control-source",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ControlSourceTitle"),
             "--control-source-object")};
     }
     if (result.request.current_control_object && !result.request.current_control_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "current-control",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.CurrentControl"),
             "--current-control")};
     }
     if (result.request.current_control_object && result.request.current_control_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "current-control")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.CurrentControl"))};
     }
     if (!result.request.current_control_object &&
         (result.request.current_control_available ||
          !result.request.current_control_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Current-control",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.CurrentControlTitle"),
             "--current-control-object")};
     }
     if (result.request.input_mask_object && !result.request.input_mask_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "input-mask",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.InputMask"),
             "--input-mask")};
     }
     if (result.request.input_mask_object && result.request.input_mask_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "input-mask")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.InputMask"))};
     }
     if (!result.request.input_mask_object &&
         (result.request.input_mask_available ||
          !result.request.input_mask_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Input-mask",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.InputMaskTitle"),
             "--input-mask-object")};
     }
     if (result.request.format_object && !result.request.format_available) {
