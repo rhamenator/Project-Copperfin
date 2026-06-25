@@ -21180,8 +21180,8 @@ void print_document(const copperfin::studio::StudioDocumentModel& document) {
     }
 }
 
-void print_json_subsystems() {
-    const auto& subsystems = copperfin::studio::product_subsystems();
+void print_json_subsystems(const copperfin::localization::LocalizedCatalog& catalog) {
+    const auto subsystems = copperfin::studio::product_subsystems_for_catalog(catalog);
     std::cout << "{\n";
     std::cout << "  \"status\": \"ok\",\n";
     std::cout << "  \"subsystems\": [\n";
@@ -21222,8 +21222,8 @@ void print_json_subsystems() {
     std::cout << "}\n";
 }
 
-void print_subsystems() {
-    const auto& subsystems = copperfin::studio::product_subsystems();
+void print_subsystems(const copperfin::localization::LocalizedCatalog& catalog) {
+    const auto subsystems = copperfin::studio::product_subsystems_for_catalog(catalog);
     std::cout << "status: ok\n";
     std::cout << "subsystem_count: " << subsystems.size() << "\n";
     for (const auto& subsystem : subsystems) {
@@ -21258,9 +21258,9 @@ int main(int argc, char** argv) {
     if (list_subsystems) {
         const bool output_json = std::find(args.begin(), args.end(), "--json") != args.end();
         if (output_json) {
-            print_json_subsystems();
+            print_json_subsystems(catalog);
         } else {
-            print_subsystems();
+            print_subsystems(catalog);
         }
         return 0;
     }

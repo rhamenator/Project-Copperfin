@@ -772,6 +772,54 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     }
 }
 
+void test_studio_host_list_subsystems_localizes_descriptor_text(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_list_subsystems_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(studio_host_path, {"--list-subsystems"}, temp_root);
+
+    expect(process.exit_code == 0,
+        "#2395: list-subsystems text output should succeed");
+    expect_contains(process.stdout_text,
+        "title: Report Designer",
+        "#2395: default list-subsystems text output should preserve en-US titles");
+    expect_contains(process.stdout_text,
+        "current_status: implemented",
+        "#2395: default list-subsystems text output should preserve invariant status values");
+    expect_contains(process.stdout_text,
+        "vfp9_equivalent: FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app",
+        "#2395: default list-subsystems text output should preserve VFP-equivalent identifiers");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(studio_host_path, {"--list-subsystems", "--json"}, temp_root);
+
+    expect(process.exit_code == 0,
+        "#2395: pseudo-localized list-subsystems JSON output should succeed");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2395: pseudo-localized list-subsystems JSON should decorate descriptor prose");
+    expect_contains(process.stdout_text,
+        "\"id\": \"report-designer\"",
+        "#2395: pseudo-localized list-subsystems JSON should preserve subsystem ids");
+    expect_contains(process.stdout_text,
+        "\"currentStatus\": \"implemented\"",
+        "#2395: pseudo-localized list-subsystems JSON should preserve status values");
+    expect_contains(process.stdout_text,
+        "\"vfp9Equivalent\": \"FRX/FRT designer, ReportBuilder.app, ReportPreview.app, ReportOutput.app\"",
+        "#2395: pseudo-localized list-subsystems JSON should preserve VFP-equivalent identifiers");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -112904,6 +112952,7 @@ int main(int argc, char** argv) {
     }
 
     test_studio_host_usage_exposes_selected_execution_catalogs(argv[1]);
+    test_studio_host_list_subsystems_localizes_descriptor_text(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);

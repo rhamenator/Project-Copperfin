@@ -1,8 +1,10 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/product_subsystems.h"
 
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -13,6 +15,17 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+const copperfin::studio::ProductSubsystemDescriptor* find_subsystem(
+    const std::vector<copperfin::studio::ProductSubsystemDescriptor>& subsystems,
+    const std::string& id) {
+    for (const auto& subsystem : subsystems) {
+        if (subsystem.id == id) {
+            return &subsystem;
+        }
+    }
+    return nullptr;
 }
 
 }  // namespace
@@ -84,6 +97,36 @@ int main() {
     expect(found_object_browser, "registry should include the object browser subsystem");
     expect(found_toolbox_task_pane, "registry should include the toolbox/task pane subsystem");
     expect(implemented_count >= 11U, "registry should now mark the Phase C-equivalent surfaces as implemented");
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto english_subsystems = copperfin::studio::product_subsystems_for_catalog(english_catalog);
+    const auto pseudo_subsystems = copperfin::studio::product_subsystems_for_catalog(pseudo_catalog);
+
+    const auto* english_report = find_subsystem(english_subsystems, "report-designer");
+    const auto* pseudo_report = find_subsystem(pseudo_subsystems, "report-designer");
+    expect(english_report != nullptr && pseudo_report != nullptr,
+        "#2395: localized registry should preserve report designer subsystem lookup");
+    if (english_report != nullptr && pseudo_report != nullptr) {
+        expect(english_report->title == "Report Designer",
+            "#2395: en-US registry should preserve report designer title");
+        expect(english_report->parity_scope ==
+                "band editing, expression authoring, grouping, preview, export, report listeners, builder workflows",
+            "#2395: en-US registry should preserve report designer parity prose");
+        expect(pseudo_report->title.starts_with("[!! "),
+            "#2395: pseudo-localized registry should decorate report designer title");
+        expect(pseudo_report->parity_scope.starts_with("[!! "),
+            "#2395: pseudo-localized registry should decorate report designer parity prose");
+        expect(pseudo_report->modern_editor_direction.starts_with("[!! "),
+            "#2395: pseudo-localized registry should decorate report designer direction prose");
+        expect(pseudo_report->id == english_report->id &&
+                pseudo_report->vfp9_equivalent == english_report->vfp9_equivalent &&
+                pseudo_report->copperfin_component == english_report->copperfin_component &&
+                pseudo_report->host_kind == english_report->host_kind &&
+                pseudo_report->current_status == english_report->current_status,
+            "#2395: pseudo-localized registry should preserve invariant subsystem metadata");
+    }
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

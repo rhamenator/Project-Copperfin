@@ -1,7 +1,12 @@
 #pragma once
 
+#include <string>
 #include <string_view>
 #include <vector>
+
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
 
 namespace copperfin::studio {
 
@@ -12,17 +17,19 @@ enum class ProductHostKind {
 };
 
 struct ProductSubsystemDescriptor {
-    std::string_view id;
-    std::string_view title;
-    std::string_view vfp9_equivalent;
-    std::string_view copperfin_component;
+    std::string id;
+    std::string title;
+    std::string vfp9_equivalent;
+    std::string copperfin_component;
     ProductHostKind host_kind = ProductHostKind::native_ide;
-    std::string_view current_status;
-    std::string_view parity_scope;
-    std::string_view modern_editor_direction;
+    std::string current_status;
+    std::string parity_scope;
+    std::string modern_editor_direction;
 };
 
 [[nodiscard]] const char* product_host_kind_name(ProductHostKind kind);
 [[nodiscard]] const std::vector<ProductSubsystemDescriptor>& product_subsystems();
+[[nodiscard]] std::vector<ProductSubsystemDescriptor> product_subsystems_for_catalog(
+    const copperfin::localization::LocalizedCatalog& catalog);
 
 }  // namespace copperfin::studio
