@@ -1,5 +1,7 @@
 #include "copperfin/studio/vs_launch_contract.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <cerrno>
 #include <charconv>
@@ -7,6 +9,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <optional>
+#include <string_view>
 
 namespace copperfin::studio {
 
@@ -92,6 +95,47 @@ std::optional<StudioEditorSelectionContext> parse_selection_context_token(std::s
 
 std::string selection_context_error() {
     return "The --selection-context value must be visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.";
+}
+
+const localization::LocalizedCatalog& default_launch_catalog() {
+    static const localization::LocalizedCatalog catalog = localization::load_catalogs(
+        localization::resolve_catalog_root(),
+        localization::default_locale);
+    return catalog;
+}
+
+std::string localized_object_assignment_requires_option(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view property_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+        {
+            {"propertyName", std::string(property_name)},
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_object_assignment_requires_target(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view property_name) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+        {
+            {"propertyName", std::string(property_name)}
+        });
+}
+
+std::string localized_object_arguments_require_mode(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view property_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+        {
+            {"propertyName", std::string(property_name)},
+            {"option", std::string(option)}
+        });
 }
 
 bool parse_form_set_class_argument(const std::string& argument,
@@ -581,144 +625,176 @@ bool parse_whats_this_button_argument(const std::string& argument,
     return false;
 }
 
-std::optional<std::string> validate_form_set_class_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_form_set_class_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.form_set_class_object && !request.form_set_class_available) {
-        return "An object form set class assignment requires --form-set-class.";
+        return localized_object_assignment_requires_option(catalog, "form set class", "--form-set-class");
     }
     if (request.form_set_class_object && request.form_set_class_objects.empty()) {
-        return "An object form set class assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "form set class");
     }
     if (!request.form_set_class_object &&
         (request.form_set_class_available ||
          !request.form_set_class_objects.empty())) {
-        return "Form-set-class arguments can only be used with --form-set-class-object.";
+        return localized_object_arguments_require_mode(catalog, "Form-set-class", "--form-set-class-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_default_file_path_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_default_file_path_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.default_file_path_object && !request.default_file_path_available) {
-        return "An object default file path assignment requires --default-file-path.";
+        return localized_object_assignment_requires_option(catalog, "default file path", "--default-file-path");
     }
     if (request.default_file_path_object && request.default_file_path_objects.empty()) {
-        return "An object default file path assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "default file path");
     }
     if (!request.default_file_path_object &&
         (request.default_file_path_available ||
          !request.default_file_path_objects.empty())) {
-        return "Default-file-path arguments can only be used with --default-file-path-object.";
+        return localized_object_arguments_require_mode(catalog, "Default-file-path", "--default-file-path-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_initial_selected_alias_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_initial_selected_alias_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.initial_selected_alias_object && !request.initial_selected_alias_available) {
-        return "An object initial selected alias assignment requires --initial-selected-alias.";
+        return localized_object_assignment_requires_option(
+            catalog,
+            "initial selected alias",
+            "--initial-selected-alias");
     }
     if (request.initial_selected_alias_object && request.initial_selected_alias_objects.empty()) {
-        return "An object initial selected alias assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "initial selected alias");
     }
     if (!request.initial_selected_alias_object &&
         (request.initial_selected_alias_available ||
          !request.initial_selected_alias_objects.empty())) {
-        return "Initial-selected-alias arguments can only be used with --initial-selected-alias-object.";
+        return localized_object_arguments_require_mode(
+            catalog,
+            "Initial-selected-alias",
+            "--initial-selected-alias-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_tab_orientation_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_tab_orientation_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.tab_orientation_object && !request.tab_orientation_available) {
-        return "An object tab orientation assignment requires --tab-orientation.";
+        return localized_object_assignment_requires_option(catalog, "tab orientation", "--tab-orientation");
     }
     if (request.tab_orientation_object && request.tab_orientation_objects.empty()) {
-        return "An object tab orientation assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "tab orientation");
     }
     if (!request.tab_orientation_object &&
         (request.tab_orientation_available ||
          !request.tab_orientation_objects.empty())) {
-        return "Tab-orientation arguments can only be used with --tab-orientation-object.";
+        return localized_object_arguments_require_mode(catalog, "Tab-orientation", "--tab-orientation-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_display_orientation_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_display_orientation_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.display_orientation_object && !request.display_orientation_available) {
-        return "An object display orientation assignment requires --display-orientation.";
+        return localized_object_assignment_requires_option(catalog, "display orientation", "--display-orientation");
     }
     if (request.display_orientation_object && request.display_orientation_objects.empty()) {
-        return "An object display orientation assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "display orientation");
     }
     if (!request.display_orientation_object &&
         (request.display_orientation_available ||
          !request.display_orientation_objects.empty())) {
-        return "Display-orientation arguments can only be used with --display-orientation-object.";
+        return localized_object_arguments_require_mode(
+            catalog,
+            "Display-orientation",
+            "--display-orientation-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_help_context_id_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_help_context_id_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.help_context_id_object && !request.help_context_id_available) {
-        return "An object help context ID assignment requires --help-context-id.";
+        return localized_object_assignment_requires_option(catalog, "help context ID", "--help-context-id");
     }
     if (request.help_context_id_object && request.help_context_id_objects.empty()) {
-        return "An object help context ID assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "help context ID");
     }
     if (!request.help_context_id_object &&
         (request.help_context_id_available ||
          !request.help_context_id_objects.empty())) {
-        return "Help-context-id arguments can only be used with --help-context-id-object.";
+        return localized_object_arguments_require_mode(catalog, "Help-context-id", "--help-context-id-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_whats_this_help_id_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_whats_this_help_id_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.whats_this_help_id_object && !request.whats_this_help_id_available) {
-        return "An object WhatsThis help ID assignment requires --whats-this-help-id.";
+        return localized_object_assignment_requires_option(catalog, "WhatsThis help ID", "--whats-this-help-id");
     }
     if (request.whats_this_help_id_object && request.whats_this_help_id_objects.empty()) {
-        return "An object WhatsThis help ID assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "WhatsThis help ID");
     }
     if (!request.whats_this_help_id_object &&
         (request.whats_this_help_id_available ||
          !request.whats_this_help_id_objects.empty())) {
-        return "Whats-this-help-id arguments can only be used with --whats-this-help-id-object.";
+        return localized_object_arguments_require_mode(
+            catalog,
+            "Whats-this-help-id",
+            "--whats-this-help-id-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_whats_this_help_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_whats_this_help_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.whats_this_help_object && !request.whats_this_help_available) {
-        return "An object WhatsThis help assignment requires --whats-this-help.";
+        return localized_object_assignment_requires_option(catalog, "WhatsThis help", "--whats-this-help");
     }
     if (request.whats_this_help_object && request.whats_this_help_objects.empty()) {
-        return "An object WhatsThis help assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "WhatsThis help");
     }
     if (!request.whats_this_help_object &&
         (request.whats_this_help_available ||
          !request.whats_this_help_objects.empty())) {
-        return "Whats-this-help arguments can only be used with --whats-this-help-object.";
+        return localized_object_arguments_require_mode(catalog, "Whats-this-help", "--whats-this-help-object");
     }
     return std::nullopt;
 }
 
-std::optional<std::string> validate_whats_this_button_request(const StudioOpenRequest& request) {
+std::optional<std::string> validate_whats_this_button_request(
+    const StudioOpenRequest& request,
+    const localization::LocalizedCatalog& catalog) {
     if (request.whats_this_button_object && !request.whats_this_button_available) {
-        return "An object WhatsThis button assignment requires --whats-this-button.";
+        return localized_object_assignment_requires_option(catalog, "WhatsThis button", "--whats-this-button");
     }
     if (request.whats_this_button_object && request.whats_this_button_objects.empty()) {
-        return "An object WhatsThis button assignment requires at least one target selector.";
+        return localized_object_assignment_requires_target(catalog, "WhatsThis button");
     }
     if (!request.whats_this_button_object &&
         (request.whats_this_button_available ||
          !request.whats_this_button_objects.empty())) {
-        return "Whats-this-button arguments can only be used with --whats-this-button-object.";
+        return localized_object_arguments_require_mode(catalog, "Whats-this-button", "--whats-this-button-object");
     }
     return std::nullopt;
 }
 
 }  // namespace
 
-LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
+LaunchParseResult parse_launch_arguments(
+    const std::vector<std::string>& args,
+    const localization::LocalizedCatalog& catalog) {
     LaunchParseResult result;
 
     for (std::size_t index = 0; index < args.size(); ++index) {
@@ -8513,31 +8589,31 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
          !result.request.record_source_objects.empty())) {
         return {.ok = false, .error = "Record source arguments can only be used with --record-source-object."};
     }
-    if (const auto form_set_class_error = validate_form_set_class_request(result.request)) {
+    if (const auto form_set_class_error = validate_form_set_class_request(result.request, catalog)) {
         return {.ok = false, .error = *form_set_class_error};
     }
-    if (const auto default_file_path_error = validate_default_file_path_request(result.request)) {
+    if (const auto default_file_path_error = validate_default_file_path_request(result.request, catalog)) {
         return {.ok = false, .error = *default_file_path_error};
     }
-    if (const auto initial_selected_alias_error = validate_initial_selected_alias_request(result.request)) {
+    if (const auto initial_selected_alias_error = validate_initial_selected_alias_request(result.request, catalog)) {
         return {.ok = false, .error = *initial_selected_alias_error};
     }
-    if (const auto tab_orientation_error = validate_tab_orientation_request(result.request)) {
+    if (const auto tab_orientation_error = validate_tab_orientation_request(result.request, catalog)) {
         return {.ok = false, .error = *tab_orientation_error};
     }
-    if (const auto display_orientation_error = validate_display_orientation_request(result.request)) {
+    if (const auto display_orientation_error = validate_display_orientation_request(result.request, catalog)) {
         return {.ok = false, .error = *display_orientation_error};
     }
-    if (const auto help_context_id_error = validate_help_context_id_request(result.request)) {
+    if (const auto help_context_id_error = validate_help_context_id_request(result.request, catalog)) {
         return {.ok = false, .error = *help_context_id_error};
     }
-    if (const auto whats_this_help_id_error = validate_whats_this_help_id_request(result.request)) {
+    if (const auto whats_this_help_id_error = validate_whats_this_help_id_request(result.request, catalog)) {
         return {.ok = false, .error = *whats_this_help_id_error};
     }
-    if (const auto whats_this_help_error = validate_whats_this_help_request(result.request)) {
+    if (const auto whats_this_help_error = validate_whats_this_help_request(result.request, catalog)) {
         return {.ok = false, .error = *whats_this_help_error};
     }
-    if (const auto whats_this_button_error = validate_whats_this_button_request(result.request)) {
+    if (const auto whats_this_button_error = validate_whats_this_button_request(result.request, catalog)) {
         return {.ok = false, .error = *whats_this_button_error};
     }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
@@ -10033,6 +10109,10 @@ LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
 
     result.ok = true;
     return result;
+}
+
+LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args) {
+    return parse_launch_arguments(args, default_launch_catalog());
 }
 
 }  // namespace copperfin::studio

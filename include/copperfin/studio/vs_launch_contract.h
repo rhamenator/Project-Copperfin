@@ -5,7 +5,13 @@
 #include <string>
 #include <vector>
 
-namespace copperfin::studio {
+namespace copperfin {
+
+namespace localization {
+struct LocalizedCatalog;
+}  // namespace localization
+
+namespace studio {
 
 struct LaunchParseResult {
     bool ok = false;
@@ -16,5 +22,10 @@ struct LaunchParseResult {
 };
 
 LaunchParseResult parse_launch_arguments(const std::vector<std::string>& args);
+LaunchParseResult parse_launch_arguments(
+    const std::vector<std::string>& args,
+    const localization::LocalizedCatalog& catalog);
 
-}  // namespace copperfin::studio
+}  // namespace studio
+
+}  // namespace copperfin

@@ -3443,6 +3443,85 @@ void test_studio_host_designer_parse_diagnostics_localize(const std::string& stu
     }
 }
 
+void test_studio_host_launch_object_metadata_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_object_metadata_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--form-set-class-object",
+            "--form-set-class", "BaseFormSet",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2426: default object metadata diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "status: error",
+        "#2426: default object metadata diagnostics should preserve text status contracts");
+    expect_contains(process.stdout_text,
+        "An object form set class assignment requires at least one target selector.",
+        "#2426: default object metadata diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--default-file-path-object",
+            "--default-file-path-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2426: pseudo-localized missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2426: pseudo-localized missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--default-file-path",
+        "#2426: pseudo-localized missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object default file path assignment requires --default-file-path.",
+        "#2426: pseudo-localized missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--whats-this-button", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2426: pseudo-localized stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2426: pseudo-localized stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--whats-this-button-object",
+        "#2426: pseudo-localized stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Whats-this-button arguments can only be used with --whats-this-button-object.",
+        "#2426: pseudo-localized stray-argument diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -116951,6 +117030,7 @@ int main(int argc, char** argv) {
     test_studio_host_toolbox_direct_plan_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_direct_create_parse_diagnostics_localize(argv[1]);
     test_studio_host_designer_parse_diagnostics_localize(argv[1]);
+    test_studio_host_launch_object_metadata_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

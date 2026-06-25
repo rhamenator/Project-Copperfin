@@ -26139,7 +26139,7 @@ int main(int argc, char** argv) {
         return create_result.ok ? 0 : 4;
     }
 
-    const auto parse_result = copperfin::studio::parse_launch_arguments(args);
+    const auto parse_result = copperfin::studio::parse_launch_arguments(args, catalog);
     if (!parse_result.ok) {
         std::cout << "status: error\n";
         std::cout << "error: " << parse_result.error << "\n";
