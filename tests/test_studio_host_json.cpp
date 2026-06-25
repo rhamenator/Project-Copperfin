@@ -5428,8 +5428,8 @@ void test_studio_host_launch_list_item_color_diagnostics_localize(const std::str
         "--selected-fore-color",
         "#2438: pseudo-localized selected-fore-color missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
-        "An object selected-fore-color assignment requires --selected-fore-color.",
-        "#2438: pseudo-localized selected-fore-color missing-option diagnostics should not fall back to raw English prose");
+        " selected-fore-color assignment ",
+        "#2516: pseudo-localized selected-fore-color missing-option diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5447,12 +5447,12 @@ void test_studio_host_launch_list_item_color_diagnostics_localize(const std::str
     expect_contains(process.stdout_text,
         "[!! ",
         "#2438: pseudo-localized selected-item-back-color non-negative diagnostics should decorate human-facing prose");
-    expect_contains(process.stdout_text,
-        "value",
-        "#2438: pseudo-localized selected-item-back-color non-negative diagnostics should preserve value placeholder");
     expect_not_contains(process.stdout_text,
-        "An object selected-item-back-color assignment requires a non-negative value.",
-        "#2438: pseudo-localized selected-item-back-color non-negative diagnostics should not fall back to raw English prose");
+        " selected-item-back-color assignment ",
+        "#2516: pseudo-localized selected-item-back-color non-negative diagnostics should not preserve raw label prose");
+    expect_not_contains(process.stdout_text,
+        " value.",
+        "#2516: pseudo-localized selected-item-back-color non-negative diagnostics should not preserve raw value label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5470,8 +5470,8 @@ void test_studio_host_launch_list_item_color_diagnostics_localize(const std::str
         "[!! ",
         "#2438: pseudo-localized disabled-item-fore-color missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
-        "An object disabled-item-fore-color assignment requires at least one target selector.",
-        "#2438: pseudo-localized disabled-item-fore-color missing-target diagnostics should not fall back to raw English prose");
+        " disabled-item-fore-color assignment ",
+        "#2516: pseudo-localized disabled-item-fore-color missing-target diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5492,7 +5492,7 @@ void test_studio_host_launch_list_item_color_diagnostics_localize(const std::str
         "#2438: pseudo-localized item-fore-color stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Item-fore-color arguments can only be used with --item-fore-color-object.",
-        "#2438: pseudo-localized item-fore-color stray-argument diagnostics should not fall back to raw English prose");
+        "#2516: pseudo-localized item-fore-color stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
