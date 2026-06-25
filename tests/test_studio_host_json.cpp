@@ -3611,6 +3611,89 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
 
     process = run_process_capture(
         studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--tab-order-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2507: pseudo-localized tab-order target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2507: pseudo-localized tab-order target diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--tab-order-object",
+        "#2507: pseudo-localized tab-order target diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " tab-order ",
+        "#2507: pseudo-localized tab-order target diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--tab-order-object",
+            "--starting-tab-index", "-1",
+            "--tab-order-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2507: pseudo-localized tab-order non-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2507: pseudo-localized tab-order non-negative diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "starting tab index",
+        "#2507: pseudo-localized tab-order non-negative diagnostics should not preserve raw value-label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--enabled", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2507: pseudo-localized enabled stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2507: pseudo-localized enabled stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--enabled-object",
+        "#2507: pseudo-localized enabled stray-argument diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Enabled arguments",
+        "#2507: pseudo-localized enabled stray-argument diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--picture", "assets/logo.bmp",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2507: pseudo-localized picture stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2507: pseudo-localized picture stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--picture-object",
+        "#2507: pseudo-localized picture stray-argument diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Picture arguments",
+        "#2507: pseudo-localized picture stray-argument diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
         {"--json", "--default-file-path"},
         temp_root);
 
