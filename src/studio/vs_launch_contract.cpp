@@ -2446,11 +2446,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--multi-select") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --multi-select."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--multi-select")};
             }
             const auto multi_select = parse_bool_value(args[++index]);
             if (!multi_select.has_value()) {
-                return {.ok = false, .error = "The --multi-select value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--multi-select")};
             }
             result.request.multi_select = *multi_select;
             result.request.multi_select_available = true;
@@ -2459,11 +2459,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--row-source-type") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --row-source-type."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--row-source-type")};
             }
             int row_source_type = 0;
             if (!parse_int_value(args[++index], row_source_type)) {
-                return {.ok = false, .error = "The --row-source-type value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--row-source-type")};
             }
             result.request.row_source_type = row_source_type;
             result.request.row_source_type_available = true;
@@ -2472,11 +2472,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--bound-column") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --bound-column."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--bound-column")};
             }
             int bound_column = 0;
             if (!parse_int_value(args[++index], bound_column)) {
-                return {.ok = false, .error = "The --bound-column value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--bound-column")};
             }
             result.request.bound_column = bound_column;
             result.request.bound_column_available = true;
@@ -2485,11 +2485,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--column-count") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --column-count."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--column-count")};
             }
             int column_count = 0;
             if (!parse_int_value(args[++index], column_count)) {
-                return {.ok = false, .error = "The --column-count value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--column-count")};
             }
             result.request.column_count = column_count;
             result.request.column_count_available = true;
@@ -2498,11 +2498,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--style") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --style."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--style")};
             }
             int style = 0;
             if (!parse_int_value(args[++index], style)) {
-                return {.ok = false, .error = "The --style value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--style")};
             }
             result.request.style = style;
             result.request.style_available = true;
@@ -2511,11 +2511,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--list-index") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --list-index."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--list-index")};
             }
             int list_index = 0;
             if (!parse_int_value(args[++index], list_index)) {
-                return {.ok = false, .error = "The --list-index value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--list-index")};
             }
             result.request.list_index = list_index;
             result.request.list_index_available = true;
@@ -2524,11 +2524,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--left-column") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --left-column."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--left-column")};
             }
             int left_column = 0;
             if (!parse_int_value(args[++index], left_column)) {
-                return {.ok = false, .error = "The --left-column value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--left-column")};
             }
             result.request.left_column = left_column;
             result.request.left_column_available = true;

@@ -5965,6 +5965,88 @@ void test_studio_host_launch_text_media_list_value_diagnostics_localize(const st
     }
 }
 
+void test_studio_host_launch_list_scalar_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_list_scalar_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--multi-select"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2452: default multi-select missing value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --multi-select.",
+        "#2452: default multi-select missing value diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--multi-select", "maybe"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2452: pseudo-localized multi-select boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2452: pseudo-localized multi-select boolean diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2452: pseudo-localized multi-select boolean diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2452: pseudo-localized multi-select boolean diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --multi-select value must be true or false.",
+        "#2452: pseudo-localized multi-select boolean diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--row-source-type", "table"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2452: pseudo-localized row-source-type integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2452: pseudo-localized row-source-type integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--row-source-type",
+        "#2452: pseudo-localized row-source-type integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --row-source-type value must be an integer.",
+        "#2452: pseudo-localized row-source-type integer diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--left-column", "first"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2452: pseudo-localized left-column integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2452: pseudo-localized left-column integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--left-column",
+        "#2452: pseudo-localized left-column integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --left-column value must be an integer.",
+        "#2452: pseudo-localized left-column integer diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -119499,6 +119581,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_core_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_layout_state_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_text_media_list_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_list_scalar_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
