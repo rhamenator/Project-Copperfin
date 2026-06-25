@@ -5027,7 +5027,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-line-color-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-line-color-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-line-color-target-object-name")};
             }
             result.request.grid_line_color_objects.push_back({
                 .record_index = 0U,
@@ -5039,7 +5039,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-line-color-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-line-color-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-line-color-target-unique-id")};
             }
             result.request.grid_line_color_objects.push_back({
                 .record_index = 0U,
@@ -5051,7 +5051,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--header-height-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --header-height-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--header-height-target-object-name")};
             }
             result.request.header_height_objects.push_back({
                 .record_index = 0U,
@@ -5063,7 +5063,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--header-height-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --header-height-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--header-height-target-unique-id")};
             }
             result.request.header_height_objects.push_back({
                 .record_index = 0U,
@@ -5075,7 +5075,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--row-height-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --row-height-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--row-height-target-object-name")};
             }
             result.request.row_height_objects.push_back({
                 .record_index = 0U,
@@ -5087,7 +5087,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--row-height-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --row-height-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--row-height-target-unique-id")};
             }
             result.request.row_height_objects.push_back({
                 .record_index = 0U,
@@ -5099,7 +5099,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--lock-columns-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --lock-columns-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--lock-columns-target-object-name")};
             }
             result.request.lock_columns_objects.push_back({
                 .record_index = 0U,
@@ -5111,7 +5111,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--lock-columns-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --lock-columns-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--lock-columns-target-unique-id")};
             }
             result.request.lock_columns_objects.push_back({
                 .record_index = 0U,
@@ -5123,7 +5123,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--lock-columns-left-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --lock-columns-left-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--lock-columns-left-target-object-name")};
             }
             result.request.lock_columns_left_objects.push_back({
                 .record_index = 0U,
@@ -5135,7 +5135,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--lock-columns-left-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --lock-columns-left-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--lock-columns-left-target-unique-id")};
             }
             result.request.lock_columns_left_objects.push_back({
                 .record_index = 0U,
@@ -5147,7 +5147,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-line-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-line-width-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-line-width-target-object-name")};
             }
             result.request.grid_line_width_objects.push_back({
                 .record_index = 0U,
@@ -5159,7 +5159,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-line-width-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-line-width-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-line-width-target-unique-id")};
             }
             result.request.grid_line_width_objects.push_back({
                 .record_index = 0U,
@@ -5171,7 +5171,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-lines-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-lines-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-lines-target-object-name")};
             }
             result.request.grid_lines_objects.push_back({
                 .record_index = 0U,
@@ -5183,7 +5183,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--grid-lines-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --grid-lines-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--grid-lines-target-unique-id")};
             }
             result.request.grid_lines_objects.push_back({
                 .record_index = 0U,
@@ -5195,7 +5195,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-row-line-width-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-row-line-width-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-row-line-width-target-object-name")};
             }
             result.request.highlight_row_line_width_objects.push_back({
                 .record_index = 0U,
@@ -5207,7 +5207,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-row-line-width-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-row-line-width-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-row-line-width-target-unique-id")};
             }
             result.request.highlight_row_line_width_objects.push_back({
                 .record_index = 0U,

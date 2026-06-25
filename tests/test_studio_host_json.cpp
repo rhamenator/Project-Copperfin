@@ -7702,6 +7702,97 @@ void test_studio_host_launch_drawing_buffer_target_selector_value_diagnostics_lo
     }
 }
 
+void test_studio_host_launch_grid_target_selector_value_diagnostics_localize(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_grid_target_selector_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--grid-line-color-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2472: default grid-line-color-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --grid-line-color-target-object-name.",
+        "#2472: default grid-line-color-target-object-name missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--highlight-row-line-width-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2472: default highlight-row-line-width-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --highlight-row-line-width-target-unique-id.",
+        "#2472: default highlight-row-line-width-target-unique-id missing diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--header-height-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2472: pseudo-localized header-height-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2472: pseudo-localized header-height-target-unique-id missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--header-height-target-unique-id",
+        "#2472: pseudo-localized header-height-target-unique-id missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --header-height-target-unique-id.",
+        "#2472: pseudo-localized header-height-target-unique-id missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--lock-columns-left-target-object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2472: pseudo-localized lock-columns-left-target-object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2472: pseudo-localized lock-columns-left-target-object-name missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--lock-columns-left-target-object-name",
+        "#2472: pseudo-localized lock-columns-left-target-object-name missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --lock-columns-left-target-object-name.",
+        "#2472: pseudo-localized lock-columns-left-target-object-name missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--grid-lines-target-unique-id"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2472: pseudo-localized grid-lines-target-unique-id missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2472: pseudo-localized grid-lines-target-unique-id missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--grid-lines-target-unique-id",
+        "#2472: pseudo-localized grid-lines-target-unique-id missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --grid-lines-target-unique-id.",
+        "#2472: pseudo-localized grid-lines-target-unique-id missing diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -121256,6 +121347,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_mouse_drag_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_ole_drop_drawing_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_drawing_buffer_target_selector_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_grid_target_selector_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
