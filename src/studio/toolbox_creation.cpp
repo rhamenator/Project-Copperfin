@@ -1,5 +1,6 @@
 #include "copperfin/studio/toolbox_creation.h"
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/toolbox_palette.h"
 #include "copperfin/vfp/dbf_table.h"
 
@@ -15,6 +16,18 @@
 namespace copperfin::studio {
 
 namespace {
+
+const copperfin::localization::LocalizedCatalog& toolbox_creation_catalog() {
+    static const copperfin::localization::LocalizedCatalog catalog =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            copperfin::localization::select_locale());
+    return catalog;
+}
+
+std::string toolbox_creation_text(std::string_view key) {
+    return toolbox_creation_catalog().translate(key);
+}
 
 [[nodiscard]] vfp::VisualObjectCreateResult failed_create_result(std::string error) {
     return {
@@ -212,15 +225,15 @@ void append_argument(std::vector<std::string>& arguments, std::string key, std::
         object_name = generate_default_object_name(item, table, reserved_object_names);
     }
     if (object_name.empty()) {
-        return failed_plan_result("A unique object name could not be generated for the requested toolbox item.");
+        return failed_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.UniqueObjectNameUnavailable"));
     }
     if (table_or_reservations_have_object_name(table, reserved_object_names, object_name)) {
-        return failed_plan_result("The requested toolbox object identity already exists in the asset.");
+        return failed_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.ObjectIdentityExists"));
     }
 
     const std::string unique_id = trimmed_copy(request.unique_id);
     if (!unique_id.empty() && table_or_reservations_have_unique_id(table, reserved_unique_ids, unique_id)) {
-        return failed_plan_result("The requested toolbox object identity already exists in the asset.");
+        return failed_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.ObjectIdentityExists"));
     }
 
     std::vector<vfp::VisualObjectPropertyChange> field_values{
@@ -265,15 +278,15 @@ void append_argument(std::vector<std::string>& arguments, std::string key, std::
 StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_item(
     const StudioToolboxObjectCreateRequest& request) {
     if (request.path.empty()) {
-        return failed_plan_result("No asset path was provided.");
+        return failed_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.AssetPathRequired"));
     }
 
     const auto item = find_toolbox_item(request.toolbox_item_id);
     if (!item.has_value()) {
-        return failed_plan_result("The requested toolbox item was not found.");
+        return failed_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.ItemNotFound"));
     }
     if (request.toolbox_context_provided && !toolbox_item_supports_context(*item, request.toolbox_context)) {
-        return failed_plan_result("The requested toolbox item is not available in the requested designer context.");
+        return failed_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.ItemUnavailableForContext"));
     }
 
     const auto table_result = vfp::parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
@@ -302,7 +315,7 @@ StudioSelectionToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_sel
     if (!launch_plan.ok) {
         return {
             .ok = false,
-            .error = "A selection-context toolbox object creation plan request requires a toolbox palette.",
+            .error = toolbox_creation_text("Studio.ToolboxCreation.SelectionPlan.Error.PaletteRequired"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .launch_plan = std::move(launch_plan),
@@ -351,16 +364,19 @@ StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
     const StudioToolboxObjectCreateFromPaletteDispatchRequest& request) {
     const auto& dispatch_plan = request.dispatch_plan;
     if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run || dispatch_plan.executed) {
-        return failed_plan_result("A toolbox create-from-dispatch request requires an admitted non-executed toolbox dispatch.");
+        return failed_plan_result(
+            toolbox_creation_text("Studio.ToolboxCreation.FromDispatch.Error.AdmittedDispatchRequired"));
     }
     if (dispatch_plan.asset_path.empty()) {
-        return failed_plan_result("A toolbox create-from-dispatch request requires an asset path.");
+        return failed_plan_result(toolbox_creation_text("Studio.ToolboxCreation.FromDispatch.Error.AssetPathRequired"));
     }
     if (dispatch_plan.items.empty() || dispatch_plan.item_count == 0U) {
-        return failed_plan_result("A toolbox create-from-dispatch request requires validated toolbox item metadata.");
+        return failed_plan_result(
+            toolbox_creation_text("Studio.ToolboxCreation.FromDispatch.Error.ValidatedItemMetadataRequired"));
     }
     if (dispatch_plan.item_count != dispatch_plan.items.size()) {
-        return failed_plan_result("A toolbox create-from-dispatch request requires consistent toolbox item metadata.");
+        return failed_plan_result(
+            toolbox_creation_text("Studio.ToolboxCreation.FromDispatch.Error.ConsistentItemMetadataRequired"));
     }
 
     const std::string requested_item_id = normalized_identity(request.toolbox_item_id);
@@ -371,7 +387,8 @@ StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
             return normalized_identity(item.id) == requested_item_id;
         });
     if (item_found == dispatch_plan.items.end()) {
-        return failed_plan_result("The requested toolbox item is not available in the admitted toolbox dispatch.");
+        return failed_plan_result(
+            toolbox_creation_text("Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch"));
     }
 
     const std::string parent_name = trimmed_copy(request.parent_name).empty()
@@ -392,10 +409,10 @@ StudioToolboxObjectCreatePlanResult plan_visual_object_from_toolbox_dispatch(
 StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
     const StudioToolboxObjectCreateBatchPlanRequest& request) {
     if (request.path.empty()) {
-        return failed_batch_plan_result("No asset path was provided.");
+        return failed_batch_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.AssetPathRequired"));
     }
     if (request.items.empty()) {
-        return failed_batch_plan_result("No toolbox object creates were provided.");
+        return failed_batch_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Batch.Error.NoCreatesProvided"));
     }
 
     const auto table_result = vfp::parse_dbf_table_from_file(request.path, std::numeric_limits<std::size_t>::max());
@@ -413,11 +430,11 @@ StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_items(
     for (const auto& item_request : request.items) {
         const auto item = find_toolbox_item(item_request.toolbox_item_id);
         if (!item.has_value()) {
-            return failed_batch_plan_result("The requested toolbox item was not found.");
+            return failed_batch_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Error.ItemNotFound"));
         }
         if (request.toolbox_context_provided && !toolbox_item_supports_context(*item, request.toolbox_context)) {
             return failed_batch_plan_result(
-                "The requested toolbox item is not available in the requested designer context.");
+                toolbox_creation_text("Studio.ToolboxCreation.Error.ItemUnavailableForContext"));
         }
 
         const auto plan_result = build_plan_from_toolbox_item(
@@ -474,7 +491,7 @@ StudioSelectionToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolb
     if (!launch_plan.ok) {
         return {
             .ok = false,
-            .error = "A selection-context toolbox object batch creation plan request requires a toolbox palette.",
+            .error = toolbox_creation_text("Studio.ToolboxCreation.SelectionBatchPlan.Error.PaletteRequired"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .launch_plan = std::move(launch_plan),
@@ -529,21 +546,22 @@ StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_dispat
     const auto& dispatch_plan = request.dispatch_plan;
     if (!dispatch_plan.dispatch_admitted || dispatch_plan.dry_run || dispatch_plan.executed) {
         return failed_batch_plan_result(
-            "A toolbox batch create-from-dispatch request requires an admitted non-executed toolbox dispatch.");
+            toolbox_creation_text("Studio.ToolboxCreation.BatchFromDispatch.Error.AdmittedDispatchRequired"));
     }
     if (dispatch_plan.asset_path.empty()) {
-        return failed_batch_plan_result("A toolbox batch create-from-dispatch request requires an asset path.");
+        return failed_batch_plan_result(
+            toolbox_creation_text("Studio.ToolboxCreation.BatchFromDispatch.Error.AssetPathRequired"));
     }
     if (dispatch_plan.items.empty() || dispatch_plan.item_count == 0U) {
         return failed_batch_plan_result(
-            "A toolbox batch create-from-dispatch request requires validated toolbox item metadata.");
+            toolbox_creation_text("Studio.ToolboxCreation.BatchFromDispatch.Error.ValidatedItemMetadataRequired"));
     }
     if (dispatch_plan.item_count != dispatch_plan.items.size()) {
         return failed_batch_plan_result(
-            "A toolbox batch create-from-dispatch request requires consistent toolbox item metadata.");
+            toolbox_creation_text("Studio.ToolboxCreation.BatchFromDispatch.Error.ConsistentItemMetadataRequired"));
     }
     if (request.items.empty()) {
-        return failed_batch_plan_result("No toolbox object creates were provided.");
+        return failed_batch_plan_result(toolbox_creation_text("Studio.ToolboxCreation.Batch.Error.NoCreatesProvided"));
     }
 
     std::vector<StudioToolboxObjectCreateBatchItem> batch_items;
@@ -558,7 +576,7 @@ StudioToolboxObjectCreateBatchPlanResult plan_visual_objects_from_toolbox_dispat
             });
         if (item_found == dispatch_plan.items.end()) {
             return failed_batch_plan_result(
-                "The requested toolbox item is not available in the admitted toolbox dispatch.");
+                toolbox_creation_text("Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch"));
         }
 
         const std::string parent_name = trimmed_copy(item_request.parent_name).empty()
@@ -585,25 +603,29 @@ StudioToolboxObjectCreateDispatchResult plan_visual_object_create_dispatch(
     const StudioToolboxObjectCreateDispatchRequest& request) {
     const auto& create_plan = request.create_plan;
     if (create_plan.toolbox_item.id.empty() ||
-        create_plan.toolbox_item.vfp_class.empty() ||
-        create_plan.toolbox_item.base_class.empty()) {
-        return failed_dispatch_result("A toolbox create dispatch request requires validated toolbox item metadata.");
+            create_plan.toolbox_item.vfp_class.empty() ||
+            create_plan.toolbox_item.base_class.empty()) {
+        return failed_dispatch_result(
+            toolbox_creation_text("Studio.ToolboxCreation.Dispatch.Error.ValidatedItemMetadataRequired"));
     }
     if (create_plan.path.empty()) {
-        return failed_dispatch_result("A toolbox create dispatch request requires an asset path.");
+        return failed_dispatch_result(toolbox_creation_text("Studio.ToolboxCreation.Dispatch.Error.AssetPathRequired"));
     }
     if (trimmed_copy(create_plan.object_name).empty()) {
-        return failed_dispatch_result("A toolbox create dispatch request requires a planned object name.");
+        return failed_dispatch_result(
+            toolbox_creation_text("Studio.ToolboxCreation.Dispatch.Error.PlannedObjectNameRequired"));
     }
     if (create_plan.field_values.empty() ||
         !has_field_value_named(create_plan.field_values, "OBJNAME") ||
         !has_field_value_named(create_plan.field_values, "NAME") ||
         !has_field_value_named(create_plan.field_values, "CLASS") ||
         !has_field_value_named(create_plan.field_values, "BASECLASS")) {
-        return failed_dispatch_result("A toolbox create dispatch request requires descriptor field values.");
+        return failed_dispatch_result(
+            toolbox_creation_text("Studio.ToolboxCreation.Dispatch.Error.DescriptorFieldValuesRequired"));
     }
     if (!request.admit_create_operation) {
-        return failed_dispatch_result("A toolbox create dispatch request requires an admitted non-dry-run create operation.");
+        return failed_dispatch_result(
+            toolbox_creation_text("Studio.ToolboxCreation.Dispatch.Error.AdmittedCreateOperationRequired"));
     }
 
     std::vector<std::string> arguments;
@@ -715,17 +737,20 @@ StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dis
     const StudioToolboxObjectCreateBatchDispatchRequest& request) {
     const auto& batch_plan = request.batch_plan;
     if (batch_plan.path.empty()) {
-        return failed_batch_dispatch_result("A toolbox batch create dispatch request requires an asset path.");
+        return failed_batch_dispatch_result(
+            toolbox_creation_text("Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired"));
     }
     if (batch_plan.plans.empty() || batch_plan.item_count == 0U) {
-        return failed_batch_dispatch_result("A toolbox batch create dispatch request requires planned toolbox creates.");
+        return failed_batch_dispatch_result(
+            toolbox_creation_text("Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired"));
     }
     if (batch_plan.item_count != batch_plan.plans.size()) {
-        return failed_batch_dispatch_result("A toolbox batch create dispatch request requires consistent planned toolbox creates.");
+        return failed_batch_dispatch_result(
+            toolbox_creation_text("Studio.ToolboxCreation.BatchDispatch.Error.ConsistentPlannedCreatesRequired"));
     }
     if (!request.admit_create_operation) {
         return failed_batch_dispatch_result(
-            "A toolbox batch create dispatch request requires an admitted non-dry-run create operation.");
+            toolbox_creation_text("Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired"));
     }
 
     std::vector<std::string> arguments;
@@ -740,11 +765,11 @@ StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dis
             create_plan.toolbox_item.vfp_class.empty() ||
             create_plan.toolbox_item.base_class.empty()) {
             return failed_batch_dispatch_result(
-                "A toolbox batch create dispatch request requires validated toolbox item metadata.");
+                toolbox_creation_text("Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired"));
         }
         if (trimmed_copy(create_plan.object_name).empty()) {
             return failed_batch_dispatch_result(
-                "A toolbox batch create dispatch request requires planned object names.");
+                toolbox_creation_text("Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired"));
         }
         if (create_plan.field_values.empty() ||
             !has_field_value_named(create_plan.field_values, "OBJNAME") ||
@@ -752,7 +777,7 @@ StudioToolboxObjectCreateBatchDispatchResult plan_visual_object_batch_create_dis
             !has_field_value_named(create_plan.field_values, "CLASS") ||
             !has_field_value_named(create_plan.field_values, "BASECLASS")) {
             return failed_batch_dispatch_result(
-                "A toolbox batch create dispatch request requires descriptor field values.");
+                toolbox_creation_text("Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired"));
         }
 
         append_argument(arguments, "--toolbox-item", std::string(create_plan.toolbox_item.id));
@@ -862,7 +887,7 @@ StudioToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_from_toolb
     if (items.empty()) {
         return {
             .ok = false,
-            .error = "A toolbox object creation catalog request requires validated toolbox item metadata.",
+            .error = toolbox_creation_text("Studio.ToolboxCreation.Catalog.Error.ValidatedItemMetadataRequired"),
             .toolbox_context = request.toolbox_context,
             .item_count = 0U,
             .plan_count = 0U,
@@ -928,7 +953,7 @@ StudioSelectionToolboxObjectCreatePlanCatalogResult plan_visual_object_catalog_f
     if (!launch_plan.ok) {
         return {
             .ok = false,
-            .error = "A selection-context toolbox object creation catalog request requires a toolbox palette.",
+            .error = toolbox_creation_text("Studio.ToolboxCreation.SelectionCatalog.Error.PaletteRequired"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .launch_plan = std::move(launch_plan),
@@ -1062,7 +1087,7 @@ plan_visual_object_create_dispatch_catalog_from_toolbox_selection(
     if (!launch_plan.ok) {
         return {
             .ok = false,
-            .error = "A selection-context toolbox object creation dispatch catalog request requires a toolbox palette.",
+            .error = toolbox_creation_text("Studio.ToolboxCreation.SelectionDispatchCatalog.Error.PaletteRequired"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .launch_plan = std::move(launch_plan),
@@ -1119,7 +1144,7 @@ StudioToolboxObjectCreateBatchPlanCatalogResult plan_visual_object_batch_catalog
     if (items.empty()) {
         return {
             .ok = false,
-            .error = "A toolbox batch create catalog request requires validated toolbox item metadata.",
+            .error = toolbox_creation_text("Studio.ToolboxCreation.BatchCatalog.Error.ValidatedItemMetadataRequired"),
             .toolbox_context = request.toolbox_context,
             .item_count = 0U,
             .plan_count = 0U,
@@ -1176,7 +1201,7 @@ plan_visual_object_batch_catalog_from_toolbox_selection(
     if (!launch_plan.ok) {
         return {
             .ok = false,
-            .error = "A selection-context toolbox object batch creation catalog request requires a toolbox palette.",
+            .error = toolbox_creation_text("Studio.ToolboxCreation.SelectionBatchCatalog.Error.PaletteRequired"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .launch_plan = std::move(launch_plan),
@@ -1232,7 +1257,8 @@ StudioToolboxObjectCreateBatchDispatchCatalogResult plan_visual_object_batch_cre
     if (items.empty()) {
         return {
             .ok = false,
-            .error = "A toolbox batch create dispatch catalog request requires validated toolbox item metadata.",
+            .error = toolbox_creation_text(
+                "Studio.ToolboxCreation.BatchDispatchCatalog.Error.ValidatedItemMetadataRequired"),
             .toolbox_context = request.toolbox_context,
             .item_count = 0U,
             .batch_plan = {},
@@ -1309,7 +1335,7 @@ plan_visual_object_batch_create_dispatch_catalog_from_toolbox_selection(
         return {
             .ok = false,
             .error =
-                "A selection-context toolbox object batch creation dispatch catalog request requires a toolbox palette.",
+                toolbox_creation_text("Studio.ToolboxCreation.SelectionBatchDispatchCatalog.Error.PaletteRequired"),
             .selection_context = request.selection_context,
             .toolbox_context = StudioToolboxContext::form,
             .launch_plan = std::move(launch_plan),

@@ -1,5 +1,6 @@
 #include "copperfin/studio/toolbox_creation.h"
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
@@ -4410,9 +4411,33 @@ void test_toolbox_creation_enforces_optional_context_filters() {
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_toolbox_creation_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(english_catalog.translate("Studio.ToolboxCreation.Error.ItemNotFound") ==
+               "The requested toolbox item was not found." &&
+               english_catalog.translate("Studio.ToolboxCreation.Error.ItemUnavailableForContext") ==
+                   "The requested toolbox item is not available in the requested designer context." &&
+               english_catalog.translate("Studio.ToolboxCreation.FromDispatch.Error.AdmittedDispatchRequired") ==
+                   "A toolbox create-from-dispatch request requires an admitted non-executed toolbox dispatch." &&
+               english_catalog.translate("Studio.ToolboxCreation.Dispatch.Error.AdmittedCreateOperationRequired") ==
+                   "A toolbox create dispatch request requires an admitted non-dry-run create operation." &&
+               english_catalog.translate("Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired") ==
+                   "A toolbox batch create dispatch request requires descriptor field values." &&
+               english_catalog.translate("Studio.ToolboxCreation.SelectionBatchDispatchCatalog.Error.PaletteRequired") ==
+                   "A selection-context toolbox object batch creation dispatch catalog request requires a toolbox palette." &&
+               pseudo_catalog.translate("Studio.ToolboxCreation.Error.ObjectIdentityExists").starts_with("[!! ") &&
+               pseudo_catalog.translate("Studio.ToolboxCreation.BatchFromDispatch.Error.ValidatedItemMetadataRequired")
+                   .starts_with("[!! "),
+           "#2372: toolbox creation error prose should resolve through localizable catalog keys");
+}
+
 }  // namespace
 
 int main() {
+    test_toolbox_creation_errors_resolve_through_localization_catalog();
     test_toolbox_creation_planner_maps_descriptors_without_mutation();
     test_toolbox_creation_planner_respects_explicit_names_and_rejections();
     test_toolbox_creation_selection_planner_resolves_contexts_without_mutation();
