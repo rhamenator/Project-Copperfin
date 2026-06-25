@@ -1,5 +1,7 @@
 #include "copperfin/studio/report_layout.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <charconv>
 #include <cctype>
@@ -12,6 +14,12 @@ namespace copperfin::studio {
 namespace {
 
 using vfp::DbfRecord;
+
+const localization::LocalizedCatalog& report_layout_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
 
 std::string trim_copy(std::string text) {
     const auto first = std::find_if(text.begin(), text.end(), [](unsigned char ch) {
@@ -157,32 +165,32 @@ std::string band_kind_name(int objcode) {
     }
 }
 
-std::string band_title(int objcode) {
+std::string band_title(int objcode, const localization::LocalizedCatalog& catalog) {
     switch (objcode) {
         case 0:
-            return "Title";
+            return catalog.translate("Studio.ReportLayout.Section.Title");
         case 1:
-            return "Page Header";
+            return catalog.translate("Studio.ReportLayout.Section.PageHeader");
         case 2:
-            return "Column Header";
+            return catalog.translate("Studio.ReportLayout.Section.ColumnHeader");
         case 3:
-            return "Group Header";
+            return catalog.translate("Studio.ReportLayout.Section.GroupHeader");
         case 4:
-            return "Detail";
+            return catalog.translate("Studio.ReportLayout.Section.Detail");
         case 5:
-            return "Group Footer";
+            return catalog.translate("Studio.ReportLayout.Section.GroupFooter");
         case 6:
-            return "Column Footer";
+            return catalog.translate("Studio.ReportLayout.Section.ColumnFooter");
         case 7:
-            return "Page Footer";
+            return catalog.translate("Studio.ReportLayout.Section.PageFooter");
         case 8:
-            return "Summary";
+            return catalog.translate("Studio.ReportLayout.Section.Summary");
         case 9:
-            return "Detail Header";
+            return catalog.translate("Studio.ReportLayout.Section.DetailHeader");
         case 10:
-            return "Detail Footer";
+            return catalog.translate("Studio.ReportLayout.Section.DetailFooter");
         default:
-            return "Other Band";
+            return catalog.translate("Studio.ReportLayout.Section.OtherBand");
     }
 }
 
@@ -551,7 +559,9 @@ void finalize_section_kind_counts(StudioReportLayoutSnapshot& snapshot) {
     sort_kind_counts(snapshot.deleted_section_kind_counts);
 }
 
-StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
+StudioReportSectionSnapshot build_report_section(
+    const DbfRecord& record,
+    const localization::LocalizedCatalog& catalog) {
     const int objcode = parse_scaled_int_or_default(record, "OBJCODE");
     const std::size_t objcode_field_index = field_index_or_missing(record, "OBJCODE");
     const std::uint32_t objcode_memo_block_number = memo_block_number_or_zero(record, "OBJCODE");
@@ -562,7 +572,7 @@ StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
         .id = make_section_id(record.record_index, objcode),
         .id_field_index = StudioReportMissingFieldIndex,
         .id_memo_block_number = 0U,
-        .title = band_title(objcode),
+        .title = band_title(objcode, catalog),
         .title_field_index = objcode_field_index,
         .title_memo_block_number = objcode_memo_block_number,
         .band_kind = band_kind_name(objcode),
@@ -588,7 +598,9 @@ StudioReportSectionSnapshot build_report_section(const DbfRecord& record) {
 
 }  // namespace
 
-StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& document) {
+StudioReportLayoutSnapshot build_report_layout(
+    const StudioDocumentModel& document,
+    const localization::LocalizedCatalog& catalog) {
     StudioReportLayoutSnapshot snapshot;
     if (!is_report_family(document) || !document.table_preview_available) {
         return snapshot;
@@ -606,7 +618,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
                 append_report_settings(record, snapshot.deleted_settings);
             }
             if (is_band_record(record)) {
-                StudioReportSectionSnapshot section = build_report_section(record);
+                StudioReportSectionSnapshot section = build_report_section(record, catalog);
                 expand_deleted_preview_bounds(snapshot, 0, section.top, 0, section.bottom);
                 snapshot.deleted_sections.push_back(std::move(section));
             }
@@ -625,7 +637,7 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
         }
 
         if (is_band_record(record)) {
-            snapshot.sections.push_back(build_report_section(record));
+            snapshot.sections.push_back(build_report_section(record, catalog));
         }
     }
 
@@ -721,6 +733,10 @@ StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& docume
     finalize_section_kind_counts(snapshot);
 
     return snapshot;
+}
+
+StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& document) {
+    return build_report_layout(document, report_layout_catalog());
 }
 
 }  // namespace copperfin::studio

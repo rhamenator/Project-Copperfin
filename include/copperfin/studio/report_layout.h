@@ -7,6 +7,10 @@
 #include <string>
 #include <vector>
 
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
+
 namespace copperfin::studio {
 
 inline constexpr std::size_t StudioReportMissingFieldIndex = static_cast<std::size_t>(-1);
@@ -158,5 +162,8 @@ struct StudioReportLayoutSnapshot {
 };
 
 [[nodiscard]] StudioReportLayoutSnapshot build_report_layout(const StudioDocumentModel& document);
+[[nodiscard]] StudioReportLayoutSnapshot build_report_layout(
+    const StudioDocumentModel& document,
+    const localization::LocalizedCatalog& catalog);
 
 }  // namespace copperfin::studio

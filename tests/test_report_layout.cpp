@@ -1,5 +1,7 @@
 #include "copperfin/studio/report_layout.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -148,6 +150,8 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.settings.size() >= 2U, "report layout should parse root settings");
     expect(layout.sections[0].band_kind == "page_header", "first section should decode the page header band");
     expect(layout.sections[1].band_kind == "detail", "second section should decode the detail band");
+    expect(layout.sections[0].title == "Page Header", "#2489: default report section titles should preserve en-US prose");
+    expect(layout.sections[1].title == "Detail", "#2489: default detail section titles should preserve en-US prose");
     expect(layout.sections[0].section_index == 0U, "#1460: report sections should carry zero-based order");
     expect(layout.sections[0].section_count == 2U, "#1460: report sections should carry live section counts");
     expect(layout.sections[1].section_index == 1U, "#1460: later report sections should carry sorted order");
@@ -337,6 +341,7 @@ void test_build_report_layout_groups_band_objects() {
     expect(layout.deleted_sections.size() == 1U, "#690: deleted report sections should be preserved separately");
     if (!layout.deleted_sections.empty()) {
         expect(layout.deleted_sections[0].deleted, "#690: deleted report section snapshots should retain deleted state");
+        expect(layout.deleted_sections[0].title == "Summary", "#2489: default deleted section titles should preserve en-US prose");
         expect(layout.deleted_sections[0].section_index == copperfin::studio::StudioReportMissingRecordIndex,
             "#1460: deleted report sections should expose missing section order");
         expect(layout.deleted_sections[0].section_count == 0U,
@@ -383,6 +388,56 @@ void test_build_report_layout_groups_band_objects() {
         return setting.name == "DELETEDSETTING";
     });
     expect(live_deleted_setting == layout.settings.end(), "#691: deleted report root settings should not mix into live settings");
+}
+
+void test_build_report_layout_localizes_section_titles_without_localizing_band_kinds() {
+    copperfin::studio::StudioDocumentModel document;
+    document.display_name = "localized.frx";
+    document.kind = copperfin::studio::StudioAssetKind::report;
+    document.table_preview_available = true;
+
+    document.table_preview.records = {
+        {
+            .record_index = 0U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "10"),
+                value("VPOS", "0.000"),
+                value("HEIGHT", "500.000")
+            }
+        },
+        {
+            .record_index = 1U,
+            .deleted = false,
+            .values = {
+                value("OBJTYPE", "9"),
+                value("OBJCODE", "99"),
+                value("VPOS", "500.000"),
+                value("HEIGHT", "500.000")
+            }
+        }
+    };
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto layout = copperfin::studio::build_report_layout(document, pseudo_catalog);
+
+    expect(layout.sections.size() == 2U, "#2489: pseudo-localized report layout should preserve section detection");
+    if (layout.sections.size() == 2U) {
+        expect(layout.sections[0].band_kind == "detail_footer",
+            "#2489: pseudo-localized report layout should preserve invariant detail-footer band_kind");
+        expect(layout.sections[1].band_kind == "other",
+            "#2489: pseudo-localized report layout should preserve invariant fallback band_kind");
+        expect(layout.sections[0].title.find("[!! ") != std::string::npos,
+            "#2489: pseudo-localized detail-footer title should route through the catalog");
+        expect(layout.sections[1].title.find("[!! ") != std::string::npos,
+            "#2489: pseudo-localized other-band title should route through the catalog");
+        expect(layout.sections[0].title.find("Detail Footer") == std::string::npos,
+            "#2489: pseudo-localized detail-footer title should not fall back to raw English prose");
+        expect(layout.sections[1].title.find("Other Band") == std::string::npos,
+            "#2489: pseudo-localized other-band title should not fall back to raw English prose");
+    }
 }
 
 void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
@@ -651,6 +706,7 @@ void test_build_report_layout_includes_direct_paper_size_settings() {
 
 int main() {
     test_build_report_layout_groups_band_objects();
+    test_build_report_layout_localizes_section_titles_without_localizing_band_kinds();
     test_build_report_layout_suppresses_unresolved_memo_placeholders();
     test_build_report_layout_carries_group_section_expressions();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
