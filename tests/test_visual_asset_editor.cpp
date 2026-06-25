@@ -24613,9 +24613,15 @@ void test_visual_asset_editor_errors_resolve_through_localization_catalog() {
                    "The requested replacement identity field is not present in the asset." &&
                english_catalog.translate("VisualAssetEditor.Field.NotFound") ==
                    "The requested field was not found in the asset." &&
+               english_catalog.translate("VisualAssetEditor.Geometry.GridWidthPositiveRequired") ==
+                   "Grid width must be positive for horizontal snapping." &&
+               english_catalog.translate(
+                   "VisualAssetEditor.Property.NonNegativeRequired",
+                   {{"propertyName", "BackColor"}}) == "BackColor must not be negative." &&
                pseudo_catalog.translate("VisualAssetEditor.Object.RecordUnavailable").starts_with("[!! ") &&
-               pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! "),
-           "#2373: visual asset editor lookup and identity prose should resolve through localizable catalog keys");
+               pseudo_catalog.translate("VisualAssetEditor.Identity.ReplacementExists").starts_with("[!! ") &&
+               pseudo_catalog.translate("VisualAssetEditor.Geometry.RequiredFieldsMissing").starts_with("[!! "),
+           "#2373/#2374: visual asset editor prose should resolve through localizable catalog keys");
 }
 
 }  // namespace

@@ -39,6 +39,18 @@ std::string visual_asset_text(std::string_view key) {
     return visual_asset_editor_catalog().translate(key);
 }
 
+std::string visual_asset_text(
+    std::string_view key,
+    const copperfin::localization::PlaceholderMap& placeholders) {
+    return visual_asset_editor_catalog().translate(key, placeholders);
+}
+
+std::string visual_asset_property_non_negative_text(std::string property_name) {
+    return visual_asset_text(
+        "VisualAssetEditor.Property.NonNegativeRequired",
+        {{"propertyName", std::move(property_name)}});
+}
+
 std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t offset) {
     return static_cast<std::uint32_t>(bytes[offset]) |
            (static_cast<std::uint32_t>(bytes[offset + 1]) << 8U) |
@@ -939,7 +951,7 @@ VisualAssetEditResult read_visual_object_geometry(
             return {.ok = false, .error = property_result.error};
         }
         if (!property_result.exists) {
-            return {.ok = false, .error = "The selected object does not expose required geometry fields."};
+            return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.RequiredFieldsMissing")};
         }
         const auto parsed_value = parse_visual_geometry_number(property_result.value);
         if (!parsed_value.has_value()) {
@@ -979,7 +991,7 @@ VisualAssetEditResult read_visual_object_geometry_coordinate(
         return {.ok = false, .error = property_result.error};
     }
     if (!property_result.exists) {
-        return {.ok = false, .error = "The selected object does not expose required distribution coordinates."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.DistributionCoordinatesMissing")};
     }
 
     const auto parsed_value = parse_visual_geometry_number(property_result.value);
@@ -5214,7 +5226,7 @@ VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequ
         return {.ok = false, .error = "No asset path was provided."};
     }
     if (request.objects.size() < 3U) {
-        return {.ok = false, .error = "At least three visual objects are required for distribution."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.DistributionTargetCountRequired")};
     }
 
     const std::string mode = normalize_visual_property_name(request.mode);
@@ -5261,7 +5273,7 @@ VisualAssetEditResult distribute_visual_objects(const VisualObjectDistributeRequ
     const double first_coordinate = items.front().coordinate;
     const double last_coordinate = items.back().coordinate;
     if (std::abs(last_coordinate - first_coordinate) < 0.0005) {
-        return {.ok = false, .error = "Distribution endpoints must have distinct coordinates."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.DistributionDistinctEndpointsRequired")};
     }
 
     const double step = (last_coordinate - first_coordinate) / static_cast<double>(items.size() - 1U);
@@ -5303,10 +5315,10 @@ VisualAssetEditResult snap_visual_objects_to_grid(const VisualObjectSnapToGridRe
         return {.ok = false, .error = "Unsupported visual object grid snapping mode."};
     }
     if (snap_horizontal && request.grid_width <= 0.0) {
-        return {.ok = false, .error = "Grid width must be positive for horizontal snapping."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.GridWidthPositiveRequired")};
     }
     if (snap_vertical && request.grid_height <= 0.0) {
-        return {.ok = false, .error = "Grid height must be positive for vertical snapping."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.GridHeightPositiveRequired")};
     }
 
     const auto snap_coordinate = [](double coordinate, double grid_size) {
@@ -5377,10 +5389,10 @@ VisualAssetEditResult nudge_visual_objects(const VisualObjectNudgeRequest& reque
         return {.ok = false, .error = "Unsupported visual object nudge mode."};
     }
     if (nudge_horizontal && std::abs(request.delta_hpos) < 0.0000001) {
-        return {.ok = false, .error = "Horizontal nudge delta must be non-zero."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.HorizontalNudgeDeltaRequired")};
     }
     if (nudge_vertical && std::abs(request.delta_vpos) < 0.0000001) {
-        return {.ok = false, .error = "Vertical nudge delta must be non-zero."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Geometry.VerticalNudgeDeltaRequired")};
     }
 
     std::vector<VisualObjectBatchEditItem> edits;
@@ -5440,7 +5452,7 @@ VisualAssetEditResult set_visual_object_tab_order(const VisualObjectTabOrderRequ
         return {.ok = false, .error = "No visual objects were selected for tab-order assignment."};
     }
     if (request.starting_tab_index < 0) {
-        return {.ok = false, .error = "Starting tab index must not be negative."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.StartingTabIndexNonNegativeRequired")};
     }
 
     std::vector<std::size_t> resolved_record_indexes;
@@ -5923,7 +5935,7 @@ VisualAssetEditResult set_visual_object_max_button(const VisualObjectMaxButtonRe
 
 VisualAssetEditResult set_visual_object_max_height(const VisualObjectMaxHeightRequest& request) {
     if (request.max_height < 0) {
-        return {.ok = false, .error = "MaxHeight must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("MaxHeight")};
     }
 
     return set_visual_object_scalar_property(
@@ -5936,7 +5948,7 @@ VisualAssetEditResult set_visual_object_max_height(const VisualObjectMaxHeightRe
 
 VisualAssetEditResult set_visual_object_max_width(const VisualObjectMaxWidthRequest& request) {
     if (request.max_width < 0) {
-        return {.ok = false, .error = "MaxWidth must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("MaxWidth")};
     }
 
     return set_visual_object_scalar_property(
@@ -5949,7 +5961,7 @@ VisualAssetEditResult set_visual_object_max_width(const VisualObjectMaxWidthRequ
 
 VisualAssetEditResult set_visual_object_max_left(const VisualObjectMaxLeftRequest& request) {
     if (request.max_left < 0) {
-        return {.ok = false, .error = "MaxLeft must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("MaxLeft")};
     }
 
     return set_visual_object_scalar_property(
@@ -5962,7 +5974,7 @@ VisualAssetEditResult set_visual_object_max_left(const VisualObjectMaxLeftReques
 
 VisualAssetEditResult set_visual_object_max_top(const VisualObjectMaxTopRequest& request) {
     if (request.max_top < 0) {
-        return {.ok = false, .error = "MaxTop must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("MaxTop")};
     }
 
     return set_visual_object_scalar_property(
@@ -5984,7 +5996,7 @@ VisualAssetEditResult set_visual_object_min_button(const VisualObjectMinButtonRe
 
 VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRequest& request) {
     if (request.min_height < 0) {
-        return {.ok = false, .error = "MinHeight must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("MinHeight")};
     }
 
     return set_visual_object_scalar_property(
@@ -5997,7 +6009,7 @@ VisualAssetEditResult set_visual_object_min_height(const VisualObjectMinHeightRe
 
 VisualAssetEditResult set_visual_object_min_width(const VisualObjectMinWidthRequest& request) {
     if (request.min_width < 0) {
-        return {.ok = false, .error = "MinWidth must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("MinWidth")};
     }
 
     return set_visual_object_scalar_property(
@@ -6056,7 +6068,7 @@ VisualAssetEditResult set_visual_object_whats_this_help(const VisualObjectWhatsT
 
 VisualAssetEditResult set_visual_object_whats_this_help_id(const VisualObjectWhatsThisHelpIdRequest& request) {
     if (request.whats_this_help_id < 0) {
-        return {.ok = false, .error = "WhatsThisHelpID must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("WhatsThisHelpID")};
     }
 
     return set_visual_object_scalar_property(
@@ -6069,7 +6081,7 @@ VisualAssetEditResult set_visual_object_whats_this_help_id(const VisualObjectWha
 
 VisualAssetEditResult set_visual_object_help_context_id(const VisualObjectHelpContextIdRequest& request) {
     if (request.help_context_id < 0) {
-        return {.ok = false, .error = "HelpContextID must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("HelpContextID")};
     }
 
     return set_visual_object_scalar_property(
@@ -6082,7 +6094,7 @@ VisualAssetEditResult set_visual_object_help_context_id(const VisualObjectHelpCo
 
 VisualAssetEditResult set_visual_object_display_orientation(const VisualObjectDisplayOrientationRequest& request) {
     if (request.display_orientation < 0) {
-        return {.ok = false, .error = "DisplayOrientation must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DisplayOrientation")};
     }
 
     return set_visual_object_scalar_property(
@@ -6095,7 +6107,7 @@ VisualAssetEditResult set_visual_object_display_orientation(const VisualObjectDi
 
 VisualAssetEditResult set_visual_object_tab_orientation(const VisualObjectTabOrientationRequest& request) {
     if (request.tab_orientation < 0) {
-        return {.ok = false, .error = "TabOrientation must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("TabOrientation")};
     }
 
     return set_visual_object_scalar_property(
@@ -6108,7 +6120,7 @@ VisualAssetEditResult set_visual_object_tab_orientation(const VisualObjectTabOri
 
 VisualAssetEditResult set_visual_object_list_item_id(const VisualObjectListItemIdRequest& request) {
     if (request.list_item_id < 0) {
-        return {.ok = false, .error = "ListItemID must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ListItemID")};
     }
 
     return set_visual_object_scalar_property(
@@ -6310,7 +6322,7 @@ VisualAssetEditResult set_visual_object_drag_icon(const VisualObjectDragIconRequ
 
 VisualAssetEditResult set_visual_object_drag_mode(const VisualObjectDragModeRequest& request) {
     if (request.drag_mode < 0) {
-        return {.ok = false, .error = "DragMode must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DragMode")};
     }
 
     return set_visual_object_scalar_property(
@@ -6323,7 +6335,7 @@ VisualAssetEditResult set_visual_object_drag_mode(const VisualObjectDragModeRequ
 
 VisualAssetEditResult set_visual_object_ole_drag_mode(const VisualObjectOleDragModeRequest& request) {
     if (request.ole_drag_mode < 0) {
-        return {.ok = false, .error = "OLEDragMode must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("OLEDragMode")};
     }
 
     return set_visual_object_scalar_property(
@@ -6336,7 +6348,7 @@ VisualAssetEditResult set_visual_object_ole_drag_mode(const VisualObjectOleDragM
 
 VisualAssetEditResult set_visual_object_ole_drop_mode(const VisualObjectOleDropModeRequest& request) {
     if (request.ole_drop_mode < 0) {
-        return {.ok = false, .error = "OLEDropMode must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("OLEDropMode")};
     }
 
     return set_visual_object_scalar_property(
@@ -6349,7 +6361,7 @@ VisualAssetEditResult set_visual_object_ole_drop_mode(const VisualObjectOleDropM
 
 VisualAssetEditResult set_visual_object_ole_drop_effects(const VisualObjectOleDropEffectsRequest& request) {
     if (request.ole_drop_effects < 0) {
-        return {.ok = false, .error = "OLEDropEffects must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("OLEDropEffects")};
     }
 
     return set_visual_object_scalar_property(
@@ -6363,7 +6375,7 @@ VisualAssetEditResult set_visual_object_ole_drop_effects(const VisualObjectOleDr
 VisualAssetEditResult set_visual_object_ole_drop_text_insertion(
     const VisualObjectOleDropTextInsertionRequest& request) {
     if (request.ole_drop_text_insertion < 0) {
-        return {.ok = false, .error = "OLEDropTextInsertion must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("OLEDropTextInsertion")};
     }
 
     return set_visual_object_scalar_property(
@@ -6376,7 +6388,7 @@ VisualAssetEditResult set_visual_object_ole_drop_text_insertion(
 
 VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRequest& request) {
     if (request.back_style < 0) {
-        return {.ok = false, .error = "BackStyle must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BackStyle")};
     }
 
     return set_visual_object_scalar_property(
@@ -6389,7 +6401,7 @@ VisualAssetEditResult set_visual_object_back_style(const VisualObjectBackStyleRe
 
 VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderStyleRequest& request) {
     if (request.border_style < 0) {
-        return {.ok = false, .error = "BorderStyle must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BorderStyle")};
     }
 
     return set_visual_object_scalar_property(
@@ -6402,7 +6414,7 @@ VisualAssetEditResult set_visual_object_border_style(const VisualObjectBorderSty
 
 VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWidthRequest& request) {
     if (request.border_width < 0) {
-        return {.ok = false, .error = "BorderWidth must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BorderWidth")};
     }
 
     return set_visual_object_scalar_property(
@@ -6415,7 +6427,7 @@ VisualAssetEditResult set_visual_object_border_width(const VisualObjectBorderWid
 
 VisualAssetEditResult set_visual_object_border_color(const VisualObjectBorderColorRequest& request) {
     if (request.border_color < 0) {
-        return {.ok = false, .error = "BorderColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BorderColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -6428,7 +6440,7 @@ VisualAssetEditResult set_visual_object_border_color(const VisualObjectBorderCol
 
 VisualAssetEditResult set_visual_object_grid_line_color(const VisualObjectGridLineColorRequest& request) {
     if (request.grid_line_color < 0) {
-        return {.ok = false, .error = "GridLineColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("GridLineColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -6441,7 +6453,7 @@ VisualAssetEditResult set_visual_object_grid_line_color(const VisualObjectGridLi
 
 VisualAssetEditResult set_visual_object_grid_line_width(const VisualObjectGridLineWidthRequest& request) {
     if (request.grid_line_width < 0) {
-        return {.ok = false, .error = "GridLineWidth must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("GridLineWidth")};
     }
 
     return set_visual_object_scalar_property(
@@ -6454,7 +6466,7 @@ VisualAssetEditResult set_visual_object_grid_line_width(const VisualObjectGridLi
 
 VisualAssetEditResult set_visual_object_grid_lines(const VisualObjectGridLinesRequest& request) {
     if (request.grid_lines < 0) {
-        return {.ok = false, .error = "GridLines must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("GridLines")};
     }
 
     return set_visual_object_scalar_property(
@@ -6468,7 +6480,7 @@ VisualAssetEditResult set_visual_object_grid_lines(const VisualObjectGridLinesRe
 VisualAssetEditResult set_visual_object_highlight_row_line_width(
     const VisualObjectHighlightRowLineWidthRequest& request) {
     if (request.highlight_row_line_width < 0) {
-        return {.ok = false, .error = "HighlightRowLineWidth must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("HighlightRowLineWidth")};
     }
 
     return set_visual_object_scalar_property(
@@ -6481,7 +6493,7 @@ VisualAssetEditResult set_visual_object_highlight_row_line_width(
 
 VisualAssetEditResult set_visual_object_highlight_style(const VisualObjectHighlightStyleRequest& request) {
     if (request.highlight_style < 0) {
-        return {.ok = false, .error = "HighlightStyle must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("HighlightStyle")};
     }
 
     return set_visual_object_scalar_property(
@@ -6494,7 +6506,7 @@ VisualAssetEditResult set_visual_object_highlight_style(const VisualObjectHighli
 
 VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHeightRequest& request) {
     if (request.header_height < 0) {
-        return {.ok = false, .error = "HeaderHeight must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("HeaderHeight")};
     }
 
     return set_visual_object_scalar_property(
@@ -6507,7 +6519,7 @@ VisualAssetEditResult set_visual_object_header_height(const VisualObjectHeaderHe
 
 VisualAssetEditResult set_visual_object_row_height(const VisualObjectRowHeightRequest& request) {
     if (request.row_height < 0) {
-        return {.ok = false, .error = "RowHeight must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("RowHeight")};
     }
 
     return set_visual_object_scalar_property(
@@ -6520,7 +6532,7 @@ VisualAssetEditResult set_visual_object_row_height(const VisualObjectRowHeightRe
 
 VisualAssetEditResult set_visual_object_lock_columns(const VisualObjectLockColumnsRequest& request) {
     if (request.lock_columns < 0) {
-        return {.ok = false, .error = "LockColumns must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("LockColumns")};
     }
 
     return set_visual_object_scalar_property(
@@ -6533,7 +6545,7 @@ VisualAssetEditResult set_visual_object_lock_columns(const VisualObjectLockColum
 
 VisualAssetEditResult set_visual_object_lock_columns_left(const VisualObjectLockColumnsLeftRequest& request) {
     if (request.lock_columns_left < 0) {
-        return {.ok = false, .error = "LockColumnsLeft must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("LockColumnsLeft")};
     }
 
     return set_visual_object_scalar_property(
@@ -6591,7 +6603,7 @@ VisualAssetEditResult set_visual_object_form_set_class(const VisualObjectFormSet
 
 VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRecordSourceTypeRequest& request) {
     if (request.record_source_type < 0) {
-        return {.ok = false, .error = "RecordSourceType must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("RecordSourceType")};
     }
 
     return set_visual_object_scalar_property(
@@ -6604,7 +6616,7 @@ VisualAssetEditResult set_visual_object_record_source_type(const VisualObjectRec
 
 VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionRequest& request) {
     if (request.partition < 0) {
-        return {.ok = false, .error = "Partition must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("Partition")};
     }
 
     return set_visual_object_scalar_property(
@@ -6617,7 +6629,7 @@ VisualAssetEditResult set_visual_object_partition(const VisualObjectPartitionReq
 
 VisualAssetEditResult set_visual_object_column_order(const VisualObjectColumnOrderRequest& request) {
     if (request.column_order < 0) {
-        return {.ok = false, .error = "ColumnOrder must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ColumnOrder")};
     }
 
     return set_visual_object_scalar_property(
@@ -6630,7 +6642,7 @@ VisualAssetEditResult set_visual_object_column_order(const VisualObjectColumnOrd
 
 VisualAssetEditResult set_visual_object_child_order(const VisualObjectChildOrderRequest& request) {
     if (request.child_order < 0) {
-        return {.ok = false, .error = "ChildOrder must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ChildOrder")};
     }
 
     return set_visual_object_scalar_property(
@@ -6643,7 +6655,7 @@ VisualAssetEditResult set_visual_object_child_order(const VisualObjectChildOrder
 
 VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecialEffectRequest& request) {
     if (request.special_effect < 0) {
-        return {.ok = false, .error = "SpecialEffect must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("SpecialEffect")};
     }
 
     return set_visual_object_scalar_property(
@@ -6656,7 +6668,7 @@ VisualAssetEditResult set_visual_object_special_effect(const VisualObjectSpecial
 
 VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureRequest& request) {
     if (request.curvature < 0) {
-        return {.ok = false, .error = "Curvature must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("Curvature")};
     }
 
     return set_visual_object_scalar_property(
@@ -6669,7 +6681,7 @@ VisualAssetEditResult set_visual_object_curvature(const VisualObjectCurvatureReq
 
 VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequest& request) {
     if (request.draw_mode < 0) {
-        return {.ok = false, .error = "DrawMode must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DrawMode")};
     }
 
     return set_visual_object_scalar_property(
@@ -6682,7 +6694,7 @@ VisualAssetEditResult set_visual_object_draw_mode(const VisualObjectDrawModeRequ
 
 VisualAssetEditResult set_visual_object_draw_style(const VisualObjectDrawStyleRequest& request) {
     if (request.draw_style < 0) {
-        return {.ok = false, .error = "DrawStyle must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DrawStyle")};
     }
 
     return set_visual_object_scalar_property(
@@ -6695,7 +6707,7 @@ VisualAssetEditResult set_visual_object_draw_style(const VisualObjectDrawStyleRe
 
 VisualAssetEditResult set_visual_object_draw_width(const VisualObjectDrawWidthRequest& request) {
     if (request.draw_width < 0) {
-        return {.ok = false, .error = "DrawWidth must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DrawWidth")};
     }
 
     return set_visual_object_scalar_property(
@@ -6708,7 +6720,7 @@ VisualAssetEditResult set_visual_object_draw_width(const VisualObjectDrawWidthRe
 
 VisualAssetEditResult set_visual_object_fill_color(const VisualObjectFillColorRequest& request) {
     if (request.fill_color < 0) {
-        return {.ok = false, .error = "FillColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("FillColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -6721,7 +6733,7 @@ VisualAssetEditResult set_visual_object_fill_color(const VisualObjectFillColorRe
 
 VisualAssetEditResult set_visual_object_fill_style(const VisualObjectFillStyleRequest& request) {
     if (request.fill_style < 0) {
-        return {.ok = false, .error = "FillStyle must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("FillStyle")};
     }
 
     return set_visual_object_scalar_property(
@@ -6734,7 +6746,7 @@ VisualAssetEditResult set_visual_object_fill_style(const VisualObjectFillStyleRe
 
 VisualAssetEditResult set_visual_object_buffer_mode(const VisualObjectBufferModeRequest& request) {
     if (request.buffer_mode < 0) {
-        return {.ok = false, .error = "BufferMode must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BufferMode")};
     }
 
     return set_visual_object_scalar_property(
@@ -6748,7 +6760,7 @@ VisualAssetEditResult set_visual_object_buffer_mode(const VisualObjectBufferMode
 VisualAssetEditResult set_visual_object_buffer_mode_override(
     const VisualObjectBufferModeOverrideRequest& request) {
     if (request.buffer_mode_override < 0) {
-        return {.ok = false, .error = "BufferModeOverride must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BufferModeOverride")};
     }
 
     return set_visual_object_scalar_property(
@@ -6761,7 +6773,7 @@ VisualAssetEditResult set_visual_object_buffer_mode_override(
 
 VisualAssetEditResult set_visual_object_data_session(const VisualObjectDataSessionRequest& request) {
     if (request.data_session < 0) {
-        return {.ok = false, .error = "DataSession must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DataSession")};
     }
 
     return set_visual_object_scalar_property(
@@ -6774,7 +6786,7 @@ VisualAssetEditResult set_visual_object_data_session(const VisualObjectDataSessi
 
 VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRequest& request) {
     if (request.scale_mode < 0) {
-        return {.ok = false, .error = "ScaleMode must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ScaleMode")};
     }
 
     return set_visual_object_scalar_property(
@@ -6787,7 +6799,7 @@ VisualAssetEditResult set_visual_object_scale_mode(const VisualObjectScaleModeRe
 
 VisualAssetEditResult set_visual_object_scroll_bars(const VisualObjectScrollBarsRequest& request) {
     if (request.scroll_bars < 0) {
-        return {.ok = false, .error = "ScrollBars must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ScrollBars")};
     }
 
     return set_visual_object_scalar_property(
@@ -6800,7 +6812,7 @@ VisualAssetEditResult set_visual_object_scroll_bars(const VisualObjectScrollBars
 
 VisualAssetEditResult set_visual_object_window_state(const VisualObjectWindowStateRequest& request) {
     if (request.window_state < 0) {
-        return {.ok = false, .error = "WindowState must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("WindowState")};
     }
 
     return set_visual_object_scalar_property(
@@ -6813,7 +6825,7 @@ VisualAssetEditResult set_visual_object_window_state(const VisualObjectWindowSta
 
 VisualAssetEditResult set_visual_object_show_window(const VisualObjectShowWindowRequest& request) {
     if (request.show_window < 0) {
-        return {.ok = false, .error = "ShowWindow must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ShowWindow")};
     }
 
     return set_visual_object_scalar_property(
@@ -6826,7 +6838,7 @@ VisualAssetEditResult set_visual_object_show_window(const VisualObjectShowWindow
 
 VisualAssetEditResult set_visual_object_title_bar(const VisualObjectTitleBarRequest& request) {
     if (request.title_bar < 0) {
-        return {.ok = false, .error = "TitleBar must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("TitleBar")};
     }
 
     return set_visual_object_scalar_property(
@@ -6839,7 +6851,7 @@ VisualAssetEditResult set_visual_object_title_bar(const VisualObjectTitleBarRequ
 
 VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePointerRequest& request) {
     if (request.mouse_pointer < 0) {
-        return {.ok = false, .error = "MousePointer must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("MousePointer")};
     }
 
     return set_visual_object_scalar_property(
@@ -6852,7 +6864,7 @@ VisualAssetEditResult set_visual_object_mouse_pointer(const VisualObjectMousePoi
 
 VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPictureMarginRequest& request) {
     if (request.picture_margin < 0) {
-        return {.ok = false, .error = "PictureMargin must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("PictureMargin")};
     }
 
     return set_visual_object_scalar_property(
@@ -6865,7 +6877,7 @@ VisualAssetEditResult set_visual_object_picture_margin(const VisualObjectPicture
 
 VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPicturePositionRequest& request) {
     if (request.picture_position < 0) {
-        return {.ok = false, .error = "PicturePosition must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("PicturePosition")};
     }
 
     return set_visual_object_scalar_property(
@@ -6878,7 +6890,7 @@ VisualAssetEditResult set_visual_object_picture_position(const VisualObjectPictu
 
 VisualAssetEditResult set_visual_object_picture_spacing(const VisualObjectPictureSpacingRequest& request) {
     if (request.picture_spacing < 0) {
-        return {.ok = false, .error = "PictureSpacing must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("PictureSpacing")};
     }
 
     return set_visual_object_scalar_property(
@@ -6892,7 +6904,7 @@ VisualAssetEditResult set_visual_object_picture_spacing(const VisualObjectPictur
 VisualAssetEditResult set_visual_object_picture_selection_display(
     const VisualObjectPictureSelectionDisplayRequest& request) {
     if (request.picture_selection_display < 0) {
-        return {.ok = false, .error = "PictureSelectionDisplay must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("PictureSelectionDisplay")};
     }
 
     return set_visual_object_scalar_property(
@@ -6950,7 +6962,7 @@ VisualAssetEditResult set_visual_object_font_name(const VisualObjectFontNameRequ
 
 VisualAssetEditResult set_visual_object_font_size(const VisualObjectFontSizeRequest& request) {
     if (!std::isfinite(request.font_size) || request.font_size < 0.0) {
-        return {.ok = false, .error = "FontSize must be a finite non-negative value."};
+        return {.ok = false, .error = visual_asset_text("VisualAssetEditor.Property.FontSizeFiniteNonNegativeRequired")};
     }
 
     return set_visual_object_scalar_property(
@@ -7117,7 +7129,7 @@ VisualAssetEditResult set_visual_object_row_source(const VisualObjectRowSourceRe
 
 VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSourceTypeRequest& request) {
     if (request.row_source_type < 0) {
-        return {.ok = false, .error = "RowSourceType must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("RowSourceType")};
     }
 
     return set_visual_object_scalar_property(
@@ -7130,7 +7142,7 @@ VisualAssetEditResult set_visual_object_row_source_type(const VisualObjectRowSou
 
 VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColumnRequest& request) {
     if (request.bound_column < 0) {
-        return {.ok = false, .error = "BoundColumn must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BoundColumn")};
     }
 
     return set_visual_object_scalar_property(
@@ -7143,7 +7155,7 @@ VisualAssetEditResult set_visual_object_bound_column(const VisualObjectBoundColu
 
 VisualAssetEditResult set_visual_object_button_count(const VisualObjectButtonCountRequest& request) {
     if (request.button_count < 0) {
-        return {.ok = false, .error = "ButtonCount must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ButtonCount")};
     }
 
     return set_visual_object_scalar_property(
@@ -7156,7 +7168,7 @@ VisualAssetEditResult set_visual_object_button_count(const VisualObjectButtonCou
 
 VisualAssetEditResult set_visual_object_column_count(const VisualObjectColumnCountRequest& request) {
     if (request.column_count < 0) {
-        return {.ok = false, .error = "ColumnCount must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ColumnCount")};
     }
 
     return set_visual_object_scalar_property(
@@ -7214,7 +7226,7 @@ VisualAssetEditResult set_visual_object_multi_select(const VisualObjectMultiSele
 
 VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& request) {
     if (request.style < 0) {
-        return {.ok = false, .error = "Style must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("Style")};
     }
 
     return set_visual_object_scalar_property(
@@ -7227,7 +7239,7 @@ VisualAssetEditResult set_visual_object_style(const VisualObjectStyleRequest& re
 
 VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRequest& request) {
     if (request.list_index < 0) {
-        return {.ok = false, .error = "ListIndex must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ListIndex")};
     }
 
     return set_visual_object_scalar_property(
@@ -7240,7 +7252,7 @@ VisualAssetEditResult set_visual_object_list_index(const VisualObjectListIndexRe
 
 VisualAssetEditResult set_visual_object_left_column(const VisualObjectLeftColumnRequest& request) {
     if (request.left_column < 0) {
-        return {.ok = false, .error = "LeftColumn must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("LeftColumn")};
     }
 
     return set_visual_object_scalar_property(
@@ -7262,7 +7274,7 @@ VisualAssetEditResult set_visual_object_display_value(const VisualObjectDisplayV
 
 VisualAssetEditResult set_visual_object_selected_back_color(const VisualObjectSelectedBackColorRequest& request) {
     if (request.selected_back_color < 0) {
-        return {.ok = false, .error = "SelectedBackColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("SelectedBackColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7275,7 +7287,7 @@ VisualAssetEditResult set_visual_object_selected_back_color(const VisualObjectSe
 
 VisualAssetEditResult set_visual_object_selected_fore_color(const VisualObjectSelectedForeColorRequest& request) {
     if (request.selected_fore_color < 0) {
-        return {.ok = false, .error = "SelectedForeColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("SelectedForeColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7289,7 +7301,7 @@ VisualAssetEditResult set_visual_object_selected_fore_color(const VisualObjectSe
 VisualAssetEditResult set_visual_object_selected_item_back_color(
     const VisualObjectSelectedItemBackColorRequest& request) {
     if (request.selected_item_back_color < 0) {
-        return {.ok = false, .error = "SelectedItemBackColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("SelectedItemBackColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7303,7 +7315,7 @@ VisualAssetEditResult set_visual_object_selected_item_back_color(
 VisualAssetEditResult set_visual_object_selected_item_fore_color(
     const VisualObjectSelectedItemForeColorRequest& request) {
     if (request.selected_item_fore_color < 0) {
-        return {.ok = false, .error = "SelectedItemForeColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("SelectedItemForeColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7317,7 +7329,7 @@ VisualAssetEditResult set_visual_object_selected_item_fore_color(
 VisualAssetEditResult set_visual_object_disabled_item_back_color(
     const VisualObjectDisabledItemBackColorRequest& request) {
     if (request.disabled_item_back_color < 0) {
-        return {.ok = false, .error = "DisabledItemBackColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DisabledItemBackColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7331,7 +7343,7 @@ VisualAssetEditResult set_visual_object_disabled_item_back_color(
 VisualAssetEditResult set_visual_object_disabled_item_fore_color(
     const VisualObjectDisabledItemForeColorRequest& request) {
     if (request.disabled_item_fore_color < 0) {
-        return {.ok = false, .error = "DisabledItemForeColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DisabledItemForeColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7345,7 +7357,7 @@ VisualAssetEditResult set_visual_object_disabled_item_fore_color(
 VisualAssetEditResult set_visual_object_item_back_color(
     const VisualObjectItemBackColorRequest& request) {
     if (request.item_back_color < 0) {
-        return {.ok = false, .error = "ItemBackColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ItemBackColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7359,7 +7371,7 @@ VisualAssetEditResult set_visual_object_item_back_color(
 VisualAssetEditResult set_visual_object_item_fore_color(
     const VisualObjectItemForeColorRequest& request) {
     if (request.item_fore_color < 0) {
-        return {.ok = false, .error = "ItemForeColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ItemForeColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7373,7 +7385,7 @@ VisualAssetEditResult set_visual_object_item_fore_color(
 VisualAssetEditResult set_visual_object_highlight_back_color(
     const VisualObjectHighlightBackColorRequest& request) {
     if (request.highlight_back_color < 0) {
-        return {.ok = false, .error = "HighlightBackColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("HighlightBackColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7387,7 +7399,7 @@ VisualAssetEditResult set_visual_object_highlight_back_color(
 VisualAssetEditResult set_visual_object_highlight_fore_color(
     const VisualObjectHighlightForeColorRequest& request) {
     if (request.highlight_fore_color < 0) {
-        return {.ok = false, .error = "HighlightForeColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("HighlightForeColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7401,7 +7413,7 @@ VisualAssetEditResult set_visual_object_highlight_fore_color(
 VisualAssetEditResult set_visual_object_back_color(
     const VisualObjectBackColorRequest& request) {
     if (request.back_color < 0) {
-        return {.ok = false, .error = "BackColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("BackColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7415,7 +7427,7 @@ VisualAssetEditResult set_visual_object_back_color(
 VisualAssetEditResult set_visual_object_fore_color(
     const VisualObjectForeColorRequest& request) {
     if (request.fore_color < 0) {
-        return {.ok = false, .error = "ForeColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("ForeColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7429,7 +7441,7 @@ VisualAssetEditResult set_visual_object_fore_color(
 VisualAssetEditResult set_visual_object_disabled_back_color(
     const VisualObjectDisabledBackColorRequest& request) {
     if (request.disabled_back_color < 0) {
-        return {.ok = false, .error = "DisabledBackColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DisabledBackColor")};
     }
 
     return set_visual_object_scalar_property(
@@ -7443,7 +7455,7 @@ VisualAssetEditResult set_visual_object_disabled_back_color(
 VisualAssetEditResult set_visual_object_disabled_fore_color(
     const VisualObjectDisabledForeColorRequest& request) {
     if (request.disabled_fore_color < 0) {
-        return {.ok = false, .error = "DisabledForeColor must not be negative."};
+        return {.ok = false, .error = visual_asset_property_non_negative_text("DisabledForeColor")};
     }
 
     return set_visual_object_scalar_property(
