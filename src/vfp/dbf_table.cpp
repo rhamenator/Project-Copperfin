@@ -1628,7 +1628,7 @@ DbfWriteResult set_record_deleted_flag(
     bool deleted) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open table file."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
     std::vector<std::uint8_t> bytes = {
@@ -1642,17 +1642,17 @@ DbfWriteResult set_record_deleted_flag(
         return {.ok = false, .error = header_result.error};
     }
     if (record_index >= header_result.header.record_count) {
-        return {.ok = false, .error = "Record index is out of range.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordIndexOutOfRange"), .record_count = header_result.header.record_count};
     }
 
     const std::size_t record_offset = header_result.header.header_length + (record_index * header_result.header.record_length);
     if (record_offset >= bytes.size()) {
-        return {.ok = false, .error = "Record data is truncated.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"), .record_count = header_result.header.record_count};
     }
 
     bytes[record_offset] = deleted ? 0x2AU : 0x20U;
     if (!write_binary_file(path, bytes)) {
-        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
 
     return {.ok = true, .error = {}, .record_count = header_result.header.record_count};
@@ -1661,7 +1661,7 @@ DbfWriteResult set_record_deleted_flag(
 DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t record_count) {
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
-        return {.ok = false, .error = "Unable to open table file."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
@@ -1671,22 +1671,22 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
 
     const auto& header = header_result.header;
     if (record_count > header.record_count) {
-        return {.ok = false, .error = "Requested record count exceeds current table size.", .record_count = header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RequestedRecordCountTooLarge"), .record_count = header.record_count};
     }
     if (header.header_length > bytes.size()) {
-        return {.ok = false, .error = "Table header is truncated.", .record_count = header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated"), .record_count = header.record_count};
     }
 
     const std::size_t new_size = header.header_length + (record_count * static_cast<std::size_t>(header.record_length)) + 1U;
     if (new_size > bytes.size()) {
-        return {.ok = false, .error = "Record data is truncated.", .record_count = header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"), .record_count = header.record_count};
     }
 
     bytes.resize(new_size);
     bytes.back() = 0x1AU;
     write_le_u32(bytes, 4U, static_cast<std::uint32_t>(record_count));
     if (!write_binary_file(path, bytes)) {
-        return {.ok = false, .error = "Unable to write table file.", .record_count = header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header.record_count};
     }
 
     return {.ok = true, .error = {}, .record_count = record_count};
@@ -1695,7 +1695,7 @@ DbfWriteResult truncate_dbf_table_file(const std::string& path, std::size_t reco
 DbfWriteResult pack_dbf_table_file(const std::string& path) {
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
-        return {.ok = false, .error = "Unable to open table file."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
@@ -1708,7 +1708,7 @@ DbfWriteResult pack_dbf_table_file(const std::string& path) {
     const std::size_t original_record_count = header.record_count;
     const std::size_t required_size = data_start + (original_record_count * static_cast<std::size_t>(header.record_length));
     if (required_size > bytes.size()) {
-        return {.ok = false, .error = "Record data is truncated.", .record_count = original_record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.RecordDataTruncated"), .record_count = original_record_count};
     }
 
     std::vector<std::uint8_t> packed;
@@ -1731,7 +1731,7 @@ DbfWriteResult pack_dbf_table_file(const std::string& path) {
     packed.push_back(0x1AU);
     write_le_u32(packed, 4U, kept_count);
     if (!write_binary_file(path, packed)) {
-        return {.ok = false, .error = "Unable to write table file.", .record_count = original_record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = original_record_count};
     }
 
     return {.ok = true, .error = {}, .record_count = kept_count};
@@ -1794,7 +1794,7 @@ DbfWriteResult pack_dbf_memo_file(const std::string& path) {
 DbfWriteResult zap_dbf_table_file(const std::string& path) {
     std::vector<std::uint8_t> bytes = read_binary_file(path);
     if (bytes.empty()) {
-        return {.ok = false, .error = "Unable to open table file."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
     const DbfParseResult header_result = parse_dbf_header(bytes);
@@ -1803,7 +1803,7 @@ DbfWriteResult zap_dbf_table_file(const std::string& path) {
     }
 
     if (header_result.header.header_length > bytes.size()) {
-        return {.ok = false, .error = "Table header is truncated.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TableHeaderTruncated"), .record_count = header_result.header.record_count};
     }
 
     std::vector<std::uint8_t> truncated(
@@ -1812,7 +1812,7 @@ DbfWriteResult zap_dbf_table_file(const std::string& path) {
     truncated.push_back(0x1AU);
     write_le_u32(truncated, 4U, 0U);
     if (!write_binary_file(path, truncated)) {
-        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
 
     return {.ok = true, .error = {}, .record_count = 0U};

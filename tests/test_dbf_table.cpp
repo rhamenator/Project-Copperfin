@@ -1203,6 +1203,47 @@ void test_dbf_table_record_replacement_errors_resolve_through_localization_catal
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_dbf_table_row_header_errors_resolve_through_localization_catalog() {
+    namespace fs = std::filesystem;
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.RequestedRecordCountTooLarge") ==
+            "Requested record count exceeds current table size.",
+        "#2385: DBF table requested-count error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.TableHeaderTruncated") ==
+            "Table header is truncated.",
+        "#2385: DBF table header truncation error should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Vfp.DbfTable.Error.RequestedRecordCountTooLarge") !=
+            english_catalog.translate("Vfp.DbfTable.Error.RequestedRecordCountTooLarge"),
+        "#2385: DBF table row/header mutation errors should be pseudo-localizable");
+
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_localized_row_header_error_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "localized_row_header_error.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"ALPHA"}});
+    expect(create_result.ok, "#2385: localized row/header validation fixture should be created");
+
+    const auto truncate_result = copperfin::vfp::truncate_dbf_table_file(table_path.string(), 2U);
+    expect(!truncate_result.ok, "#2385: truncation should reject record counts above current table size");
+    expect(
+        truncate_result.error == "Requested record count exceeds current table size.",
+        "#2385: too-large truncate count should preserve the default localized error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_memo_sidecar_version_mismatch_is_diagnosed() {
     // GAP-02: malformed memo sidecar headers must not crash parsing.
     // If payload decoding fails, the reader should surface a stable placeholder.
@@ -1657,6 +1698,7 @@ int main() {
     test_dbf_table_creation_errors_resolve_through_localization_catalog();
     test_dbf_table_schema_mutation_errors_resolve_through_localization_catalog();
     test_dbf_table_record_replacement_errors_resolve_through_localization_catalog();
+    test_dbf_table_row_header_errors_resolve_through_localization_catalog();
     test_memo_sidecar_version_mismatch_is_diagnosed();
     test_dbf_field_name_without_null_terminator_is_tolerated();
     test_currency_field_boundary_values();
