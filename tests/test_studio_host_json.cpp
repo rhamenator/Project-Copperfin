@@ -4401,6 +4401,124 @@ void test_studio_host_launch_row_list_diagnostics_localize(const std::string& st
     }
 }
 
+void test_studio_host_launch_deleted_state_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_deleted_state_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--deleted-states",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2436: default deleted-states diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "A deleted-states request requires at least one target selector.",
+        "#2436: default deleted-states diagnostics should preserve en-US target-selector prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--deleted-states",
+            "--deleted-state-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2436: pseudo-localized deleted-state item diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2436: pseudo-localized deleted-state item diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--deleted-state",
+        "#2436: pseudo-localized deleted-state item diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "A deleted-states item requires --deleted-state after its target selector.",
+        "#2436: pseudo-localized deleted-state item diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--deleted-state-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2436: pseudo-localized deleted-state target mode diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2436: pseudo-localized deleted-state target mode diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--deleted-states",
+        "#2436: pseudo-localized deleted-state target mode diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Deleted-state target arguments can only be used with --deleted-states.",
+        "#2436: pseudo-localized deleted-state target mode diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--subtree-deleted-state",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2436: pseudo-localized subtree missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2436: pseudo-localized subtree missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--subtree-deleted",
+        "#2436: pseudo-localized subtree missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "A subtree deleted-state request requires --subtree-deleted.",
+        "#2436: pseudo-localized subtree missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--subtree-deleted-state",
+            "--subtree-deleted", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2436: pseudo-localized subtree root diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2436: pseudo-localized subtree root diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "root",
+        "#2436: pseudo-localized subtree root diagnostics should preserve selector placeholder");
+    expect_not_contains(process.stdout_text,
+        "A subtree deleted-state request requires at least one root selector.",
+        "#2436: pseudo-localized subtree root diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -117919,6 +118037,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_list_grid_property_diagnostics_localize(argv[1]);
     test_studio_host_launch_text_binding_diagnostics_localize(argv[1]);
     test_studio_host_launch_row_list_diagnostics_localize(argv[1]);
+    test_studio_host_launch_deleted_state_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

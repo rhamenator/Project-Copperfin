@@ -150,6 +150,54 @@ std::string localized_object_arguments_require_mode(
         });
 }
 
+std::string localized_request_requires_selector(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view request_name,
+    std::string_view selector_name) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.RequestRequiresSelector",
+        {
+            {"requestName", std::string(request_name)},
+            {"selectorName", std::string(selector_name)}
+        });
+}
+
+std::string localized_request_item_requires_option_after_target(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view item_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector",
+        {
+            {"itemName", std::string(item_name)},
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_request_requires_option(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view request_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.RequestRequiresOption",
+        {
+            {"requestName", std::string(request_name)},
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_request_arguments_require_mode(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view request_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.RequestArgumentsRequireMode",
+        {
+            {"requestName", std::string(request_name)},
+            {"option", std::string(option)}
+        });
+}
+
 std::string localized_object_action_requires_option(
     const localization::LocalizedCatalog& catalog,
     std::string_view action_name,
@@ -9210,28 +9258,46 @@ LaunchParseResult parse_launch_arguments(
             "--multi-select-object")};
     }
     if (result.request.deleted_states && result.request.deleted_state_objects.empty()) {
-        return {.ok = false, .error = "A deleted-states request requires at least one target selector."};
+        return {.ok = false, .error = localized_request_requires_selector(
+            catalog,
+            "deleted-states",
+            "target")};
     }
     if (result.request.deleted_states) {
         for (const auto& object : result.request.deleted_state_objects) {
             if (!object.deleted_available) {
-                return {.ok = false, .error = "A deleted-states item requires --deleted-state after its target selector."};
+                return {.ok = false, .error = localized_request_item_requires_option_after_target(
+                    catalog,
+                    "deleted-states",
+                    "--deleted-state")};
             }
         }
     }
     if (!result.request.deleted_states && !result.request.deleted_state_objects.empty()) {
-        return {.ok = false, .error = "Deleted-state target arguments can only be used with --deleted-states."};
+        return {.ok = false, .error = localized_request_arguments_require_mode(
+            catalog,
+            "Deleted-state target",
+            "--deleted-states")};
     }
     if (result.request.subtree_deleted_state && !result.request.subtree_deleted_available) {
-        return {.ok = false, .error = "A subtree deleted-state request requires --subtree-deleted."};
+        return {.ok = false, .error = localized_request_requires_option(
+            catalog,
+            "subtree deleted-state",
+            "--subtree-deleted")};
     }
     if (result.request.subtree_deleted_state &&
         result.request.object_name.empty() &&
         result.request.unique_id.empty()) {
-        return {.ok = false, .error = "A subtree deleted-state request requires at least one root selector."};
+        return {.ok = false, .error = localized_request_requires_selector(
+            catalog,
+            "subtree deleted-state",
+            "root")};
     }
     if (!result.request.subtree_deleted_state && result.request.subtree_deleted_available) {
-        return {.ok = false, .error = "Subtree deleted-state arguments can only be used with --subtree-deleted-state."};
+        return {.ok = false, .error = localized_request_arguments_require_mode(
+            catalog,
+            "Subtree deleted-state",
+            "--subtree-deleted-state")};
     }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
