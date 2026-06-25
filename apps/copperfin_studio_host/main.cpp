@@ -6972,7 +6972,9 @@ VisualMethodDeleteParseResult parse_visual_method_delete_arguments(
     return result;
 }
 
-VisualMethodDeleteBatchParseResult parse_visual_method_delete_batch_arguments(const std::vector<std::string>& args) {
+VisualMethodDeleteBatchParseResult parse_visual_method_delete_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodDeleteBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-delete-batch") != args.end();
@@ -6987,7 +6989,9 @@ VisualMethodDeleteBatchParseResult parse_visual_method_delete_batch_arguments(co
 
     auto current_method = [&]() -> copperfin::vfp::VisualObjectMethodDeleteBatchItem* {
         if (result.request.methods.empty()) {
-            fail("Visual method delete batch item options require a preceding --method-name.");
+            fail(catalog.translate(
+                "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+                {{"methodNameOption", "--method-name"}}));
             return nullptr;
         }
         return &result.request.methods.back();
@@ -6997,7 +7001,7 @@ VisualMethodDeleteBatchParseResult parse_visual_method_delete_batch_arguments(co
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7021,7 +7025,7 @@ VisualMethodDeleteBatchParseResult parse_visual_method_delete_batch_arguments(co
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             if (auto* method = current_method()) {
@@ -7036,20 +7040,22 @@ VisualMethodDeleteBatchParseResult parse_visual_method_delete_batch_arguments(co
                 method->unique_id = require_value(argument);
             }
         } else {
-            fail("Unknown visual-method-delete-batch option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-delete-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.methods.empty()) {
-        fail("No method deletes were provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodDeletes"));
     }
     return result;
 }
 
-VisualMethodRenameParseResult parse_visual_method_rename_arguments(const std::vector<std::string>& args) {
+VisualMethodRenameParseResult parse_visual_method_rename_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodRenameParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-rename") != args.end();
@@ -7066,7 +7072,7 @@ VisualMethodRenameParseResult parse_visual_method_rename_arguments(const std::ve
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7083,7 +7089,7 @@ VisualMethodRenameParseResult parse_visual_method_rename_arguments(const std::ve
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -7098,23 +7104,25 @@ VisualMethodRenameParseResult parse_visual_method_rename_arguments(const std::ve
             result.request.new_method_name = require_value(argument);
             result.new_method_name_provided = !result.request.new_method_name.empty();
         } else {
-            fail("Unknown visual-method-rename option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-rename", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && !result.method_name_provided) {
-        fail("No method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodName"));
     }
     if (result.ok && !result.new_method_name_provided) {
-        fail("No target method name was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoTargetMethodName"));
     }
     return result;
 }
 
-VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(const std::vector<std::string>& args) {
+VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     VisualMethodRenameBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--visual-method-rename-batch") != args.end();
@@ -7129,7 +7137,9 @@ VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(co
 
     auto current_method = [&]() -> copperfin::vfp::VisualObjectMethodRenameBatchItem* {
         if (result.request.methods.empty()) {
-            fail("Visual method rename batch item options require a preceding --method-name.");
+            fail(catalog.translate(
+                "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+                {{"methodNameOption", "--method-name"}}));
             return nullptr;
         }
         return &result.request.methods.back();
@@ -7139,7 +7149,7 @@ VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(co
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(visual_method_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -7168,7 +7178,7 @@ VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(co
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(visual_method_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             if (auto* method = current_method()) {
@@ -7183,20 +7193,20 @@ VisualMethodRenameBatchParseResult parse_visual_method_rename_batch_arguments(co
                 method->unique_id = require_value(argument);
             }
         } else {
-            fail("Unknown visual-method-rename-batch option: " + argument);
+            fail(visual_method_parse_unknown_option(catalog, "visual-method-rename-batch", argument));
         }
     }
 
     if (result.ok && !result.path_provided) {
-        fail("No asset path was provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.methods.empty()) {
-        fail("No method renames were provided.");
+        fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoMethodRenames"));
     }
     if (result.ok) {
         for (const auto& method : result.request.methods) {
             if (method.new_method_name.empty()) {
-                fail("No target method name was provided.");
+                fail(visual_method_parse_message(catalog, "StudioHost.VisualMethodParse.Error.NoTargetMethodName"));
                 break;
             }
         }
@@ -22894,7 +22904,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_delete_batch_parse = parse_visual_method_delete_batch_arguments(args);
+    const auto visual_method_delete_batch_parse = parse_visual_method_delete_batch_arguments(catalog, args);
     if (visual_method_delete_batch_parse.requested) {
         if (!visual_method_delete_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -22924,7 +22934,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_rename_batch_parse = parse_visual_method_rename_batch_arguments(args);
+    const auto visual_method_rename_batch_parse = parse_visual_method_rename_batch_arguments(catalog, args);
     if (visual_method_rename_batch_parse.requested) {
         if (!visual_method_rename_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
@@ -23074,7 +23084,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto visual_method_rename_parse = parse_visual_method_rename_arguments(args);
+    const auto visual_method_rename_parse = parse_visual_method_rename_arguments(catalog, args);
     if (visual_method_rename_parse.requested) {
         if (!visual_method_rename_parse.ok) {
             const auto result = copperfin::vfp::VisualAssetEditResult{
