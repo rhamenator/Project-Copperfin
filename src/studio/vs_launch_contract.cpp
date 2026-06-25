@@ -10573,114 +10573,147 @@ LaunchParseResult parse_launch_arguments(
             "--font-shadow-object")};
     }
     if (result.request.max_width_object && !result.request.max_width_available) {
-        return {.ok = false, .error = "An object max-width assignment requires --max-width."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "max-width", "--max-width")};
     }
     if (result.request.max_width_object && result.request.max_width_objects.empty()) {
-        return {.ok = false, .error = "An object max-width assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "max-width")};
     }
     if (!result.request.max_width_object &&
         (result.request.max_width_available ||
          !result.request.max_width_objects.empty())) {
-        return {.ok = false, .error = "Max-width arguments can only be used with --max-width-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Max-width",
+            "--max-width-object")};
     }
     if (result.request.max_left_object && !result.request.max_left_available) {
-        return {.ok = false, .error = "An object max-left assignment requires --max-left."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "max-left", "--max-left")};
     }
     if (result.request.max_left_object && result.request.max_left_objects.empty()) {
-        return {.ok = false, .error = "An object max-left assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "max-left")};
     }
     if (!result.request.max_left_object &&
         (result.request.max_left_available ||
          !result.request.max_left_objects.empty())) {
-        return {.ok = false, .error = "Max-left arguments can only be used with --max-left-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Max-left",
+            "--max-left-object")};
     }
     if (result.request.max_top_object && !result.request.max_top_available) {
-        return {.ok = false, .error = "An object max-top assignment requires --max-top."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "max-top", "--max-top")};
     }
     if (result.request.max_top_object && result.request.max_top_objects.empty()) {
-        return {.ok = false, .error = "An object max-top assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "max-top")};
     }
     if (!result.request.max_top_object &&
         (result.request.max_top_available ||
          !result.request.max_top_objects.empty())) {
-        return {.ok = false, .error = "Max-top arguments can only be used with --max-top-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Max-top",
+            "--max-top-object")};
     }
     if (result.request.auto_center_object && !result.request.auto_center_available) {
-        return {.ok = false, .error = "An object auto-center assignment requires --auto-center."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "auto-center", "--auto-center")};
     }
     if (result.request.auto_center_object && result.request.auto_center_objects.empty()) {
-        return {.ok = false, .error = "An object auto-center assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "auto-center")};
     }
     if (!result.request.auto_center_object &&
         (result.request.auto_center_available ||
          !result.request.auto_center_objects.empty())) {
-        return {.ok = false, .error = "Auto-center arguments can only be used with --auto-center-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Auto-center",
+            "--auto-center-object")};
     }
     if (result.request.auto_size_object && !result.request.auto_size_available) {
-        return {.ok = false, .error = "An object auto-size assignment requires --auto-size."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "auto-size", "--auto-size")};
     }
     if (result.request.auto_size_object && result.request.auto_size_objects.empty()) {
-        return {.ok = false, .error = "An object auto-size assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "auto-size")};
     }
     if (!result.request.auto_size_object &&
         (result.request.auto_size_available ||
          !result.request.auto_size_objects.empty())) {
-        return {.ok = false, .error = "Auto-size arguments can only be used with --auto-size-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Auto-size",
+            "--auto-size-object")};
     }
     if (result.request.auto_release_object && !result.request.auto_release_available) {
-        return {.ok = false, .error = "An object auto-release assignment requires --auto-release."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "auto-release", "--auto-release")};
     }
     if (result.request.auto_release_object && result.request.auto_release_objects.empty()) {
-        return {.ok = false, .error = "An object auto-release assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "auto-release")};
     }
     if (!result.request.auto_release_object &&
         (result.request.auto_release_available ||
          !result.request.auto_release_objects.empty())) {
-        return {.ok = false, .error = "Auto-release arguments can only be used with --auto-release-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Auto-release",
+            "--auto-release-object")};
     }
     if (result.request.continuous_scroll_object && !result.request.continuous_scroll_available) {
-        return {.ok = false, .error = "An object continuous-scroll assignment requires --continuous-scroll."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "continuous-scroll",
+            "--continuous-scroll")};
     }
     if (result.request.continuous_scroll_object && result.request.continuous_scroll_objects.empty()) {
-        return {.ok = false, .error = "An object continuous-scroll assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "continuous-scroll")};
     }
     if (!result.request.continuous_scroll_object &&
         (result.request.continuous_scroll_available ||
          !result.request.continuous_scroll_objects.empty())) {
-        return {.ok = false, .error = "Continuous-scroll arguments can only be used with --continuous-scroll-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Continuous-scroll",
+            "--continuous-scroll-object")};
     }
     if (result.request.dockable_object && !result.request.dockable_available) {
-        return {.ok = false, .error = "An object dockable assignment requires --dockable."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "dockable", "--dockable")};
     }
     if (result.request.dockable_object && result.request.dockable_objects.empty()) {
-        return {.ok = false, .error = "An object dockable assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dockable")};
     }
     if (!result.request.dockable_object &&
         (result.request.dockable_available ||
          !result.request.dockable_objects.empty())) {
-        return {.ok = false, .error = "Dockable arguments can only be used with --dockable-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dockable",
+            "--dockable-object")};
     }
     if (result.request.clip_controls_object && !result.request.clip_controls_available) {
-        return {.ok = false, .error = "An object clip-controls assignment requires --clip-controls."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "clip-controls", "--clip-controls")};
     }
     if (result.request.clip_controls_object && result.request.clip_controls_objects.empty()) {
-        return {.ok = false, .error = "An object clip-controls assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "clip-controls")};
     }
     if (!result.request.clip_controls_object &&
         (result.request.clip_controls_available ||
          !result.request.clip_controls_objects.empty())) {
-        return {.ok = false, .error = "Clip-controls arguments can only be used with --clip-controls-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Clip-controls",
+            "--clip-controls-object")};
     }
     if (result.request.sparse_object && !result.request.sparse_available) {
-        return {.ok = false, .error = "An object sparse assignment requires --sparse."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "sparse", "--sparse")};
     }
     if (result.request.sparse_object && result.request.sparse_objects.empty()) {
-        return {.ok = false, .error = "An object sparse assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "sparse")};
     }
     if (!result.request.sparse_object &&
         (result.request.sparse_available ||
          !result.request.sparse_objects.empty())) {
-        return {.ok = false, .error = "Sparse arguments can only be used with --sparse-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Sparse",
+            "--sparse-object")};
     }
     if (result.request.lock_screen_object && !result.request.lock_screen_available) {
         return {.ok = false, .error = "An object lock-screen assignment requires --lock-screen."};
