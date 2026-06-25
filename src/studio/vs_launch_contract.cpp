@@ -111,13 +111,24 @@ std::string localized_missing_value_after_option(
 }
 
 std::string localized_selection_context_error(const localization::LocalizedCatalog& catalog) {
+    const std::string allowed_values = catalog.translate(
+        "StudioHost.LaunchParse.SelectionContextAllowedValues",
+        {
+            {"visualObject", studio_editor_selection_context_name(StudioEditorSelectionContext::visual_object)},
+            {"visualMethod", studio_editor_selection_context_name(StudioEditorSelectionContext::visual_method)},
+            {"containerObject", studio_editor_selection_context_name(StudioEditorSelectionContext::container_object)},
+            {"classDesigner", studio_editor_selection_context_name(StudioEditorSelectionContext::class_designer)},
+            {"reportExpression", studio_editor_selection_context_name(StudioEditorSelectionContext::report_expression)},
+            {"labelExpression", studio_editor_selection_context_name(StudioEditorSelectionContext::label_expression)},
+            {"menuItem", studio_editor_selection_context_name(StudioEditorSelectionContext::menu_item)},
+            {"projectItem", studio_editor_selection_context_name(StudioEditorSelectionContext::project_item)},
+            {"dataEnvironment", studio_editor_selection_context_name(StudioEditorSelectionContext::data_environment)}
+        });
     return catalog.translate(
         "StudioHost.LaunchParse.Error.SelectionContextValueRequired",
         {
             {"option", "--selection-context"},
-            {"allowedValues",
-                "visual_object, visual_method, container_object, class_designer, report_expression, "
-                "label_expression, menu_item, project_item, or data_environment"}
+            {"allowedValues", allowed_values}
         });
 }
 

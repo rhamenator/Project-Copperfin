@@ -5982,6 +5982,17 @@ void test_studio_host_launch_core_value_diagnostics_localize(const std::string& 
         "The --undo-mode value must be edit or command.",
         "#2488: default undo-mode value diagnostics should preserve en-US prose");
 
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--selection-context", "bogus_context"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2501: default selection-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "The --selection-context value must be visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.",
+        "#2501: default selection-context diagnostics should preserve en-US list grammar");
+
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
         studio_host_path,
@@ -5996,9 +6007,12 @@ void test_studio_host_launch_core_value_diagnostics_localize(const std::string& 
     expect_contains(process.stdout_text,
         "visual_object",
         "#2449: pseudo-localized selection-context diagnostics should preserve selection-context tokens");
+    expect_contains(process.stdout_text,
+        "data_environment",
+        "#2501: pseudo-localized selection-context diagnostics should preserve final selection-context token");
     expect_not_contains(process.stdout_text,
         "The --selection-context value must be visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, or data_environment.",
-        "#2449: pseudo-localized selection-context diagnostics should not fall back to raw English prose");
+        "#2501: pseudo-localized selection-context diagnostics should not fall back to raw English list grammar");
 
     process = run_process_capture(
         studio_host_path,

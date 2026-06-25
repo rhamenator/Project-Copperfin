@@ -106,6 +106,7 @@
   "StudioHost.LaunchParse.Error.RequestRequiresOption": "A {requestName} request requires {option}.",
   "StudioHost.LaunchParse.Error.RequestRequiresSelector": "A {requestName} request requires at least one {selectorName} selector.",
   "StudioHost.LaunchParse.Error.SelectionContextValueRequired": "The {option} value must be {allowedValues}.",
+  "StudioHost.LaunchParse.SelectionContextAllowedValues": "{visualObject}, {visualMethod}, {containerObject}, {classDesigner}, {reportExpression}, {labelExpression}, {menuItem}, {projectItem}, or {dataEnvironment}",
   "StudioHost.LaunchParse.Error.SingleObjectCommand": "Only one object command can be used at a time.",
   "StudioHost.LaunchParse.Error.SinglePropertyCommand": "Only one property command can be used at a time.",
   "StudioHost.LaunchParse.Error.TrueFalseValueRequired": "The {option} value must be {trueValue} or {falseValue}.",
