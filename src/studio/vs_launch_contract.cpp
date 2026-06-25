@@ -2915,14 +2915,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--partition") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --partition."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--partition")};
             }
             int partition = 0;
             if (!parse_int_value(args[++index], partition)) {
-                return {.ok = false, .error = "The --partition value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--partition")};
             }
             if (partition < 0) {
-                return {.ok = false, .error = "The --partition value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--partition")};
             }
             result.request.partition = partition;
             result.request.partition_available = true;
@@ -2931,14 +2931,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--record-source-type") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --record-source-type."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--record-source-type")};
             }
             int record_source_type = 0;
             if (!parse_int_value(args[++index], record_source_type)) {
-                return {.ok = false, .error = "The --record-source-type value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--record-source-type")};
             }
             if (record_source_type < 0) {
-                return {.ok = false, .error = "The --record-source-type value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--record-source-type")};
             }
             result.request.record_source_type = record_source_type;
             result.request.record_source_type_available = true;
@@ -2947,14 +2947,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--column-order") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --column-order."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--column-order")};
             }
             int column_order = 0;
             if (!parse_int_value(args[++index], column_order)) {
-                return {.ok = false, .error = "The --column-order value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--column-order")};
             }
             if (column_order < 0) {
-                return {.ok = false, .error = "The --column-order value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--column-order")};
             }
             result.request.column_order = column_order;
             result.request.column_order_available = true;
@@ -2963,14 +2963,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--highlight-style") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --highlight-style."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--highlight-style")};
             }
             int highlight_style = 0;
             if (!parse_int_value(args[++index], highlight_style)) {
-                return {.ok = false, .error = "The --highlight-style value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--highlight-style")};
             }
             if (highlight_style < 0) {
-                return {.ok = false, .error = "The --highlight-style value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--highlight-style")};
             }
             result.request.highlight_style = highlight_style;
             result.request.highlight_style_available = true;
@@ -2979,14 +2979,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--child-order") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --child-order."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--child-order")};
             }
             int child_order = 0;
             if (!parse_int_value(args[++index], child_order)) {
-                return {.ok = false, .error = "The --child-order value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--child-order")};
             }
             if (child_order < 0) {
-                return {.ok = false, .error = "The --child-order value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--child-order")};
             }
             result.request.child_order = child_order;
             result.request.child_order_available = true;
@@ -2995,14 +2995,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--fill-color") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --fill-color."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--fill-color")};
             }
             int fill_color = 0;
             if (!parse_int_value(args[++index], fill_color)) {
-                return {.ok = false, .error = "The --fill-color value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--fill-color")};
             }
             if (fill_color < 0) {
-                return {.ok = false, .error = "The --fill-color value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--fill-color")};
             }
             result.request.fill_color = fill_color;
             result.request.fill_color_available = true;
@@ -3011,14 +3011,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--list-item-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --list-item-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--list-item-id")};
             }
             int list_item_id = 0;
             if (!parse_int_value(args[++index], list_item_id)) {
-                return {.ok = false, .error = "The --list-item-id value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--list-item-id")};
             }
             if (list_item_id < 0) {
-                return {.ok = false, .error = "The --list-item-id value must be non-negative."};
+                return {.ok = false, .error = localized_non_negative_value_required(catalog, "--list-item-id")};
             }
             result.request.list_item_id = list_item_id;
             result.request.list_item_id_available = true;

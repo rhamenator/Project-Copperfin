@@ -6301,6 +6301,85 @@ void test_studio_host_launch_grid_value_diagnostics_localize(const std::string& 
     }
 }
 
+void test_studio_host_launch_record_list_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_record_list_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--partition"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2456: default partition missing value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --partition.",
+        "#2456: default partition missing value diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--record-source-type", "alias"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2456: pseudo-localized record-source-type integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2456: pseudo-localized record-source-type integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record-source-type",
+        "#2456: pseudo-localized record-source-type integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --record-source-type value must be an integer.",
+        "#2456: pseudo-localized record-source-type integer diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--column-order", "-1"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2456: pseudo-localized column-order non-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2456: pseudo-localized column-order non-negative diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--column-order",
+        "#2456: pseudo-localized column-order non-negative diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --column-order value must be non-negative.",
+        "#2456: pseudo-localized column-order non-negative diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--list-item-id", "current"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2456: pseudo-localized list-item-id integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2456: pseudo-localized list-item-id integer diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--list-item-id",
+        "#2456: pseudo-localized list-item-id integer diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --list-item-id value must be an integer.",
+        "#2456: pseudo-localized list-item-id integer diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -119839,6 +119918,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_drag_ole_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_drawing_buffer_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_grid_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_record_list_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
