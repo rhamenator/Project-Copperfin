@@ -1035,6 +1035,100 @@ void test_studio_host_editor_action_parse_diagnostics_localize(const std::string
     }
 }
 
+void test_studio_host_toolbox_palette_parse_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_palette_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-query", "--toolbox-context", "menu_item", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2398: default toolbox palette parser diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2398: default toolbox palette parser diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"toolboxPaletteQuery\": null",
+        "#2398: default toolbox palette parser diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "Unknown toolbox context token: menu_item",
+        "#2398: default toolbox palette parser diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-query", "--toolbox-context", "menu_item", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2398: pseudo-localized unknown-toolbox-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2398: pseudo-localized unknown-toolbox-context diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"toolboxPaletteQuery\": null",
+        "#2398: pseudo-localized unknown-toolbox-context diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2398: pseudo-localized unknown-toolbox-context diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "menu_item",
+        "#2398: pseudo-localized unknown-toolbox-context diagnostics should preserve toolbox context tokens");
+    expect_not_contains(process.stdout_text,
+        "Unknown toolbox context token: menu_item",
+        "#2398: pseudo-localized unknown-toolbox-context diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-query", "--toolbox-context", "form", "--toolbox-search", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2398: pseudo-localized missing-value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2398: pseudo-localized missing-value diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--toolbox-search",
+        "#2398: pseudo-localized missing-value diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value for --toolbox-search.",
+        "#2398: pseudo-localized missing-value diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-launch-catalog", "--selection-context", "visual_object", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2398: pseudo-localized unknown-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2398: pseudo-localized unknown-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "toolbox-palette-launch-catalog",
+        "#2398: pseudo-localized unknown-option diagnostics should preserve command names");
+    expect_contains(process.stdout_text,
+        "--selection-context",
+        "#2398: pseudo-localized unknown-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Unknown toolbox-palette-launch-catalog option: --selection-context",
+        "#2398: pseudo-localized unknown-option diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 
 void write_synthetic_form_table_for_deleted_states(const std::filesystem::path& form_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -113170,6 +113264,7 @@ int main(int argc, char** argv) {
     test_studio_host_list_subsystems_localizes_descriptor_text(argv[1]);
     test_studio_host_builder_parse_diagnostics_localize(argv[1]);
     test_studio_host_editor_action_parse_diagnostics_localize(argv[1]);
+    test_studio_host_toolbox_palette_parse_diagnostics_localize(argv[1]);
     test_studio_host_json_exposes_designer_contexts(argv[1]);
     test_studio_host_json_exposes_report_layout_provenance(argv[1]);
     test_studio_host_json_exposes_extended_report_object_kinds(argv[1]);

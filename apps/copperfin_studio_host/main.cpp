@@ -3289,7 +3289,59 @@ EditorActionDispatchExecutionCatalogParseResult parse_editor_action_dispatch_exe
     return result;
 }
 
-ToolboxPaletteLaunchPlanParseResult parse_toolbox_palette_launch_plan_arguments(const std::vector<std::string>& args) {
+std::string toolbox_palette_parse_missing_value(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.ToolboxPaletteParse.Error.MissingValue",
+        {{"option", option}});
+}
+
+std::string toolbox_palette_parse_unknown_selection_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.ToolboxPaletteParse.Error.UnknownSelectionContextToken",
+        {{"token", token}});
+}
+
+std::string toolbox_palette_parse_unknown_toolbox_context_token(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& token) {
+    return catalog.translate(
+        "StudioHost.ToolboxPaletteParse.Error.UnknownToolboxContextToken",
+        {{"token", token}});
+}
+
+std::string toolbox_palette_parse_non_negative_integer(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& option) {
+    return catalog.translate(
+        "StudioHost.ToolboxPaletteParse.Error.NonNegativeInteger",
+        {{"option", option}});
+}
+
+std::string toolbox_palette_parse_unknown_option(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& command_name,
+    const std::string& argument) {
+    return catalog.translate(
+        "StudioHost.ToolboxPaletteParse.Error.UnknownOption",
+        {
+            {"commandName", command_name},
+            {"argument", argument}
+        });
+}
+
+std::string toolbox_palette_parse_message(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+ToolboxPaletteLaunchPlanParseResult parse_toolbox_palette_launch_plan_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxPaletteLaunchPlanParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-palette-launch-plan") != args.end();
@@ -3306,7 +3358,7 @@ ToolboxPaletteLaunchPlanParseResult parse_toolbox_palette_launch_plan_arguments(
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_palette_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3320,7 +3372,7 @@ ToolboxPaletteLaunchPlanParseResult parse_toolbox_palette_launch_plan_arguments(
             const std::string token = require_value(argument);
             copperfin::studio::StudioEditorSelectionContext parsed_context{};
             if (!parse_editor_selection_context_token(token, parsed_context)) {
-                fail("Unknown selection context token: " + token);
+                fail(toolbox_palette_parse_unknown_selection_context_token(catalog, token));
                 continue;
             }
             result.selection_context_provided = true;
@@ -3331,7 +3383,7 @@ ToolboxPaletteLaunchPlanParseResult parse_toolbox_palette_launch_plan_arguments(
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_palette_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3340,17 +3392,18 @@ ToolboxPaletteLaunchPlanParseResult parse_toolbox_palette_launch_plan_arguments(
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown toolbox-palette-launch-plan option: " + argument);
+            fail(toolbox_palette_parse_unknown_option(catalog, "toolbox-palette-launch-plan", argument));
         }
     }
 
     if (result.ok && !result.selection_context_provided) {
-        fail("No selection context was provided.");
+        fail(toolbox_palette_parse_message(catalog, "StudioHost.ToolboxPaletteParse.Error.NoSelectionContext"));
     }
     return result;
 }
 
 ToolboxPaletteLaunchCatalogParseResult parse_toolbox_palette_launch_catalog_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::vector<std::string>& args) {
     ToolboxPaletteLaunchCatalogParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
@@ -3368,7 +3421,7 @@ ToolboxPaletteLaunchCatalogParseResult parse_toolbox_palette_launch_catalog_argu
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_palette_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -3384,7 +3437,7 @@ ToolboxPaletteLaunchCatalogParseResult parse_toolbox_palette_launch_catalog_argu
             const std::string token = require_value(argument);
             std::size_t record_index = 0U;
             if (!parse_size_t_token(token, record_index)) {
-                fail("The --record value must be a non-negative integer.");
+                fail(toolbox_palette_parse_non_negative_integer(catalog, "--record"));
                 continue;
             }
             result.request.record_index = record_index;
@@ -3393,7 +3446,7 @@ ToolboxPaletteLaunchCatalogParseResult parse_toolbox_palette_launch_catalog_argu
         } else if (argument == "--unique-id") {
             result.request.unique_id = require_value(argument);
         } else {
-            fail("Unknown toolbox-palette-launch-catalog option: " + argument);
+            fail(toolbox_palette_parse_unknown_option(catalog, "toolbox-palette-launch-catalog", argument));
         }
     }
 
@@ -4412,7 +4465,9 @@ bool parse_toolbox_context_token(
     return false;
 }
 
-ToolboxPaletteQueryParseResult parse_toolbox_palette_query_arguments(const std::vector<std::string>& args) {
+ToolboxPaletteQueryParseResult parse_toolbox_palette_query_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxPaletteQueryParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-palette-query") != args.end();
@@ -4429,7 +4484,7 @@ ToolboxPaletteQueryParseResult parse_toolbox_palette_query_arguments(const std::
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_palette_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -4443,7 +4498,7 @@ ToolboxPaletteQueryParseResult parse_toolbox_palette_query_arguments(const std::
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_palette_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.context_provided = true;
@@ -4453,12 +4508,12 @@ ToolboxPaletteQueryParseResult parse_toolbox_palette_query_arguments(const std::
         } else if (argument == "--toolbox-category") {
             result.request.category = require_value(argument);
         } else {
-            fail("Unknown toolbox-palette-query option: " + argument);
+            fail(toolbox_palette_parse_unknown_option(catalog, "toolbox-palette-query", argument));
         }
     }
 
     if (result.ok && !result.context_provided) {
-        fail("No toolbox context was provided.");
+        fail(toolbox_palette_parse_message(catalog, "StudioHost.ToolboxPaletteParse.Error.NoToolboxContext"));
     }
     return result;
 }
@@ -23560,7 +23615,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto toolbox_palette_query_parse = parse_toolbox_palette_query_arguments(args);
+    const auto toolbox_palette_query_parse = parse_toolbox_palette_query_arguments(catalog, args);
     if (toolbox_palette_query_parse.requested) {
         if (!toolbox_palette_query_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxPaletteQueryResult{
@@ -23593,7 +23648,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto toolbox_palette_launch_parse = parse_toolbox_palette_launch_plan_arguments(args);
+    const auto toolbox_palette_launch_parse = parse_toolbox_palette_launch_plan_arguments(catalog, args);
     if (toolbox_palette_launch_parse.requested) {
         if (!toolbox_palette_launch_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxPaletteLaunchPlanResult{
@@ -23620,7 +23675,7 @@ int main(int argc, char** argv) {
         return result.ok ? 0 : 4;
     }
 
-    const auto toolbox_palette_launch_catalog_parse = parse_toolbox_palette_launch_catalog_arguments(args);
+    const auto toolbox_palette_launch_catalog_parse = parse_toolbox_palette_launch_catalog_arguments(catalog, args);
     if (toolbox_palette_launch_catalog_parse.requested) {
         if (!toolbox_palette_launch_catalog_parse.ok) {
             const auto result = copperfin::studio::StudioToolboxPaletteLaunchCatalogResult{
