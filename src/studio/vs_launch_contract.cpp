@@ -8943,15 +8943,21 @@ LaunchParseResult parse_launch_arguments(
             "--list-item-id-object")};
     }
     if (result.request.record_source_object && !result.request.record_source_available) {
-        return {.ok = false, .error = "An object record source assignment requires --record-source."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "record source",
+            "--record-source")};
     }
     if (result.request.record_source_object && result.request.record_source_objects.empty()) {
-        return {.ok = false, .error = "An object record source assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "record source")};
     }
     if (!result.request.record_source_object &&
         (result.request.record_source_available ||
          !result.request.record_source_objects.empty())) {
-        return {.ok = false, .error = "Record source arguments can only be used with --record-source-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Record source",
+            "--record-source-object")};
     }
     if (const auto form_set_class_error = validate_form_set_class_request(result.request, catalog)) {
         return {.ok = false, .error = *form_set_class_error};
@@ -8981,81 +8987,123 @@ LaunchParseResult parse_launch_arguments(
         return {.ok = false, .error = *whats_this_button_error};
     }
     if (result.request.tooltip_text_object && !result.request.tooltip_text_available) {
-        return {.ok = false, .error = "An object tooltip text assignment requires --tooltip-text."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "tooltip text",
+            "--tooltip-text")};
     }
     if (result.request.tooltip_text_object && result.request.tooltip_text_objects.empty()) {
-        return {.ok = false, .error = "An object tooltip text assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "tooltip text")};
     }
     if (!result.request.tooltip_text_object &&
         (result.request.tooltip_text_available ||
          !result.request.tooltip_text_objects.empty())) {
-        return {.ok = false, .error = "Tooltip text arguments can only be used with --tooltip-text-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Tooltip text",
+            "--tooltip-text-object")};
     }
     if (result.request.status_bar_text_object && !result.request.status_bar_text_available) {
-        return {.ok = false, .error = "An object status-bar text assignment requires --status-bar-text."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "status-bar text",
+            "--status-bar-text")};
     }
     if (result.request.status_bar_text_object && result.request.status_bar_text_objects.empty()) {
-        return {.ok = false, .error = "An object status-bar text assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "status-bar text")};
     }
     if (!result.request.status_bar_text_object &&
         (result.request.status_bar_text_available ||
          !result.request.status_bar_text_objects.empty())) {
-        return {.ok = false, .error = "Status-bar text arguments can only be used with --status-bar-text-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Status-bar text",
+            "--status-bar-text-object")};
     }
     if (result.request.link_master_object && !result.request.link_master_available) {
-        return {.ok = false, .error = "An object link-master assignment requires --link-master."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "link-master",
+            "--link-master")};
     }
     if (result.request.link_master_object && result.request.link_master_objects.empty()) {
-        return {.ok = false, .error = "An object link-master assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "link-master")};
     }
     if (!result.request.link_master_object &&
         (result.request.link_master_available ||
          !result.request.link_master_objects.empty())) {
-        return {.ok = false, .error = "Link-master arguments can only be used with --link-master-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Link-master",
+            "--link-master-object")};
     }
     if (result.request.control_source_object && !result.request.control_source_available) {
-        return {.ok = false, .error = "An object control-source assignment requires --control-source."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "control-source",
+            "--control-source")};
     }
     if (result.request.control_source_object && result.request.control_source_objects.empty()) {
-        return {.ok = false, .error = "An object control-source assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "control-source")};
     }
     if (!result.request.control_source_object &&
         (result.request.control_source_available ||
          !result.request.control_source_objects.empty())) {
-        return {.ok = false, .error = "Control-source arguments can only be used with --control-source-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Control-source",
+            "--control-source-object")};
     }
     if (result.request.current_control_object && !result.request.current_control_available) {
-        return {.ok = false, .error = "An object current-control assignment requires --current-control."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "current-control",
+            "--current-control")};
     }
     if (result.request.current_control_object && result.request.current_control_objects.empty()) {
-        return {.ok = false, .error = "An object current-control assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "current-control")};
     }
     if (!result.request.current_control_object &&
         (result.request.current_control_available ||
          !result.request.current_control_objects.empty())) {
-        return {.ok = false, .error = "Current-control arguments can only be used with --current-control-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Current-control",
+            "--current-control-object")};
     }
     if (result.request.input_mask_object && !result.request.input_mask_available) {
-        return {.ok = false, .error = "An object input-mask assignment requires --input-mask."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "input-mask",
+            "--input-mask")};
     }
     if (result.request.input_mask_object && result.request.input_mask_objects.empty()) {
-        return {.ok = false, .error = "An object input-mask assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "input-mask")};
     }
     if (!result.request.input_mask_object &&
         (result.request.input_mask_available ||
          !result.request.input_mask_objects.empty())) {
-        return {.ok = false, .error = "Input-mask arguments can only be used with --input-mask-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Input-mask",
+            "--input-mask-object")};
     }
     if (result.request.format_object && !result.request.format_available) {
-        return {.ok = false, .error = "An object format assignment requires --format."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "format",
+            "--format")};
     }
     if (result.request.format_object && result.request.format_objects.empty()) {
-        return {.ok = false, .error = "An object format assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "format")};
     }
     if (!result.request.format_object &&
         (result.request.format_available ||
          !result.request.format_objects.empty())) {
-        return {.ok = false, .error = "Format arguments can only be used with --format-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Format",
+            "--format-object")};
     }
     if (result.request.row_source_object && !result.request.row_source_available) {
         return {.ok = false, .error = "An object row-source assignment requires --row-source."};
