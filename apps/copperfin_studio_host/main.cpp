@@ -9830,7 +9830,9 @@ ToolboxCreateBatchDispatchPlanParseResult parse_toolbox_create_batch_dispatch_pl
     return result;
 }
 
-ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(const std::vector<std::string>& args) {
+ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::vector<std::string>& args) {
     ToolboxCreateBatchParseResult result{};
     result.output_json = std::find(args.begin(), args.end(), "--json") != args.end();
     result.requested = std::find(args.begin(), args.end(), "--toolbox-create-batch") != args.end();
@@ -9845,7 +9847,7 @@ ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(const std::ve
 
     auto require_current_item = [&]() -> copperfin::studio::StudioToolboxObjectCreateBatchItem* {
         if (result.request.items.empty()) {
-            fail("Toolbox batch item options require a preceding --toolbox-item.");
+            fail(toolbox_parse_batch_item_requires_toolbox_item(catalog));
             return nullptr;
         }
         return &result.request.items.back();
@@ -9855,7 +9857,7 @@ ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(const std::ve
         const std::string& argument = args[index];
         auto require_value = [&](const std::string& option) -> std::string {
             if ((index + 1U) >= args.size() || args[index + 1U].rfind("--", 0U) == 0U) {
-                fail("Missing value for " + option + ".");
+                fail(toolbox_parse_missing_value(catalog, option));
                 return {};
             }
             ++index;
@@ -9871,7 +9873,7 @@ ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(const std::ve
             const std::string token = require_value(argument);
             copperfin::studio::StudioToolboxContext parsed_context{};
             if (!parse_toolbox_context_token(token, parsed_context)) {
-                fail("Unknown toolbox context token: " + token);
+                fail(toolbox_parse_unknown_toolbox_context_token(catalog, token));
                 continue;
             }
             result.request.toolbox_context_provided = true;
@@ -9908,7 +9910,9 @@ ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(const std::ve
             const std::string assignment = require_value(argument);
             const auto separator = assignment.find('=');
             if (separator == std::string::npos || separator == 0U) {
-                fail("Toolbox field values must use name=value syntax.");
+                fail(catalog.translate(
+                    "StudioHost.ToolboxParse.Error.FieldValueSyntax",
+                    {{"assignmentSyntax", "name=value"}}));
                 continue;
             }
             item->field_values.push_back({
@@ -9916,15 +9920,15 @@ ToolboxCreateBatchParseResult parse_toolbox_create_batch_arguments(const std::ve
                 .property_value = assignment.substr(separator + 1U)
             });
         } else {
-            fail("Unknown toolbox-create-batch option: " + argument);
+            fail(toolbox_parse_unknown_option(catalog, "toolbox-create-batch", argument));
         }
     }
 
     if (result.ok && result.request.path.empty()) {
-        fail("No asset path was provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoAssetPath"));
     }
     if (result.ok && result.request.items.empty()) {
-        fail("No toolbox item ids were provided.");
+        fail(toolbox_parse_message(catalog, "StudioHost.ToolboxParse.Error.NoToolboxItemIds"));
     }
     return result;
 }
@@ -25909,7 +25913,7 @@ int main(int argc, char** argv) {
         return dispatch_result.ok ? 0 : 4;
     }
 
-    const auto toolbox_create_batch_parse = parse_toolbox_create_batch_arguments(args);
+    const auto toolbox_create_batch_parse = parse_toolbox_create_batch_arguments(catalog, args);
     if (toolbox_create_batch_parse.requested) {
         if (!toolbox_create_batch_parse.ok) {
             const auto result = copperfin::vfp::VisualObjectCreateBatchResult{

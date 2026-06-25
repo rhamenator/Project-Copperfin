@@ -2309,6 +2309,133 @@ void test_studio_host_toolbox_batch_dispatch_direct_parse_diagnostics_localize(c
     }
 }
 
+void test_studio_host_toolbox_batch_create_direct_parse_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_toolbox_batch_create_direct_parse_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-create-batch", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2419: default toolbox-create-batch diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2419: default toolbox-create-batch diagnostics should preserve JSON status");
+    expect_contains(process.stdout_text,
+        "\"toolboxCreateBatch\": {",
+        "#2419: default toolbox-create-batch diagnostics should preserve JSON contracts");
+    expect_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2419: default toolbox-create-batch diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch",
+            "--path", "forms/customer.scx",
+            "--toolbox-context", "unknown",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2419: pseudo-localized toolbox-create-batch toolbox-context diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2419: pseudo-localized toolbox-create-batch toolbox-context diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "unknown",
+        "#2419: pseudo-localized toolbox-create-batch toolbox-context diagnostics should preserve context tokens");
+    expect_not_contains(process.stdout_text,
+        "Unknown toolbox context token: unknown",
+        "#2419: pseudo-localized toolbox-create-batch toolbox-context diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch",
+            "--path", "forms/customer.scx",
+            "--object-name", "txtName",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2419: pseudo-localized toolbox-create-batch orphan-item diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2419: pseudo-localized toolbox-create-batch orphan-item diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "--toolbox-item",
+        "#2419: pseudo-localized toolbox-create-batch orphan-item diagnostics should preserve option names");
+    expect_not_contains(process.stdout_text,
+        "Toolbox batch item options require a preceding --toolbox-item.",
+        "#2419: pseudo-localized toolbox-create-batch orphan-item diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch",
+            "--path", "forms/customer.scx",
+            "--toolbox-item", "textbox",
+            "--field-value", "caption",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2419: pseudo-localized toolbox-create-batch field diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2419: pseudo-localized toolbox-create-batch field diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "name=value",
+        "#2419: pseudo-localized toolbox-create-batch field diagnostics should preserve assignment syntax");
+    expect_not_contains(process.stdout_text,
+        "Toolbox field values must use name=value syntax.",
+        "#2419: pseudo-localized toolbox-create-batch field diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-create-batch",
+            "--path", "forms/customer.scx",
+            "--toolbox-item", "textbox",
+            "--unexpected",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2419: pseudo-localized toolbox-create-batch unknown-option diagnostics should preserve exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2419: pseudo-localized toolbox-create-batch unknown-option diagnostics should decorate prose");
+    expect_contains(process.stdout_text,
+        "toolbox-create-batch",
+        "#2419: pseudo-localized toolbox-create-batch unknown-option diagnostics should preserve command names");
+    expect_contains(process.stdout_text,
+        "--unexpected",
+        "#2419: pseudo-localized toolbox-create-batch unknown-option diagnostics should preserve option names");
+    expect_not_contains(process.stdout_text,
+        "Unknown toolbox-create-batch option: --unexpected",
+        "#2419: pseudo-localized toolbox-create-batch unknown-option diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_designer_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -115933,6 +116060,7 @@ int main(int argc, char** argv) {
     test_studio_host_selection_toolbox_batch_create_parse_diagnostics_localize(argv[1]);
     test_studio_host_selection_toolbox_batch_dispatch_parse_diagnostics_localize(argv[1]);
     test_studio_host_toolbox_batch_dispatch_direct_parse_diagnostics_localize(argv[1]);
+    test_studio_host_toolbox_batch_create_direct_parse_diagnostics_localize(argv[1]);
     test_studio_host_designer_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
