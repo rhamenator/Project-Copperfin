@@ -4041,6 +4041,89 @@ void test_studio_host_launch_object_metadata_diagnostics_localize(const std::str
 
     process = run_process_capture(
         studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--row-source-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2513: pseudo-localized row-source missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2513: pseudo-localized row-source missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--row-source",
+        "#2513: pseudo-localized row-source missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " row-source ",
+        "#2513: pseudo-localized row-source missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--column-widths-object",
+            "--column-widths", "120,80",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2513: pseudo-localized column-widths target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2513: pseudo-localized column-widths target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        " column-widths ",
+        "#2513: pseudo-localized column-widths target diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--incremental-search-object",
+            "--incremental-search-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2513: pseudo-localized incremental-search missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2513: pseudo-localized incremental-search missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--incremental-search",
+        "#2513: pseudo-localized incremental-search missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        " incremental-search ",
+        "#2513: pseudo-localized incremental-search missing-option diagnostics should not preserve raw label prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--multi-select-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2513: pseudo-localized multi-select stray diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2513: pseudo-localized multi-select stray diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--multi-select-object",
+        "#2513: pseudo-localized multi-select stray diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Multi-select arguments",
+        "#2513: pseudo-localized multi-select diagnostics should not preserve raw title label prose");
+
+    process = run_process_capture(
+        studio_host_path,
         {"--json", "--default-file-path"},
         temp_root);
 

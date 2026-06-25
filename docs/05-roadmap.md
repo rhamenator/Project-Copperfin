@@ -25,7 +25,7 @@ Current state:
 Active issue lanes:
 
 - critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- live execution is temporarily centered on localization/#2348 repo-wide user-facing string cleanup, where latest shipped child `#2512` routes Studio launch text-binding assignment diagnostic labels through the portable C++ localization catalog; after the obvious localization backlog is handled or blocked, return to E3/#24 report/label designer fidelity, where latest E3 child `#2367` covers builder and wizard registry localization; E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
+- live execution is temporarily centered on localization/#2348 repo-wide user-facing string cleanup, where latest shipped child `#2513` routes Studio launch row-source/list assignment diagnostic labels through the portable C++ localization catalog; after the obvious localization backlog is handled or blocked, return to E3/#24 report/label designer fidelity, where latest E3 child `#2367` covers builder and wizard registry localization; E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
 
 Execution rule:
 

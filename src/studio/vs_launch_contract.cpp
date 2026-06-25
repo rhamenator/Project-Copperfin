@@ -9643,105 +9643,115 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.row_source_object && !result.request.row_source_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "row-source",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RowSource"),
             "--row-source")};
     }
     if (result.request.row_source_object && result.request.row_source_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "row-source")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RowSource"))};
     }
     if (!result.request.row_source_object &&
         (result.request.row_source_available ||
          !result.request.row_source_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Row-source",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle"),
             "--row-source-object")};
     }
     if (result.request.column_widths_object && !result.request.column_widths_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "column-widths",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnWidths"),
             "--column-widths")};
     }
     if (result.request.column_widths_object && result.request.column_widths_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "column-widths")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnWidths"))};
     }
     if (!result.request.column_widths_object &&
         (result.request.column_widths_available ||
          !result.request.column_widths_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Column-widths",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle"),
             "--column-widths-object")};
     }
     if (result.request.column_lines_object && !result.request.column_lines_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "column-lines",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnLines"),
             "--column-lines")};
     }
     if (result.request.column_lines_object && result.request.column_lines_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "column-lines")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnLines"))};
     }
     if (!result.request.column_lines_object &&
         (result.request.column_lines_available ||
          !result.request.column_lines_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Column-lines",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle"),
             "--column-lines-object")};
     }
     if (result.request.integral_height_object && !result.request.integral_height_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "integral-height",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.IntegralHeight"),
             "--integral-height")};
     }
     if (result.request.integral_height_object && result.request.integral_height_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "integral-height")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.IntegralHeight"))};
     }
     if (!result.request.integral_height_object &&
         (result.request.integral_height_available ||
          !result.request.integral_height_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Integral-height",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.IntegralHeightTitle"),
             "--integral-height-object")};
     }
     if (result.request.incremental_search_object && !result.request.incremental_search_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "incremental-search",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.IncrementalSearch"),
             "--incremental-search")};
     }
     if (result.request.incremental_search_object && result.request.incremental_search_objects.empty()) {
         return {.ok = false, .error = localized_object_assignment_requires_target(
             catalog,
-            "incremental-search")};
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.IncrementalSearch"))};
     }
     if (!result.request.incremental_search_object &&
         (result.request.incremental_search_available ||
          !result.request.incremental_search_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Incremental-search",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.IncrementalSearchTitle"),
             "--incremental-search-object")};
     }
     if (result.request.multi_select_object && !result.request.multi_select_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "multi-select",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MultiSelect"),
             "--multi-select")};
     }
     if (result.request.multi_select_object && result.request.multi_select_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "multi-select")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MultiSelect"))};
     }
     if (!result.request.multi_select_object &&
         (result.request.multi_select_available ||
          !result.request.multi_select_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Multi-select",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MultiSelectTitle"),
             "--multi-select-object")};
     }
     if (result.request.deleted_states && result.request.deleted_state_objects.empty()) {
