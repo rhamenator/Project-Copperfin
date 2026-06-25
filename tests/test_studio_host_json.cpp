@@ -5063,6 +5063,101 @@ void test_studio_host_launch_form_bounds_style_diagnostics_localize(const std::s
     }
 }
 
+void test_studio_host_launch_form_appearance_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_form_appearance_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--special-effect-object",
+            "--special-effect", "1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2442: default special-effect diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object special-effect assignment requires at least one target selector.",
+        "#2442: default special-effect diagnostics should preserve en-US missing-target prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--scroll-bars-object",
+            "--scroll-bars-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2442: pseudo-localized scroll-bars missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2442: pseudo-localized scroll-bars missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--scroll-bars",
+        "#2442: pseudo-localized scroll-bars missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object scroll-bars assignment requires --scroll-bars.",
+        "#2442: pseudo-localized scroll-bars missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--picture-margin-object",
+            "--picture-margin", "2",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2442: pseudo-localized picture-margin missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2442: pseudo-localized picture-margin missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object picture-margin assignment requires at least one target selector.",
+        "#2442: pseudo-localized picture-margin missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--picture-selection-display", "1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--picture-selection-display-object",
+        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Picture-selection-display arguments can only be used with --picture-selection-display-object.",
+        "#2442: pseudo-localized picture-selection-display stray-argument diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -118587,6 +118682,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_general_color_diagnostics_localize(argv[1]);
     test_studio_host_launch_window_flag_diagnostics_localize(argv[1]);
     test_studio_host_launch_form_bounds_style_diagnostics_localize(argv[1]);
+    test_studio_host_launch_form_appearance_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

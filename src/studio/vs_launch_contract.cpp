@@ -10105,114 +10105,156 @@ LaunchParseResult parse_launch_arguments(
             "--border-color-object")};
     }
     if (result.request.special_effect_object && !result.request.special_effect_available) {
-        return {.ok = false, .error = "An object special-effect assignment requires --special-effect."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "special-effect", "--special-effect")};
     }
     if (result.request.special_effect_object && result.request.special_effect_objects.empty()) {
-        return {.ok = false, .error = "An object special-effect assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "special-effect")};
     }
     if (!result.request.special_effect_object &&
         (result.request.special_effect_available ||
          !result.request.special_effect_objects.empty())) {
-        return {.ok = false, .error = "Special-effect arguments can only be used with --special-effect-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Special-effect",
+            "--special-effect-object")};
     }
     if (result.request.scroll_bars_object && !result.request.scroll_bars_available) {
-        return {.ok = false, .error = "An object scroll-bars assignment requires --scroll-bars."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "scroll-bars", "--scroll-bars")};
     }
     if (result.request.scroll_bars_object && result.request.scroll_bars_objects.empty()) {
-        return {.ok = false, .error = "An object scroll-bars assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "scroll-bars")};
     }
     if (!result.request.scroll_bars_object &&
         (result.request.scroll_bars_available ||
          !result.request.scroll_bars_objects.empty())) {
-        return {.ok = false, .error = "Scroll-bars arguments can only be used with --scroll-bars-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Scroll-bars",
+            "--scroll-bars-object")};
     }
     if (result.request.window_state_object && !result.request.window_state_available) {
-        return {.ok = false, .error = "An object window-state assignment requires --window-state."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "window-state", "--window-state")};
     }
     if (result.request.window_state_object && result.request.window_state_objects.empty()) {
-        return {.ok = false, .error = "An object window-state assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "window-state")};
     }
     if (!result.request.window_state_object &&
         (result.request.window_state_available ||
          !result.request.window_state_objects.empty())) {
-        return {.ok = false, .error = "Window-state arguments can only be used with --window-state-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Window-state",
+            "--window-state-object")};
     }
     if (result.request.show_window_object && !result.request.show_window_available) {
-        return {.ok = false, .error = "An object show-window assignment requires --show-window."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "show-window", "--show-window")};
     }
     if (result.request.show_window_object && result.request.show_window_objects.empty()) {
-        return {.ok = false, .error = "An object show-window assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "show-window")};
     }
     if (!result.request.show_window_object &&
         (result.request.show_window_available ||
          !result.request.show_window_objects.empty())) {
-        return {.ok = false, .error = "Show-window arguments can only be used with --show-window-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Show-window",
+            "--show-window-object")};
     }
     if (result.request.title_bar_object && !result.request.title_bar_available) {
-        return {.ok = false, .error = "An object title-bar assignment requires --title-bar."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "title-bar", "--title-bar")};
     }
     if (result.request.title_bar_object && result.request.title_bar_objects.empty()) {
-        return {.ok = false, .error = "An object title-bar assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "title-bar")};
     }
     if (!result.request.title_bar_object &&
         (result.request.title_bar_available ||
          !result.request.title_bar_objects.empty())) {
-        return {.ok = false, .error = "Title-bar arguments can only be used with --title-bar-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Title-bar",
+            "--title-bar-object")};
     }
     if (result.request.mouse_pointer_object && !result.request.mouse_pointer_available) {
-        return {.ok = false, .error = "An object mouse-pointer assignment requires --mouse-pointer."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "mouse-pointer", "--mouse-pointer")};
     }
     if (result.request.mouse_pointer_object && result.request.mouse_pointer_objects.empty()) {
-        return {.ok = false, .error = "An object mouse-pointer assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "mouse-pointer")};
     }
     if (!result.request.mouse_pointer_object &&
         (result.request.mouse_pointer_available ||
          !result.request.mouse_pointer_objects.empty())) {
-        return {.ok = false, .error = "Mouse-pointer arguments can only be used with --mouse-pointer-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Mouse-pointer",
+            "--mouse-pointer-object")};
     }
     if (result.request.picture_margin_object && !result.request.picture_margin_available) {
-        return {.ok = false, .error = "An object picture-margin assignment requires --picture-margin."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "picture-margin",
+            "--picture-margin")};
     }
     if (result.request.picture_margin_object && result.request.picture_margin_objects.empty()) {
-        return {.ok = false, .error = "An object picture-margin assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "picture-margin")};
     }
     if (!result.request.picture_margin_object &&
         (result.request.picture_margin_available ||
          !result.request.picture_margin_objects.empty())) {
-        return {.ok = false, .error = "Picture-margin arguments can only be used with --picture-margin-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Picture-margin",
+            "--picture-margin-object")};
     }
     if (result.request.picture_position_object && !result.request.picture_position_available) {
-        return {.ok = false, .error = "An object picture-position assignment requires --picture-position."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "picture-position",
+            "--picture-position")};
     }
     if (result.request.picture_position_object && result.request.picture_position_objects.empty()) {
-        return {.ok = false, .error = "An object picture-position assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "picture-position")};
     }
     if (!result.request.picture_position_object &&
         (result.request.picture_position_available ||
          !result.request.picture_position_objects.empty())) {
-        return {.ok = false, .error = "Picture-position arguments can only be used with --picture-position-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Picture-position",
+            "--picture-position-object")};
     }
     if (result.request.picture_spacing_object && !result.request.picture_spacing_available) {
-        return {.ok = false, .error = "An object picture-spacing assignment requires --picture-spacing."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "picture-spacing",
+            "--picture-spacing")};
     }
     if (result.request.picture_spacing_object && result.request.picture_spacing_objects.empty()) {
-        return {.ok = false, .error = "An object picture-spacing assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "picture-spacing")};
     }
     if (!result.request.picture_spacing_object &&
         (result.request.picture_spacing_available ||
          !result.request.picture_spacing_objects.empty())) {
-        return {.ok = false, .error = "Picture-spacing arguments can only be used with --picture-spacing-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Picture-spacing",
+            "--picture-spacing-object")};
     }
     if (result.request.picture_selection_display_object && !result.request.picture_selection_display_available) {
-        return {.ok = false, .error = "An object picture-selection-display assignment requires --picture-selection-display."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "picture-selection-display",
+            "--picture-selection-display")};
     }
     if (result.request.picture_selection_display_object && result.request.picture_selection_display_objects.empty()) {
-        return {.ok = false, .error = "An object picture-selection-display assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "picture-selection-display")};
     }
     if (!result.request.picture_selection_display_object &&
         (result.request.picture_selection_display_available ||
          !result.request.picture_selection_display_objects.empty())) {
-        return {.ok = false, .error = "Picture-selection-display arguments can only be used with --picture-selection-display-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Picture-selection-display",
+            "--picture-selection-display-object")};
     }
     if (result.request.dynamic_input_mask_object && !result.request.dynamic_input_mask_available) {
         return {.ok = false, .error = "An object dynamic-input-mask assignment requires --dynamic-input-mask."};
