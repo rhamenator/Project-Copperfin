@@ -404,6 +404,34 @@ std::string localized_no_asset_path_provided(const localization::LocalizedCatalo
     return catalog.translate("StudioHost.LaunchParse.Error.NoAssetPathProvided");
 }
 
+std::string localized_object_command_rename(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectCommand.Rename");
+}
+
+std::string localized_object_command_reparent(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectCommand.Reparent");
+}
+
+std::string localized_object_rename_required_options(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+        {
+            {"newObjectNameOption", "--new-object-name"},
+            {"newNameOption", "--new-name"},
+            {"newUniqueIdOption", "--new-unique-id"}
+        });
+}
+
+std::string localized_object_reparent_required_options(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions",
+        {
+            {"parentNameOption", "--parent-name"},
+            {"parentUniqueIdOption", "--parent-unique-id"},
+            {"clearParentOption", "--clear-parent"}
+        });
+}
+
 std::string localized_object_command_requires_options(
     const localization::LocalizedCatalog& catalog,
     std::string_view command_name,
@@ -8333,8 +8361,8 @@ LaunchParseResult parse_launch_arguments(
         result.request.new_unique_id.empty()) {
         return {.ok = false, .error = localized_object_command_requires_options(
             catalog,
-            "rename",
-            "--new-object-name, --new-name, or --new-unique-id")};
+            localized_object_command_rename(catalog),
+            localized_object_rename_required_options(catalog))};
     }
     if (result.request.reparent_object &&
         !result.request.clear_parent &&
@@ -8342,8 +8370,8 @@ LaunchParseResult parse_launch_arguments(
         result.request.parent_unique_id.empty()) {
         return {.ok = false, .error = localized_object_command_requires_options(
             catalog,
-            "reparent",
-            "--parent-name, --parent-unique-id, or --clear-parent")};
+            localized_object_command_reparent(catalog),
+            localized_object_reparent_required_options(catalog))};
     }
     if (result.request.reorder_object && result.request.placement.empty()) {
         return {.ok = false, .error = localized_object_command_requires_options(catalog, "reorder", "--placement")};

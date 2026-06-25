@@ -5764,6 +5764,36 @@ void test_studio_host_launch_command_mode_diagnostics_localize(const std::string
         "A property clear requires --property-name.",
         "#2488: default clear-property required option diagnostics should preserve en-US prose");
 
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--rename-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2502: default rename-object required option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object rename requires --new-object-name, --new-name, or --new-unique-id.",
+        "#2502: default rename-object required option diagnostics should preserve en-US list grammar");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--reparent-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2502: default reparent-object required option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object reparent requires --parent-name, --parent-unique-id, or --clear-parent.",
+        "#2502: default reparent-object required option diagnostics should preserve en-US list grammar");
+
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
         studio_host_path,
@@ -5847,7 +5877,34 @@ void test_studio_host_launch_command_mode_diagnostics_localize(const std::string
         "#2488: pseudo-localized rename-object required option diagnostics should preserve third CLI option");
     expect_not_contains(process.stdout_text,
         "An object rename requires --new-object-name, --new-name, or --new-unique-id.",
-        "#2488: pseudo-localized rename-object required option diagnostics should not fall back to raw English prose");
+        "#2502: pseudo-localized rename-object required option diagnostics should not fall back to raw English list grammar");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--reparent-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2502: pseudo-localized reparent-object required option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2502: pseudo-localized reparent-object required option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--parent-name",
+        "#2502: pseudo-localized reparent-object required option diagnostics should preserve first CLI option");
+    expect_contains(process.stdout_text,
+        "--parent-unique-id",
+        "#2502: pseudo-localized reparent-object required option diagnostics should preserve second CLI option");
+    expect_contains(process.stdout_text,
+        "--clear-parent",
+        "#2502: pseudo-localized reparent-object required option diagnostics should preserve third CLI option");
+    expect_not_contains(process.stdout_text,
+        "An object reparent requires --parent-name, --parent-unique-id, or --clear-parent.",
+        "#2502: pseudo-localized reparent-object required option diagnostics should not fall back to raw English list grammar");
 
     process = run_process_capture(
         studio_host_path,
