@@ -4093,6 +4093,101 @@ void test_studio_host_launch_grid_layout_diagnostics_localize(const std::string&
     }
 }
 
+void test_studio_host_launch_list_grid_property_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_list_grid_property_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--partition-object",
+            "--partition", "1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2433: default partition diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object partition assignment requires at least one target selector.",
+        "#2433: default partition diagnostics should preserve en-US missing-target prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--record-source-type-object",
+            "--record-source-type-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2433: pseudo-localized record-source-type missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2433: pseudo-localized record-source-type missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--record-source-type",
+        "#2433: pseudo-localized record-source-type missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object record-source-type assignment requires --record-source-type.",
+        "#2433: pseudo-localized record-source-type missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--fill-color-object",
+            "--fill-color", "255",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2433: pseudo-localized fill-color missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2433: pseudo-localized fill-color missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object fill-color assignment requires at least one target selector.",
+        "#2433: pseudo-localized fill-color missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--list-item-id", "1",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2433: pseudo-localized list-item-id stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2433: pseudo-localized list-item-id stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--list-item-id-object",
+        "#2433: pseudo-localized list-item-id stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "ListItemId arguments can only be used with --list-item-id-object.",
+        "#2433: pseudo-localized list-item-id stray-argument diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -117608,6 +117703,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_ole_icon_diagnostics_localize(argv[1]);
     test_studio_host_launch_drawing_data_diagnostics_localize(argv[1]);
     test_studio_host_launch_grid_layout_diagnostics_localize(argv[1]);
+    test_studio_host_launch_list_grid_property_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

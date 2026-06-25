@@ -8822,81 +8822,125 @@ LaunchParseResult parse_launch_arguments(
             "--highlight-row-line-width-object")};
     }
     if (result.request.partition_object && !result.request.partition_available) {
-        return {.ok = false, .error = "An object partition assignment requires --partition."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "partition",
+            "--partition")};
     }
     if (result.request.partition_object && result.request.partition_objects.empty()) {
-        return {.ok = false, .error = "An object partition assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "partition")};
     }
     if (!result.request.partition_object &&
         (result.request.partition_available ||
          !result.request.partition_objects.empty())) {
-        return {.ok = false, .error = "Partition arguments can only be used with --partition-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Partition",
+            "--partition-object")};
     }
     if (result.request.record_source_type_object && !result.request.record_source_type_available) {
-        return {.ok = false, .error = "An object record-source-type assignment requires --record-source-type."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "record-source-type",
+            "--record-source-type")};
     }
     if (result.request.record_source_type_object && result.request.record_source_type_objects.empty()) {
-        return {.ok = false, .error = "An object record-source-type assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "record-source-type")};
     }
     if (!result.request.record_source_type_object &&
         (result.request.record_source_type_available ||
          !result.request.record_source_type_objects.empty())) {
-        return {.ok = false, .error = "RecordSourceType arguments can only be used with --record-source-type-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "RecordSourceType",
+            "--record-source-type-object")};
     }
     if (result.request.column_order_object && !result.request.column_order_available) {
-        return {.ok = false, .error = "An object column-order assignment requires --column-order."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "column-order",
+            "--column-order")};
     }
     if (result.request.column_order_object && result.request.column_order_objects.empty()) {
-        return {.ok = false, .error = "An object column-order assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "column-order")};
     }
     if (!result.request.column_order_object &&
         (result.request.column_order_available ||
          !result.request.column_order_objects.empty())) {
-        return {.ok = false, .error = "ColumnOrder arguments can only be used with --column-order-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "ColumnOrder",
+            "--column-order-object")};
     }
     if (result.request.highlight_style_object && !result.request.highlight_style_available) {
-        return {.ok = false, .error = "An object highlight-style assignment requires --highlight-style."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "highlight-style",
+            "--highlight-style")};
     }
     if (result.request.highlight_style_object && result.request.highlight_style_objects.empty()) {
-        return {.ok = false, .error = "An object highlight-style assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "highlight-style")};
     }
     if (!result.request.highlight_style_object &&
         (result.request.highlight_style_available ||
          !result.request.highlight_style_objects.empty())) {
-        return {.ok = false, .error = "HighlightStyle arguments can only be used with --highlight-style-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "HighlightStyle",
+            "--highlight-style-object")};
     }
     if (result.request.child_order_object && !result.request.child_order_available) {
-        return {.ok = false, .error = "An object child-order assignment requires --child-order."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "child-order",
+            "--child-order")};
     }
     if (result.request.child_order_object && result.request.child_order_objects.empty()) {
-        return {.ok = false, .error = "An object child-order assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "child-order")};
     }
     if (!result.request.child_order_object &&
         (result.request.child_order_available ||
          !result.request.child_order_objects.empty())) {
-        return {.ok = false, .error = "ChildOrder arguments can only be used with --child-order-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "ChildOrder",
+            "--child-order-object")};
     }
     if (result.request.fill_color_object && !result.request.fill_color_available) {
-        return {.ok = false, .error = "An object fill-color assignment requires --fill-color."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "fill-color",
+            "--fill-color")};
     }
     if (result.request.fill_color_object && result.request.fill_color_objects.empty()) {
-        return {.ok = false, .error = "An object fill-color assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "fill-color")};
     }
     if (!result.request.fill_color_object &&
         (result.request.fill_color_available ||
          !result.request.fill_color_objects.empty())) {
-        return {.ok = false, .error = "FillColor arguments can only be used with --fill-color-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "FillColor",
+            "--fill-color-object")};
     }
     if (result.request.list_item_id_object && !result.request.list_item_id_available) {
-        return {.ok = false, .error = "An object list-item-id assignment requires --list-item-id."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "list-item-id",
+            "--list-item-id")};
     }
     if (result.request.list_item_id_object && result.request.list_item_id_objects.empty()) {
-        return {.ok = false, .error = "An object list-item-id assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "list-item-id")};
     }
     if (!result.request.list_item_id_object &&
         (result.request.list_item_id_available ||
          !result.request.list_item_id_objects.empty())) {
-        return {.ok = false, .error = "ListItemId arguments can only be used with --list-item-id-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "ListItemId",
+            "--list-item-id-object")};
     }
     if (result.request.record_source_object && !result.request.record_source_available) {
         return {.ok = false, .error = "An object record source assignment requires --record-source."};
