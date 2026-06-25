@@ -6794,6 +6794,96 @@ void test_studio_host_launch_dynamic_expression_value_diagnostics_localize(
     }
 }
 
+void test_studio_host_launch_font_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_font_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--font-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2462: default font-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --font-name.",
+        "#2462: default font-name missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--font-size", "huge"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2462: default font-size numeric diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "The --font-size value must be numeric.",
+        "#2462: default font-size numeric diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--font-size", "-1"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2462: pseudo-localized font-size not-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2462: pseudo-localized font-size not-negative diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--font-size",
+        "#2462: pseudo-localized font-size not-negative diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --font-size value must not be negative.",
+        "#2462: pseudo-localized font-size not-negative diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--font-bold", "maybe"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2462: pseudo-localized font-bold true/false diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2462: pseudo-localized font-bold true/false diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--font-bold",
+        "#2462: pseudo-localized font-bold true/false diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --font-bold value must be true or false.",
+        "#2462: pseudo-localized font-bold true/false diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--font-shadow"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2462: pseudo-localized font-shadow missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2462: pseudo-localized font-shadow missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--font-shadow",
+        "#2462: pseudo-localized font-shadow missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --font-shadow.",
+        "#2462: pseudo-localized font-shadow missing diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -120338,6 +120428,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_bounds_border_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_form_appearance_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_dynamic_expression_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_font_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

@@ -3626,7 +3626,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-name")};
             }
             result.request.font_name = args[++index];
             result.request.font_name_available = true;
@@ -3635,14 +3635,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-size") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-size."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-size")};
             }
             double font_size = 0.0;
             if (!parse_double_value(args[++index], font_size) || !std::isfinite(font_size)) {
-                return {.ok = false, .error = "The --font-size value must be numeric."};
+                return {.ok = false, .error = localized_numeric_value_required(catalog, "--font-size")};
             }
             if (font_size < 0.0) {
-                return {.ok = false, .error = "The --font-size value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--font-size")};
             }
             result.request.font_size = font_size;
             result.request.font_size_available = true;
@@ -3651,11 +3651,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-bold") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-bold."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-bold")};
             }
             const auto font_bold = parse_bool_value(args[++index]);
             if (!font_bold.has_value()) {
-                return {.ok = false, .error = "The --font-bold value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--font-bold")};
             }
             result.request.font_bold = *font_bold;
             result.request.font_bold_available = true;
@@ -3664,11 +3664,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-italic") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-italic."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-italic")};
             }
             const auto font_italic = parse_bool_value(args[++index]);
             if (!font_italic.has_value()) {
-                return {.ok = false, .error = "The --font-italic value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--font-italic")};
             }
             result.request.font_italic = *font_italic;
             result.request.font_italic_available = true;
@@ -3677,11 +3677,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-underline") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-underline."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-underline")};
             }
             const auto font_underline = parse_bool_value(args[++index]);
             if (!font_underline.has_value()) {
-                return {.ok = false, .error = "The --font-underline value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--font-underline")};
             }
             result.request.font_underline = *font_underline;
             result.request.font_underline_available = true;
@@ -3690,11 +3690,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-strikethru") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-strikethru."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-strikethru")};
             }
             const auto font_strikethru = parse_bool_value(args[++index]);
             if (!font_strikethru.has_value()) {
-                return {.ok = false, .error = "The --font-strikethru value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--font-strikethru")};
             }
             result.request.font_strikethru = *font_strikethru;
             result.request.font_strikethru_available = true;
@@ -3703,11 +3703,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-outline") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-outline."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-outline")};
             }
             const auto font_outline = parse_bool_value(args[++index]);
             if (!font_outline.has_value()) {
-                return {.ok = false, .error = "The --font-outline value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--font-outline")};
             }
             result.request.font_outline = *font_outline;
             result.request.font_outline_available = true;
@@ -3716,11 +3716,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--font-shadow") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --font-shadow."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--font-shadow")};
             }
             const auto font_shadow = parse_bool_value(args[++index]);
             if (!font_shadow.has_value()) {
-                return {.ok = false, .error = "The --font-shadow value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--font-shadow")};
             }
             result.request.font_shadow = *font_shadow;
             result.request.font_shadow_available = true;
