@@ -8118,7 +8118,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--object-name")};
             }
             result.request.object_name = args[++index];
             continue;
@@ -8126,7 +8126,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--unique-id")};
             }
             result.request.unique_id = args[++index];
             continue;
@@ -8134,7 +8134,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--line") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --line."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--line")};
             }
             std::size_t line = 0;
             if (!parse_size_value(args[++index], line)) {
@@ -8146,7 +8146,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--column") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --column."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--column")};
             }
             std::size_t column = 0;
             if (!parse_size_value(args[++index], column)) {
@@ -8158,7 +8158,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--undo-mode") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --undo-mode."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--undo-mode")};
             }
             std::string mode = lowercase_copy(args[++index]);
             if (mode == "edit") {
@@ -8174,7 +8174,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--undo-label") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --undo-label."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--undo-label")};
             }
             result.request.undo_label = args[++index];
             continue;

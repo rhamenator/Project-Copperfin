@@ -5744,6 +5744,28 @@ void test_studio_host_launch_core_value_diagnostics_localize(const std::string& 
         "Missing value after --path.",
         "#2449: default missing path value diagnostics should preserve en-US prose");
 
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--object-name"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2486: default object-name missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --object-name.",
+        "#2486: default object-name missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--undo-label"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2486: default undo-label missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --undo-label.",
+        "#2486: default undo-label missing diagnostics should preserve en-US prose");
+
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
         studio_host_path,
@@ -5795,6 +5817,40 @@ void test_studio_host_launch_core_value_diagnostics_localize(const std::string& 
     expect_not_contains(process.stdout_text,
         "Field values must use name=value syntax.",
         "#2449: pseudo-localized field-value syntax diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--line"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2486: pseudo-localized line missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2486: pseudo-localized line missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--line",
+        "#2486: pseudo-localized line missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --line.",
+        "#2486: pseudo-localized line missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--undo-mode"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2486: pseudo-localized undo-mode missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2486: pseudo-localized undo-mode missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--undo-mode",
+        "#2486: pseudo-localized undo-mode missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --undo-mode.",
+        "#2486: pseudo-localized undo-mode missing diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
