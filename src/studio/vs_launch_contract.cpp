@@ -3358,14 +3358,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--special-effect") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --special-effect."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--special-effect")};
             }
             int special_effect = 0;
             if (!parse_int_value(args[++index], special_effect)) {
-                return {.ok = false, .error = "The --special-effect value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--special-effect")};
             }
             if (special_effect < 0) {
-                return {.ok = false, .error = "The --special-effect value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--special-effect")};
             }
             result.request.special_effect = special_effect;
             result.request.special_effect_available = true;
@@ -3374,14 +3374,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--scroll-bars") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --scroll-bars."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--scroll-bars")};
             }
             int scroll_bars = 0;
             if (!parse_int_value(args[++index], scroll_bars)) {
-                return {.ok = false, .error = "The --scroll-bars value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--scroll-bars")};
             }
             if (scroll_bars < 0) {
-                return {.ok = false, .error = "The --scroll-bars value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--scroll-bars")};
             }
             result.request.scroll_bars = scroll_bars;
             result.request.scroll_bars_available = true;
@@ -3390,14 +3390,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--window-state") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --window-state."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--window-state")};
             }
             int window_state = 0;
             if (!parse_int_value(args[++index], window_state)) {
-                return {.ok = false, .error = "The --window-state value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--window-state")};
             }
             if (window_state < 0) {
-                return {.ok = false, .error = "The --window-state value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--window-state")};
             }
             result.request.window_state = window_state;
             result.request.window_state_available = true;
@@ -3406,14 +3406,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--show-window") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --show-window."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--show-window")};
             }
             int show_window = 0;
             if (!parse_int_value(args[++index], show_window)) {
-                return {.ok = false, .error = "The --show-window value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--show-window")};
             }
             if (show_window < 0) {
-                return {.ok = false, .error = "The --show-window value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--show-window")};
             }
             result.request.show_window = show_window;
             result.request.show_window_available = true;
@@ -3422,14 +3422,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--title-bar") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --title-bar."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--title-bar")};
             }
             int title_bar = 0;
             if (!parse_int_value(args[++index], title_bar)) {
-                return {.ok = false, .error = "The --title-bar value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--title-bar")};
             }
             if (title_bar < 0) {
-                return {.ok = false, .error = "The --title-bar value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--title-bar")};
             }
             result.request.title_bar = title_bar;
             result.request.title_bar_available = true;
@@ -3438,14 +3438,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mouse-pointer") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mouse-pointer."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mouse-pointer")};
             }
             int mouse_pointer = 0;
             if (!parse_int_value(args[++index], mouse_pointer)) {
-                return {.ok = false, .error = "The --mouse-pointer value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--mouse-pointer")};
             }
             if (mouse_pointer < 0) {
-                return {.ok = false, .error = "The --mouse-pointer value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--mouse-pointer")};
             }
             result.request.mouse_pointer = mouse_pointer;
             result.request.mouse_pointer_available = true;
@@ -3454,14 +3454,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--picture-margin") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --picture-margin."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--picture-margin")};
             }
             int picture_margin = 0;
             if (!parse_int_value(args[++index], picture_margin)) {
-                return {.ok = false, .error = "The --picture-margin value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--picture-margin")};
             }
             if (picture_margin < 0) {
-                return {.ok = false, .error = "The --picture-margin value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--picture-margin")};
             }
             result.request.picture_margin = picture_margin;
             result.request.picture_margin_available = true;
@@ -3470,14 +3470,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--picture-position") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --picture-position."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--picture-position")};
             }
             int picture_position = 0;
             if (!parse_int_value(args[++index], picture_position)) {
-                return {.ok = false, .error = "The --picture-position value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--picture-position")};
             }
             if (picture_position < 0) {
-                return {.ok = false, .error = "The --picture-position value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--picture-position")};
             }
             result.request.picture_position = picture_position;
             result.request.picture_position_available = true;
@@ -3486,14 +3486,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--picture-spacing") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --picture-spacing."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--picture-spacing")};
             }
             int picture_spacing = 0;
             if (!parse_int_value(args[++index], picture_spacing)) {
-                return {.ok = false, .error = "The --picture-spacing value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--picture-spacing")};
             }
             if (picture_spacing < 0) {
-                return {.ok = false, .error = "The --picture-spacing value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--picture-spacing")};
             }
             result.request.picture_spacing = picture_spacing;
             result.request.picture_spacing_available = true;
@@ -3502,14 +3502,14 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--picture-selection-display") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --picture-selection-display."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--picture-selection-display")};
             }
             int picture_selection_display = 0;
             if (!parse_int_value(args[++index], picture_selection_display)) {
-                return {.ok = false, .error = "The --picture-selection-display value must be an integer."};
+                return {.ok = false, .error = localized_integer_value_required(catalog, "--picture-selection-display")};
             }
             if (picture_selection_display < 0) {
-                return {.ok = false, .error = "The --picture-selection-display value must not be negative."};
+                return {.ok = false, .error = localized_not_negative_value_required(catalog, "--picture-selection-display")};
             }
             result.request.picture_selection_display = picture_selection_display;
             result.request.picture_selection_display_available = true;
