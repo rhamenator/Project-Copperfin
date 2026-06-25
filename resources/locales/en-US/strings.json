@@ -1043,6 +1043,7 @@
   "Studio.ProjectWorkspace.ItemType.Query": "Query",
   "Studio.ProjectWorkspace.ItemType.Report": "Report",
   "Studio.ProjectWorkspace.ItemType.Table": "Table",
+  "Studio.ReportLayout.Fallback.RecordTitle": "Record {recordIndex}",
   "Studio.ReportLayout.Section.ColumnFooter": "Column Footer",
   "Studio.ReportLayout.Section.ColumnHeader": "Column Header",
   "Studio.ReportLayout.Section.Detail": "Detail",

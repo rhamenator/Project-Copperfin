@@ -21,6 +21,13 @@ const localization::LocalizedCatalog& report_layout_catalog() {
     return catalog;
 }
 
+std::string report_layout_text(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    return catalog.translate(key, placeholders);
+}
+
 std::string trim_copy(std::string text) {
     const auto first = std::find_if(text.begin(), text.end(), [](unsigned char ch) {
         return std::isspace(ch) == 0;
@@ -241,7 +248,9 @@ FieldSelection first_non_empty_selection(const DbfRecord& record, std::initializ
     return {};
 }
 
-StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
+StudioLayoutObjectSnapshot build_layout_object(
+    const DbfRecord& record,
+    const localization::LocalizedCatalog& catalog) {
     StudioLayoutObjectSnapshot object;
     object.record_index = record.record_index;
     object.deleted = record.deleted;
@@ -277,7 +286,10 @@ StudioLayoutObjectSnapshot build_layout_object(const DbfRecord& record) {
     object.bottom = object.top + object.height;
 
     if (object.title.empty()) {
-        object.title = "Record " + std::to_string(record.record_index);
+        object.title = report_layout_text(
+            catalog,
+            "Studio.ReportLayout.Fallback.RecordTitle",
+            {{"recordIndex", std::to_string(record.record_index)}});
     }
 
     const auto add_highlight = [&](std::string_view name) {
@@ -624,7 +636,7 @@ StudioReportLayoutSnapshot build_report_layout(
             }
             const int objtype = parse_scaled_int_or_default(record, "OBJTYPE");
             if (is_layout_object_type(objtype)) {
-                StudioLayoutObjectSnapshot object = build_layout_object(record);
+                StudioLayoutObjectSnapshot object = build_layout_object(record, catalog);
                 expand_deleted_preview_bounds(snapshot, object.left, object.top, object.right, object.bottom);
                 snapshot.deleted_objects.push_back(std::move(object));
             }
@@ -669,7 +681,7 @@ StudioReportLayoutSnapshot build_report_layout(
             continue;
         }
 
-        StudioLayoutObjectSnapshot object = build_layout_object(record);
+        StudioLayoutObjectSnapshot object = build_layout_object(record, catalog);
         const std::size_t section_index = find_section_index(snapshot.sections, object.top, object.height);
         if (section_index < snapshot.sections.size()) {
             object.containing_section_id = snapshot.sections[section_index].id;

@@ -478,6 +478,40 @@ void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
     if (!layout.unplaced_objects.empty()) {
         const auto& object = layout.unplaced_objects[0];
         expect(object.title == "Record 1", "#695: unresolved memo object titles should use the synthetic fallback");
+        const auto pseudo_catalog =
+            copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+        const auto pseudo_layout = copperfin::studio::build_report_layout(document, pseudo_catalog);
+        expect(
+            pseudo_layout.unplaced_objects.size() == 1U,
+            "#2498: pseudo-localized fallback title should preserve unplaced object capture");
+        if (!pseudo_layout.unplaced_objects.empty()) {
+            const auto& pseudo_object = pseudo_layout.unplaced_objects[0];
+            expect(
+                pseudo_object.record_index == 1U,
+                "#2498: pseudo-localized fallback title should preserve object record index");
+            expect(
+                pseudo_object.title.find("[!! ") != std::string::npos,
+                "#2498: fallback object title should route through pseudo-localization");
+            expect(
+                pseudo_object.title.find("Record 1") == std::string::npos,
+                "#2498: pseudo-localized fallback object title should not fall back to raw English prose");
+            expect(
+                pseudo_object.title.find("1") != std::string::npos,
+                "#2498: fallback object title should preserve the named recordIndex placeholder value");
+            expect(
+                pseudo_object.object_kind == object.object_kind,
+                "#2498: pseudo-localized fallback title should preserve object kind");
+            expect(
+                pseudo_object.title_field_index == object.title_field_index,
+                "#2498: pseudo-localized fallback title should preserve title field provenance");
+            expect(
+                pseudo_object.title_memo_block_number == object.title_memo_block_number,
+                "#2498: pseudo-localized fallback title should preserve title memo provenance");
+            expect(
+                pseudo_object.left == object.left && pseudo_object.top == object.top &&
+                    pseudo_object.width == object.width && pseudo_object.height == object.height,
+                "#2498: pseudo-localized fallback title should preserve object geometry");
+        }
         expect(object.title_field_index == copperfin::studio::StudioReportMissingFieldIndex,
             "#695: synthetic titles should not masquerade as unresolved memo field provenance");
         expect(object.expression.empty(), "#695: unresolved memo expressions should not become active object expressions");
