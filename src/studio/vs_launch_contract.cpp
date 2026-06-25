@@ -347,6 +347,95 @@ std::string localized_object_action_arguments_require_mode(
         });
 }
 
+std::string localized_undo_mode_value_required(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.UndoModeValueRequired",
+        {
+            {"option", "--undo-mode"},
+            {"firstValue", "edit"},
+            {"secondValue", "command"}
+        });
+}
+
+std::string localized_unknown_argument(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view argument) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.UnknownArgument",
+        {
+            {"argument", std::string(argument)}
+        });
+}
+
+std::string localized_unexpected_extra_positional_argument(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view argument) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.UnexpectedExtraPositionalArgument",
+        {
+            {"argument", std::string(argument)}
+        });
+}
+
+std::string localized_property_command_requires_option(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view command_name,
+    std::string_view option) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.PropertyCommandRequiresOption",
+        {
+            {"commandName", std::string(command_name)},
+            {"option", std::string(option)}
+        });
+}
+
+std::string localized_no_asset_path_provided(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.Error.NoAssetPathProvided");
+}
+
+std::string localized_object_command_requires_options(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view command_name,
+    std::string_view options) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectCommandRequiresOptions",
+        {
+            {"commandName", std::string(command_name)},
+            {"options", std::string(options)}
+        });
+}
+
+std::string localized_object_group_requires_grouped_child_selector(
+    const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.Error.ObjectGroupRequiresGroupedChildSelector");
+}
+
+std::string localized_object_group_requires_field_value(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.ObjectGroupRequiresFieldValue",
+        {
+            {"option", "--field-value"}
+        });
+}
+
+std::string localized_field_value_only_with_group_object(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.FieldValueOnlyWithGroupObject",
+        {
+            {"option", "--field-value"},
+            {"commandOption", "--group-object"}
+        });
+}
+
+std::string localized_grouped_child_selectors_only_with_group_object(
+    const localization::LocalizedCatalog& catalog) {
+    return catalog.translate(
+        "StudioHost.LaunchParse.Error.GroupedChildSelectorsOnlyWithGroupObject",
+        {
+            {"commandOption", "--group-object"}
+        });
+}
+
 bool parse_form_set_class_argument(const std::string& argument,
                                    const localization::LocalizedCatalog& catalog,
                                    const std::vector<std::string>& args,
@@ -8157,7 +8246,7 @@ LaunchParseResult parse_launch_arguments(
             }
             std::size_t line = 0;
             if (!parse_size_value(args[++index], line)) {
-                return {.ok = false, .error = "The --line value must be an unsigned integer."};
+                return {.ok = false, .error = localized_unsigned_integer_value_required(catalog, "--line")};
             }
             result.request.line = line;
             continue;
@@ -8169,7 +8258,7 @@ LaunchParseResult parse_launch_arguments(
             }
             std::size_t column = 0;
             if (!parse_size_value(args[++index], column)) {
-                return {.ok = false, .error = "The --column value must be an unsigned integer."};
+                return {.ok = false, .error = localized_unsigned_integer_value_required(catalog, "--column")};
             }
             result.request.column = column;
             continue;
@@ -8188,7 +8277,7 @@ LaunchParseResult parse_launch_arguments(
                 result.request.undo_mode = StudioUndoMode::command;
                 continue;
             }
-            return {.ok = false, .error = "The --undo-mode value must be edit or command."};
+            return {.ok = false, .error = localized_undo_mode_value_required(catalog)};
         }
 
         if (argument == "--undo-label") {
@@ -8200,7 +8289,7 @@ LaunchParseResult parse_launch_arguments(
         }
 
         if (!argument.empty() && argument[0] == '-') {
-            return {.ok = false, .error = "Unknown argument: " + argument};
+            return {.ok = false, .error = localized_unknown_argument(catalog, argument)};
         }
 
         if (result.request.path.empty()) {
@@ -8208,51 +8297,57 @@ LaunchParseResult parse_launch_arguments(
             continue;
         }
 
-        return {.ok = false, .error = "Unexpected extra positional argument: " + argument};
+        return {.ok = false, .error = localized_unexpected_extra_positional_argument(catalog, argument)};
     }
 
     if (result.request.path.empty()) {
-        return {.ok = false, .error = "No asset path was provided."};
+        return {.ok = false, .error = localized_no_asset_path_provided(catalog)};
     }
 
     if (result.request.apply_property_update && result.request.property_name.empty()) {
-        return {.ok = false, .error = "A property update requires --property-name."};
+        return {.ok = false, .error = localized_property_command_requires_option(catalog, "update", "--property-name")};
     }
     if (result.request.clear_property && result.request.property_name.empty()) {
-        return {.ok = false, .error = "A property clear requires --property-name."};
+        return {.ok = false, .error = localized_property_command_requires_option(catalog, "clear", "--property-name")};
     }
     if (result.request.rename_property && result.request.property_name.empty()) {
-        return {.ok = false, .error = "A property rename requires --property-name."};
+        return {.ok = false, .error = localized_property_command_requires_option(catalog, "rename", "--property-name")};
     }
     if (result.request.rename_property && result.request.new_property_name.empty()) {
-        return {.ok = false, .error = "A property rename requires --new-property-name."};
+        return {.ok = false, .error = localized_property_command_requires_option(catalog, "rename", "--new-property-name")};
     }
     if (result.request.rename_object &&
         result.request.new_object_name.empty() &&
         result.request.new_name.empty() &&
         result.request.new_unique_id.empty()) {
-        return {.ok = false, .error = "An object rename requires --new-object-name, --new-name, or --new-unique-id."};
+        return {.ok = false, .error = localized_object_command_requires_options(
+            catalog,
+            "rename",
+            "--new-object-name, --new-name, or --new-unique-id")};
     }
     if (result.request.reparent_object &&
         !result.request.clear_parent &&
         result.request.parent_name.empty() &&
         result.request.parent_unique_id.empty()) {
-        return {.ok = false, .error = "An object reparent requires --parent-name, --parent-unique-id, or --clear-parent."};
+        return {.ok = false, .error = localized_object_command_requires_options(
+            catalog,
+            "reparent",
+            "--parent-name, --parent-unique-id, or --clear-parent")};
     }
     if (result.request.reorder_object && result.request.placement.empty()) {
-        return {.ok = false, .error = "An object reorder requires --placement."};
+        return {.ok = false, .error = localized_object_command_requires_options(catalog, "reorder", "--placement")};
     }
     if (result.request.group_object && result.request.field_values.empty()) {
-        return {.ok = false, .error = "An object group requires at least one --field-value."};
+        return {.ok = false, .error = localized_object_group_requires_field_value(catalog)};
     }
     if (result.request.group_object && result.request.group_objects.empty()) {
-        return {.ok = false, .error = "An object group requires at least one grouped child selector."};
+        return {.ok = false, .error = localized_object_group_requires_grouped_child_selector(catalog)};
     }
     if (!result.request.group_object && !result.request.field_values.empty()) {
-        return {.ok = false, .error = "--field-value can only be used with --group-object."};
+        return {.ok = false, .error = localized_field_value_only_with_group_object(catalog)};
     }
     if (!result.request.group_object && !result.request.group_objects.empty()) {
-        return {.ok = false, .error = "Grouped child selectors can only be used with --group-object."};
+        return {.ok = false, .error = localized_grouped_child_selectors_only_with_group_object(catalog)};
     }
     if (result.request.align_object && result.request.alignment_mode.empty()) {
         return {.ok = false, .error = localized_object_action_requires_option(

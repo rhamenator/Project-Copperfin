@@ -5749,6 +5749,21 @@ void test_studio_host_launch_command_mode_diagnostics_localize(const std::string
         "Anchor selectors can only be used with --align-object or --resize-object.",
         "#2448: default anchor selector mode diagnostics should preserve en-US prose");
 
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--clear-property",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: default clear-property required option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "A property clear requires --property-name.",
+        "#2488: default clear-property required option diagnostics should preserve en-US prose");
+
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
         studio_host_path,
@@ -5807,6 +5822,95 @@ void test_studio_host_launch_command_mode_diagnostics_localize(const std::string
         "Object commands cannot be combined with property commands.",
         "#2448: pseudo-localized mixed command diagnostics should not fall back to raw English prose");
 
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--rename-object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: pseudo-localized rename-object required option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2488: pseudo-localized rename-object required option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--new-object-name",
+        "#2488: pseudo-localized rename-object required option diagnostics should preserve first CLI option");
+    expect_contains(process.stdout_text,
+        "--new-name",
+        "#2488: pseudo-localized rename-object required option diagnostics should preserve second CLI option");
+    expect_contains(process.stdout_text,
+        "--new-unique-id",
+        "#2488: pseudo-localized rename-object required option diagnostics should preserve third CLI option");
+    expect_not_contains(process.stdout_text,
+        "An object rename requires --new-object-name, --new-name, or --new-unique-id.",
+        "#2488: pseudo-localized rename-object required option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--group-object",
+            "--group-child-object-name", "cmdSave",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: pseudo-localized group-object required field-value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2488: pseudo-localized group-object required field-value diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--field-value",
+        "#2488: pseudo-localized group-object required field-value diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object group requires at least one --field-value.",
+        "#2488: pseudo-localized group-object required field-value diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--group-object",
+            "--field-value", "OBJNAME=cntGroup",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: pseudo-localized group-object required child selector diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2488: pseudo-localized group-object required child selector diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object group requires at least one grouped child selector.",
+        "#2488: pseudo-localized group-object required child selector diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--field-value", "OBJNAME=cntGroup",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: pseudo-localized group-only field-value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2488: pseudo-localized group-only field-value diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--group-object",
+        "#2488: pseudo-localized group-only field-value diagnostics should preserve group command option");
+    expect_not_contains(process.stdout_text,
+        "--field-value can only be used with --group-object.",
+        "#2488: pseudo-localized group-only field-value diagnostics should not fall back to raw English prose");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
@@ -5855,6 +5959,28 @@ void test_studio_host_launch_core_value_diagnostics_localize(const std::string& 
     expect_contains(process.stdout_text,
         "Missing value after --undo-label.",
         "#2486: default undo-label missing diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--path", "forms/customer.scx", "--line", "not-number"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: default line unsigned-integer diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "The --line value must be an unsigned integer.",
+        "#2488: default line unsigned-integer diagnostics should preserve en-US prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--path", "forms/customer.scx", "--undo-mode", "nonsense"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: default undo-mode value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "The --undo-mode value must be edit or command.",
+        "#2488: default undo-mode value diagnostics should preserve en-US prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
@@ -5941,6 +6067,54 @@ void test_studio_host_launch_core_value_diagnostics_localize(const std::string& 
     expect_not_contains(process.stdout_text,
         "Missing value after --undo-mode.",
         "#2486: pseudo-localized undo-mode missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--bogus-option"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: pseudo-localized unknown argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2488: pseudo-localized unknown argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--bogus-option",
+        "#2488: pseudo-localized unknown argument diagnostics should preserve argument text");
+    expect_not_contains(process.stdout_text,
+        "Unknown argument: --bogus-option",
+        "#2488: pseudo-localized unknown argument diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "forms/customer.scx", "extra.scx"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: pseudo-localized extra positional diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2488: pseudo-localized extra positional diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "extra.scx",
+        "#2488: pseudo-localized extra positional diagnostics should preserve argument text");
+    expect_not_contains(process.stdout_text,
+        "Unexpected extra positional argument: extra.scx",
+        "#2488: pseudo-localized extra positional diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2488: pseudo-localized missing asset path diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2488: pseudo-localized missing asset path diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "No asset path was provided.",
+        "#2488: pseudo-localized missing asset path diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
