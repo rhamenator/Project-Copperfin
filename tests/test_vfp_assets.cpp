@@ -509,6 +509,39 @@ void test_parse_index_probe_for_mdx_rejects_implausible_header() {
     expect(!result.ok, "parse_index_probe should reject MDX files with an implausible all-zero header block");
 }
 
+void test_index_probe_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall") ==
+            "File is smaller than the 512-byte Visual FoxPro IDX header size.",
+        "#2380: IDX short-header error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.IndexProbe.Error.DbaseMdxInvalidValues") ==
+            "Header values do not look like a block-oriented dBase MDX file.",
+        "#2380: MDX invalid-header error should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall") !=
+            english_catalog.translate("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall"),
+        "#2380: index probe errors should be pseudo-localizable");
+
+    const auto idx_result =
+        copperfin::vfp::parse_index_probe({0x00U}, 1U, copperfin::vfp::IndexKind::idx);
+    expect(!idx_result.ok, "parse_index_probe should reject short IDX input");
+    expect(
+        idx_result.error == "File is smaller than the 512-byte Visual FoxPro IDX header size.",
+        "#2380: parse_index_probe should preserve the default localized IDX short-header error");
+
+    const auto unknown_result =
+        copperfin::vfp::parse_index_probe({}, 0U, copperfin::vfp::IndexKind::unknown);
+    expect(!unknown_result.ok, "parse_index_probe should reject unknown index kinds");
+    expect(
+        unknown_result.error == "Unknown index extension.",
+        "#2380: parse_index_probe should preserve the default localized unknown-extension error");
+}
+
 void test_inspect_asset_collects_companion_indexes() {
     namespace fs = std::filesystem;
     const fs::path temp_dir = fs::temp_directory_path() / "copperfin_vfp_assets_tests";
@@ -1339,6 +1372,7 @@ int main() {
     test_parse_index_probe_for_ndx_surfaces_character_domain_without_named_collation();
     test_parse_index_probe_for_mdx();
     test_parse_index_probe_for_mdx_rejects_implausible_header();
+    test_index_probe_errors_resolve_through_localization_catalog();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
     test_inspect_database_container_collects_casefolded_same_base_companions();

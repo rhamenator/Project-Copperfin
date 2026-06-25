@@ -1,11 +1,13 @@
 #include "copperfin/vfp/index_probe.h"
 
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/cdx_header.h"
 
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <string_view>
 
 namespace copperfin::vfp {
 
@@ -21,6 +23,16 @@ std::uint32_t read_le_u32(const std::vector<std::uint8_t>& bytes, std::size_t of
            (static_cast<std::uint32_t>(bytes[offset + 1]) << 8U) |
            (static_cast<std::uint32_t>(bytes[offset + 2]) << 16U) |
            (static_cast<std::uint32_t>(bytes[offset + 3]) << 24U);
+}
+
+const localization::LocalizedCatalog& index_probe_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string index_probe_text(std::string_view key) {
+    return index_probe_catalog().translate(key);
 }
 
 std::string read_ascii_hint(const std::vector<std::uint8_t>& bytes, std::size_t offset, std::size_t length) {
@@ -329,7 +341,7 @@ IndexParseResult parse_cdx_family_probe(
 
 IndexParseResult parse_fox_idx_probe(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 512U) {
-        return {.ok = false, .error = "File is smaller than the 512-byte Visual FoxPro IDX header size."};
+        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall")};
     }
 
     IndexProbe probe;
@@ -365,7 +377,7 @@ IndexParseResult parse_fox_idx_probe(const std::vector<std::uint8_t>& bytes, std
         return {
             .ok = false,
             .probe = probe,
-            .error = "Header values do not look like a Visual FoxPro IDX file."
+            .error = index_probe_text("Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues")
         };
     }
 
@@ -374,7 +386,7 @@ IndexParseResult parse_fox_idx_probe(const std::vector<std::uint8_t>& bytes, std
 
 IndexParseResult parse_dbase_ndx_probe(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 512U) {
-        return {.ok = false, .error = "File is smaller than the 512-byte dBase NDX header size."};
+        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.DbaseNdxHeaderTooSmall")};
     }
 
     const std::uint32_t root_block = read_le_u32(bytes, 0U);
@@ -416,7 +428,7 @@ IndexParseResult parse_dbase_ndx_probe(const std::vector<std::uint8_t>& bytes, s
         return {
             .ok = false,
             .probe = probe,
-            .error = "Header values do not look like a dBase NDX file."
+            .error = index_probe_text("Vfp.IndexProbe.Error.DbaseNdxInvalidValues")
         };
     }
 
@@ -425,7 +437,7 @@ IndexParseResult parse_dbase_ndx_probe(const std::vector<std::uint8_t>& bytes, s
 
 IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 512U) {
-        return {.ok = false, .error = "File is smaller than the minimum MDX probe size (512 bytes)."};
+        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall")};
     }
 
     IndexProbe probe;
@@ -458,7 +470,7 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
         return {
             .ok = false,
             .probe = probe,
-            .error = "Header values do not look like a block-oriented dBase MDX file."
+            .error = index_probe_text("Vfp.IndexProbe.Error.DbaseMdxInvalidValues")
         };
     }
 
@@ -555,7 +567,7 @@ IndexParseResult parse_dbase_mdx_probe(const std::vector<std::uint8_t>& bytes, s
         return {
             .ok = false,
             .probe = probe,
-            .error = "No plausible MDX tag metadata was found in the tag table."
+            .error = index_probe_text("Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing")
         };
     }
 
@@ -638,20 +650,20 @@ IndexParseResult parse_index_probe(
         case IndexKind::mdx:
             return parse_dbase_mdx_probe(bytes, file_size);
         case IndexKind::unknown:
-            return {.ok = false, .error = "Unknown index extension."};
+            return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.UnknownExtension")};
     }
-    return {.ok = false, .error = "Unsupported index type."};
+    return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.UnsupportedType")};
 }
 
 IndexParseResult parse_index_probe_from_file(const std::string& path) {
     const IndexKind kind = index_kind_from_path(path);
     if (kind == IndexKind::unknown) {
-        return {.ok = false, .error = "Path does not use a known xBase index extension."};
+        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.PathExtensionUnknown")};
     }
 
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open file."};
+        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.OpenFileFailed")};
     }
 
     const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
@@ -663,7 +675,7 @@ IndexParseResult parse_index_probe_from_file(const std::string& path) {
     input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 
     if (input.gcount() <= 0) {
-        return {.ok = false, .error = "Unable to read index header bytes."};
+        return {.ok = false, .error = index_probe_text("Vfp.IndexProbe.Error.ReadHeaderFailed")};
     }
 
     bytes.resize(static_cast<std::size_t>(input.gcount()));
