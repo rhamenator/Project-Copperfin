@@ -1161,6 +1161,48 @@ void test_dbf_table_schema_mutation_errors_resolve_through_localization_catalog(
     fs::remove_all(temp_dir, ignored);
 }
 
+void test_dbf_table_record_replacement_errors_resolve_through_localization_catalog() {
+    namespace fs = std::filesystem;
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.TargetFieldNotFoundInTable") ==
+            "The target field was not found in the table.",
+        "#2384: DBF table replacement missing-field error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.DbfTable.Error.MemoSidecarPathMissing") ==
+            "No memo sidecar path could be inferred for the table.",
+        "#2384: DBF table replacement memo-sidecar-path error should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Vfp.DbfTable.Error.TargetFieldNotFoundInTable") !=
+            english_catalog.translate("Vfp.DbfTable.Error.TargetFieldNotFoundInTable"),
+        "#2384: DBF table append/replacement errors should be pseudo-localizable");
+
+    const fs::path temp_dir = fs::temp_directory_path() /
+        ("copperfin_dbf_localized_replacement_error_tests_" + std::to_string(_getpid()));
+    std::error_code ignored;
+    fs::remove_all(temp_dir, ignored);
+    fs::create_directories(temp_dir);
+
+    const fs::path table_path = temp_dir / "localized_replacement_error.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "NAME", .type = 'C', .offset = 1U, .length = 10U, .decimal_count = 0U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"ALPHA"}});
+    expect(create_result.ok, "#2384: localized replacement validation fixture should be created");
+
+    const auto missing_field_result =
+        copperfin::vfp::replace_record_field_value(table_path.string(), 0U, "MISSING", "BRAVO");
+    expect(!missing_field_result.ok, "#2384: missing replacement fields should be rejected");
+    expect(
+        missing_field_result.error == "The target field was not found in the table.",
+        "#2384: missing replacement fields should preserve the default localized error");
+
+    fs::remove_all(temp_dir, ignored);
+}
+
 void test_memo_sidecar_version_mismatch_is_diagnosed() {
     // GAP-02: malformed memo sidecar headers must not crash parsing.
     // If payload decoding fails, the reader should surface a stable placeholder.
@@ -1614,6 +1656,7 @@ int main() {
     test_dbf_table_record_value_errors_resolve_through_localization_catalog();
     test_dbf_table_creation_errors_resolve_through_localization_catalog();
     test_dbf_table_schema_mutation_errors_resolve_through_localization_catalog();
+    test_dbf_table_record_replacement_errors_resolve_through_localization_catalog();
     test_memo_sidecar_version_mismatch_is_diagnosed();
     test_dbf_field_name_without_null_terminator_is_tolerated();
     test_currency_field_boundary_values();

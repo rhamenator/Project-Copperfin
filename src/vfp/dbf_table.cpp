@@ -1528,7 +1528,7 @@ DbfWriteResult alter_dbf_table_field(const std::string& path, const DbfFieldDesc
 DbfWriteResult append_blank_record_to_file(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open table file."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
     std::vector<std::uint8_t> bytes = {
@@ -1547,7 +1547,7 @@ DbfWriteResult append_blank_record_to_file(const std::string& path) {
         return result;
     }
     if (!write_binary_file(path, bytes)) {
-        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
     return result;
 }
@@ -1559,7 +1559,7 @@ DbfWriteResult replace_record_field_value(
     const std::string& value) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open table file."};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.OpenTableFailed")};
     }
 
     std::vector<std::uint8_t> bytes = {
@@ -1576,7 +1576,7 @@ DbfWriteResult replace_record_field_value(
     const std::vector<RawFieldDescriptor> fields = read_raw_field_descriptors(bytes);
     const auto field = find_raw_field(fields, field_name);
     if (!field.has_value()) {
-        return {.ok = false, .error = "The target field was not found in the table.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.TargetFieldNotFoundInTable"), .record_count = header_result.header.record_count};
     }
 
     DbfWriteResult result;
@@ -1587,7 +1587,7 @@ DbfWriteResult replace_record_field_value(
     if (is_memo_pointer_field(field->type)) {
         memo_path = infer_memo_sidecar_path(path);
         if (memo_path.empty()) {
-            return {.ok = false, .error = "No memo sidecar path could be inferred for the table.", .record_count = header_result.header.record_count};
+            return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.MemoSidecarPathMissing"), .record_count = header_result.header.record_count};
         }
         original_memo_bytes = read_binary_file(memo_path);
         had_memo_file = !original_memo_bytes.empty();
@@ -1605,7 +1605,7 @@ DbfWriteResult replace_record_field_value(
         return result;
     }
     if (!write_binary_file(path, bytes)) {
-        return {.ok = false, .error = "Unable to write table file.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteTableFailed"), .record_count = header_result.header.record_count};
     }
     if (is_memo_pointer_field(field->type) && !write_binary_file(memo_path, memo_bytes)) {
         write_binary_file(path, original_table_bytes);
@@ -1617,7 +1617,7 @@ DbfWriteResult replace_record_field_value(
                 std::filesystem::remove(memo_path, ignored);
             }
         }
-        return {.ok = false, .error = "Unable to write memo sidecar.", .record_count = header_result.header.record_count};
+        return {.ok = false, .error = dbf_table_text("Vfp.DbfTable.Error.WriteMemoSidecarFailed"), .record_count = header_result.header.record_count};
     }
     return result;
 }
