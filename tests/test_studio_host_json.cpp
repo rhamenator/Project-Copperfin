@@ -3644,6 +3644,31 @@ void test_studio_host_launch_layout_action_diagnostics_localize(const std::strin
         studio_host_path,
         {
             "--path", "forms/customer.scx",
+            "--align-object",
+            "--alignment-mode", "left",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2503: pseudo-localized alignment either-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2503: pseudo-localized alignment either-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--anchor-object-name",
+        "#2503: pseudo-localized alignment either-option diagnostics should preserve first CLI option");
+    expect_contains(process.stdout_text,
+        "--anchor-unique-id",
+        "#2503: pseudo-localized alignment either-option diagnostics should preserve second CLI option");
+    expect_not_contains(process.stdout_text,
+        "An object alignment requires --anchor-object-name or --anchor-unique-id.",
+        "#2503: pseudo-localized alignment either-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
             "--distribute-object",
             "--json"
         },
@@ -3701,6 +3726,27 @@ void test_studio_host_launch_layout_action_diagnostics_localize(const std::strin
     expect_not_contains(process.stdout_text,
         "Snap arguments can only be used with --snap-object.",
         "#2427: pseudo-localized stray-mode diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--nudge-mode", "up",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2503: pseudo-localized nudge stray-mode diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2503: pseudo-localized nudge stray-mode diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--nudge-object",
+        "#2503: pseudo-localized nudge stray-mode diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Nudge arguments can only be used with --nudge-object.",
+        "#2503: pseudo-localized nudge stray-mode diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

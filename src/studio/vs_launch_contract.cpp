@@ -358,6 +358,46 @@ std::string localized_object_action_arguments_require_mode(
         });
 }
 
+std::string localized_layout_action_alignment(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.Alignment");
+}
+
+std::string localized_layout_action_alignment_title(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.AlignmentTitle");
+}
+
+std::string localized_layout_action_distribution(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.Distribution");
+}
+
+std::string localized_layout_action_distribution_title(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.DistributionTitle");
+}
+
+std::string localized_layout_action_nudge(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.Nudge");
+}
+
+std::string localized_layout_action_nudge_title(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.NudgeTitle");
+}
+
+std::string localized_layout_action_resize(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.Resize");
+}
+
+std::string localized_layout_action_resize_title(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.ResizeTitle");
+}
+
+std::string localized_layout_action_snap(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.Snap");
+}
+
+std::string localized_layout_action_snap_title(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.ObjectAction.SnapTitle");
+}
+
 std::string localized_undo_mode_value_required(const localization::LocalizedCatalog& catalog) {
     return catalog.translate(
         "StudioHost.LaunchParse.Error.UndoModeValueRequired",
@@ -8391,7 +8431,7 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.align_object && result.request.alignment_mode.empty()) {
         return {.ok = false, .error = localized_object_action_requires_option(
             catalog,
-            "alignment",
+            localized_layout_action_alignment(catalog),
             "--alignment-mode")};
     }
     if (result.request.align_object &&
@@ -8399,25 +8439,27 @@ LaunchParseResult parse_launch_arguments(
         result.request.anchor_unique_id.empty()) {
         return {.ok = false, .error = localized_object_action_requires_either_option(
             catalog,
-            "alignment",
+            localized_layout_action_alignment(catalog),
             "--anchor-object-name",
             "--anchor-unique-id")};
     }
     if (result.request.align_object && result.request.align_objects.empty()) {
-        return {.ok = false, .error = localized_object_action_requires_target(catalog, "alignment")};
+        return {.ok = false, .error = localized_object_action_requires_target(
+            catalog,
+            localized_layout_action_alignment(catalog))};
     }
     if (!result.request.align_object &&
         (!result.request.alignment_mode.empty() ||
          !result.request.align_objects.empty())) {
         return {.ok = false, .error = localized_object_action_arguments_require_mode(
             catalog,
-            "Alignment",
+            localized_layout_action_alignment_title(catalog),
             "--align-object")};
     }
     if (result.request.resize_object && result.request.resize_mode.empty()) {
         return {.ok = false, .error = localized_object_action_requires_option(
             catalog,
-            "resize",
+            localized_layout_action_resize(catalog),
             "--resize-mode")};
     }
     if (result.request.resize_object &&
@@ -8425,46 +8467,52 @@ LaunchParseResult parse_launch_arguments(
         result.request.anchor_unique_id.empty()) {
         return {.ok = false, .error = localized_object_action_requires_either_option(
             catalog,
-            "resize",
+            localized_layout_action_resize(catalog),
             "--anchor-object-name",
             "--anchor-unique-id")};
     }
     if (result.request.resize_object && result.request.resize_objects.empty()) {
-        return {.ok = false, .error = localized_object_action_requires_target(catalog, "resize")};
+        return {.ok = false, .error = localized_object_action_requires_target(
+            catalog,
+            localized_layout_action_resize(catalog))};
     }
     if (!result.request.resize_object &&
         (!result.request.resize_mode.empty() ||
          !result.request.resize_objects.empty())) {
         return {.ok = false, .error = localized_object_action_arguments_require_mode(
             catalog,
-            "Resize",
+            localized_layout_action_resize_title(catalog),
             "--resize-object")};
     }
     if (result.request.distribute_object && result.request.distribution_mode.empty()) {
         return {.ok = false, .error = localized_object_action_requires_option(
             catalog,
-            "distribution",
+            localized_layout_action_distribution(catalog),
             "--distribution-mode")};
     }
     if (result.request.distribute_object && result.request.distribute_objects.empty()) {
-        return {.ok = false, .error = localized_object_action_requires_target(catalog, "distribution")};
+        return {.ok = false, .error = localized_object_action_requires_target(
+            catalog,
+            localized_layout_action_distribution(catalog))};
     }
     if (!result.request.distribute_object &&
         (!result.request.distribution_mode.empty() ||
          !result.request.distribute_objects.empty())) {
         return {.ok = false, .error = localized_object_action_arguments_require_mode(
             catalog,
-            "Distribution",
+            localized_layout_action_distribution_title(catalog),
             "--distribute-object")};
     }
     if (result.request.snap_object && result.request.snap_mode.empty()) {
         return {.ok = false, .error = localized_object_action_requires_option(
             catalog,
-            "snap",
+            localized_layout_action_snap(catalog),
             "--snap-mode")};
     }
     if (result.request.snap_object && result.request.snap_objects.empty()) {
-        return {.ok = false, .error = localized_object_action_requires_target(catalog, "snap")};
+        return {.ok = false, .error = localized_object_action_requires_target(
+            catalog,
+            localized_layout_action_snap(catalog))};
     }
     if (!result.request.snap_object &&
         (!result.request.snap_mode.empty() ||
@@ -8473,17 +8521,19 @@ LaunchParseResult parse_launch_arguments(
          !result.request.snap_objects.empty())) {
         return {.ok = false, .error = localized_object_action_arguments_require_mode(
             catalog,
-            "Snap",
+            localized_layout_action_snap_title(catalog),
             "--snap-object")};
     }
     if (result.request.nudge_object && result.request.nudge_mode.empty()) {
         return {.ok = false, .error = localized_object_action_requires_option(
             catalog,
-            "nudge",
+            localized_layout_action_nudge(catalog),
             "--nudge-mode")};
     }
     if (result.request.nudge_object && result.request.nudge_objects.empty()) {
-        return {.ok = false, .error = localized_object_action_requires_target(catalog, "nudge")};
+        return {.ok = false, .error = localized_object_action_requires_target(
+            catalog,
+            localized_layout_action_nudge(catalog))};
     }
     if (!result.request.nudge_object &&
         (!result.request.nudge_mode.empty() ||
@@ -8492,7 +8542,7 @@ LaunchParseResult parse_launch_arguments(
          !result.request.nudge_objects.empty())) {
         return {.ok = false, .error = localized_object_action_arguments_require_mode(
             catalog,
-            "Nudge",
+            localized_layout_action_nudge_title(catalog),
             "--nudge-object")};
     }
     if (result.request.tab_order_object && result.request.tab_order_objects.empty()) {
