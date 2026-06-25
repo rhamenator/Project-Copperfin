@@ -1,5 +1,8 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/security/audit_stream.h"
 #include "copperfin/security/authorization.h"
+#include "copperfin/security/external_process_policy.h"
+#include "copperfin/security/process_hardening.h"
 #include "copperfin/security/secret_provider.h"
 #include "copperfin/security/security_model.h"
 #include "copperfin/security/sha256.h"
@@ -45,6 +48,9 @@ void test_secret_provider() {
 
     const auto invalid = copperfin::security::resolve_secret_reference("plain-text-secret");
     expect(!invalid.ok, "secret provider should reject non-provider references");
+    expect(
+        invalid.error == "Secret reference must use env:<NAME> format.",
+        "#2388: secret provider should preserve the default localized invalid-reference diagnostic");
 }
 
 void test_audit_stream_chain() {
@@ -87,6 +93,39 @@ void test_sha256_helpers() {
         expect(!digest.hex_digest.empty(), "sha256 digest should not be empty");
         expect(digest.hex_digest.size() == 64U, "sha256 hex digest should be 64 characters");
     }
+
+    const auto missing_file = copperfin::security::sha256_hex_for_file("missing-security-hash-input.bin");
+    expect(!missing_file.ok, "sha256 file digest should fail for missing input");
+    expect(
+        missing_file.error == "Unable to open file for SHA-256: missing-security-hash-input.bin",
+        "#2388: SHA-256 file diagnostics should preserve the default localized missing-file message");
+}
+
+void test_security_diagnostics_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate(
+            "Security.Secret.Error.EnvironmentVariableNotFound",
+            {{"variableName", "COPPERFIN_TEST_MISSING_SECRET"}}) ==
+            "Secret environment variable was not found: COPPERFIN_TEST_MISSING_SECRET",
+        "#2388: secret diagnostics should preserve named placeholders");
+    expect(
+        english_catalog.translate("Security.Audit.Error.MalformedLine", {{"lineNumber", "7"}}) ==
+            "Malformed audit line 7",
+        "#2388: audit diagnostics should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate(
+            "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
+            {{"executableName", "dotnet"}}) ==
+            "Unable to resolve executable on PATH: dotnet",
+        "#2388: external process diagnostics should preserve executable placeholders");
+    expect(
+        pseudo_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows") !=
+            english_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows"),
+        "#2388: security diagnostics should be pseudo-localizable");
 }
 
 // #247 [gap-06a]
@@ -124,6 +163,9 @@ void test_secret_provider_missing_env_var_returns_not_ok() {
     const auto result = copperfin::security::resolve_secret_reference("env:" + missing_var);
     expect(!result.ok, "resolve_secret_reference should return not-ok for a missing environment variable");
     expect(!result.error.empty(), "resolve_secret_reference should provide an error message for a missing variable");
+    expect(
+        result.error == "Secret environment variable was not found: " + missing_var,
+        "#2388: missing secret diagnostics should preserve variable-name placeholders");
 }
 
 void test_secret_provider_rejects_malformed_env_var_names() {
@@ -262,6 +304,51 @@ void test_audit_stream_chain_verification() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_audit_stream_localized_malformed_line_diagnostic() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_security_malformed_audit_tests";
+    const fs::path malformed_log = temp_root / "audit" / "events.log";
+
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(malformed_log.parent_path());
+
+    {
+        std::ofstream output(malformed_log, std::ios::binary);
+        output << "not|enough|fields\n";
+    }
+
+    const auto result = copperfin::security::verify_immutable_audit_chain(malformed_log.string());
+    expect(!result.ok, "verify_immutable_audit_chain should reject malformed audit lines");
+    expect(
+        result.error == "Malformed audit line 1",
+        "#2388: audit verification should preserve the default localized malformed-line diagnostic");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_external_process_and_process_hardening_diagnostics() {
+#ifndef _WIN32
+    const copperfin::security::ExternalProcessPolicy policy{
+        .executable_name = "dotnet",
+        .allowed_path_roots = {},
+        .allowed_publishers = {},
+        .require_trusted_signature = true
+    };
+    const auto authorization = copperfin::security::authorize_external_process(policy);
+    expect(!authorization.allowed, "external process authorization should report unsupported platforms outside Windows");
+    expect(
+        authorization.error == "External process policy authorization is implemented for Windows only.",
+        "#2388: external process policy should preserve the default localized non-Windows diagnostic");
+
+    const auto hardening = copperfin::security::apply_default_process_hardening();
+    expect(hardening.applied, "process hardening should be a no-op success outside Windows");
+    expect(
+        hardening.message == "Process hardening is currently a no-op outside Windows.",
+        "#2388: process hardening should preserve the default localized non-Windows status");
+#endif
+}
+
 // #252 [gap-06e]
 void test_audit_stream_append_to_readonly_path_fails_gracefully() {
     namespace fs = std::filesystem;
@@ -295,13 +382,16 @@ int main() {
     test_secret_provider();
     test_audit_stream_chain();
     test_sha256_helpers();
+    test_security_diagnostics_resolve_through_localization_catalog();
     test_authorization_unknown_role_returns_false();
     test_authorization_empty_permission_returns_false();
     test_secret_provider_missing_env_var_returns_not_ok();
     test_secret_provider_rejects_malformed_env_var_names();
     test_audit_stream_tamper_detection();
     test_audit_stream_chain_verification();
+    test_audit_stream_localized_malformed_line_diagnostic();
     test_audit_stream_append_to_readonly_path_fails_gracefully();
+    test_external_process_and_process_hardening_diagnostics();
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed.\n";

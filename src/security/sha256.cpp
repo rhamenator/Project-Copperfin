@@ -1,5 +1,7 @@
 #include "copperfin/security/sha256.h"
 
+#include "localized_text.h"
+
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
@@ -36,39 +38,39 @@ Sha256Result hash_bytes(const std::uint8_t* bytes, std::size_t size) {
     std::array<std::uint8_t, 32U> digest{};
 
     if (BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, 0) != 0) {
-        return {.ok = false, .error = "BCryptOpenAlgorithmProvider failed."};
+        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptOpenAlgorithmProviderFailed")};
     }
 
     DWORD object_size = 0;
     DWORD bytes_written = 0;
     if (BCryptGetProperty(algorithm, BCRYPT_OBJECT_LENGTH, reinterpret_cast<PUCHAR>(&object_size), sizeof(object_size), &bytes_written, 0) != 0) {
         BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .error = "BCryptGetProperty(BCRYPT_OBJECT_LENGTH) failed."};
+        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptGetPropertyObjectLengthFailed")};
     }
 
     object_buffer.resize(object_size);
 
     if (BCryptCreateHash(algorithm, &hash, object_buffer.data(), object_size, nullptr, 0, 0) != 0) {
         BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .error = "BCryptCreateHash failed."};
+        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptCreateHashFailed")};
     }
 
     if (BCryptHashData(hash, const_cast<PUCHAR>(bytes), static_cast<ULONG>(size), 0) != 0) {
         BCryptDestroyHash(hash);
         BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .error = "BCryptHashData failed."};
+        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptHashDataFailed")};
     }
 
     if (BCryptFinishHash(hash, digest.data(), static_cast<ULONG>(digest.size()), 0) != 0) {
         BCryptDestroyHash(hash);
         BCryptCloseAlgorithmProvider(algorithm, 0);
-        return {.ok = false, .error = "BCryptFinishHash failed."};
+        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.BCryptFinishHashFailed")};
     }
 
     BCryptDestroyHash(hash);
     BCryptCloseAlgorithmProvider(algorithm, 0);
 
-    return {.ok = true, .hex_digest = to_hex(digest.data(), digest.size())};
+    return {.ok = true, .hex_digest = to_hex(digest.data(), digest.size()), .error = {}};
 }
 #endif
 
@@ -183,7 +185,7 @@ Sha256Result hash_bytes(const std::uint8_t* bytes, std::size_t size) {
         write_be_u32(digest, index * 4U, hash[index]);
     }
 
-    return {.ok = true, .hex_digest = to_hex(digest.data(), digest.size())};
+    return {.ok = true, .hex_digest = to_hex(digest.data(), digest.size()), .error = {}};
 }
 #endif
 
@@ -196,7 +198,7 @@ Sha256Result sha256_hex_for_text(const std::string& text) {
 Sha256Result sha256_hex_for_file(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open file for SHA-256: " + path};
+        return {.ok = false, .hex_digest = {}, .error = security_text("Security.Sha256.Error.OpenFileFailed", {{"path", path}})};
     }
 
     std::ostringstream stream;

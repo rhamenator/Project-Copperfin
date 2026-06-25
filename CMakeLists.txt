@@ -34,6 +34,7 @@ add_library(cf_security
     src/security/audit_stream.cpp
     src/security/authorization.cpp
     src/security/external_process_policy.cpp
+    src/security/localized_text.cpp
     src/security/process_hardening.cpp
     src/security/secret_provider.cpp
     src/security/sha256.cpp
@@ -51,6 +52,8 @@ if(MSVC)
 else()
     target_compile_options(cf_security PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+target_link_libraries(cf_security PRIVATE cf_localization)
 
 add_library(cf_platform_profile
     src/platform/database_model.cpp

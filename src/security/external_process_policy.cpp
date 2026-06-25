@@ -1,5 +1,7 @@
 #include "copperfin/security/external_process_policy.h"
 
+#include "localized_text.h"
+
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
@@ -162,7 +164,11 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
 #ifdef _WIN32
     const std::string resolved_path = resolve_executable_from_path(policy.executable_name);
     if (resolved_path.empty()) {
-        return {.allowed = false, .error = "Unable to resolve executable on PATH: " + policy.executable_name};
+        return {.allowed = false,
+                .resolved_path = {},
+                .error = security_text(
+                    "Security.ExternalProcessPolicy.Error.ResolveExecutableOnPathFailed",
+                    {{"executableName", policy.executable_name}})};
     }
 
     const std::filesystem::path executable_path(resolved_path);
@@ -174,11 +180,15 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
         }
     }
     if (!root_match) {
-        return {.allowed = false, .resolved_path = resolved_path, .error = "Executable path is outside allowed roots."};
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text("Security.ExternalProcessPolicy.Error.PathOutsideAllowedRoots")};
     }
 
     if (policy.require_trusted_signature && !has_trusted_signature(resolved_path)) {
-        return {.allowed = false, .resolved_path = resolved_path, .error = "Executable does not have a trusted Authenticode signature."};
+        return {.allowed = false,
+                .resolved_path = resolved_path,
+                .error = security_text("Security.ExternalProcessPolicy.Error.UntrustedAuthenticodeSignature")};
     }
 
     if (!policy.allowed_publishers.empty()) {
@@ -188,14 +198,16 @@ ExternalProcessAuthorizationResult authorize_external_process(const ExternalProc
         });
 
         if (match == policy.allowed_publishers.end()) {
-            return {.allowed = false, .resolved_path = resolved_path, .error = "Executable publisher is not in the allow-list."};
+            return {.allowed = false,
+                    .resolved_path = resolved_path,
+                    .error = security_text("Security.ExternalProcessPolicy.Error.PublisherNotAllowed")};
         }
     }
 
-    return {.allowed = true, .resolved_path = resolved_path};
+    return {.allowed = true, .resolved_path = resolved_path, .error = {}};
 #else
     (void)policy;
-    return {.allowed = false, .error = "External process policy authorization is implemented for Windows only."};
+    return {.allowed = false, .resolved_path = {}, .error = security_text("Security.ExternalProcessPolicy.Error.WindowsOnly")};
 #endif
 }
 

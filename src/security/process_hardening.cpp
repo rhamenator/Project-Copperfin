@@ -1,5 +1,7 @@
 #include "copperfin/security/process_hardening.h"
 
+#include "localized_text.h"
+
 #ifdef _WIN32
 #define NOMINMAX
 #include <windows.h>
@@ -13,7 +15,7 @@ ProcessHardeningStatus apply_default_process_hardening() {
 
     if (!SetDllDirectoryW(L"")) {
         status.applied = false;
-        status.message = "SetDllDirectoryW(\"\") failed; current-directory DLL lookup may remain enabled.";
+        status.message = security_text("Security.ProcessHardening.Error.SetDllDirectoryFailed");
     }
 
     using SetDefaultDllDirectoriesFn = BOOL(WINAPI*)(DWORD);
@@ -25,23 +27,23 @@ ProcessHardeningStatus apply_default_process_hardening() {
             if (!set_default_dll_directories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS)) {
                 status.applied = false;
                 if (status.message.empty()) {
-                    status.message = "SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) failed.";
+                    status.message = security_text("Security.ProcessHardening.Error.SetDefaultDllDirectoriesFailed");
                 } else {
-                    status.message += " SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) failed.";
+                    status.message += " " + security_text("Security.ProcessHardening.Error.SetDefaultDllDirectoriesFailed");
                 }
             }
         }
     }
 
     if (status.applied && status.message.empty()) {
-        status.message = "Applied Windows DLL search-path hardening.";
+        status.message = security_text("Security.ProcessHardening.Status.AppliedWindowsDllSearchPathHardening");
     }
 
     return status;
 #else
     return ProcessHardeningStatus{
         .applied = true,
-        .message = "Process hardening is currently a no-op outside Windows."
+        .message = security_text("Security.ProcessHardening.Status.NoopOutsideWindows")
     };
 #endif
 }
