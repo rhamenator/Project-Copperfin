@@ -6443,6 +6443,91 @@ void test_studio_host_launch_display_dynamic_color_value_diagnostics_localize(
     }
 }
 
+void test_studio_host_launch_window_flag_value_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_window_flag_value_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {"--json", "--closable"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2458: default closable missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Missing value after --closable.",
+        "#2458: default closable missing diagnostics should preserve en-US prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--control-box"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2458: pseudo-localized control-box missing diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2458: pseudo-localized control-box missing diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--control-box",
+        "#2458: pseudo-localized control-box missing diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value after --control-box.",
+        "#2458: pseudo-localized control-box missing diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--auto-verb-menu", "maybe"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2458: pseudo-localized auto-verb-menu boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2458: pseudo-localized auto-verb-menu boolean diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--auto-verb-menu",
+        "#2458: pseudo-localized auto-verb-menu boolean diagnostics should preserve CLI option names");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2458: pseudo-localized auto-verb-menu boolean diagnostics should preserve true token");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2458: pseudo-localized auto-verb-menu boolean diagnostics should preserve false token");
+    expect_not_contains(process.stdout_text,
+        "The --auto-verb-menu value must be true or false.",
+        "#2458: pseudo-localized auto-verb-menu boolean diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--json", "--min-button", "maybe"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2458: pseudo-localized min-button boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2458: pseudo-localized min-button boolean diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--min-button",
+        "#2458: pseudo-localized min-button boolean diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "The --min-button value must be true or false.",
+        "#2458: pseudo-localized min-button boolean diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -119983,6 +120068,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_grid_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_record_list_value_diagnostics_localize(argv[1]);
     test_studio_host_launch_display_dynamic_color_value_diagnostics_localize(argv[1]);
+    test_studio_host_launch_window_flag_value_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

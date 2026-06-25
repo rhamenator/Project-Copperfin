@@ -3054,11 +3054,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--closable") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --closable."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--closable")};
             }
             const auto closable = parse_bool_value(args[++index]);
             if (!closable.has_value()) {
-                return {.ok = false, .error = "The --closable value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--closable")};
             }
             result.request.closable = *closable;
             result.request.closable_available = true;
@@ -3067,11 +3067,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--control-box") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --control-box."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--control-box")};
             }
             const auto control_box = parse_bool_value(args[++index]);
             if (!control_box.has_value()) {
-                return {.ok = false, .error = "The --control-box value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--control-box")};
             }
             result.request.control_box = *control_box;
             result.request.control_box_available = true;
@@ -3080,11 +3080,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--allow-output") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --allow-output."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--allow-output")};
             }
             const auto allow_output = parse_bool_value(args[++index]);
             if (!allow_output.has_value()) {
-                return {.ok = false, .error = "The --allow-output value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--allow-output")};
             }
             result.request.allow_output = *allow_output;
             result.request.allow_output_available = true;
@@ -3093,11 +3093,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-center") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-center."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-center")};
             }
             const auto auto_center = parse_bool_value(args[++index]);
             if (!auto_center.has_value()) {
-                return {.ok = false, .error = "The --auto-center value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--auto-center")};
             }
             result.request.auto_center = *auto_center;
             result.request.auto_center_available = true;
@@ -3106,11 +3106,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--auto-verb-menu") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --auto-verb-menu."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--auto-verb-menu")};
             }
             const auto auto_verb_menu = parse_bool_value(args[++index]);
             if (!auto_verb_menu.has_value()) {
-                return {.ok = false, .error = "The --auto-verb-menu value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--auto-verb-menu")};
             }
             result.request.auto_verb_menu = *auto_verb_menu;
             result.request.auto_verb_menu_available = true;
@@ -3119,11 +3119,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--bind-controls") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --bind-controls."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--bind-controls")};
             }
             const auto bind_controls = parse_bool_value(args[++index]);
             if (!bind_controls.has_value()) {
-                return {.ok = false, .error = "The --bind-controls value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--bind-controls")};
             }
             result.request.bind_controls = *bind_controls;
             result.request.bind_controls_available = true;
@@ -3132,11 +3132,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--desktop") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --desktop."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--desktop")};
             }
             const auto desktop = parse_bool_value(args[++index]);
             if (!desktop.has_value()) {
-                return {.ok = false, .error = "The --desktop value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--desktop")};
             }
             result.request.desktop = *desktop;
             result.request.desktop_available = true;
@@ -3145,11 +3145,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--key-preview") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --key-preview."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--key-preview")};
             }
             const auto key_preview = parse_bool_value(args[++index]);
             if (!key_preview.has_value()) {
-                return {.ok = false, .error = "The --key-preview value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--key-preview")};
             }
             result.request.key_preview = *key_preview;
             result.request.key_preview_available = true;
@@ -3158,11 +3158,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--mac-desktop") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --mac-desktop."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--mac-desktop")};
             }
             const auto mac_desktop = parse_bool_value(args[++index]);
             if (!mac_desktop.has_value()) {
-                return {.ok = false, .error = "The --mac-desktop value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--mac-desktop")};
             }
             result.request.mac_desktop = *mac_desktop;
             result.request.mac_desktop_available = true;
@@ -3171,11 +3171,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--max-button") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --max-button."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--max-button")};
             }
             const auto max_button = parse_bool_value(args[++index]);
             if (!max_button.has_value()) {
-                return {.ok = false, .error = "The --max-button value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--max-button")};
             }
             result.request.max_button = *max_button;
             result.request.max_button_available = true;
@@ -3184,11 +3184,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--min-button") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --min-button."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--min-button")};
             }
             const auto min_button = parse_bool_value(args[++index]);
             if (!min_button.has_value()) {
-                return {.ok = false, .error = "The --min-button value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--min-button")};
             }
             result.request.min_button = *min_button;
             result.request.min_button_available = true;
