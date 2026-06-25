@@ -183,6 +183,10 @@ std::string localized_true_false_value_required(
         });
 }
 
+std::string localized_deleted_state_requires_target_selector(const localization::LocalizedCatalog& catalog) {
+    return catalog.translate("StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector");
+}
+
 std::string localized_field_value_name_value_syntax_required(const localization::LocalizedCatalog& catalog) {
     return catalog.translate(
         "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
@@ -5723,7 +5727,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--deleted-state-target-object-name") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --deleted-state-target-object-name."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--deleted-state-target-object-name")};
             }
             result.request.deleted_state_objects.push_back({
                 .record_index = 0U,
@@ -5737,7 +5741,7 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--deleted-state-target-unique-id") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --deleted-state-target-unique-id."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--deleted-state-target-unique-id")};
             }
             result.request.deleted_state_objects.push_back({
                 .record_index = 0U,
@@ -5751,11 +5755,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--deleted-state") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --deleted-state."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--deleted-state")};
             }
             const auto deleted_state = parse_bool_value(args[++index]);
             if (!deleted_state.has_value()) {
-                return {.ok = false, .error = "The --deleted-state value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--deleted-state")};
             }
             auto pending = std::find_if(
                 result.request.deleted_state_objects.rbegin(),
@@ -5764,7 +5768,7 @@ LaunchParseResult parse_launch_arguments(
                     return !object.deleted_available;
                 });
             if (pending == result.request.deleted_state_objects.rend()) {
-                return {.ok = false, .error = "A deleted-state value requires a preceding deleted-state target selector."};
+                return {.ok = false, .error = localized_deleted_state_requires_target_selector(catalog)};
             }
             pending->deleted = *deleted_state;
             pending->deleted_available = true;
@@ -5773,11 +5777,11 @@ LaunchParseResult parse_launch_arguments(
 
         if (argument == "--subtree-deleted") {
             if ((index + 1U) >= args.size()) {
-                return {.ok = false, .error = "Missing value after --subtree-deleted."};
+                return {.ok = false, .error = localized_missing_value_after_option(catalog, "--subtree-deleted")};
             }
             const auto subtree_deleted = parse_bool_value(args[++index]);
             if (!subtree_deleted.has_value()) {
-                return {.ok = false, .error = "The --subtree-deleted value must be true or false."};
+                return {.ok = false, .error = localized_true_false_value_required(catalog, "--subtree-deleted")};
             }
             result.request.subtree_deleted = *subtree_deleted;
             result.request.subtree_deleted_available = true;

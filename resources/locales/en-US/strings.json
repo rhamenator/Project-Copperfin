@@ -93,6 +93,7 @@
   "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue": "An object {propertyName} assignment requires a non-negative {valueName}.",
   "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector": "An object {propertyName} assignment requires at least one target selector.",
   "StudioHost.LaunchParse.Error.RequestArgumentsRequireMode": "{requestName} arguments can only be used with {option}.",
+  "StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector": "A deleted-state value requires a preceding deleted-state target selector.",
   "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector": "A {itemName} item requires {option} after its target selector.",
   "StudioHost.LaunchParse.Error.RequestRequiresOption": "A {requestName} request requires {option}.",
   "StudioHost.LaunchParse.Error.RequestRequiresSelector": "A {requestName} request requires at least one {selectorName} selector.",
