@@ -1,5 +1,7 @@
 #include "copperfin/studio/project_workspace.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
@@ -9,6 +11,18 @@
 namespace copperfin::studio {
 
 namespace {
+
+const localization::LocalizedCatalog& project_workspace_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string project_workspace_text(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
 
 const vfp::DbfRecordValue* find_value(const vfp::DbfRecord& record, std::string_view field_name) {
     for (const auto& value : record.values) {
@@ -266,28 +280,36 @@ std::string infer_output_kind(const std::string& output_path) {
     return "unknown";
 }
 
-std::string build_target_for_output_kind(const std::string& output_kind) {
+std::string build_target_for_output_kind(
+    const std::string& output_kind,
+    const localization::LocalizedCatalog& catalog) {
     if (output_kind == "dll") {
-        return "x64 Windows dynamic-link library";
+        return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary");
     }
     if (output_kind == "app") {
-        return "x64 Visual FoxPro application archive";
+        return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.VisualFoxProApplicationArchive");
     }
     if (output_kind == "fll") {
-        return "x64 Visual FoxPro library";
+        return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.VisualFoxProLibrary");
     }
     if (output_kind == "fxp") {
-        return "x64 Visual FoxPro tokenized program";
+        return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram");
     }
     if (output_kind == "ocx") {
-        return "x64 Windows ActiveX control";
+        return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl");
     }
-    return "x64 Windows executable";
+    return project_workspace_text(catalog, "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable");
 }
 
 }  // namespace
 
 StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& document) {
+    return build_project_workspace(document, project_workspace_catalog());
+}
+
+StudioProjectWorkspace build_project_workspace(
+    const StudioDocumentModel& document,
+    const localization::LocalizedCatalog& catalog) {
     StudioProjectWorkspace workspace;
     if (document.kind != StudioAssetKind::project || !document.table_preview_available) {
         return workspace;
@@ -466,7 +488,7 @@ StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& docume
     workspace.build_plan.output_kind = infer_output_kind(workspace.output_path);
     workspace.build_plan.output_kind_field_index = workspace.output_path_field_index;
     workspace.build_plan.output_kind_memo_block_number = workspace.output_path_memo_block_number;
-    workspace.build_plan.build_target = build_target_for_output_kind(workspace.build_plan.output_kind);
+    workspace.build_plan.build_target = build_target_for_output_kind(workspace.build_plan.output_kind, catalog);
     workspace.build_plan.build_target_field_index = workspace.output_path_field_index;
     workspace.build_plan.build_target_memo_block_number = workspace.output_path_memo_block_number;
     workspace.build_plan.total_items = workspace.entries.size();

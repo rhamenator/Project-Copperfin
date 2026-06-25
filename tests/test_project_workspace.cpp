@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/project_workspace.h"
 
 #include <algorithm>
@@ -89,6 +90,27 @@ void test_build_project_workspace() {
     expect(workspace.build_plan.output_kind_field_index == 3U, "#683: build plan output kind provenance should retain OUTFILE field ordinal");
     expect(workspace.build_plan.build_target == "x64 Windows executable", "build plan should label .exe outputs as Windows executables");
     expect(workspace.build_plan.build_target_field_index == 3U, "#683: build plan target provenance should retain OUTFILE field ordinal");
+    const auto pseudo_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    const auto pseudo_workspace = copperfin::studio::build_project_workspace(document, pseudo_catalog);
+    expect(
+        pseudo_workspace.build_plan.output_kind == "executable",
+        "#2495: pseudo-localized build plan should preserve output_kind machine values");
+    expect(
+        pseudo_workspace.build_plan.output_kind_field_index == 3U,
+        "#2495: pseudo-localized build plan should preserve output_kind provenance");
+    expect(
+        pseudo_workspace.build_plan.build_target.find("[!! ") != std::string::npos,
+        "#2495: pseudo-localized build target label should route through the catalog");
+    expect(
+        pseudo_workspace.build_plan.build_target.find("x64 Windows executable") == std::string::npos,
+        "#2495: pseudo-localized build target label should not fall back to raw English prose");
+    expect(
+        pseudo_workspace.build_plan.build_target_field_index == 3U,
+        "#2495: pseudo-localized build target should preserve field provenance");
+    expect(
+        pseudo_workspace.build_plan.build_target_memo_block_number == 4U,
+        "#2495: pseudo-localized build target should preserve memo provenance");
     expect(workspace.build_plan.startup_item == "main.prg", "build plan should choose the main program as startup item");
     expect(workspace.build_plan.startup_item_field_index == 1U, "#681: build plan startup item provenance should retain selected NAME field ordinal");
     expect(workspace.build_plan.startup_item_memo_block_number == 11U, "#715: build plan startup items should inherit selected entry NAME memo block provenance");

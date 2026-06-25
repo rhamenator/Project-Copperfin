@@ -7,6 +7,10 @@
 #include <string>
 #include <vector>
 
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
+
 namespace copperfin::studio {
 
 inline constexpr std::size_t StudioProjectMissingFieldIndex = static_cast<std::size_t>(-1);
@@ -124,5 +128,8 @@ struct StudioProjectWorkspace {
 };
 
 [[nodiscard]] StudioProjectWorkspace build_project_workspace(const StudioDocumentModel& document);
+[[nodiscard]] StudioProjectWorkspace build_project_workspace(
+    const StudioDocumentModel& document,
+    const localization::LocalizedCatalog& catalog);
 
 }  // namespace copperfin::studio
