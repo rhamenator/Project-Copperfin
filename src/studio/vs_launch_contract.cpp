@@ -10865,48 +10865,66 @@ LaunchParseResult parse_launch_arguments(
             "--allow-row-sizing-object")};
     }
     if (result.request.resizable_object && !result.request.resizable_available) {
-        return {.ok = false, .error = "An object resizable assignment requires --resizable."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "resizable", "--resizable")};
     }
     if (result.request.resizable_object && result.request.resizable_objects.empty()) {
-        return {.ok = false, .error = "An object resizable assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "resizable")};
     }
     if (!result.request.resizable_object &&
         (result.request.resizable_available ||
          !result.request.resizable_objects.empty())) {
-        return {.ok = false, .error = "Resizable arguments can only be used with --resizable-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Resizable",
+            "--resizable-object")};
     }
     if (result.request.add_line_feeds_object && !result.request.add_line_feeds_available) {
-        return {.ok = false, .error = "An object add-line-feeds assignment requires --add-line-feeds."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "add-line-feeds",
+            "--add-line-feeds")};
     }
     if (result.request.add_line_feeds_object && result.request.add_line_feeds_objects.empty()) {
-        return {.ok = false, .error = "An object add-line-feeds assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "add-line-feeds")};
     }
     if (!result.request.add_line_feeds_object &&
         (result.request.add_line_feeds_available ||
          !result.request.add_line_feeds_objects.empty())) {
-        return {.ok = false, .error = "Add-line-feeds arguments can only be used with --add-line-feeds-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Add-line-feeds",
+            "--add-line-feeds-object")};
     }
     if (result.request.always_on_top_object && !result.request.always_on_top_available) {
-        return {.ok = false, .error = "An object always-on-top assignment requires --always-on-top."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "always-on-top", "--always-on-top")};
     }
     if (result.request.always_on_top_object && result.request.always_on_top_objects.empty()) {
-        return {.ok = false, .error = "An object always-on-top assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "always-on-top")};
     }
     if (!result.request.always_on_top_object &&
         (result.request.always_on_top_available ||
          !result.request.always_on_top_objects.empty())) {
-        return {.ok = false, .error = "Always-on-top arguments can only be used with --always-on-top-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Always-on-top",
+            "--always-on-top-object")};
     }
     if (result.request.always_on_bottom_object && !result.request.always_on_bottom_available) {
-        return {.ok = false, .error = "An object always-on-bottom assignment requires --always-on-bottom."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "always-on-bottom",
+            "--always-on-bottom")};
     }
     if (result.request.always_on_bottom_object && result.request.always_on_bottom_objects.empty()) {
-        return {.ok = false, .error = "An object always-on-bottom assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "always-on-bottom")};
     }
     if (!result.request.always_on_bottom_object &&
         (result.request.always_on_bottom_available ||
          !result.request.always_on_bottom_objects.empty())) {
-        return {.ok = false, .error = "Always-on-bottom arguments can only be used with --always-on-bottom-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Always-on-bottom",
+            "--always-on-bottom-object")};
     }
     if (!result.request.align_object && !result.request.resize_object &&
         (!result.request.anchor_object_name.empty() || !result.request.anchor_unique_id.empty())) {

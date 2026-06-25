@@ -5538,6 +5538,101 @@ void test_studio_host_launch_selection_marker_diagnostics_localize(const std::st
     }
 }
 
+void test_studio_host_launch_sizing_zorder_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_sizing_zorder_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--resizable-object",
+            "--resizable", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2447: default resizable diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object resizable assignment requires at least one target selector.",
+        "#2447: default resizable diagnostics should preserve en-US missing-target prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--add-line-feeds-object",
+            "--add-line-feeds-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--add-line-feeds",
+        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object add-line-feeds assignment requires --add-line-feeds.",
+        "#2447: pseudo-localized add-line-feeds missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--always-on-top-object",
+            "--always-on-top", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2447: pseudo-localized always-on-top missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2447: pseudo-localized always-on-top missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object always-on-top assignment requires at least one target selector.",
+        "#2447: pseudo-localized always-on-top missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--always-on-bottom", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--always-on-bottom-object",
+        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Always-on-bottom arguments can only be used with --always-on-bottom-object.",
+        "#2447: pseudo-localized always-on-bottom stray-argument diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -119067,6 +119162,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_font_diagnostics_localize(argv[1]);
     test_studio_host_launch_max_auto_diagnostics_localize(argv[1]);
     test_studio_host_launch_selection_marker_diagnostics_localize(argv[1]);
+    test_studio_host_launch_sizing_zorder_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
