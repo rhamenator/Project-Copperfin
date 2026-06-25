@@ -9106,70 +9106,108 @@ LaunchParseResult parse_launch_arguments(
             "--format-object")};
     }
     if (result.request.row_source_object && !result.request.row_source_available) {
-        return {.ok = false, .error = "An object row-source assignment requires --row-source."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "row-source",
+            "--row-source")};
     }
     if (result.request.row_source_object && result.request.row_source_objects.empty()) {
-        return {.ok = false, .error = "An object row-source assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "row-source")};
     }
     if (!result.request.row_source_object &&
         (result.request.row_source_available ||
          !result.request.row_source_objects.empty())) {
-        return {.ok = false, .error = "Row-source arguments can only be used with --row-source-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Row-source",
+            "--row-source-object")};
     }
     if (result.request.column_widths_object && !result.request.column_widths_available) {
-        return {.ok = false, .error = "An object column-widths assignment requires --column-widths."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "column-widths",
+            "--column-widths")};
     }
     if (result.request.column_widths_object && result.request.column_widths_objects.empty()) {
-        return {.ok = false, .error = "An object column-widths assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "column-widths")};
     }
     if (!result.request.column_widths_object &&
         (result.request.column_widths_available ||
          !result.request.column_widths_objects.empty())) {
-        return {.ok = false, .error = "Column-widths arguments can only be used with --column-widths-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Column-widths",
+            "--column-widths-object")};
     }
     if (result.request.column_lines_object && !result.request.column_lines_available) {
-        return {.ok = false, .error = "An object column-lines assignment requires --column-lines."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "column-lines",
+            "--column-lines")};
     }
     if (result.request.column_lines_object && result.request.column_lines_objects.empty()) {
-        return {.ok = false, .error = "An object column-lines assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "column-lines")};
     }
     if (!result.request.column_lines_object &&
         (result.request.column_lines_available ||
          !result.request.column_lines_objects.empty())) {
-        return {.ok = false, .error = "Column-lines arguments can only be used with --column-lines-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Column-lines",
+            "--column-lines-object")};
     }
     if (result.request.integral_height_object && !result.request.integral_height_available) {
-        return {.ok = false, .error = "An object integral-height assignment requires --integral-height."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "integral-height",
+            "--integral-height")};
     }
     if (result.request.integral_height_object && result.request.integral_height_objects.empty()) {
-        return {.ok = false, .error = "An object integral-height assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "integral-height")};
     }
     if (!result.request.integral_height_object &&
         (result.request.integral_height_available ||
          !result.request.integral_height_objects.empty())) {
-        return {.ok = false, .error = "Integral-height arguments can only be used with --integral-height-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Integral-height",
+            "--integral-height-object")};
     }
     if (result.request.incremental_search_object && !result.request.incremental_search_available) {
-        return {.ok = false, .error = "An object incremental-search assignment requires --incremental-search."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "incremental-search",
+            "--incremental-search")};
     }
     if (result.request.incremental_search_object && result.request.incremental_search_objects.empty()) {
-        return {.ok = false, .error = "An object incremental-search assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            "incremental-search")};
     }
     if (!result.request.incremental_search_object &&
         (result.request.incremental_search_available ||
          !result.request.incremental_search_objects.empty())) {
-        return {.ok = false, .error = "Incremental-search arguments can only be used with --incremental-search-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Incremental-search",
+            "--incremental-search-object")};
     }
     if (result.request.multi_select_object && !result.request.multi_select_available) {
-        return {.ok = false, .error = "An object multi-select assignment requires --multi-select."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "multi-select",
+            "--multi-select")};
     }
     if (result.request.multi_select_object && result.request.multi_select_objects.empty()) {
-        return {.ok = false, .error = "An object multi-select assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "multi-select")};
     }
     if (!result.request.multi_select_object &&
         (result.request.multi_select_available ||
          !result.request.multi_select_objects.empty())) {
-        return {.ok = false, .error = "Multi-select arguments can only be used with --multi-select-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Multi-select",
+            "--multi-select-object")};
     }
     if (result.request.deleted_states && result.request.deleted_state_objects.empty()) {
         return {.ok = false, .error = "A deleted-states request requires at least one target selector."};
@@ -9196,18 +9234,27 @@ LaunchParseResult parse_launch_arguments(
         return {.ok = false, .error = "Subtree deleted-state arguments can only be used with --subtree-deleted-state."};
     }
     if (result.request.row_source_type_object && !result.request.row_source_type_available) {
-        return {.ok = false, .error = "An object row-source-type assignment requires --row-source-type."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "row-source-type",
+            "--row-source-type")};
     }
     if (result.request.row_source_type_object && result.request.row_source_type < 0) {
-        return {.ok = false, .error = "An object row-source-type assignment requires a non-negative value."};
+        return {.ok = false, .error = localized_object_assignment_requires_non_negative_value(
+            catalog,
+            "row-source-type",
+            "value")};
     }
     if (result.request.row_source_type_object && result.request.row_source_type_objects.empty()) {
-        return {.ok = false, .error = "An object row-source-type assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "row-source-type")};
     }
     if (!result.request.row_source_type_object &&
         (result.request.row_source_type_available ||
          !result.request.row_source_type_objects.empty())) {
-        return {.ok = false, .error = "Row-source-type arguments can only be used with --row-source-type-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Row-source-type",
+            "--row-source-type-object")};
     }
     if (result.request.bound_column_object && !result.request.bound_column_available) {
         return {.ok = false, .error = "An object bound-column assignment requires --bound-column."};

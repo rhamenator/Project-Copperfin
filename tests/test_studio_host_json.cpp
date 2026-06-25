@@ -4283,6 +4283,124 @@ void test_studio_host_launch_text_binding_diagnostics_localize(const std::string
     }
 }
 
+void test_studio_host_launch_row_list_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_row_list_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--row-source-object",
+            "--row-source", "customers.name",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2435: default row-source diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object row-source assignment requires at least one target selector.",
+        "#2435: default row-source diagnostics should preserve en-US missing-target prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--column-widths-object",
+            "--column-widths-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2435: pseudo-localized column-widths missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2435: pseudo-localized column-widths missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--column-widths",
+        "#2435: pseudo-localized column-widths missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object column-widths assignment requires --column-widths.",
+        "#2435: pseudo-localized column-widths missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--integral-height-object",
+            "--integral-height", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2435: pseudo-localized integral-height missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2435: pseudo-localized integral-height missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object integral-height assignment requires at least one target selector.",
+        "#2435: pseudo-localized integral-height missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--multi-select", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2435: pseudo-localized multi-select stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2435: pseudo-localized multi-select stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--multi-select-object",
+        "#2435: pseudo-localized multi-select stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Multi-select arguments can only be used with --multi-select-object.",
+        "#2435: pseudo-localized multi-select stray-argument diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--row-source-type-object",
+            "--row-source-type", "-1",
+            "--row-source-type-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2435: pseudo-localized row-source-type non-negative diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2435: pseudo-localized row-source-type non-negative diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "value",
+        "#2435: pseudo-localized row-source-type non-negative diagnostics should preserve value placeholder");
+    expect_not_contains(process.stdout_text,
+        "An object row-source-type assignment requires a non-negative value.",
+        "#2435: pseudo-localized row-source-type non-negative diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -117800,6 +117918,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_grid_layout_diagnostics_localize(argv[1]);
     test_studio_host_launch_list_grid_property_diagnostics_localize(argv[1]);
     test_studio_host_launch_text_binding_diagnostics_localize(argv[1]);
+    test_studio_host_launch_row_list_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);
