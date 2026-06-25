@@ -166,6 +166,10 @@ void test_default_database_profile() {
     expect(sqlite != profile.connectors.end(), "database profile should include SQLite");
     if (sqlite != profile.connectors.end()) {
         expect(sqlite->fox_sql_translation_direct, "SQLite should support direct Fox SQL translation");
+        expect(sqlite->title == "SQLite", "#2491: default SQLite connector title should preserve en-US prose");
+        expect(
+            sqlite->access_mode == "embedded SQL engine",
+            "#2491: default SQLite connector access mode should preserve en-US prose");
     }
 
     const auto mongodb = std::find_if(profile.connectors.begin(), profile.connectors.end(), [](const auto& connector) {
@@ -174,7 +178,51 @@ void test_default_database_profile() {
     expect(mongodb != profile.connectors.end(), "database profile should include document database guidance");
     if (mongodb != profile.connectors.end()) {
         expect(mongodb->ai_query_planning_optional, "document database planning should allow optional AI assistance");
+        expect(
+            mongodb->translation_story ==
+                "Document stores need projection and predicate translation from FoxPro-style queries into dynamic document pipelines.",
+            "#2491: default MongoDB connector story should preserve en-US prose");
     }
+
+    const auto relational_path = copperfin::platform::query_translation_path_by_id(profile, "foxsql-relational");
+    expect(relational_path != nullptr, "database profile should include Fox SQL relational translation");
+    if (relational_path != nullptr) {
+        expect(
+            relational_path->title == "Fox SQL To Relational SQL",
+            "#2491: default query path title should preserve en-US prose");
+        expect(
+            relational_path->complexity == "low-to-medium",
+            "#2491: default query path complexity should preserve en-US prose");
+    }
+
+    const auto pseudo_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    const auto pseudo_profile = copperfin::platform::default_database_federation_profile(pseudo_catalog);
+    expect(
+        pseudo_profile.connectors.size() == profile.connectors.size(),
+        "#2491: pseudo-localized database profile should preserve connector counts");
+    expect(
+        !pseudo_profile.connectors.empty() && pseudo_profile.connectors[0].id == "dbf",
+        "#2491: pseudo-localized database profile should preserve connector ids");
+    expect(
+        !pseudo_profile.connectors.empty() && pseudo_profile.connectors[0].family == "xbase",
+        "#2491: pseudo-localized database profile should preserve connector family values");
+    expect(
+        !pseudo_profile.connectors.empty() && pseudo_profile.connectors[0].title.find("[!! ") != std::string::npos,
+        "#2491: pseudo-localized connector titles should route through the catalog");
+    expect(
+        !pseudo_profile.connectors.empty() &&
+            pseudo_profile.connectors[0].title.find("DBF/CDX/FPT Native Storage") == std::string::npos,
+        "#2491: pseudo-localized connector titles should not fall back to raw English prose");
+    expect(
+        !pseudo_profile.query_paths.empty() && pseudo_profile.query_paths[0].id == "foxsql-relational",
+        "#2491: pseudo-localized database profile should preserve query path ids");
+    expect(
+        !pseudo_profile.query_paths.empty() && pseudo_profile.query_paths[0].title.find("[!! ") != std::string::npos,
+        "#2491: pseudo-localized query path titles should route through the catalog");
+    expect(
+        !pseudo_profile.guardrails.empty() && pseudo_profile.guardrails[0].find("[!! ") != std::string::npos,
+        "#2491: pseudo-localized guardrails should route through the catalog");
 }
 
 void test_document_and_vector_mapping_paths() {

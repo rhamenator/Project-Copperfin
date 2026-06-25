@@ -1,6 +1,24 @@
 #include "copperfin/platform/database_model.h"
 
+#include "copperfin/localization/localization.h"
+
 namespace copperfin::platform {
+
+namespace {
+
+const localization::LocalizedCatalog& database_profile_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string database_text(
+    const localization::LocalizedCatalog& catalog,
+    std::string_view key) {
+    return catalog.translate(key);
+}
+
+}  // namespace
 
 const QueryTranslationPath* query_translation_path_by_id(
     const DatabaseFederationProfile& profile,
@@ -24,37 +42,41 @@ const DatabaseConnectorProfile* database_connector_by_id(
     return nullptr;
 }
 
-DatabaseFederationProfile default_database_federation_profile() {
+DatabaseFederationProfile default_database_federation_profile(const localization::LocalizedCatalog& catalog) {
     DatabaseFederationProfile profile;
     profile.available = true;
 
     profile.connectors = {
-        {"dbf", "DBF/CDX/FPT Native Storage", "xbase", "embedded file engine", "tabular", "Copperfin should treat legacy xBase storage as a first-class runtime and design-time store.", true, true, false},
-        {"sqlite", "SQLite", "relational", "embedded SQL engine", "tabular", "FoxPro-style SQL can be translated through a deterministic SQL dialect mapper for straightforward relational workloads.", true, true, false},
-        {"postgresql", "PostgreSQL", "relational", "network SQL engine", "tabular", "FoxPro-style SQL can map to PostgreSQL with a deterministic relational translator and optional extensions such as pgvector.", true, true, false},
-        {"sqlserver", "SQL Server", "relational", "network SQL engine", "tabular", "FoxPro-style SQL can map to SQL Server through a deterministic relational translator with stored procedure and security-policy support.", true, true, false},
-        {"oracle", "Oracle", "relational", "network SQL engine", "tabular", "Oracle stays in the first-class relational path even when syntax normalization is required.", true, true, false},
-        {"mongodb", "MongoDB/JSON Document Stores", "document", "network document engine", "document", "Document stores need projection and predicate translation from FoxPro-style queries into dynamic document pipelines.", false, false, true},
-        {"json-api", "HTTP/JSON Data APIs", "document", "remote service", "document", "JSON-backed services need schema discovery and dynamic projection to feel browseable through xBase-style commands.", false, false, true},
-        {"vector", "Vector/Embedding Stores", "vector", "service or extension", "vector", "Vector stores need semantic-search operators, embedding pipelines, and optional AI-assisted query planning around deterministic connector rules.", false, false, true}
+        {"dbf", database_text(catalog, "Platform.Database.Connector.Dbf.Title"), "xbase", database_text(catalog, "Platform.Database.Connector.Dbf.AccessMode"), database_text(catalog, "Platform.Database.Connector.Dbf.SchemaShape"), database_text(catalog, "Platform.Database.Connector.Dbf.TranslationStory"), true, true, false},
+        {"sqlite", database_text(catalog, "Platform.Database.Connector.Sqlite.Title"), "relational", database_text(catalog, "Platform.Database.Connector.Sqlite.AccessMode"), database_text(catalog, "Platform.Database.Connector.Sqlite.SchemaShape"), database_text(catalog, "Platform.Database.Connector.Sqlite.TranslationStory"), true, true, false},
+        {"postgresql", database_text(catalog, "Platform.Database.Connector.Postgresql.Title"), "relational", database_text(catalog, "Platform.Database.Connector.Postgresql.AccessMode"), database_text(catalog, "Platform.Database.Connector.Postgresql.SchemaShape"), database_text(catalog, "Platform.Database.Connector.Postgresql.TranslationStory"), true, true, false},
+        {"sqlserver", database_text(catalog, "Platform.Database.Connector.SqlServer.Title"), "relational", database_text(catalog, "Platform.Database.Connector.SqlServer.AccessMode"), database_text(catalog, "Platform.Database.Connector.SqlServer.SchemaShape"), database_text(catalog, "Platform.Database.Connector.SqlServer.TranslationStory"), true, true, false},
+        {"oracle", database_text(catalog, "Platform.Database.Connector.Oracle.Title"), "relational", database_text(catalog, "Platform.Database.Connector.Oracle.AccessMode"), database_text(catalog, "Platform.Database.Connector.Oracle.SchemaShape"), database_text(catalog, "Platform.Database.Connector.Oracle.TranslationStory"), true, true, false},
+        {"mongodb", database_text(catalog, "Platform.Database.Connector.Mongodb.Title"), "document", database_text(catalog, "Platform.Database.Connector.Mongodb.AccessMode"), database_text(catalog, "Platform.Database.Connector.Mongodb.SchemaShape"), database_text(catalog, "Platform.Database.Connector.Mongodb.TranslationStory"), false, false, true},
+        {"json-api", database_text(catalog, "Platform.Database.Connector.JsonApi.Title"), "document", database_text(catalog, "Platform.Database.Connector.JsonApi.AccessMode"), database_text(catalog, "Platform.Database.Connector.JsonApi.SchemaShape"), database_text(catalog, "Platform.Database.Connector.JsonApi.TranslationStory"), false, false, true},
+        {"vector", database_text(catalog, "Platform.Database.Connector.Vector.Title"), "vector", database_text(catalog, "Platform.Database.Connector.Vector.AccessMode"), database_text(catalog, "Platform.Database.Connector.Vector.SchemaShape"), database_text(catalog, "Platform.Database.Connector.Vector.TranslationStory"), false, false, true}
     };
 
     profile.query_paths = {
-        {"foxsql-relational", "Fox SQL To Relational SQL", "FoxPro-style SQL", "relational SQL dialect", "low-to-medium", "Build a canonical Copperfin query AST and lower it deterministically into each relational backend dialect.", true, false},
-        {"xbase-browse-document", "xBase Browse To Document Projection", "xBase browse/filter commands", "JSON projection and pipeline query", "medium", "Translate browse/filter intent into field projection, path navigation, and document predicates.", true, true},
-        {"foxsql-document", "Fox SQL To Document Query Plan", "FoxPro-style SQL", "document database pipeline", "medium-to-high", "Lower simple selects and filters deterministically, then allow optional AI assistance for ambiguous nested-document reshaping.", true, true},
-        {"foxsql-vector", "Fox SQL To Vector Retrieval Plan", "FoxPro-style SQL plus semantic operators", "vector search request", "high", "Use deterministic retrieval templates first, then optionally ask an approved AI model to help synthesize semantic ranking or hybrid-search plans.", true, true},
-        {"xbase-polyglot", "xBase Commands Across Polyglot Stores", "SEEK/BROWSE/SCAN/REPORT intent", "connector-specific execution plan", "medium-to-high", "Normalize xBase intent into Copperfin commands that each connector can execute or reject with an explainable compatibility result.", true, true}
+        {"foxsql-relational", database_text(catalog, "Platform.Database.QueryPath.FoxSqlRelational.Title"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlRelational.SourceShape"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlRelational.TargetShape"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlRelational.Complexity"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlRelational.Strategy"), true, false},
+        {"xbase-browse-document", database_text(catalog, "Platform.Database.QueryPath.XbaseBrowseDocument.Title"), database_text(catalog, "Platform.Database.QueryPath.XbaseBrowseDocument.SourceShape"), database_text(catalog, "Platform.Database.QueryPath.XbaseBrowseDocument.TargetShape"), database_text(catalog, "Platform.Database.QueryPath.XbaseBrowseDocument.Complexity"), database_text(catalog, "Platform.Database.QueryPath.XbaseBrowseDocument.Strategy"), true, true},
+        {"foxsql-document", database_text(catalog, "Platform.Database.QueryPath.FoxSqlDocument.Title"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlDocument.SourceShape"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlDocument.TargetShape"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlDocument.Complexity"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlDocument.Strategy"), true, true},
+        {"foxsql-vector", database_text(catalog, "Platform.Database.QueryPath.FoxSqlVector.Title"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlVector.SourceShape"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlVector.TargetShape"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlVector.Complexity"), database_text(catalog, "Platform.Database.QueryPath.FoxSqlVector.Strategy"), true, true},
+        {"xbase-polyglot", database_text(catalog, "Platform.Database.QueryPath.XbasePolyglot.Title"), database_text(catalog, "Platform.Database.QueryPath.XbasePolyglot.SourceShape"), database_text(catalog, "Platform.Database.QueryPath.XbasePolyglot.TargetShape"), database_text(catalog, "Platform.Database.QueryPath.XbasePolyglot.Complexity"), database_text(catalog, "Platform.Database.QueryPath.XbasePolyglot.Strategy"), true, true}
     };
 
     profile.guardrails = {
-        "Deterministic translators come first for relational backends and other straightforward mappings.",
-        "AI-assisted query planning stays optional, policy-controlled, and outside the trusted execution core.",
-        "Document and vector backends should expose browseable schema hints even when the source is dynamic or sparse.",
-        "Connector failures must be explainable so developers know when Copperfin translated a query directly and when it needed a planner."
+        database_text(catalog, "Platform.Database.Guardrail.DeterministicTranslatorsFirst"),
+        database_text(catalog, "Platform.Database.Guardrail.AiPlanningOptional"),
+        database_text(catalog, "Platform.Database.Guardrail.BrowseableSchemaHints"),
+        database_text(catalog, "Platform.Database.Guardrail.ExplainableConnectorFailures")
     };
 
     return profile;
+}
+
+DatabaseFederationProfile default_database_federation_profile() {
+    return default_database_federation_profile(database_profile_catalog());
 }
 
 }  // namespace copperfin::platform

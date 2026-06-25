@@ -3,6 +3,10 @@
 #include <string>
 #include <vector>
 
+namespace copperfin::localization {
+struct LocalizedCatalog;
+}
+
 namespace copperfin::platform {
 
 struct DatabaseConnectorProfile {
@@ -36,6 +40,8 @@ struct DatabaseFederationProfile {
 };
 
 [[nodiscard]] DatabaseFederationProfile default_database_federation_profile();
+[[nodiscard]] DatabaseFederationProfile default_database_federation_profile(
+    const localization::LocalizedCatalog& catalog);
 const QueryTranslationPath* query_translation_path_by_id(
     const DatabaseFederationProfile& profile,
     const std::string& path_id);
