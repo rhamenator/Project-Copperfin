@@ -10357,146 +10357,193 @@ LaunchParseResult parse_launch_arguments(
             "--dynamic-fore-color-object")};
     }
     if (result.request.closable_object && !result.request.closable_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "closable", "--closable")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Closable"),
+            "--closable")};
     }
     if (result.request.closable_object && result.request.closable_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "closable")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Closable"))};
     }
     if (!result.request.closable_object &&
         (result.request.closable_available ||
          !result.request.closable_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Closable",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ClosableTitle"),
             "--closable-object")};
     }
     if (result.request.control_box_object && !result.request.control_box_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "control-box", "--control-box")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ControlBox"),
+            "--control-box")};
     }
     if (result.request.control_box_object && result.request.control_box_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "control-box")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ControlBox"))};
     }
     if (!result.request.control_box_object &&
         (result.request.control_box_available ||
          !result.request.control_box_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Control-box",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle"),
             "--control-box-object")};
     }
     if (result.request.allow_output_object && !result.request.allow_output_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "allow-output", "--allow-output")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowOutput"),
+            "--allow-output")};
     }
     if (result.request.allow_output_object && result.request.allow_output_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "allow-output")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowOutput"))};
     }
     if (!result.request.allow_output_object &&
         (result.request.allow_output_available ||
          !result.request.allow_output_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Allow-output",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle"),
             "--allow-output-object")};
     }
     if (result.request.bind_controls_object && !result.request.bind_controls_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "bind-controls", "--bind-controls")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BindControls"),
+            "--bind-controls")};
     }
     if (result.request.bind_controls_object && result.request.bind_controls_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "bind-controls")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BindControls"))};
     }
     if (!result.request.bind_controls_object &&
         (result.request.bind_controls_available ||
          !result.request.bind_controls_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Bind-controls",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BindControlsTitle"),
             "--bind-controls-object")};
     }
     if (result.request.auto_verb_menu_object && !result.request.auto_verb_menu_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "auto-verb-menu",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu"),
             "--auto-verb-menu")};
     }
     if (result.request.auto_verb_menu_object && result.request.auto_verb_menu_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "auto-verb-menu")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu"))};
     }
     if (!result.request.auto_verb_menu_object &&
         (result.request.auto_verb_menu_available ||
          !result.request.auto_verb_menu_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Auto-verb-menu",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenuTitle"),
             "--auto-verb-menu-object")};
     }
     if (result.request.desktop_object && !result.request.desktop_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "desktop", "--desktop")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Desktop"),
+            "--desktop")};
     }
     if (result.request.desktop_object && result.request.desktop_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "desktop")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Desktop"))};
     }
     if (!result.request.desktop_object &&
         (result.request.desktop_available ||
          !result.request.desktop_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Desktop",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DesktopTitle"),
             "--desktop-object")};
     }
     if (result.request.key_preview_object && !result.request.key_preview_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "key-preview", "--key-preview")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.KeyPreview"),
+            "--key-preview")};
     }
     if (result.request.key_preview_object && result.request.key_preview_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "key-preview")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.KeyPreview"))};
     }
     if (!result.request.key_preview_object &&
         (result.request.key_preview_available ||
          !result.request.key_preview_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Key-preview",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.KeyPreviewTitle"),
             "--key-preview-object")};
     }
     if (result.request.mac_desktop_object && !result.request.mac_desktop_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "mac-desktop", "--mac-desktop")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MacDesktop"),
+            "--mac-desktop")};
     }
     if (result.request.mac_desktop_object && result.request.mac_desktop_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "mac-desktop")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MacDesktop"))};
     }
     if (!result.request.mac_desktop_object &&
         (result.request.mac_desktop_available ||
          !result.request.mac_desktop_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Mac-desktop",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MacDesktopTitle"),
             "--mac-desktop-object")};
     }
     if (result.request.max_button_object && !result.request.max_button_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "max-button", "--max-button")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxButton"),
+            "--max-button")};
     }
     if (result.request.max_button_object && result.request.max_button_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "max-button")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxButton"))};
     }
     if (!result.request.max_button_object &&
         (result.request.max_button_available ||
          !result.request.max_button_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Max-button",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxButtonTitle"),
             "--max-button-object")};
     }
     if (result.request.min_button_object && !result.request.min_button_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "min-button", "--min-button")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinButton"),
+            "--min-button")};
     }
     if (result.request.min_button_object && result.request.min_button_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "min-button")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinButton"))};
     }
     if (!result.request.min_button_object &&
         (result.request.min_button_available ||
          !result.request.min_button_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Min-button",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinButtonTitle"),
             "--min-button-object")};
     }
     if (result.request.min_height_object && !result.request.min_height_available) {

@@ -5664,8 +5664,8 @@ void test_studio_host_launch_window_flag_diagnostics_localize(const std::string&
         "--control-box",
         "#2440: pseudo-localized control-box missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
-        "An object control-box assignment requires --control-box.",
-        "#2440: pseudo-localized control-box missing-option diagnostics should not fall back to raw English prose");
+        " control-box assignment ",
+        "#2518: pseudo-localized control-box missing-option diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5683,8 +5683,8 @@ void test_studio_host_launch_window_flag_diagnostics_localize(const std::string&
         "[!! ",
         "#2440: pseudo-localized allow-output missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
-        "An object allow-output assignment requires at least one target selector.",
-        "#2440: pseudo-localized allow-output missing-target diagnostics should not fall back to raw English prose");
+        " allow-output assignment ",
+        "#2518: pseudo-localized allow-output missing-target diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5705,7 +5705,7 @@ void test_studio_host_launch_window_flag_diagnostics_localize(const std::string&
         "#2440: pseudo-localized max-button stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Max-button arguments can only be used with --max-button-object.",
-        "#2440: pseudo-localized max-button stray-argument diagnostics should not fall back to raw English prose");
+        "#2518: pseudo-localized max-button stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
