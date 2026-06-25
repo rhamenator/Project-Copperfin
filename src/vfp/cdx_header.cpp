@@ -1,11 +1,14 @@
 #include "copperfin/vfp/cdx_header.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
 #include <limits>
 #include <set>
+#include <string_view>
 
 namespace copperfin::vfp {
 
@@ -78,6 +81,16 @@ std::string uppercase_copy(std::string value) {
         return static_cast<char>(std::toupper(ch));
     });
     return value;
+}
+
+const localization::LocalizedCatalog& cdx_header_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string cdx_header_text(std::string_view key) {
+    return cdx_header_catalog().translate(key);
 }
 
 std::string collapse_identifier(const std::string& value) {
@@ -639,7 +652,7 @@ bool CdxHeader::looks_like_cdx() const {
 
 CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uint64_t file_size) {
     if (bytes.size() < 16U) {
-        return {.ok = false, .error = "File is smaller than the minimum CDX header probe size (16 bytes)."};
+        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.ShortProbe")};
     }
 
     CdxHeader header;
@@ -655,7 +668,7 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
     header.key_pool_length_hint = header.raw_words[7];
 
     if (!header.looks_like_cdx()) {
-        return {.ok = false, .header = header, .error = "Header values do not look like a CDX-family index file."};
+        return {.ok = false, .header = header, .error = cdx_header_text("Vfp.CdxHeader.Error.InvalidValues")};
     }
 
     CdxParseResult result{.ok = true, .header = header};
@@ -668,12 +681,12 @@ CdxParseResult parse_cdx_header(const std::vector<std::uint8_t>& bytes, std::uin
 CdxParseResult parse_cdx_header_from_file(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open file."};
+        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.OpenFileFailed")};
     }
 
     const std::uint64_t file_size = static_cast<std::uint64_t>(std::filesystem::file_size(path));
     if (file_size < 16U) {
-        return {.ok = false, .error = "Unable to read a complete 16-byte CDX header probe."};
+        return {.ok = false, .error = cdx_header_text("Vfp.CdxHeader.Error.ReadProbeFailed")};
     }
 
     std::vector<std::uint8_t> bytes(static_cast<std::size_t>(file_size), 0U);

@@ -1,4 +1,6 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/asset_inspector.h"
+#include "copperfin/vfp/cdx_header.h"
 #include "copperfin/vfp/dbf_header.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/index_probe.h"
@@ -215,6 +217,34 @@ void test_parse_dbf_header() {
 void test_parse_dbf_header_rejects_short_input() {
     const auto result = copperfin::vfp::parse_dbf_header({0x30U, 0x00U});
     expect(!result.ok, "parse_dbf_header should reject short input");
+    expect(
+        result.error == "File is smaller than the minimum DBF header size (32 bytes).",
+        "#2379: parse_dbf_header should preserve the default localized short-header error");
+}
+
+void test_dbf_cdx_header_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english_catalog.translate("Vfp.DbfHeader.Error.ShortHeader") ==
+            "File is smaller than the minimum DBF header size (32 bytes).",
+        "#2379: DBF header short-input error should resolve through the en-US catalog");
+    expect(
+        english_catalog.translate("Vfp.CdxHeader.Error.InvalidValues") ==
+            "Header values do not look like a CDX-family index file.",
+        "#2379: CDX invalid-header error should resolve through the en-US catalog");
+    expect(
+        pseudo_catalog.translate("Vfp.DbfHeader.Error.ShortHeader") !=
+            english_catalog.translate("Vfp.DbfHeader.Error.ShortHeader"),
+        "#2379: DBF header errors should be pseudo-localizable");
+
+    const auto cdx_result = copperfin::vfp::parse_cdx_header({0x00U, 0x04U}, 2U);
+    expect(!cdx_result.ok, "parse_cdx_header should reject short input");
+    expect(
+        cdx_result.error == "File is smaller than the minimum CDX header probe size (16 bytes).",
+        "#2379: parse_cdx_header should preserve the default localized short-probe error");
 }
 
 void test_asset_family_detection() {
@@ -1298,6 +1328,7 @@ void test_read_memo_block_raw_returns_correct_bytes() {
 int main() {
     test_parse_dbf_header();
     test_parse_dbf_header_rejects_short_input();
+    test_dbf_cdx_header_errors_resolve_through_localization_catalog();
     test_asset_family_detection();
     test_parse_index_probe_for_cdx();
     test_parse_index_probe_for_dcx();

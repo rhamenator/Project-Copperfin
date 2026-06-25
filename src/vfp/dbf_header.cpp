@@ -1,8 +1,11 @@
 #include "copperfin/vfp/dbf_header.h"
 
+#include "copperfin/localization/localization.h"
+
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <string_view>
 
 namespace copperfin::vfp {
 
@@ -27,6 +30,16 @@ std::string two_digit(std::uint8_t value) {
     }
     stream << static_cast<unsigned int>(value);
     return stream.str();
+}
+
+const localization::LocalizedCatalog& dbf_header_catalog() {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog;
+}
+
+std::string dbf_header_text(std::string_view key) {
+    return dbf_header_catalog().translate(key);
 }
 
 }  // namespace
@@ -89,7 +102,7 @@ std::string DbfHeader::last_update_iso8601() const {
 
 DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
     if (bytes.size() < 32U) {
-        return {.ok = false, .error = "File is smaller than the minimum DBF header size (32 bytes)."};
+        return {.ok = false, .error = dbf_header_text("Vfp.DbfHeader.Error.ShortHeader")};
     }
 
     DbfHeader header;
@@ -104,7 +117,7 @@ DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
     header.code_page_mark = bytes[29];
 
     if (!header.looks_like_dbf()) {
-        return {.ok = false, .header = header, .error = "Header values do not look like a DBF-family file."};
+        return {.ok = false, .header = header, .error = dbf_header_text("Vfp.DbfHeader.Error.InvalidValues")};
     }
 
     return {.ok = true, .header = header};
@@ -113,14 +126,14 @@ DbfParseResult parse_dbf_header(const std::vector<std::uint8_t>& bytes) {
 DbfParseResult parse_dbf_header_from_file(const std::string& path) {
     std::ifstream input(path, std::ios::binary);
     if (!input) {
-        return {.ok = false, .error = "Unable to open file."};
+        return {.ok = false, .error = dbf_header_text("Vfp.DbfHeader.Error.OpenFileFailed")};
     }
 
     std::vector<std::uint8_t> bytes(32U, 0U);
     input.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
 
     if (input.gcount() < static_cast<std::streamsize>(bytes.size())) {
-        return {.ok = false, .error = "Unable to read a complete 32-byte header."};
+        return {.ok = false, .error = dbf_header_text("Vfp.DbfHeader.Error.ReadHeaderFailed")};
     }
 
     return parse_dbf_header(bytes);
