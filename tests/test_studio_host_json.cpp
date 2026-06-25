@@ -5253,6 +5253,101 @@ void test_studio_host_launch_dynamic_expression_diagnostics_localize(const std::
     }
 }
 
+void test_studio_host_launch_font_diagnostics_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_launch_font_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--dynamic-font-outline-object",
+            "--dynamic-font-outline", "IIF(.T., .T., .F.)",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2444: default dynamic-font-outline diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "An object dynamic-font-outline assignment requires at least one target selector.",
+        "#2444: default dynamic-font-outline diagnostics should preserve en-US missing-target prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--dynamic-font-shadow-object",
+            "--dynamic-font-shadow-target-unique-id", "one-guid",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--dynamic-font-shadow",
+        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "An object dynamic-font-shadow assignment requires --dynamic-font-shadow.",
+        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--font-name-object",
+            "--font-name", "Arial",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2444: pseudo-localized font-name missing-target diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2444: pseudo-localized font-name missing-target diagnostics should decorate human-facing prose");
+    expect_not_contains(process.stdout_text,
+        "An object font-name assignment requires at least one target selector.",
+        "#2444: pseudo-localized font-name missing-target diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--path", "forms/customer.scx",
+            "--font-shadow", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2444: pseudo-localized font-shadow stray-argument diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2444: pseudo-localized font-shadow stray-argument diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "--font-shadow-object",
+        "#2444: pseudo-localized font-shadow stray-argument diagnostics should preserve required mode option");
+    expect_not_contains(process.stdout_text,
+        "Font-shadow arguments can only be used with --font-shadow-object.",
+        "#2444: pseudo-localized font-shadow stray-argument diagnostics should not fall back to raw English prose");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_visual_property_core_parse_diagnostics_localize(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root =
@@ -118779,6 +118874,7 @@ int main(int argc, char** argv) {
     test_studio_host_launch_form_bounds_style_diagnostics_localize(argv[1]);
     test_studio_host_launch_form_appearance_diagnostics_localize(argv[1]);
     test_studio_host_launch_dynamic_expression_diagnostics_localize(argv[1]);
+    test_studio_host_launch_font_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_core_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_copy_move_parse_diagnostics_localize(argv[1]);
     test_studio_host_visual_property_rename_reorder_parse_diagnostics_localize(argv[1]);

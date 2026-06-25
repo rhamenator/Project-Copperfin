@@ -10427,114 +10427,150 @@ LaunchParseResult parse_launch_arguments(
             "--dynamic-font-strikethru-object")};
     }
     if (result.request.dynamic_font_outline_object && !result.request.dynamic_font_outline_available) {
-        return {.ok = false, .error = "An object dynamic-font-outline assignment requires --dynamic-font-outline."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-outline",
+            "--dynamic-font-outline")};
     }
     if (result.request.dynamic_font_outline_object && result.request.dynamic_font_outline_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-outline assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-outline")};
     }
     if (!result.request.dynamic_font_outline_object &&
         (result.request.dynamic_font_outline_available ||
          !result.request.dynamic_font_outline_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-outline arguments can only be used with --dynamic-font-outline-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-outline",
+            "--dynamic-font-outline-object")};
     }
     if (result.request.dynamic_font_shadow_object && !result.request.dynamic_font_shadow_available) {
-        return {.ok = false, .error = "An object dynamic-font-shadow assignment requires --dynamic-font-shadow."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            "dynamic-font-shadow",
+            "--dynamic-font-shadow")};
     }
     if (result.request.dynamic_font_shadow_object && result.request.dynamic_font_shadow_objects.empty()) {
-        return {.ok = false, .error = "An object dynamic-font-shadow assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-shadow")};
     }
     if (!result.request.dynamic_font_shadow_object &&
         (result.request.dynamic_font_shadow_available ||
          !result.request.dynamic_font_shadow_objects.empty())) {
-        return {.ok = false, .error = "Dynamic-font-shadow arguments can only be used with --dynamic-font-shadow-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Dynamic-font-shadow",
+            "--dynamic-font-shadow-object")};
     }
     if (result.request.font_name_object && !result.request.font_name_available) {
-        return {.ok = false, .error = "An object font-name assignment requires --font-name."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-name", "--font-name")};
     }
     if (result.request.font_name_object && result.request.font_name_objects.empty()) {
-        return {.ok = false, .error = "An object font-name assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-name")};
     }
     if (!result.request.font_name_object &&
         (result.request.font_name_available ||
          !result.request.font_name_objects.empty())) {
-        return {.ok = false, .error = "Font-name arguments can only be used with --font-name-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-name",
+            "--font-name-object")};
     }
     if (result.request.font_size_object && !result.request.font_size_available) {
-        return {.ok = false, .error = "An object font-size assignment requires --font-size."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-size", "--font-size")};
     }
     if (result.request.font_size_object && result.request.font_size_objects.empty()) {
-        return {.ok = false, .error = "An object font-size assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-size")};
     }
     if (!result.request.font_size_object &&
         (result.request.font_size_available ||
          !result.request.font_size_objects.empty())) {
-        return {.ok = false, .error = "Font-size arguments can only be used with --font-size-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-size",
+            "--font-size-object")};
     }
     if (result.request.font_bold_object && !result.request.font_bold_available) {
-        return {.ok = false, .error = "An object font-bold assignment requires --font-bold."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-bold", "--font-bold")};
     }
     if (result.request.font_bold_object && result.request.font_bold_objects.empty()) {
-        return {.ok = false, .error = "An object font-bold assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-bold")};
     }
     if (!result.request.font_bold_object &&
         (result.request.font_bold_available ||
          !result.request.font_bold_objects.empty())) {
-        return {.ok = false, .error = "Font-bold arguments can only be used with --font-bold-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-bold",
+            "--font-bold-object")};
     }
     if (result.request.font_italic_object && !result.request.font_italic_available) {
-        return {.ok = false, .error = "An object font-italic assignment requires --font-italic."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-italic", "--font-italic")};
     }
     if (result.request.font_italic_object && result.request.font_italic_objects.empty()) {
-        return {.ok = false, .error = "An object font-italic assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-italic")};
     }
     if (!result.request.font_italic_object &&
         (result.request.font_italic_available ||
          !result.request.font_italic_objects.empty())) {
-        return {.ok = false, .error = "Font-italic arguments can only be used with --font-italic-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-italic",
+            "--font-italic-object")};
     }
     if (result.request.font_underline_object && !result.request.font_underline_available) {
-        return {.ok = false, .error = "An object font-underline assignment requires --font-underline."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-underline", "--font-underline")};
     }
     if (result.request.font_underline_object && result.request.font_underline_objects.empty()) {
-        return {.ok = false, .error = "An object font-underline assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-underline")};
     }
     if (!result.request.font_underline_object &&
         (result.request.font_underline_available ||
          !result.request.font_underline_objects.empty())) {
-        return {.ok = false, .error = "Font-underline arguments can only be used with --font-underline-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-underline",
+            "--font-underline-object")};
     }
     if (result.request.font_strikethru_object && !result.request.font_strikethru_available) {
-        return {.ok = false, .error = "An object font-strikethru assignment requires --font-strikethru."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-strikethru", "--font-strikethru")};
     }
     if (result.request.font_strikethru_object && result.request.font_strikethru_objects.empty()) {
-        return {.ok = false, .error = "An object font-strikethru assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-strikethru")};
     }
     if (!result.request.font_strikethru_object &&
         (result.request.font_strikethru_available ||
          !result.request.font_strikethru_objects.empty())) {
-        return {.ok = false, .error = "Font-strikethru arguments can only be used with --font-strikethru-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-strikethru",
+            "--font-strikethru-object")};
     }
     if (result.request.font_outline_object && !result.request.font_outline_available) {
-        return {.ok = false, .error = "An object font-outline assignment requires --font-outline."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-outline", "--font-outline")};
     }
     if (result.request.font_outline_object && result.request.font_outline_objects.empty()) {
-        return {.ok = false, .error = "An object font-outline assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-outline")};
     }
     if (!result.request.font_outline_object &&
         (result.request.font_outline_available ||
          !result.request.font_outline_objects.empty())) {
-        return {.ok = false, .error = "Font-outline arguments can only be used with --font-outline-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-outline",
+            "--font-outline-object")};
     }
     if (result.request.font_shadow_object && !result.request.font_shadow_available) {
-        return {.ok = false, .error = "An object font-shadow assignment requires --font-shadow."};
+        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-shadow", "--font-shadow")};
     }
     if (result.request.font_shadow_object && result.request.font_shadow_objects.empty()) {
-        return {.ok = false, .error = "An object font-shadow assignment requires at least one target selector."};
+        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-shadow")};
     }
     if (!result.request.font_shadow_object &&
         (result.request.font_shadow_available ||
          !result.request.font_shadow_objects.empty())) {
-        return {.ok = false, .error = "Font-shadow arguments can only be used with --font-shadow-object."};
+        return {.ok = false, .error = localized_object_arguments_require_mode(
+            catalog,
+            "Font-shadow",
+            "--font-shadow-object")};
     }
     if (result.request.max_width_object && !result.request.max_width_available) {
         return {.ok = false, .error = "An object max-width assignment requires --max-width."};
