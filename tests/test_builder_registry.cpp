@@ -216,6 +216,53 @@ int main() {
 
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto spanish_builders = copperfin::studio::studio_builder_registry_for_catalog(spanish_catalog);
+    const auto portuguese_builders = copperfin::studio::studio_builder_registry_for_catalog(portuguese_catalog);
+    const std::vector<std::string_view> builder_metadata_keys = {
+        "Studio.Builder.ApplicationWizard.Description",
+        "Studio.Builder.ApplicationWizard.Title",
+        "Studio.Builder.ClassBuilder.Description",
+        "Studio.Builder.ClassBuilder.Title"};
+    const auto* spanish_application_wizard = find_builder(spanish_builders, "application-wizard");
+    const auto* portuguese_class_builder = find_builder(portuguese_builders, "class-builder");
+    expect(
+        spanish_application_wizard != nullptr &&
+            spanish_application_wizard->title == "Asistente de aplicaciones" &&
+            spanish_application_wizard->description ==
+                "Generar assets del proyecto, programas de inicio y formularios de plantilla usando metadatos compatibles con VFP." &&
+            spanish_application_wizard->id == "application-wizard" &&
+            spanish_application_wizard->kind == StudioBuilderKind::wizard &&
+            spanish_application_wizard->context == StudioBuilderContext::project &&
+            spanish_application_wizard->vfp9_equivalent == "Wizards application templates" &&
+            spanish_application_wizard->copperfin_component == "cf_wizards" &&
+            spanish_application_wizard->entry_point == "cf_wizards.application_wizard",
+        "#2632: es-419 application wizard metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        portuguese_class_builder != nullptr &&
+            portuguese_class_builder->title == "Builder de classes" &&
+            portuguese_class_builder->description ==
+                "Configurar padroes de classes visuais, metadados de heranca e membros reutilizaveis." &&
+            portuguese_class_builder->id == "class-builder" &&
+            portuguese_class_builder->kind == StudioBuilderKind::builder &&
+            portuguese_class_builder->context == StudioBuilderContext::class_designer &&
+            portuguese_class_builder->vfp9_equivalent == "builder.app class builder" &&
+            portuguese_class_builder->copperfin_component == "cf_class_surface" &&
+            portuguese_class_builder->entry_point == "cf_builders.class_builder",
+        "#2632: pt-BR class builder metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        pseudo_catalog.translate("Studio.Builder.ClassBuilder.Description") ==
+            copperfin::localization::pseudo_localize(
+                "Configure visual class defaults, inheritance metadata, and reusable members."),
+        "#2632: qps-ploc class builder metadata should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", builder_metadata_keys) == 0U,
+        "#2632: es-419 should define every remaining Studio.Builder application/class metadata key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", builder_metadata_keys) == 0U,
+        "#2632: pt-BR should define every remaining Studio.Builder application/class metadata key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", builder_metadata_keys) == 0U,
+        "#2632: qps-ploc should define every remaining Studio.Builder application/class metadata key");
     const std::vector<std::string_view> execution_keys = {
         "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired",
