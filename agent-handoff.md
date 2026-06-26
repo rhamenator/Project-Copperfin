@@ -15,7 +15,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2367`, builder and wizard registry display title, description, launch validation, and launch catalog error localization for report/label designer-facing builder discovery paths.
-- Last shipped localization child: `#2561`, the shared runtime package pipeline now localizes package-plan warning prose for unavailable project workspace, unknown security-role fallback, missing assets, unresolved startup/debug startup sources, unavailable native security or .NET output profiles, missing library export discovery, and missing FXP PRG discovery while preserving package/debug manifest contracts, paths, launcher/output tokens, and other machine-readable runtime metadata.
+- Last shipped localization child: `#2563`, `copperfin_build_host` now localizes its remaining human-facing `error:` and `warning:` prefixes through the build-host catalogs for `en-US`, `es-419`, `pt-BR`, and `qps-ploc` while preserving exit codes, `status:` lines, CLI/build/package contracts, and the underlying localized message bodies.
 - Current lane: continue prompt-sized localization cleanup under `#2348` until the obvious repo-wide user-facing string backlog is handled, then return to E3/#24 report/label designer fidelity and section-aware host surfaces.
 - Next action: inspect live `#2348` children for the next prompt-sized localization slice; if the remaining backlog is no longer a release blocker, return to E3/#24 report/label designer fidelity.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.

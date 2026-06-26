@@ -9,6 +9,8 @@
   "BuildHost.Error.SecurityPolicyDenied": "La politica de seguridad denego {permission} para el rol '{role}'.",
   "BuildHost.Error.SigningKeyValidationFailed": "Fallo la validacion de la referencia de clave de firma: {error}",
   "BuildHost.Error.UnknownOrIncompleteArgument": "Argumento desconocido o incompleto: {argument}",
+  "BuildHost.Prefix.Error": "error: ",
+  "BuildHost.Prefix.Warning": "advertencia: ",
   "BuildHost.Usage": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
   "BuildHost.Warning.ProcessHardening": "advertencia: {message}",
   "Runtime.Package.Warning.DebugStartupSourceUnresolved": "No se pudo resolver el asset de inicio del lado fuente para depuracion.",

@@ -70,6 +70,18 @@ std::string message(
     return catalog.translate(key, placeholders);
 }
 
+void print_error_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& error) {
+    std::cout << message(catalog, "BuildHost.Prefix.Error") << error << "\n";
+}
+
+void print_warning_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& warning) {
+    std::cout << message(catalog, "BuildHost.Prefix.Warning") << warning << "\n";
+}
+
 std::string environment_value(const char* name) {
 #ifdef _WIN32
     char* raw = nullptr;
@@ -274,10 +286,12 @@ int main(int argc, char** argv) {
             runtime_host_override = args[++index];
         } else {
             std::cout << "status: error\n";
-            std::cout << "error: " << message(
+            print_error_line(
                 catalog,
-                "BuildHost.Error.UnknownOrIncompleteArgument",
-                {{"argument", arg}}) << "\n";
+                message(
+                    catalog,
+                    "BuildHost.Error.UnknownOrIncompleteArgument",
+                    {{"argument", arg}}));
             print_usage(catalog);
             return 2;
         }
@@ -285,13 +299,15 @@ int main(int argc, char** argv) {
 
     if (project_path.empty() || output_dir.empty()) {
         std::cout << "status: error\n";
-        std::cout << "error: " << message(
+        print_error_line(
             catalog,
-            "BuildHost.Error.RequiredProjectAndOutput",
-            {
-                {"outputDirOption", "--output-dir"},
-                {"projectOption", "--project"}
-            }) << "\n";
+            message(
+                catalog,
+                "BuildHost.Error.RequiredProjectAndOutput",
+                {
+                    {"outputDirOption", "--output-dir"},
+                    {"projectOption", "--project"}
+                }));
         print_usage(catalog);
         return 2;
     }
@@ -299,7 +315,7 @@ int main(int argc, char** argv) {
     const auto open_result = copperfin::studio::open_document({.path = project_path});
     if (!open_result.ok) {
         std::cout << "status: error\n";
-        std::cout << "error: " << open_result.error << "\n";
+        print_error_line(catalog, open_result.error);
         return 3;
     }
 
@@ -326,26 +342,30 @@ int main(int argc, char** argv) {
 
         if (!copperfin::security::role_has_permission(security_profile, security_role, "build.execute")) {
             std::cout << "status: error\n";
-            std::cout << "error: " << message(
+            print_error_line(
                 catalog,
-                "BuildHost.Error.SecurityPolicyDenied",
-                {
-                    {"permission", "build.execute"},
-                    {"role", security_role}
-                }) << "\n";
+                message(
+                    catalog,
+                    "BuildHost.Error.SecurityPolicyDenied",
+                    {
+                        {"permission", "build.execute"},
+                        {"role", security_role}
+                    }));
             return 7;
         }
 
         if (configuration == copperfin::runtime::BuildConfiguration::release &&
             !copperfin::security::role_has_permission(security_profile, security_role, "build.release")) {
             std::cout << "status: error\n";
-            std::cout << "error: " << message(
+            print_error_line(
                 catalog,
-                "BuildHost.Error.SecurityPolicyDenied",
-                {
-                    {"permission", "build.release"},
-                    {"role", security_role}
-                }) << "\n";
+                message(
+                    catalog,
+                    "BuildHost.Error.SecurityPolicyDenied",
+                    {
+                        {"permission", "build.release"},
+                        {"role", security_role}
+                    }));
             return 7;
         }
 
@@ -366,23 +386,27 @@ int main(int argc, char** argv) {
 
             if (signing_ref.empty()) {
                 std::cout << "status: error\n";
-                std::cout << "error: " << message(
+                print_error_line(
                     catalog,
-                    "BuildHost.Error.ReleaseSigningKeyRequired",
-                    {
-                        {"environmentVariable", "COPPERFIN_RELEASE_SIGNING_KEY_REF"},
-                        {"environmentValue", "env:<NAME>"}
-                    }) << "\n";
+                    message(
+                        catalog,
+                        "BuildHost.Error.ReleaseSigningKeyRequired",
+                        {
+                            {"environmentVariable", "COPPERFIN_RELEASE_SIGNING_KEY_REF"},
+                            {"environmentValue", "env:<NAME>"}
+                        }));
                 return 7;
             }
 
             const auto secret = copperfin::security::resolve_secret_reference(signing_ref);
             if (!secret.ok) {
                 std::cout << "status: error\n";
-                std::cout << "error: " << message(
+                print_error_line(
                     catalog,
-                    "BuildHost.Error.SigningKeyValidationFailed",
-                    {{"error", secret.error}}) << "\n";
+                    message(
+                        catalog,
+                        "BuildHost.Error.SigningKeyValidationFailed",
+                        {{"error", secret.error}}));
                 return 7;
             }
         }
@@ -401,7 +425,7 @@ int main(int argc, char** argv) {
 
     if (!plan.ok) {
         std::cout << "status: error\n";
-        std::cout << "error: " << message(catalog, "BuildHost.Error.BuildPlanCreationFailed") << "\n";
+        print_error_line(catalog, message(catalog, "BuildHost.Error.BuildPlanCreationFailed"));
         return 4;
     }
 
@@ -413,7 +437,7 @@ int main(int argc, char** argv) {
         runtime_host_path);
     if (!materialized.ok) {
         std::cout << "status: error\n";
-        std::cout << "error: " << materialized.error << "\n";
+        print_error_line(catalog, materialized.error);
         return 5;
     }
 
@@ -426,7 +450,7 @@ int main(int argc, char** argv) {
             extensibility_profile);
         if (!build_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << build_result.error << "\n";
+            print_error_line(catalog, build_result.error);
             return 8;
         }
         final_plan = build_result.plan;
@@ -449,7 +473,7 @@ int main(int argc, char** argv) {
                     publish_error);
             }
             std::cout << "status: error\n";
-            std::cout << "error: " << publish_error << "\n";
+            print_error_line(catalog, publish_error);
             return 6;
         }
     }
@@ -475,7 +499,7 @@ int main(int argc, char** argv) {
     std::cout << "security.enabled: " << (final_plan.security_enabled ? "true" : "false") << "\n";
     std::cout << "warnings: " << final_plan.warnings.size() << "\n";
     for (const auto& warning : final_plan.warnings) {
-        std::cout << "warning: " << warning << "\n";
+        print_warning_line(catalog, warning);
     }
 
     return 0;

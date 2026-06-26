@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 
 #include <cstdlib>
@@ -105,6 +106,16 @@ std::vector<std::string> lines_with_prefix(const std::string& text, const std::s
         }
     }
     return matches;
+}
+
+const copperfin::localization::LocalizedCatalog& build_host_catalog(const std::string& locale) {
+    static const std::unordered_map<std::string, copperfin::localization::LocalizedCatalog> catalogs = {
+        {"en-US", copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "en-US")},
+        {"es-419", copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "es-419")},
+        {"pt-BR", copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "pt-BR")},
+        {"qps-ploc", copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc")}
+    };
+    return catalogs.at(locale);
 }
 
 std::string hex_decode_bytes(const std::string& encoded) {
@@ -3085,6 +3096,8 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                "Portuguese placeholder build host errors should preserve machine-readable status");
         expect(process.stdout_text.find("Argumento desconhecido ou incompleto: --project") != std::string::npos,
                "Portuguese placeholder build host errors should resolve through the pt-BR catalog");
+        expect(process.stdout_text.find("erro: ") != std::string::npos,
+               "Portuguese placeholder build host errors should localize the error prefix");
         expect(process.stdout_text.find("Unknown or incomplete argument") == std::string::npos,
                "Portuguese placeholder build host errors should not fall back to raw English prose");
     }
@@ -3110,10 +3123,48 @@ void run_build_host_localized_usage_smoke(const std::string& build_host_path) {
                "pseudo-localized build host command errors should still use the original exit code");
         expect(error_process.stdout_text.find("status: error") != std::string::npos,
                "pseudo-localized build host command errors should preserve machine-readable status");
+        const std::string pseudo_error_prefix = build_host_catalog("qps-ploc").translate("BuildHost.Prefix.Error");
+        expect(error_process.stdout_text.find(pseudo_error_prefix) != std::string::npos,
+               "pseudo-localized build host command errors should route the error prefix through qps-ploc");
         expect(error_process.stdout_text.find("[!! ") != std::string::npos,
                "pseudo-localized build host command errors should decorate prose");
         expect(error_process.stdout_text.find("--project") != std::string::npos,
                "pseudo-localized build host command errors should preserve the invalid CLI flag");
+        expect(error_process.stdout_text.find("error: Unknown or incomplete argument") == std::string::npos,
+               "pseudo-localized build host command errors should not fall back to the raw English prefixed error");
+    }
+
+    {
+        const std::filesystem::path project_dir = temp_root / "warning_project";
+        const std::filesystem::path output_dir = temp_root / "warning_output";
+        const std::filesystem::path project_path = project_dir / "warningdemo.pjx";
+        std::error_code ignored_warning_setup;
+        fs::remove_all(project_dir, ignored_warning_setup);
+        fs::remove_all(output_dir, ignored_warning_setup);
+        fs::create_directories(project_dir);
+        fs::create_directories(output_dir);
+
+        write_text(project_dir / "librarymain.prg", "RETURN\n");
+        write_text(project_dir / "helper.prg", "RETURN\n");
+        write_synthetic_project(project_path, project_dir, output_dir / "WarningDemo.dll");
+
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+        set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+        const auto process = run_process_capture(
+            build_host_path,
+            {"build", "--project", project_path.string(), "--output-dir", output_dir.string()},
+            temp_root);
+        const std::string pseudo_warning_prefix = build_host_catalog("qps-ploc").translate("BuildHost.Prefix.Warning");
+        expect(process.exit_code == 0,
+               "pseudo-localized build host warning-path builds should still succeed");
+        expect(process.stdout_text.find("status: ok") != std::string::npos,
+               "pseudo-localized build host warning-path builds should preserve machine-readable status");
+        expect(process.stdout_text.find(pseudo_warning_prefix) != std::string::npos,
+               "pseudo-localized build host warnings should route the warning prefix through qps-ploc");
+        expect(process.stdout_text.find("warning: No PRG routine exports were discovered") == std::string::npos,
+               "pseudo-localized build host warnings should not fall back to the raw English prefixed warning");
     }
 
     fs::remove_all(temp_root, ignored);

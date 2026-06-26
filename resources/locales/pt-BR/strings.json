@@ -9,6 +9,8 @@
   "BuildHost.Error.SecurityPolicyDenied": "A politica de seguranca negou {permission} para a funcao '{role}'.",
   "BuildHost.Error.SigningKeyValidationFailed": "Falha na validacao da referencia da chave de assinatura: {error}",
   "BuildHost.Error.UnknownOrIncompleteArgument": "Argumento desconhecido ou incompleto: {argument}",
+  "BuildHost.Prefix.Error": "erro: ",
+  "BuildHost.Prefix.Warning": "aviso: ",
   "BuildHost.Usage": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
   "BuildHost.Warning.ProcessHardening": "aviso: {message}",
   "Runtime.Package.Warning.DebugStartupSourceUnresolved": "Nao foi possivel resolver o asset de inicializacao do lado da origem para depuracao.",
