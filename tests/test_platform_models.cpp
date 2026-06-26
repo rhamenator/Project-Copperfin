@@ -373,9 +373,86 @@ void test_default_database_profile() {
             "#2491: default query path complexity should preserve en-US prose");
     }
 
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog =
-        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+        copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const auto spanish_profile = copperfin::platform::default_database_federation_profile(spanish_catalog);
+    const auto portuguese_profile = copperfin::platform::default_database_federation_profile(portuguese_catalog);
     const auto pseudo_profile = copperfin::platform::default_database_federation_profile(pseudo_catalog);
+
+    const auto spanish_dbf = copperfin::platform::database_connector_by_id(spanish_profile, "dbf");
+    expect(spanish_dbf != nullptr, "#2598: es-419 database profile should still expose the DBF connector");
+    if (spanish_dbf != nullptr) {
+        expect(
+            spanish_dbf->title == "Almacenamiento nativo DBF/CDX/FPT",
+            "#2598: es-419 DBF connector title should localize the prose");
+        expect(
+            spanish_dbf->access_mode == "motor de archivos embebido",
+            "#2598: es-419 DBF connector access mode should localize the prose");
+        expect(
+            spanish_dbf->family == "xbase",
+            "#2598: es-419 database profile should preserve connector family values");
+    }
+
+    const auto spanish_relational_path =
+        copperfin::platform::query_translation_path_by_id(spanish_profile, "foxsql-relational");
+    expect(spanish_relational_path != nullptr, "#2598: es-419 database profile should still expose foxsql-relational");
+    if (spanish_relational_path != nullptr) {
+        expect(
+            spanish_relational_path->title == "Fox SQL a SQL relacional",
+            "#2598: es-419 foxsql-relational title should localize the prose");
+        expect(
+            spanish_relational_path->complexity == "baja a media",
+            "#2598: es-419 foxsql-relational complexity should localize the prose");
+        expect(
+            spanish_relational_path->id == "foxsql-relational",
+            "#2598: es-419 database profile should preserve query-path ids");
+    }
+
+    expect(
+        !spanish_profile.guardrails.empty() &&
+            spanish_profile.guardrails[0] ==
+                "Los traductores deterministas van primero para los backends relacionales y otros mapeos directos.",
+        "#2598: es-419 database guardrail prose should localize without falling back to English");
+
+    const auto portuguese_mongodb = copperfin::platform::database_connector_by_id(portuguese_profile, "mongodb");
+    expect(portuguese_mongodb != nullptr, "#2598: pt-BR database profile should still expose the MongoDB connector");
+    if (portuguese_mongodb != nullptr) {
+        expect(
+            portuguese_mongodb->translation_story ==
+                "Armazenamentos de documentos exigem traducao de projecoes e predicados de consultas no estilo FoxPro para pipelines dinamicos de documentos.",
+            "#2598: pt-BR MongoDB connector story should localize the prose");
+        expect(
+            portuguese_mongodb->family == "document",
+            "#2598: pt-BR database profile should preserve connector family values");
+    }
+
+    const auto portuguese_vector = copperfin::platform::database_connector_by_id(portuguese_profile, "vector");
+    expect(portuguese_vector != nullptr, "#2598: pt-BR database profile should still expose the vector connector");
+    if (portuguese_vector != nullptr) {
+        expect(
+            portuguese_vector->title == "Armazenamentos de vetores/embeddings",
+            "#2598: pt-BR vector connector title should localize the prose");
+        expect(
+            portuguese_vector->schema_shape == "vetor",
+            "#2598: pt-BR vector connector schema shape should localize the prose");
+    }
+
+    const auto portuguese_polyglot_path =
+        copperfin::platform::query_translation_path_by_id(portuguese_profile, "xbase-polyglot");
+    expect(portuguese_polyglot_path != nullptr, "#2598: pt-BR database profile should still expose xbase-polyglot");
+    if (portuguese_polyglot_path != nullptr) {
+        expect(
+            portuguese_polyglot_path->source_shape == "intencao SEEK/BROWSE/SCAN/REPORT",
+            "#2598: pt-BR xbase-polyglot source shape should localize prose while preserving command tokens");
+        expect(
+            portuguese_polyglot_path->id == "xbase-polyglot",
+            "#2598: pt-BR database profile should preserve query-path ids");
+    }
+
     expect(
         pseudo_profile.connectors.size() == profile.connectors.size(),
         "#2491: pseudo-localized database profile should preserve connector counts");
