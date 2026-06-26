@@ -1566,11 +1566,11 @@ std::string builder_parse_unknown_option(
 
 std::string builder_parse_context_conflict(
     const copperfin::localization::LocalizedCatalog& catalog,
-    const std::string& request_name) {
+    std::string_view request_name_key) {
     return catalog.translate(
         "StudioHost.BuilderParse.Error.ContextConflict",
         {
-            {"requestName", request_name},
+            {"requestName", catalog.translate(request_name_key)},
             {"builderContextOption", "--builder-context"},
             {"selectionContextOption", "--selection-context"}
         });
@@ -1654,7 +1654,7 @@ BuilderLaunchPlanParseResult parse_builder_launch_plan_arguments(
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail(builder_parse_context_conflict(catalog, "Builder launch-plan"));
+        fail(builder_parse_context_conflict(catalog, "StudioHost.BuilderParse.RequestName.LaunchPlan"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));
@@ -1869,7 +1869,7 @@ BuilderInvocationAdmissionParseResult parse_builder_invocation_admission_argumen
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail(builder_parse_context_conflict(catalog, "Builder invocation-admission"));
+        fail(builder_parse_context_conflict(catalog, "StudioHost.BuilderParse.RequestName.InvocationAdmission"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));
@@ -2102,7 +2102,7 @@ BuilderDispatchParseResult parse_builder_dispatch_arguments(
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail(builder_parse_context_conflict(catalog, "Builder dispatch"));
+        fail(builder_parse_context_conflict(catalog, "StudioHost.BuilderParse.RequestName.Dispatch"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));
@@ -2200,7 +2200,7 @@ BuilderExecuteParseResult parse_builder_execute_arguments(
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderId"));
     }
     if (result.ok && result.context_provided && result.selection_context_provided) {
-        fail(builder_parse_context_conflict(catalog, "Builder execute"));
+        fail(builder_parse_context_conflict(catalog, "StudioHost.BuilderParse.RequestName.Execute"));
     }
     if (result.ok && !result.context_provided && !result.selection_context_provided) {
         fail(builder_parse_message(catalog, "StudioHost.BuilderParse.Error.NoBuilderOrSelectionContext"));

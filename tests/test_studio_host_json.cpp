@@ -917,6 +917,42 @@ void test_studio_host_builder_parse_diagnostics_localize(const std::string& stud
     process = run_process_capture(
         studio_host_path,
         {
+            "--builder-launch-plan", "grid-builder",
+            "--builder-context", "control",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "qps-ploc");
+    const std::string pseudo_launch_plan_request_name =
+        pseudo_catalog.translate("StudioHost.BuilderParse.RequestName.LaunchPlan");
+    expect(process.exit_code == 2,
+        "#2568: pseudo-localized ambiguous builder-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2568: pseudo-localized ambiguous builder-context diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"builderLaunchPlan\": null",
+        "#2568: pseudo-localized ambiguous builder-context diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        pseudo_launch_plan_request_name,
+        "#2568: pseudo-localized ambiguous builder-context diagnostics should route request labels through localization");
+    expect_contains(process.stdout_text,
+        "--builder-context",
+        "#2568: pseudo-localized ambiguous builder-context diagnostics should preserve CLI option names");
+    expect_contains(process.stdout_text,
+        "--selection-context",
+        "#2568: pseudo-localized ambiguous builder-context diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Builder launch-plan requests cannot provide both --builder-context and --selection-context.",
+        "#2568: pseudo-localized ambiguous builder-context diagnostics should not fall back to raw English request labels");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
             "--builder-invocation-admission", "grid-builder",
             "--builder-context", "control",
             "--admit-ui-launch", "maybe",
