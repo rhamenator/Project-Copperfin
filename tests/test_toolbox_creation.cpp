@@ -4452,6 +4452,43 @@ void test_toolbox_creation_errors_resolve_through_localization_catalog() {
                pseudo_catalog.translate("Studio.ToolboxCreation.BatchFromDispatch.Error.ValidatedItemMetadataRequired")
                    .starts_with("[!! "),
            "#2372: toolbox creation error prose should resolve through localizable catalog keys");
+    const std::vector<std::string_view> toolbox_creation_error_keys = {
+        "Studio.ToolboxCreation.Error.AssetPathRequired",
+        "Studio.ToolboxCreation.Error.ItemNotFound",
+        "Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch",
+        "Studio.ToolboxCreation.Error.ItemUnavailableForContext",
+        "Studio.ToolboxCreation.Error.ObjectIdentityExists",
+        "Studio.ToolboxCreation.Error.UniqueObjectNameUnavailable"};
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.Error.AssetPathRequired") ==
+            "No se proporciono una ruta de asset.",
+        "#2624: es-419 toolbox creation asset-path error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.Error.ItemUnavailableForContext") ==
+            "El elemento solicitado de la caja de herramientas no esta disponible en el contexto de disenador solicitado.",
+        "#2624: es-419 toolbox creation context-unavailable error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.Error.ItemNotFound") ==
+            "O item solicitado da caixa de ferramentas nao foi encontrado.",
+        "#2624: pt-BR toolbox creation item-not-found error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.Error.UniqueObjectNameUnavailable") ==
+            "Nao foi possivel gerar um nome de objeto unico para o item solicitado da caixa de ferramentas.",
+        "#2624: pt-BR toolbox creation unique-object-name error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch") ==
+            copperfin::localization::pseudo_localize(
+                "The requested toolbox item is not available in the admitted toolbox dispatch."),
+        "#2624: qps-ploc toolbox creation admitted-dispatch availability error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", toolbox_creation_error_keys) == 0U,
+        "#2624: es-419 should define every remaining Studio.ToolboxCreation.Error localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", toolbox_creation_error_keys) == 0U,
+        "#2624: pt-BR should define every remaining Studio.ToolboxCreation.Error localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_creation_error_keys) == 0U,
+        "#2624: qps-ploc should define every remaining Studio.ToolboxCreation.Error localization key");
     const std::vector<std::string_view> batch_dispatch_keys = {
         "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired",
         "Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired",

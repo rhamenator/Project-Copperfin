@@ -816,5 +816,11 @@
   "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired": "A toolbox batch create dispatch request requires descriptor field values.",
   "Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired": "A toolbox batch create dispatch request requires planned toolbox creates.",
   "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired": "A toolbox batch create dispatch request requires planned object names.",
-  "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired": "A toolbox batch create dispatch request requires validated toolbox item metadata."
+  "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired": "A toolbox batch create dispatch request requires validated toolbox item metadata.",
+  "Studio.ToolboxCreation.Error.AssetPathRequired": "No asset path was provided.",
+  "Studio.ToolboxCreation.Error.ItemNotFound": "The requested toolbox item was not found.",
+  "Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch": "The requested toolbox item is not available in the admitted toolbox dispatch.",
+  "Studio.ToolboxCreation.Error.ItemUnavailableForContext": "The requested toolbox item is not available in the requested designer context.",
+  "Studio.ToolboxCreation.Error.ObjectIdentityExists": "The requested toolbox object identity already exists in the asset.",
+  "Studio.ToolboxCreation.Error.UniqueObjectNameUnavailable": "A unique object name could not be generated for the requested toolbox item."
 }

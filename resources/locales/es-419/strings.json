@@ -828,5 +828,11 @@
   "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere valores de campos del descriptor.",
   "Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere creaciones planificadas de caja de herramientas.",
   "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere nombres planificados de objetos.",
-  "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere metadatos validados de elementos de la caja de herramientas."
+  "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere metadatos validados de elementos de la caja de herramientas.",
+  "Studio.ToolboxCreation.Error.AssetPathRequired": "No se proporciono una ruta de asset.",
+  "Studio.ToolboxCreation.Error.ItemNotFound": "No se encontro el elemento solicitado de la caja de herramientas.",
+  "Studio.ToolboxCreation.Error.ItemUnavailableForAdmittedDispatch": "El elemento solicitado de la caja de herramientas no esta disponible en el dispatch admitido de la caja de herramientas.",
+  "Studio.ToolboxCreation.Error.ItemUnavailableForContext": "El elemento solicitado de la caja de herramientas no esta disponible en el contexto de disenador solicitado.",
+  "Studio.ToolboxCreation.Error.ObjectIdentityExists": "La identidad solicitada del objeto de la caja de herramientas ya existe en el asset.",
+  "Studio.ToolboxCreation.Error.UniqueObjectNameUnavailable": "No se pudo generar un nombre de objeto unico para el elemento solicitado de la caja de herramientas."
 }
