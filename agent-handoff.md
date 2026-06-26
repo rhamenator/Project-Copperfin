@@ -15,9 +15,9 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2367`, builder and wizard registry display title, description, launch validation, and launch catalog error localization for report/label designer-facing builder discovery paths.
-- Last shipped localization child: `#2565`, `copperfin_inspect` now localizes its remaining human-facing `error:` and `warning:` prefixes through the inspect/localization catalogs for `en-US`, `es-419`, `pt-BR`, and `qps-ploc` while preserving inspect exit codes, `status:` lines, asset-inspection field names, and other machine-readable output.
+- Last shipped localization child: `#2566`, `copperfin_runtime_host` now localizes its remaining human-facing `error:` and `warning:` prefixes through the runtime-host localization catalogs for `en-US`, `es-419`, `pt-BR`, and `qps-ploc`, preserves runtime/debug/bridge machine-readable output, and seeds `COPPERFIN_LOCALE_DIR` from the resolved executable-path catalog root so shared downstream localized diagnostics continue to resolve when the host runs from another working directory.
 - Current lane: continue prompt-sized localization cleanup under `#2348` until the obvious repo-wide user-facing string backlog is handled, then return to E3/#24 report/label designer fidelity and section-aware host surfaces.
-- Next action: inspect live `#2348` children for the next prompt-sized localization slice; if the remaining backlog is no longer a release blocker, return to E3/#24 report/label designer fidelity.
+- Next action: inspect live `#2348` children for the next prompt-sized localization slice, with `copperfin_studio_host` still the largest obvious remaining hotspot; if the remaining localization backlog stops blocking MVP release readiness, return to E3/#24 report/label designer fidelity.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.
 - Localization/release-readiness slices under `#2348`/`#113` have shipped through `#2352` and `#1856`; continue them only if live issue state makes them higher priority than E3/#24.
 

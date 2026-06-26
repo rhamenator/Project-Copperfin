@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "copperfin/security/sha256.h"
 #include "copperfin/studio/document_model.h"
@@ -33,8 +34,10 @@ void write_text(const std::filesystem::path& path, const std::string& text) {
 
 void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root) {
     const std::filesystem::path english_root = locale_root / "en-US";
+    const std::filesystem::path portuguese_root = locale_root / "pt-BR";
     const std::filesystem::path pseudo_root = locale_root / "qps-ploc";
     std::filesystem::create_directories(english_root);
+    std::filesystem::create_directories(portuguese_root);
     std::filesystem::create_directories(pseudo_root);
     write_text(
         english_root / "strings.json",
@@ -62,6 +65,8 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Debug.Error.UnknownXAssetAction\": \"Unknown xAsset action: {command}\",\n"
         "  \"RuntimeHost.Debug.Error.WatchRequiresPausedState\": \"Watch evaluation requires an active paused state.\",\n"
         "  \"RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode\": \"xAsset action breakpoints require xasset-bootstrap mode.\",\n"
+        "  \"RuntimeHost.Prefix.Error\": \"error: \",\n"
+        "  \"RuntimeHost.Prefix.Warning\": \"warning: \",\n"
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
@@ -73,6 +78,13 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Usage.Federation\": \"   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
         "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
         "  \"RuntimeHost.Usage.Manifest\": \"Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\"\n"
+        "}\n");
+    write_text(
+        portuguese_root / "strings.json",
+        "{\n"
+        "  \"RuntimeHost.Debug.Error.InvalidBreakpointCommand\": \"Comando de breakpoint invalido: {command}\",\n"
+        "  \"RuntimeHost.Prefix.Error\": \"erro: \",\n"
+        "  \"RuntimeHost.Prefix.Warning\": \"aviso: \"\n"
         "}\n");
     write_text(pseudo_root / "strings.json", "{}\n");
 }
@@ -2189,6 +2201,29 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
 
     {
         ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "break:add:not-a-breakpoint"
+            },
+            temp_root);
+        expect(process.exit_code == 5,
+               "#2566: pt-BR invalid breakpoint diagnostics should keep the debug error exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2566: pt-BR invalid breakpoint diagnostics should preserve machine-readable status");
+        expect(process.stdout_text.find("erro: ") != std::string::npos,
+               "#2566: pt-BR invalid breakpoint diagnostics should localize the error prefix");
+        expect(process.stdout_text.find("Comando de breakpoint invalido: break:add:not-a-breakpoint") != std::string::npos,
+               "#2566: pt-BR invalid breakpoint diagnostics should localize the error body");
+        expect(process.stdout_text.find("error: Invalid breakpoint command") == std::string::npos,
+               "#2566: pt-BR invalid breakpoint diagnostics should not fall back to the raw English prefixed error");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
         const auto process = run_process_capture(
             runtime_host_path,
@@ -2202,10 +2237,16 @@ void test_runtime_host_debug_errors_localize_without_changing_command_tokens(con
                "#2391: pseudo-localized invalid breakpoint diagnostics should keep the debug error exit code");
         expect(process.stdout_text.find("status: error") != std::string::npos,
                "#2391: pseudo-localized invalid breakpoint diagnostics should preserve machine-readable status");
+        const std::string pseudo_error_prefix =
+            copperfin::localization::load_catalogs(locale_root, "qps-ploc").translate("RuntimeHost.Prefix.Error");
+        expect(process.stdout_text.find(pseudo_error_prefix) != std::string::npos,
+               "#2566: pseudo-localized invalid breakpoint diagnostics should route the error prefix through qps-ploc");
         expect(process.stdout_text.find("[!! ") != std::string::npos,
                "#2391: pseudo-localized invalid breakpoint diagnostics should decorate prose");
         expect(process.stdout_text.find("break:add:not-a-breakpoint") != std::string::npos,
                "#2391: pseudo-localized invalid breakpoint diagnostics should preserve debug command tokens");
+        expect(process.stdout_text.find("error: Invalid breakpoint command: break:add:not-a-breakpoint") == std::string::npos,
+               "#2566: pseudo-localized invalid breakpoint diagnostics should not fall back to the raw English prefixed error");
     }
 
     fs::remove_all(temp_root, ignored);

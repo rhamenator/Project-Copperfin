@@ -31,6 +31,8 @@
   "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit": "O comando de inicializacao da caixa de ferramentas retornou um codigo de saida diferente de zero.",
   "Inspect.Prefix.Error": "erro: ",
   "Inspect.Prefix.Warning": "aviso: ",
+  "RuntimeHost.Prefix.Error": "erro: ",
+  "RuntimeHost.Prefix.Warning": "aviso: ",
   "Runtime.Prg.Dll.Error.AppDomainDispatchQueryFailed": "Falha em QueryInterface IDispatch de AppDomain",
   "Runtime.Prg.Dll.Error.AssemblyNotDispatch": "O assembly nao e IDispatch",
   "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed": "CLRCreateInstance falhou: {hresult}",

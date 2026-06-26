@@ -64,6 +64,17 @@ std::string environment_value(const char* name) {
 #endif
 }
 
+void set_environment_value(const char* name, const std::string& value) {
+    if (name == nullptr || *name == '\0') {
+        return;
+    }
+#ifdef _WIN32
+    _putenv_s(name, value.c_str());
+#else
+    setenv(name, value.c_str(), 1);
+#endif
+}
+
 bool starts_with_insensitive(const std::string& value, const std::string& prefix) {
     if (value.size() < prefix.size()) {
         return false;
@@ -452,6 +463,27 @@ std::string localized_message(
     return catalog.translate(key, placeholders);
 }
 
+std::string localized_message_or_default(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& key,
+    const std::string& fallback,
+    const copperfin::localization::PlaceholderMap& placeholders = {}) {
+    const std::string translated = localized_message(catalog, key, placeholders);
+    return translated == key ? fallback : translated;
+}
+
+void print_error_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& error) {
+    std::cout << localized_message_or_default(catalog, "RuntimeHost.Prefix.Error", "error: ") << error << "\n";
+}
+
+void print_warning_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& warning) {
+    std::cerr << localized_message_or_default(catalog, "RuntimeHost.Prefix.Warning", "warning: ") << warning << "\n";
+}
+
 bool is_runtime_bridge_routine_identifier(const std::string& value) {
     const std::string identifier = trim_copy(value);
     if (identifier.empty()) {
@@ -540,7 +572,7 @@ int run_runtime_bridge_invocation(
         trim_copy(options.schema_version).empty()) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequiredArguments") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.RequiredArguments"));
         return 2;
     }
 
@@ -548,7 +580,7 @@ int run_runtime_bridge_invocation(
     if (!request_input.good()) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestArtifactNotFound") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.RequestArtifactNotFound"));
         return 6;
     }
     std::ostringstream request_document_stream;
@@ -561,13 +593,13 @@ int run_runtime_bridge_invocation(
     if (request_media_type != options.request_media_type) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.RequestMediaTypeMismatch"));
         return 6;
     }
     if (request_schema_version != options.schema_version) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch"));
         return 6;
     }
     const auto descriptor_matches = [&](const std::string& field_name, const std::string& expected_value) {
@@ -582,7 +614,7 @@ int run_runtime_bridge_invocation(
         !descriptor_matches("parameter_count", options.parameter_count)) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestDescriptorMismatch") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.RequestDescriptorMismatch"));
         return 6;
     }
 
@@ -596,13 +628,13 @@ int run_runtime_bridge_invocation(
         if (trim_copy(options.parameter_count) != std::to_string(parameter_values.size())) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
-            std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestParameterCountMismatch") << "\n";
+            print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.RequestParameterCountMismatch"));
             return 6;
         }
         if (!bridge_parameter_names_match(split_bridge_parameter_name_list(options.parameter_names), parameter_names)) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
-            std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.RequestParameterNameMismatch") << "\n";
+            print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.RequestParameterNameMismatch"));
             return 6;
         }
         std::string bootstrap_error;
@@ -610,7 +642,7 @@ int run_runtime_bridge_invocation(
         if (!bootstrap_path.has_value()) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
-            std::cout << "error: " << bootstrap_error << "\n";
+            print_error_line(catalog, bootstrap_error);
             return 6;
         }
         execution_source = bootstrap_path->string();
@@ -620,7 +652,7 @@ int run_runtime_bridge_invocation(
     if (lowercase_copy(std::filesystem::path(execution_source).extension().string()) != ".prg") {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.PrgStartupRequired") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.PrgStartupRequired"));
         return 6;
     }
 
@@ -637,7 +669,7 @@ int run_runtime_bridge_invocation(
     if (runtime_state.reason == copperfin::runtime::DebugPauseReason::error) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << runtime_state.message << "\n";
+        print_error_line(catalog, runtime_state.message);
         return 5;
     }
 
@@ -653,7 +685,7 @@ int run_runtime_bridge_invocation(
         if (directory_error) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: bridge-invocation\n";
-            std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed") << "\n";
+            print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed"));
             return 6;
         }
     }
@@ -670,7 +702,7 @@ int run_runtime_bridge_invocation(
     if (!response_output.good()) {
         std::cout << "status: error\n";
         std::cout << "runtime.mode: bridge-invocation\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Bridge.Error.WriteResponseArtifactFailed"));
         return 6;
     }
 
@@ -915,6 +947,9 @@ copperfin::localization::LocalizedCatalog load_localization(
     const char* executable_path,
     const std::string& explicit_locale) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(executable_path);
+    if (trim_copy(environment_value("COPPERFIN_LOCALE_DIR")).empty()) {
+        set_environment_value("COPPERFIN_LOCALE_DIR", locale_root.string());
+    }
     return copperfin::localization::load_catalogs(
         locale_root,
         copperfin::localization::select_locale(explicit_locale));
@@ -1334,13 +1369,14 @@ std::string resolve_implicit_manifest_path(const char* argv0) {
 }  // namespace
 
 int main(int argc, char** argv) {
+    const std::string explicit_locale = explicit_locale_from_arguments(argc, argv);
+    const copperfin::localization::LocalizedCatalog catalog =
+        load_localization(argc > 0 ? argv[0] : nullptr, explicit_locale);
+
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
-        std::cerr << "warning: " << hardening.message << "\n";
+        print_warning_line(catalog, hardening.message);
     }
-
-    const copperfin::localization::LocalizedCatalog catalog =
-        load_localization(argc > 0 ? argv[0] : nullptr, explicit_locale_from_arguments(argc, argv));
 
     std::string manifest_path;
     std::string federation_backend;
@@ -1404,10 +1440,12 @@ int main(int argc, char** argv) {
             ++index;
         } else {
             std::cout << "status: error\n";
-            std::cout << "error: " << localized_message(
+            print_error_line(
                 catalog,
-                "RuntimeHost.Error.UnknownArgument",
-                {{"argument", arg}}) << "\n";
+                localized_message(
+                    catalog,
+                    "RuntimeHost.Error.UnknownArgument",
+                    {{"argument", arg}}));
             print_usage(catalog);
             return 2;
         }
@@ -1417,29 +1455,33 @@ int main(int argc, char** argv) {
         !trim_copy(federation_backend).empty() || !trim_copy(federation_query).empty();
     if (federation_mode_requested && runtime_bridge_mode_requested(bridge_options)) {
         std::cout << "status: error\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Error.BridgeFederationModeConflict") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.BridgeFederationModeConflict"));
         return 2;
     }
     if (federation_mode_requested) {
         if (trim_copy(federation_backend).empty() || trim_copy(federation_query).empty()) {
             std::cout << "status: error\n";
-            std::cout << "error: " << localized_message(
+            print_error_line(
                 catalog,
-                "RuntimeHost.Error.FederationRequiredOptions",
-                {
-                    {"federationBackendOption", "--federation-backend"},
-                    {"federationQueryOption", "--federation-query"}
-                }) << "\n";
+                localized_message(
+                    catalog,
+                    "RuntimeHost.Error.FederationRequiredOptions",
+                    {
+                        {"federationBackendOption", "--federation-backend"},
+                        {"federationQueryOption", "--federation-query"}
+                    }));
             return 2;
         }
 
         const auto backend = copperfin::platform::federation_backend_from_string(federation_backend);
         if (!backend.has_value()) {
             std::cout << "status: error\n";
-            std::cout << "error: " << localized_message(
+            print_error_line(
                 catalog,
-                "RuntimeHost.Error.UnknownFederationBackend",
-                {{"backend", federation_backend}}) << "\n";
+                localized_message(
+                    catalog,
+                    "RuntimeHost.Error.UnknownFederationBackend",
+                    {{"backend", federation_backend}}));
             return 2;
         }
 
@@ -1450,13 +1492,15 @@ int main(int argc, char** argv) {
             if (!copperfin::security::role_has_permission(security_profile, security_role, "ai.mcp")) {
                 std::cout << "status: error\n";
                 std::cout << "runtime.mode: federation-query-plan\n";
-                std::cout << "error: " << localized_message(
+                print_error_line(
                     catalog,
-                    "RuntimeHost.Error.SecurityPolicyDenied",
-                    {
-                        {"permission", "ai.mcp"},
-                        {"role", security_role}
-                    }) << "\n";
+                    localized_message(
+                        catalog,
+                        "RuntimeHost.Error.SecurityPolicyDenied",
+                        {
+                            {"permission", "ai.mcp"},
+                            {"role", security_role}
+                        }));
                 return 7;
             }
         }
@@ -1472,7 +1516,7 @@ int main(int argc, char** argv) {
         if (!plan.ok) {
             std::cout << "status: error\n";
             std::cout << "runtime.mode: federation-query-plan\n";
-            std::cout << "error: " << plan.error << "\n";
+            print_error_line(catalog, plan.error);
             return 6;
         }
 
@@ -1501,14 +1545,14 @@ int main(int argc, char** argv) {
 
     if (!std::filesystem::exists(manifest_path)) {
         std::cout << "status: error\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Error.ManifestNotFound") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.ManifestNotFound"));
         return 3;
     }
 
     const auto manifest = load_manifest(manifest_path);
     if (manifest.empty()) {
         std::cout << "status: error\n";
-        std::cout << "error: " << localized_message(catalog, "RuntimeHost.Error.ManifestEmptyOrInvalid") << "\n";
+        print_error_line(catalog, localized_message(catalog, "RuntimeHost.Error.ManifestEmptyOrInvalid"));
         return 4;
     }
 
@@ -1531,13 +1575,15 @@ int main(int argc, char** argv) {
                     "role missing permission: project.open");
             }
             std::cout << "status: error\n";
-            std::cout << "error: " << localized_message(
+            print_error_line(
                 catalog,
-                "RuntimeHost.Error.SecurityPolicyDenied",
-                {
-                    {"permission", "project.open"},
-                    {"role", security_role}
-                }) << "\n";
+                localized_message(
+                    catalog,
+                    "RuntimeHost.Error.SecurityPolicyDenied",
+                    {
+                        {"permission", "project.open"},
+                        {"role", security_role}
+                    }));
             return 7;
         }
 
@@ -1550,7 +1596,7 @@ int main(int argc, char** argv) {
                     "hash verification failed: " + verification_error);
             }
             std::cout << "status: error\n";
-            std::cout << "error: " << verification_error << "\n";
+            print_error_line(catalog, verification_error);
             return 8;
         }
 
@@ -1649,10 +1695,12 @@ int main(int argc, char** argv) {
                         "role missing permission: runtime.admin");
                 }
                 std::cout << "status: error\n";
-                std::cout << "error: " << localized_message(
+                print_error_line(
                     catalog,
-                    "RuntimeHost.Error.SecurityPolicyDenied",
-                    {{"permission", "runtime.admin"}, {"role", security_role}}) << "\n";
+                    localized_message(
+                        catalog,
+                        "RuntimeHost.Error.SecurityPolicyDenied",
+                        {{"permission", "runtime.admin"}, {"role", security_role}}));
                 return 9;
             }
 
@@ -1660,27 +1708,29 @@ int main(int argc, char** argv) {
                 const auto action_routine = resolve_action_routine_name(xasset_model, command);
                 if (!action_routine.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.UnknownXAssetAction",
-                        {{"command", command}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.UnknownXAssetAction",
+                            {{"command", command}}));
                     return 5;
                 }
                 if (!session.dispatch_event_handler(*action_routine)) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
-                        {{"command", command}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.DispatchXAssetActionFailed",
+                            {{"command", command}}));
                     return 5;
                 }
                 state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
             } else if (starts_with_insensitive(command, "watch:")) {
                 if (!state.paused || state.completed) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
-                        catalog,
-                        "RuntimeHost.Debug.Error.WatchRequiresPausedState") << "\n";
+                    print_error_line(catalog, localized_message(catalog, "RuntimeHost.Debug.Error.WatchRequiresPausedState"));
                     return 5;
                 }
                 const auto watch = session.evaluate_watch_expression(command.substr(6U));
@@ -1699,10 +1749,12 @@ int main(int argc, char** argv) {
                 const auto breakpoint = parse_breakpoint(command.substr(10U), effective_startup_source);
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
-                        {{"command", command}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+                            {{"command", command}}));
                     return 5;
                 }
                 session.add_breakpoint(*breakpoint);
@@ -1713,18 +1765,22 @@ int main(int argc, char** argv) {
                 const auto breakpoint = parse_breakpoint(command.substr(13U), effective_startup_source);
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
-                        {{"command", command}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.InvalidBreakpointCommand",
+                            {{"command", command}}));
                     return 5;
                 }
                 if (!session.remove_breakpoint(*breakpoint)) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.UnknownBreakpoint",
-                        {{"path", breakpoint->file_path}, {"line", std::to_string(breakpoint->line)}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.UnknownBreakpoint",
+                            {{"path", breakpoint->file_path}, {"line", std::to_string(breakpoint->line)}}));
                     return 5;
                 }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
@@ -1733,9 +1789,9 @@ int main(int argc, char** argv) {
             } else if (starts_with_insensitive(command, "break:add-action:")) {
                 if (runtime_mode != "xasset-bootstrap") {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode") << "\n";
+                        localized_message(catalog, "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode"));
                     return 5;
                 }
                 const auto breakpoint = resolve_action_breakpoint(
@@ -1745,10 +1801,12 @@ int main(int argc, char** argv) {
                     command.substr(17U));
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
-                        {{"action", trim_copy(command.substr(17U))}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+                            {{"action", trim_copy(command.substr(17U))}}));
                     return 5;
                 }
                 session.add_breakpoint(*breakpoint);
@@ -1758,9 +1816,9 @@ int main(int argc, char** argv) {
             } else if (starts_with_insensitive(command, "break:remove-action:")) {
                 if (runtime_mode != "xasset-bootstrap") {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode") << "\n";
+                        localized_message(catalog, "RuntimeHost.Debug.Error.XAssetActionBreakpointsRequireBootstrapMode"));
                     return 5;
                 }
                 const auto breakpoint = resolve_action_breakpoint(
@@ -1770,18 +1828,22 @@ int main(int argc, char** argv) {
                     command.substr(20U));
                 if (!breakpoint.has_value()) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
-                        {{"action", trim_copy(command.substr(20U))}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.UnknownOrNonBreakpointableXAssetAction",
+                            {{"action", trim_copy(command.substr(20U))}}));
                     return 5;
                 }
                 if (!session.remove_breakpoint(*breakpoint)) {
                     std::cout << "status: error\n";
-                    std::cout << "error: " << localized_message(
+                    print_error_line(
                         catalog,
-                        "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
-                        {{"action", trim_copy(command.substr(20U))}}) << "\n";
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Debug.Error.UnknownBreakpointForXAssetAction",
+                            {{"action", trim_copy(command.substr(20U))}}));
                     return 5;
                 }
                 std::cout << "debug.command[" << index << "]: " << command << "\n";
