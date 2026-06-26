@@ -10929,205 +10929,229 @@ LaunchParseResult parse_launch_arguments(
     if (result.request.dynamic_input_mask_object && !result.request.dynamic_input_mask_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-input-mask",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask"),
             "--dynamic-input-mask")};
     }
     if (result.request.dynamic_input_mask_object && result.request.dynamic_input_mask_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-input-mask")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask"))};
     }
     if (!result.request.dynamic_input_mask_object &&
         (result.request.dynamic_input_mask_available ||
          !result.request.dynamic_input_mask_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-input-mask",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicInputMaskTitle"),
             "--dynamic-input-mask-object")};
     }
     if (result.request.dynamic_line_height_object && !result.request.dynamic_line_height_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-line-height",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight"),
             "--dynamic-line-height")};
     }
     if (result.request.dynamic_line_height_object && result.request.dynamic_line_height_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-line-height")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight"))};
     }
     if (!result.request.dynamic_line_height_object &&
         (result.request.dynamic_line_height_available ||
          !result.request.dynamic_line_height_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-line-height",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeightTitle"),
             "--dynamic-line-height-object")};
     }
     if (result.request.dynamic_alignment_object && !result.request.dynamic_alignment_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-alignment",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment"),
             "--dynamic-alignment")};
     }
     if (result.request.dynamic_alignment_object && result.request.dynamic_alignment_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-alignment")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment"))};
     }
     if (!result.request.dynamic_alignment_object &&
         (result.request.dynamic_alignment_available ||
          !result.request.dynamic_alignment_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-alignment",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicAlignmentTitle"),
             "--dynamic-alignment-object")};
     }
     if (result.request.dynamic_current_control_object && !result.request.dynamic_current_control_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-current-control",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl"),
             "--dynamic-current-control")};
     }
     if (result.request.dynamic_current_control_object && result.request.dynamic_current_control_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-current-control")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl"))};
     }
     if (!result.request.dynamic_current_control_object &&
         (result.request.dynamic_current_control_available ||
          !result.request.dynamic_current_control_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-current-control",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle"),
             "--dynamic-current-control-object")};
     }
     if (result.request.dynamic_font_name_object && !result.request.dynamic_font_name_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-name",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontName"),
             "--dynamic-font-name")};
     }
     if (result.request.dynamic_font_name_object && result.request.dynamic_font_name_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-name")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontName"))};
     }
     if (!result.request.dynamic_font_name_object &&
         (result.request.dynamic_font_name_available ||
          !result.request.dynamic_font_name_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-name",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontNameTitle"),
             "--dynamic-font-name-object")};
     }
     if (result.request.dynamic_font_size_object && !result.request.dynamic_font_size_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-size",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize"),
             "--dynamic-font-size")};
     }
     if (result.request.dynamic_font_size_object && result.request.dynamic_font_size_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-size")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize"))};
     }
     if (!result.request.dynamic_font_size_object &&
         (result.request.dynamic_font_size_available ||
          !result.request.dynamic_font_size_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-size",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle"),
             "--dynamic-font-size-object")};
     }
     if (result.request.dynamic_font_bold_object && !result.request.dynamic_font_bold_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-bold",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold"),
             "--dynamic-font-bold")};
     }
     if (result.request.dynamic_font_bold_object && result.request.dynamic_font_bold_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-bold")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold"))};
     }
     if (!result.request.dynamic_font_bold_object &&
         (result.request.dynamic_font_bold_available ||
          !result.request.dynamic_font_bold_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-bold",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontBoldTitle"),
             "--dynamic-font-bold-object")};
     }
     if (result.request.dynamic_font_italic_object && !result.request.dynamic_font_italic_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-italic",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic"),
             "--dynamic-font-italic")};
     }
     if (result.request.dynamic_font_italic_object && result.request.dynamic_font_italic_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-italic")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic"))};
     }
     if (!result.request.dynamic_font_italic_object &&
         (result.request.dynamic_font_italic_available ||
          !result.request.dynamic_font_italic_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-italic",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalicTitle"),
             "--dynamic-font-italic-object")};
     }
     if (result.request.dynamic_font_underline_object && !result.request.dynamic_font_underline_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-underline",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline"),
             "--dynamic-font-underline")};
     }
     if (result.request.dynamic_font_underline_object && result.request.dynamic_font_underline_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-underline")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline"))};
     }
     if (!result.request.dynamic_font_underline_object &&
         (result.request.dynamic_font_underline_available ||
          !result.request.dynamic_font_underline_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-underline",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle"),
             "--dynamic-font-underline-object")};
     }
     if (result.request.dynamic_font_strikethru_object && !result.request.dynamic_font_strikethru_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-strikethru",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru"),
             "--dynamic-font-strikethru")};
     }
     if (result.request.dynamic_font_strikethru_object && result.request.dynamic_font_strikethru_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-strikethru")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru"))};
     }
     if (!result.request.dynamic_font_strikethru_object &&
         (result.request.dynamic_font_strikethru_available ||
          !result.request.dynamic_font_strikethru_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-strikethru",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethruTitle"),
             "--dynamic-font-strikethru-object")};
     }
     if (result.request.dynamic_font_outline_object && !result.request.dynamic_font_outline_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-outline",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline"),
             "--dynamic-font-outline")};
     }
     if (result.request.dynamic_font_outline_object && result.request.dynamic_font_outline_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-outline")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline"))};
     }
     if (!result.request.dynamic_font_outline_object &&
         (result.request.dynamic_font_outline_available ||
          !result.request.dynamic_font_outline_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-outline",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutlineTitle"),
             "--dynamic-font-outline-object")};
     }
     if (result.request.dynamic_font_shadow_object && !result.request.dynamic_font_shadow_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "dynamic-font-shadow",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadow"),
             "--dynamic-font-shadow")};
     }
     if (result.request.dynamic_font_shadow_object && result.request.dynamic_font_shadow_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "dynamic-font-shadow")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadow"))};
     }
     if (!result.request.dynamic_font_shadow_object &&
         (result.request.dynamic_font_shadow_available ||
          !result.request.dynamic_font_shadow_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Dynamic-font-shadow",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadowTitle"),
             "--dynamic-font-shadow-object")};
     }
     if (result.request.font_name_object && !result.request.font_name_available) {

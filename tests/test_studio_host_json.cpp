@@ -5924,10 +5924,10 @@ void test_studio_host_launch_dynamic_expression_diagnostics_localize(const std::
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2443: default dynamic-input-mask diagnostics should preserve parse-failure exit status");
+        "#2521: default dynamic-input-mask diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "An object dynamic-input-mask assignment requires at least one target selector.",
-        "#2443: default dynamic-input-mask diagnostics should preserve en-US missing-target prose");
+        "#2521: default dynamic-input-mask diagnostics should preserve en-US missing-target prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
@@ -5941,16 +5941,16 @@ void test_studio_host_launch_dynamic_expression_diagnostics_localize(const std::
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2443: pseudo-localized dynamic-line-height missing-option diagnostics should preserve parse-failure exit status");
+        "#2521: pseudo-localized dynamic-line-height missing-option diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2443: pseudo-localized dynamic-line-height missing-option diagnostics should decorate human-facing prose");
+        "#2521: pseudo-localized dynamic-line-height missing-option diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--dynamic-line-height",
-        "#2443: pseudo-localized dynamic-line-height missing-option diagnostics should preserve CLI option names");
+        "#2521: pseudo-localized dynamic-line-height missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
         "An object dynamic-line-height assignment requires --dynamic-line-height.",
-        "#2443: pseudo-localized dynamic-line-height missing-option diagnostics should not fall back to raw English prose");
+        "#2521: pseudo-localized dynamic-line-height missing-option diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5963,13 +5963,13 @@ void test_studio_host_launch_dynamic_expression_diagnostics_localize(const std::
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2443: pseudo-localized dynamic-font-name missing-target diagnostics should preserve parse-failure exit status");
+        "#2521: pseudo-localized dynamic-font-name missing-target diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2443: pseudo-localized dynamic-font-name missing-target diagnostics should decorate human-facing prose");
+        "#2521: pseudo-localized dynamic-font-name missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
         "An object dynamic-font-name assignment requires at least one target selector.",
-        "#2443: pseudo-localized dynamic-font-name missing-target diagnostics should not fall back to raw English prose");
+        "#2521: pseudo-localized dynamic-font-name missing-target diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5981,16 +5981,16 @@ void test_studio_host_launch_dynamic_expression_diagnostics_localize(const std::
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2443: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should preserve parse-failure exit status");
+        "#2521: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2443: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should decorate human-facing prose");
+        "#2521: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--dynamic-font-strikethru-object",
-        "#2443: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should preserve required mode option");
+        "#2521: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Dynamic-font-strikethru arguments can only be used with --dynamic-font-strikethru-object.",
-        "#2443: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should not fall back to raw English prose");
+        "#2521: pseudo-localized dynamic-font-strikethru stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -6019,10 +6019,10 @@ void test_studio_host_launch_font_diagnostics_localize(const std::string& studio
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2444: default dynamic-font-outline diagnostics should preserve parse-failure exit status");
+        "#2521: default dynamic-font-outline diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "An object dynamic-font-outline assignment requires at least one target selector.",
-        "#2444: default dynamic-font-outline diagnostics should preserve en-US missing-target prose");
+        "#2521: default dynamic-font-outline diagnostics should preserve en-US missing-target prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
@@ -6036,16 +6036,16 @@ void test_studio_host_launch_font_diagnostics_localize(const std::string& studio
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should preserve parse-failure exit status");
+        "#2521: pseudo-localized dynamic-font-shadow missing-option diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should decorate human-facing prose");
+        "#2521: pseudo-localized dynamic-font-shadow missing-option diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--dynamic-font-shadow",
-        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should preserve CLI option names");
+        "#2521: pseudo-localized dynamic-font-shadow missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
         "An object dynamic-font-shadow assignment requires --dynamic-font-shadow.",
-        "#2444: pseudo-localized dynamic-font-shadow missing-option diagnostics should not fall back to raw English prose");
+        "#2521: pseudo-localized dynamic-font-shadow missing-option diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
