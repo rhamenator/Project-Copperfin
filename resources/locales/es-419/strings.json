@@ -22,6 +22,7 @@
   "Runtime.Prg.Dll.Error.DotNetTypeNotFound": "Tipo no encontrado: {typeName}",
   "Runtime.Prg.Dll.Error.FoxtoolsNotLoaded": "FOXTOOLS no esta cargado",
   "Runtime.Prg.Dll.Error.GetDefaultDomainFailed": "Fallo GetDefaultDomain: {hresult}",
+  "Runtime.Prg.Dll.Error.NativeProcAddressMissing": "No hay direccion de proc para: {functionName}",
   "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "No se encontro el handle de API registrado: {handle}",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Division por cero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Se esperaba un argumento de funcion",

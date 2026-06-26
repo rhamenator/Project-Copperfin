@@ -549,6 +549,7 @@ void test_runtime_dll_errors_route_through_catalog() {
         {"path", "bin/Interop.dll"}
     };
     const copperfin::localization::PlaceholderMap type_placeholders{{"typeName", "Copperfin.Tools.Loader"}};
+    const copperfin::localization::PlaceholderMap function_placeholders{{"functionName", "GetVersion"}};
 
     expect(
         english.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded") == "FOXTOOLS is not loaded",
@@ -569,6 +570,10 @@ void test_runtime_dll_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dll.Error.DotNetTypeNotFound", type_placeholders) ==
             "Type not found: Copperfin.Tools.Loader",
         "#2549: .NET type lookup error should preserve type-name placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.NativeProcAddressMissing", function_placeholders) ==
+            "No proc address for: GetVersion",
+        "#2550: native proc-address error should preserve function-name placeholder");
     expect(
         spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("FOXTOOLS") != std::string::npos &&
             spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("is not loaded") == std::string::npos,
@@ -596,6 +601,13 @@ void test_runtime_dll_errors_route_through_catalog() {
             pseudo_assembly.find("{path}") == std::string::npos &&
             pseudo_assembly.find("{hresult}") == std::string::npos,
         "#2549: qps-ploc .NET assembly error should pseudo-localize prose while preserving placeholders");
+    const std::string pseudo_function =
+        pseudo.translate("Runtime.Prg.Dll.Error.NativeProcAddressMissing", function_placeholders);
+    expect(
+        pseudo_function.find("[!! ") == 0U &&
+            pseudo_function.find("GetVersion") != std::string::npos &&
+            pseudo_function.find("{functionName}") == std::string::npos,
+        "#2550: qps-ploc native proc-address error should pseudo-localize prose while preserving function name");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {

@@ -451,7 +451,9 @@
                 // ---------------------------------------------------------------
                 if (declfn.proc_address == nullptr)
                 {
-                    last_error_message = "No proc address for: " + declfn.function_name;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.NativeProcAddressMissing",
+                        {{"functionName", declfn.function_name}});
                     return make_empty_value();
                 }
 
