@@ -371,6 +371,42 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", editor_action_dispatch_error_keys) == 0U,
         "#2625: qps-ploc should define every remaining Studio.EditorActionDispatch.Error localization key");
+    const std::vector<std::string_view> toolbox_dispatch_error_keys = {
+        "Studio.ToolboxDispatch.Error.AdmittedInvocationRequired",
+        "Studio.ToolboxDispatch.Error.CommandTokenRequired",
+        "Studio.ToolboxDispatch.Error.ConsistentItemMetadataRequired",
+        "Studio.ToolboxDispatch.Error.SelectionCatalogRequiresPalette",
+        "Studio.ToolboxDispatch.Error.ValidatedItemMetadataRequired"};
+    expect(
+        spanish_catalog.translate("Studio.ToolboxDispatch.Error.CommandTokenRequired") ==
+            "Una solicitud de dispatch de caja de herramientas requiere un token de comando.",
+        "#2627: es-419 toolbox dispatch command-token error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxDispatch.Error.SelectionCatalogRequiresPalette") ==
+            "Una solicitud de catalogo de dispatch de caja de herramientas con contexto de seleccion requiere una paleta de caja de herramientas.",
+        "#2627: es-419 toolbox dispatch selection-catalog palette error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxDispatch.Error.AdmittedInvocationRequired") ==
+            "Uma solicitacao de dispatch da caixa de ferramentas exige uma invocacao admitida que nao seja dry-run.",
+        "#2627: pt-BR toolbox dispatch admitted-invocation error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxDispatch.Error.ValidatedItemMetadataRequired") ==
+            "Uma solicitacao de dispatch da caixa de ferramentas exige metadados validados de itens da caixa de ferramentas.",
+        "#2627: pt-BR toolbox dispatch validated-item-metadata error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxDispatch.Error.ConsistentItemMetadataRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A toolbox dispatch request requires consistent toolbox item metadata."),
+        "#2627: qps-ploc toolbox dispatch consistent-item-metadata error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", toolbox_dispatch_error_keys) == 0U,
+        "#2627: es-419 should define every remaining Studio.ToolboxDispatch.Error localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", toolbox_dispatch_error_keys) == 0U,
+        "#2627: pt-BR should define every remaining Studio.ToolboxDispatch.Error localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_dispatch_error_keys) == 0U,
+        "#2627: qps-ploc should define every remaining Studio.ToolboxDispatch.Error localization key");
     expect(
         count_missing_locale_keys(spanish_catalog, "es-419", toolbox_category_keys) == 0U,
         "#2623: es-419 should define every Studio.Toolbox.Category localization key");
