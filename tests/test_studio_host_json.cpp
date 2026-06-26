@@ -762,6 +762,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Max-top object:",
         "#2572: default studio host usage should preserve en-US max-top labels");
     expect_contains(process.stdout_text,
+        "Button-count object:",
+        "#2573: default studio host usage should preserve en-US button-count labels");
+    expect_contains(process.stdout_text,
+        "Buffer-mode-override object:",
+        "#2573: default studio host usage should preserve en-US buffer-mode-override labels");
+    expect_contains(process.stdout_text,
+        "Header-height object:",
+        "#2573: default studio host usage should preserve en-US header-height labels");
+    expect_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: default studio host usage should preserve localized OLE drop-mode labels");
     expect_contains(process.stdout_text,
@@ -822,6 +831,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxTopTitle"),
         "#2572: pseudo-localized studio host usage should route max-top labels through localization");
     expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ButtonCountTitle"),
+        "#2573: pseudo-localized studio host usage should route button-count labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferModeOverrideTitle"),
+        "#2573: pseudo-localized studio host usage should route buffer-mode-override labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle"),
+        "#2573: pseudo-localized studio host usage should route header-height labels through localization");
+    expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
     expect_not_contains(process.stdout_text,
@@ -845,6 +863,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_not_contains(process.stdout_text,
         "Max-top object:",
         "#2572: pseudo-localized studio host usage should not fall back to the raw English max-top label");
+    expect_not_contains(process.stdout_text,
+        "Button-count object:",
+        "#2573: pseudo-localized studio host usage should not fall back to the raw English button-count label");
+    expect_not_contains(process.stdout_text,
+        "Buffer-mode-override object:",
+        "#2573: pseudo-localized studio host usage should not fall back to the raw English buffer-mode-override label");
+    expect_not_contains(process.stdout_text,
+        "Header-height object:",
+        "#2573: pseudo-localized studio host usage should not fall back to the raw English header-height label");
     expect_not_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: pseudo-localized studio host usage should not fall back to the raw English OLE drop-mode label");
