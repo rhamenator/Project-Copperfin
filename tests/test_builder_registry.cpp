@@ -256,6 +256,44 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", execution_keys) == 0U,
         "#2612: qps-ploc should define every remaining Studio.BuilderDispatch.Execution localization key");
+    const std::vector<std::string_view> catalog_entry_keys = {
+        "Studio.BuilderDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+        "Studio.BuilderDispatch.CatalogEntry.Error.CommandTokenRequired",
+        "Studio.BuilderDispatch.CatalogEntry.Error.DispatchArgumentsRequired",
+        "Studio.BuilderDispatch.CatalogEntry.Error.EntryPointRequired",
+        "Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+        "Studio.BuilderDispatch.CatalogEntry.Error.NonExecutedDispatchRequired",
+        "Studio.BuilderDispatch.CatalogEntry.Error.ValidatedBuilderIdRequired"};
+    expect(
+        spanish_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de builder requiere admision explicita de ejecucion.",
+        "#2615: es-419 builder dispatch catalog-entry execution-admission error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.CommandTokenRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de builder requiere un token de comando.",
+        "#2615: es-419 builder dispatch catalog-entry command-token error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.EntryPointRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch de builder exige um ponto de entrada de inicializacao.",
+        "#2615: pt-BR builder dispatch catalog-entry entry-point error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.ValidatedBuilderIdRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch de builder exige um id de builder validado.",
+        "#2615: pt-BR builder dispatch catalog-entry validated-builder-id error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.NonExecutedDispatchRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A builder dispatch execution catalog entry requires a non-executed dispatch."),
+        "#2615: qps-ploc builder dispatch catalog-entry non-executed-dispatch error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", catalog_entry_keys) == 0U,
+        "#2615: es-419 should define every remaining Studio.BuilderDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", catalog_entry_keys) == 0U,
+        "#2615: pt-BR should define every remaining Studio.BuilderDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", catalog_entry_keys) == 0U,
+        "#2615: qps-ploc should define every remaining Studio.BuilderDispatch.CatalogEntry localization key");
 
     const auto control_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::control);
     expect(control_builders.size() >= 2U, "#956: control context should expose multiple control builders");
