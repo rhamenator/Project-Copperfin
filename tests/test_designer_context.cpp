@@ -1103,6 +1103,44 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", catalog_entry_keys) == 0U,
         "#2616: qps-ploc should define every remaining Studio.DesignerDispatch.CatalogEntry localization key");
+    const std::vector<std::string_view> execution_keys = {
+        "Studio.DesignerDispatch.Execution.Error.AdmittedDispatchRequired",
+        "Studio.DesignerDispatch.Execution.Error.BuilderExecutorRequired",
+        "Studio.DesignerDispatch.Execution.Error.EditorExecutorRequired",
+        "Studio.DesignerDispatch.Execution.Error.ErrorFreeDispatchRequired",
+        "Studio.DesignerDispatch.Execution.Error.ExecutionAdmissionRequired",
+        "Studio.DesignerDispatch.Execution.Error.NonDryRunDispatchRequired",
+        "Studio.DesignerDispatch.Execution.Error.ToolboxExecutorRequired"};
+    expect(
+        spanish_catalog.translate("Studio.DesignerDispatch.Execution.Error.ExecutionAdmissionRequired") ==
+            "Una solicitud de ejecucion de dispatch de disenador requiere admision explicita de ejecucion.",
+        "#2617: es-419 designer dispatch execution-admission error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.DesignerDispatch.Execution.Error.ToolboxExecutorRequired") ==
+            "Una solicitud de ejecucion de dispatch de disenador requiere un ejecutor de caja de herramientas.",
+        "#2617: es-419 designer dispatch toolbox-executor error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.DesignerDispatch.Execution.Error.ErrorFreeDispatchRequired") ==
+            "Uma solicitacao de execucao de dispatch de designer exige um plano de dispatch sem erros.",
+        "#2617: pt-BR designer dispatch error-free-dispatch error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.DesignerDispatch.Execution.Error.EditorExecutorRequired") ==
+            "Uma solicitacao de execucao de dispatch de designer exige um executor de acoes do editor.",
+        "#2617: pt-BR designer dispatch editor-executor error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.DesignerDispatch.Execution.Error.NonDryRunDispatchRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A designer dispatch execution request requires a non-dry-run dispatch plan."),
+        "#2617: qps-ploc designer dispatch non-dry-run execution error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", execution_keys) == 0U,
+        "#2617: es-419 should define every remaining Studio.DesignerDispatch.Execution localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", execution_keys) == 0U,
+        "#2617: pt-BR should define every remaining Studio.DesignerDispatch.Execution localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", execution_keys) == 0U,
+        "#2617: qps-ploc should define every remaining Studio.DesignerDispatch.Execution localization key");
 
     std::size_t editor_execution_calls = 0U;
     std::size_t builder_execution_calls = 0U;
