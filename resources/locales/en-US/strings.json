@@ -797,6 +797,8 @@
   "Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired": "Table already open in this data session; USE AGAIN is required: {path}",
   "Runtime.Prg.Cursor.Error.UseTargetResolveFailed": "Unable to resolve USE target: {path}",
   "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound": "USE target work area not found: {target}",
+  "Runtime.Prg.Dll.Error.FoxtoolsNotLoaded": "FOXTOOLS is not loaded",
+  "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "Registered API handle not found: {handle}",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Division by zero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Expected function argument",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division by zero in integer expression",

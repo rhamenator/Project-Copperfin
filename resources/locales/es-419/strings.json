@@ -11,6 +11,8 @@
   "BuildHost.Error.UnknownOrIncompleteArgument": "Argumento desconocido o incompleto: {argument}",
   "BuildHost.Usage": "Uso: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
   "BuildHost.Warning.ProcessHardening": "advertencia: {message}",
+  "Runtime.Prg.Dll.Error.FoxtoolsNotLoaded": "FOXTOOLS no esta cargado",
+  "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "No se encontro el handle de API registrado: {handle}",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Division por cero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Se esperaba un argumento de funcion",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division por cero en expresion entera",

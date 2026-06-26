@@ -16,7 +16,7 @@
         {
             if (!is_library_loaded("foxtools"))
             {
-                last_error_message = "FOXTOOLS is not loaded";
+                last_error_message = runtime_text("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded");
                 return -1;
             }
 
@@ -46,7 +46,9 @@
             const auto found = registered_functions.find(handle);
             if (found == registered_functions.end())
             {
-                last_error_message = "Registered API handle not found: " + std::to_string(handle);
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound",
+                    {{"handle", std::to_string(handle)}});
                 return make_number_value(-1.0);
             }
 

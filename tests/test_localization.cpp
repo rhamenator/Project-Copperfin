@@ -537,6 +537,34 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
         "#2547: qps-ploc table-backed cursor error should pseudo-localize prose while preserving command");
 }
 
+void test_runtime_dll_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap handle_placeholders{{"handle", "42"}};
+
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded") == "FOXTOOLS is not loaded",
+        "#2548: FOXTOOLS load precondition should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound", handle_placeholders) ==
+            "Registered API handle not found: 42",
+        "#2548: API handle error should preserve handle placeholder");
+    expect(
+        spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("FOXTOOLS") != std::string::npos &&
+            spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("is not loaded") == std::string::npos,
+        "#2548: es-419 FOXTOOLS error should preserve invariant product token without falling back to English");
+
+    const std::string pseudo_handle =
+        pseudo.translate("Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound", handle_placeholders);
+    expect(
+        pseudo_handle.find("[!! ") == 0U &&
+            pseudo_handle.find("42") != std::string::npos &&
+            pseudo_handle.find("{handle}") == std::string::npos,
+        "#2548: qps-ploc API handle error should pseudo-localize prose while preserving handle");
+}
+
 void test_runtime_surface_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -687,6 +715,7 @@ int main(int argc, char** argv) {
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();
+    test_runtime_dll_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
