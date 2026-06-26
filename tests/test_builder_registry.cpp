@@ -353,6 +353,51 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", form_data_builder_keys) == 0U,
         "#2639: qps-ploc should define every remaining Studio.Builder form/data-environment metadata key");
+    const std::vector<std::string_view> report_label_builder_keys = {
+        "Studio.Builder.LabelWizard.Description",
+        "Studio.Builder.LabelWizard.Title",
+        "Studio.Builder.ReportBuilder.Description",
+        "Studio.Builder.ReportBuilder.Title"};
+    const auto* spanish_report_builder = find_builder(spanish_builders, "report-builder");
+    const auto* portuguese_label_wizard = find_builder(portuguese_builders, "label-wizard");
+    expect(
+        spanish_report_builder != nullptr &&
+            spanish_report_builder->title == "Builder de reportes" &&
+            spanish_report_builder->description ==
+                "Configurar datos de reportes, agrupacion, bandas, expresiones y valores predeterminados de vista previa." &&
+            spanish_report_builder->id == "report-builder" &&
+            spanish_report_builder->kind == StudioBuilderKind::builder &&
+            spanish_report_builder->context == StudioBuilderContext::report &&
+            spanish_report_builder->vfp9_equivalent == "ReportBuilder.app" &&
+            spanish_report_builder->copperfin_component == "cf_report_surface" &&
+            spanish_report_builder->entry_point == "cf_builders.report_builder",
+        "#2640: es-419 report builder metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        portuguese_label_wizard != nullptr &&
+            portuguese_label_wizard->title == "Assistente de etiquetas" &&
+            portuguese_label_wizard->description ==
+                "Criar layouts de etiquetas a partir de escolhas de estoque ou modelo, preservando as semanticas de LBX/LBT." &&
+            portuguese_label_wizard->id == "label-wizard" &&
+            portuguese_label_wizard->kind == StudioBuilderKind::wizard &&
+            portuguese_label_wizard->context == StudioBuilderContext::label &&
+            portuguese_label_wizard->vfp9_equivalent == "Wizards label templates" &&
+            portuguese_label_wizard->copperfin_component == "cf_wizards" &&
+            portuguese_label_wizard->entry_point == "cf_wizards.label_wizard",
+        "#2640: pt-BR label wizard metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        pseudo_catalog.translate("Studio.Builder.ReportBuilder.Description") ==
+            copperfin::localization::pseudo_localize(
+                "Configure report data, grouping, bands, expressions, and preview defaults."),
+        "#2640: qps-ploc report builder metadata should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", report_label_builder_keys) == 0U,
+        "#2640: es-419 should define every remaining Studio.Builder report/label metadata key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", report_label_builder_keys) == 0U,
+        "#2640: pt-BR should define every remaining Studio.Builder report/label metadata key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", report_label_builder_keys) == 0U,
+        "#2640: qps-ploc should define every remaining Studio.Builder report/label metadata key");
     const std::vector<std::string_view> execution_keys = {
         "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired",
