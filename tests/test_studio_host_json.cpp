@@ -1285,6 +1285,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "VisualAssetEditor.Object.SelectedContainerChildrenRequired",
         "VisualAssetEditor.Object.SelectedContainerNameMissing",
         "VisualAssetEditor.Object.SnapSelectionRequired"};
+    const std::vector<std::string_view> asset_editor_object_property_keys = {
+        "VisualAssetEditor.Object.TabOrderSelectionDuplicate",
+        "VisualAssetEditor.Object.TabOrderSelectionRequired",
+        "VisualAssetEditor.Object.TabStopSelectionDuplicate",
+        "VisualAssetEditor.Object.TabStopSelectionRequired",
+        "VisualAssetEditor.Object.TargetRecordUnavailable",
+        "VisualAssetEditor.Object.TargetSelectorRequired",
+        "VisualAssetEditor.Object.UniqueIdAmbiguous",
+        "VisualAssetEditor.Object.UniqueIdNotFound",
+        "VisualAssetEditor.Object.VisibilitySelectionDuplicate",
+        "VisualAssetEditor.Object.VisibilitySelectionRequired",
+        "VisualAssetEditor.Operation.AssetPathRequired",
+        "VisualAssetEditor.Operation.RollbackFailed",
+        "VisualAssetEditor.Operation.TargetRollbackFailed",
+        "VisualAssetEditor.Property.Ambiguous",
+        "VisualAssetEditor.Property.ChangeBatchRequired",
+        "VisualAssetEditor.Property.ClearBatchRequired",
+        "VisualAssetEditor.Property.CopyBatchRequired",
+        "VisualAssetEditor.Property.DirectFieldRenameUnsupported",
+        "VisualAssetEditor.Property.DirectFieldReorderUnsupported",
+        "VisualAssetEditor.Property.FontSizeFiniteNonNegativeRequired",
+        "VisualAssetEditor.Property.MoveBatchRequired",
+        "VisualAssetEditor.Property.NameRequired",
+        "VisualAssetEditor.Property.NonNegativeRequired",
+        "VisualAssetEditor.Property.NotFound",
+        "VisualAssetEditor.Property.NotRenameableMemo"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1560,6 +1586,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("The same visual object was selected more than once for {propertyLabel} assignment."),
         "#2669: asset-editor object placement and selection labels should resolve through locale catalogs without changing machine contracts");
     expect(
+        spanish_catalog.translate("VisualAssetEditor.Object.TargetSelectorRequired") ==
+                "No se proporciono ningun selector de objeto de destino." &&
+            spanish_catalog.translate("VisualAssetEditor.Property.DirectFieldRenameUnsupported") ==
+                "Los campos directos con respaldo DBF no pueden renombrarse por objeto." &&
+            portuguese_catalog.translate("VisualAssetEditor.Operation.RollbackFailed") ==
+                "{error} Falha na reversao: {rollbackError}" &&
+            portuguese_catalog.translate("VisualAssetEditor.Property.NotRenameableMemo") ==
+                "A propriedade solicitada nao e exposta como uma propriedade baseada em memo renomeavel neste ativo." &&
+            pseudo_catalog.translate("VisualAssetEditor.Object.VisibilitySelectionDuplicate") ==
+                copperfin::localization::pseudo_localize("The same visual object was selected more than once for visibility assignment."),
+        "#2670: asset-editor object target and property labels should resolve through locale catalogs without changing machine contracts");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1721,6 +1759,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_object_selection_keys) == 0U,
         "#2669: qps-ploc should define every remaining asset-editor object placement/selection localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", asset_editor_object_property_keys) == 0U,
+        "#2670: es-419 should define every remaining asset-editor object target/property localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", asset_editor_object_property_keys) == 0U,
+        "#2670: pt-BR should define every remaining asset-editor object target/property localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_object_property_keys) == 0U,
+        "#2670: qps-ploc should define every remaining asset-editor object target/property localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
