@@ -265,6 +265,55 @@ void test_do_case_control_flow() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_cursor_use_and_seek_errors_use_default_locale_messages() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_cursor_seek_errors";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script);
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    const auto duplicate_alias = run_error_script(
+        "duplicate_alias",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS People AGAIN IN 0\n");
+    expect(duplicate_alias.reason == copperfin::runtime::DebugPauseReason::error,
+        "duplicate alias USE should pause with an error");
+    expect(duplicate_alias.message == "Alias already open in this data session: People",
+        "duplicate alias USE error should interpolate alias through the default locale catalog");
+
+    const auto duplicate_table = run_error_script(
+        "duplicate_table",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "USE '" + table_path.string() + "' ALIAS Other IN 0\n");
+    expect(duplicate_table.reason == copperfin::runtime::DebugPauseReason::error,
+        "duplicate table USE without AGAIN should pause with an error");
+    expect(
+        duplicate_table.message == "Table already open in this data session; USE AGAIN is required: " + table_path.string(),
+        "duplicate table USE error should interpolate path through the default locale catalog");
+
+    const auto missing_order = run_error_script(
+        "missing_order",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "SET ORDER TO 2\n");
+    expect(missing_order.reason == copperfin::runtime::DebugPauseReason::error,
+        "SET ORDER to a missing numeric order should pause with an error");
+    expect(missing_order.message == "Requested order does not exist",
+        "missing order error should route through the default locale catalog");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_push_pop_key_menu_popup_stack_commands() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_push_pop_stack_commands";
@@ -6633,6 +6682,7 @@ int main() {
     test_command_keyword_scanner_ignores_nested_text();
     test_do_while_and_loop_control_flow();
     test_do_case_control_flow();
+    test_cursor_use_and_seek_errors_use_default_locale_messages();
     test_push_pop_key_menu_popup_stack_commands();
     test_text_endtext_literal_blocks();
     test_aggregate_functions_respect_visibility();

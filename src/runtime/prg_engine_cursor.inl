@@ -748,14 +748,14 @@
 
                 if (!normalized_alias.empty() && normalize_identifier(cursor.alias) == normalized_alias)
                 {
-                    last_error_message = "Alias already open in this data session: " + alias;
+                    last_error_message = runtime_text("Runtime.Prg.Cursor.Error.AliasAlreadyOpen", {{"alias", alias}});
                     return false;
                 }
 
                 if (!remote && !allow_again && !normalized_path.empty() &&
                     normalize_path(cursor.source_path) == normalized_path)
                 {
-                    last_error_message = "Table already open in this data session; USE AGAIN is required: " + resolved_path;
+                    last_error_message = runtime_text("Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired", {{"path", resolved_path}});
                     return false;
                 }
             }
@@ -787,7 +787,7 @@
             CursorState *existing = find_cursor_by_alias(area_text);
             if (existing == nullptr)
             {
-                last_error_message = "USE target work area not found: " + area_text;
+                last_error_message = runtime_text("Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound", {{"target", area_text}});
                 return std::nullopt;
             }
 
@@ -921,7 +921,7 @@
                 const std::size_t index = static_cast<std::size_t>(std::max(1, std::stoi(target_name))) - 1U;
                 if (index >= cursor.orders.size())
                 {
-                    last_error_message = "Requested order does not exist";
+                    last_error_message = runtime_text("Runtime.Prg.Cursor.Error.RequestedOrderMissing");
                     return false;
                 }
 
@@ -970,7 +970,7 @@
             cursor.found = false;
             if (!cursor.remote && cursor.source_path.empty())
             {
-                last_error_message = "SEEK requires a local table-backed cursor";
+                last_error_message = runtime_text("Runtime.Prg.Cursor.Error.SeekRequiresLocalTableBackedCursor");
                 return false;
             }
 
@@ -989,7 +989,7 @@
                 }
                 else
                 {
-                    last_error_message = "SEEK requires an active order";
+                    last_error_message = runtime_text("Runtime.Prg.Cursor.Error.SeekRequiresActiveOrder");
                     return false;
                 }
             }
