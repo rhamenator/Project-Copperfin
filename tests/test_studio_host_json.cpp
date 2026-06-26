@@ -1103,6 +1103,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAssignment.TabStop",
         "StudioHost.LaunchParse.ObjectAssignment.TabStopTitle",
         "StudioHost.LaunchParse.ObjectAssignment.TitleBar"};
+    const std::vector<std::string_view> host_tail_parse_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.TooltipText",
+        "StudioHost.LaunchParse.ObjectAssignment.TooltipTextTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.Visibility",
+        "StudioHost.LaunchParse.ObjectAssignment.VisibilityTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButtonTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpIdTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.WindowState",
+        "StudioHost.LaunchParse.PropertyCommand.Clear",
+        "StudioHost.LaunchParse.PropertyCommand.Rename",
+        "StudioHost.LaunchParse.PropertyCommand.Update",
+        "StudioHost.LaunchParse.Request.DeletedStateTargetTitle",
+        "StudioHost.LaunchParse.Request.DeletedStates",
+        "StudioHost.LaunchParse.Request.SubtreeDeletedState",
+        "StudioHost.LaunchParse.Request.SubtreeDeletedStateTitle",
+        "StudioHost.LaunchParse.SelectionContextAllowedValues",
+        "StudioHost.LaunchParse.Selector.Root",
+        "StudioHost.LaunchParse.Selector.Target",
+        "StudioHost.LaunchParse.Value.Value",
+        "StudioHost.VisualMethodParse.Error.BooleanValue",
+        "StudioHost.VisualMethodParse.Error.CopyBatchItemRequiresMethodName",
+        "StudioHost.VisualMethodParse.Error.DeleteBatchItemRequiresMethodName",
+        "StudioHost.VisualMethodParse.Error.MissingValue",
+        "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
+        "StudioHost.VisualMethodParse.Error.NoAssetPath"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1295,6 +1321,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("selected-item-fore-color"),
         "#2662: host object-assignment selection state and tab labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.TooltipTextTitle") ==
+                "Texto de informacion sobre herramientas" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.PropertyCommand.Clear") == "borrar" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.Request.SubtreeDeletedStateTitle") ==
+                "Estado excluido da subarvore" &&
+            portuguese_catalog.translate("StudioHost.VisualMethodParse.Error.NoAssetPath") ==
+                "Nenhum caminho de ativo foi fornecido." &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WindowState") ==
+                copperfin::localization::pseudo_localize("window-state"),
+        "#2663: host tooltip, selector, and visual-method parse labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1393,6 +1430,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_selection_state_tab_keys) == 0U,
         "#2662: qps-ploc should define every remaining selection-state/tab object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", host_tail_parse_keys) == 0U,
+        "#2663: es-419 should define every remaining host tail parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", host_tail_parse_keys) == 0U,
+        "#2663: pt-BR should define every remaining host tail parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", host_tail_parse_keys) == 0U,
+        "#2663: qps-ploc should define every remaining host tail parse localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
