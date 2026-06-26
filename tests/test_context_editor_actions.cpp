@@ -328,6 +328,44 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_execution_keys) == 0U,
         "#2613: qps-ploc should define every remaining Studio.ToolboxDispatch.Execution localization key");
+    const std::vector<std::string_view> toolbox_catalog_entry_keys = {
+        "Studio.ToolboxDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+        "Studio.ToolboxDispatch.CatalogEntry.Error.CommandTokenRequired",
+        "Studio.ToolboxDispatch.CatalogEntry.Error.ConsistentItemMetadataRequired",
+        "Studio.ToolboxDispatch.CatalogEntry.Error.DispatchArgumentsRequired",
+        "Studio.ToolboxDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+        "Studio.ToolboxDispatch.CatalogEntry.Error.NonExecutedDispatchRequired",
+        "Studio.ToolboxDispatch.CatalogEntry.Error.ValidatedItemMetadataRequired"};
+    expect(
+        spanish_catalog.translate("Studio.ToolboxDispatch.CatalogEntry.Error.ExecutionAdmissionRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de caja de herramientas requiere admision explicita de ejecucion.",
+        "#2618: es-419 toolbox dispatch catalog-entry execution-admission error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxDispatch.CatalogEntry.Error.ValidatedItemMetadataRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de caja de herramientas requiere metadatos validados de elementos de la caja de herramientas.",
+        "#2618: es-419 toolbox dispatch catalog-entry validated-item-metadata error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxDispatch.CatalogEntry.Error.ConsistentItemMetadataRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch da caixa de ferramentas exige metadados consistentes de itens da caixa de ferramentas.",
+        "#2618: pt-BR toolbox dispatch catalog-entry consistent-item-metadata error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxDispatch.CatalogEntry.Error.NonExecutedDispatchRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch da caixa de ferramentas exige um dispatch nao executado.",
+        "#2618: pt-BR toolbox dispatch catalog-entry non-executed-dispatch error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxDispatch.CatalogEntry.Error.DispatchArgumentsRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A toolbox dispatch execution catalog entry requires dispatch arguments."),
+        "#2618: qps-ploc toolbox dispatch catalog-entry dispatch-arguments error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", toolbox_catalog_entry_keys) == 0U,
+        "#2618: es-419 should define every remaining Studio.ToolboxDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", toolbox_catalog_entry_keys) == 0U,
+        "#2618: pt-BR should define every remaining Studio.ToolboxDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_catalog_entry_keys) == 0U,
+        "#2618: qps-ploc should define every remaining Studio.ToolboxDispatch.CatalogEntry localization key");
     const std::vector<std::string_view> editor_execution_keys = {
         "Studio.EditorActionDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.EditorActionDispatch.Execution.Error.CommandTokenRequired",
