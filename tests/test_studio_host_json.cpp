@@ -1577,6 +1577,60 @@ void test_studio_host_toolbox_palette_parse_diagnostics_localize(const std::stri
         "Unknown toolbox-palette-launch-catalog option: --selection-context",
         "#2398: pseudo-localized unknown-option diagnostics should not fall back to raw English prose");
 
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-query", "--toolbox-context", "menu_item", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2582: es-419 unknown-toolbox-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2582: es-419 unknown-toolbox-context diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"toolboxPaletteQuery\": null",
+        "#2582: es-419 unknown-toolbox-context diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "Token de contexto de la caja de herramientas desconocido: menu_item",
+        "#2582: es-419 unknown-toolbox-context diagnostics should localize toolbox-context token prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown toolbox context token: menu_item",
+        "#2582: es-419 unknown-toolbox-context diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-query", "--toolbox-context", "form", "--toolbox-search", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2582: pt-BR missing-value diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Falta um valor para --toolbox-search.",
+        "#2582: pt-BR missing-value diagnostics should localize missing-value prose");
+    expect_contains(process.stdout_text,
+        "--toolbox-search",
+        "#2582: pt-BR missing-value diagnostics should preserve CLI option names");
+    expect_not_contains(process.stdout_text,
+        "Missing value for --toolbox-search.",
+        "#2582: pt-BR missing-value diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-palette-launch-catalog", "--selection-context", "visual_object", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2582: es-419 unknown-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Opcion desconocida de toolbox-palette-launch-catalog: --selection-context",
+        "#2582: es-419 unknown-option diagnostics should localize command-option prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown toolbox-palette-launch-catalog option: --selection-context",
+        "#2582: es-419 unknown-option diagnostics should not fall back to raw English prose");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
