@@ -308,6 +308,51 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", control_grid_builder_keys) == 0U,
         "#2638: qps-ploc should define every remaining Studio.Builder control/grid metadata key");
+    const std::vector<std::string_view> form_data_builder_keys = {
+        "Studio.Builder.DataEnvironmentBuilder.Description",
+        "Studio.Builder.DataEnvironmentBuilder.Title",
+        "Studio.Builder.FormBuilder.Description",
+        "Studio.Builder.FormBuilder.Title"};
+    const auto* spanish_form_builder = find_builder(spanish_builders, "form-builder");
+    const auto* portuguese_data_environment_builder = find_builder(portuguese_builders, "data-environment-builder");
+    expect(
+        spanish_form_builder != nullptr &&
+            spanish_form_builder->title == "Builder de formularios" &&
+            spanish_form_builder->description ==
+                "Configurar datos a nivel de formulario, disposicion y valores predeterminados de metodos generados." &&
+            spanish_form_builder->id == "form-builder" &&
+            spanish_form_builder->kind == StudioBuilderKind::builder &&
+            spanish_form_builder->context == StudioBuilderContext::form &&
+            spanish_form_builder->vfp9_equivalent == "builder.app form builder" &&
+            spanish_form_builder->copperfin_component == "cf_form_surface" &&
+            spanish_form_builder->entry_point == "cf_builders.form_builder",
+        "#2639: es-419 form builder metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        portuguese_data_environment_builder != nullptr &&
+            portuguese_data_environment_builder->title == "Builder de ambiente de dados" &&
+            portuguese_data_environment_builder->description ==
+                "Configurar vinculacoes de tabelas ou cursores e metadados de relacoes para ambientes de dados de formularios e relatorios." &&
+            portuguese_data_environment_builder->id == "data-environment-builder" &&
+            portuguese_data_environment_builder->kind == StudioBuilderKind::builder &&
+            portuguese_data_environment_builder->context == StudioBuilderContext::data_environment &&
+            portuguese_data_environment_builder->vfp9_equivalent == "data environment builder" &&
+            portuguese_data_environment_builder->copperfin_component == "cf_data_explorer" &&
+            portuguese_data_environment_builder->entry_point == "cf_builders.data_environment_builder",
+        "#2639: pt-BR data-environment builder metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        pseudo_catalog.translate("Studio.Builder.FormBuilder.Description") ==
+            copperfin::localization::pseudo_localize(
+                "Configure form-level data, layout, and generated method defaults."),
+        "#2639: qps-ploc form builder metadata should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", form_data_builder_keys) == 0U,
+        "#2639: es-419 should define every remaining Studio.Builder form/data-environment metadata key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", form_data_builder_keys) == 0U,
+        "#2639: pt-BR should define every remaining Studio.Builder form/data-environment metadata key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", form_data_builder_keys) == 0U,
+        "#2639: qps-ploc should define every remaining Studio.Builder form/data-environment metadata key");
     const std::vector<std::string_view> execution_keys = {
         "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired",
