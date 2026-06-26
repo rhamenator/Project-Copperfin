@@ -1065,6 +1065,34 @@ int main() {
                pseudo_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired").starts_with("[!! ") &&
                pseudo_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.ExecutionAdmissionRequired").starts_with("[!! "),
            "#2371: designer dispatch error prose should resolve through localizable catalog keys");
+    const std::vector<std::string_view> designer_gate_error_keys = {
+        "Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired",
+        "Studio.DesignerDispatch.Error.InvocationAdmissionRequired"};
+    expect(
+        spanish_catalog.translate("Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired") ==
+            "Una solicitud de admision de invocacion de disenador requiere al menos una superficie de lanzamiento validada.",
+        "#2644: es-419 designer invocation-admission gate error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired") ==
+            "Una solicitud de dispatch de disenador requiere al menos una admision de invocacion.",
+        "#2644: es-419 designer dispatch gate error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.DesignerInvocationAdmission.Error.ValidatedLaunchSurfaceRequired") ==
+            "Uma solicitacao de admissao de invocacao de designer exige pelo menos uma superficie de inicializacao validada.",
+        "#2644: pt-BR designer invocation-admission gate error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired") ==
+            "Uma solicitacao de dispatch de designer exige pelo menos uma admissao de invocacao.",
+        "#2644: pt-BR designer dispatch gate error should localize through the catalog");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", designer_gate_error_keys) == 0U,
+        "#2644: es-419 should define every remaining designer gate-error localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", designer_gate_error_keys) == 0U,
+        "#2644: pt-BR should define every remaining designer gate-error localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", designer_gate_error_keys) == 0U,
+        "#2644: qps-ploc should define every remaining designer gate-error localization key");
     const std::vector<std::string_view> catalog_entry_keys = {
         "Studio.DesignerDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
         "Studio.DesignerDispatch.CatalogEntry.Error.ErrorFreeDispatchRequired",
