@@ -263,6 +263,51 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", builder_metadata_keys) == 0U,
         "#2632: qps-ploc should define every remaining Studio.Builder application/class metadata key");
+    const std::vector<std::string_view> control_grid_builder_keys = {
+        "Studio.Builder.ControlBuilder.Description",
+        "Studio.Builder.ControlBuilder.Title",
+        "Studio.Builder.GridBuilder.Description",
+        "Studio.Builder.GridBuilder.Title"};
+    const auto* spanish_control_builder = find_builder(spanish_builders, "control-builder");
+    const auto* portuguese_grid_builder = find_builder(portuguese_builders, "grid-builder");
+    expect(
+        spanish_control_builder != nullptr &&
+            spanish_control_builder->title == "Builder de controles" &&
+            spanish_control_builder->description ==
+                "Configurar enlaces de controles seleccionados, titulos, estilos y hooks de eventos generados." &&
+            spanish_control_builder->id == "control-builder" &&
+            spanish_control_builder->kind == StudioBuilderKind::builder &&
+            spanish_control_builder->context == StudioBuilderContext::control &&
+            spanish_control_builder->vfp9_equivalent == "builder.app control builders" &&
+            spanish_control_builder->copperfin_component == "cf_form_surface" &&
+            spanish_control_builder->entry_point == "cf_builders.control_builder",
+        "#2638: es-419 control builder metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        portuguese_grid_builder != nullptr &&
+            portuguese_grid_builder->title == "Builder de grid" &&
+            portuguese_grid_builder->description ==
+                "Configurar colunas de grid, vinculacoes de dados, cabecalhos e comportamento de exibicao." &&
+            portuguese_grid_builder->id == "grid-builder" &&
+            portuguese_grid_builder->kind == StudioBuilderKind::builder &&
+            portuguese_grid_builder->context == StudioBuilderContext::control &&
+            portuguese_grid_builder->vfp9_equivalent == "builder.app grid builder" &&
+            portuguese_grid_builder->copperfin_component == "cf_form_surface" &&
+            portuguese_grid_builder->entry_point == "cf_builders.grid_builder",
+        "#2638: pt-BR grid builder metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        pseudo_catalog.translate("Studio.Builder.ControlBuilder.Description") ==
+            copperfin::localization::pseudo_localize(
+                "Configure selected control bindings, captions, styles, and generated event hooks."),
+        "#2638: qps-ploc control builder metadata should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", control_grid_builder_keys) == 0U,
+        "#2638: es-419 should define every remaining Studio.Builder control/grid metadata key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", control_grid_builder_keys) == 0U,
+        "#2638: pt-BR should define every remaining Studio.Builder control/grid metadata key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", control_grid_builder_keys) == 0U,
+        "#2638: qps-ploc should define every remaining Studio.Builder control/grid metadata key");
     const std::vector<std::string_view> execution_keys = {
         "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired",
