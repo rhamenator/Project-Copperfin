@@ -1416,6 +1416,73 @@ void test_studio_host_editor_action_parse_diagnostics_localize(const std::string
         "Unknown editor-action-launch-catalog option: --admit-editor-invocation",
         "#2397: pseudo-localized unknown-option diagnostics should not fall back to raw English prose");
 
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--editor-action-launch-plan", "show-property-grid", "--selection-context", "unknown", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2580: es-419 unknown-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2580: es-419 unknown-context diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"editorActionLaunchPlan\": null",
+        "#2580: es-419 unknown-context diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "Token de contexto de seleccion desconocido: unknown",
+        "#2580: es-419 unknown-context diagnostics should localize selection-context token prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown selection context token: unknown",
+        "#2580: es-419 unknown-context diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-invocation-admission", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2580: pt-BR invalid-boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "O valor de --admit-editor-invocation deve ser true ou false.",
+        "#2580: pt-BR invalid-boolean diagnostics should localize boolean validation prose");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2580: pt-BR invalid-boolean diagnostics should preserve invariant true tokens");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2580: pt-BR invalid-boolean diagnostics should preserve invariant false tokens");
+    expect_not_contains(process.stdout_text,
+        "The --admit-editor-invocation value must be true or false.",
+        "#2580: pt-BR invalid-boolean diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-launch-catalog",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2580: es-419 unknown-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Opcion desconocida de editor-action-launch-catalog: --admit-editor-invocation",
+        "#2580: es-419 unknown-option diagnostics should localize command-option prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown editor-action-launch-catalog option: --admit-editor-invocation",
+        "#2580: es-419 unknown-option diagnostics should not fall back to raw English prose");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
