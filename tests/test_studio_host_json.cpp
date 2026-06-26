@@ -6114,10 +6114,10 @@ void test_studio_host_launch_max_auto_diagnostics_localize(const std::string& st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2445: default max-width diagnostics should preserve parse-failure exit status");
+        "#2523: default max-width diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "An object max-width assignment requires at least one target selector.",
-        "#2445: default max-width diagnostics should preserve en-US missing-target prose");
+        "#2523: default max-width diagnostics should preserve en-US missing-target prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
@@ -6131,16 +6131,16 @@ void test_studio_host_launch_max_auto_diagnostics_localize(const std::string& st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2445: pseudo-localized max-left missing-option diagnostics should preserve parse-failure exit status");
+        "#2523: pseudo-localized max-left missing-option diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2445: pseudo-localized max-left missing-option diagnostics should decorate human-facing prose");
+        "#2523: pseudo-localized max-left missing-option diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--max-left",
-        "#2445: pseudo-localized max-left missing-option diagnostics should preserve CLI option names");
+        "#2523: pseudo-localized max-left missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
         "An object max-left assignment requires --max-left.",
-        "#2445: pseudo-localized max-left missing-option diagnostics should not fall back to raw English prose");
+        "#2523: pseudo-localized max-left missing-option diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -6153,13 +6153,13 @@ void test_studio_host_launch_max_auto_diagnostics_localize(const std::string& st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2445: pseudo-localized continuous-scroll missing-target diagnostics should preserve parse-failure exit status");
+        "#2523: pseudo-localized continuous-scroll missing-target diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2445: pseudo-localized continuous-scroll missing-target diagnostics should decorate human-facing prose");
+        "#2523: pseudo-localized continuous-scroll missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
         "An object continuous-scroll assignment requires at least one target selector.",
-        "#2445: pseudo-localized continuous-scroll missing-target diagnostics should not fall back to raw English prose");
+        "#2523: pseudo-localized continuous-scroll missing-target diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -6171,16 +6171,16 @@ void test_studio_host_launch_max_auto_diagnostics_localize(const std::string& st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2445: pseudo-localized sparse stray-argument diagnostics should preserve parse-failure exit status");
+        "#2523: pseudo-localized sparse stray-argument diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2445: pseudo-localized sparse stray-argument diagnostics should decorate human-facing prose");
+        "#2523: pseudo-localized sparse stray-argument diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--sparse-object",
-        "#2445: pseudo-localized sparse stray-argument diagnostics should preserve required mode option");
+        "#2523: pseudo-localized sparse stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Sparse arguments can only be used with --sparse-object.",
-        "#2445: pseudo-localized sparse stray-argument diagnostics should not fall back to raw English prose");
+        "#2523: pseudo-localized sparse stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -6209,10 +6209,10 @@ void test_studio_host_launch_selection_marker_diagnostics_localize(const std::st
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2446: default lock-screen diagnostics should preserve parse-failure exit status");
+        "#2523: default lock-screen diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "An object lock-screen assignment requires at least one target selector.",
-        "#2446: default lock-screen diagnostics should preserve en-US missing-target prose");
+        "#2523: default lock-screen diagnostics should preserve en-US missing-target prose");
 
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
