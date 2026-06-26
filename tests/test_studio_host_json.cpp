@@ -1148,6 +1148,60 @@ void test_studio_host_builder_parse_diagnostics_localize(const std::string& stud
         "Builder launch-plan requests cannot provide both --builder-context and --selection-context.",
         "#2568: pseudo-localized ambiguous builder-context diagnostics should not fall back to raw English request labels");
 
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--builder-context", "control",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2577: es-419 ambiguous builder-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2577: es-419 ambiguous builder-context diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"builderLaunchPlan\": null",
+        "#2577: es-419 ambiguous builder-context diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "Las solicitudes de plan de lanzamiento del builder no pueden proporcionar --builder-context y --selection-context al mismo tiempo.",
+        "#2577: es-419 ambiguous builder-context diagnostics should localize builder request conflict prose");
+    expect_not_contains(process.stdout_text,
+        "Builder launch-plan requests cannot provide both --builder-context and --selection-context.",
+        "#2577: es-419 ambiguous builder-context diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-launch-plan", "grid-builder",
+            "--builder-context", "control",
+            "--selection-context", "visual_object",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2577: pt-BR ambiguous builder-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2577: pt-BR ambiguous builder-context diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"builderLaunchPlan\": null",
+        "#2577: pt-BR ambiguous builder-context diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "Solicitacoes de plano de lancamento do builder nao podem fornecer --builder-context e --selection-context ao mesmo tempo.",
+        "#2577: pt-BR ambiguous builder-context diagnostics should localize builder request conflict prose");
+    expect_not_contains(process.stdout_text,
+        "Builder launch-plan requests cannot provide both --builder-context and --selection-context.",
+        "#2577: pt-BR ambiguous builder-context diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
     process = run_process_capture(
         studio_host_path,
         {
