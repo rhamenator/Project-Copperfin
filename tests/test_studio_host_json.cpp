@@ -1500,6 +1500,22 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "VisualAssetEditor.PropertyLabel.WhatsThisHelp",
         "VisualAssetEditor.PropertyLabel.WhatsThisHelpID",
         "VisualAssetEditor.PropertyLabel.WindowState"};
+    const std::vector<std::string_view> asset_editor_storage_undo_keys = {
+        "VisualAssetEditor.Storage.MemoSidecarWriteFailed",
+        "VisualAssetEditor.Storage.NumericValueTooLarge",
+        "VisualAssetEditor.Storage.RecordDataTruncated",
+        "VisualAssetEditor.Storage.RecordIndexOutOfRange",
+        "VisualAssetEditor.Storage.TableOpenFailed",
+        "VisualAssetEditor.Storage.TableWriteFailed",
+        "VisualAssetEditor.Storage.TargetFieldMemoRequired",
+        "VisualAssetEditor.Undo.CreateJournalFailed",
+        "VisualAssetEditor.Undo.CurrentPropertyReadFailed",
+        "VisualAssetEditor.Undo.HistoryUnavailable",
+        "VisualAssetEditor.Undo.JournalReadFailed",
+        "VisualAssetEditor.Undo.PersistJournalFailed",
+        "VisualAssetEditor.Undo.PropertyLabel",
+        "VisualAssetEditor.Undo.PropertyLookupMismatch",
+        "VisualAssetEditor.Undo.RenamePropertyLabel"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1849,6 +1865,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("window-state"),
         "#2677: asset-editor property labels batch 6 should resolve through locale catalogs without changing machine contracts");
     expect(
+        spanish_catalog.translate("VisualAssetEditor.Storage.TableWriteFailed") ==
+                "No se pudo escribir la tabla del recurso visual." &&
+            spanish_catalog.translate("VisualAssetEditor.Undo.PropertyLabel") == "Propiedad {propertyName}" &&
+            portuguese_catalog.translate("VisualAssetEditor.Storage.TargetFieldMemoRequired") ==
+                "O campo de destino nao e um campo baseado em memo." &&
+            portuguese_catalog.translate("VisualAssetEditor.Undo.RenamePropertyLabel") ==
+                "Renomear propriedade {propertyName}" &&
+            pseudo_catalog.translate("VisualAssetEditor.Undo.HistoryUnavailable") ==
+                copperfin::localization::pseudo_localize("No visual asset undo history is available."),
+        "#2678: asset-editor storage and undo labels should resolve through locale catalogs without changing machine contracts");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -2082,6 +2109,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_property_label_batch6_keys) == 0U,
         "#2677: qps-ploc should define every remaining asset-editor property-label localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", asset_editor_storage_undo_keys) == 0U,
+        "#2678: es-419 should define every remaining asset-editor storage/undo localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", asset_editor_storage_undo_keys) == 0U,
+        "#2678: pt-BR should define every remaining asset-editor storage/undo localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_storage_undo_keys) == 0U,
+        "#2678: qps-ploc should define every remaining asset-editor storage/undo localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
