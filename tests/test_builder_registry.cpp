@@ -294,6 +294,43 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", catalog_entry_keys) == 0U,
         "#2615: qps-ploc should define every remaining Studio.BuilderDispatch.CatalogEntry localization key");
+    const std::vector<std::string_view> request_keys = {
+        "Studio.BuilderDispatch.Error.AdmittedInvocationRequired",
+        "Studio.BuilderDispatch.Error.CommandTokenRequired",
+        "Studio.BuilderDispatch.Error.DispatchCatalogRequiresBuilder",
+        "Studio.BuilderDispatch.Error.EntryPointRequired",
+        "Studio.BuilderDispatch.Error.ExecutionCatalogRequiresBuilder",
+        "Studio.BuilderDispatch.Error.ValidatedBuilderIdRequired"};
+    expect(
+        spanish_catalog.translate("Studio.BuilderDispatch.Error.AdmittedInvocationRequired") ==
+            "Una solicitud de dispatch de builder requiere una invocacion admitida que no sea dry-run.",
+        "#2620: es-419 builder dispatch admitted-invocation error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.BuilderDispatch.Error.ExecutionCatalogRequiresBuilder") ==
+            "Una solicitud de catalogo de ejecucion de dispatch de builder requiere al menos un builder de contexto.",
+        "#2620: es-419 builder dispatch execution-catalog error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderDispatch.Error.EntryPointRequired") ==
+            "Uma solicitacao de dispatch de builder exige um ponto de entrada de inicializacao.",
+        "#2620: pt-BR builder dispatch entry-point error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderDispatch.Error.ValidatedBuilderIdRequired") ==
+            "Uma solicitacao de dispatch de builder exige um id de builder validado.",
+        "#2620: pt-BR builder dispatch validated-builder-id error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.BuilderDispatch.Error.DispatchCatalogRequiresBuilder") ==
+            copperfin::localization::pseudo_localize(
+                "A builder dispatch catalog request requires at least one context builder."),
+        "#2620: qps-ploc builder dispatch catalog-requires-builder error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", request_keys) == 0U,
+        "#2620: es-419 should define every remaining Studio.BuilderDispatch request localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", request_keys) == 0U,
+        "#2620: pt-BR should define every remaining Studio.BuilderDispatch request localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", request_keys) == 0U,
+        "#2620: qps-ploc should define every remaining Studio.BuilderDispatch request localization key");
 
     const auto control_builders = copperfin::studio::studio_builders_for_context(StudioBuilderContext::control);
     expect(control_builders.size() >= 2U, "#956: control context should expose multiple control builders");
