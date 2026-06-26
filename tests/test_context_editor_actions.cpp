@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace {
 
@@ -19,6 +21,24 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 bool has_action(
@@ -266,6 +286,48 @@ int main() {
                pseudo_catalog.translate("Studio.ToolboxDispatch.Error.ConsistentItemMetadataRequired").starts_with("[!! ") &&
                pseudo_catalog.translate("Studio.ToolboxDispatch.Execution.Error.ExecutorDidNotLaunch").starts_with("[!! "),
            "#2366: toolbox dispatch error prose should resolve through localizable catalog keys");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const std::vector<std::string_view> toolbox_execution_keys = {
+        "Studio.ToolboxDispatch.Execution.Error.AdmittedDispatchRequired",
+        "Studio.ToolboxDispatch.Execution.Error.CommandTokenRequired",
+        "Studio.ToolboxDispatch.Execution.Error.ConsistentItemMetadataRequired",
+        "Studio.ToolboxDispatch.Execution.Error.DispatchArgumentsRequired",
+        "Studio.ToolboxDispatch.Execution.Error.ExecutionAdmissionRequired",
+        "Studio.ToolboxDispatch.Execution.Error.ExecutorDidNotLaunch",
+        "Studio.ToolboxDispatch.Execution.Error.ExecutorNonZeroExit",
+        "Studio.ToolboxDispatch.Execution.Error.ExecutorRequired",
+        "Studio.ToolboxDispatch.Execution.Error.NonExecutedDispatchRequired",
+        "Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired"};
+    expect(
+        spanish_catalog.translate("Studio.ToolboxDispatch.Execution.Error.ExecutionAdmissionRequired") ==
+            "Una solicitud de ejecucion de dispatch de caja de herramientas requiere admision explicita de ejecucion.",
+        "#2613: es-419 toolbox dispatch execution-admission error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired") ==
+            "Una solicitud de ejecucion de dispatch de caja de herramientas requiere metadatos validados de elementos de la caja de herramientas.",
+        "#2613: es-419 toolbox dispatch validated-item-metadata error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxDispatch.Execution.Error.ConsistentItemMetadataRequired") ==
+            "Uma solicitacao de execucao de dispatch da caixa de ferramentas exige metadados consistentes de itens da caixa de ferramentas.",
+        "#2613: pt-BR toolbox dispatch consistent-item-metadata error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxDispatch.Execution.Error.ExecutorNonZeroExit") ==
+            "Um executor de dispatch da caixa de ferramentas retornou um codigo de saida diferente de zero.",
+        "#2613: pt-BR toolbox dispatch executor-exit error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxDispatch.Execution.Error.ExecutorDidNotLaunch") ==
+            copperfin::localization::pseudo_localize("A toolbox dispatch executor did not launch the toolbox dispatch."),
+        "#2613: qps-ploc toolbox dispatch executor-launch error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", toolbox_execution_keys) == 0U,
+        "#2613: es-419 should define every remaining Studio.ToolboxDispatch.Execution localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", toolbox_execution_keys) == 0U,
+        "#2613: pt-BR should define every remaining Studio.ToolboxDispatch.Execution localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_execution_keys) == 0U,
+        "#2613: qps-ploc should define every remaining Studio.ToolboxDispatch.Execution localization key");
 
     const auto visual_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::visual_object);

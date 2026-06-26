@@ -738,5 +738,15 @@
   "Studio.BuilderDispatch.Execution.Error.ExecutorNonZeroExit": "A builder dispatch executor returned a non-zero exit code.",
   "Studio.BuilderDispatch.Execution.Error.ExecutorRequired": "A builder dispatch execution request requires an executor.",
   "Studio.BuilderDispatch.Execution.Error.NonExecutedDispatchRequired": "A builder dispatch execution request requires a non-executed dispatch.",
-  "Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired": "A builder dispatch execution request requires a validated builder id."
+  "Studio.BuilderDispatch.Execution.Error.ValidatedBuilderIdRequired": "A builder dispatch execution request requires a validated builder id.",
+  "Studio.ToolboxDispatch.Execution.Error.AdmittedDispatchRequired": "A toolbox dispatch execution request requires an admitted non-dry-run dispatch.",
+  "Studio.ToolboxDispatch.Execution.Error.CommandTokenRequired": "A toolbox dispatch execution request requires a command token.",
+  "Studio.ToolboxDispatch.Execution.Error.ConsistentItemMetadataRequired": "A toolbox dispatch execution request requires consistent toolbox item metadata.",
+  "Studio.ToolboxDispatch.Execution.Error.DispatchArgumentsRequired": "A toolbox dispatch execution request requires dispatch arguments.",
+  "Studio.ToolboxDispatch.Execution.Error.ExecutionAdmissionRequired": "A toolbox dispatch execution request requires explicit execution admission.",
+  "Studio.ToolboxDispatch.Execution.Error.ExecutorDidNotLaunch": "A toolbox dispatch executor did not launch the toolbox dispatch.",
+  "Studio.ToolboxDispatch.Execution.Error.ExecutorNonZeroExit": "A toolbox dispatch executor returned a non-zero exit code.",
+  "Studio.ToolboxDispatch.Execution.Error.ExecutorRequired": "A toolbox dispatch execution request requires an executor.",
+  "Studio.ToolboxDispatch.Execution.Error.NonExecutedDispatchRequired": "A toolbox dispatch execution request requires a non-executed dispatch.",
+  "Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired": "A toolbox dispatch execution request requires validated toolbox item metadata."
 }
