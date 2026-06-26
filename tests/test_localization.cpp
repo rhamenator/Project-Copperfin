@@ -673,6 +673,16 @@ void test_runtime_dispatch_errors_route_through_catalog() {
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap yield_placeholders{{"command", "YIELD"}};
     const copperfin::localization::PlaceholderMap go_placeholders{{"command", "GO"}};
+    const copperfin::localization::PlaceholderMap replace_placeholders{{"command", "REPLACE"}};
+    const copperfin::localization::PlaceholderMap update_placeholders{{"command", "UPDATE"}};
+    const copperfin::localization::PlaceholderMap append_blank_placeholders{{"command", "APPEND BLANK"}};
+    const copperfin::localization::PlaceholderMap delete_placeholders{{"command", "DELETE"}};
+    const copperfin::localization::PlaceholderMap delete_from_placeholders{{"command", "DELETE FROM"}};
+    const copperfin::localization::PlaceholderMap recall_placeholders{{"command", "RECALL"}};
+    const copperfin::localization::PlaceholderMap insert_into_placeholders{{"command", "INSERT INTO"}};
+    const copperfin::localization::PlaceholderMap pack_placeholders{{"command", "PACK"}};
+    const copperfin::localization::PlaceholderMap zap_placeholders{{"command", "ZAP"}};
+    const copperfin::localization::PlaceholderMap unlock_placeholders{{"command", "UNLOCK"}};
     const copperfin::localization::PlaceholderMap seek_placeholders{{"command", "SEEK"}};
     const copperfin::localization::PlaceholderMap skip_placeholders{{"command", "SKIP"}};
     const copperfin::localization::PlaceholderMap browse_placeholders{{"command", "BROWSE"}};
@@ -725,6 +735,46 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             "SEEK target work area not found",
         "#2555: SEEK work-area error should preserve command placeholder");
     expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", replace_placeholders) ==
+            "REPLACE target work area not found",
+        "#2557: REPLACE work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", update_placeholders) ==
+            "UPDATE target work area not found",
+        "#2557: UPDATE work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", append_blank_placeholders) ==
+            "APPEND BLANK target work area not found",
+        "#2557: APPEND BLANK work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", delete_placeholders) ==
+            "DELETE target work area not found",
+        "#2557: DELETE work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", delete_from_placeholders) ==
+            "DELETE FROM target work area not found",
+        "#2557: DELETE FROM work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", recall_placeholders) ==
+            "RECALL target work area not found",
+        "#2557: RECALL work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", insert_into_placeholders) ==
+            "INSERT INTO target work area not found",
+        "#2557: INSERT INTO work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", pack_placeholders) ==
+            "PACK target work area not found",
+        "#2557: PACK work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", zap_placeholders) ==
+            "ZAP target work area not found",
+        "#2557: ZAP work-area error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", unlock_placeholders) ==
+            "UNLOCK target work area not found",
+        "#2557: UNLOCK work-area error should preserve command placeholder");
+    expect(
         english.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", do_target_placeholders) ==
             "Unable to resolve DO target: legacy/startup.prg",
         "#2554: DO target resolution error should preserve command and target placeholders");
@@ -763,9 +813,15 @@ void test_runtime_dispatch_errors_route_through_catalog() {
     expect(
         spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders)
                     .find("SEEK") != std::string::npos &&
-            spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders)
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders)
                     .find("target work area not found") == std::string::npos,
         "#2555: es-419 SEEK work-area error should preserve command without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", delete_placeholders).find("DELETE") !=
+            std::string::npos &&
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", delete_placeholders)
+                    .find("target work area not found") == std::string::npos,
+        "#2557: es-419 DELETE work-area error should preserve command without falling back to English");
     expect(
         spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", go_placeholders).find("GO") !=
             std::string::npos &&
@@ -830,6 +886,14 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             pseudo_go.find("GO") != std::string::npos &&
             pseudo_go.find("{command}") == std::string::npos,
         "#2556: qps-ploc GO work-area error should pseudo-localize prose while preserving command");
+    const std::string pseudo_replace =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", replace_placeholders);
+    expect(
+        pseudo_replace.find("[!! ") == 0U &&
+            pseudo_replace.find("REPLACE") != std::string::npos &&
+            pseudo_replace.find("target work area not found") == std::string::npos &&
+            pseudo_replace.find("{command}") == std::string::npos,
+        "#2557: qps-ploc REPLACE work-area error should pseudo-localize prose while preserving command");
     const std::string pseudo_select =
         pseudo.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", select_placeholders) +
         ": MISSING_ALIAS";

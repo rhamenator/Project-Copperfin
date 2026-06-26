@@ -2256,7 +2256,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "REPLACE target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "REPLACE"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2302,7 +2303,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(target_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "UPDATE target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "UPDATE"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2339,7 +2341,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "APPEND BLANK target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "APPEND BLANK"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2364,7 +2367,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "DELETE target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "DELETE"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2394,7 +2398,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.identifier, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "DELETE FROM target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "DELETE FROM"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2427,7 +2432,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "RECALL target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "RECALL"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2457,7 +2463,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.identifier, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "INSERT INTO target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "INSERT INTO"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2490,7 +2497,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "PACK target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "PACK"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2547,7 +2555,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "ZAP target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "ZAP"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2579,7 +2588,8 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "UNLOCK target work area not found";
+                    last_error_message = runtime_text("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                                                     {{"command", "UNLOCK"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

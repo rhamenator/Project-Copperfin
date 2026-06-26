@@ -15,9 +15,9 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2367`, builder and wizard registry display title, description, launch validation, and launch catalog error localization for report/label designer-facing builder discovery paths.
-- Last shipped localization child: `#2556`, `GO`, `SKIP`, `BROWSE`, `SET ORDER`, and `SELECT` target work-area errors route through the portable C++ localization catalog with `{command}` placeholders while preserving VFP command names, parser behavior, event categories, machine-readable state, and default en-US output.
+- Last shipped localization child: `#2557`, `REPLACE`, `UPDATE`, `APPEND BLANK`, `DELETE`, `DELETE FROM`, `RECALL`, `INSERT INTO`, `PACK`, `ZAP`, and `UNLOCK` target work-area errors now route through the portable C++ localization catalog with `{command}` placeholders while preserving VFP command names, parser behavior, event categories, machine-readable state, and default en-US output.
 - Current lane: continue prompt-sized localization cleanup under `#2348` until the obvious repo-wide user-facing string backlog is handled, then return to E3/#24 report/label designer fidelity and section-aware host surfaces.
-- Next action: inspect live GitHub children under `#2348`; pick the highest-weight open prompt-sized localization child, or create the next child under `#2348` if no prompt-sized child fits and the user-facing string backlog remains obvious. Return to `#24` only after the localization cleanup pass is complete or blocked.
+- Next action: finish `#2557` closeout on GitHub (`#2557` evidence comment + closure), then inspect live `#2348` children for the next prompt-sized localization slice before returning fully to `#24`.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.
 - Localization/release-readiness slices under `#2348`/`#113` have shipped through `#2352` and `#1856`; continue them only if live issue state makes them higher priority than E3/#24.
 
