@@ -84,6 +84,19 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
     write_text(
         spanish_root / "strings.json",
         "{\n"
+        "  \"RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed\": \"No se pudo crear el directorio de respuesta bridge.\",\n"
+        "  \"RuntimeHost.Bridge.Error.PrgStartupRequired\": \"La invocacion bridge actualmente requiere un origen de inicio PRG.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestArtifactNotFound\": \"No se encontro el artefacto de solicitud bridge.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestDescriptorMismatch\": \"El descriptor de la solicitud bridge no coincide.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestMediaTypeMismatch\": \"El tipo de medio de la solicitud bridge no coincide.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestParameterCountMismatch\": \"La cantidad de parametros de la solicitud bridge no coincide.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestParameterNameMismatch\": \"El nombre de parametro de la solicitud bridge no coincide.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch\": \"La version de esquema de la solicitud bridge no coincide.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequiredArguments\": \"La invocacion bridge requiere argumentos de ruta de solicitud/respuesta, tipo de medio y version de esquema.\",\n"
+        "  \"RuntimeHost.Bridge.Error.SourceArtifactNotFound\": \"No se encontro el artefacto fuente de la rutina bridge.\",\n"
+        "  \"RuntimeHost.Bridge.Error.UnsupportedRoutineExportName\": \"El nombre de exportacion de la rutina bridge no es un identificador PRG compatible.\",\n"
+        "  \"RuntimeHost.Bridge.Error.WriteResponseArtifactFailed\": \"No se pudo escribir el artefacto de respuesta bridge.\",\n"
+        "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"No se pudo escribir el bootstrap de la rutina bridge.\",\n"
         "  \"RuntimeHost.Debug.Error.DispatchXAssetActionFailed\": \"No se pudo despachar la accion xAsset: {command}\",\n"
         "  \"RuntimeHost.Debug.Error.InvalidBreakpointCommand\": \"Comando de breakpoint invalido: {command}\",\n"
         "  \"RuntimeHost.Debug.Error.MaterializeXAssetBootstrapFailed\": \"No se pudo materializar el bootstrap xAsset.\",\n"
@@ -112,7 +125,20 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         portuguese_root / "strings.json",
         "{\n"
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"O asset de inicializacao nao e um arquivo PRG. A execucao de PRG e real; o codigo xBase incorporado em assets SCX/VCX/FRX/MNX/LBX pertence a uma etapa posterior do runtime.\",\n"
+        "  \"RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed\": \"Nao foi possivel criar o diretorio de resposta bridge.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"O modo de invocacao bridge nao pode ser combinado com o modo de consulta de federacao.\",\n"
+        "  \"RuntimeHost.Bridge.Error.PrgStartupRequired\": \"A invocacao bridge atualmente exige uma origem de inicializacao PRG.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestArtifactNotFound\": \"Artefato de solicitacao bridge nao encontrado.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestDescriptorMismatch\": \"O descritor da solicitacao bridge nao corresponde.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestMediaTypeMismatch\": \"O tipo de midia da solicitacao bridge nao corresponde.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestParameterCountMismatch\": \"A contagem de parametros da solicitacao bridge nao corresponde.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestParameterNameMismatch\": \"O nome do parametro da solicitacao bridge nao corresponde.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequestSchemaVersionMismatch\": \"A versao de esquema da solicitacao bridge nao corresponde.\",\n"
+        "  \"RuntimeHost.Bridge.Error.RequiredArguments\": \"A invocacao bridge exige argumentos de caminho de solicitacao/resposta, tipo de midia e versao de esquema.\",\n"
+        "  \"RuntimeHost.Bridge.Error.SourceArtifactNotFound\": \"Artefato fonte da rotina bridge nao encontrado.\",\n"
+        "  \"RuntimeHost.Bridge.Error.UnsupportedRoutineExportName\": \"O nome de exportacao da rotina bridge nao e um identificador PRG suportado.\",\n"
+        "  \"RuntimeHost.Bridge.Error.WriteResponseArtifactFailed\": \"Nao foi possivel gravar o artefato de resposta bridge.\",\n"
+        "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"Nao foi possivel gravar o bootstrap da rotina bridge.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} e {federationQueryOption} sao obrigatorios no modo de federacao.\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"O manifesto esta vazio ou e invalido.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Arquivo de manifesto nao encontrado.\",\n"
@@ -2214,6 +2240,46 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
 
     {
         ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+
+        const fs::path bridge_manifest_path = temp_root / "bridge_es.cfmanifest";
+        const fs::path bridge_source_path = temp_root / "bridge_es.prg";
+        const fs::path bridge_response_path = temp_root / "bridge_es.response.json";
+        write_text(
+            bridge_manifest_path,
+            std::string("manifest_version=1\n"
+            "project_title=BridgeLocalizationSpanish\n"
+            "startup_item=bridge_es.prg\n"
+            "startup_source=") + bridge_source_path.string() + "\n"
+            "security_enabled=false\n"
+            "dotnet_story=none\n");
+        write_text(bridge_source_path, "RETURN 1\n");
+
+        const auto bridge_error = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", bridge_manifest_path.string(),
+                "--request-path", (temp_root / "missing.request.es.json").string(),
+                "--response-path", bridge_response_path.string(),
+                "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+                "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+                "--schema-version", "v1"
+            },
+            temp_root);
+        expect(bridge_error.exit_code == 6,
+               "#2587: es-419 bridge request-artifact errors should keep the bridge validation exit code");
+        expect(bridge_error.stdout_text.find("status: error") != std::string::npos,
+               "#2587: es-419 bridge request-artifact errors should preserve machine-readable status");
+        expect(bridge_error.stdout_text.find("runtime.mode: bridge-invocation") != std::string::npos,
+               "#2587: es-419 bridge request-artifact errors should preserve bridge runtime mode");
+        expect(bridge_error.stdout_text.find("error: No se encontro el artefacto de solicitud bridge.") != std::string::npos,
+               "#2587: es-419 bridge request-artifact errors should localize prose");
+        expect(bridge_error.stdout_text.find("error: Bridge request artifact not found.") == std::string::npos,
+               "#2587: es-419 bridge request-artifact errors should not fall back to raw English prose");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
         ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
 
         const auto unknown_argument = run_process_capture(runtime_host_path, {"--unknown-option"}, temp_root);
@@ -2239,6 +2305,41 @@ void test_runtime_host_usage_text_localizes_without_changing_cli_tokens(const st
                "#2585: pt-BR federation validation should preserve CLI tokens");
         expect(missing_federation_argument.stdout_text.find("error: --federation-backend and --federation-query are both required in federation mode.") == std::string::npos,
                "#2585: pt-BR federation validation should not fall back to raw English prose");
+
+        const fs::path bridge_manifest_path = temp_root / "bridge_pt.cfmanifest";
+        const fs::path bridge_source_path = temp_root / "bridge_pt.prg";
+        const fs::path bridge_response_path = temp_root / "bridge_pt.response.json";
+        write_text(
+            bridge_manifest_path,
+            std::string("manifest_version=1\n"
+            "project_title=BridgeLocalizationPortuguese\n"
+            "startup_item=bridge_pt.prg\n"
+            "startup_source=") + bridge_source_path.string() + "\n"
+            "security_enabled=false\n"
+            "dotnet_story=none\n");
+        write_text(bridge_source_path, "RETURN 1\n");
+
+        const auto bridge_error = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", bridge_manifest_path.string(),
+                "--request-path", (temp_root / "missing.request.pt.json").string(),
+                "--response-path", bridge_response_path.string(),
+                "--request-media-type", "application/vnd.copperfin.runtime-bridge-request+json",
+                "--response-media-type", "application/vnd.copperfin.runtime-bridge-response+json",
+                "--schema-version", "v1"
+            },
+            temp_root);
+        expect(bridge_error.exit_code == 6,
+               "#2587: pt-BR bridge request-artifact errors should keep the bridge validation exit code");
+        expect(bridge_error.stdout_text.find("status: error") != std::string::npos,
+               "#2587: pt-BR bridge request-artifact errors should preserve machine-readable status");
+        expect(bridge_error.stdout_text.find("runtime.mode: bridge-invocation") != std::string::npos,
+               "#2587: pt-BR bridge request-artifact errors should preserve bridge runtime mode");
+        expect(bridge_error.stdout_text.find("erro: Artefato de solicitacao bridge nao encontrado.") != std::string::npos,
+               "#2587: pt-BR bridge request-artifact errors should localize prose");
+        expect(bridge_error.stdout_text.find("error: Bridge request artifact not found.") == std::string::npos,
+               "#2587: pt-BR bridge request-artifact errors should not fall back to raw English prose");
     }
 
     fs::remove_all(temp_root, ignored);
