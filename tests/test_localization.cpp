@@ -427,6 +427,7 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
 
     const copperfin::localization::PlaceholderMap replace_placeholders{{"command", "REPLACE"}};
     const copperfin::localization::PlaceholderMap field_placeholders{{"fieldName", "CustomerID"}};
+    const copperfin::localization::PlaceholderMap append_blank_placeholders{{"command", "APPEND BLANK"}};
     const copperfin::localization::PlaceholderMap constraint_placeholders{
         {"constraint", "NOT NULL"},
         {"fieldName", "CustomerID"}
@@ -445,6 +446,11 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord", replace_placeholders) ==
             "REPLACE requires a current local record",
         "#2542: command-specific local record error should preserve command placeholder");
+    expect(
+        english.translate(
+            "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor",
+            append_blank_placeholders) == "APPEND BLANK requires a local table-backed cursor",
+        "#2547: command-specific local table-backed cursor error should preserve command placeholder");
     expect(
         english.translate("Runtime.Prg.Records.Error.RemoteSqlFieldNotFound", field_placeholders) ==
             "Field not found on remote SQL cursor: CustomerID",
@@ -486,6 +492,12 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
         portuguese_replace.find("REPLACE") != std::string::npos &&
             portuguese_replace.find("requires a current local record") == std::string::npos,
         "#2542: pt-BR command-specific record error should preserve command without falling back to English");
+    const std::string spanish_append =
+        spanish.translate("Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor", append_blank_placeholders);
+    expect(
+        spanish_append.find("APPEND BLANK") != std::string::npos &&
+            spanish_append.find("requires a local table-backed cursor") == std::string::npos,
+        "#2547: es-419 table-backed cursor error should preserve command without falling back to English");
     const std::string spanish_insert =
         spanish.translate("Runtime.Prg.Records.Error.InsertFieldValueCountMismatch", insert_placeholders);
     expect(
@@ -516,6 +528,13 @@ void test_runtime_record_precondition_errors_route_through_catalog() {
             pseudo_constraint.find("{constraint}") == std::string::npos &&
             pseudo_constraint.find("{fieldName}") == std::string::npos,
         "#2546: qps-ploc NOT NULL error should pseudo-localize prose while preserving placeholders");
+    const std::string pseudo_append =
+        pseudo.translate("Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor", append_blank_placeholders);
+    expect(
+        pseudo_append.find("[!! ") == 0U &&
+            pseudo_append.find("APPEND BLANK") != std::string::npos &&
+            pseudo_append.find("{command}") == std::string::npos,
+        "#2547: qps-ploc table-backed cursor error should pseudo-localize prose while preserving command");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {

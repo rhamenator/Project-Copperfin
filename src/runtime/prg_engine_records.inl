@@ -1184,7 +1184,9 @@
             }
             if (cursor.source_path.empty())
             {
-                last_error_message = "APPEND BLANK requires a local table-backed cursor";
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor",
+                    {{"command", "APPEND BLANK"}});
                 return false;
             }
             if (!ensure_transaction_backup_for_table(cursor.source_path))
@@ -1374,7 +1376,9 @@
 
             if (cursor.source_path.empty())
             {
-                last_error_message = "PACK requires a local table-backed cursor";
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor",
+                    {{"command", "PACK"}});
                 return false;
             }
             if (!ensure_exclusive_table_maintenance(cursor, "PACK"))
@@ -1412,7 +1416,9 @@
 
             if (cursor.source_path.empty())
             {
-                last_error_message = "ZAP requires a local table-backed cursor";
+                last_error_message = runtime_text(
+                    "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor",
+                    {{"command", "ZAP"}});
                 return false;
             }
             if (!ensure_exclusive_table_maintenance(cursor, "ZAP"))

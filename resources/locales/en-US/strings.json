@@ -804,6 +804,7 @@
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requires an argument between -1 and 1 (got {value})",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} requires a current local record",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentRemoteRecord": "{command} requires a current remote record",
+  "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor": "{command} requires a local table-backed cursor",
   "Runtime.Prg.Records.Error.ConstraintFailedForField": "{constraint} constraint failed for field: {fieldName}",
   "Runtime.Prg.Records.Error.ConstraintFieldNotFound": "{constraint} field not found: {fieldName}",
   "Runtime.Prg.Records.Error.InsertFieldValueCountMismatch": "{command} field/value counts do not match",

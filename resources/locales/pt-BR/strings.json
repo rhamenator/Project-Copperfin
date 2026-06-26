@@ -18,6 +18,7 @@
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} exige um argumento entre -1 e 1 (recebeu {value})",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentLocalRecord": "{command} exige um registro local atual",
   "Runtime.Prg.Records.Error.CommandRequiresCurrentRemoteRecord": "{command} exige um registro remoto atual",
+  "Runtime.Prg.Records.Error.CommandRequiresLocalTableBackedCursor": "{command} exige um cursor local baseado em tabela",
   "Runtime.Prg.Records.Error.ConstraintFailedForField": "Restricao {constraint} falhou para o campo: {fieldName}",
   "Runtime.Prg.Records.Error.ConstraintFieldNotFound": "Campo {constraint} nao encontrado: {fieldName}",
   "Runtime.Prg.Records.Error.InsertFieldValueCountMismatch": "As contagens de campos/valores de {command} nao coincidem",
