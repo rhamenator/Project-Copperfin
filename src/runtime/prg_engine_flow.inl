@@ -630,6 +630,21 @@
             return output_path.lexically_normal();
         }
 
+        std::string report_output_path_required_message() const
+        {
+            return runtime_text("Runtime.Prg.ReportOutput.Error.PathRequired");
+        }
+
+        std::string report_output_open_message(const std::filesystem::path &path) const
+        {
+            return runtime_text("Runtime.Prg.ReportOutput.Error.OpenFailed", {{"path", path.string()}});
+        }
+
+        std::string report_output_write_message(const std::filesystem::path &path) const
+        {
+            return runtime_text("Runtime.Prg.ReportOutput.Error.WriteFailed", {{"path", path.string()}});
+        }
+
         ExecutionOutcome open_report_surface(const Statement &statement, const Frame &frame, const char *extension, const char *category_prefix)
         {
             const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
@@ -676,7 +691,7 @@
             const std::filesystem::path output_path = resolve_report_output_path(statement.tertiary_expression, frame);
             if (output_path.empty())
             {
-                last_error_message = "REPORT/LABEL TO clause requires a writable output path";
+                last_error_message = report_output_path_required_message();
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
@@ -691,7 +706,7 @@
             std::ofstream output(output_path, std::ios::binary);
             if (!output.good())
             {
-                last_error_message = "Unable to open report output path: " + output_path.string();
+                last_error_message = report_output_open_message(output_path);
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
@@ -706,7 +721,7 @@
             output.close();
             if (!output.good())
             {
-                last_error_message = "Unable to write report output path: " + output_path.string();
+                last_error_message = report_output_write_message(output_path);
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};

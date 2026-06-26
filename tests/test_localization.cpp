@@ -264,6 +264,24 @@ void test_runtime_transaction_journal_messages_route_through_catalog() {
         "#2535: transaction replay error should be catalog-backed");
 }
 
+void test_runtime_report_output_messages_route_through_catalog() {
+    const auto catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "en-US");
+
+    expect(
+        catalog.translate("Runtime.Prg.ReportOutput.Error.PathRequired") ==
+            "REPORT/LABEL TO clause requires a writable output path",
+        "#2536: report output path-required error should be catalog-backed");
+    expect(
+        catalog.translate("Runtime.Prg.ReportOutput.Error.OpenFailed", {{"path", "renders/invoice.txt"}}) ==
+            "Unable to open report output path: renders/invoice.txt",
+        "#2536: report output open error should preserve the named path placeholder");
+    expect(
+        catalog.translate("Runtime.Prg.ReportOutput.Error.WriteFailed", {{"path", "renders/invoice.txt"}}) ==
+            "Unable to write report output path: renders/invoice.txt",
+        "#2536: report output write error should preserve the named path placeholder");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -296,6 +314,7 @@ int main(int argc, char** argv) {
     test_catalog_root_resolution_searches_parent_directories();
     test_parser_behavior_remains_locale_invariant();
     test_runtime_transaction_journal_messages_route_through_catalog();
+    test_runtime_report_output_messages_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {
