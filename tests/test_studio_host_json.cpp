@@ -753,6 +753,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Picture-selection-display object:",
         "#2571: default studio host usage should preserve en-US picture-selection-display labels");
     expect_contains(process.stdout_text,
+        "Dynamic-input-mask object:",
+        "#2572: default studio host usage should preserve en-US dynamic-input-mask labels");
+    expect_contains(process.stdout_text,
+        "Font-name object:",
+        "#2572: default studio host usage should preserve en-US font-name labels");
+    expect_contains(process.stdout_text,
+        "Max-top object:",
+        "#2572: default studio host usage should preserve en-US max-top labels");
+    expect_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: default studio host usage should preserve localized OLE drop-mode labels");
     expect_contains(process.stdout_text,
@@ -804,6 +813,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplayTitle"),
         "#2571: pseudo-localized studio host usage should route picture-selection-display labels through localization");
     expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicInputMaskTitle"),
+        "#2572: pseudo-localized studio host usage should route dynamic-input-mask labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontNameTitle"),
+        "#2572: pseudo-localized studio host usage should route font-name labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxTopTitle"),
+        "#2572: pseudo-localized studio host usage should route max-top labels through localization");
+    expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
     expect_not_contains(process.stdout_text,
@@ -818,6 +836,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_not_contains(process.stdout_text,
         "Picture-selection-display object:",
         "#2571: pseudo-localized studio host usage should not fall back to the raw English picture-selection-display label");
+    expect_not_contains(process.stdout_text,
+        "Dynamic-input-mask object:",
+        "#2572: pseudo-localized studio host usage should not fall back to the raw English dynamic-input-mask label");
+    expect_not_contains(process.stdout_text,
+        "Font-name object:",
+        "#2572: pseudo-localized studio host usage should not fall back to the raw English font-name label");
+    expect_not_contains(process.stdout_text,
+        "Max-top object:",
+        "#2572: pseudo-localized studio host usage should not fall back to the raw English max-top label");
     expect_not_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: pseudo-localized studio host usage should not fall back to the raw English OLE drop-mode label");
