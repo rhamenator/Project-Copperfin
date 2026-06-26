@@ -862,6 +862,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectCommand.Reorder",
         "StudioHost.LaunchParse.ObjectCommand.Reparent",
         "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions"};
+    const std::vector<std::string_view> object_action_keys = {
+        "StudioHost.LaunchParse.ObjectAction.Alignment",
+        "StudioHost.LaunchParse.ObjectAction.AlignmentTitle",
+        "StudioHost.LaunchParse.ObjectAction.Distribution",
+        "StudioHost.LaunchParse.ObjectAction.DistributionTitle",
+        "StudioHost.LaunchParse.ObjectAction.Nudge",
+        "StudioHost.LaunchParse.ObjectAction.NudgeTitle",
+        "StudioHost.LaunchParse.ObjectAction.Resize",
+        "StudioHost.LaunchParse.ObjectAction.ResizeTitle",
+        "StudioHost.LaunchParse.ObjectAction.Snap",
+        "StudioHost.LaunchParse.ObjectAction.SnapTitle"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -943,6 +954,14 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("reorder"),
         "#2628: host object-command labels should resolve through locale catalogs without changing CLI option placeholders");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAction.Alignment") == "alineacion" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAction.ResizeTitle") == "Redimensionar" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAction.Alignment") == "alinhamento" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAction.SnapTitle") == "Encaixar" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAction.Nudge") ==
+                copperfin::localization::pseudo_localize("nudge"),
+        "#2629: host object-action labels should resolve through locale catalogs without changing CLI option placeholders");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -951,6 +970,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_command_keys) == 0U,
         "#2628: qps-ploc should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_action_keys) == 0U,
+        "#2629: es-419 should define every remaining StudioHost.LaunchParse.ObjectAction localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_action_keys) == 0U,
+        "#2629: pt-BR should define every remaining StudioHost.LaunchParse.ObjectAction localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_action_keys) == 0U,
+        "#2629: qps-ploc should define every remaining StudioHost.LaunchParse.ObjectAction localization key");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
