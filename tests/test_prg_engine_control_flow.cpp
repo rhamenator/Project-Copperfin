@@ -1005,6 +1005,88 @@ void test_aggregate_command_errors_localize_without_changing_runtime_behavior() 
     fs::remove_all(temp_root, ignored);
 }
 
+void test_sql_runtime_errors_localize_without_changing_runtime_behavior() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_sql_error_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script);
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_missing_command = run_script(
+        "sql_missing_command_es",
+        "DIMENSION aSqlErr[1]\n"
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn)\n"
+        "nRows = AERROR(aSqlErr)\n"
+        "cSqlMessage = aSqlErr[1,2]\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+    expect(spanish_missing_command.completed,
+           "#2596: es-419 SQL missing-command script should complete");
+    const auto spanish_sql_message = spanish_missing_command.globals.find("csqlmessage");
+    expect(spanish_sql_message != spanish_missing_command.globals.end() &&
+               copperfin::runtime::format_value(spanish_sql_message->second) ==
+                   "SQLEXEC requiere un comando o una instruccion SQL preparada",
+           "#2596: es-419 SQLEXEC missing-command error should localize the prose (got '" +
+               (spanish_sql_message != spanish_missing_command.globals.end()
+                    ? copperfin::runtime::format_value(spanish_sql_message->second)
+                    : std::string("<missing>")) +
+               "')");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_missing_handle = run_script(
+        "sql_missing_handle_pt",
+        "DIMENSION aSqlErr[1]\n"
+        "nExec = SQLEXEC(7, 'select * from customers')\n"
+        "nRows = AERROR(aSqlErr)\n"
+        "cSqlMessage = aSqlErr[1,2]\n"
+        "RETURN\n");
+    expect(portuguese_missing_handle.completed,
+           "#2596: pt-BR SQL missing-handle script should complete");
+    const auto portuguese_sql_message = portuguese_missing_handle.globals.find("csqlmessage");
+    expect(portuguese_sql_message != portuguese_missing_handle.globals.end() &&
+               copperfin::runtime::format_value(portuguese_sql_message->second) == "Handle SQL nao encontrado: 7",
+           "#2596: pt-BR SQL missing-handle error should localize the prose while preserving the handle value (got '" +
+               (portuguese_sql_message != portuguese_missing_handle.globals.end()
+                    ? copperfin::runtime::format_value(portuguese_sql_message->second)
+                    : std::string("<missing>")) +
+               "')");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_missing_command = run_script(
+        "sql_missing_command_qps",
+        "DIMENSION aSqlErr[1]\n"
+        "nConn = SQLCONNECT('dsn=Northwind')\n"
+        "nExec = SQLEXEC(nConn)\n"
+        "nRows = AERROR(aSqlErr)\n"
+        "cSqlMessage = aSqlErr[1,2]\n"
+        "lDisc = SQLDISCONNECT(nConn)\n"
+        "RETURN\n");
+    expect(pseudo_missing_command.completed,
+           "#2596: qps-ploc SQL missing-command script should complete");
+    const auto pseudo_sql_message = pseudo_missing_command.globals.find("csqlmessage");
+    expect(pseudo_sql_message != pseudo_missing_command.globals.end() &&
+               copperfin::runtime::format_value(pseudo_sql_message->second) ==
+                   copperfin::localization::pseudo_localize("SQLEXEC requires a command or a prepared SQL statement"),
+           "#2596: qps-ploc SQLEXEC missing-command error should resolve through the pseudo-localization transform (got '" +
+               (pseudo_sql_message != pseudo_missing_command.globals.end()
+                    ? copperfin::runtime::format_value(pseudo_sql_message->second)
+                    : std::string("<missing>")) +
+               "')");
+
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scan_on_empty_table_does_not_execute_body() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_scan_empty_table";
@@ -6782,6 +6864,7 @@ int main() {
     test_calculate_command_aggregates();
     test_aggregate_command_errors_use_default_locale_messages();
     test_aggregate_command_errors_localize_without_changing_runtime_behavior();
+    test_sql_runtime_errors_localize_without_changing_runtime_behavior();
     test_command_level_aggregate_commands();
     test_scan_on_empty_table_does_not_execute_body();
     test_aggregate_commands_on_empty_table_return_zero();

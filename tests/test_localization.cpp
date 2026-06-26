@@ -350,6 +350,48 @@ void test_runtime_aggregate_errors_route_through_catalog() {
         "#2595: qps-ploc aggregate count-target error should resolve through the pseudo-localization transform");
 }
 
+void test_runtime_sql_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english.translate("Runtime.Prg.Sql.Error.HandleNotFound", {{"handle", "7"}}) ==
+            "SQL handle not found: 7",
+        "#2596: SQL missing-handle error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement") ==
+            "SQLEXEC requires a command or a prepared SQL statement",
+        "#2596: SQLEXEC missing-command error should remain catalog-backed in en-US");
+
+    const std::string spanish_handle =
+        spanish.translate("Runtime.Prg.Sql.Error.HandleNotFound", {{"handle", "7"}});
+    expect(
+        spanish_handle == "No se encontro el handle SQL: 7",
+        "#2596: es-419 SQL missing-handle error should localize the prose");
+    expect(
+        spanish_handle.find("7") != std::string::npos &&
+            spanish_handle.find("SQL") != std::string::npos &&
+            spanish_handle.find("SQL handle not found") == std::string::npos,
+        "#2596: es-419 SQL missing-handle error should preserve invariant handle and SQL token values without falling back to English prose");
+
+    const std::string portuguese_sqlexec =
+        portuguese.translate("Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement");
+    expect(
+        portuguese_sqlexec == "SQLEXEC exige um comando ou uma instrucao SQL preparada",
+        "#2596: pt-BR SQLEXEC missing-command error should localize the prose");
+
+    const std::string pseudo_handle =
+        pseudo.translate("Runtime.Prg.Sql.Error.HandleNotFound", {{"handle", "7"}});
+    expect(
+        pseudo_handle.find("[!! ") == 0U &&
+            pseudo_handle.find("7") != std::string::npos &&
+            pseudo_handle.find("SQL handle not found: 7") == std::string::npos,
+        "#2596: qps-ploc SQL missing-handle error should pseudo-localize prose while preserving the handle value");
+}
+
 void test_build_host_catalog_entries_cover_placeholder_locales() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1617,6 +1659,7 @@ int main(int argc, char** argv) {
     test_runtime_transaction_journal_messages_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
     test_runtime_aggregate_errors_route_through_catalog();
+    test_runtime_sql_errors_route_through_catalog();
     test_build_host_catalog_entries_cover_placeholder_locales();
     test_inspect_catalog_entries_cover_placeholder_locales();
     test_shared_core_catalog_entries_cover_placeholder_locales();

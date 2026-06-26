@@ -35,6 +35,8 @@
   "Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression": "CALCULATE exige expressoes agregadas como COUNT() ou SUM(field)",
   "Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments": "CALCULATE exige uma ou mais atribuicoes agregadas TO/INTO",
   "Runtime.Prg.Aggregate.Error.CountToSingleTarget": "COUNT TO aceita apenas um unico destino de variavel",
+  "Runtime.Prg.Sql.Error.HandleNotFound": "Handle SQL nao encontrado: {handle}",
+  "Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement": "SQLEXEC exige um comando ou uma instrucao SQL preparada",
   "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit": "O comando de inicializacao do builder retornou um codigo de saida diferente de zero.",
   "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit": "O comando de inicializacao do builder do designer retornou um codigo de saida diferente de zero.",
   "StudioHost.DesignerExecution.Error.ChildExecutionsFailed": "Uma ou mais execucoes filhas do designer falharam.",
