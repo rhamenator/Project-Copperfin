@@ -973,6 +973,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
         "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
         "StudioHost.LaunchParse.ObjectAssignment.GridLines"};
+    const std::vector<std::string_view> object_assignment_base_layout_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.BackColor",
+        "StudioHost.LaunchParse.ObjectAssignment.BackStyle",
+        "StudioHost.LaunchParse.ObjectAssignment.BindControls",
+        "StudioHost.LaunchParse.ObjectAssignment.BorderColor",
+        "StudioHost.LaunchParse.ObjectAssignment.BorderStyle",
+        "StudioHost.LaunchParse.ObjectAssignment.BorderWidth",
+        "StudioHost.LaunchParse.ObjectAssignment.BoundColumn",
+        "StudioHost.LaunchParse.ObjectAssignment.BoundColumnTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.BufferMode",
+        "StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride",
+        "StudioHost.LaunchParse.ObjectAssignment.ButtonCount",
+        "StudioHost.LaunchParse.ObjectAssignment.Caption",
+        "StudioHost.LaunchParse.ObjectAssignment.CaptionTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.ChildOrder",
+        "StudioHost.LaunchParse.ObjectAssignment.ClipControls",
+        "StudioHost.LaunchParse.ObjectAssignment.ClipControlsTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.Closable",
+        "StudioHost.LaunchParse.ObjectAssignment.ClosableTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.ColumnCount",
+        "StudioHost.LaunchParse.ObjectAssignment.ColumnCountTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.ColumnLines",
+        "StudioHost.LaunchParse.ObjectAssignment.ColumnLinesTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.ColumnOrder",
+        "StudioHost.LaunchParse.ObjectAssignment.ColumnWidths",
+        "StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1106,6 +1132,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("fore-color"),
         "#2657: host object-assignment font/fill labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackColor") == "color de fondo" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ColumnWidthsTitle") ==
+                "Anchos de columna" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BufferModeOverride") ==
+                "substituicao do modo de buffer" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ClosableTitle") ==
+                "Fechavel" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Caption") ==
+                copperfin::localization::pseudo_localize("caption"),
+        "#2658: host object-assignment base layout/column labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1159,6 +1196,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_font_fill_keys) == 0U,
         "#2657: qps-ploc should define every remaining font/fill object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_assignment_base_layout_keys) == 0U,
+        "#2658: es-419 should define every remaining base layout/column object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_assignment_base_layout_keys) == 0U,
+        "#2658: pt-BR should define every remaining base layout/column object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_base_layout_keys) == 0U,
+        "#2658: qps-ploc should define every remaining base layout/column object-assignment localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
