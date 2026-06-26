@@ -441,6 +441,54 @@ void test_shared_core_catalog_entries_cover_placeholder_locales() {
         "#2584: qps-ploc shared diagnostics should pseudo-localize prose while preserving placeholders");
 }
 
+void test_runtime_host_manifest_verification_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const copperfin::localization::PlaceholderMap file_name{{"fileName", "helper.dll"}};
+
+    expect(
+        english.translate("RuntimeHost.Error.ManifestMissingRuntimeHostSha256") ==
+            "Security-enabled manifest is missing runtime_host_sha256.",
+        "#2588: runtime-host manifest verification should preserve the en-US missing runtime_host_sha256 output");
+    expect(
+        english.translate("RuntimeHost.Error.ExtensionPayloadMissingFromPackage", file_name) ==
+            "Extension payload is missing from the package: helper.dll",
+        "#2588: runtime-host manifest verification should preserve the en-US payload-path placeholder output");
+
+    const std::string spanish_missing_sha256 =
+        spanish.translate("RuntimeHost.Error.ManifestMissingRuntimeHostSha256");
+    expect(
+        spanish_missing_sha256 ==
+            "Al manifiesto con seguridad habilitada le falta runtime_host_sha256.",
+        "#2588: es-419 runtime-host manifest verification should localize missing runtime_host_sha256 prose");
+    expect(
+        spanish_missing_sha256.find("Security-enabled manifest is missing") == std::string::npos,
+        "#2588: es-419 runtime-host manifest verification should not fall back to raw English prose");
+
+    const std::string portuguese_missing_payload =
+        portuguese.translate("RuntimeHost.Error.ExtensionPayloadMissingFromPackage", file_name);
+    expect(
+        portuguese_missing_payload ==
+            "O payload de extensao esta ausente do pacote: helper.dll",
+        "#2588: pt-BR runtime-host manifest verification should localize payload-path prose while preserving the file name");
+    expect(
+        portuguese_missing_payload.find("helper.dll") != std::string::npos &&
+            portuguese_missing_payload.find("Extension payload is missing") == std::string::npos,
+        "#2588: pt-BR runtime-host manifest verification should preserve payload placeholders without falling back to English");
+
+    const std::string pseudo_missing_payload =
+        pseudo.translate("RuntimeHost.Error.ExtensionPayloadMissingFromPackage", file_name);
+    expect(
+        pseudo_missing_payload.find("[!! ") == 0U &&
+            pseudo_missing_payload.find("helper.dll") != std::string::npos &&
+            pseudo_missing_payload.find("{fileName}") == std::string::npos,
+        "#2588: qps-ploc runtime-host manifest verification should pseudo-localize prose while preserving payload placeholders");
+}
+
 void test_runtime_numeric_domain_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1264,6 +1312,7 @@ int main(int argc, char** argv) {
     test_build_host_catalog_entries_cover_placeholder_locales();
     test_inspect_catalog_entries_cover_placeholder_locales();
     test_shared_core_catalog_entries_cover_placeholder_locales();
+    test_runtime_host_manifest_verification_errors_route_through_catalog();
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();

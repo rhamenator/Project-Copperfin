@@ -878,11 +878,12 @@ std::string resolve_manifest_bound_directory(
 bool verify_manifest_hashes(
     const ManifestMap& manifest,
     const std::filesystem::path& manifest_directory,
+    const copperfin::localization::LocalizedCatalog& catalog,
     std::string& error) {
     const std::string recorded_package_root = first_value(manifest, "package_root");
     const std::string expected_runtime_host_hash = first_value(manifest, "runtime_host_sha256");
     if (expected_runtime_host_hash.empty()) {
-        error = "security-enabled manifest is missing runtime_host_sha256.";
+        error = localized_message(catalog, "RuntimeHost.Error.ManifestMissingRuntimeHostSha256");
         return false;
     }
 
@@ -893,7 +894,7 @@ bool verify_manifest_hashes(
         return false;
     }
     if (lowercase_copy(runtime_host_hash.hex_digest) != lowercase_copy(expected_runtime_host_hash)) {
-        error = "runtime host hash does not match manifest digest.";
+        error = localized_message(catalog, "RuntimeHost.Error.RuntimeHostSha256Mismatch");
         return false;
     }
 
@@ -901,7 +902,7 @@ bool verify_manifest_hashes(
     for (const auto& payload : payload_values) {
         const auto parts = split_pipe(payload);
         if (parts.size() != 2U) {
-            error = "extension_payload entry is malformed in manifest.";
+            error = localized_message(catalog, "RuntimeHost.Error.ExtensionPayloadMalformed");
             return false;
         }
 
@@ -911,7 +912,10 @@ bool verify_manifest_hashes(
             manifest_directory,
             PackagePathBindingMode::strict_relative_fidelity);
         if (!bound_payload_path.has_value()) {
-            error = "extension payload is missing from the package: " + std::filesystem::path(parts[0]).filename().string();
+            error = localized_message(
+                catalog,
+                "RuntimeHost.Error.ExtensionPayloadMissingFromPackage",
+                {{"fileName", std::filesystem::path(parts[0]).filename().string()}});
             return false;
         }
 
@@ -921,7 +925,10 @@ bool verify_manifest_hashes(
             return false;
         }
         if (lowercase_copy(digest.hex_digest) != lowercase_copy(parts[1])) {
-            error = "extension payload hash mismatch: " + bound_payload_path->filename().string();
+            error = localized_message(
+                catalog,
+                "RuntimeHost.Error.ExtensionPayloadSha256Mismatch",
+                {{"fileName", bound_payload_path->filename().string()}});
             return false;
         }
     }
@@ -1588,7 +1595,7 @@ int main(int argc, char** argv) {
         }
 
         std::string verification_error;
-        if (!verify_manifest_hashes(manifest, manifest_directory, verification_error)) {
+        if (!verify_manifest_hashes(manifest, manifest_directory, catalog, verification_error)) {
             if (!audit_log_path.empty()) {
                 (void)copperfin::security::append_immutable_audit_event(
                     audit_log_path,

@@ -72,8 +72,13 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"Startup asset is not a PRG file. PRG execution is real; xBase code embedded in SCX/VCX/FRX/MNX/LBX assets is a later runtime slice.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"Bridge invocation mode cannot be combined with federation query mode.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} and {federationQueryOption} are both required in federation mode.\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"extension_payload entry is malformed in manifest.\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"Extension payload is missing from the package: {fileName}\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"Extension payload hash mismatch: {fileName}\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"Manifest is empty or invalid.\",\n"
+        "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Security-enabled manifest is missing runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Manifest file not found.\",\n"
+        "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"Runtime host hash does not match manifest digest.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"Security policy denied {permission} for role '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Unknown argument: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Unknown federation backend: {backend}\",\n"
@@ -111,9 +116,14 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Prefix.Warning\": \"advertencia: \",\n"
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"El asset de inicio no es un archivo PRG. La ejecucion de PRG es real; el codigo xBase incrustado en assets SCX/VCX/FRX/MNX/LBX corresponde a una fase posterior del runtime.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"El modo de invocacion bridge no puede combinarse con el modo de consulta de federacion.\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"La entrada extension_payload del manifiesto esta mal formada.\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"Falta el payload de extension en el paquete: {fileName}\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"El hash del payload de extension no coincide: {fileName}\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} y {federationQueryOption} son obligatorios en el modo de federacion.\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"El manifiesto esta vacio o no es valido.\",\n"
+        "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Al manifiesto con seguridad habilitada le falta runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"No se encontro el archivo de manifiesto.\",\n"
+        "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"El hash del runtime host no coincide con el digest del manifiesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"La politica de seguridad denego {permission} para el rol '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconocido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacion desconocido: {backend}\",\n"
@@ -127,6 +137,9 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Launch.Note.CompatibilityLauncher\": \"O asset de inicializacao nao e um arquivo PRG. A execucao de PRG e real; o codigo xBase incorporado em assets SCX/VCX/FRX/MNX/LBX pertence a uma etapa posterior do runtime.\",\n"
         "  \"RuntimeHost.Bridge.Error.CreateResponseDirectoryFailed\": \"Nao foi possivel criar o diretorio de resposta bridge.\",\n"
         "  \"RuntimeHost.Error.BridgeFederationModeConflict\": \"O modo de invocacao bridge nao pode ser combinado com o modo de consulta de federacao.\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadMalformed\": \"A entrada extension_payload do manifesto esta malformada.\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadMissingFromPackage\": \"O payload de extensao esta ausente do pacote: {fileName}\",\n"
+        "  \"RuntimeHost.Error.ExtensionPayloadSha256Mismatch\": \"O hash do payload de extensao nao corresponde: {fileName}\",\n"
         "  \"RuntimeHost.Bridge.Error.PrgStartupRequired\": \"A invocacao bridge atualmente exige uma origem de inicializacao PRG.\",\n"
         "  \"RuntimeHost.Bridge.Error.RequestArtifactNotFound\": \"Artefato de solicitacao bridge nao encontrado.\",\n"
         "  \"RuntimeHost.Bridge.Error.RequestDescriptorMismatch\": \"O descritor da solicitacao bridge nao corresponde.\",\n"
@@ -141,7 +154,9 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Bridge.Error.WriteRoutineBootstrapFailed\": \"Nao foi possivel gravar o bootstrap da rotina bridge.\",\n"
         "  \"RuntimeHost.Error.FederationRequiredOptions\": \"{federationBackendOption} e {federationQueryOption} sao obrigatorios no modo de federacao.\",\n"
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"O manifesto esta vazio ou e invalido.\",\n"
+        "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Falta runtime_host_sha256 no manifesto com seguranca habilitada.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Arquivo de manifesto nao encontrado.\",\n"
+        "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"O hash do runtime host nao corresponde ao digest do manifesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"A politica de seguranca negou {permission} para a funcao '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconhecido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacao desconhecido: {backend}\",\n"
@@ -895,6 +910,7 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
     const fs::path startup_path = content_root / "main.prg";
     const fs::path root_helper_path = deployed_root / "helper.dll";
     const fs::path manifest_path = deployed_root / "app.cfmanifest";
+    const fs::path locale_root = temp_root / "locales";
 
     fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
 #if defined(__unix__) || defined(__APPLE__)
@@ -905,6 +921,7 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
         ignored);
 #endif
 
+    write_runtime_host_usage_catalogs(locale_root);
     write_text(startup_path, "RETURN\n");
     write_text(root_helper_path, "plugin-payload");
 
@@ -937,21 +954,116 @@ void test_runtime_host_rejects_extension_payload_basename_fallback(const std::st
         "extension_payload=" + (builder_root / "content" / "plugins" / "helper.dll").string() + "|" + helper_hash.hex_digest + "\n"
         "dotnet_story=none\n");
 
-    const auto process = run_process_capture(
-        deployed_runtime_host.string(),
-        {"--manifest", manifest_path.string()},
-        temp_root);
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            temp_root);
 
-    if (process.exit_code == 0) {
-        std::cerr << "payload-path fidelity stdout:\n" << process.stdout_text << "\n";
-        std::cerr << "payload-path fidelity stderr:\n" << process.stderr_text << "\n";
-        std::cerr << "fixture root: " << temp_root << "\n";
+        if (process.exit_code == 0) {
+            std::cerr << "payload-path fidelity stdout:\n" << process.stdout_text << "\n";
+            std::cerr << "payload-path fidelity stderr:\n" << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 8,
+               "runtime host should reject extension payloads that only match by basename outside their recorded package path");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "runtime host payload-path fidelity failures should preserve machine-readable status");
+        expect(process.stdout_text.find("error: Extension payload is missing from the package: helper.dll") !=
+                   std::string::npos,
+               "runtime host should report the missing recorded payload path instead of accepting a same-named root payload");
     }
 
-    expect(process.exit_code == 8,
-           "runtime host should reject extension payloads that only match by basename outside their recorded package path");
-    expect(process.stdout_text.find("error: extension payload is missing from the package: helper.dll") != std::string::npos,
-           "runtime host should report the missing recorded payload path instead of accepting a same-named root payload");
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            temp_root);
+
+        expect(process.exit_code == 8,
+               "#2588: pt-BR payload-path fidelity failures should keep the manifest verification exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2588: pt-BR payload-path fidelity failures should preserve machine-readable status");
+        expect(process.stdout_text.find("erro: O payload de extensao esta ausente do pacote: helper.dll") !=
+                   std::string::npos,
+               "#2588: pt-BR payload-path fidelity failures should localize the missing payload error while preserving the file name");
+        expect(process.stdout_text.find("Extension payload is missing from the package: helper.dll") ==
+                   std::string::npos,
+               "#2588: pt-BR payload-path fidelity failures should not fall back to the raw English error");
+    }
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_manifest_error_localization";
+    const fs::path deployed_root = temp_root / "deployed";
+    const fs::path content_root = deployed_root / "content";
+    const fs::path locale_root = temp_root / "locales";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(content_root);
+
+    const fs::path deployed_runtime_host = deployed_root / "copperfin_runtime_host.exe";
+    const fs::path startup_path = content_root / "main.prg";
+    const fs::path manifest_path = deployed_root / "app.cfmanifest";
+
+    fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+    fs::permissions(
+        deployed_runtime_host,
+        fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+        fs::perm_options::add,
+        ignored);
+#endif
+
+    write_runtime_host_usage_catalogs(locale_root);
+    write_text(startup_path, "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=ManifestErrorLocalization\n"
+        "project_path=" + (temp_root / "demo.pjx").string() + "\n"
+        "package_root=" + deployed_root.string() + "\n"
+        "content_root=" + content_root.string() + "\n"
+        "working_directory=" + content_root.string() + "\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "configuration=debug\n"
+        "security_enabled=true\n"
+        "security_role=developer\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            deployed_runtime_host.string(),
+            {"--manifest", manifest_path.string()},
+            temp_root);
+
+        expect(process.exit_code == 8,
+               "#2588: es-419 manifest verification failures should keep the manifest verification exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2588: es-419 manifest verification failures should preserve machine-readable status");
+        expect(process.stdout_text.find(
+                   "error: Al manifiesto con seguridad habilitada le falta runtime_host_sha256.") !=
+                   std::string::npos,
+               "#2588: es-419 manifest verification failures should localize the missing runtime_host_sha256 error");
+        expect(process.stdout_text.find("Security-enabled manifest is missing runtime_host_sha256.") ==
+                   std::string::npos,
+               "#2588: es-419 manifest verification failures should not fall back to the raw English error");
+    }
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -2506,6 +2618,7 @@ int main(int argc, char** argv) {
     test_runtime_host_supports_xasset_action_breakpoint_commands(argv[1]);
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
     test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
+    test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(argv[1]);
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
     test_runtime_host_writes_bridge_response_artifact(argv[1]);
     test_runtime_host_invokes_zero_argument_bridge_export(argv[1]);
