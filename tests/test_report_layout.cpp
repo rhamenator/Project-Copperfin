@@ -478,7 +478,8 @@ void test_report_layout_section_catalog_entries_cover_placeholder_locales() {
         "Studio.ReportLayout.Section.Summary",
         "Studio.ReportLayout.Section.DetailHeader",
         "Studio.ReportLayout.Section.DetailFooter",
-        "Studio.ReportLayout.Section.OtherBand"};
+        "Studio.ReportLayout.Section.OtherBand",
+        "Studio.ReportLayout.Fallback.RecordTitle"};
 
     expect(
         english_catalog.translate("Studio.ReportLayout.Section.PageHeader") == "Page Header",
@@ -495,6 +496,12 @@ void test_report_layout_section_catalog_entries_cover_placeholder_locales() {
     expect(
         portuguese_catalog.translate("Studio.ReportLayout.Section.OtherBand") == "Outra banda",
         "#2610: pt-BR report layout fallback band title should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ReportLayout.Fallback.RecordTitle") == "Registro {recordIndex}",
+        "#2652: es-419 report-layout fallback record title should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ReportLayout.Fallback.RecordTitle") == "Registro {recordIndex}",
+        "#2652: pt-BR report-layout fallback record title should localize through the catalog");
     expect(
         pseudo_catalog.translate("Studio.ReportLayout.Section.Summary") ==
             copperfin::localization::pseudo_localize("Summary"),
@@ -549,8 +556,22 @@ void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
     if (!layout.unplaced_objects.empty()) {
         const auto& object = layout.unplaced_objects[0];
         expect(object.title == "Record 1", "#695: unresolved memo object titles should use the synthetic fallback");
+        const auto spanish_catalog =
+            copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "es-419");
+        const auto portuguese_catalog =
+            copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "pt-BR");
         const auto pseudo_catalog =
             copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+        const auto spanish_layout = copperfin::studio::build_report_layout(document, spanish_catalog);
+        const auto portuguese_layout = copperfin::studio::build_report_layout(document, portuguese_catalog);
+        expect(
+            spanish_layout.unplaced_objects.size() == 1U &&
+                spanish_layout.unplaced_objects[0].title == "Registro 1",
+            "#2652: es-419 fallback report object title should flow through the report-layout model");
+        expect(
+            portuguese_layout.unplaced_objects.size() == 1U &&
+                portuguese_layout.unplaced_objects[0].title == "Registro 1",
+            "#2652: pt-BR fallback report object title should flow through the report-layout model");
         const auto pseudo_layout = copperfin::studio::build_report_layout(document, pseudo_catalog);
         expect(
             pseudo_layout.unplaced_objects.size() == 1U,

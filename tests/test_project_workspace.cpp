@@ -322,7 +322,8 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
         "Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram",
         "Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl",
         "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary",
-        "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable"};
+        "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable",
+        "Studio.ProjectWorkspace.Fallback.RecordTitle"};
 
     expect(
         english_catalog.translate("Studio.ProjectWorkspace.Group.Forms") == "Forms",
@@ -355,6 +356,12 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
         portuguese_catalog.translate("Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram") ==
             "Programa tokenizado do Visual FoxPro x64",
         "#2622: pt-BR project-workspace tokenized-program build target should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ProjectWorkspace.Fallback.RecordTitle") == "Registro {recordIndex}",
+        "#2652: es-419 project-workspace fallback record title should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ProjectWorkspace.Fallback.RecordTitle") == "Registro {recordIndex}",
+        "#2652: pt-BR project-workspace fallback record title should localize through the catalog");
     expect(
         pseudo_catalog.translate("Studio.ProjectWorkspace.Group.ProjectItems") ==
             copperfin::localization::pseudo_localize("Project Items"),
@@ -524,8 +531,20 @@ void test_build_project_workspace_suppresses_unresolved_memo_placeholders() {
     expect(workspace.build_plan.build_target_memo_block_number == 0U,
            "#714: fallback build-plan target should expose memo block zero");
     expect(workspace.entries[1].name == "Record 1", "#694: unresolved memo names should use the synthetic entry fallback");
+    const auto spanish_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "es-419");
+    const auto portuguese_catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "pt-BR");
+    const auto spanish_workspace = copperfin::studio::build_project_workspace(document, spanish_catalog);
+    const auto portuguese_workspace = copperfin::studio::build_project_workspace(document, portuguese_catalog);
     const auto pseudo_catalog =
         copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+    expect(
+        spanish_workspace.entries.size() > 1U && spanish_workspace.entries[1].name == "Registro 1",
+        "#2652: es-419 fallback record title should flow through the project workspace model");
+    expect(
+        portuguese_workspace.entries.size() > 1U && portuguese_workspace.entries[1].name == "Registro 1",
+        "#2652: pt-BR fallback record title should flow through the project workspace model");
     const auto pseudo_workspace = copperfin::studio::build_project_workspace(document, pseudo_catalog);
     expect(
         pseudo_workspace.entries.size() > 1U && pseudo_workspace.entries[1].record_index == 1U,
