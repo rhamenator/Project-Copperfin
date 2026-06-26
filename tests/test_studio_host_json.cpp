@@ -921,6 +921,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAssignment.Dockable",
         "StudioHost.LaunchParse.ObjectAssignment.DockableTitle",
         "StudioHost.LaunchParse.ObjectAssignment.DownPicture"};
+    const std::vector<std::string_view> object_assignment_drag_dynamic_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.DownPictureTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DragIcon",
+        "StudioHost.LaunchParse.ObjectAssignment.DragIconTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DragMode",
+        "StudioHost.LaunchParse.ObjectAssignment.DragModeTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DrawMode",
+        "StudioHost.LaunchParse.ObjectAssignment.DrawStyle",
+        "StudioHost.LaunchParse.ObjectAssignment.DrawWidth",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicAlignment",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControl",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBold",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontBoldTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalic",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontItalicTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontName",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontNameTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutline",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontOutlineTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadow",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontShadowTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1032,6 +1058,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("disabled back-color"),
         "#2655: host object-assignment control/display labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DragModeTitle") == "Modo de arrastre" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontName") ==
+                "nombre de fuente dinamica" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DrawWidth") ==
+                "largura de desenho" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicCurrentControlTitle") ==
+                "Controle atual dinamico" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicBackColor") ==
+                copperfin::localization::pseudo_localize("dynamic-back-color"),
+        "#2656: host object-assignment drag and dynamic-font labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1067,6 +1104,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_control_display_keys) == 0U,
         "#2655: qps-ploc should define every remaining control/display object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_assignment_drag_dynamic_keys) == 0U,
+        "#2656: es-419 should define every remaining drag/dynamic object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_assignment_drag_dynamic_keys) == 0U,
+        "#2656: pt-BR should define every remaining drag/dynamic object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_drag_dynamic_keys) == 0U,
+        "#2656: qps-ploc should define every remaining drag/dynamic object-assignment localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
