@@ -204,6 +204,36 @@ void test_label_form_to_file_renders_without_event_loop_pause() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_report_form_missing_asset_uses_localized_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_report_missing_asset";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "missing_invoice.frx";
+    const fs::path main_path = temp_root / "report_missing_asset.prg";
+    write_text(
+        main_path,
+        "REPORT FORM '" + report_path.string() + "' PREVIEW\n"
+        "x = 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "missing report asset should pause with an error");
+    expect(state.message == "Unable to resolve report asset: " + report_path.string(),
+           "missing report asset error should route through the default locale catalog");
+
+    const auto x_value = state.globals.find("x");
+    expect(x_value == state.globals.end(), "statements after missing report asset should not execute");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_cross_session_alias_and_work_area_isolation() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_cross_session_isolation";
@@ -1341,6 +1371,7 @@ int main() {
     test_use_and_data_session_isolation();
     test_report_form_to_file_renders_without_event_loop_pause();
     test_label_form_to_file_renders_without_event_loop_pause();
+    test_report_form_missing_asset_uses_localized_error();
     test_cross_session_alias_and_work_area_isolation();
     test_use_in_existing_alias_reuses_target_work_area();
     test_use_in_nonselected_alias_preserves_selected_work_area();

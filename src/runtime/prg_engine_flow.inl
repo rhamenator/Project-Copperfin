@@ -645,12 +645,17 @@
             return runtime_text("Runtime.Prg.ReportOutput.Error.WriteFailed", {{"path", path.string()}});
         }
 
+        std::string report_asset_resolve_message(const std::filesystem::path &path) const
+        {
+            return runtime_text("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", path.string()}});
+        }
+
         ExecutionOutcome open_report_surface(const Statement &statement, const Frame &frame, const char *extension, const char *category_prefix)
         {
             const std::filesystem::path asset_path = resolve_asset_path(statement.identifier, extension);
             if (!std::filesystem::exists(asset_path))
             {
-                last_error_message = std::string("Unable to resolve report asset: ") + asset_path.string();
+                last_error_message = report_asset_resolve_message(asset_path);
                 last_fault_location = statement.location;
                 last_fault_statement = statement.text;
                 return {.ok = false, .message = last_error_message};
