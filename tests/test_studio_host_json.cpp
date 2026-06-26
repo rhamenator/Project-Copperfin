@@ -1311,6 +1311,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "VisualAssetEditor.Property.NonNegativeRequired",
         "VisualAssetEditor.Property.NotFound",
         "VisualAssetEditor.Property.NotRenameableMemo"};
+    const std::vector<std::string_view> asset_editor_property_storage_keys = {
+        "VisualAssetEditor.Property.NotReorderableMemo",
+        "VisualAssetEditor.Property.NotWritableField",
+        "VisualAssetEditor.Property.PlacementUnsupported",
+        "VisualAssetEditor.Property.ReadFailed",
+        "VisualAssetEditor.Property.RelativeAmbiguous",
+        "VisualAssetEditor.Property.RelativeNameRequired",
+        "VisualAssetEditor.Property.RelativeNotFound",
+        "VisualAssetEditor.Property.RenameBatchRequired",
+        "VisualAssetEditor.Property.ReorderBatchRequired",
+        "VisualAssetEditor.Property.SourceAmbiguousInObject",
+        "VisualAssetEditor.Property.SourceMoveToSelf",
+        "VisualAssetEditor.Property.SourceNotFound",
+        "VisualAssetEditor.Property.SourceRelativeToSelf",
+        "VisualAssetEditor.Property.SourceRenameToSelf",
+        "VisualAssetEditor.Property.StartingTabIndexNonNegativeRequired",
+        "VisualAssetEditor.Property.TargetExistsInObject",
+        "VisualAssetEditor.Property.TargetNameRequired",
+        "VisualAssetEditor.Property.TargetObjectAlreadyHasProperty",
+        "VisualAssetEditor.Storage.CharacterValueTooLarge",
+        "VisualAssetEditor.Storage.DirectFieldUpdateUnsupported",
+        "VisualAssetEditor.Storage.LogicalValueRequired",
+        "VisualAssetEditor.Storage.MemoSidecarBlockSizeInvalid",
+        "VisualAssetEditor.Storage.MemoSidecarNextFreeBlockInvalid",
+        "VisualAssetEditor.Storage.MemoSidecarOpenFailed",
+        "VisualAssetEditor.Storage.MemoSidecarPathMissing"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1598,6 +1624,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("The same visual object was selected more than once for visibility assignment."),
         "#2670: asset-editor object target and property labels should resolve through locale catalogs without changing machine contracts");
     expect(
+        spanish_catalog.translate("VisualAssetEditor.Property.SourceRelativeToSelf") ==
+                "La propiedad de origen no puede posicionarse en relacion consigo misma." &&
+            spanish_catalog.translate("VisualAssetEditor.Storage.MemoSidecarNextFreeBlockInvalid") ==
+                "El puntero al siguiente bloque libre del sidecar memo no es valido." &&
+            portuguese_catalog.translate("VisualAssetEditor.Property.NotWritableField") ==
+                "A propriedade solicitada nao e exposta como um campo gravavel neste ativo." &&
+            portuguese_catalog.translate("VisualAssetEditor.Storage.MemoSidecarPathMissing") ==
+                "Nenhum caminho de sidecar memo pode ser inferido para o ativo." &&
+            pseudo_catalog.translate("VisualAssetEditor.Property.SourceMoveToSelf") ==
+                copperfin::localization::pseudo_localize("The source property cannot be moved onto itself."),
+        "#2671: asset-editor property relative and storage validation labels should resolve through locale catalogs without changing machine contracts");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1768,6 +1806,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_object_property_keys) == 0U,
         "#2670: qps-ploc should define every remaining asset-editor object target/property localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", asset_editor_property_storage_keys) == 0U,
+        "#2671: es-419 should define every remaining asset-editor property/storage localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", asset_editor_property_storage_keys) == 0U,
+        "#2671: pt-BR should define every remaining asset-editor property/storage localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_property_storage_keys) == 0U,
+        "#2671: qps-ploc should define every remaining asset-editor property/storage localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
