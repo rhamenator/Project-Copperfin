@@ -796,6 +796,7 @@
   "Runtime.Prg.Core.Error.ResourceSystemError": "Runtime resource fault: system error: {detail}",
   "Runtime.Prg.Core.Error.RuntimeFault": "Runtime fault: {detail}",
   "Runtime.Prg.Core.Error.UnknownRuntimeFault": "Runtime fault: unknown exception",
+  "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed": "Unable to materialize xAsset bootstrap for: {path}",
   "Runtime.Prg.Cursor.Error.AliasAlreadyOpen": "Alias already open in this data session: {alias}",
   "Runtime.Prg.Cursor.Error.RequestedOrderMissing": "Requested order does not exist",
   "Runtime.Prg.Cursor.Error.SeekRequiresActiveOrder": "SEEK requires an active order",

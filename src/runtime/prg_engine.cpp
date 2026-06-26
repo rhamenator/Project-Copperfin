@@ -1322,7 +1322,9 @@ namespace copperfin::runtime
         output.close();
         if (!output.good())
         {
-            last_error_message = "Unable to materialize xAsset bootstrap for: " + asset_path;
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed",
+                {{"path", asset_path}});
             return std::nullopt;
         }
 

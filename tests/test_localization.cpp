@@ -616,6 +616,7 @@ void test_runtime_core_errors_route_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap detail_placeholders{{"detail", "disk full"}};
+    const copperfin::localization::PlaceholderMap path_placeholders{{"path", "forms/customer.scx"}};
 
     expect(
         english.translate("Runtime.Prg.Core.Error.AsyncTaskCancelled") == "Async task cancelled.",
@@ -639,6 +640,10 @@ void test_runtime_core_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Core.Error.UnknownRuntimeFault") == "Runtime fault: unknown exception",
         "#2551: unknown runtime fault should preserve en-US default output");
     expect(
+        english.translate("Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed", path_placeholders) ==
+            "Unable to materialize xAsset bootstrap for: forms/customer.scx",
+        "#2552: xAsset bootstrap error should preserve path placeholder");
+    expect(
         spanish.translate("Runtime.Prg.Core.Error.RuntimeFault", detail_placeholders).find("disk full") !=
                 std::string::npos &&
             spanish.translate("Runtime.Prg.Core.Error.RuntimeFault", detail_placeholders).find("Runtime fault") ==
@@ -652,6 +657,13 @@ void test_runtime_core_errors_route_through_catalog() {
             pseudo_fault.find("disk full") != std::string::npos &&
             pseudo_fault.find("{detail}") == std::string::npos,
         "#2551: qps-ploc runtime resource fault should pseudo-localize prose while preserving detail");
+    const std::string pseudo_xasset =
+        pseudo.translate("Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed", path_placeholders);
+    expect(
+        pseudo_xasset.find("[!! ") == 0U &&
+            pseudo_xasset.find("forms/customer.scx") != std::string::npos &&
+            pseudo_xasset.find("{path}") == std::string::npos,
+        "#2552: qps-ploc xAsset bootstrap error should pseudo-localize prose while preserving path");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {

@@ -30,6 +30,7 @@
   "Runtime.Prg.Core.Error.ResourceSystemError": "Falha de recurso de runtime: erro de sistema: {detail}",
   "Runtime.Prg.Core.Error.RuntimeFault": "Falha de runtime: {detail}",
   "Runtime.Prg.Core.Error.UnknownRuntimeFault": "Falha de runtime: excecao desconhecida",
+  "Runtime.Prg.Core.Error.XAssetBootstrapMaterializeFailed": "Nao foi possivel materializar o bootstrap xAsset para: {path}",
   "Runtime.Prg.Expression.Error.DivisionByZero": "Divisao por zero",
   "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Argumento de funcao esperado",
   "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Divisao por zero em expressao inteira",
