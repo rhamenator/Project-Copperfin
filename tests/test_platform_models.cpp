@@ -57,9 +57,77 @@ void test_default_security_profile() {
         profile.package_policy == "signed packages, signed extensions, explicit trust manifests",
         "#2490: default security package policy should preserve en-US prose");
 
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog =
-        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+        copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto spanish_profile = copperfin::security::default_native_security_profile(spanish_catalog);
+    const auto portuguese_profile = copperfin::security::default_native_security_profile(portuguese_catalog);
     const auto pseudo_profile = copperfin::security::default_native_security_profile(pseudo_catalog);
+
+    const auto spanish_security_admin =
+        std::find_if(spanish_profile.roles.begin(), spanish_profile.roles.end(), [](const auto& role) {
+            return role.id == "security-admin";
+        });
+    expect(spanish_security_admin != spanish_profile.roles.end(),
+           "#2600: es-419 security profile should still expose the security-admin role");
+    if (spanish_security_admin != spanish_profile.roles.end()) {
+        expect(spanish_security_admin->title == "Administrador de seguridad",
+               "#2600: es-419 security-admin title should localize the prose");
+        expect(spanish_security_admin->description ==
+                   "Es responsable del mapeo de identidades, la politica de roles y la configuracion de confianza.",
+               "#2600: es-419 security-admin description should localize the prose");
+    }
+
+    const auto spanish_project_open =
+        std::find_if(spanish_profile.permissions.begin(), spanish_profile.permissions.end(), [](const auto& permission) {
+            return permission.id == "project.open";
+        });
+    expect(spanish_project_open != spanish_profile.permissions.end(),
+           "#2600: es-419 security profile should still expose the project.open permission");
+    if (spanish_project_open != spanish_profile.permissions.end()) {
+        expect(spanish_project_open->title == "Abrir proyecto",
+               "#2600: es-419 project.open title should localize the prose");
+        expect(spanish_project_open->description == "Abrir e inspeccionar assets del proyecto.",
+               "#2600: es-419 project.open description should localize the prose");
+    }
+
+    expect(spanish_profile.mode == "seguridad nativa opcional con RBAC de plataforma",
+           "#2600: es-419 security profile mode should localize the prose");
+    expect(!spanish_profile.features.empty() &&
+               spanish_profile.features[0].title == "Control de acceso basado en roles",
+           "#2600: es-419 security features should localize without falling back to English");
+    expect(spanish_profile.identity_providers.size() > 1U &&
+               spanish_profile.identity_providers[1].kind == "windows" &&
+               spanish_profile.identity_providers[1].title == "Identidad Windows/AD",
+           "#2600: es-419 identity provider prose should localize while preserving kind values");
+
+    const auto portuguese_ai_permission =
+        std::find_if(portuguese_profile.permissions.begin(), portuguese_profile.permissions.end(), [](const auto& permission) {
+            return permission.id == "ai.mcp";
+        });
+    expect(portuguese_ai_permission != portuguese_profile.permissions.end(),
+           "#2600: pt-BR security profile should still expose the ai.mcp permission");
+    if (portuguese_ai_permission != portuguese_profile.permissions.end()) {
+        expect(portuguese_ai_permission->title == "Usar ferramentas MCP e IA",
+               "#2600: pt-BR ai.mcp title should localize the prose");
+        expect(portuguese_ai_permission->description ==
+                   "Invocar ferramentas MCP ou fluxos assistidos por IA para desenvolvedores sob auditoria.",
+               "#2600: pt-BR ai.mcp description should localize the prose");
+    }
+
+    expect(portuguese_profile.package_policy ==
+               "pacotes assinados, extensoes assinadas, manifestos explicitos de confianca",
+           "#2600: pt-BR security package policy should localize the prose");
+    expect(!portuguese_profile.hardening_profiles.empty() &&
+               portuguese_profile.hardening_profiles[2] ==
+                   "ouro: identidade empresarial, auditoria completa, provedores de segredos, restricoes de interop, assinatura release",
+           "#2600: pt-BR hardening profiles should localize without falling back to English");
+    expect(!portuguese_profile.features.empty() &&
+               portuguese_profile.features[0].id == "rbac",
+           "#2600: pt-BR security features should preserve feature ids");
+
     expect(
         pseudo_profile.mode.find("[!! ") != std::string::npos,
         "#2490: pseudo-localized security profile mode should route through the catalog");
