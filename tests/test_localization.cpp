@@ -238,6 +238,32 @@ void test_parser_behavior_remains_locale_invariant() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_transaction_journal_messages_route_through_catalog() {
+    const auto catalog =
+        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "en-US");
+
+    expect(
+        catalog.translate("Runtime.Prg.Transaction.Error.JournalInitializeFailed") ==
+            "Unable to initialize transaction journal",
+        "#2535: transaction journal initialize error should be catalog-backed");
+    expect(
+        catalog.translate("Runtime.Prg.Transaction.Error.JournalStatePersistFailed") ==
+            "Unable to persist transaction journal state",
+        "#2535: transaction journal state persist error should be catalog-backed");
+    expect(
+        catalog.translate("Runtime.Prg.Transaction.Error.BackupCreateFailed", {{"path", "fixtures/people.dbf"}}) ==
+            "Unable to create transaction backup for: fixtures/people.dbf",
+        "#2535: transaction backup error should preserve the named path placeholder");
+    expect(
+        catalog.translate("Runtime.Prg.Transaction.Error.BackupJournalPersistFailed") ==
+            "Unable to persist transaction backup journal",
+        "#2535: transaction backup journal persist error should be catalog-backed");
+    expect(
+        catalog.translate("Runtime.Prg.Transaction.Error.JournalReplayFailed") ==
+            "Failed to replay transaction journal",
+        "#2535: transaction replay error should be catalog-backed");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -269,6 +295,7 @@ int main(int argc, char** argv) {
     test_machine_contract_fields_remain_invariant();
     test_catalog_root_resolution_searches_parent_directories();
     test_parser_behavior_remains_locale_invariant();
+    test_runtime_transaction_journal_messages_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {

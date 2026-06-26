@@ -1094,6 +1094,31 @@
             return iterator->second;
         }
 
+        std::string transaction_journal_initialize_message() const
+        {
+            return runtime_text("Runtime.Prg.Transaction.Error.JournalInitializeFailed");
+        }
+
+        std::string transaction_journal_persist_state_message() const
+        {
+            return runtime_text("Runtime.Prg.Transaction.Error.JournalStatePersistFailed");
+        }
+
+        std::string transaction_backup_message(const std::string &path) const
+        {
+            return runtime_text("Runtime.Prg.Transaction.Error.BackupCreateFailed", {{"path", path}});
+        }
+
+        std::string transaction_backup_journal_persist_message() const
+        {
+            return runtime_text("Runtime.Prg.Transaction.Error.BackupJournalPersistFailed");
+        }
+
+        std::string transaction_journal_replay_message() const
+        {
+            return runtime_text("Runtime.Prg.Transaction.Error.JournalReplayFailed");
+        }
+
         bool begin_transaction_journal_if_needed()
         {
             if (current_transaction_level() <= 0)
@@ -1128,7 +1153,7 @@
             journal.level = current_transaction_level();
             if (!write_transaction_journal_file(journal))
             {
-                last_error_message = "Unable to initialize transaction journal";
+                last_error_message = transaction_journal_initialize_message();
                 return false;
             }
             return true;
@@ -1150,7 +1175,7 @@
 
             if (!write_transaction_journal_file(found->second))
             {
-                last_error_message = "Unable to persist transaction journal state";
+                last_error_message = transaction_journal_persist_state_message();
                 return false;
             }
             return true;
@@ -1191,7 +1216,7 @@
                     std::filesystem::copy_file(path, backup_path, std::filesystem::copy_options::overwrite_existing, copy_error);
                     if (copy_error)
                     {
-                        last_error_message = "Unable to create transaction backup for: " + key;
+                        last_error_message = transaction_backup_message(key);
                         return false;
                     }
                     entry.backup_path = backup_path.string();
@@ -1200,7 +1225,7 @@
                 journal.tracked_files.emplace(key, std::move(entry));
                 if (!write_transaction_journal_file(journal))
                 {
-                    last_error_message = "Unable to persist transaction backup journal";
+                    last_error_message = transaction_backup_journal_persist_message();
                     return false;
                 }
             }
@@ -1286,7 +1311,7 @@
 
             if (!replay_transaction_journal_state(found->second))
             {
-                last_error_message = "Failed to replay transaction journal";
+                last_error_message = transaction_journal_replay_message();
                 return false;
             }
 
