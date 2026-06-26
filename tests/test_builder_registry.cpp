@@ -462,6 +462,40 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", builder_invocation_admission_keys) == 0U,
         "#2642: qps-ploc should define every remaining Studio.BuilderInvocationAdmission localization key");
+    const std::vector<std::string_view> builder_registry_error_keys = {
+        "Studio.BuilderRegistry.Error.BuilderIdRequired",
+        "Studio.BuilderRegistry.Error.BuilderUnavailableForContext",
+        "Studio.BuilderRegistry.Error.LaunchCatalogRequiresBuilder"};
+    expect(
+        spanish_catalog.translate("Studio.BuilderRegistry.Error.BuilderIdRequired") ==
+            "Una solicitud de lanzamiento de builder requiere un id de builder.",
+        "#2643: es-419 builder registry builder-id error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.BuilderRegistry.Error.LaunchCatalogRequiresBuilder") ==
+            "Una solicitud de catalogo de lanzamiento de builder requiere al menos un builder de contexto.",
+        "#2643: es-419 builder registry launch-catalog error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderRegistry.Error.BuilderUnavailableForContext") ==
+            "O builder solicitado nao esta disponivel para o contexto de designer selecionado.",
+        "#2643: pt-BR builder registry unavailable-for-context error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderRegistry.Error.BuilderIdRequired") ==
+            "Uma solicitacao de inicializacao de builder exige um id de builder.",
+        "#2643: pt-BR builder registry builder-id error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.BuilderRegistry.Error.BuilderUnavailableForContext") ==
+            copperfin::localization::pseudo_localize(
+                "The requested builder is not available for the selected designer context."),
+        "#2643: qps-ploc builder registry unavailable-for-context error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", builder_registry_error_keys) == 0U,
+        "#2643: es-419 should define every remaining Studio.BuilderRegistry localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", builder_registry_error_keys) == 0U,
+        "#2643: pt-BR should define every remaining Studio.BuilderRegistry localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", builder_registry_error_keys) == 0U,
+        "#2643: qps-ploc should define every remaining Studio.BuilderRegistry localization key");
     const std::vector<std::string_view> execution_keys = {
         "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired",
