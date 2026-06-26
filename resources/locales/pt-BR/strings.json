@@ -27,6 +27,7 @@
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} exige um handle de tarefa",
   "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments": "{command} nao aceita argumentos",
   "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "Nao foi possivel resolver o destino de {command}: {target}",
+  "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound": "Area de trabalho de destino nao encontrada para {command}",
   "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget": "{command} exige uma rotina ou arquivo de destino",
   "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed": "Nao foi possivel resolver o destino de {command}: {target}",
   "Runtime.Prg.Dispatch.Error.UnknownTaskHandle": "Handle de tarefa desconhecido: {handle}",

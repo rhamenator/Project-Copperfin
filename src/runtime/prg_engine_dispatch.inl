@@ -2148,7 +2148,9 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "SEEK target work area not found";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "SEEK"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2186,7 +2188,9 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "LOCATE target work area not found";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "LOCATE"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -2209,7 +2213,9 @@
                 CursorState *cursor = resolve_cursor_target_expression(statement.secondary_expression, frame);
                 if (cursor == nullptr)
                 {
-                    last_error_message = "SCAN target work area not found";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound",
+                        {{"command", "SCAN"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

@@ -672,6 +672,8 @@ void test_runtime_dispatch_errors_route_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap yield_placeholders{{"command", "YIELD"}};
+    const copperfin::localization::PlaceholderMap seek_placeholders{{"command", "SEEK"}};
+    const copperfin::localization::PlaceholderMap scan_placeholders{{"command", "SCAN"}};
     const copperfin::localization::PlaceholderMap do_target_placeholders{
         {"command", "DO"},
         {"target", "legacy/startup.prg"}
@@ -692,6 +694,10 @@ void test_runtime_dispatch_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments", yield_placeholders) ==
             "YIELD does not take arguments",
         "#2553: YIELD argument error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders) ==
+            "SEEK target work area not found",
+        "#2555: SEEK work-area error should preserve command placeholder");
     expect(
         english.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", do_target_placeholders) ==
             "Unable to resolve DO target: legacy/startup.prg",
@@ -728,6 +734,12 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", do_target_placeholders)
                     .find("Unable to resolve") == std::string::npos,
         "#2554: es-419 DO target error should preserve target without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders)
+                    .find("SEEK") != std::string::npos &&
+            spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders)
+                    .find("target work area not found") == std::string::npos,
+        "#2555: es-419 SEEK work-area error should preserve command without falling back to English");
 
     const std::string pseudo_spawn =
         pseudo.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders);
@@ -747,6 +759,13 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             pseudo_do.find("{command}") == std::string::npos &&
             pseudo_do.find("{target}") == std::string::npos,
         "#2554: qps-ploc DO target error should pseudo-localize prose while preserving placeholders");
+    const std::string pseudo_scan =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", scan_placeholders);
+    expect(
+        pseudo_scan.find("[!! ") == 0U &&
+            pseudo_scan.find("SCAN") != std::string::npos &&
+            pseudo_scan.find("{command}") == std::string::npos,
+        "#2555: qps-ploc SCAN work-area error should pseudo-localize prose while preserving command");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {
