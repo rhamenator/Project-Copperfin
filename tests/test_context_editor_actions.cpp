@@ -233,6 +233,14 @@ int main() {
                english_visual_method->command_token == "studio.method_editor.open" &&
                english_visual_method->target_surface == "method-editor",
            "#2646: en-US visual-method editor action text should resolve through the shared action catalog");
+    const auto* english_project_navigation = find_action(english_actions, "navigate-project-item");
+    expect(english_project_navigation != nullptr &&
+               english_project_navigation->label == "Go To Project Item" &&
+               english_project_navigation->description ==
+                   "Navigate from the active designer/editor selection back to the owning PJX/PJT item." &&
+               english_project_navigation->command_token == "studio.project_item.navigate" &&
+               english_project_navigation->target_surface == "project-explorer",
+           "#2647: en-US project navigation editor action text should resolve through the shared action catalog");
     expect(english_catalog.translate("Studio.EditorActionDispatch.Error.AdmittedInvocationRequired") ==
                "An editor action dispatch request requires an admitted non-dry-run invocation." &&
                english_catalog.translate("Studio.EditorActionDispatch.Execution.Error.ExecutionAdmissionRequired") ==
@@ -345,6 +353,53 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", editor_action_keys) == 0U,
         "#2646: qps-ploc should define every remaining Studio.EditorAction localization key");
+    const std::vector<std::string_view> editor_action_catalog_keys = {
+        "Studio.EditorAction.Error.LaunchCatalogRequiresAction",
+        "Studio.EditorActionInvocationAdmission.Error.CatalogRequiresAction",
+        "Studio.EditorActionInvocationAdmission.Error.CommandTokenRequired",
+        "Studio.EditorActionInvocationAdmission.Error.ValidatedActionIdRequired",
+        "Studio.EditorAction.NavigateProjectItem.Description",
+        "Studio.EditorAction.NavigateProjectItem.Label",
+        "Studio.EditorAction.OpenBuilder.Description",
+        "Studio.EditorAction.OpenBuilder.Label",
+        "Studio.EditorAction.ShowPropertyGrid.Description",
+        "Studio.EditorAction.ShowPropertyGrid.Label",
+        "Studio.EditorAction.ShowToolbox.Description",
+        "Studio.EditorAction.ShowToolbox.Label"};
+    expect(
+        spanish_catalog.translate("Studio.EditorAction.ShowPropertyGrid.Label") == "Propiedades",
+        "#2647: es-419 property-grid editor action label should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.EditorActionInvocationAdmission.Error.CatalogRequiresAction") ==
+            "Una solicitud de catalogo de admision de invocacion de accion del editor requiere al menos una accion de contexto.",
+        "#2647: es-419 editor action invocation catalog error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.EditorAction.NavigateProjectItem.Label") ==
+            "Ir para item do projeto",
+        "#2647: pt-BR project-navigation editor action label should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.EditorAction.ShowToolbox.Description") ==
+            "Mostra itens da caixa de ferramentas relevantes para o contexto ativo do designer visual.",
+        "#2647: pt-BR toolbox editor action description should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.EditorAction.OpenBuilder.Description") ==
+            copperfin::localization::pseudo_localize(
+                "Open the context-filtered VFP-compatible builder or wizard list."),
+        "#2647: qps-ploc builder editor action description should resolve through the pseudo-localization transform");
+    expect(
+        pseudo_catalog.translate("Studio.EditorActionInvocationAdmission.Error.CommandTokenRequired") ==
+            copperfin::localization::pseudo_localize(
+                "An editor action invocation admission request requires a command token."),
+        "#2647: qps-ploc editor action invocation command-token error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", editor_action_catalog_keys) == 0U,
+        "#2647: es-419 should define every remaining shared Studio.EditorAction catalog key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", editor_action_catalog_keys) == 0U,
+        "#2647: pt-BR should define every remaining shared Studio.EditorAction catalog key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", editor_action_catalog_keys) == 0U,
+        "#2647: qps-ploc should define every remaining shared Studio.EditorAction catalog key");
     const std::vector<std::string_view> toolbox_execution_keys = {
         "Studio.ToolboxDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.ToolboxDispatch.Execution.Error.CommandTokenRequired",
