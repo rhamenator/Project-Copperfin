@@ -699,5 +699,17 @@
   "Vfp.IndexProbe.Error.UnknownExtension": "Extensao de indice desconhecida.",
   "Vfp.IndexProbe.Error.UnsupportedType": "Tipo de indice sem suporte.",
   "Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall": "O arquivo e menor que o tamanho do cabecalho Visual FoxPro IDX de 512 bytes.",
-  "Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues": "Os valores do cabecalho nao parecem pertencer a um arquivo Visual FoxPro IDX."
+  "Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues": "Os valores do cabecalho nao parecem pertencer a um arquivo Visual FoxPro IDX.",
+  "Studio.ReportLayout.Section.ColumnFooter": "Rodape da coluna",
+  "Studio.ReportLayout.Section.ColumnHeader": "Cabecalho da coluna",
+  "Studio.ReportLayout.Section.Detail": "Detalhe",
+  "Studio.ReportLayout.Section.DetailFooter": "Rodape do detalhe",
+  "Studio.ReportLayout.Section.DetailHeader": "Cabecalho do detalhe",
+  "Studio.ReportLayout.Section.GroupFooter": "Rodape do grupo",
+  "Studio.ReportLayout.Section.GroupHeader": "Cabecalho do grupo",
+  "Studio.ReportLayout.Section.OtherBand": "Outra banda",
+  "Studio.ReportLayout.Section.PageFooter": "Rodape da pagina",
+  "Studio.ReportLayout.Section.PageHeader": "Cabecalho da pagina",
+  "Studio.ReportLayout.Section.Summary": "Resumo",
+  "Studio.ReportLayout.Section.Title": "Titulo"
 }

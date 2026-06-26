@@ -6,6 +6,8 @@
 #include <iostream>
 #include <string>
 #include <algorithm>
+#include <string_view>
+#include <vector>
 
 namespace {
 
@@ -16,6 +18,24 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 copperfin::vfp::DbfRecordValue value(std::string name, std::string display_value, std::uint32_t memo_block_number = 0U) {
@@ -440,6 +460,57 @@ void test_build_report_layout_localizes_section_titles_without_localizing_band_k
     }
 }
 
+void test_report_layout_section_catalog_entries_cover_placeholder_locales() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys = {
+        "Studio.ReportLayout.Section.Title",
+        "Studio.ReportLayout.Section.PageHeader",
+        "Studio.ReportLayout.Section.ColumnHeader",
+        "Studio.ReportLayout.Section.GroupHeader",
+        "Studio.ReportLayout.Section.Detail",
+        "Studio.ReportLayout.Section.GroupFooter",
+        "Studio.ReportLayout.Section.ColumnFooter",
+        "Studio.ReportLayout.Section.PageFooter",
+        "Studio.ReportLayout.Section.Summary",
+        "Studio.ReportLayout.Section.DetailHeader",
+        "Studio.ReportLayout.Section.DetailFooter",
+        "Studio.ReportLayout.Section.OtherBand"};
+
+    expect(
+        english_catalog.translate("Studio.ReportLayout.Section.PageHeader") == "Page Header",
+        "#2610: report layout page-header title should remain catalog-backed in en-US");
+    expect(
+        spanish_catalog.translate("Studio.ReportLayout.Section.PageHeader") == "Encabezado de pagina",
+        "#2610: es-419 report layout page-header title should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ReportLayout.Section.DetailFooter") == "Pie de detalle",
+        "#2610: es-419 report layout detail-footer title should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ReportLayout.Section.ColumnFooter") == "Rodape da coluna",
+        "#2610: pt-BR report layout column-footer title should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ReportLayout.Section.OtherBand") == "Outra banda",
+        "#2610: pt-BR report layout fallback band title should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ReportLayout.Section.Summary") ==
+            copperfin::localization::pseudo_localize("Summary"),
+        "#2610: qps-ploc report layout summary title should resolve through the pseudo-localization transform");
+
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2610: es-419 should define every remaining Studio.ReportLayout.Section localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2610: pt-BR should define every remaining Studio.ReportLayout.Section localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2610: qps-ploc should define every remaining Studio.ReportLayout.Section localization key");
+}
+
 void test_build_report_layout_suppresses_unresolved_memo_placeholders() {
     copperfin::studio::StudioDocumentModel document;
     document.display_name = "memo-placeholder.frx";
@@ -741,6 +812,7 @@ void test_build_report_layout_includes_direct_paper_size_settings() {
 int main() {
     test_build_report_layout_groups_band_objects();
     test_build_report_layout_localizes_section_titles_without_localizing_band_kinds();
+    test_report_layout_section_catalog_entries_cover_placeholder_locales();
     test_build_report_layout_suppresses_unresolved_memo_placeholders();
     test_build_report_layout_carries_group_section_expressions();
     test_build_report_layout_reports_missing_title_provenance_when_unavailable();
