@@ -492,13 +492,21 @@ void test_watch_expression_evaluates_locals_globals_and_cursor_fields() {
 
     const auto malformed_watch = session.evaluate_watch_expression("   ");
     expect(!malformed_watch.ok, "watch-eval test should reject empty watch expressions");
-    expect(!malformed_watch.message.empty(), "watch-eval test should surface a deterministic empty-watch message");
+    expect(malformed_watch.message == "Watch expression is empty.",
+           "watch-eval empty-expression message should route through the default locale catalog");
 
     const auto preserved_state = session.state();
     expect(preserved_state.reason == copperfin::runtime::DebugPauseReason::breakpoint,
            "watch-eval test should not resume execution while evaluating watches");
     expect(preserved_state.statement_text == "x = nLocal",
            "watch-eval test should preserve the paused statement after watch evaluation");
+
+    const auto completed_state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(completed_state.completed, "watch-eval test should be able to resume to completion");
+    const auto unpaused_watch = session.evaluate_watch_expression("gValue");
+    expect(!unpaused_watch.ok, "watch-eval test should reject evaluation without a paused frame");
+    expect(unpaused_watch.message == "Watch evaluation requires a paused runtime frame.",
+           "watch-eval paused-frame message should route through the default locale catalog");
 
     fs::remove_all(temp_root, ignored);
 }

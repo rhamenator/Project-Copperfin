@@ -1258,12 +1258,12 @@ namespace copperfin::runtime
         result.expression = trim_copy(expression);
         if (result.expression.empty())
         {
-            result.message = "Watch expression is empty.";
+            result.message = runtime_text("Runtime.Prg.Watch.Error.EmptyExpression");
             return result;
         }
         if (stack.empty())
         {
-            result.message = "Watch evaluation requires a paused runtime frame.";
+            result.message = runtime_text("Runtime.Prg.Watch.Error.RequiresPausedFrame");
             return result;
         }
 
@@ -1274,7 +1274,7 @@ namespace copperfin::runtime
         }
         catch (const std::bad_alloc &)
         {
-            result.message = "Watch evaluation ran out of memory.";
+            result.message = runtime_text("Runtime.Prg.Watch.Error.OutOfMemory");
         }
         catch (const std::exception &ex)
         {
@@ -1282,7 +1282,7 @@ namespace copperfin::runtime
         }
         catch (...)
         {
-            result.message = "Watch evaluation failed.";
+            result.message = runtime_text("Runtime.Prg.Watch.Error.Failed");
         }
 
         return result;
