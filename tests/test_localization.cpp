@@ -399,6 +399,48 @@ void test_inspect_catalog_entries_cover_placeholder_locales() {
         "#2579: qps-ploc inspect usage should pseudo-localize prose while preserving placeholder values");
 }
 
+void test_shared_core_catalog_entries_cover_placeholder_locales() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        spanish.translate("Command.Build") == "Compilar",
+        "#2584: es-419 shared command labels should localize build labels");
+    expect(
+        portuguese.translate("Command.Inspect") == "Inspecionar",
+        "#2584: pt-BR shared command labels should localize inspect labels");
+    expect(
+        spanish.translate("Help.LocaleOption") != english.translate("Help.LocaleOption") &&
+            spanish.translate("Help.LocaleOption").find("Select the user-interface locale.") == std::string::npos,
+        "#2584: es-419 shared help prose should not fall back to raw English");
+
+    const std::string spanish_diagnostic = spanish.translate(
+        "Diagnostic.ExpectedTokenBeforeToken",
+        {{"expectedToken", "ENDSCAN"}, {"actualToken", "ENDIF"}});
+    expect(
+        spanish_diagnostic == "Se esperaba ENDSCAN antes de ENDIF.",
+        "#2584: es-419 shared diagnostics should preserve parser tokens while localizing prose");
+
+    const std::string portuguese_error =
+        portuguese.translate("Error.UnknownLocale", {{"locale", "zz-ZZ"}});
+    expect(
+        portuguese_error == "Localidade desconhecida: zz-ZZ",
+        "#2584: pt-BR shared error prose should preserve locale placeholders");
+
+    const std::string pseudo_diagnostic = pseudo.translate(
+        "Diagnostic.ExpectedTokenBeforeToken",
+        {{"expectedToken", "ENDSCAN"}, {"actualToken", "ENDIF"}});
+    expect(
+        pseudo_diagnostic.find("[!! ") == 0U &&
+            pseudo_diagnostic.find("ENDSCAN") != std::string::npos &&
+            pseudo_diagnostic.find("ENDIF") != std::string::npos &&
+            pseudo_diagnostic.find("{expectedToken}") == std::string::npos,
+        "#2584: qps-ploc shared diagnostics should pseudo-localize prose while preserving placeholders");
+}
+
 void test_runtime_numeric_domain_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1221,6 +1263,7 @@ int main(int argc, char** argv) {
     test_runtime_report_output_messages_route_through_catalog();
     test_build_host_catalog_entries_cover_placeholder_locales();
     test_inspect_catalog_entries_cover_placeholder_locales();
+    test_shared_core_catalog_entries_cover_placeholder_locales();
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();
