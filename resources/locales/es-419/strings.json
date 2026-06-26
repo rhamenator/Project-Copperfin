@@ -533,6 +533,8 @@
   "Runtime.Prg.Watch.Error.Failed": "La evaluacion de watch fallo.",
   "Runtime.Prg.Watch.Error.OutOfMemory": "La evaluacion de watch se quedo sin memoria.",
   "Runtime.Prg.Watch.Error.RequiresPausedFrame": "La evaluacion de watch requiere un frame de runtime pausado.",
+  "Runtime.XAsset.Error.TablePreviewMissing": "El asset no tiene una vista previa de tabla.",
+  "Runtime.XAsset.Error.UnsupportedExecutableFamily": "La familia del asset no es un xAsset ejecutable compatible.",
   "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle": "Orden secundario",
   "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle": "Orden de columnas",
   "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle": "Ruta de archivo predeterminada",

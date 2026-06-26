@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -16,6 +18,58 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    bool had_value = false;
+    std::string original_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)) {
+        if (const char* current = std::getenv(name.c_str())) {
+            had_value = true;
+            original_value = current;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 void expect_substring_order(
@@ -44,7 +98,12 @@ bool has_action_id(
 void test_xasset_executable_model_errors_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys{
+        "Runtime.XAsset.Error.TablePreviewMissing",
+        "Runtime.XAsset.Error.UnsupportedExecutableFamily"};
 
     expect(
         english_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") ==
@@ -55,9 +114,30 @@ void test_xasset_executable_model_errors_resolve_through_localization_catalog() 
             "Asset family is not a supported executable xAsset.",
         "#2392: unsupported executable xAsset diagnostic should resolve through the en-US catalog");
     expect(
+        spanish_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") ==
+            "El asset no tiene una vista previa de tabla.",
+        "#2604: xAsset missing-preview diagnostics should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Runtime.XAsset.Error.UnsupportedExecutableFamily") ==
+            "A familia do asset nao e um xAsset executavel suportado.",
+        "#2604: xAsset unsupported-family diagnostics should resolve through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") !=
             english_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing"),
         "#2392: missing table-preview xAsset diagnostic should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Runtime.XAsset.Error.TablePreviewMissing") ==
+            copperfin::localization::pseudo_localize("Asset does not have a table preview."),
+        "#2604: xAsset qps-ploc diagnostics should route through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2604: es-419 should define every remaining Runtime.XAsset localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2604: pt-BR should define every remaining Runtime.XAsset localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2604: qps-ploc should define every remaining Runtime.XAsset localization key");
 
     copperfin::studio::StudioDocumentModel missing_preview;
     missing_preview.kind = copperfin::studio::StudioAssetKind::form;
@@ -76,6 +156,34 @@ void test_xasset_executable_model_errors_resolve_through_localization_catalog() 
     expect(
         unsupported_family_model.error == "Asset family is not a supported executable xAsset.",
         "#2392: xAsset model should preserve default localized unsupported-family diagnostic");
+
+    ScopedEnvironmentValue scoped_locale("COPPERFIN_LOCALE");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_missing_preview_model =
+        copperfin::runtime::build_xasset_executable_model(missing_preview);
+    expect(
+        !spanish_missing_preview_model.ok &&
+            spanish_missing_preview_model.error == "El asset no tiene una vista previa de tabla.",
+        "#2604: xAsset runtime diagnostics should refresh to es-419 when the runtime locale changes in-process");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_unsupported_family_model =
+        copperfin::runtime::build_xasset_executable_model(unsupported_family);
+    expect(
+        !portuguese_unsupported_family_model.ok &&
+            portuguese_unsupported_family_model.error ==
+                "A familia do asset nao e um xAsset executavel suportado.",
+        "#2604: xAsset runtime diagnostics should refresh to pt-BR when the runtime locale changes in-process");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_missing_preview_model =
+        copperfin::runtime::build_xasset_executable_model(missing_preview);
+    expect(
+        !pseudo_missing_preview_model.ok &&
+            pseudo_missing_preview_model.error ==
+                copperfin::localization::pseudo_localize("Asset does not have a table preview."),
+        "#2604: xAsset runtime diagnostics should refresh to qps-ploc when the runtime locale changes in-process");
 }
 
 const copperfin::runtime::XAssetMethod* find_method(

@@ -521,6 +521,8 @@
   "Runtime.Prg.Watch.Error.Failed": "Watch evaluation failed.",
   "Runtime.Prg.Watch.Error.OutOfMemory": "Watch evaluation ran out of memory.",
   "Runtime.Prg.Watch.Error.RequiresPausedFrame": "Watch evaluation requires a paused runtime frame.",
+  "Runtime.XAsset.Error.TablePreviewMissing": "Asset does not have a table preview.",
+  "Runtime.XAsset.Error.UnsupportedExecutableFamily": "Asset family is not a supported executable xAsset.",
   "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle": "[!! Çhïļð-øřðëř !!]",
   "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle": "[!! Çøļümñ-øřðëř !!]",
   "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle": "[!! Ðëƒåüļţ-ƒïļë-þåţh !!]",

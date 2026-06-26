@@ -1,5 +1,5 @@
 #include "copperfin/runtime/xasset_methods.h"
-#include "copperfin/localization/localization.h"
+#include "localized_text.h"
 
 #include <algorithm>
 #include <cctype>
@@ -14,9 +14,7 @@ namespace {
 std::string xasset_text(
     std::string_view key,
     const localization::PlaceholderMap& placeholders = {}) {
-    static const localization::LocalizedCatalog catalog =
-        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog.translate(key, placeholders);
+    return runtime_text(key, placeholders);
 }
 
 const copperfin::vfp::DbfRecordValue* find_value(
