@@ -846,7 +846,12 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         const std::string cursor_designator = arguments.empty() ? std::string{} : value_as_string(arguments[0]);
         const std::string output_target = arguments.size() >= 2U ? trim_copy(value_as_string(arguments[1])) : std::string{};
         if (!snapshot_cursor_callback) {
-            record_runtime_warning("CURSORTOXML() unavailable (no cursor snapshot callback)");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback",
+                {
+                    {"capability", "cursor snapshot"},
+                    {"function", "CURSORTOXML()"}
+                }));
             if (!output_target.empty() && looks_like_file_path(output_target)) {
                 return make_boolean_value(false);
             }
@@ -855,7 +860,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
 
         const std::optional<RuntimeSurfaceCursorSnapshot> snapshot = snapshot_cursor_callback(cursor_designator);
         if (!snapshot.has_value()) {
-            record_runtime_warning("CURSORTOXML() target cursor not found or unreadable");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlTargetUnreadable",
+                {{"function", "CURSORTOXML()"}}));
             if (!output_target.empty() && looks_like_file_path(output_target)) {
                 return make_boolean_value(false);
             }
@@ -884,24 +891,35 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         output << xml_payload;
         output.close();
         if (!output.good()) {
-            record_runtime_warning("CURSORTOXML() failed to write target path");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlWriteFailed",
+                {{"function", "CURSORTOXML()"}}));
             return make_boolean_value(false);
         }
         return make_boolean_value(true);
     }
     if (function == "xmltocursor") {
         if (arguments.size() < 2U) {
-            record_runtime_warning("XMLTOCURSOR() requires XML input and destination alias");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired",
+                {{"function", "XMLTOCURSOR()"}}));
             return make_number_value(0.0);
         }
         const std::string xml_or_path = value_as_string(arguments[0]);
         const std::string destination_alias = trim_copy(value_as_string(arguments[1]));
         if (destination_alias.empty()) {
-            record_runtime_warning("XMLTOCURSOR() destination alias is required");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorDestinationAliasRequired",
+                {{"function", "XMLTOCURSOR()"}}));
             return make_number_value(0.0);
         }
         if (!load_cursor_snapshot_callback) {
-            record_runtime_warning("XMLTOCURSOR() unavailable (no cursor load callback)");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback",
+                {
+                    {"capability", "cursor load"},
+                    {"function", "XMLTOCURSOR()"}
+                }));
             return make_number_value(0.0);
         }
 
@@ -923,13 +941,17 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
 
         const std::optional<RuntimeSurfaceCursorSnapshot> parsed = parse_cursor_snapshot_xml(xml_payload);
         if (!parsed.has_value()) {
-            record_runtime_warning("XMLTOCURSOR() could not parse the provided XML payload");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed",
+                {{"function", "XMLTOCURSOR()"}}));
             return make_number_value(0.0);
         }
 
         std::optional<std::size_t> loaded_count = load_cursor_snapshot_callback(*parsed, destination_alias);
         if (!loaded_count.has_value()) {
-            record_runtime_warning("XMLTOCURSOR() failed to materialize destination cursor");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed",
+                {{"function", "XMLTOCURSOR()"}}));
             return make_number_value(0.0);
         }
 

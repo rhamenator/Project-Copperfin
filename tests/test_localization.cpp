@@ -541,6 +541,47 @@ void test_runtime_surface_errors_route_through_catalog() {
             pseudo_warning.find("{function}") == std::string::npos &&
             pseudo_warning.find("{capability}") == std::string::npos,
         "#2544: qps-ploc runtime-surface warning should pseudo-localize prose while preserving placeholders");
+
+    const copperfin::localization::PlaceholderMap cursor_snapshot_placeholders{
+        {"capability", "cursor snapshot"},
+        {"function", "CURSORTOXML()"}
+    };
+    const copperfin::localization::PlaceholderMap xml_to_cursor_placeholders{{"function", "XMLTOCURSOR()"}};
+
+    expect(
+        english.translate("Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback", cursor_snapshot_placeholders) ==
+            "CURSORTOXML() unavailable (no cursor snapshot callback)",
+        "#2545: cursor snapshot warning should preserve en-US default output");
+    expect(
+        english.translate(
+            "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlWriteFailed",
+            {{"function", "CURSORTOXML()"}}) == "CURSORTOXML() failed to write target path",
+        "#2545: CURSORTOXML write warning should preserve en-US default output");
+    expect(
+        english.translate(
+            "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired",
+            xml_to_cursor_placeholders) == "XMLTOCURSOR() requires XML input and destination alias",
+        "#2545: XMLTOCURSOR input warning should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed", xml_to_cursor_placeholders) ==
+            "XMLTOCURSOR() could not parse the provided XML payload",
+        "#2545: XMLTOCURSOR parse warning should preserve en-US default output");
+    expect(
+        spanish.translate("Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed", xml_to_cursor_placeholders)
+                .find("XMLTOCURSOR()") != std::string::npos &&
+            spanish.translate("Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed", xml_to_cursor_placeholders)
+                    .find("could not parse") == std::string::npos,
+        "#2545: es-419 XMLTOCURSOR warning should preserve function name without falling back to English");
+
+    const std::string pseudo_cursor_warning =
+        pseudo.translate("Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback", cursor_snapshot_placeholders);
+    expect(
+        pseudo_cursor_warning.find("[!! ") == 0U &&
+            pseudo_cursor_warning.find("CURSORTOXML()") != std::string::npos &&
+            pseudo_cursor_warning.find("cursor snapshot") != std::string::npos &&
+            pseudo_cursor_warning.find("{function}") == std::string::npos &&
+            pseudo_cursor_warning.find("{capability}") == std::string::npos,
+        "#2545: qps-ploc cursor XML warning should pseudo-localize prose while preserving placeholders");
 }
 
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {

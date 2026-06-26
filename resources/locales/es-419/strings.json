@@ -26,7 +26,14 @@
   "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "La posicion de bit debe estar entre {minimum} y {maximum}",
   "Runtime.Prg.RuntimeSurface.Warning.AclassFallback": "Respaldo de {function}: no se pudo enumerar la cadena de clases",
   "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback": "Respaldo de {function}: no se pudieron enumerar los miembros; se devuelve un arreglo vacio",
+  "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlTargetUnreadable": "{function} no encontro el cursor destino o no puede leerlo",
+  "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlWriteFailed": "{function} no pudo escribir la ruta destino",
   "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback": "{function} usa comportamiento suplente (sin callback de {capability})",
   "Runtime.Prg.RuntimeSurface.Warning.StubObjectResolution": "{function} usa resolucion de objeto suplente (sin callback de objeto de runtime)",
-  "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback": "{function} usa comportamiento suplente (sin callback de objeto de runtime)"
+  "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback": "{function} usa comportamiento suplente (sin callback de objeto de runtime)",
+  "Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback": "{function} no esta disponible (sin callback de {capability})",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorDestinationAliasRequired": "{function} requiere alias de destino",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired": "{function} requiere entrada XML y alias de destino",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} no pudo materializar el cursor destino",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} no pudo analizar la carga XML proporcionada"
 }

@@ -26,7 +26,14 @@
   "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "Bit position must be between {minimum} and {maximum}",
   "Runtime.Prg.RuntimeSurface.Warning.AclassFallback": "{function} fallback: unable to enumerate class chain",
   "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback": "{function} fallback: unable to enumerate members, returning empty array",
+  "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlTargetUnreadable": "{function} target cursor not found or unreadable",
+  "Runtime.Prg.RuntimeSurface.Warning.CursorToXmlWriteFailed": "{function} failed to write target path",
   "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback": "{function} uses stub behavior (no {capability} callback)",
   "Runtime.Prg.RuntimeSurface.Warning.StubObjectResolution": "{function} uses stub object resolution (no runtime object callback)",
-  "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback": "{function} uses stub behavior (no runtime object callback)"
+  "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback": "{function} uses stub behavior (no runtime object callback)",
+  "Runtime.Prg.RuntimeSurface.Warning.UnavailableCallback": "{function} unavailable (no {capability} callback)",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorDestinationAliasRequired": "{function} destination alias is required",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired": "{function} requires XML input and destination alias",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} failed to materialize destination cursor",
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} could not parse the provided XML payload"
 }
