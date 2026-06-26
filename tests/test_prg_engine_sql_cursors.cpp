@@ -1482,7 +1482,9 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
         "lUsedSession2Before = USED('sqlcust')\n"
         "nAreaSession2Before = SELECT('sqlcust')\n"
         "nExecCrossSession = SQLEXEC(nConn1, 'select * from orders', 'sqlcust2')\n"
+        "cExecCrossSessionMessage = MESSAGE()\n"
         "lDisconnectSession2BeforeConnect = SQLDISCONNECT(nConn1)\n"
+        "cDisconnectCrossSessionMessage = MESSAGE()\n"
         "nConn2 = SQLCONNECT('dsn=SessionTwo')\n"
         "nExec2 = SQLEXEC(nConn2, 'select * from orders', 'sqlother')\n"
         "lUsedSession2After = USED('sqlother')\n"
@@ -1508,7 +1510,9 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     const auto used_session2_before = state.globals.find("lusedsession2before");
     const auto area_session2_before = state.globals.find("nareasession2before");
     const auto exec_cross_session = state.globals.find("nexeccrosssession");
+    const auto exec_cross_session_message = state.globals.find("cexeccrosssessionmessage");
     const auto disconnect_session2_before_connect = state.globals.find("ldisconnectsession2beforeconnect");
+    const auto disconnect_cross_session_message = state.globals.find("cdisconnectcrosssessionmessage");
     const auto conn2 = state.globals.find("nconn2");
     const auto exec2 = state.globals.find("nexec2");
     const auto used_session2_after = state.globals.find("lusedsession2after");
@@ -1525,7 +1529,9 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     expect(used_session2_before != state.globals.end(), "session-2 preexisting SQL cursor visibility should be captured");
     expect(area_session2_before != state.globals.end(), "session-2 preexisting SQL cursor area should be captured");
     expect(exec_cross_session != state.globals.end(), "cross-session SQLEXEC result should be captured");
+    expect(exec_cross_session_message != state.globals.end(), "cross-session SQLEXEC message should be captured");
     expect(disconnect_session2_before_connect != state.globals.end(), "cross-session SQLDISCONNECT before a local connect should be captured");
+    expect(disconnect_cross_session_message != state.globals.end(), "cross-session SQLDISCONNECT message should be captured");
     expect(conn2 != state.globals.end(), "session-2 SQLCONNECT handle should be captured");
     expect(exec2 != state.globals.end(), "session-2 SQLEXEC result should be captured");
     expect(used_session2_after != state.globals.end(), "session-2 SQL cursor visibility should be captured");
@@ -1550,8 +1556,16 @@ void test_sql_result_cursors_are_isolated_by_data_session() {
     if (exec_cross_session != state.globals.end()) {
         expect(copperfin::runtime::format_value(exec_cross_session->second) == "-1", "SQLEXEC should reject a SQL handle from another data session");
     }
+    if (exec_cross_session_message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(exec_cross_session_message->second) == "SQL handle not found: 1",
+            "cross-session SQLEXEC missing-handle message should route through the default locale catalog");
+    }
     if (disconnect_session2_before_connect != state.globals.end()) {
         expect(copperfin::runtime::format_value(disconnect_session2_before_connect->second) == "-1", "SQLDISCONNECT should reject a SQL handle from another data session before the session creates its own handle");
+    }
+    if (disconnect_cross_session_message != state.globals.end()) {
+        expect(copperfin::runtime::format_value(disconnect_cross_session_message->second) == "SQL handle not found: 1",
+            "cross-session SQLDISCONNECT missing-handle message should route through the default locale catalog");
     }
     if (conn2 != state.globals.end()) {
         expect(copperfin::runtime::format_value(conn2->second) == "1", "the first SQLCONNECT handle in a fresh data session should restart at 1");

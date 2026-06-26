@@ -2686,8 +2686,10 @@ void test_aerror_exposes_sql_and_ole_specific_rows() {
         expect(copperfin::runtime::format_value(sql_code->second) == "1526", "SQL failures should use the VFP ODBC error code");
     }
     if (sql_message != state.globals.end()) {
-        expect(copperfin::runtime::format_value(sql_message->second).find("SQLEXEC requires a command") != std::string::npos,
-            "SQL AERROR message should preserve SQL failure text");
+        expect(
+            copperfin::runtime::format_value(sql_message->second) ==
+                "SQLEXEC requires a command or a prepared SQL statement",
+            "SQL AERROR message should route SQLEXEC failure text through the default locale catalog");
     }
     if (sql_detail != state.globals.end()) {
         expect(copperfin::runtime::format_value(sql_detail->second) == "1",

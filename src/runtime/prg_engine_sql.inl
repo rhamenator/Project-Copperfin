@@ -725,6 +725,11 @@
             return current_sql_connections().erase(handle) > 0;
         }
 
+        std::string sql_handle_not_found_message(int handle) const
+        {
+            return runtime_text("Runtime.Prg.Sql.Error.HandleNotFound", {{"handle", std::to_string(handle)}});
+        }
+
         int sql_row_count(int handle) const
         {
             const auto &connections = current_sql_connections();
@@ -742,7 +747,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLPREPARE", trim_copy(command));
                 return -1;
@@ -765,7 +770,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLCANCEL", std::string{});
                 return -1;
@@ -787,7 +792,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLCOMMIT", std::string{});
                 return -1;
@@ -811,7 +816,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLROLLBACK", std::string{});
                 return -1;
@@ -937,7 +942,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLSETPROP", trim_copy(property_name));
                 return -1;
@@ -1020,7 +1025,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLEXEC", trim_copy(command));
                 return -1;
@@ -1034,7 +1039,7 @@
             const std::string effective_command = trim_copy(command).empty() ? connection.prepared_command : trim_copy(command);
             if (effective_command.empty())
             {
-                last_error_message = "SQLEXEC requires a command or a prepared SQL statement";
+                last_error_message = runtime_text("Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement");
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle),
                                           "HY000",
@@ -1106,7 +1111,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLTABLES", trim_copy(table_types));
                 return -1;
@@ -1145,7 +1150,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLDATABASES", std::string{});
                 return -1;
@@ -1183,7 +1188,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLPRIMARYKEYS", trim_copy(table_name));
                 return -1;
@@ -1222,7 +1227,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLFOREIGNKEYS", trim_copy(table_name));
                 return -1;
@@ -1261,7 +1266,7 @@
             const auto found = connections.find(handle);
             if (found == connections.end())
             {
-                last_error_message = "SQL handle not found: " + std::to_string(handle);
+                last_error_message = sql_handle_not_found_message(handle);
                 last_error_code = classify_runtime_error_code(last_error_message);
                 record_sql_aerror_context(std::to_string(handle), "HY000", -1, "SQLCOLUMNS", trim_copy(table_name));
                 return -1;

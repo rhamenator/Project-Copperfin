@@ -785,6 +785,8 @@
   "Runtime.Prg.Cursor.Error.SeekRequiresLocalTableBackedCursor": "SEEK requires a local table-backed cursor",
   "Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired": "Table already open in this data session; USE AGAIN is required: {path}",
   "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound": "USE target work area not found: {target}",
+  "Runtime.Prg.Sql.Error.HandleNotFound": "SQL handle not found: {handle}",
+  "Runtime.Prg.Sql.Error.SqlExecRequiresCommandOrPreparedStatement": "SQLEXEC requires a command or a prepared SQL statement",
   "Runtime.Prg.Watch.Error.EmptyExpression": "Watch expression is empty.",
   "Runtime.Prg.Watch.Error.Failed": "Watch evaluation failed.",
   "Runtime.Prg.Watch.Error.OutOfMemory": "Watch evaluation ran out of memory.",
