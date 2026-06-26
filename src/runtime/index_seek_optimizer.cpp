@@ -1,4 +1,5 @@
 #include "copperfin/runtime/index_seek_optimizer.h"
+#include "copperfin/localization/localization.h"
 
 #include <algorithm>
 #include <cmath>
@@ -6,12 +7,21 @@
 #include <cstdlib>
 #include <limits>
 #include <optional>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
 namespace copperfin::runtime {
 
 namespace {
+
+std::string index_seek_text(
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog.translate(key, placeholders);
+}
 
 std::string trim_copy(std::string text) {
     const auto first = std::find_if(text.begin(), text.end(), [](unsigned char ch) {
@@ -300,8 +310,8 @@ bool IndexExpressionAnalyzer::recognize_simple_comparison(
     out_pattern.operands.push_back(IndexOperand{.raw_text = right, .evaluated_value = {}, .is_literal = is_literal_text(right)});
     out_pattern.confidence = is_literal_text(right) ? OptimizationConfidence::high : OptimizationConfidence::low;
     out_pattern.reason = is_literal_text(right)
-                             ? "Simple field-to-literal comparison"
-                             : "Simple field comparison with runtime-evaluated right side";
+                             ? index_seek_text("Runtime.IndexSeek.PatternReason.SimpleFieldToLiteralComparison")
+                             : index_seek_text("Runtime.IndexSeek.PatternReason.SimpleFieldRuntimeEvaluatedComparison");
     out_pattern.is_dnf_compatible = true;
     return true;
 }
@@ -345,7 +355,7 @@ bool IndexExpressionAnalyzer::recognize_between_pattern(
     out_pattern.confidence = (is_literal_text(lower) && is_literal_text(upper))
                                  ? OptimizationConfidence::high
                                  : OptimizationConfidence::medium;
-    out_pattern.reason = "Field BETWEEN lower AND upper range comparison";
+    out_pattern.reason = index_seek_text("Runtime.IndexSeek.PatternReason.FieldBetweenRangeComparison");
     out_pattern.is_dnf_compatible = true;
     return true;
 }
@@ -377,7 +387,7 @@ bool IndexExpressionAnalyzer::recognize_and_chain(
     out_pattern.confidence = combined_confidence == OptimizationConfidence::high
                                  ? OptimizationConfidence::medium
                                  : combined_confidence;
-    out_pattern.reason = "Top-level AND chain with recognized sub-patterns";
+    out_pattern.reason = index_seek_text("Runtime.IndexSeek.PatternReason.TopLevelAndChain");
     out_pattern.is_dnf_compatible = true;
     return true;
 }
@@ -392,7 +402,7 @@ IndexExpressionPattern IndexExpressionAnalyzer::analyze_expression(
     std::string trimmed = trim_copy(expression_text);
     if (trimmed.empty() || trimmed == ".T." || trimmed == ".F.") {
         result.confidence = OptimizationConfidence::not_applicable;
-        result.reason = "Expression is empty or boolean constant";
+        result.reason = index_seek_text("Runtime.IndexSeek.PatternReason.EmptyOrBooleanConstant");
         return result;
     }
 
@@ -412,7 +422,7 @@ IndexExpressionPattern IndexExpressionAnalyzer::analyze_expression(
                 result.operator_kind = IndexOperatorKind::not_pattern;
                 result.sub_patterns.push_back(std::move(child));
                 result.confidence = result.sub_patterns.front().confidence;
-                result.reason = "Top-level NOT pattern";
+                result.reason = index_seek_text("Runtime.IndexSeek.PatternReason.TopLevelNotPattern");
                 result.is_dnf_compatible = false;
                 return result;
             }
@@ -433,7 +443,7 @@ IndexExpressionPattern IndexExpressionAnalyzer::analyze_expression(
 
     result.operator_kind = IndexOperatorKind::unsupported;
     result.confidence = OptimizationConfidence::not_applicable;
-    result.reason = "Expression does not match recognized optimization patterns";
+    result.reason = index_seek_text("Runtime.IndexSeek.PatternReason.UnrecognizedOptimizationPattern");
     return result;
 }
 
@@ -459,19 +469,14 @@ int IndexSeekMatcher::score_order_match(
     const std::string order_for_norm = collapse_identifier(order_candidate.order_for_expression);
 
     int score = 0;
-    std::string reason;
     if (order_expression_norm == field_norm) {
         score = 100;
-        reason = "exact key expression match";
     } else if (order_name_norm == field_norm) {
         score = 95;
-        reason = "order name matches field";
     } else if (order_expression_norm.find(field_norm) != std::string::npos) {
         score = 80;
-        reason = "key expression references the field";
     } else if (order_for_norm.find(field_norm) != std::string::npos) {
         score = 60;
-        reason = "FOR expression references the field";
     }
 
     if (score > 0 && !order_candidate.is_descending) {
@@ -497,7 +502,7 @@ IndexSeekPlan IndexSeekMatcher::create_plan(
     if (pattern.confidence == OptimizationConfidence::not_applicable) {
         plan.can_optimize = false;
         plan.strategy = IndexSeekPlan::ExecutionStrategy::linear_scan;
-        plan.decision_rationale = "Pattern not recognized for optimization";
+        plan.decision_rationale = index_seek_text("Runtime.IndexSeek.PlanDecision.PatternNotRecognized");
         return plan;
     }
 
@@ -510,13 +515,13 @@ IndexSeekPlan IndexSeekMatcher::create_plan(
         }
         candidate.optimization_confidence = confidence_for_score(candidate.match_score);
         if (candidate.match_score >= 90) {
-            candidate.match_reason = "high-confidence Rushmore match";
+            candidate.match_reason = index_seek_text("Runtime.IndexSeek.MatchReason.HighConfidenceRushmoreMatch");
         } else if (candidate.match_score >= 60) {
-            candidate.match_reason = "moderate-confidence Rushmore match";
+            candidate.match_reason = index_seek_text("Runtime.IndexSeek.MatchReason.ModerateConfidenceRushmoreMatch");
         } else if (candidate.match_score > 0) {
-            candidate.match_reason = "possible Rushmore match";
+            candidate.match_reason = index_seek_text("Runtime.IndexSeek.MatchReason.PossibleRushmoreMatch");
         } else {
-            candidate.match_reason = "no match";
+            candidate.match_reason = index_seek_text("Runtime.IndexSeek.MatchReason.NoMatch");
         }
         ranked_candidates.push_back(std::move(candidate));
     }
@@ -524,7 +529,7 @@ IndexSeekPlan IndexSeekMatcher::create_plan(
     if (ranked_candidates.empty()) {
         plan.can_optimize = false;
         plan.strategy = IndexSeekPlan::ExecutionStrategy::linear_scan;
-        plan.decision_rationale = "No indexes available that match pattern fields";
+        plan.decision_rationale = index_seek_text("Runtime.IndexSeek.PlanDecision.NoMatchingIndexes");
         plan.candidate_orders.clear();
         return plan;
     }
@@ -545,12 +550,14 @@ IndexSeekPlan IndexSeekMatcher::create_plan(
         plan.selected_order = ranked_candidates.front();
         plan.can_optimize = true;
         plan.strategy = IndexSeekPlan::ExecutionStrategy::index_seek;
-        plan.decision_rationale = "Pattern field '" + (pattern.field ? pattern.field->field_name : std::string{"compound"}) +
-                                  "' matched order '" + plan.selected_order->order_name + "'";
+        plan.decision_rationale = index_seek_text(
+            "Runtime.IndexSeek.PlanDecision.PatternFieldMatchedOrder",
+            {{"fieldName", pattern.field ? pattern.field->field_name : index_seek_text("Runtime.IndexSeek.Field.Compound")},
+                {"orderName", plan.selected_order->order_name}});
     } else {
         plan.can_optimize = false;
         plan.strategy = IndexSeekPlan::ExecutionStrategy::linear_scan;
-        plan.decision_rationale = "No indexes available that match pattern fields";
+        plan.decision_rationale = index_seek_text("Runtime.IndexSeek.PlanDecision.NoMatchingIndexes");
     }
     return plan;
 }

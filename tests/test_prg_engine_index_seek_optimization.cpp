@@ -105,6 +105,8 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "analyzer should normalize the comparison field");
     expect(equality.operands.size() == 2U,
         "analyzer should capture both operands for a simple comparison");
+    expect(equality.reason == "Simple field-to-literal comparison",
+        "analyzer should route equality rationale through the default locale catalog");
 
     const auto between = analyzer.analyze_expression("AGE BETWEEN 10 AND 20", fields);
     expect(between.operator_kind == copperfin::runtime::IndexOperatorKind::between,
@@ -115,6 +117,8 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "analyzer should normalize the BETWEEN field");
     expect(between.operands.size() == 3U,
         "analyzer should capture all BETWEEN operands");
+    expect(between.reason == "Field BETWEEN lower AND upper range comparison",
+        "analyzer should route BETWEEN rationale through the default locale catalog");
 
     const auto and_chain = analyzer.analyze_expression("NAME = 'BRAVO' AND AGE > 20", fields);
     expect(and_chain.operator_kind == copperfin::runtime::IndexOperatorKind::and_chain,
@@ -127,6 +131,8 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "first AND-chain branch should remain an equality pattern");
     expect(and_chain.sub_patterns[1].operator_kind == copperfin::runtime::IndexOperatorKind::greater_than,
         "second AND-chain branch should remain a range pattern");
+    expect(and_chain.reason == "Top-level AND chain with recognized sub-patterns",
+        "analyzer should route AND-chain rationale through the default locale catalog");
 
     const auto not_pattern = analyzer.analyze_expression(".NOT. NAME = 'BRAVO'", fields);
     expect(not_pattern.operator_kind == copperfin::runtime::IndexOperatorKind::not_pattern,
@@ -135,6 +141,14 @@ void test_index_expression_analyzer_recognizes_comparison_between_and_not_chain(
         "analyzer should preserve the wrapped NOT subpattern");
     expect(not_pattern.sub_patterns[0].operator_kind == copperfin::runtime::IndexOperatorKind::equal,
         "NOT wrapper should preserve the inner comparison pattern");
+    expect(not_pattern.reason == "Top-level NOT pattern",
+        "analyzer should route NOT rationale through the default locale catalog");
+
+    const auto unsupported = analyzer.analyze_expression("RECNO() > 10", fields);
+    expect(unsupported.operator_kind == copperfin::runtime::IndexOperatorKind::unsupported,
+        "analyzer should leave unsupported expressions unsupported");
+    expect(unsupported.reason == "Expression does not match recognized optimization patterns",
+        "analyzer should route unsupported-expression rationale through the default locale catalog");
 }
 
 void test_index_seek_matcher_ranks_and_limits_candidate_orders() {
@@ -170,6 +184,8 @@ void test_index_seek_matcher_ranks_and_limits_candidate_orders() {
             "matcher should prefer the exact field order");
         expect(plan.selected_order->match_score >= 90,
             "exact field order should score as a high-confidence match");
+        expect(plan.selected_order->match_reason == "high-confidence Rushmore match",
+            "matcher should route selected candidate match reason through the default locale catalog");
     }
     expect(plan.candidate_orders.size() == 3U,
         "matcher should return only the top three candidate orders");
@@ -178,9 +194,27 @@ void test_index_seek_matcher_ranks_and_limits_candidate_orders() {
             "candidate orders should be sorted by descending match score");
         expect(plan.candidate_orders[1].match_score >= plan.candidate_orders[2].match_score,
             "candidate orders should keep descending score order after truncation");
+        expect(plan.candidate_orders[1].match_reason == "moderate-confidence Rushmore match",
+            "matcher should localize moderate-confidence match reasons");
+        expect(plan.candidate_orders[2].match_reason == "no match",
+            "matcher should localize no-match reasons");
     }
-    expect(plan.decision_rationale.find("NAME") != std::string::npos,
-        "matcher should emit a readable decision rationale");
+    expect(plan.decision_rationale == "Pattern field 'NAME' matched order 'NAME'",
+        "matcher should interpolate selected field and order names through the default locale catalog");
+
+    const auto no_indexes = matcher.create_plan(pattern, {}, "NAME");
+    expect(!no_indexes.can_optimize,
+        "matcher should fall back when no orders are available");
+    expect(no_indexes.decision_rationale == "No indexes available that match pattern fields",
+        "matcher should route missing-index rationale through the default locale catalog");
+
+    copperfin::runtime::IndexExpressionPattern unsupported_pattern{};
+    unsupported_pattern.confidence = copperfin::runtime::OptimizationConfidence::not_applicable;
+    const auto rejected = matcher.create_plan(unsupported_pattern, {exact}, "");
+    expect(!rejected.can_optimize,
+        "matcher should reject not-applicable patterns");
+    expect(rejected.decision_rationale == "Pattern not recognized for optimization",
+        "matcher should route rejected-pattern rationale through the default locale catalog");
 }
 
 }  // namespace
