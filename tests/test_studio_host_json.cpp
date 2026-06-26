@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "copperfin/vfp/visual_asset_editor.h"
 
@@ -848,6 +849,20 @@ void test_studio_host_builder_parse_diagnostics_localize(const std::string& stud
         "Unknown builder context token: unknown",
         "#2396: default builder parser diagnostics should preserve en-US prose");
 
+    process = run_process_capture(
+        studio_host_path,
+        {"--builder-launch-plan", "grid-builder", "--builder-context", "unknown"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2567: default text-mode builder diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "status: error",
+        "#2567: default text-mode builder diagnostics should preserve machine-readable status");
+    expect_contains(process.stdout_text,
+        "error: Unknown builder context token: unknown",
+        "#2567: default text-mode builder diagnostics should preserve the en-US prefixed error line");
+
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
     process = run_process_capture(
         studio_host_path,
@@ -871,6 +886,33 @@ void test_studio_host_builder_parse_diagnostics_localize(const std::string& stud
     expect_not_contains(process.stdout_text,
         "Unknown builder context token: unknown",
         "#2396: pseudo-localized unknown-context diagnostics should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {"--builder-launch-plan", "grid-builder", "--builder-context", "unknown"},
+        temp_root);
+
+    const std::string pseudo_error_prefix =
+        copperfin::localization::load_catalogs(
+            copperfin::localization::resolve_catalog_root(),
+            "qps-ploc").translate("StudioHost.Prefix.Error");
+    expect(process.exit_code == 2,
+        "#2567: pseudo-localized text-mode builder diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "status: error",
+        "#2567: pseudo-localized text-mode builder diagnostics should preserve machine-readable status");
+    expect_contains(process.stdout_text,
+        pseudo_error_prefix,
+        "#2567: pseudo-localized text-mode builder diagnostics should route the error prefix through localization");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2567: pseudo-localized text-mode builder diagnostics should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "unknown",
+        "#2567: pseudo-localized text-mode builder diagnostics should preserve context tokens");
+    expect_not_contains(process.stdout_text,
+        "error: Unknown builder context token: unknown",
+        "#2567: pseudo-localized text-mode builder diagnostics should not fall back to the raw English prefixed error");
 
     process = run_process_capture(
         studio_host_path,

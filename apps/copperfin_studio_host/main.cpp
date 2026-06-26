@@ -40,12 +40,32 @@
 
 namespace {
 
+const copperfin::localization::LocalizedCatalog* g_active_catalog = nullptr;
+
 copperfin::localization::LocalizedCatalog load_localization(const char* executable_path) {
     const std::filesystem::path locale_root = copperfin::localization::resolve_catalog_root(
         executable_path == nullptr ? std::filesystem::path{} : std::filesystem::path(executable_path));
     return copperfin::localization::load_catalogs(
         locale_root,
         copperfin::localization::select_locale());
+}
+
+std::string localized_message_or_default(
+    std::string_view key,
+    std::string_view fallback) {
+    if (g_active_catalog == nullptr) {
+        return std::string(fallback);
+    }
+    const std::string translated = g_active_catalog->translate(key);
+    return translated == key ? std::string(fallback) : translated;
+}
+
+std::string studio_error_prefix() {
+    return localized_message_or_default("StudioHost.Prefix.Error", "error: ");
+}
+
+std::string studio_warning_prefix() {
+    return localized_message_or_default("StudioHost.Prefix.Warning", "warning: ");
 }
 
 void print_primary_usage_line(
@@ -18363,7 +18383,7 @@ void print_json_designer_launch_surface_catalog_result(
 void print_text_toolbox_create_result(const copperfin::vfp::VisualObjectCreateResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "record_index: " << result.record_index << "\n";
     std::cout << "object_name: " << result.object_name << "\n";
@@ -18374,7 +18394,7 @@ void print_text_toolbox_create_result(const copperfin::vfp::VisualObjectCreateRe
 void print_text_toolbox_create_batch_result(const copperfin::vfp::VisualObjectCreateBatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     for (const auto record_index : result.record_indexes) {
         std::cout << "record_index: " << record_index << "\n";
@@ -18391,7 +18411,7 @@ void print_text_toolbox_create_plan_result(
     const copperfin::studio::StudioToolboxObjectCreatePlanResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18419,7 +18439,7 @@ void print_text_selection_toolbox_create_plan_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreatePlanResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18459,7 +18479,7 @@ void print_text_selection_toolbox_create_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "selection_context: "
               << copperfin::studio::studio_editor_selection_context_name(result.selection_context) << "\n";
@@ -18497,7 +18517,7 @@ void print_text_toolbox_create_from_dispatch_result(
     const copperfin::studio::StudioToolboxObjectCreateFromDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "create_plan_ok: " << (result.create_plan.ok ? "true" : "false") << "\n";
     if (!result.create_plan.error.empty()) {
@@ -18527,7 +18547,7 @@ void print_text_toolbox_create_dispatch_plan_result(
     const copperfin::studio::StudioToolboxObjectCreateDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18560,7 +18580,7 @@ void print_text_selection_toolbox_create_dispatch_plan_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "selection_context: "
               << copperfin::studio::studio_editor_selection_context_name(result.selection_context) << "\n";
@@ -18610,7 +18630,7 @@ void print_text_toolbox_create_batch_plan_result(
     const copperfin::studio::StudioToolboxObjectCreateBatchPlanResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18636,7 +18656,7 @@ void print_text_toolbox_create_batch_from_dispatch_result(
     const copperfin::studio::StudioToolboxObjectCreateBatchFromDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "batch_plan_ok: " << (result.batch_plan.ok ? "true" : "false") << "\n";
     if (!result.batch_plan.error.empty()) {
@@ -18673,7 +18693,7 @@ void print_text_toolbox_create_batch_dispatch_plan_result(
     const copperfin::studio::StudioToolboxObjectCreateBatchDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18705,7 +18725,7 @@ void print_text_selection_toolbox_create_batch_dispatch_plan_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateBatchDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "selection_context: "
               << copperfin::studio::studio_editor_selection_context_name(result.selection_context) << "\n";
@@ -18748,7 +18768,7 @@ void print_text_toolbox_create_plan_catalog_result(
     const copperfin::studio::StudioToolboxObjectCreatePlanCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18775,7 +18795,7 @@ void print_text_selection_toolbox_create_plan_catalog_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreatePlanCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18808,7 +18828,7 @@ void print_text_toolbox_create_batch_plan_catalog_result(
     const copperfin::studio::StudioToolboxObjectCreateBatchPlanCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18836,7 +18856,7 @@ void print_text_selection_toolbox_create_batch_plan_catalog_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateBatchPlanCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18870,7 +18890,7 @@ void print_text_selection_toolbox_create_batch_plan_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateBatchPlanResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "selection_context: "
               << copperfin::studio::studio_editor_selection_context_name(result.selection_context) << "\n";
@@ -18901,7 +18921,7 @@ void print_text_selection_toolbox_create_batch_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateBatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "selection_context: "
               << copperfin::studio::studio_editor_selection_context_name(result.selection_context) << "\n";
@@ -18942,7 +18962,7 @@ void print_text_toolbox_create_dispatch_catalog_result(
     const copperfin::studio::StudioToolboxObjectCreateDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -18968,7 +18988,7 @@ void print_text_selection_toolbox_create_dispatch_catalog_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19000,7 +19020,7 @@ void print_text_toolbox_create_batch_dispatch_catalog_result(
     const copperfin::studio::StudioToolboxObjectCreateBatchDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19037,7 +19057,7 @@ void print_text_selection_toolbox_create_batch_dispatch_catalog_result(
     const copperfin::studio::StudioSelectionToolboxObjectCreateBatchDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19081,7 +19101,7 @@ void print_text_builder_launch_plan_result(
     const copperfin::studio::StudioEditorSelectionContext* selection_context = nullptr) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19107,7 +19127,7 @@ void print_text_builder_launch_catalog_result(
     const copperfin::studio::StudioBuilderLaunchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19131,7 +19151,7 @@ void print_text_selection_builder_launch_catalog_result(
     const copperfin::studio::StudioSelectionBuilderLaunchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19159,7 +19179,7 @@ void print_text_builder_invocation_admission_result(
     const copperfin::studio::StudioEditorSelectionContext* selection_context = nullptr) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19187,7 +19207,7 @@ void print_text_builder_invocation_admission_catalog_result(
     const copperfin::studio::StudioBuilderInvocationAdmissionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19211,7 +19231,7 @@ void print_text_selection_builder_invocation_admission_catalog_result(
     const copperfin::studio::StudioSelectionBuilderInvocationAdmissionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19239,7 +19259,7 @@ void print_text_builder_dispatch_result(
     const copperfin::studio::StudioEditorSelectionContext* selection_context = nullptr) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19274,7 +19294,7 @@ void print_text_builder_execution_result(
     const copperfin::studio::StudioEditorSelectionContext* selection_context = nullptr) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "execution_admitted: " << (result.execution_admitted ? "true" : "false") << "\n";
     std::cout << "executed: " << (result.executed ? "true" : "false") << "\n";
@@ -19307,7 +19327,7 @@ void print_text_builder_dispatch_catalog_result(
     const copperfin::studio::StudioBuilderDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19331,7 +19351,7 @@ void print_text_builder_dispatch_execution_catalog_result(
     const copperfin::studio::StudioBuilderDispatchExecutionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19355,7 +19375,7 @@ void print_text_selection_builder_dispatch_catalog_result(
     const copperfin::studio::StudioSelectionBuilderDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19382,7 +19402,7 @@ void print_text_selection_builder_dispatch_execution_catalog_result(
     const copperfin::studio::StudioSelectionBuilderDispatchExecutionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19409,7 +19429,7 @@ void print_text_editor_action_launch_plan_result(
     const copperfin::studio::StudioEditorActionLaunchPlanResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19434,7 +19454,7 @@ void print_text_editor_action_launch_catalog_result(
     const copperfin::studio::StudioEditorActionLaunchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19459,7 +19479,7 @@ void print_text_editor_action_invocation_admission_result(
     const copperfin::studio::StudioEditorActionInvocationAdmissionResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19488,7 +19508,7 @@ void print_text_editor_action_invocation_admission_catalog_result(
     const copperfin::studio::StudioEditorActionInvocationAdmissionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19515,7 +19535,7 @@ void print_text_editor_action_dispatch_result(
     const copperfin::studio::StudioEditorActionDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19549,7 +19569,7 @@ void print_text_editor_action_execution_result(
     const std::string& executed_command) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "execution_admitted: " << (result.execution_admitted ? "true" : "false") << "\n";
     std::cout << "executed: " << (result.executed ? "true" : "false") << "\n";
@@ -19582,7 +19602,7 @@ void print_text_editor_action_dispatch_catalog_result(
     const copperfin::studio::StudioEditorActionDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19607,7 +19627,7 @@ void print_text_editor_action_dispatch_execution_catalog_result(
     const copperfin::studio::StudioEditorActionDispatchExecutionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19632,7 +19652,7 @@ void print_text_toolbox_palette_launch_plan_result(
     const copperfin::studio::StudioToolboxPaletteLaunchPlanResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19655,7 +19675,7 @@ void print_text_toolbox_palette_launch_catalog_result(
     const copperfin::studio::StudioToolboxPaletteLaunchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19680,7 +19700,7 @@ void print_text_toolbox_palette_query_result(
     const copperfin::studio::StudioToolboxPaletteQueryResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19701,7 +19721,7 @@ void print_text_visual_property_filter_result(
     const copperfin::vfp::VisualObjectPropertyListFilterResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19721,7 +19741,7 @@ void print_text_visual_property_query_result(
     const copperfin::vfp::VisualObjectPropertyQueryResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19738,7 +19758,7 @@ void print_text_visual_property_list_result(
     const copperfin::vfp::VisualObjectPropertyListResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19757,7 +19777,7 @@ void print_text_visual_object_list_result(
     const copperfin::vfp::VisualObjectListResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19774,7 +19794,7 @@ void print_text_visual_object_children_result(
     const copperfin::vfp::VisualObjectChildrenListResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19793,7 +19813,7 @@ void print_text_visual_object_descendants_result(
     const copperfin::vfp::VisualObjectDescendantsListResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19813,7 +19833,7 @@ void print_text_visual_object_ancestors_result(
     const copperfin::vfp::VisualObjectAncestorsListResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19832,7 +19852,7 @@ void print_text_visual_method_list_result(
     const copperfin::vfp::VisualObjectMethodListResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19852,7 +19872,7 @@ void print_text_visual_method_query_result(
     const copperfin::vfp::VisualObjectMethodQueryResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19873,7 +19893,7 @@ void print_text_visual_method_update_result(
     const copperfin::vfp::VisualAssetUndoStatus& undo_status) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19889,7 +19909,7 @@ void print_text_toolbox_invocation_admission_result(
     const copperfin::studio::StudioToolboxInvocationAdmissionResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19916,7 +19936,7 @@ void print_text_toolbox_invocation_admission_catalog_result(
     const copperfin::studio::StudioToolboxInvocationAdmissionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19953,7 +19973,7 @@ void print_text_selection_toolbox_invocation_admission_catalog_result(
     const copperfin::studio::StudioSelectionToolboxInvocationAdmissionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -19993,7 +20013,7 @@ void print_text_selection_toolbox_invocation_admission_catalog_result(
 void print_text_toolbox_dispatch_result(const copperfin::studio::StudioToolboxDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20026,7 +20046,7 @@ void print_text_toolbox_execution_result(
     const std::string& executed_command) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "execution_admitted: " << (result.execution_admitted ? "true" : "false") << "\n";
     std::cout << "executed: " << (result.executed ? "true" : "false") << "\n";
@@ -20058,7 +20078,7 @@ void print_text_toolbox_dispatch_catalog_result(
     const copperfin::studio::StudioToolboxDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20099,7 +20119,7 @@ void print_text_toolbox_dispatch_execution_catalog_result(
     const copperfin::studio::StudioToolboxDispatchExecutionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20139,7 +20159,7 @@ void print_text_selection_toolbox_dispatch_catalog_result(
     const copperfin::studio::StudioSelectionToolboxDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20189,7 +20209,7 @@ void print_text_selection_toolbox_dispatch_execution_catalog_result(
     const copperfin::studio::StudioSelectionToolboxDispatchExecutionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20238,7 +20258,7 @@ void print_text_designer_launch_surfaces_result(
     const copperfin::studio::StudioDesignerLaunchSurfacePlanResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20264,7 +20284,7 @@ void print_text_designer_invocation_admission_result(
     const copperfin::studio::StudioDesignerInvocationAdmissionResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20292,7 +20312,7 @@ void print_text_designer_dispatch_result(
     const copperfin::studio::StudioDesignerDispatchResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20344,7 +20364,7 @@ void print_text_designer_execution_result(
     const copperfin::studio::StudioDesignerDispatchExecutionResult& result) {
     std::cout << "status: " << (result.ok && result.error_count == 0U ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     std::cout << "execution_admitted: " << (result.execution_admitted ? "true" : "false") << "\n";
     std::cout << "executed: " << (result.executed ? "true" : "false") << "\n";
@@ -20366,7 +20386,7 @@ void print_text_designer_dispatch_catalog_result(
     const copperfin::studio::StudioDesignerDispatchCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20388,7 +20408,7 @@ void print_text_designer_dispatch_execution_catalog_result(
     const copperfin::studio::StudioDesignerDispatchExecutionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20414,7 +20434,7 @@ void print_text_designer_launch_surface_catalog_result(
     const copperfin::studio::StudioDesignerLaunchSurfaceCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -20436,7 +20456,7 @@ void print_text_designer_invocation_admission_catalog_result(
     const copperfin::studio::StudioDesignerInvocationAdmissionCatalogResult& result) {
     std::cout << "status: " << (result.ok ? "ok" : "error") << "\n";
     if (!result.error.empty()) {
-        std::cout << "error: " << result.error << "\n";
+        std::cout << studio_error_prefix() << result.error << "\n";
     }
     if (!result.ok) {
         return;
@@ -21966,12 +21986,13 @@ void print_subsystems(const copperfin::localization::LocalizedCatalog& catalog) 
 }  // namespace
 
 int main(int argc, char** argv) {
+    const auto catalog = load_localization(argc > 0 ? argv[0] : nullptr);
+    g_active_catalog = &catalog;
+
     const auto hardening = copperfin::security::apply_default_process_hardening();
     if (!hardening.applied) {
-        std::cerr << "warning: " << hardening.message << "\n";
+        std::cerr << studio_warning_prefix() << hardening.message << "\n";
     }
-
-    const auto catalog = load_localization(argc > 0 ? argv[0] : nullptr);
 
     std::vector<std::string> args;
     args.reserve(argc > 1 ? static_cast<std::size_t>(argc - 1) : 0U);
@@ -23444,7 +23465,7 @@ int main(int argc, char** argv) {
                 print_json_visual_object_subtree_duplicate_result(result, undo_status);
             } else {
                 std::cout << "status: error\n";
-                std::cout << "error: " << result.error << "\n";
+                std::cout << studio_error_prefix() << result.error << "\n";
                 print_usage(catalog);
             }
             return 2;
@@ -23458,7 +23479,7 @@ int main(int argc, char** argv) {
             print_json_visual_object_subtree_duplicate_result(result, undo_status);
         } else if (!result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << result.error << "\n";
+            std::cout << studio_error_prefix() << result.error << "\n";
         } else {
             std::cout << "status: ok\n";
             std::cout << "copied-count: " << result.copied_count << "\n";
@@ -26150,7 +26171,7 @@ int main(int argc, char** argv) {
     const auto parse_result = copperfin::studio::parse_launch_arguments(args, catalog);
     if (!parse_result.ok) {
         std::cout << "status: error\n";
-        std::cout << "error: " << parse_result.error << "\n";
+        std::cout << studio_error_prefix() << parse_result.error << "\n";
         print_usage(catalog);
         return 2;
     }
@@ -26188,7 +26209,7 @@ int main(int argc, char** argv) {
         const auto undo_result = copperfin::vfp::undo_visual_object_property(parse_result.request.path);
         if (!undo_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << undo_result.error << "\n";
+            std::cout << studio_error_prefix() << undo_result.error << "\n";
             return 5;
         }
     }
@@ -26206,7 +26227,7 @@ int main(int argc, char** argv) {
 
         if (!update_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << update_result.error << "\n";
+            std::cout << studio_error_prefix() << update_result.error << "\n";
             return 4;
         }
 
@@ -26225,7 +26246,7 @@ int main(int argc, char** argv) {
 
         if (!clear_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << clear_result.error << "\n";
+            std::cout << studio_error_prefix() << clear_result.error << "\n";
             return 4;
         }
 
@@ -26245,7 +26266,7 @@ int main(int argc, char** argv) {
 
         if (!rename_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << rename_result.error << "\n";
+            std::cout << studio_error_prefix() << rename_result.error << "\n";
             return 4;
         }
 
@@ -26263,7 +26284,7 @@ int main(int argc, char** argv) {
 
         if (!delete_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << delete_result.error << "\n";
+            std::cout << studio_error_prefix() << delete_result.error << "\n";
             return 4;
         }
 
@@ -26281,7 +26302,7 @@ int main(int argc, char** argv) {
 
         if (!restore_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << restore_result.error << "\n";
+            std::cout << studio_error_prefix() << restore_result.error << "\n";
             return 4;
         }
 
@@ -26307,7 +26328,7 @@ int main(int argc, char** argv) {
 
         if (!deleted_states_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << deleted_states_result.error << "\n";
+            std::cout << studio_error_prefix() << deleted_states_result.error << "\n";
             return 4;
         }
     }
@@ -26323,7 +26344,7 @@ int main(int argc, char** argv) {
 
         if (!subtree_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << subtree_result.error << "\n";
+            std::cout << studio_error_prefix() << subtree_result.error << "\n";
             return 4;
         }
     }
@@ -26341,7 +26362,7 @@ int main(int argc, char** argv) {
 
         if (!duplicate_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << duplicate_result.error << "\n";
+            std::cout << studio_error_prefix() << duplicate_result.error << "\n";
             return 4;
         }
 
@@ -26368,7 +26389,7 @@ int main(int argc, char** argv) {
 
         if (!rename_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << rename_result.error << "\n";
+            std::cout << studio_error_prefix() << rename_result.error << "\n";
             return 4;
         }
 
@@ -26395,7 +26416,7 @@ int main(int argc, char** argv) {
 
         if (!reparent_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << reparent_result.error << "\n";
+            std::cout << studio_error_prefix() << reparent_result.error << "\n";
             return 4;
         }
     }
@@ -26413,7 +26434,7 @@ int main(int argc, char** argv) {
 
         if (!reorder_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << reorder_result.error << "\n";
+            std::cout << studio_error_prefix() << reorder_result.error << "\n";
             return 4;
         }
 
@@ -26449,7 +26470,7 @@ int main(int argc, char** argv) {
 
         if (!group_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << group_result.error << "\n";
+            std::cout << studio_error_prefix() << group_result.error << "\n";
             return 4;
         }
     }
@@ -26476,7 +26497,7 @@ int main(int argc, char** argv) {
 
         if (!align_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << align_result.error << "\n";
+            std::cout << studio_error_prefix() << align_result.error << "\n";
             return 4;
         }
 
@@ -26506,7 +26527,7 @@ int main(int argc, char** argv) {
 
         if (!resize_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << resize_result.error << "\n";
+            std::cout << studio_error_prefix() << resize_result.error << "\n";
             return 4;
         }
 
@@ -26533,7 +26554,7 @@ int main(int argc, char** argv) {
 
         if (!distribute_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << distribute_result.error << "\n";
+            std::cout << studio_error_prefix() << distribute_result.error << "\n";
             return 4;
         }
 
@@ -26562,7 +26583,7 @@ int main(int argc, char** argv) {
 
         if (!snap_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << snap_result.error << "\n";
+            std::cout << studio_error_prefix() << snap_result.error << "\n";
             return 4;
         }
 
@@ -26591,7 +26612,7 @@ int main(int argc, char** argv) {
 
         if (!nudge_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << nudge_result.error << "\n";
+            std::cout << studio_error_prefix() << nudge_result.error << "\n";
             return 4;
         }
 
@@ -26618,7 +26639,7 @@ int main(int argc, char** argv) {
 
         if (!tab_order_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << tab_order_result.error << "\n";
+            std::cout << studio_error_prefix() << tab_order_result.error << "\n";
             return 4;
         }
     }
@@ -26642,7 +26663,7 @@ int main(int argc, char** argv) {
 
         if (!tab_stop_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << tab_stop_result.error << "\n";
+            std::cout << studio_error_prefix() << tab_stop_result.error << "\n";
             return 4;
         }
     }
@@ -26666,7 +26687,7 @@ int main(int argc, char** argv) {
 
         if (!visibility_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << visibility_result.error << "\n";
+            std::cout << studio_error_prefix() << visibility_result.error << "\n";
             return 4;
         }
     }
@@ -26690,7 +26711,7 @@ int main(int argc, char** argv) {
 
         if (!enabled_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << enabled_result.error << "\n";
+            std::cout << studio_error_prefix() << enabled_result.error << "\n";
             return 4;
         }
     }
@@ -26714,7 +26735,7 @@ int main(int argc, char** argv) {
 
         if (!read_only_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << read_only_result.error << "\n";
+            std::cout << studio_error_prefix() << read_only_result.error << "\n";
             return 4;
         }
     }
@@ -26738,7 +26759,7 @@ int main(int argc, char** argv) {
 
         if (!locked_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << locked_result.error << "\n";
+            std::cout << studio_error_prefix() << locked_result.error << "\n";
             return 4;
         }
     }
@@ -26762,7 +26783,7 @@ int main(int argc, char** argv) {
 
         if (!caption_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << caption_result.error << "\n";
+            std::cout << studio_error_prefix() << caption_result.error << "\n";
             return 4;
         }
     }
@@ -26786,7 +26807,7 @@ int main(int argc, char** argv) {
 
         if (!picture_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << picture_result.error << "\n";
+            std::cout << studio_error_prefix() << picture_result.error << "\n";
             return 4;
         }
     }
@@ -26810,7 +26831,7 @@ int main(int argc, char** argv) {
 
         if (!down_picture_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << down_picture_result.error << "\n";
+            std::cout << studio_error_prefix() << down_picture_result.error << "\n";
             return 4;
         }
     }
@@ -26834,7 +26855,7 @@ int main(int argc, char** argv) {
 
         if (!disabled_picture_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << disabled_picture_result.error << "\n";
+            std::cout << studio_error_prefix() << disabled_picture_result.error << "\n";
             return 4;
         }
     }
@@ -26858,7 +26879,7 @@ int main(int argc, char** argv) {
 
         if (!ole_drag_picture_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << ole_drag_picture_result.error << "\n";
+            std::cout << studio_error_prefix() << ole_drag_picture_result.error << "\n";
             return 4;
         }
     }
@@ -26882,7 +26903,7 @@ int main(int argc, char** argv) {
 
         if (!mouse_icon_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << mouse_icon_result.error << "\n";
+            std::cout << studio_error_prefix() << mouse_icon_result.error << "\n";
             return 4;
         }
     }
@@ -26906,7 +26927,7 @@ int main(int argc, char** argv) {
 
         if (!drag_icon_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << drag_icon_result.error << "\n";
+            std::cout << studio_error_prefix() << drag_icon_result.error << "\n";
             return 4;
         }
     }
@@ -26930,7 +26951,7 @@ int main(int argc, char** argv) {
 
         if (!drag_mode_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << drag_mode_result.error << "\n";
+            std::cout << studio_error_prefix() << drag_mode_result.error << "\n";
             return 4;
         }
     }
@@ -26954,7 +26975,7 @@ int main(int argc, char** argv) {
 
         if (!ole_drag_mode_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << ole_drag_mode_result.error << "\n";
+            std::cout << studio_error_prefix() << ole_drag_mode_result.error << "\n";
             return 4;
         }
     }
@@ -26978,7 +26999,7 @@ int main(int argc, char** argv) {
 
         if (!ole_drop_mode_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << ole_drop_mode_result.error << "\n";
+            std::cout << studio_error_prefix() << ole_drop_mode_result.error << "\n";
             return 4;
         }
     }
@@ -27002,7 +27023,7 @@ int main(int argc, char** argv) {
 
         if (!ole_drop_effects_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << ole_drop_effects_result.error << "\n";
+            std::cout << studio_error_prefix() << ole_drop_effects_result.error << "\n";
             return 4;
         }
     }
@@ -27026,7 +27047,7 @@ int main(int argc, char** argv) {
 
         if (!ole_drop_text_insertion_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << ole_drop_text_insertion_result.error << "\n";
+            std::cout << studio_error_prefix() << ole_drop_text_insertion_result.error << "\n";
             return 4;
         }
     }
@@ -27050,7 +27071,7 @@ int main(int argc, char** argv) {
 
         if (!button_count_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << button_count_result.error << "\n";
+            std::cout << studio_error_prefix() << button_count_result.error << "\n";
             return 4;
         }
     }
@@ -27074,7 +27095,7 @@ int main(int argc, char** argv) {
 
         if (!curvature_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << curvature_result.error << "\n";
+            std::cout << studio_error_prefix() << curvature_result.error << "\n";
             return 4;
         }
     }
@@ -27098,7 +27119,7 @@ int main(int argc, char** argv) {
 
         if (!draw_mode_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << draw_mode_result.error << "\n";
+            std::cout << studio_error_prefix() << draw_mode_result.error << "\n";
             return 4;
         }
     }
@@ -27122,7 +27143,7 @@ int main(int argc, char** argv) {
 
         if (!draw_style_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << draw_style_result.error << "\n";
+            std::cout << studio_error_prefix() << draw_style_result.error << "\n";
             return 4;
         }
     }
@@ -27146,7 +27167,7 @@ int main(int argc, char** argv) {
 
         if (!draw_width_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << draw_width_result.error << "\n";
+            std::cout << studio_error_prefix() << draw_width_result.error << "\n";
             return 4;
         }
     }
@@ -27170,7 +27191,7 @@ int main(int argc, char** argv) {
 
         if (!fill_style_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << fill_style_result.error << "\n";
+            std::cout << studio_error_prefix() << fill_style_result.error << "\n";
             return 4;
         }
     }
@@ -27194,7 +27215,7 @@ int main(int argc, char** argv) {
 
         if (!scale_mode_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << scale_mode_result.error << "\n";
+            std::cout << studio_error_prefix() << scale_mode_result.error << "\n";
             return 4;
         }
     }
@@ -27218,7 +27239,7 @@ int main(int argc, char** argv) {
 
         if (!buffer_mode_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << buffer_mode_result.error << "\n";
+            std::cout << studio_error_prefix() << buffer_mode_result.error << "\n";
             return 4;
         }
     }
@@ -27242,7 +27263,7 @@ int main(int argc, char** argv) {
 
         if (!buffer_mode_override_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << buffer_mode_override_result.error << "\n";
+            std::cout << studio_error_prefix() << buffer_mode_override_result.error << "\n";
             return 4;
         }
     }
@@ -27266,7 +27287,7 @@ int main(int argc, char** argv) {
 
         if (!data_session_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << data_session_result.error << "\n";
+            std::cout << studio_error_prefix() << data_session_result.error << "\n";
             return 4;
         }
     }
@@ -27290,7 +27311,7 @@ int main(int argc, char** argv) {
 
         if (!grid_line_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << grid_line_color_result.error << "\n";
+            std::cout << studio_error_prefix() << grid_line_color_result.error << "\n";
             return 4;
         }
     }
@@ -27314,7 +27335,7 @@ int main(int argc, char** argv) {
 
         if (!header_height_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << header_height_result.error << "\n";
+            std::cout << studio_error_prefix() << header_height_result.error << "\n";
             return 4;
         }
     }
@@ -27338,7 +27359,7 @@ int main(int argc, char** argv) {
 
         if (!row_height_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << row_height_result.error << "\n";
+            std::cout << studio_error_prefix() << row_height_result.error << "\n";
             return 4;
         }
     }
@@ -27362,7 +27383,7 @@ int main(int argc, char** argv) {
 
         if (!lock_columns_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << lock_columns_result.error << "\n";
+            std::cout << studio_error_prefix() << lock_columns_result.error << "\n";
             return 4;
         }
     }
@@ -27386,7 +27407,7 @@ int main(int argc, char** argv) {
 
         if (!lock_columns_left_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << lock_columns_left_result.error << "\n";
+            std::cout << studio_error_prefix() << lock_columns_left_result.error << "\n";
             return 4;
         }
     }
@@ -27410,7 +27431,7 @@ int main(int argc, char** argv) {
 
         if (!grid_line_width_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << grid_line_width_result.error << "\n";
+            std::cout << studio_error_prefix() << grid_line_width_result.error << "\n";
             return 4;
         }
     }
@@ -27434,7 +27455,7 @@ int main(int argc, char** argv) {
 
         if (!grid_lines_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << grid_lines_result.error << "\n";
+            std::cout << studio_error_prefix() << grid_lines_result.error << "\n";
             return 4;
         }
     }
@@ -27458,7 +27479,7 @@ int main(int argc, char** argv) {
 
         if (!highlight_row_line_width_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << highlight_row_line_width_result.error << "\n";
+            std::cout << studio_error_prefix() << highlight_row_line_width_result.error << "\n";
             return 4;
         }
     }
@@ -27482,7 +27503,7 @@ int main(int argc, char** argv) {
 
         if (!partition_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << partition_result.error << "\n";
+            std::cout << studio_error_prefix() << partition_result.error << "\n";
             return 4;
         }
     }
@@ -27506,7 +27527,7 @@ int main(int argc, char** argv) {
 
         if (!record_source_type_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << record_source_type_result.error << "\n";
+            std::cout << studio_error_prefix() << record_source_type_result.error << "\n";
             return 4;
         }
     }
@@ -27530,7 +27551,7 @@ int main(int argc, char** argv) {
 
         if (!column_order_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << column_order_result.error << "\n";
+            std::cout << studio_error_prefix() << column_order_result.error << "\n";
             return 4;
         }
     }
@@ -27554,7 +27575,7 @@ int main(int argc, char** argv) {
 
         if (!highlight_style_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << highlight_style_result.error << "\n";
+            std::cout << studio_error_prefix() << highlight_style_result.error << "\n";
             return 4;
         }
     }
@@ -27578,7 +27599,7 @@ int main(int argc, char** argv) {
 
         if (!child_order_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << child_order_result.error << "\n";
+            std::cout << studio_error_prefix() << child_order_result.error << "\n";
             return 4;
         }
     }
@@ -27602,7 +27623,7 @@ int main(int argc, char** argv) {
 
         if (!fill_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << fill_color_result.error << "\n";
+            std::cout << studio_error_prefix() << fill_color_result.error << "\n";
             return 4;
         }
     }
@@ -27626,7 +27647,7 @@ int main(int argc, char** argv) {
 
         if (!list_item_id_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << list_item_id_result.error << "\n";
+            std::cout << studio_error_prefix() << list_item_id_result.error << "\n";
             return 4;
         }
     }
@@ -27650,7 +27671,7 @@ int main(int argc, char** argv) {
 
         if (!tab_orientation_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << tab_orientation_result.error << "\n";
+            std::cout << studio_error_prefix() << tab_orientation_result.error << "\n";
             return 4;
         }
     }
@@ -27674,7 +27695,7 @@ int main(int argc, char** argv) {
 
         if (!display_orientation_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << display_orientation_result.error << "\n";
+            std::cout << studio_error_prefix() << display_orientation_result.error << "\n";
             return 4;
         }
     }
@@ -27698,7 +27719,7 @@ int main(int argc, char** argv) {
 
         if (!help_context_id_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << help_context_id_result.error << "\n";
+            std::cout << studio_error_prefix() << help_context_id_result.error << "\n";
             return 4;
         }
     }
@@ -27722,7 +27743,7 @@ int main(int argc, char** argv) {
 
         if (!whats_this_help_id_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << whats_this_help_id_result.error << "\n";
+            std::cout << studio_error_prefix() << whats_this_help_id_result.error << "\n";
             return 4;
         }
     }
@@ -27746,7 +27767,7 @@ int main(int argc, char** argv) {
 
         if (!whats_this_help_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << whats_this_help_result.error << "\n";
+            std::cout << studio_error_prefix() << whats_this_help_result.error << "\n";
             return 4;
         }
     }
@@ -27770,7 +27791,7 @@ int main(int argc, char** argv) {
 
         if (!whats_this_button_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << whats_this_button_result.error << "\n";
+            std::cout << studio_error_prefix() << whats_this_button_result.error << "\n";
             return 4;
         }
     }
@@ -27794,7 +27815,7 @@ int main(int argc, char** argv) {
 
         if (!record_source_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << record_source_result.error << "\n";
+            std::cout << studio_error_prefix() << record_source_result.error << "\n";
             return 4;
         }
     }
@@ -27818,7 +27839,7 @@ int main(int argc, char** argv) {
 
         if (!form_set_class_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << form_set_class_result.error << "\n";
+            std::cout << studio_error_prefix() << form_set_class_result.error << "\n";
             return 4;
         }
     }
@@ -27842,7 +27863,7 @@ int main(int argc, char** argv) {
 
         if (!default_file_path_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << default_file_path_result.error << "\n";
+            std::cout << studio_error_prefix() << default_file_path_result.error << "\n";
             return 4;
         }
     }
@@ -27866,7 +27887,7 @@ int main(int argc, char** argv) {
 
         if (!initial_selected_alias_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << initial_selected_alias_result.error << "\n";
+            std::cout << studio_error_prefix() << initial_selected_alias_result.error << "\n";
             return 4;
         }
     }
@@ -27890,7 +27911,7 @@ int main(int argc, char** argv) {
 
         if (!tooltip_text_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << tooltip_text_result.error << "\n";
+            std::cout << studio_error_prefix() << tooltip_text_result.error << "\n";
             return 4;
         }
     }
@@ -27914,7 +27935,7 @@ int main(int argc, char** argv) {
 
         if (!status_bar_text_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << status_bar_text_result.error << "\n";
+            std::cout << studio_error_prefix() << status_bar_text_result.error << "\n";
             return 4;
         }
     }
@@ -27938,7 +27959,7 @@ int main(int argc, char** argv) {
 
         if (!link_master_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << link_master_result.error << "\n";
+            std::cout << studio_error_prefix() << link_master_result.error << "\n";
             return 4;
         }
     }
@@ -27962,7 +27983,7 @@ int main(int argc, char** argv) {
 
         if (!control_source_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << control_source_result.error << "\n";
+            std::cout << studio_error_prefix() << control_source_result.error << "\n";
             return 4;
         }
     }
@@ -27986,7 +28007,7 @@ int main(int argc, char** argv) {
 
         if (!current_control_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << current_control_result.error << "\n";
+            std::cout << studio_error_prefix() << current_control_result.error << "\n";
             return 4;
         }
     }
@@ -28010,7 +28031,7 @@ int main(int argc, char** argv) {
 
         if (!input_mask_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << input_mask_result.error << "\n";
+            std::cout << studio_error_prefix() << input_mask_result.error << "\n";
             return 4;
         }
     }
@@ -28034,7 +28055,7 @@ int main(int argc, char** argv) {
 
         if (!format_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << format_result.error << "\n";
+            std::cout << studio_error_prefix() << format_result.error << "\n";
             return 4;
         }
     }
@@ -28058,7 +28079,7 @@ int main(int argc, char** argv) {
 
         if (!row_source_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << row_source_result.error << "\n";
+            std::cout << studio_error_prefix() << row_source_result.error << "\n";
             return 4;
         }
     }
@@ -28082,7 +28103,7 @@ int main(int argc, char** argv) {
 
         if (!column_widths_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << column_widths_result.error << "\n";
+            std::cout << studio_error_prefix() << column_widths_result.error << "\n";
             return 4;
         }
     }
@@ -28106,7 +28127,7 @@ int main(int argc, char** argv) {
 
         if (!column_lines_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << column_lines_result.error << "\n";
+            std::cout << studio_error_prefix() << column_lines_result.error << "\n";
             return 4;
         }
     }
@@ -28130,7 +28151,7 @@ int main(int argc, char** argv) {
 
         if (!integral_height_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << integral_height_result.error << "\n";
+            std::cout << studio_error_prefix() << integral_height_result.error << "\n";
             return 4;
         }
     }
@@ -28154,7 +28175,7 @@ int main(int argc, char** argv) {
 
         if (!incremental_search_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << incremental_search_result.error << "\n";
+            std::cout << studio_error_prefix() << incremental_search_result.error << "\n";
             return 4;
         }
     }
@@ -28178,7 +28199,7 @@ int main(int argc, char** argv) {
 
         if (!multi_select_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << multi_select_result.error << "\n";
+            std::cout << studio_error_prefix() << multi_select_result.error << "\n";
             return 4;
         }
     }
@@ -28202,7 +28223,7 @@ int main(int argc, char** argv) {
 
         if (!row_source_type_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << row_source_type_result.error << "\n";
+            std::cout << studio_error_prefix() << row_source_type_result.error << "\n";
             return 4;
         }
     }
@@ -28226,7 +28247,7 @@ int main(int argc, char** argv) {
 
         if (!bound_column_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << bound_column_result.error << "\n";
+            std::cout << studio_error_prefix() << bound_column_result.error << "\n";
             return 4;
         }
     }
@@ -28250,7 +28271,7 @@ int main(int argc, char** argv) {
 
         if (!column_count_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << column_count_result.error << "\n";
+            std::cout << studio_error_prefix() << column_count_result.error << "\n";
             return 4;
         }
     }
@@ -28274,7 +28295,7 @@ int main(int argc, char** argv) {
 
         if (!style_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << style_result.error << "\n";
+            std::cout << studio_error_prefix() << style_result.error << "\n";
             return 4;
         }
     }
@@ -28298,7 +28319,7 @@ int main(int argc, char** argv) {
 
         if (!list_index_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << list_index_result.error << "\n";
+            std::cout << studio_error_prefix() << list_index_result.error << "\n";
             return 4;
         }
     }
@@ -28322,7 +28343,7 @@ int main(int argc, char** argv) {
 
         if (!left_column_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << left_column_result.error << "\n";
+            std::cout << studio_error_prefix() << left_column_result.error << "\n";
             return 4;
         }
     }
@@ -28346,7 +28367,7 @@ int main(int argc, char** argv) {
 
         if (!display_value_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << display_value_result.error << "\n";
+            std::cout << studio_error_prefix() << display_value_result.error << "\n";
             return 4;
         }
     }
@@ -28370,7 +28391,7 @@ int main(int argc, char** argv) {
 
         if (!selected_back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << selected_back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << selected_back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28394,7 +28415,7 @@ int main(int argc, char** argv) {
 
         if (!selected_fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << selected_fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << selected_fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28418,7 +28439,7 @@ int main(int argc, char** argv) {
 
         if (!selected_item_back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << selected_item_back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << selected_item_back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28442,7 +28463,7 @@ int main(int argc, char** argv) {
 
         if (!selected_item_fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << selected_item_fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << selected_item_fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28466,7 +28487,7 @@ int main(int argc, char** argv) {
 
         if (!disabled_item_back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << disabled_item_back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << disabled_item_back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28490,7 +28511,7 @@ int main(int argc, char** argv) {
 
         if (!disabled_item_fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << disabled_item_fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << disabled_item_fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28514,7 +28535,7 @@ int main(int argc, char** argv) {
 
         if (!item_back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << item_back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << item_back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28538,7 +28559,7 @@ int main(int argc, char** argv) {
 
         if (!item_fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << item_fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << item_fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28562,7 +28583,7 @@ int main(int argc, char** argv) {
 
         if (!highlight_back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << highlight_back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << highlight_back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28586,7 +28607,7 @@ int main(int argc, char** argv) {
 
         if (!highlight_fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << highlight_fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << highlight_fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28610,7 +28631,7 @@ int main(int argc, char** argv) {
 
         if (!back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28634,7 +28655,7 @@ int main(int argc, char** argv) {
 
         if (!fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28658,7 +28679,7 @@ int main(int argc, char** argv) {
 
         if (!disabled_back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << disabled_back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << disabled_back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28682,7 +28703,7 @@ int main(int argc, char** argv) {
 
         if (!disabled_fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << disabled_fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << disabled_fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28706,7 +28727,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_back_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_back_color_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_back_color_result.error << "\n";
             return 4;
         }
     }
@@ -28730,7 +28751,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_fore_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_fore_color_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_fore_color_result.error << "\n";
             return 4;
         }
     }
@@ -28754,7 +28775,7 @@ int main(int argc, char** argv) {
 
         if (!closable_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << closable_result.error << "\n";
+            std::cout << studio_error_prefix() << closable_result.error << "\n";
             return 4;
         }
     }
@@ -28778,7 +28799,7 @@ int main(int argc, char** argv) {
 
         if (!control_box_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << control_box_result.error << "\n";
+            std::cout << studio_error_prefix() << control_box_result.error << "\n";
             return 4;
         }
     }
@@ -28802,7 +28823,7 @@ int main(int argc, char** argv) {
 
         if (!allow_output_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << allow_output_result.error << "\n";
+            std::cout << studio_error_prefix() << allow_output_result.error << "\n";
             return 4;
         }
     }
@@ -28826,7 +28847,7 @@ int main(int argc, char** argv) {
 
         if (!bind_controls_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << bind_controls_result.error << "\n";
+            std::cout << studio_error_prefix() << bind_controls_result.error << "\n";
             return 4;
         }
     }
@@ -28850,7 +28871,7 @@ int main(int argc, char** argv) {
 
         if (!auto_verb_menu_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << auto_verb_menu_result.error << "\n";
+            std::cout << studio_error_prefix() << auto_verb_menu_result.error << "\n";
             return 4;
         }
     }
@@ -28874,7 +28895,7 @@ int main(int argc, char** argv) {
 
         if (!desktop_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << desktop_result.error << "\n";
+            std::cout << studio_error_prefix() << desktop_result.error << "\n";
             return 4;
         }
     }
@@ -28898,7 +28919,7 @@ int main(int argc, char** argv) {
 
         if (!key_preview_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << key_preview_result.error << "\n";
+            std::cout << studio_error_prefix() << key_preview_result.error << "\n";
             return 4;
         }
     }
@@ -28922,7 +28943,7 @@ int main(int argc, char** argv) {
 
         if (!mac_desktop_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << mac_desktop_result.error << "\n";
+            std::cout << studio_error_prefix() << mac_desktop_result.error << "\n";
             return 4;
         }
     }
@@ -28946,7 +28967,7 @@ int main(int argc, char** argv) {
 
         if (!max_button_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << max_button_result.error << "\n";
+            std::cout << studio_error_prefix() << max_button_result.error << "\n";
             return 4;
         }
     }
@@ -28970,7 +28991,7 @@ int main(int argc, char** argv) {
 
         if (!min_button_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << min_button_result.error << "\n";
+            std::cout << studio_error_prefix() << min_button_result.error << "\n";
             return 4;
         }
     }
@@ -28994,7 +29015,7 @@ int main(int argc, char** argv) {
 
         if (!min_height_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << min_height_result.error << "\n";
+            std::cout << studio_error_prefix() << min_height_result.error << "\n";
             return 4;
         }
     }
@@ -29018,7 +29039,7 @@ int main(int argc, char** argv) {
 
         if (!min_width_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << min_width_result.error << "\n";
+            std::cout << studio_error_prefix() << min_width_result.error << "\n";
             return 4;
         }
     }
@@ -29042,7 +29063,7 @@ int main(int argc, char** argv) {
 
         if (!max_height_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << max_height_result.error << "\n";
+            std::cout << studio_error_prefix() << max_height_result.error << "\n";
             return 4;
         }
     }
@@ -29066,7 +29087,7 @@ int main(int argc, char** argv) {
 
         if (!movable_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << movable_result.error << "\n";
+            std::cout << studio_error_prefix() << movable_result.error << "\n";
             return 4;
         }
     }
@@ -29090,7 +29111,7 @@ int main(int argc, char** argv) {
 
         if (!half_height_caption_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << half_height_caption_result.error << "\n";
+            std::cout << studio_error_prefix() << half_height_caption_result.error << "\n";
             return 4;
         }
     }
@@ -29114,7 +29135,7 @@ int main(int argc, char** argv) {
 
         if (!mdi_form_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << mdi_form_result.error << "\n";
+            std::cout << studio_error_prefix() << mdi_form_result.error << "\n";
             return 4;
         }
     }
@@ -29138,7 +29159,7 @@ int main(int argc, char** argv) {
 
         if (!back_style_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << back_style_result.error << "\n";
+            std::cout << studio_error_prefix() << back_style_result.error << "\n";
             return 4;
         }
     }
@@ -29162,7 +29183,7 @@ int main(int argc, char** argv) {
 
         if (!border_style_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << border_style_result.error << "\n";
+            std::cout << studio_error_prefix() << border_style_result.error << "\n";
             return 4;
         }
     }
@@ -29186,7 +29207,7 @@ int main(int argc, char** argv) {
 
         if (!border_width_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << border_width_result.error << "\n";
+            std::cout << studio_error_prefix() << border_width_result.error << "\n";
             return 4;
         }
     }
@@ -29210,7 +29231,7 @@ int main(int argc, char** argv) {
 
         if (!border_color_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << border_color_result.error << "\n";
+            std::cout << studio_error_prefix() << border_color_result.error << "\n";
             return 4;
         }
     }
@@ -29234,7 +29255,7 @@ int main(int argc, char** argv) {
 
         if (!special_effect_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << special_effect_result.error << "\n";
+            std::cout << studio_error_prefix() << special_effect_result.error << "\n";
             return 4;
         }
     }
@@ -29258,7 +29279,7 @@ int main(int argc, char** argv) {
 
         if (!scroll_bars_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << scroll_bars_result.error << "\n";
+            std::cout << studio_error_prefix() << scroll_bars_result.error << "\n";
             return 4;
         }
     }
@@ -29282,7 +29303,7 @@ int main(int argc, char** argv) {
 
         if (!window_state_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << window_state_result.error << "\n";
+            std::cout << studio_error_prefix() << window_state_result.error << "\n";
             return 4;
         }
     }
@@ -29306,7 +29327,7 @@ int main(int argc, char** argv) {
 
         if (!show_window_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << show_window_result.error << "\n";
+            std::cout << studio_error_prefix() << show_window_result.error << "\n";
             return 4;
         }
     }
@@ -29330,7 +29351,7 @@ int main(int argc, char** argv) {
 
         if (!title_bar_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << title_bar_result.error << "\n";
+            std::cout << studio_error_prefix() << title_bar_result.error << "\n";
             return 4;
         }
     }
@@ -29354,7 +29375,7 @@ int main(int argc, char** argv) {
 
         if (!mouse_pointer_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << mouse_pointer_result.error << "\n";
+            std::cout << studio_error_prefix() << mouse_pointer_result.error << "\n";
             return 4;
         }
     }
@@ -29378,7 +29399,7 @@ int main(int argc, char** argv) {
 
         if (!picture_margin_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << picture_margin_result.error << "\n";
+            std::cout << studio_error_prefix() << picture_margin_result.error << "\n";
             return 4;
         }
     }
@@ -29402,7 +29423,7 @@ int main(int argc, char** argv) {
 
         if (!picture_position_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << picture_position_result.error << "\n";
+            std::cout << studio_error_prefix() << picture_position_result.error << "\n";
             return 4;
         }
     }
@@ -29426,7 +29447,7 @@ int main(int argc, char** argv) {
 
         if (!picture_spacing_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << picture_spacing_result.error << "\n";
+            std::cout << studio_error_prefix() << picture_spacing_result.error << "\n";
             return 4;
         }
     }
@@ -29450,7 +29471,7 @@ int main(int argc, char** argv) {
 
         if (!picture_selection_display_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << picture_selection_display_result.error << "\n";
+            std::cout << studio_error_prefix() << picture_selection_display_result.error << "\n";
             return 4;
         }
     }
@@ -29474,7 +29495,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_input_mask_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_input_mask_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_input_mask_result.error << "\n";
             return 4;
         }
     }
@@ -29498,7 +29519,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_line_height_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_line_height_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_line_height_result.error << "\n";
             return 4;
         }
     }
@@ -29522,7 +29543,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_alignment_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_alignment_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_alignment_result.error << "\n";
             return 4;
         }
     }
@@ -29546,7 +29567,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_current_control_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_current_control_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_current_control_result.error << "\n";
             return 4;
         }
     }
@@ -29570,7 +29591,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_name_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_name_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_name_result.error << "\n";
             return 4;
         }
     }
@@ -29594,7 +29615,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_size_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_size_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_size_result.error << "\n";
             return 4;
         }
     }
@@ -29618,7 +29639,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_bold_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_bold_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_bold_result.error << "\n";
             return 4;
         }
     }
@@ -29642,7 +29663,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_italic_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_italic_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_italic_result.error << "\n";
             return 4;
         }
     }
@@ -29666,7 +29687,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_underline_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_underline_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_underline_result.error << "\n";
             return 4;
         }
     }
@@ -29690,7 +29711,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_strikethru_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_strikethru_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_strikethru_result.error << "\n";
             return 4;
         }
     }
@@ -29714,7 +29735,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_outline_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_outline_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_outline_result.error << "\n";
             return 4;
         }
     }
@@ -29738,7 +29759,7 @@ int main(int argc, char** argv) {
 
         if (!dynamic_font_shadow_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dynamic_font_shadow_result.error << "\n";
+            std::cout << studio_error_prefix() << dynamic_font_shadow_result.error << "\n";
             return 4;
         }
     }
@@ -29762,7 +29783,7 @@ int main(int argc, char** argv) {
 
         if (!font_name_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_name_result.error << "\n";
+            std::cout << studio_error_prefix() << font_name_result.error << "\n";
             return 4;
         }
     }
@@ -29786,7 +29807,7 @@ int main(int argc, char** argv) {
 
         if (!font_size_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_size_result.error << "\n";
+            std::cout << studio_error_prefix() << font_size_result.error << "\n";
             return 4;
         }
     }
@@ -29810,7 +29831,7 @@ int main(int argc, char** argv) {
 
         if (!font_bold_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_bold_result.error << "\n";
+            std::cout << studio_error_prefix() << font_bold_result.error << "\n";
             return 4;
         }
     }
@@ -29834,7 +29855,7 @@ int main(int argc, char** argv) {
 
         if (!font_italic_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_italic_result.error << "\n";
+            std::cout << studio_error_prefix() << font_italic_result.error << "\n";
             return 4;
         }
     }
@@ -29858,7 +29879,7 @@ int main(int argc, char** argv) {
 
         if (!font_underline_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_underline_result.error << "\n";
+            std::cout << studio_error_prefix() << font_underline_result.error << "\n";
             return 4;
         }
     }
@@ -29882,7 +29903,7 @@ int main(int argc, char** argv) {
 
         if (!font_strikethru_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_strikethru_result.error << "\n";
+            std::cout << studio_error_prefix() << font_strikethru_result.error << "\n";
             return 4;
         }
     }
@@ -29906,7 +29927,7 @@ int main(int argc, char** argv) {
 
         if (!font_outline_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_outline_result.error << "\n";
+            std::cout << studio_error_prefix() << font_outline_result.error << "\n";
             return 4;
         }
     }
@@ -29930,7 +29951,7 @@ int main(int argc, char** argv) {
 
         if (!font_shadow_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << font_shadow_result.error << "\n";
+            std::cout << studio_error_prefix() << font_shadow_result.error << "\n";
             return 4;
         }
     }
@@ -29954,7 +29975,7 @@ int main(int argc, char** argv) {
 
         if (!max_width_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << max_width_result.error << "\n";
+            std::cout << studio_error_prefix() << max_width_result.error << "\n";
             return 4;
         }
     }
@@ -29978,7 +29999,7 @@ int main(int argc, char** argv) {
 
         if (!max_left_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << max_left_result.error << "\n";
+            std::cout << studio_error_prefix() << max_left_result.error << "\n";
             return 4;
         }
     }
@@ -30002,7 +30023,7 @@ int main(int argc, char** argv) {
 
         if (!max_top_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << max_top_result.error << "\n";
+            std::cout << studio_error_prefix() << max_top_result.error << "\n";
             return 4;
         }
     }
@@ -30026,7 +30047,7 @@ int main(int argc, char** argv) {
 
         if (!auto_center_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << auto_center_result.error << "\n";
+            std::cout << studio_error_prefix() << auto_center_result.error << "\n";
             return 4;
         }
     }
@@ -30050,7 +30071,7 @@ int main(int argc, char** argv) {
 
         if (!auto_size_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << auto_size_result.error << "\n";
+            std::cout << studio_error_prefix() << auto_size_result.error << "\n";
             return 4;
         }
     }
@@ -30074,7 +30095,7 @@ int main(int argc, char** argv) {
 
         if (!auto_release_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << auto_release_result.error << "\n";
+            std::cout << studio_error_prefix() << auto_release_result.error << "\n";
             return 4;
         }
     }
@@ -30098,7 +30119,7 @@ int main(int argc, char** argv) {
 
         if (!continuous_scroll_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << continuous_scroll_result.error << "\n";
+            std::cout << studio_error_prefix() << continuous_scroll_result.error << "\n";
             return 4;
         }
     }
@@ -30122,7 +30143,7 @@ int main(int argc, char** argv) {
 
         if (!dockable_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << dockable_result.error << "\n";
+            std::cout << studio_error_prefix() << dockable_result.error << "\n";
             return 4;
         }
     }
@@ -30146,7 +30167,7 @@ int main(int argc, char** argv) {
 
         if (!clip_controls_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << clip_controls_result.error << "\n";
+            std::cout << studio_error_prefix() << clip_controls_result.error << "\n";
             return 4;
         }
     }
@@ -30170,7 +30191,7 @@ int main(int argc, char** argv) {
 
         if (!sparse_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << sparse_result.error << "\n";
+            std::cout << studio_error_prefix() << sparse_result.error << "\n";
             return 4;
         }
     }
@@ -30194,7 +30215,7 @@ int main(int argc, char** argv) {
 
         if (!lock_screen_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << lock_screen_result.error << "\n";
+            std::cout << studio_error_prefix() << lock_screen_result.error << "\n";
             return 4;
         }
     }
@@ -30218,7 +30239,7 @@ int main(int argc, char** argv) {
 
         if (!allow_cell_selection_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << allow_cell_selection_result.error << "\n";
+            std::cout << studio_error_prefix() << allow_cell_selection_result.error << "\n";
             return 4;
         }
     }
@@ -30242,7 +30263,7 @@ int main(int argc, char** argv) {
 
         if (!hide_selection_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << hide_selection_result.error << "\n";
+            std::cout << studio_error_prefix() << hide_selection_result.error << "\n";
             return 4;
         }
     }
@@ -30266,7 +30287,7 @@ int main(int argc, char** argv) {
 
         if (!delete_mark_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << delete_mark_result.error << "\n";
+            std::cout << studio_error_prefix() << delete_mark_result.error << "\n";
             return 4;
         }
     }
@@ -30290,7 +30311,7 @@ int main(int argc, char** argv) {
 
         if (!record_mark_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << record_mark_result.error << "\n";
+            std::cout << studio_error_prefix() << record_mark_result.error << "\n";
             return 4;
         }
     }
@@ -30314,7 +30335,7 @@ int main(int argc, char** argv) {
 
         if (!split_bar_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << split_bar_result.error << "\n";
+            std::cout << studio_error_prefix() << split_bar_result.error << "\n";
             return 4;
         }
     }
@@ -30338,7 +30359,7 @@ int main(int argc, char** argv) {
 
         if (!highlight_row_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << highlight_row_result.error << "\n";
+            std::cout << studio_error_prefix() << highlight_row_result.error << "\n";
             return 4;
         }
     }
@@ -30362,7 +30383,7 @@ int main(int argc, char** argv) {
 
         if (!panel_link_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << panel_link_result.error << "\n";
+            std::cout << studio_error_prefix() << panel_link_result.error << "\n";
             return 4;
         }
     }
@@ -30386,7 +30407,7 @@ int main(int argc, char** argv) {
 
         if (!allow_header_sizing_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << allow_header_sizing_result.error << "\n";
+            std::cout << studio_error_prefix() << allow_header_sizing_result.error << "\n";
             return 4;
         }
     }
@@ -30410,7 +30431,7 @@ int main(int argc, char** argv) {
 
         if (!allow_row_sizing_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << allow_row_sizing_result.error << "\n";
+            std::cout << studio_error_prefix() << allow_row_sizing_result.error << "\n";
             return 4;
         }
     }
@@ -30434,7 +30455,7 @@ int main(int argc, char** argv) {
 
         if (!resizable_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << resizable_result.error << "\n";
+            std::cout << studio_error_prefix() << resizable_result.error << "\n";
             return 4;
         }
     }
@@ -30458,7 +30479,7 @@ int main(int argc, char** argv) {
 
         if (!add_line_feeds_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << add_line_feeds_result.error << "\n";
+            std::cout << studio_error_prefix() << add_line_feeds_result.error << "\n";
             return 4;
         }
     }
@@ -30482,7 +30503,7 @@ int main(int argc, char** argv) {
 
         if (!always_on_top_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << always_on_top_result.error << "\n";
+            std::cout << studio_error_prefix() << always_on_top_result.error << "\n";
             return 4;
         }
     }
@@ -30506,7 +30527,7 @@ int main(int argc, char** argv) {
 
         if (!always_on_bottom_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << always_on_bottom_result.error << "\n";
+            std::cout << studio_error_prefix() << always_on_bottom_result.error << "\n";
             return 4;
         }
     }
@@ -30521,7 +30542,7 @@ int main(int argc, char** argv) {
 
         if (!ungroup_result.ok) {
             std::cout << "status: error\n";
-            std::cout << "error: " << ungroup_result.error << "\n";
+            std::cout << studio_error_prefix() << ungroup_result.error << "\n";
             return 4;
         }
     }
@@ -30529,7 +30550,7 @@ int main(int argc, char** argv) {
     const auto open_result = copperfin::studio::open_document(open_request);
     if (!open_result.ok) {
         std::cout << "status: error\n";
-        std::cout << "error: " << open_result.error << "\n";
+        std::cout << studio_error_prefix() << open_result.error << "\n";
         return 3;
     }
 

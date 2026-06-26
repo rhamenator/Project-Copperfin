@@ -35,6 +35,8 @@
   "Inspect.Prefix.Warning": "warning: ",
   "RuntimeHost.Prefix.Error": "error: ",
   "RuntimeHost.Prefix.Warning": "warning: ",
+  "StudioHost.Prefix.Error": "error: ",
+  "StudioHost.Prefix.Warning": "warning: ",
   "Command.Run": "Run",
   "Diagnostic.ExpectedTokenBeforeToken": "Expected {expectedToken} before {actualToken}.",
   "Diagnostic.UnterminatedString": "Unterminated string literal.",

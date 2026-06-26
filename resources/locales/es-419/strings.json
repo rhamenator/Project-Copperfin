@@ -33,6 +33,8 @@
   "Inspect.Prefix.Warning": "advertencia: ",
   "RuntimeHost.Prefix.Error": "error: ",
   "RuntimeHost.Prefix.Warning": "advertencia: ",
+  "StudioHost.Prefix.Error": "error: ",
+  "StudioHost.Prefix.Warning": "advertencia: ",
   "Runtime.Prg.Dll.Error.AppDomainDispatchQueryFailed": "Fallo QueryInterface IDispatch de AppDomain",
   "Runtime.Prg.Dll.Error.AssemblyNotDispatch": "El assembly no es IDispatch",
   "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed": "Fallo CLRCreateInstance: {hresult}",
