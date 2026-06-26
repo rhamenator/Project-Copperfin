@@ -748,5 +748,14 @@
   "Studio.ToolboxDispatch.Execution.Error.ExecutorNonZeroExit": "A toolbox dispatch executor returned a non-zero exit code.",
   "Studio.ToolboxDispatch.Execution.Error.ExecutorRequired": "A toolbox dispatch execution request requires an executor.",
   "Studio.ToolboxDispatch.Execution.Error.NonExecutedDispatchRequired": "A toolbox dispatch execution request requires a non-executed dispatch.",
-  "Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired": "A toolbox dispatch execution request requires validated toolbox item metadata."
+  "Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired": "A toolbox dispatch execution request requires validated toolbox item metadata.",
+  "Studio.EditorActionDispatch.Execution.Error.AdmittedDispatchRequired": "An editor action dispatch execution request requires an admitted non-dry-run dispatch.",
+  "Studio.EditorActionDispatch.Execution.Error.CommandTokenRequired": "An editor action dispatch execution request requires a command token.",
+  "Studio.EditorActionDispatch.Execution.Error.DispatchArgumentsRequired": "An editor action dispatch execution request requires dispatch arguments.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutionAdmissionRequired": "An editor action dispatch execution request requires explicit execution admission.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutorDidNotLaunch": "An editor action dispatch executor did not launch the editor action.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutorNonZeroExit": "An editor action dispatch executor returned a non-zero exit code.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutorRequired": "An editor action dispatch execution request requires an executor.",
+  "Studio.EditorActionDispatch.Execution.Error.NonExecutedDispatchRequired": "An editor action dispatch execution request requires a non-executed dispatch.",
+  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "An editor action dispatch execution request requires a validated action id."
 }

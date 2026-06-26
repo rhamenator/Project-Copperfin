@@ -760,5 +760,14 @@
   "Studio.ToolboxDispatch.Execution.Error.ExecutorNonZeroExit": "Um executor de dispatch da caixa de ferramentas retornou um codigo de saida diferente de zero.",
   "Studio.ToolboxDispatch.Execution.Error.ExecutorRequired": "Uma solicitacao de execucao de dispatch da caixa de ferramentas exige um executor.",
   "Studio.ToolboxDispatch.Execution.Error.NonExecutedDispatchRequired": "Uma solicitacao de execucao de dispatch da caixa de ferramentas exige um dispatch nao executado.",
-  "Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired": "Uma solicitacao de execucao de dispatch da caixa de ferramentas exige metadados validados de itens da caixa de ferramentas."
+  "Studio.ToolboxDispatch.Execution.Error.ValidatedItemMetadataRequired": "Uma solicitacao de execucao de dispatch da caixa de ferramentas exige metadados validados de itens da caixa de ferramentas.",
+  "Studio.EditorActionDispatch.Execution.Error.AdmittedDispatchRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um dispatch admitido que nao seja dry-run.",
+  "Studio.EditorActionDispatch.Execution.Error.CommandTokenRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um token de comando.",
+  "Studio.EditorActionDispatch.Execution.Error.DispatchArgumentsRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige argumentos de dispatch.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutionAdmissionRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige admissao explicita de execucao.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutorDidNotLaunch": "Um executor de dispatch de acao do editor nao iniciou a acao do editor.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutorNonZeroExit": "Um executor de dispatch de acao do editor retornou um codigo de saida diferente de zero.",
+  "Studio.EditorActionDispatch.Execution.Error.ExecutorRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um executor.",
+  "Studio.EditorActionDispatch.Execution.Error.NonExecutedDispatchRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um dispatch nao executado.",
+  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um id de acao validado."
 }
