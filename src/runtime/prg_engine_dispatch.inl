@@ -971,7 +971,12 @@
                 }
                 if (!std::filesystem::exists(target_path))
                 {
-                    last_error_message = "Unable to resolve DO target: " + target;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                        {
+                            {"command", "DO"},
+                            {"target", target}
+                        });
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -1347,7 +1352,12 @@
                         return {};
                     }
 
-                    last_error_message = "Unable to resolve CALL target: " + target;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed",
+                        {
+                            {"command", "CALL"},
+                            {"target", target}
+                        });
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

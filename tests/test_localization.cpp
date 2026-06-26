@@ -672,6 +672,14 @@ void test_runtime_dispatch_errors_route_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap yield_placeholders{{"command", "YIELD"}};
+    const copperfin::localization::PlaceholderMap do_target_placeholders{
+        {"command", "DO"},
+        {"target", "legacy/startup.prg"}
+    };
+    const copperfin::localization::PlaceholderMap call_target_placeholders{
+        {"command", "CALL"},
+        {"target", "NativeEntry"}
+    };
     const copperfin::localization::PlaceholderMap spawn_placeholders{{"command", "SPAWN"}};
     const copperfin::localization::PlaceholderMap spawn_target_placeholders{
         {"command", "SPAWN"},
@@ -684,6 +692,14 @@ void test_runtime_dispatch_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments", yield_placeholders) ==
             "YIELD does not take arguments",
         "#2553: YIELD argument error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", do_target_placeholders) ==
+            "Unable to resolve DO target: legacy/startup.prg",
+        "#2554: DO target resolution error should preserve command and target placeholders");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", call_target_placeholders) ==
+            "Unable to resolve CALL target: NativeEntry",
+        "#2554: CALL target resolution error should preserve command and target placeholders");
     expect(
         english.translate("Runtime.Prg.Dispatch.Error.SpawnRequiresTarget", spawn_placeholders) ==
             "SPAWN requires a target routine or file",
@@ -706,6 +722,12 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             spanish.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders)
                     .find("Unable to resolve") == std::string::npos,
         "#2553: es-419 SPAWN target error should preserve target without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", do_target_placeholders)
+                    .find("legacy/startup.prg") != std::string::npos &&
+            spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", do_target_placeholders)
+                    .find("Unable to resolve") == std::string::npos,
+        "#2554: es-419 DO target error should preserve target without falling back to English");
 
     const std::string pseudo_spawn =
         pseudo.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders);
@@ -716,6 +738,15 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             pseudo_spawn.find("{command}") == std::string::npos &&
             pseudo_spawn.find("{target}") == std::string::npos,
         "#2553: qps-ploc SPAWN target error should pseudo-localize prose while preserving placeholders");
+    const std::string pseudo_do =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed", do_target_placeholders);
+    expect(
+        pseudo_do.find("[!! ") == 0U &&
+            pseudo_do.find("DO") != std::string::npos &&
+            pseudo_do.find("legacy/startup.prg") != std::string::npos &&
+            pseudo_do.find("{command}") == std::string::npos &&
+            pseudo_do.find("{target}") == std::string::npos,
+        "#2554: qps-ploc DO target error should pseudo-localize prose while preserving placeholders");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {

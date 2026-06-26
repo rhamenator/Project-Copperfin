@@ -26,6 +26,7 @@
   "Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound": "No se encontro el handle de API registrado: {handle}",
   "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle": "{command} requiere un handle de tarea",
   "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments": "{command} no acepta argumentos",
+  "Runtime.Prg.Dispatch.Error.CommandTargetResolveFailed": "No se pudo resolver el destino de {command}: {target}",
   "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget": "{command} requiere una rutina o archivo destino",
   "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed": "No se pudo resolver el destino de {command}: {target}",
   "Runtime.Prg.Dispatch.Error.UnknownTaskHandle": "Handle de tarea desconocido: {handle}",
