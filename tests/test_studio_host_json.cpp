@@ -747,6 +747,12 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Dynamic-fore-color object:",
         "#2570: default studio host usage should preserve en-US dynamic-fore-color labels");
     expect_contains(process.stdout_text,
+        "Desktop object:",
+        "#2571: default studio host usage should preserve en-US desktop labels");
+    expect_contains(process.stdout_text,
+        "Picture-selection-display object:",
+        "#2571: default studio host usage should preserve en-US picture-selection-display labels");
+    expect_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: default studio host usage should preserve localized OLE drop-mode labels");
     expect_contains(process.stdout_text,
@@ -792,6 +798,12 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle"),
         "#2570: pseudo-localized studio host usage should route dynamic-fore-color labels through localization");
     expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DesktopTitle"),
+        "#2571: pseudo-localized studio host usage should route desktop labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PictureSelectionDisplayTitle"),
+        "#2571: pseudo-localized studio host usage should route picture-selection-display labels through localization");
+    expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
     expect_not_contains(process.stdout_text,
@@ -800,6 +812,12 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_not_contains(process.stdout_text,
         "Dynamic-fore-color object:",
         "#2570: pseudo-localized studio host usage should not fall back to the raw English dynamic-fore-color label");
+    expect_not_contains(process.stdout_text,
+        "Desktop object:",
+        "#2571: pseudo-localized studio host usage should not fall back to the raw English desktop label");
+    expect_not_contains(process.stdout_text,
+        "Picture-selection-display object:",
+        "#2571: pseudo-localized studio host usage should not fall back to the raw English picture-selection-display label");
     expect_not_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: pseudo-localized studio host usage should not fall back to the raw English OLE drop-mode label");
