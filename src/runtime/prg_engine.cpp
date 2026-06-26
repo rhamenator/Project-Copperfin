@@ -1,5 +1,6 @@
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/runtime/index_seek_optimizer.h"
+#include "localized_text.h"
 #include "prg_engine_command_helpers.h"
 #include "prg_engine_helpers.h"
 #include "prg_engine_internal.h"

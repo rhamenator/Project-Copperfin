@@ -371,8 +371,8 @@
             if (cursor == nullptr)
             {
                 error_message = plan.in_expression.empty()
-                                    ? "TOTAL requires a selected work area"
-                                    : "TOTAL target work area not found";
+                                    ? runtime_text("Runtime.Prg.Total.Error.RequiresSelectedWorkArea")
+                                    : runtime_text("Runtime.Prg.Total.Error.TargetWorkAreaNotFound");
                 return false;
             }
             std::vector<vfp::DbfFieldDescriptor> source_fields;
@@ -421,7 +421,7 @@
             {
                 if (cursor->source_path.empty())
                 {
-                    error_message = "TOTAL requires a local table-backed cursor";
+                    error_message = runtime_text("Runtime.Prg.Total.Error.RequiresLocalTableBackedCursor");
                     return false;
                 }
 
@@ -475,7 +475,7 @@
             const vfp::DbfFieldDescriptor *on_field = field_by_name(plan.on_field_name);
             if (on_field == nullptr)
             {
-                error_message = "TOTAL ON field was not found";
+                error_message = runtime_text("Runtime.Prg.Total.Error.OnFieldNotFound");
                 return false;
             }
 
@@ -498,12 +498,12 @@
                     const vfp::DbfFieldDescriptor *field = field_by_name(field_name);
                     if (field == nullptr)
                     {
-                        error_message = "TOTAL field was not found: " + field_name;
+                        error_message = runtime_text("Runtime.Prg.Total.Error.FieldNotFound", {{"fieldName", field_name}});
                         return false;
                     }
                     if (!is_total_numeric_field(*field))
                     {
-                        error_message = "TOTAL only supports numeric FIELDS in the first pass";
+                        error_message = runtime_text("Runtime.Prg.Total.Error.OnlyNumericFields");
                         return false;
                     }
                     total_fields.push_back(field);
@@ -511,7 +511,7 @@
             }
             if (total_fields.empty())
             {
-                error_message = "TOTAL requires at least one numeric field to total";
+                error_message = runtime_text("Runtime.Prg.Total.Error.RequiresNumericField");
                 return false;
             }
 

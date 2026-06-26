@@ -1,5 +1,6 @@
 #include "prg_engine_command_helpers.h"
 
+#include "localized_text.h"
 #include "prg_engine_helpers.h"
 
 #include <algorithm>
@@ -349,11 +350,11 @@ std::optional<TotalCommandPlan> parse_total_command_plan(const std::string& body
     plan.scope = parse_aggregate_scope_clause(scope_text, ignored_expression);
 
     if (plan.target_expression.empty()) {
-        error_message = "TOTAL requires a TO target";
+        error_message = runtime_text("Runtime.Prg.Total.Error.RequiresToTarget");
         return std::nullopt;
     }
     if (plan.on_field_name.empty()) {
-        error_message = "TOTAL requires an ON field";
+        error_message = runtime_text("Runtime.Prg.Total.Error.RequiresOnField");
         return std::nullopt;
     }
     return plan;

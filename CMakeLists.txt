@@ -147,6 +147,7 @@ add_library(cf_xbase_runtime
     src/runtime/prg_engine_file_io_functions.cpp
     src/runtime/prg_engine.cpp
     src/runtime/index_seek_optimizer.cpp
+    src/runtime/localized_text.cpp
     src/runtime/prg_engine_helpers.cpp
     src/runtime/prg_engine_numeric_functions.cpp
     src/runtime/prg_engine_path_functions.cpp
@@ -181,6 +182,8 @@ target_link_libraries(cf_xbase_runtime
     PUBLIC
         cf_prg_analysis
         cf_design_model
+    PRIVATE
+        cf_localization
 )
 
 if(MSVC)

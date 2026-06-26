@@ -1255,6 +1255,107 @@ void test_total_command_for_local_tables() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_total_command_errors_use_default_locale_messages() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_command_errors";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    std::string error_message;
+    expect(!copperfin::runtime::parse_total_command_plan("ON REGION", error_message).has_value(),
+        "TOTAL parser should reject commands without a TO target");
+    expect(error_message == "TOTAL requires a TO target",
+        "TOTAL missing-TO parser error should route through the default locale catalog");
+
+    error_message.clear();
+    expect(!copperfin::runtime::parse_total_command_plan("TO 'out.dbf'", error_message).has_value(),
+        "TOTAL parser should reject commands without an ON field");
+    expect(error_message == "TOTAL requires an ON field",
+        "TOTAL missing-ON parser error should route through the default locale catalog");
+
+    const fs::path table_path = temp_root / "sales.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "REGION", .type = 'C', .length = 10U},
+        {.name = "AMOUNT", .type = 'N', .length = 6U}
+    };
+    const auto create_result = copperfin::vfp::create_dbf_table_file(table_path.string(), fields, {{"EAST", "10"}});
+    expect(create_result.ok, "TOTAL error test sales DBF fixture should be created");
+
+    const fs::path text_only_path = temp_root / "textonly.dbf";
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> text_only_fields{
+        {.name = "REGION", .type = 'C', .length = 10U}
+    };
+    const auto text_only_create = copperfin::vfp::create_dbf_table_file(text_only_path.string(), text_only_fields, {{"EAST"}});
+    expect(text_only_create.ok, "TOTAL error test text-only DBF fixture should be created");
+
+    const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script);
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    const auto no_work_area = run_error_script(
+        "total_no_work_area",
+        "TOTAL TO '" + (temp_root / "no_work_area.dbf").string() + "' ON REGION FIELDS AMOUNT\n");
+    expect(no_work_area.reason == copperfin::runtime::DebugPauseReason::error,
+        "TOTAL without a selected work area should pause with an error");
+    expect(no_work_area.message == "TOTAL requires a selected work area",
+        "TOTAL selected-work-area error should route through the default locale catalog");
+
+    const auto missing_target = run_error_script(
+        "total_missing_target",
+        "TOTAL TO '" + (temp_root / "missing_target.dbf").string() + "' ON REGION FIELDS AMOUNT IN MissingAlias\n");
+    expect(missing_target.reason == copperfin::runtime::DebugPauseReason::error,
+        "TOTAL targeting a missing work area should pause with an error");
+    expect(missing_target.message == "TOTAL target work area not found",
+        "TOTAL target-work-area error should route through the default locale catalog");
+
+    const auto missing_on_field = run_error_script(
+        "total_missing_on_field",
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "SELECT Sales\n"
+        "TOTAL TO '" + (temp_root / "missing_on.dbf").string() + "' ON MISSING FIELDS AMOUNT\n");
+    expect(missing_on_field.reason == copperfin::runtime::DebugPauseReason::error,
+        "TOTAL with a missing ON field should pause with an error");
+    expect(missing_on_field.message == "TOTAL ON field was not found",
+        "TOTAL missing-ON-field error should route through the default locale catalog");
+
+    const auto missing_field = run_error_script(
+        "total_missing_field",
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "SELECT Sales\n"
+        "TOTAL TO '" + (temp_root / "missing_field.dbf").string() + "' ON REGION FIELDS MISSING\n");
+    expect(missing_field.reason == copperfin::runtime::DebugPauseReason::error,
+        "TOTAL with a missing FIELDS item should pause with an error");
+    expect(missing_field.message == "TOTAL field was not found: MISSING",
+        "TOTAL missing-field error should interpolate fieldName through the default locale catalog");
+
+    const auto non_numeric_field = run_error_script(
+        "total_non_numeric_field",
+        "USE '" + table_path.string() + "' ALIAS Sales IN 0\n"
+        "SELECT Sales\n"
+        "TOTAL TO '" + (temp_root / "non_numeric.dbf").string() + "' ON REGION FIELDS REGION\n");
+    expect(non_numeric_field.reason == copperfin::runtime::DebugPauseReason::error,
+        "TOTAL with a nonnumeric FIELDS item should pause with an error");
+    expect(non_numeric_field.message == "TOTAL only supports numeric FIELDS in the first pass",
+        "TOTAL nonnumeric-field error should route through the default locale catalog");
+
+    const auto no_numeric_fields = run_error_script(
+        "total_no_numeric_fields",
+        "USE '" + text_only_path.string() + "' ALIAS TextOnly IN 0\n"
+        "SELECT TextOnly\n"
+        "TOTAL TO '" + (temp_root / "no_numeric.dbf").string() + "' ON REGION\n");
+    expect(no_numeric_fields.reason == copperfin::runtime::DebugPauseReason::error,
+        "TOTAL without numeric fields to total should pause with an error");
+    expect(no_numeric_fields.message == "TOTAL requires at least one numeric field to total",
+        "TOTAL no-numeric-field error should route through the default locale catalog");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_total_command_supports_currency_and_integer_fields() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_total_currency_integer";
@@ -6497,6 +6598,7 @@ int main() {
     test_aggregate_commands_support_macro_targets_and_calculate_while();
     test_command_level_aggregate_scope_and_while_semantics();
     test_total_command_for_local_tables();
+    test_total_command_errors_use_default_locale_messages();
     test_total_command_supports_currency_and_integer_fields();
     test_total_command_for_sql_result_cursors();
     test_private_declaration_masks_caller_variable();
