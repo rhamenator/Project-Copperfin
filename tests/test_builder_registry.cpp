@@ -398,6 +398,70 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", report_label_builder_keys) == 0U,
         "#2640: qps-ploc should define every remaining Studio.Builder report/label metadata key");
+    const std::vector<std::string_view> menu_builder_keys = {
+        "Studio.Builder.MenuDesigner.Description",
+        "Studio.Builder.MenuDesigner.Title"};
+    const auto* spanish_menu_designer = find_builder(spanish_builders, "menu-designer");
+    expect(
+        spanish_menu_designer != nullptr &&
+            spanish_menu_designer->title == "Diseniador de menus" &&
+            spanish_menu_designer->description ==
+                "Editar metadatos de prompt, comando, jerarquia, configuracion y limpieza de MNX/MNT." &&
+            spanish_menu_designer->id == "menu-designer" &&
+            spanish_menu_designer->kind == StudioBuilderKind::builder &&
+            spanish_menu_designer->context == StudioBuilderContext::menu &&
+            spanish_menu_designer->vfp9_equivalent == "Menu Designer" &&
+            spanish_menu_designer->copperfin_component == "cf_menu_surface" &&
+            spanish_menu_designer->entry_point == "cf_builders.menu_designer",
+        "#2641: es-419 menu designer metadata should localize through the builder registry without changing invariant fields");
+    expect(
+        pseudo_catalog.translate("Studio.Builder.MenuDesigner.Description") ==
+            copperfin::localization::pseudo_localize(
+                "Edit MNX/MNT prompt, command, hierarchy, setup, and cleanup metadata."),
+        "#2641: qps-ploc menu designer metadata should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", menu_builder_keys) == 0U,
+        "#2641: es-419 should define every remaining Studio.Builder menu metadata key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", menu_builder_keys) == 0U,
+        "#2641: pt-BR should define every remaining Studio.Builder menu metadata key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", menu_builder_keys) == 0U,
+        "#2641: qps-ploc should define every remaining Studio.Builder menu metadata key");
+    const std::vector<std::string_view> builder_invocation_admission_keys = {
+        "Studio.BuilderInvocationAdmission.Error.CatalogRequiresBuilder",
+        "Studio.BuilderInvocationAdmission.Error.EntryPointRequired",
+        "Studio.BuilderInvocationAdmission.Error.ValidatedBuilderIdRequired"};
+    expect(
+        spanish_catalog.translate("Studio.BuilderInvocationAdmission.Error.CatalogRequiresBuilder") ==
+            "Una solicitud de catalogo de admision de invocacion de builder requiere al menos un builder de contexto.",
+        "#2642: es-419 builder invocation-admission catalog error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.BuilderInvocationAdmission.Error.ValidatedBuilderIdRequired") ==
+            "Una solicitud de admision de invocacion de builder requiere un id de builder validado.",
+        "#2642: es-419 builder invocation-admission validated-builder-id error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderInvocationAdmission.Error.EntryPointRequired") ==
+            "Uma solicitacao de admissao de invocacao de builder exige um ponto de entrada de inicializacao.",
+        "#2642: pt-BR builder invocation-admission entry-point error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.BuilderInvocationAdmission.Error.CatalogRequiresBuilder") ==
+            "Uma solicitacao de catalogo de admissao de invocacao de builder exige pelo menos um builder de contexto.",
+        "#2642: pt-BR builder invocation-admission catalog error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.BuilderInvocationAdmission.Error.ValidatedBuilderIdRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A builder invocation admission request requires a validated builder id."),
+        "#2642: qps-ploc builder invocation-admission validated-builder-id error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", builder_invocation_admission_keys) == 0U,
+        "#2642: es-419 should define every remaining Studio.BuilderInvocationAdmission localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", builder_invocation_admission_keys) == 0U,
+        "#2642: pt-BR should define every remaining Studio.BuilderInvocationAdmission localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", builder_invocation_admission_keys) == 0U,
+        "#2642: qps-ploc should define every remaining Studio.BuilderInvocationAdmission localization key");
     const std::vector<std::string_view> execution_keys = {
         "Studio.BuilderDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.BuilderDispatch.Execution.Error.CommandTokenRequired",
