@@ -741,6 +741,12 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Usage: copperfin_studio_host --path <asset>",
         "#2394: default studio host usage should preserve en-US CLI text");
     expect_contains(process.stdout_text,
+        "   or: copperfin_studio_host --list-subsystems [--json]",
+        "#2576: default studio host usage should preserve en-US alternate usage prose");
+    expect_contains(process.stdout_text,
+        "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment",
+        "#2576: default studio host usage should preserve en-US selection-context token prose");
+    expect_contains(process.stdout_text,
         "Selected-back-color object:",
         "#2570: default studio host usage should preserve en-US selected-back-color labels");
     expect_contains(process.stdout_text,
@@ -825,6 +831,24 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         copperfin::localization::resolve_catalog_root(),
         "qps-ploc");
     expect_contains(process.stdout_text,
+        pseudo_catalog.translate(
+            "StudioHost.Usage.Alternate",
+            {{"usageTemplate", "copperfin_studio_host --list-subsystems [--json]"}}),
+        "#2576: pseudo-localized studio host usage should route alternate usage prose through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate(
+            "StudioHost.Usage.ObjectEntry",
+            {
+                {"objectName", pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle")},
+                {"usageTemplate", "--record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]"}
+            }),
+        "#2576: pseudo-localized studio host usage should route object wrapper prose through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate(
+            "StudioHost.Usage.SelectionContextTokens",
+            {{"selectionContextTokens", "visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment"}}),
+        "#2576: pseudo-localized studio host usage should route selection-context token prose through localization");
+    expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropMode"),
         "#2569: pseudo-localized studio host usage should route OLE drop-mode labels through localization");
     expect_contains(process.stdout_text,
@@ -878,6 +902,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
+    expect_not_contains(process.stdout_text,
+        "Usage: copperfin_studio_host --path <asset>",
+        "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
+    expect_not_contains(process.stdout_text,
+        "   or: copperfin_studio_host --list-subsystems [--json]",
+        "#2576: pseudo-localized studio host usage should not fall back to raw English alternate usage prose");
+    expect_not_contains(process.stdout_text,
+        "Selection context tokens: visual_object, visual_method, container_object, class_designer, report_expression, label_expression, menu_item, project_item, data_environment",
+        "#2576: pseudo-localized studio host usage should not fall back to raw English selection-context token prose");
     expect_not_contains(process.stdout_text,
         "Selected-back-color object:",
         "#2570: pseudo-localized studio host usage should not fall back to the raw English selected-back-color label");
