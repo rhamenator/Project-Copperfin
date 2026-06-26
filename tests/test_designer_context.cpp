@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace {
 
@@ -17,6 +19,24 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 template <typename Descriptor>
@@ -1030,6 +1050,8 @@ int main() {
     expect(!empty_dispatch.ok &&
                empty_dispatch.error == "A designer dispatch request requires at least one invocation admission.",
            "#1237: aggregate designer dispatch should reject empty invocation inputs");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     expect(english_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired") ==
                "A designer dispatch request requires at least one invocation admission." &&
                english_catalog.translate("Studio.DesignerDispatch.Execution.Error.ExecutionAdmissionRequired") ==
@@ -1043,6 +1065,44 @@ int main() {
                pseudo_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired").starts_with("[!! ") &&
                pseudo_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.ExecutionAdmissionRequired").starts_with("[!! "),
            "#2371: designer dispatch error prose should resolve through localizable catalog keys");
+    const std::vector<std::string_view> catalog_entry_keys = {
+        "Studio.DesignerDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+        "Studio.DesignerDispatch.CatalogEntry.Error.ErrorFreeDispatchRequired",
+        "Studio.DesignerDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+        "Studio.DesignerDispatch.CatalogEntry.Error.NonDryRunDispatchRequired",
+        "Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedBuilderDispatchesRequired",
+        "Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedEditorDispatchesRequired",
+        "Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedToolboxDispatchRequired"};
+    expect(
+        spanish_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.ExecutionAdmissionRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de disenador requiere admision explicita de ejecucion.",
+        "#2616: es-419 designer dispatch catalog-entry execution-admission error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedToolboxDispatchRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de disenador requiere un dispatch de caja de herramientas no ejecutado.",
+        "#2616: es-419 designer dispatch catalog-entry toolbox-dispatch error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.ErrorFreeDispatchRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch de designer exige um plano de dispatch sem erros.",
+        "#2616: pt-BR designer dispatch catalog-entry error-free-dispatch error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.NonExecutedBuilderDispatchesRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch de designer exige dispatches de builder nao executados.",
+        "#2616: pt-BR designer dispatch catalog-entry builder-dispatch error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.DesignerDispatch.CatalogEntry.Error.NonDryRunDispatchRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A designer dispatch execution catalog entry requires a non-dry-run dispatch plan."),
+        "#2616: qps-ploc designer dispatch catalog-entry non-dry-run error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", catalog_entry_keys) == 0U,
+        "#2616: es-419 should define every remaining Studio.DesignerDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", catalog_entry_keys) == 0U,
+        "#2616: pt-BR should define every remaining Studio.DesignerDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", catalog_entry_keys) == 0U,
+        "#2616: qps-ploc should define every remaining Studio.DesignerDispatch.CatalogEntry localization key");
 
     std::size_t editor_execution_calls = 0U;
     std::size_t builder_execution_calls = 0U;
