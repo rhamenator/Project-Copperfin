@@ -4633,6 +4633,47 @@ void test_toolbox_creation_errors_resolve_through_localization_catalog() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", from_dispatch_keys) == 0U,
         "#2631: qps-ploc should define every remaining Studio.ToolboxCreation.FromDispatch localization key");
+    const std::vector<std::string_view> batch_catalog_selection_keys = {
+        "Studio.ToolboxCreation.Batch.Error.NoCreatesProvided",
+        "Studio.ToolboxCreation.BatchCatalog.Error.ValidatedItemMetadataRequired",
+        "Studio.ToolboxCreation.BatchDispatchCatalog.Error.ValidatedItemMetadataRequired",
+        "Studio.ToolboxCreation.Catalog.Error.ValidatedItemMetadataRequired",
+        "Studio.ToolboxCreation.SelectionBatchCatalog.Error.PaletteRequired",
+        "Studio.ToolboxCreation.SelectionBatchDispatchCatalog.Error.PaletteRequired",
+        "Studio.ToolboxCreation.SelectionBatchPlan.Error.PaletteRequired",
+        "Studio.ToolboxCreation.SelectionCatalog.Error.PaletteRequired",
+        "Studio.ToolboxCreation.SelectionDispatchCatalog.Error.PaletteRequired",
+        "Studio.ToolboxCreation.SelectionPlan.Error.PaletteRequired"};
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.Batch.Error.NoCreatesProvided") ==
+            "No se proporcionaron creaciones de objetos de caja de herramientas.",
+        "#2651: es-419 toolbox batch no-creates error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.SelectionCatalog.Error.PaletteRequired") ==
+            "Una solicitud de catalogo de creacion de objetos de caja de herramientas con contexto de seleccion requiere una paleta de caja de herramientas.",
+        "#2651: es-419 toolbox selection catalog palette error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.BatchCatalog.Error.ValidatedItemMetadataRequired") ==
+            "Uma solicitacao de catalogo de criacao em lote da caixa de ferramentas exige metadados validados de itens da caixa de ferramentas.",
+        "#2651: pt-BR toolbox batch-catalog validated-item-metadata error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.SelectionBatchDispatchCatalog.Error.PaletteRequired") ==
+            "Uma solicitacao de catalogo de dispatch de criacao em lote de objetos da caixa de ferramentas com contexto de selecao exige uma paleta da caixa de ferramentas.",
+        "#2651: pt-BR toolbox selection batch-dispatch-catalog palette error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxCreation.SelectionPlan.Error.PaletteRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A selection-context toolbox object creation plan request requires a toolbox palette."),
+        "#2651: qps-ploc toolbox selection plan palette error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", batch_catalog_selection_keys) == 0U,
+        "#2651: es-419 should define every remaining Studio.ToolboxCreation batch/catalog/selection localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", batch_catalog_selection_keys) == 0U,
+        "#2651: pt-BR should define every remaining Studio.ToolboxCreation batch/catalog/selection localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", batch_catalog_selection_keys) == 0U,
+        "#2651: qps-ploc should define every remaining Studio.ToolboxCreation batch/catalog/selection localization key");
 }
 
 }  // namespace
