@@ -26,11 +26,20 @@ void expect(bool condition, const std::string& message) {
 void test_open_document_path_error_resolves_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
         english_catalog.translate("Studio.DocumentOpen.Error.PathRequired") == "No path was provided.",
         "#2393: missing document path diagnostic should resolve through the en-US catalog");
+    expect(
+        spanish_catalog.translate("Studio.DocumentOpen.Error.PathRequired") == "No se proporciono una ruta.",
+        "#2645: missing document path diagnostic should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Studio.DocumentOpen.Error.PathRequired") ==
+            "Nenhum caminho foi fornecido.",
+        "#2645: missing document path diagnostic should resolve through the pt-BR catalog");
     expect(
         pseudo_catalog.translate("Studio.DocumentOpen.Error.PathRequired") !=
             english_catalog.translate("Studio.DocumentOpen.Error.PathRequired"),

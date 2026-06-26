@@ -225,6 +225,14 @@ int main() {
                pseudo_toolbox->id == "show-toolbox" &&
                pseudo_toolbox->command_token == "studio.toolbox.show_for_context",
            "#2361: pseudo-localized editor actions should decorate toolbox labels without changing command tokens");
+    const auto* english_visual_method = find_action(english_actions, "edit-visual-method");
+    expect(english_visual_method != nullptr &&
+               english_visual_method->label == "Edit Method" &&
+               english_visual_method->description ==
+                   "Open the selected visual object's PROCEDURE/FUNCTION source in a method editor." &&
+               english_visual_method->command_token == "studio.method_editor.open" &&
+               english_visual_method->target_surface == "method-editor",
+           "#2646: en-US visual-method editor action text should resolve through the shared action catalog");
     expect(english_catalog.translate("Studio.EditorActionDispatch.Error.AdmittedInvocationRequired") ==
                "An editor action dispatch request requires an admitted non-dry-run invocation." &&
                english_catalog.translate("Studio.EditorActionDispatch.Execution.Error.ExecutionAdmissionRequired") ==
@@ -295,6 +303,48 @@ int main() {
            "#2366: toolbox dispatch error prose should resolve through localizable catalog keys");
     const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const std::vector<std::string_view> editor_action_keys = {
+        "Studio.EditorAction.EditDataEnvironment.Description",
+        "Studio.EditorAction.EditDataEnvironment.Label",
+        "Studio.EditorAction.EditMenuCommand.Description",
+        "Studio.EditorAction.EditMenuCommand.Label",
+        "Studio.EditorAction.EditReportExpression.Description",
+        "Studio.EditorAction.EditReportExpression.Label",
+        "Studio.EditorAction.EditVisualMethod.Description",
+        "Studio.EditorAction.EditVisualMethod.Label",
+        "Studio.EditorAction.Error.ActionIdRequired",
+        "Studio.EditorAction.Error.ActionUnavailableForContext"};
+    expect(
+        spanish_catalog.translate("Studio.EditorAction.EditVisualMethod.Label") == "Editar metodo",
+        "#2646: es-419 visual-method editor action label should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.EditorAction.EditDataEnvironment.Description") ==
+            "Abre los vinculos del entorno de datos para formularios, reportes y entradas seleccionadas del contexto de datos.",
+        "#2646: es-419 data-environment editor action description should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.EditorAction.EditMenuCommand.Label") == "Editar comando de menu",
+        "#2646: pt-BR menu-command editor action label should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.EditorAction.Error.ActionUnavailableForContext") ==
+            "A acao solicitada do editor nao esta disponivel para o contexto selecionado do Studio.",
+        "#2646: pt-BR editor action unavailable-for-context error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.EditorAction.EditMenuCommand.Label") ==
+            copperfin::localization::pseudo_localize("Edit Menu Command"),
+        "#2646: qps-ploc menu-command editor action label should resolve through the pseudo-localization transform");
+    expect(
+        pseudo_catalog.translate("Studio.EditorAction.Error.ActionIdRequired") ==
+            copperfin::localization::pseudo_localize("An editor action launch request requires an action id."),
+        "#2646: qps-ploc editor action launch-id error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", editor_action_keys) == 0U,
+        "#2646: es-419 should define every remaining Studio.EditorAction localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", editor_action_keys) == 0U,
+        "#2646: pt-BR should define every remaining Studio.EditorAction localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", editor_action_keys) == 0U,
+        "#2646: qps-ploc should define every remaining Studio.EditorAction localization key");
     const std::vector<std::string_view> toolbox_execution_keys = {
         "Studio.ToolboxDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.ToolboxDispatch.Execution.Error.CommandTokenRequired",
@@ -1613,6 +1663,10 @@ int main() {
     });
     expect(!wrong_context_plan.ok,
            "#1207: editor action launch plans should reject wrong-context action ids");
+    expect(
+        wrong_context_plan.error ==
+            "The requested editor action is not available for the selected Studio context.",
+        "#2646: wrong-context editor action launch errors should resolve through the en-US localization catalog");
 
     const auto missing_action_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
@@ -1627,6 +1681,9 @@ int main() {
     });
     expect(!missing_action_plan.ok,
            "#1207: editor action launch plans should reject missing action ids");
+    expect(
+        missing_action_plan.error == "An editor action launch request requires an action id.",
+        "#2646: missing-action editor action launch errors should resolve through the en-US localization catalog");
 
     const auto unknown_action_plan = copperfin::studio::plan_studio_editor_action_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
@@ -1641,6 +1698,10 @@ int main() {
     });
     expect(!unknown_action_plan.ok,
            "#1207: editor action launch plans should reject unknown action ids");
+    expect(
+        unknown_action_plan.error ==
+            "The requested editor action is not available for the selected Studio context.",
+        "#2646: unknown-action editor action launch errors should resolve through the en-US localization catalog");
 
     const auto unsupported_toolbox_launch = copperfin::studio::plan_studio_toolbox_palette_launch({
         .selection_context = StudioEditorSelectionContext::menu_item,
