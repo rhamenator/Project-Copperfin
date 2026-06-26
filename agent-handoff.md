@@ -15,7 +15,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2367`, builder and wizard registry display title, description, launch validation, and launch catalog error localization for report/label designer-facing builder discovery paths.
-- Last shipped localization child: `#2559`, the shared .NET `CopperfinLocalization` layer now recognizes `qps-ploc`, pseudo-localizes catalog-backed VSIX/Studio strings while preserving placeholder tokens and formatted runtime values, and extends managed test coverage so hard-coded shared-designer UI stands out without changing machine-readable keys, JSON/contracts, or default `en-US` behavior.
+- Last shipped localization child: `#2560`, the native Studio host now localizes builder, editor-action, toolbox, and aggregate designer child-execution fallback errors through the shared locale catalogs for `en-US`, `es-419`, `pt-BR`, and `qps-ploc` while preserving exit codes, JSON field names, command tokens, and machine-readable host contracts.
 - Current lane: continue prompt-sized localization cleanup under `#2348` until the obvious repo-wide user-facing string backlog is handled, then return to E3/#24 report/label designer fidelity and section-aware host surfaces.
 - Next action: inspect live `#2348` children for the next prompt-sized localization slice; if the remaining backlog is no longer a release blocker, return to E3/#24 report/label designer fidelity.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.

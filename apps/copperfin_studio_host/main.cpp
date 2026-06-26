@@ -17140,6 +17140,7 @@ void print_json_designer_dispatch_result(
 void print_json_designer_execution_result(
     const copperfin::studio::StudioDesignerDispatchExecutionResult& result,
     const copperfin::studio::StudioDesignerDispatchPlan* planned_dispatch_plan,
+    const copperfin::localization::LocalizedCatalog& catalog,
     const std::string& editor_action_launch_command,
     const std::string& builder_launch_command,
     const std::string& toolbox_launch_command) {
@@ -17667,7 +17668,10 @@ void print_json_designer_execution_result(
     std::cout << "    }\n";
     std::cout << "  },\n";
     std::cout << "  \"error\": ";
-    print_json_string(result.error_count == 0U ? "" : "One or more designer child executions failed.");
+    print_json_string(
+        result.error_count == 0U
+            ? ""
+            : catalog.translate("StudioHost.DesignerExecution.Error.ChildExecutionsFailed"));
     std::cout << "\n";
     std::cout << "}\n";
 }
@@ -22435,7 +22439,7 @@ int main(int argc, char** argv) {
                     .output = {},
                     .error = exit_code == 0
                         ? std::string{}
-                        : "Builder launch command returned a non-zero exit code.",
+                        : catalog.translate("StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit"),
                     .mutates_asset = false
                 };
             }
@@ -22913,7 +22917,7 @@ int main(int argc, char** argv) {
                     .output = {},
                     .error = exit_code == 0
                         ? std::string{}
-                        : "Editor action launch command returned a non-zero exit code.",
+                        : catalog.translate("StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit"),
                     .mutates_asset = false
                 };
             }
@@ -24505,7 +24509,7 @@ int main(int argc, char** argv) {
                     .output = {},
                     .error = exit_code == 0
                         ? std::string{}
-                        : "Toolbox launch command returned a non-zero exit code.",
+                        : catalog.translate("StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit"),
                     .mutates_asset = false
                 };
             }
@@ -24839,6 +24843,7 @@ int main(int argc, char** argv) {
                 print_json_designer_execution_result(
                     result,
                     planned_dispatch_plan,
+                    catalog,
                     designer_execute_parse.editor_action_launch_command,
                     designer_execute_parse.builder_launch_command,
                     designer_execute_parse.toolbox_launch_command);
@@ -24915,7 +24920,8 @@ int main(int argc, char** argv) {
                     .output = {},
                     .error = exit_code == 0
                         ? std::string{}
-                        : "Designer editor action launch command returned a non-zero exit code.",
+                        : catalog.translate(
+                            "StudioHost.DesignerExecution.Error.EditorActionLaunchCommandNonZeroExit"),
                     .mutates_asset = false
                 };
             },
@@ -24930,7 +24936,8 @@ int main(int argc, char** argv) {
                     .output = {},
                     .error = exit_code == 0
                         ? std::string{}
-                        : "Designer builder launch command returned a non-zero exit code.",
+                        : catalog.translate(
+                            "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit"),
                     .mutates_asset = false
                 };
             },
@@ -24945,7 +24952,8 @@ int main(int argc, char** argv) {
                     .output = {},
                     .error = exit_code == 0
                         ? std::string{}
-                        : "Designer toolbox launch command returned a non-zero exit code.",
+                        : catalog.translate(
+                            "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit"),
                     .mutates_asset = false
                 };
             }

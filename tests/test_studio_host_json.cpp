@@ -75972,6 +75972,126 @@ void test_studio_host_json_exposes_builder_dispatch(const std::string& studio_ho
     }
 }
 
+void test_studio_host_execution_fallback_errors_localize(const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_execution_fallback_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    ScopedEnvironmentValue clear_locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue clear_locale_dir("COPPERFIN_LOCALE_DIR");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+
+    auto process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-execute", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "true",
+            "--admit-builder-execution", "true",
+            "--builder-launch-command", COPPERFIN_TEST_FAILURE_COMMAND,
+            "--json"
+        },
+        temp_root);
+    expect(process.exit_code == 4,
+        "#2560: pseudo-localized builder execution failures should preserve nonzero exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2560: pseudo-localized builder execution failures should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "\"observedExitCode\": 1",
+        "#2560: pseudo-localized builder execution failures should preserve child exit codes");
+    expect_not_contains(process.stdout_text,
+        "Builder launch command returned a non-zero exit code.",
+        "#2560: pseudo-localized builder execution failures should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--editor-action-execute", "edit-visual-method",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocation", "true",
+            "--admit-editor-action-execution", "true",
+            "--editor-action-launch-command", COPPERFIN_TEST_FAILURE_COMMAND,
+            "--json"
+        },
+        temp_root);
+    expect(process.exit_code == 4,
+        "#2560: pseudo-localized editor-action execution failures should preserve nonzero exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2560: pseudo-localized editor-action execution failures should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "\"observedExitCode\": 1",
+        "#2560: pseudo-localized editor-action execution failures should preserve child exit codes");
+    expect_not_contains(process.stdout_text,
+        "Editor action launch command returned a non-zero exit code.",
+        "#2560: pseudo-localized editor-action execution failures should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--toolbox-launch-command", COPPERFIN_TEST_FAILURE_COMMAND,
+            "--json"
+        },
+        temp_root);
+    expect(process.exit_code == 4,
+        "#2560: pseudo-localized toolbox execution failures should preserve nonzero exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2560: pseudo-localized toolbox execution failures should decorate human-facing prose");
+    expect_contains(process.stdout_text,
+        "\"observedExitCode\": 1",
+        "#2560: pseudo-localized toolbox execution failures should preserve child exit codes");
+    expect_not_contains(process.stdout_text,
+        "Toolbox launch command returned a non-zero exit code.",
+        "#2560: pseudo-localized toolbox execution failures should not fall back to raw English prose");
+
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--designer-execute",
+            "--selection-context", "visual_object",
+            "--admit-editor-invocations", "true",
+            "--admit-builder-invocations", "true",
+            "--admit-toolbox-invocation", "true",
+            "--admit-designer-execution", "true",
+            "--editor-action-launch-command", COPPERFIN_TEST_SUCCESS_COMMAND,
+            "--builder-launch-command", COPPERFIN_TEST_FAILURE_COMMAND,
+            "--toolbox-launch-command", COPPERFIN_TEST_SUCCESS_COMMAND,
+            "--json"
+        },
+        temp_root);
+    expect(process.exit_code == 4,
+        "#2560: pseudo-localized designer execution failures should preserve nonzero exit status");
+    expect_contains(process.stdout_text,
+        "[!! ",
+        "#2560: pseudo-localized designer execution failures should decorate aggregate and child prose");
+    expect_contains(process.stdout_text,
+        "\"error\": \"[!! ",
+        "#2560: pseudo-localized designer execution failures should localize the aggregate error field");
+    expect_contains(process.stdout_text,
+        "\"executionBlockedErrors\": [\"[!! ",
+        "#2560: pseudo-localized designer execution failures should localize blocked child errors");
+    expect_not_contains(process.stdout_text,
+        "Designer builder launch command returned a non-zero exit code.",
+        "#2560: pseudo-localized designer execution failures should not fall back to raw English child prose");
+    expect_not_contains(process.stdout_text,
+        "One or more designer child executions failed.",
+        "#2560: pseudo-localized designer execution failures should not fall back to the raw English aggregate error");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
 void test_studio_host_json_exposes_builder_execution(const std::string& studio_host_path) {
     namespace fs = std::filesystem;
 
@@ -124213,5 +124333,6 @@ int main(int argc, char** argv) {
     test_studio_host_json_assigns_always_on_top_by_stable_selectors(argv[1]);
     test_studio_host_json_assigns_always_on_bottom_by_stable_selectors(argv[1]);
     test_studio_host_json_ungroups_objects_by_stable_selectors(argv[1]);
+    test_studio_host_execution_fallback_errors_localize(argv[1]);
     return failures == 0 ? 0 : 1;
 }
