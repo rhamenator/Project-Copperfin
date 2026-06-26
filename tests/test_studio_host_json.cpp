@@ -947,6 +947,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSize",
         "StudioHost.LaunchParse.ObjectAssignment.DynamicFontSizeTitle",
         "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethru"};
+    const std::vector<std::string_view> object_assignment_font_fill_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontStrikethruTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderline",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicForeColor",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicInputMask",
+        "StudioHost.LaunchParse.ObjectAssignment.DynamicLineHeight",
+        "StudioHost.LaunchParse.ObjectAssignment.Enabled",
+        "StudioHost.LaunchParse.ObjectAssignment.EnabledTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.FillColor",
+        "StudioHost.LaunchParse.ObjectAssignment.FillStyle",
+        "StudioHost.LaunchParse.ObjectAssignment.FontBold",
+        "StudioHost.LaunchParse.ObjectAssignment.FontItalic",
+        "StudioHost.LaunchParse.ObjectAssignment.FontName",
+        "StudioHost.LaunchParse.ObjectAssignment.FontOutline",
+        "StudioHost.LaunchParse.ObjectAssignment.FontShadow",
+        "StudioHost.LaunchParse.ObjectAssignment.FontSize",
+        "StudioHost.LaunchParse.ObjectAssignment.FontStrikethru",
+        "StudioHost.LaunchParse.ObjectAssignment.FontUnderline",
+        "StudioHost.LaunchParse.ObjectAssignment.ForeColor",
+        "StudioHost.LaunchParse.ObjectAssignment.FormSetClass",
+        "StudioHost.LaunchParse.ObjectAssignment.Format",
+        "StudioHost.LaunchParse.ObjectAssignment.FormatTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.GridLineColor",
+        "StudioHost.LaunchParse.ObjectAssignment.GridLineWidth",
+        "StudioHost.LaunchParse.ObjectAssignment.GridLines"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1069,6 +1095,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("dynamic-back-color"),
         "#2656: host object-assignment drag and dynamic-font labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillColor") == "color de relleno" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicFontUnderlineTitle") ==
+                "Fuente dinamica subrayada" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontName") ==
+                "nome da fonte" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.EnabledTitle") ==
+                "Habilitado" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ForeColor") ==
+                copperfin::localization::pseudo_localize("fore-color"),
+        "#2657: host object-assignment font/fill labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1113,6 +1150,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_drag_dynamic_keys) == 0U,
         "#2656: qps-ploc should define every remaining drag/dynamic object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_assignment_font_fill_keys) == 0U,
+        "#2657: es-419 should define every remaining font/fill object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_assignment_font_fill_keys) == 0U,
+        "#2657: pt-BR should define every remaining font/fill object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_font_fill_keys) == 0U,
+        "#2657: qps-ploc should define every remaining font/fill object-assignment localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
