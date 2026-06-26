@@ -271,6 +271,13 @@ int main() {
                find_toolbox_item(report_toolbox_items, "shape") != nullptr &&
                find_toolbox_item(report_toolbox_items, "textbox") == nullptr,
            "#2364: localized toolbox palette should preserve report-safe filtering semantics");
+    const std::vector<std::string_view> toolbox_category_keys = {
+        "Studio.Toolbox.Category.Containers",
+        "Studio.Toolbox.Category.DataControls",
+        "Studio.Toolbox.Category.Graphics",
+        "Studio.Toolbox.Category.Interop",
+        "Studio.Toolbox.Category.ListControls",
+        "Studio.Toolbox.Category.StandardControls"};
     expect(english_catalog.translate("Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired") ==
                "A toolbox invocation admission request requires validated toolbox item metadata." &&
                english_catalog.translate("Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette") ==
@@ -319,6 +326,24 @@ int main() {
         pseudo_catalog.translate("Studio.ToolboxDispatch.Execution.Error.ExecutorDidNotLaunch") ==
             copperfin::localization::pseudo_localize("A toolbox dispatch executor did not launch the toolbox dispatch."),
         "#2613: qps-ploc toolbox dispatch executor-launch error should resolve through the pseudo-localization transform");
+    expect(
+        english_catalog.translate("Studio.Toolbox.Category.StandardControls") == "Standard Controls" &&
+            spanish_catalog.translate("Studio.Toolbox.Category.Containers") == "Contenedores" &&
+            spanish_catalog.translate("Studio.Toolbox.Category.DataControls") == "Controles de datos" &&
+            portuguese_catalog.translate("Studio.Toolbox.Category.ListControls") == "Controles de lista" &&
+            portuguese_catalog.translate("Studio.Toolbox.Category.StandardControls") == "Controles padrao" &&
+            pseudo_catalog.translate("Studio.Toolbox.Category.Graphics") ==
+                copperfin::localization::pseudo_localize("Graphics"),
+        "#2623: toolbox category labels should resolve through locale catalogs without changing the shared palette model");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", toolbox_category_keys) == 0U,
+        "#2623: es-419 should define every Studio.Toolbox.Category localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", toolbox_category_keys) == 0U,
+        "#2623: pt-BR should define every Studio.Toolbox.Category localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_category_keys) == 0U,
+        "#2623: qps-ploc should define every Studio.Toolbox.Category localization key");
     expect(
         count_missing_locale_keys(spanish_catalog, "es-419", toolbox_execution_keys) == 0U,
         "#2613: es-419 should define every remaining Studio.ToolboxDispatch.Execution localization key");
