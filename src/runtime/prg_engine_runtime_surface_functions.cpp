@@ -493,7 +493,12 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         try {
             const int flags = safe_int_argument(2U, 0);
             if (!resolve_object_callback || !assign_array_callback) {
-                record_runtime_warning("AMEMBERS() uses stub behavior (no object/array callback)");
+                record_runtime_warning(runtime_text(
+                    "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback",
+                    {
+                        {"capability", "object/array"},
+                        {"function", "AMEMBERS()"}
+                    }));
                 if (assign_array_callback && !array_name.empty()) {
                     assign_array_callback(array_name, {});
                 }
@@ -517,7 +522,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             assign_array_callback(array_name, member_names);
             return make_number_value(static_cast<double>(member_names.size()));
         } catch (...) {
-            record_runtime_warning("AMEMBERS() fallback: unable to enumerate members, returning empty array");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback",
+                {{"function", "AMEMBERS()"}}));
             if (assign_array_callback && !array_name.empty()) {
                 assign_array_callback(array_name, {});
             }
@@ -529,7 +536,12 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
         const std::string array_name = trim_copy(raw_arguments[0]);
         try {
             if (!resolve_object_callback || !assign_array_callback) {
-                record_runtime_warning("ACLASS() uses stub behavior (no object/array callback)");
+                record_runtime_warning(runtime_text(
+                    "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback",
+                    {
+                        {"capability", "object/array"},
+                        {"function", "ACLASS()"}
+                    }));
                 if (assign_array_callback && !array_name.empty()) {
                     assign_array_callback(array_name, {});
                 }
@@ -551,7 +563,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
             assign_array_callback(array_name, class_chain);
             return make_number_value(static_cast<double>(class_chain.size()));
         } catch (...) {
-            record_runtime_warning("ACLASS() fallback: unable to enumerate class chain");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.AclassFallback",
+                {{"function", "ACLASS()"}}));
             if (assign_array_callback && !array_name.empty()) {
                 assign_array_callback(array_name, {});
             }
@@ -561,7 +575,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
 
     if (function == "pemstatus" && arguments.size() >= 3U) {
         if (!resolve_object_callback) {
-            record_runtime_warning("PEMSTATUS() uses stub object resolution (no runtime object callback)");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.StubObjectResolution",
+                {{"function", "PEMSTATUS()"}}));
             return make_boolean_value(false);
         }
         RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
@@ -588,7 +604,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
 
     if (function == "addproperty" && arguments.size() >= 2U) {
         if (!resolve_object_callback) {
-            record_runtime_warning("ADDPROPERTY() uses stub behavior (no runtime object callback)");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback",
+                {{"function", "ADDPROPERTY()"}}));
             return make_boolean_value(true);
         }
         RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
@@ -606,7 +624,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
 
     if (function == "getpem" && arguments.size() >= 2U) {
         if (!resolve_object_callback) {
-            record_runtime_warning("GETPEM() uses stub behavior (no runtime object callback)");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback",
+                {{"function", "GETPEM()"}}));
             return make_empty_value();
         }
         RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
@@ -627,7 +647,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
     
     if (function == "setpem" && arguments.size() >= 3U) {
         if (!resolve_object_callback) {
-            record_runtime_warning("SETPEM() uses stub behavior (no runtime object callback)");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback",
+                {{"function", "SETPEM()"}}));
             return make_boolean_value(false);
         }
         RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);
@@ -652,7 +674,9 @@ std::optional<PrgValue> evaluate_runtime_surface_function(
 
     if (function == "removeproperty" && arguments.size() >= 2U) {
         if (!resolve_object_callback) {
-            record_runtime_warning("REMOVEPROPERTY() uses stub behavior (no runtime object callback)");
+            record_runtime_warning(runtime_text(
+                "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback",
+                {{"function", "REMOVEPROPERTY()"}}));
             return make_boolean_value(true);
         }
         RuntimeOleObjectState* runtime_object = resolve_object_callback(arguments[0]);

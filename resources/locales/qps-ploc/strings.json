@@ -23,5 +23,10 @@
   "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "This command requires a current local record",
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "This command requires a current remote record",
   "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "This command requires a local table-backed cursor",
-  "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "Bit position must be between {minimum} and {maximum}"
+  "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "Bit position must be between {minimum} and {maximum}",
+  "Runtime.Prg.RuntimeSurface.Warning.AclassFallback": "{function} fallback: unable to enumerate class chain",
+  "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback": "{function} fallback: unable to enumerate members, returning empty array",
+  "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback": "{function} uses stub behavior (no {capability} callback)",
+  "Runtime.Prg.RuntimeSurface.Warning.StubObjectResolution": "{function} uses stub object resolution (no runtime object callback)",
+  "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback": "{function} uses stub behavior (no runtime object callback)"
 }

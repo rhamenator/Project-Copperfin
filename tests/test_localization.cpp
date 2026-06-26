@@ -502,6 +502,45 @@ void test_runtime_surface_errors_route_through_catalog() {
             pseudo_message.find("31") != std::string::npos &&
             pseudo_message.find("{minimum}") == std::string::npos,
         "#2543: qps-ploc bit-position range error should pseudo-localize prose while preserving bounds");
+
+    const copperfin::localization::PlaceholderMap object_array_placeholders{
+        {"capability", "object/array"},
+        {"function", "AMEMBERS()"}
+    };
+    const copperfin::localization::PlaceholderMap function_placeholders{{"function", "GETPEM()"}};
+
+    expect(
+        english.translate(
+            "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback",
+            object_array_placeholders) == "AMEMBERS() uses stub behavior (no object/array callback)",
+        "#2544: object/array runtime-surface warning should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback", function_placeholders) ==
+            "GETPEM() uses stub behavior (no runtime object callback)",
+        "#2544: runtime object callback warning should preserve en-US default output");
+    expect(
+        english.translate(
+            "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback",
+            {{"function", "AMEMBERS()"}}) ==
+            "AMEMBERS() fallback: unable to enumerate members, returning empty array",
+        "#2544: AMEMBERS fallback warning should preserve en-US default output");
+    expect(
+        spanish.translate("Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback", function_placeholders)
+                .find("GETPEM()") != std::string::npos &&
+            spanish.translate("Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback", function_placeholders)
+                    .find("uses stub behavior") == std::string::npos,
+        "#2544: es-419 runtime object callback warning should preserve function name without falling back to English");
+
+    const std::string pseudo_warning = pseudo.translate(
+        "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback",
+        object_array_placeholders);
+    expect(
+        pseudo_warning.find("[!! ") == 0U &&
+            pseudo_warning.find("AMEMBERS()") != std::string::npos &&
+            pseudo_warning.find("object/array") != std::string::npos &&
+            pseudo_warning.find("{function}") == std::string::npos &&
+            pseudo_warning.find("{capability}") == std::string::npos,
+        "#2544: qps-ploc runtime-surface warning should pseudo-localize prose while preserving placeholders");
 }
 
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {

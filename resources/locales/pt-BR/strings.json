@@ -23,5 +23,10 @@
   "Runtime.Prg.Records.Error.RequiresCurrentLocalRecord": "Este comando exige um registro local atual",
   "Runtime.Prg.Records.Error.RequiresCurrentRemoteRecord": "Este comando exige um registro remoto atual",
   "Runtime.Prg.Records.Error.RequiresLocalTableBackedCursor": "Este comando exige um cursor local baseado em tabela",
-  "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "A posicao do bit deve estar entre {minimum} e {maximum}"
+  "Runtime.Prg.RuntimeSurface.Error.BitPositionOutOfRange": "A posicao do bit deve estar entre {minimum} e {maximum}",
+  "Runtime.Prg.RuntimeSurface.Warning.AclassFallback": "Fallback de {function}: nao foi possivel enumerar a cadeia de classes",
+  "Runtime.Prg.RuntimeSurface.Warning.AmembersFallback": "Fallback de {function}: nao foi possivel enumerar membros; retornando array vazio",
+  "Runtime.Prg.RuntimeSurface.Warning.StubCapabilityCallback": "{function} usa comportamento stub (sem callback de {capability})",
+  "Runtime.Prg.RuntimeSurface.Warning.StubObjectResolution": "{function} usa resolucao de objeto stub (sem callback de objeto de runtime)",
+  "Runtime.Prg.RuntimeSurface.Warning.StubRuntimeObjectCallback": "{function} usa comportamento stub (sem callback de objeto de runtime)"
 }
