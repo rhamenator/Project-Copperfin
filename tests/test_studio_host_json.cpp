@@ -741,6 +741,12 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Usage: copperfin_studio_host --path <asset>",
         "#2394: default studio host usage should preserve en-US CLI text");
     expect_contains(process.stdout_text,
+        "Selected-back-color object:",
+        "#2570: default studio host usage should preserve en-US selected-back-color labels");
+    expect_contains(process.stdout_text,
+        "Dynamic-fore-color object:",
+        "#2570: default studio host usage should preserve en-US dynamic-fore-color labels");
+    expect_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: default studio host usage should preserve localized OLE drop-mode labels");
     expect_contains(process.stdout_text,
@@ -780,8 +786,20 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropMode"),
         "#2569: pseudo-localized studio host usage should route OLE drop-mode labels through localization");
     expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.SelectedBackColorTitle"),
+        "#2570: pseudo-localized studio host usage should route selected-back-color labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DynamicForeColorTitle"),
+        "#2570: pseudo-localized studio host usage should route dynamic-fore-color labels through localization");
+    expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
+    expect_not_contains(process.stdout_text,
+        "Selected-back-color object:",
+        "#2570: pseudo-localized studio host usage should not fall back to the raw English selected-back-color label");
+    expect_not_contains(process.stdout_text,
+        "Dynamic-fore-color object:",
+        "#2570: pseudo-localized studio host usage should not fall back to the raw English dynamic-fore-color label");
     expect_not_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: pseudo-localized studio host usage should not fall back to the raw English OLE drop-mode label");
