@@ -1026,7 +1026,9 @@
             {
                 if (!trim_copy(statement.expression).empty())
                 {
-                    last_error_message = "YIELD does not take arguments";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments",
+                        {{"command", "YIELD"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -1051,7 +1053,9 @@
                 }
                 if (target.empty())
                 {
-                    last_error_message = "SPAWN requires a target routine or file";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.SpawnRequiresTarget",
+                        {{"command", "SPAWN"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -1147,7 +1151,12 @@
                     }
                     if (!std::filesystem::exists(target_path))
                     {
-                        last_error_message = "Unable to resolve SPAWN target: " + target;
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed",
+                            {
+                                {"command", "SPAWN"},
+                                {"target", target}
+                            });
                         last_fault_location = statement.location;
                         last_fault_statement = statement.text;
                         return {.ok = false, .message = last_error_message};
@@ -1195,7 +1204,9 @@
                 const std::string handle_text = trim_copy(statement.expression);
                 if (handle_text.empty())
                 {
-                    last_error_message = "AWAIT requires a task handle";
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle",
+                        {{"command", "AWAIT"}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};
@@ -1212,7 +1223,9 @@
                 const std::shared_ptr<AsyncTaskState> task = find_async_task(handle);
                 if (task == nullptr)
                 {
-                    last_error_message = "Unknown task handle: " + std::to_string(handle);
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dispatch.Error.UnknownTaskHandle",
+                        {{"handle", std::to_string(handle)}});
                     last_fault_location = statement.location;
                     last_fault_statement = statement.text;
                     return {.ok = false, .message = last_error_message};

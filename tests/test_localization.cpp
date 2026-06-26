@@ -666,6 +666,58 @@ void test_runtime_core_errors_route_through_catalog() {
         "#2552: qps-ploc xAsset bootstrap error should pseudo-localize prose while preserving path");
 }
 
+void test_runtime_dispatch_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap yield_placeholders{{"command", "YIELD"}};
+    const copperfin::localization::PlaceholderMap spawn_placeholders{{"command", "SPAWN"}};
+    const copperfin::localization::PlaceholderMap spawn_target_placeholders{
+        {"command", "SPAWN"},
+        {"target", "workers/process.prg"}
+    };
+    const copperfin::localization::PlaceholderMap await_placeholders{{"command", "AWAIT"}};
+    const copperfin::localization::PlaceholderMap handle_placeholders{{"handle", "42"}};
+
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments", yield_placeholders) ==
+            "YIELD does not take arguments",
+        "#2553: YIELD argument error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.SpawnRequiresTarget", spawn_placeholders) ==
+            "SPAWN requires a target routine or file",
+        "#2553: SPAWN missing-target error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders) ==
+            "Unable to resolve SPAWN target: workers/process.prg",
+        "#2553: SPAWN target resolution error should preserve command and target placeholders");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.AwaitRequiresTaskHandle", await_placeholders) ==
+            "AWAIT requires a task handle",
+        "#2553: AWAIT missing-handle error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.UnknownTaskHandle", handle_placeholders) ==
+            "Unknown task handle: 42",
+        "#2553: unknown task-handle error should preserve handle placeholder");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders)
+                    .find("workers/process.prg") != std::string::npos &&
+            spanish.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders)
+                    .find("Unable to resolve") == std::string::npos,
+        "#2553: es-419 SPAWN target error should preserve target without falling back to English");
+
+    const std::string pseudo_spawn =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders);
+    expect(
+        pseudo_spawn.find("[!! ") == 0U &&
+            pseudo_spawn.find("SPAWN") != std::string::npos &&
+            pseudo_spawn.find("workers/process.prg") != std::string::npos &&
+            pseudo_spawn.find("{command}") == std::string::npos &&
+            pseudo_spawn.find("{target}") == std::string::npos,
+        "#2553: qps-ploc SPAWN target error should pseudo-localize prose while preserving placeholders");
+}
+
 void test_runtime_surface_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -818,6 +870,7 @@ int main(int argc, char** argv) {
     test_runtime_record_precondition_errors_route_through_catalog();
     test_runtime_dll_errors_route_through_catalog();
     test_runtime_core_errors_route_through_catalog();
+    test_runtime_dispatch_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
