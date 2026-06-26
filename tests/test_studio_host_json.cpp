@@ -1181,6 +1181,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.VisualPropertyParse.Error.NoTargetPropertyName",
         "StudioHost.VisualPropertyParse.Error.NonNegativeInteger",
         "StudioHost.VisualPropertyParse.Error.RenameBatchItemRequiresPropertyName"};
+    const std::vector<std::string_view> visual_property_asset_editor_keys = {
+        "StudioHost.VisualPropertyParse.Error.ReorderBatchItemRequiresPropertyName",
+        "StudioHost.VisualPropertyParse.Error.UnknownOption",
+        "StudioHost.VisualPropertyParse.Error.UpdateBatchItemRequiresPropertyName",
+        "VisualAssetEditor.Field.NameRequired",
+        "VisualAssetEditor.Field.NotFound",
+        "VisualAssetEditor.Field.TargetNotFound",
+        "VisualAssetEditor.Geometry.DistributionCoordinateNotNumeric",
+        "VisualAssetEditor.Geometry.DistributionCoordinatesMissing",
+        "VisualAssetEditor.Geometry.DistributionDistinctEndpointsRequired",
+        "VisualAssetEditor.Geometry.DistributionTargetCountRequired",
+        "VisualAssetEditor.Geometry.GridHeightPositiveRequired",
+        "VisualAssetEditor.Geometry.GridWidthPositiveRequired",
+        "VisualAssetEditor.Geometry.HorizontalNudgeDeltaRequired",
+        "VisualAssetEditor.Geometry.ObjectGeometryNotNumeric",
+        "VisualAssetEditor.Geometry.RequiredFieldsMissing",
+        "VisualAssetEditor.Geometry.VerticalNudgeDeltaRequired",
+        "VisualAssetEditor.Identity.CopiedRowFieldRequired",
+        "VisualAssetEditor.Identity.FieldMissing",
+        "VisualAssetEditor.Identity.FieldsRequired",
+        "VisualAssetEditor.Identity.ReplacementDuplicatedInSubtree",
+        "VisualAssetEditor.Identity.ReplacementExists",
+        "VisualAssetEditor.Identity.ReplacementFieldMissing",
+        "VisualAssetEditor.Identity.SubtreeReplacementBatchRequired",
+        "VisualAssetEditor.Identity.SubtreeReplacementDataMissing",
+        "VisualAssetEditor.Method.Ambiguous"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1408,6 +1434,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("No property copies were provided."),
         "#2665: host visual object and visual property parse errors should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.VisualPropertyParse.Error.UpdateBatchItemRequiresPropertyName") ==
+                "Las opciones del elemento del lote de actualizacion de propiedad visual requieren un {propertyNameOption} anterior." &&
+            spanish_catalog.translate("VisualAssetEditor.Geometry.GridWidthPositiveRequired") ==
+                "El ancho de la cuadrícula debe ser positivo para el ajuste horizontal." &&
+            portuguese_catalog.translate("VisualAssetEditor.Field.NameRequired") ==
+                "Os nomes de campo nao podem estar vazios." &&
+            portuguese_catalog.translate("VisualAssetEditor.Identity.SubtreeReplacementBatchRequired") ==
+                "Nenhuma substituicao de subarvore foi fornecida." &&
+            pseudo_catalog.translate("VisualAssetEditor.Method.Ambiguous") ==
+                copperfin::localization::pseudo_localize("Method match is ambiguous."),
+        "#2666: host visual property tail and asset-editor field geometry labels should resolve through locale catalogs without changing machine contracts");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1533,6 +1571,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", visual_object_property_error_keys) == 0U,
         "#2665: qps-ploc should define every remaining visual-object/property parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", visual_property_asset_editor_keys) == 0U,
+        "#2666: es-419 should define every remaining visual-property/asset-editor localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", visual_property_asset_editor_keys) == 0U,
+        "#2666: pt-BR should define every remaining visual-property/asset-editor localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", visual_property_asset_editor_keys) == 0U,
+        "#2666: qps-ploc should define every remaining visual-property/asset-editor localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
