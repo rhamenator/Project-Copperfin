@@ -820,6 +820,53 @@ void test_command_level_aggregate_commands() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_aggregate_command_errors_use_default_locale_messages() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregate_command_errors";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script);
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    const auto missing_assignments = run_error_script("calculate_missing_assignments", "CALCULATE FOR .T.\n");
+    expect(missing_assignments.reason == copperfin::runtime::DebugPauseReason::error,
+        "CALCULATE without assignments should pause with an error");
+    expect(
+        missing_assignments.message == "CALCULATE requires one or more aggregate TO/INTO assignments",
+        "CALCULATE missing-assignment error should route through the default locale catalog");
+
+    const auto malformed_expression = run_error_script(
+        "calculate_malformed_expression",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "CALCULATE AGE TO nBad\n");
+    expect(malformed_expression.reason == copperfin::runtime::DebugPauseReason::error,
+        "CALCULATE with a malformed aggregate expression should pause with an error");
+    expect(
+        malformed_expression.message == "CALCULATE requires aggregate expressions like COUNT() or SUM(field)",
+        "CALCULATE malformed-expression error should route through the default locale catalog");
+
+    const auto count_multi_target = run_error_script(
+        "count_multi_target",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "COUNT TO nOne, nTwo\n");
+    expect(count_multi_target.reason == copperfin::runtime::DebugPauseReason::error,
+        "COUNT TO with multiple targets should pause with an error");
+    expect(count_multi_target.message == "COUNT TO only accepts a single variable target",
+        "COUNT TO multi-target error should route through the default locale catalog");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_scan_on_empty_table_does_not_execute_body() {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_scan_empty_table";
@@ -6590,6 +6637,7 @@ int main() {
     test_text_endtext_literal_blocks();
     test_aggregate_functions_respect_visibility();
     test_calculate_command_aggregates();
+    test_aggregate_command_errors_use_default_locale_messages();
     test_command_level_aggregate_commands();
     test_scan_on_empty_table_does_not_execute_body();
     test_aggregate_commands_on_empty_table_return_zero();

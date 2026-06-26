@@ -627,7 +627,7 @@
             const std::vector<CalculateAssignment> assignments = parse_calculate_assignments(statement.expression);
             if (assignments.empty())
             {
-                error_message = "CALCULATE requires one or more aggregate TO/INTO assignments";
+                error_message = runtime_text("Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments");
                 return false;
             }
 
@@ -637,7 +637,7 @@
                 const std::size_t close_paren = assignment.aggregate_expression.rfind(')');
                 if (open_paren == std::string::npos || close_paren == std::string::npos || close_paren <= open_paren)
                 {
-                    error_message = "CALCULATE requires aggregate expressions like COUNT() or SUM(field)";
+                    error_message = runtime_text("Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression");
                     return false;
                 }
 
@@ -768,7 +768,7 @@
             {
                 if (targets.size() > 1U)
                 {
-                    error_message = "COUNT TO only accepts a single variable target";
+                    error_message = runtime_text("Runtime.Prg.Aggregate.Error.CountToSingleTarget");
                     return false;
                 }
 
