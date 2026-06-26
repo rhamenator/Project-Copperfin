@@ -1131,6 +1131,42 @@ void test_runtime_package_warnings_pseudo_localize() {
     fs::remove_all(temp_root, ignored);
 }
 
+void test_inspect_error_prefix_routes_through_localization(const std::string& inspect_path) {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_error_prefix_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    set_env_value("COPPERFIN_LOCALE_DIR", "", false);
+    const std::string missing_asset = (temp_root / "missing.dbf").string();
+    const std::string output = run_command_capture(
+        shell_quote(inspect_path) + " " + shell_quote(missing_asset) + " 2>&1");
+    set_env_value("COPPERFIN_LOCALE", "", false);
+    set_env_value("COPPERFIN_LOCALE_DIR", "", false);
+
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "qps-ploc");
+    const std::string pseudo_error_prefix = pseudo_catalog.translate("Inspect.Prefix.Error");
+
+    expect(
+        output.find("status: error") != std::string::npos,
+        "#2565: inspect error-prefix localization should preserve machine-readable error status");
+    expect(
+        output.find(pseudo_error_prefix) != std::string::npos,
+        "#2565: qps-ploc inspect failures should route the error prefix through localization");
+    expect(
+        output.find("[!! ") != std::string::npos,
+        "#2565: qps-ploc inspect failures should decorate human-facing prose");
+    expect(
+        output.find("\nerror: ") == std::string::npos,
+        "#2565: qps-ploc inspect failures should not fall back to the raw English error prefix");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1152,6 +1188,7 @@ int main(int argc, char** argv) {
     test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
+        test_inspect_error_prefix_routes_through_localization(argv[1]);
     } else {
         expect(false, "#1779: test_localization requires the copperfin_inspect executable path");
     }

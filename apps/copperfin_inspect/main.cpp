@@ -61,7 +61,21 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
         }) << "\n";
 }
 
-void print_inspection(const copperfin::vfp::AssetInspectionResult& result) {
+void print_error_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& error) {
+    std::cout << catalog.translate("Inspect.Prefix.Error") << error << "\n";
+}
+
+void print_warning_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const std::string& warning) {
+    std::cerr << catalog.translate("Inspect.Prefix.Warning") << warning << "\n";
+}
+
+void print_inspection(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    const copperfin::vfp::AssetInspectionResult& result) {
     using copperfin::vfp::asset_family_name;
     using copperfin::vfp::index_kind_name;
 
@@ -70,7 +84,7 @@ void print_inspection(const copperfin::vfp::AssetInspectionResult& result) {
 
     if (!result.ok) {
         std::cout << "status: error\n";
-        std::cout << "error: " << result.error << "\n";
+        print_error_line(catalog, result.error);
         return;
     }
 
@@ -151,19 +165,18 @@ void print_inspection(const copperfin::vfp::AssetInspectionResult& result) {
 }  // namespace
 
 int main(int argc, char** argv) {
-    const auto hardening = copperfin::security::apply_default_process_hardening();
-    if (!hardening.applied) {
-        std::cerr << "warning: " << hardening.message << "\n";
-    }
-
     const CommandLineOptions options = parse_arguments(argc, argv);
     const copperfin::localization::LocalizedCatalog catalog = load_localization(argv[0], options.locale);
+    const auto hardening = copperfin::security::apply_default_process_hardening();
+    if (!hardening.applied) {
+        print_warning_line(catalog, hardening.message);
+    }
     if (!options.valid || options.help || options.asset_path.empty()) {
         print_usage(catalog);
         return options.help && options.valid ? 0 : 1;
     }
 
     const copperfin::vfp::AssetInspectionResult result = copperfin::vfp::inspect_asset(options.asset_path);
-    print_inspection(result);
+    print_inspection(catalog, result);
     return result.ok ? 0 : 2;
 }

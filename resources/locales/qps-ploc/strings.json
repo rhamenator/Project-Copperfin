@@ -29,6 +29,8 @@
   "StudioHost.DesignerExecution.Error.ToolboxLaunchCommandNonZeroExit": "Designer toolbox launch command returned a non-zero exit code.",
   "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit": "Editor action launch command returned a non-zero exit code.",
   "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit": "Toolbox launch command returned a non-zero exit code.",
+  "Inspect.Prefix.Error": "error: ",
+  "Inspect.Prefix.Warning": "warning: ",
   "Runtime.Prg.Dll.Error.AppDomainDispatchQueryFailed": "AppDomain QueryInterface IDispatch failed",
   "Runtime.Prg.Dll.Error.AssemblyNotDispatch": "Assembly is not IDispatch",
   "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed": "CLRCreateInstance failed: {hresult}",

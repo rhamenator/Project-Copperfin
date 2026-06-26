@@ -31,6 +31,8 @@
   "StudioHost.EditorActionExecution.Error.LaunchCommandNonZeroExit": "Editor action launch command returned a non-zero exit code.",
   "StudioHost.ToolboxExecution.Error.LaunchCommandNonZeroExit": "Toolbox launch command returned a non-zero exit code.",
   "Command.Inspect": "Inspect",
+  "Inspect.Prefix.Error": "error: ",
+  "Inspect.Prefix.Warning": "warning: ",
   "Command.Run": "Run",
   "Diagnostic.ExpectedTokenBeforeToken": "Expected {expectedToken} before {actualToken}.",
   "Diagnostic.UnterminatedString": "Unterminated string literal.",
