@@ -127,6 +127,24 @@ const copperfin::localization::LocalizedCatalog& runtime_pipeline_english_catalo
     return catalog;
 }
 
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
+}
+
 std::vector<std::string> lines_with_prefix(const std::string& text, const std::string& prefix) {
     std::vector<std::string> matches;
     std::istringstream input(text);
@@ -5657,7 +5675,32 @@ void test_debug_source_roots_preserve_source_first_and_content_second_order() {
 void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys{
+        "Runtime.Package.Error.CopyFileFailed",
+        "Runtime.Package.Error.CreateContentRootFailed",
+        "Runtime.Package.Error.CreateDirectoryFailed",
+        "Runtime.Package.Error.CreateFileFailed",
+        "Runtime.Package.Error.CreateLauncherDirectoryFailed",
+        "Runtime.Package.Error.CreateNativeWrapperBuildDirectoryFailed",
+        "Runtime.Package.Error.CreateNativeWrapperDirectoryFailed",
+        "Runtime.Package.Error.CreatePackageRootFailed",
+        "Runtime.Package.Error.NativeWrapperCMakeMissing",
+        "Runtime.Package.Error.NativeWrapperPrimaryOutputBuildFailed",
+        "Runtime.Package.Error.NativeWrapperPrimaryOutputConfigureFailed",
+        "Runtime.Package.Error.NativeWrapperPrimaryOutputMissing",
+        "Runtime.Package.Error.OpenFileFailed",
+        "Runtime.Package.Error.PlanInvalid",
+        "Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput",
+        "Runtime.Package.Error.RuntimeHostSourcePathEmpty",
+        "Runtime.Package.Error.RuntimeHostSourcePathNotRegularFile",
+        "Runtime.Package.Error.RuntimeHostSourcePathResolveFailed",
+        "Runtime.Package.Error.SecurityRequiresAbsoluteRuntimeHostPath",
+        "Runtime.Package.Error.SecurityRequiresCanonicalRuntimeHostName",
+        "Runtime.Package.Error.SourceFileMissing",
+        "Runtime.Package.Error.WriteFileFailed"};
 
     expect(
         english_catalog.translate("Runtime.Package.Error.PlanInvalid") == "Package plan is not valid.",
@@ -5671,9 +5714,36 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
             "Source file does not exist: missing.prg",
         "#2390: runtime package diagnostics should preserve path placeholders");
     expect(
+        spanish_catalog.translate("Runtime.Package.Error.PlanInvalid") ==
+            "El plan del paquete no es valido.",
+        "#2606: runtime package invalid-plan diagnostics should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Runtime.Package.Error.PrimaryOutputRequiresLibraryOutput") ==
+            "Builds de saida primaria sao suportados apenas para pacotes de saida de biblioteca.",
+        "#2606: runtime package primary-output diagnostics should resolve through the pt-BR catalog");
+    expect(
+        portuguese_catalog.translate("Runtime.Package.Error.SourceFileMissing", {{"path", "missing.prg"}}) ==
+            "O arquivo de origem nao existe: missing.prg",
+        "#2606: runtime package source-file diagnostics should preserve placeholders through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Runtime.Package.Error.PlanInvalid") !=
             english_catalog.translate("Runtime.Package.Error.PlanInvalid"),
         "#2390: runtime package diagnostics should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Runtime.Package.Error.PlanInvalid") ==
+            copperfin::localization::pseudo_localize("Package plan is not valid."),
+        "#2606: runtime package qps-ploc diagnostics should route through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2606: es-419 should define every remaining Runtime.Package.Error localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2606: pt-BR should define every remaining Runtime.Package.Error localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2606: qps-ploc should define every remaining Runtime.Package.Error localization key");
+
+    ScopedEnvironmentVariable scoped_locale("COPPERFIN_LOCALE", "en-US");
 
     const copperfin::runtime::RuntimePackagePlan invalid_plan{};
     const auto materialize_result = copperfin::runtime::materialize_runtime_package(
@@ -5686,9 +5756,21 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
         materialize_result.error == "Package plan is not valid.",
         "#2390: materialize_runtime_package should preserve the default localized invalid-plan diagnostic");
 
+    set_env_variable("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_materialize_result = copperfin::runtime::materialize_runtime_package(
+        invalid_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        "runtime-host-fixture");
+    expect(
+        !spanish_materialize_result.ok &&
+            spanish_materialize_result.error == "El plan del paquete no es valido.",
+        "#2606: runtime package invalid-plan diagnostics should refresh to es-419 when the runtime locale changes in-process");
+
     copperfin::runtime::RuntimePackagePlan executable_plan{};
     executable_plan.ok = true;
     executable_plan.output_kind = copperfin::runtime::BuildOutputKind::executable;
+    set_env_variable("COPPERFIN_LOCALE", "en-US", true);
     const auto build_result = copperfin::runtime::build_runtime_package_primary_output(
         executable_plan,
         copperfin::security::default_native_security_profile(),
@@ -5697,6 +5779,29 @@ void test_runtime_package_diagnostics_resolve_through_localization_catalog() {
     expect(
         build_result.error == "Primary-output builds are only supported for library-output packages.",
         "#2390: primary-output build should preserve the default localized unsupported-kind diagnostic");
+
+    set_env_variable("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_build_result = copperfin::runtime::build_runtime_package_primary_output(
+        executable_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile());
+    expect(
+        !portuguese_build_result.ok &&
+            portuguese_build_result.error ==
+                "Builds de saida primaria sao suportados apenas para pacotes de saida de biblioteca.",
+        "#2606: runtime package primary-output diagnostics should refresh to pt-BR when the runtime locale changes in-process");
+
+    set_env_variable("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_materialize_result = copperfin::runtime::materialize_runtime_package(
+        invalid_plan,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        "runtime-host-fixture");
+    expect(
+        !pseudo_materialize_result.ok &&
+            pseudo_materialize_result.error ==
+                copperfin::localization::pseudo_localize("Package plan is not valid."),
+        "#2606: runtime package invalid-plan diagnostics should refresh to qps-ploc when the runtime locale changes in-process");
 }
 
 }  // namespace

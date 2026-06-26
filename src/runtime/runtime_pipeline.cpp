@@ -1,5 +1,5 @@
 #include "copperfin/runtime/runtime_pipeline.h"
-#include "copperfin/localization/localization.h"
+#include "localized_text.h"
 #include "copperfin/runtime/xasset_methods.h"
 #include "prg_engine_internal.h"
 #include "copperfin/security/sha256.h"
@@ -18,14 +18,6 @@
 namespace copperfin::runtime {
 
 namespace {
-
-std::string runtime_text(
-    std::string_view key,
-    const localization::PlaceholderMap& placeholders = {}) {
-    static const localization::LocalizedCatalog catalog =
-        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
-    return catalog.translate(key, placeholders);
-}
 
 std::string sanitize_file_name(const std::string& value) {
     std::string sanitized;
