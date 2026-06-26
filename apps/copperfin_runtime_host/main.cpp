@@ -1579,7 +1579,13 @@ int main(int argc, char** argv) {
                 (void)copperfin::security::append_immutable_audit_event(
                     audit_log_path,
                     "policy.denied",
-                    "role missing permission: project.open");
+                    localized_message(
+                        catalog,
+                        "RuntimeHost.Error.SecurityPolicyDenied",
+                        {
+                            {"permission", "project.open"},
+                            {"role", security_role}
+                        }));
             }
             std::cout << "status: error\n";
             print_error_line(
@@ -1600,7 +1606,7 @@ int main(int argc, char** argv) {
                 (void)copperfin::security::append_immutable_audit_event(
                     audit_log_path,
                     "policy.denied",
-                    "hash verification failed: " + verification_error);
+                    verification_error);
             }
             std::cout << "status: error\n";
             print_error_line(catalog, verification_error);
@@ -1704,7 +1710,13 @@ int main(int argc, char** argv) {
                     (void)copperfin::security::append_immutable_audit_event(
                         audit_log_path,
                         "policy.denied",
-                        "role missing permission: runtime.admin");
+                        localized_message(
+                            catalog,
+                            "RuntimeHost.Error.SecurityPolicyDenied",
+                            {
+                                {"permission", "runtime.admin"},
+                                {"role", security_role}
+                            }));
                 }
                 std::cout << "status: error\n";
                 print_error_line(

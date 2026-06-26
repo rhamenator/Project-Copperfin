@@ -528,6 +528,49 @@ void test_runtime_host_quit_prompt_routes_through_catalog() {
         "#2591: qps-ploc runtime-host quit prompt should pseudo-localize prose while preserving confirmation tokens");
 }
 
+void test_runtime_host_security_policy_denial_routes_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap denial_placeholders{
+        {"permission", "runtime.admin"},
+        {"role", "developer"}
+    };
+
+    expect(
+        english.translate("RuntimeHost.Error.SecurityPolicyDenied", denial_placeholders) ==
+            "Security policy denied runtime.admin for role 'developer'.",
+        "#2592: runtime-host security denial should preserve the en-US default output");
+
+    const std::string spanish_denial =
+        spanish.translate("RuntimeHost.Error.SecurityPolicyDenied", denial_placeholders);
+    expect(
+        spanish_denial == "La politica de seguridad denego runtime.admin para el rol 'developer'.",
+        "#2592: es-419 runtime-host security denial should localize the prose");
+    expect(
+        spanish_denial.find("Security policy denied") == std::string::npos &&
+            spanish_denial.find("runtime.admin") != std::string::npos &&
+            spanish_denial.find("developer") != std::string::npos,
+        "#2592: es-419 runtime-host security denial should preserve invariant permission and role ids without falling back to English");
+
+    const std::string portuguese_denial =
+        portuguese.translate("RuntimeHost.Error.SecurityPolicyDenied", denial_placeholders);
+    expect(
+        portuguese_denial == "A politica de seguranca negou runtime.admin para a funcao 'developer'.",
+        "#2592: pt-BR runtime-host security denial should localize the prose");
+
+    const std::string pseudo_denial =
+        pseudo.translate("RuntimeHost.Error.SecurityPolicyDenied", denial_placeholders);
+    expect(
+        pseudo_denial.find("[!! ") == 0U &&
+            pseudo_denial.find("runtime.admin") != std::string::npos &&
+            pseudo_denial.find("developer") != std::string::npos &&
+            pseudo_denial.find("Security policy denied") == std::string::npos,
+        "#2592: qps-ploc runtime-host security denial should pseudo-localize prose while preserving invariant ids");
+}
+
 void test_runtime_numeric_domain_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1461,6 +1504,7 @@ int main(int argc, char** argv) {
     test_shared_core_catalog_entries_cover_placeholder_locales();
     test_runtime_host_manifest_verification_errors_route_through_catalog();
     test_runtime_host_quit_prompt_routes_through_catalog();
+    test_runtime_host_security_policy_denial_routes_through_catalog();
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();

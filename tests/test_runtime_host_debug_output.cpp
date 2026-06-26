@@ -1,5 +1,6 @@
 #include "copperfin/localization/localization.h"
 #include "copperfin/runtime/xasset_methods.h"
+#include "copperfin/security/audit_stream.h"
 #include "copperfin/security/sha256.h"
 #include "copperfin/studio/document_model.h"
 #include "copperfin/vfp/dbf_table.h"
@@ -1109,6 +1110,202 @@ void test_runtime_host_manifest_verification_errors_localize_without_changing_co
         expect(process.stdout_text.find("Security-enabled manifest is missing runtime_host_sha256.") ==
                    std::string::npos,
                "#2588: es-419 manifest verification failures should not fall back to the raw English error");
+    }
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_security_denial_audit_localization";
+    const fs::path locale_root = temp_root / "locales";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    write_runtime_host_usage_catalogs(locale_root);
+
+    {
+        const fs::path case_root = temp_root / "project_open_denied";
+        const fs::path content_root = case_root / "content";
+        const fs::path manifest_path = case_root / "project_open_denied.cfmanifest";
+        const fs::path startup_path = content_root / "project_open_denied.prg";
+        const fs::path audit_log_path = case_root / "security_audit.log";
+        fs::create_directories(content_root);
+        write_text(startup_path, "RETURN\n");
+        const std::string manifest_text =
+            std::string("manifest_version=1\n"
+            "project_title=ProjectOpenDeniedLocalization\n"
+            "package_root=") + case_root.string() + "\n"
+            "content_root=" + content_root.string() + "\n"
+            "working_directory=" + content_root.string() + "\n"
+            "startup_item=project_open_denied.prg\n"
+            "startup_source=" + startup_path.string() + "\n"
+            "security_enabled=true\n"
+            "security_role=guest\n"
+            "security_mode=native\n"
+            "audit_log_path=security_audit.log\n"
+            "dotnet_story=none\n";
+        write_text(manifest_path, manifest_text);
+
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root);
+
+        expect(process.exit_code == 7,
+               "#2592: es-419 project.open denials should keep the security denial exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2592: es-419 project.open denials should preserve machine-readable status");
+        expect(process.stdout_text.find(
+                   "error: La politica de seguridad denego project.open para el rol 'guest'.") !=
+                   std::string::npos,
+               "#2592: es-419 project.open denials should localize console prose while preserving invariant ids");
+
+        const auto audit_chain = copperfin::security::verify_immutable_audit_chain(audit_log_path.string());
+        expect(audit_chain.ok && audit_chain.entries == 1U,
+               "#2592: es-419 project.open denials should preserve the immutable audit chain format");
+        const std::string audit_text = read_text(audit_log_path);
+        expect(audit_text.find("|policy.denied|") != std::string::npos,
+               "#2592: es-419 project.open denials should preserve the policy.denied audit event name");
+        expect(audit_text.find("La politica de seguridad denego project.open para el rol 'guest'.") !=
+                   std::string::npos,
+               "#2592: es-419 project.open denials should localize audit detail prose");
+        expect(audit_text.find("role missing permission") == std::string::npos,
+               "#2592: es-419 project.open denials should not leave raw English audit detail wrappers");
+    }
+
+    {
+        const fs::path deployed_root = temp_root / "runtime_admin_denied";
+        const fs::path content_root = deployed_root / "content";
+        const fs::path deployed_runtime_host = deployed_root / "copperfin_runtime_host.exe";
+        const fs::path manifest_path = deployed_root / "app.cfmanifest";
+        const fs::path startup_path = content_root / "main.prg";
+        const fs::path audit_log_path = deployed_root / "security_audit.log";
+        fs::create_directories(content_root);
+        fs::copy_file(runtime_host_path, deployed_runtime_host, fs::copy_options::overwrite_existing);
+#if defined(__unix__) || defined(__APPLE__)
+        fs::permissions(
+            deployed_runtime_host,
+            fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec,
+            fs::perm_options::add,
+            ignored);
+#endif
+
+        const auto runtime_host_hash = copperfin::security::sha256_hex_for_file(deployed_runtime_host.string());
+        expect(runtime_host_hash.ok, "#2592: runtime-admin denial fixture should hash the deployed runtime host");
+        if (!runtime_host_hash.ok) {
+            fs::remove_all(temp_root, ignored);
+            return;
+        }
+
+        write_text(startup_path, "RETURN\n");
+        const std::string manifest_text =
+            std::string("manifest_version=1\n"
+            "project_title=RuntimeAdminDeniedLocalization\n"
+            "project_path=") + (deployed_root / "demo.pjx").string() + "\n"
+            "package_root=" + deployed_root.string() + "\n"
+            "content_root=" + content_root.string() + "\n"
+            "working_directory=" + content_root.string() + "\n"
+            "startup_item=main.prg\n"
+            "startup_source=" + startup_path.string() + "\n"
+            "configuration=debug\n"
+            "security_enabled=true\n"
+            "security_role=developer\n"
+            "security_mode=native\n"
+            "audit_log_path=" + audit_log_path.string() + "\n"
+            "runtime_host_sha256=" + runtime_host_hash.hex_digest + "\n"
+            "dotnet_story=none\n";
+        write_text(manifest_path, manifest_text);
+
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto process = run_process_capture(
+            deployed_runtime_host.string(),
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--debug-command", "continue"
+            },
+            temp_root);
+
+        expect(process.exit_code == 9,
+               "#2592: pt-BR runtime.admin denials should keep the debug-command security denial exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2592: pt-BR runtime.admin denials should preserve machine-readable status");
+        expect(process.stdout_text.find(
+                   "erro: A politica de seguranca negou runtime.admin para a funcao 'developer'.") !=
+                   std::string::npos,
+               "#2592: pt-BR runtime.admin denials should localize console prose while preserving invariant ids");
+
+        const auto audit_chain = copperfin::security::verify_immutable_audit_chain(audit_log_path.string());
+        expect(audit_chain.ok && audit_chain.entries >= 1U,
+               "#2592: pt-BR runtime.admin denials should preserve the immutable audit chain format");
+        const std::string audit_text = read_text(audit_log_path);
+        expect(audit_text.find("|policy.denied|") != std::string::npos,
+               "#2592: pt-BR runtime.admin denials should preserve the policy.denied audit event name");
+        expect(audit_text.find("A politica de seguranca negou runtime.admin para a funcao 'developer'.") !=
+                   std::string::npos,
+               "#2592: pt-BR runtime.admin denials should localize audit detail prose");
+        expect(audit_text.find("role missing permission") == std::string::npos,
+               "#2592: pt-BR runtime.admin denials should not leave raw English audit detail wrappers");
+    }
+
+    {
+        const fs::path case_root = temp_root / "manifest_hash_denied";
+        const fs::path content_root = case_root / "content";
+        const fs::path manifest_path = case_root / "manifest_hash_denied.cfmanifest";
+        const fs::path startup_path = content_root / "manifest_hash_denied.prg";
+        const fs::path audit_log_path = case_root / "security_audit.log";
+        fs::create_directories(content_root);
+        write_text(startup_path, "RETURN\n");
+        const std::string manifest_text =
+            std::string("manifest_version=1\n"
+            "project_title=ManifestHashDeniedLocalization\n"
+            "package_root=") + case_root.string() + "\n"
+            "content_root=" + content_root.string() + "\n"
+            "working_directory=" + content_root.string() + "\n"
+            "startup_item=manifest_hash_denied.prg\n"
+            "startup_source=" + startup_path.string() + "\n"
+            "security_enabled=true\n"
+            "security_role=developer\n"
+            "security_mode=native\n"
+            "audit_log_path=security_audit.log\n"
+            "dotnet_story=none\n";
+        write_text(manifest_path, manifest_text);
+
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root);
+
+        expect(process.exit_code == 8,
+               "#2592: es-419 manifest-hash denials should keep the manifest verification exit code");
+        expect(process.stdout_text.find("status: error") != std::string::npos,
+               "#2592: es-419 manifest-hash denials should preserve machine-readable status");
+        expect(process.stdout_text.find(
+                   "error: Al manifiesto con seguridad habilitada le falta runtime_host_sha256.") !=
+                   std::string::npos,
+               "#2592: es-419 manifest-hash denials should localize console verification prose");
+
+        const auto audit_chain = copperfin::security::verify_immutable_audit_chain(audit_log_path.string());
+        expect(audit_chain.ok && audit_chain.entries == 1U,
+               "#2592: es-419 manifest-hash denials should preserve the immutable audit chain format");
+        const std::string audit_text = read_text(audit_log_path);
+        expect(audit_text.find("|policy.denied|") != std::string::npos,
+               "#2592: es-419 manifest-hash denials should preserve the policy.denied audit event name");
+        expect(audit_text.find("Al manifiesto con seguridad habilitada le falta runtime_host_sha256.") !=
+                   std::string::npos,
+               "#2592: es-419 manifest-hash denials should localize audit detail prose");
+        expect(audit_text.find("hash verification failed") == std::string::npos,
+               "#2592: es-419 manifest-hash denials should not leave the raw English hash-verification wrapper");
     }
 
     if (failures == 0) {
@@ -2974,6 +3171,7 @@ int main(int argc, char** argv) {
     test_runtime_host_surfaces_xasset_breakpoint_metadata_in_pause_output(argv[1]);
     test_runtime_host_rejects_extension_payload_basename_fallback(argv[1]);
     test_runtime_host_manifest_verification_errors_localize_without_changing_contracts(argv[1]);
+    test_runtime_host_security_denial_audit_details_localize_without_changing_audit_contracts(argv[1]);
     test_runtime_host_rejects_ai_federation_planning_without_ai_permission(argv[1]);
     test_runtime_host_writes_bridge_response_artifact(argv[1]);
     test_runtime_host_invokes_zero_argument_bridge_export(argv[1]);
