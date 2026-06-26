@@ -1363,6 +1363,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "VisualAssetEditor.PropertyLabel.ChildOrder",
         "VisualAssetEditor.PropertyLabel.ClipControls",
         "VisualAssetEditor.PropertyLabel.Closable"};
+    const std::vector<std::string_view> asset_editor_property_label_batch2_keys = {
+        "VisualAssetEditor.PropertyLabel.ColumnCount",
+        "VisualAssetEditor.PropertyLabel.ColumnLines",
+        "VisualAssetEditor.PropertyLabel.ColumnOrder",
+        "VisualAssetEditor.PropertyLabel.ColumnWidths",
+        "VisualAssetEditor.PropertyLabel.ContinuousScroll",
+        "VisualAssetEditor.PropertyLabel.ControlBox",
+        "VisualAssetEditor.PropertyLabel.ControlSource",
+        "VisualAssetEditor.PropertyLabel.CurrentControl",
+        "VisualAssetEditor.PropertyLabel.Curvature",
+        "VisualAssetEditor.PropertyLabel.DataSession",
+        "VisualAssetEditor.PropertyLabel.DefaultFilePath",
+        "VisualAssetEditor.PropertyLabel.DeleteMark",
+        "VisualAssetEditor.PropertyLabel.Desktop",
+        "VisualAssetEditor.PropertyLabel.DisabledBackColor",
+        "VisualAssetEditor.PropertyLabel.DisabledForeColor",
+        "VisualAssetEditor.PropertyLabel.DisabledItemBackColor",
+        "VisualAssetEditor.PropertyLabel.DisabledItemForeColor",
+        "VisualAssetEditor.PropertyLabel.DisabledPicture",
+        "VisualAssetEditor.PropertyLabel.DisplayOrientation",
+        "VisualAssetEditor.PropertyLabel.DisplayValue",
+        "VisualAssetEditor.PropertyLabel.Dockable",
+        "VisualAssetEditor.PropertyLabel.DownPicture",
+        "VisualAssetEditor.PropertyLabel.DragIcon",
+        "VisualAssetEditor.PropertyLabel.DragMode",
+        "VisualAssetEditor.PropertyLabel.DrawMode"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1672,6 +1698,14 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("auto-verb-menu"),
         "#2672: asset-editor property labels batch 1 should resolve through locale catalogs without changing machine contracts");
     expect(
+        spanish_catalog.translate("VisualAssetEditor.PropertyLabel.ColumnWidths") == "anchos de columna" &&
+            spanish_catalog.translate("VisualAssetEditor.PropertyLabel.DisabledPicture") == "imagen deshabilitada" &&
+            portuguese_catalog.translate("VisualAssetEditor.PropertyLabel.ControlSource") == "origem do controle" &&
+            portuguese_catalog.translate("VisualAssetEditor.PropertyLabel.DrawMode") == "modo de desenho" &&
+            pseudo_catalog.translate("VisualAssetEditor.PropertyLabel.DisplayOrientation") ==
+                copperfin::localization::pseudo_localize("display orientation"),
+        "#2673: asset-editor property labels batch 2 should resolve through locale catalogs without changing machine contracts");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1860,6 +1894,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_property_label_batch1_keys) == 0U,
         "#2672: qps-ploc should define every remaining asset-editor property-label localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", asset_editor_property_label_batch2_keys) == 0U,
+        "#2673: es-419 should define every remaining asset-editor property-label localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", asset_editor_property_label_batch2_keys) == 0U,
+        "#2673: pt-BR should define every remaining asset-editor property-label localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_property_label_batch2_keys) == 0U,
+        "#2673: qps-ploc should define every remaining asset-editor property-label localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
