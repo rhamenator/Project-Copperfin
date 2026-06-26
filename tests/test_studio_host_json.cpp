@@ -873,6 +873,28 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAction.ResizeTitle",
         "StudioHost.LaunchParse.ObjectAction.Snap",
         "StudioHost.LaunchParse.ObjectAction.SnapTitle"};
+    const std::vector<std::string_view> object_assignment_layout_window_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds",
+        "StudioHost.LaunchParse.ObjectAssignment.AddLineFeedsTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelection",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowCellSelectionTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizing",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowHeaderSizingTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowOutput",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizing",
+        "StudioHost.LaunchParse.ObjectAssignment.AllowRowSizingTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottom",
+        "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnBottomTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTop",
+        "StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTopTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AutoCenter",
+        "StudioHost.LaunchParse.ObjectAssignment.AutoCenterTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AutoRelease",
+        "StudioHost.LaunchParse.ObjectAssignment.AutoReleaseTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AutoSize",
+        "StudioHost.LaunchParse.ObjectAssignment.AutoSizeTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -962,6 +984,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("nudge"),
         "#2629: host object-action labels should resolve through locale catalogs without changing CLI option placeholders");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AutoCenter") == "centrado automatico" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AllowOutputTitle") ==
+                "Permitir salida" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu") ==
+                "menu automatico de verbos" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AlwaysOnTopTitle") ==
+                "Sempre no topo" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.AddLineFeeds") ==
+                copperfin::localization::pseudo_localize("add-line-feeds"),
+        "#2654: host object-assignment layout/window labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -979,6 +1012,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_action_keys) == 0U,
         "#2629: qps-ploc should define every remaining StudioHost.LaunchParse.ObjectAction localization key");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_assignment_layout_window_keys) == 0U,
+        "#2654: es-419 should define every remaining layout/window object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_assignment_layout_window_keys) == 0U,
+        "#2654: pt-BR should define every remaining layout/window object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_layout_window_keys) == 0U,
+        "#2654: qps-ploc should define every remaining layout/window object-assignment localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
