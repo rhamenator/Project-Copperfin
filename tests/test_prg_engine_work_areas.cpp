@@ -122,6 +122,38 @@ void test_use_and_data_session_isolation() {
 
     fs::remove_all(temp_root, ignored);
 }
+
+void test_use_missing_target_uses_localized_error() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_engine_use_missing_target";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path missing_stem = temp_root / "missing_people";
+    const fs::path expected_path = missing_stem.string() + ".dbf";
+    const fs::path main_path = temp_root / "use_missing_target.prg";
+    write_text(
+        main_path,
+        "USE '" + missing_stem.string() + "' ALIAS Missing IN 0\n"
+        "x = 2\n"
+        "RETURN\n");
+
+    copperfin::runtime::PrgRuntimeSession session = copperfin::runtime::PrgRuntimeSession::create(
+        make_runtime_session_options(main_path.string(), temp_root.string()));
+
+    const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+           "missing USE target should pause with an error");
+    expect(state.message == "Unable to resolve USE target: " + expected_path.string(),
+           "missing USE target error should route through the default locale catalog");
+
+    const auto x_value = state.globals.find("x");
+    expect(x_value == state.globals.end(), "statements after missing USE target should not execute");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 void test_report_form_to_file_renders_without_event_loop_pause() {
     namespace fs = std::filesystem;
     const fs::path report_path = R"(C:\Program Files (x86)\Microsoft Visual FoxPro 9\Samples\Solution\Reports\invoice.frx)";
@@ -1369,6 +1401,7 @@ void test_two_work_areas_on_same_table_see_consistent_mutations();  // defined b
 
 int main() {
     test_use_and_data_session_isolation();
+    test_use_missing_target_uses_localized_error();
     test_report_form_to_file_renders_without_event_loop_pause();
     test_label_form_to_file_renders_without_event_loop_pause();
     test_report_form_missing_asset_uses_localized_error();

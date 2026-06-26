@@ -506,6 +506,11 @@
                 vfp::DbfFieldDescriptor{.name = "FIELD_DEC", .type = 'N', .length = 18U, .decimal_count = 0U}};
         }
 
+        std::string use_target_resolve_message(const std::filesystem::path &path) const
+        {
+            return runtime_text("Runtime.Prg.Cursor.Error.UseTargetResolveFailed", {{"path", path.string()}});
+        }
+
         bool open_table_cursor(
             const std::string &raw_path,
             const std::string &requested_alias,
@@ -540,7 +545,7 @@
                 table_path = table_path.lexically_normal();
                 if (!std::filesystem::exists(table_path))
                 {
-                    last_error_message = "Unable to resolve USE target: " + table_path.string();
+                    last_error_message = use_target_resolve_message(table_path);
                     return false;
                 }
 

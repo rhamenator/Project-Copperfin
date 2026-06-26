@@ -794,6 +794,7 @@
   "Runtime.Prg.Cursor.Error.SeekRequiresActiveOrder": "SEEK requires an active order",
   "Runtime.Prg.Cursor.Error.SeekRequiresLocalTableBackedCursor": "SEEK requires a local table-backed cursor",
   "Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired": "Table already open in this data session; USE AGAIN is required: {path}",
+  "Runtime.Prg.Cursor.Error.UseTargetResolveFailed": "Unable to resolve USE target: {path}",
   "Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound": "USE target work area not found: {target}",
   "Runtime.Prg.ReportAsset.Error.ResolveFailed": "Unable to resolve report asset: {path}",
   "Runtime.Prg.ReportOutput.Error.OpenFailed": "Unable to open report output path: {path}",

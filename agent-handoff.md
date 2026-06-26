@@ -15,7 +15,7 @@ Canonical Copperfin continuation brief. Keep this file compact; do not rebuild a
 ## Current State
 
 - Last shipped E3 child: `#2367`, builder and wizard registry display title, description, launch validation, and launch catalog error localization for report/label designer-facing builder discovery paths.
-- Last shipped localization child: `#2537`, missing report/label asset errors route through the portable C++ localization catalog while preserving FoxPro/VFP `REPORT FORM`/`LABEL FORM` and `PREVIEW` syntax, asset path resolution, event-loop behavior, runtime error control flow, file paths, and default en-US output.
+- Last shipped localization child: `#2538`, local `USE` target resolution errors route through the portable C++ localization catalog while preserving FoxPro/VFP `USE`, `ALIAS`, `IN`, and `USE AGAIN` syntax, table path and `.dbf` extension resolution, DBF parsing, work-area allocation, runtime error control flow, file paths, and default en-US output.
 - Current lane: continue prompt-sized localization cleanup under `#2348` until the obvious repo-wide user-facing string backlog is handled, then return to E3/#24 report/label designer fidelity and section-aware host surfaces.
 - Next action: inspect live GitHub children under `#2348`; pick the highest-weight open prompt-sized localization child, or create the next child under `#2348` if no prompt-sized child fits and the user-facing string backlog remains obvious. Return to `#24` only after the localization cleanup pass is complete or blocked.
 - E2/#23 remains open mostly for evidence-audit/closure cleanup. Do not open more E2 wrapper work unless new APIs or fresh regression evidence show a real implementation gap.
