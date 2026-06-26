@@ -1794,8 +1794,8 @@ void test_undo_without_history_fails_deterministically() {
     const auto state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
     expect(state.reason == copperfin::runtime::DebugPauseReason::error, "empty UNDO stack should pause with an error");
     expect(state.location.line == 2U, "empty UNDO should report the UNDO line");
-    expect(state.message.find("No command to UNDO") != std::string::npos,
-        "empty UNDO should expose deterministic no-command error");
+    expect(state.message == "No command to UNDO",
+        "empty UNDO should route deterministic no-command error through the default locale catalog");
 
     const auto name = state.globals.find("cname");
     expect(name == state.globals.end(), "script should not execute statements after a failed UNDO");

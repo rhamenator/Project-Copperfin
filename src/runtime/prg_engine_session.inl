@@ -478,6 +478,31 @@
             return found->second.back().command_label;
         }
 
+        std::string command_undo_backup_message(const std::string &path) const
+        {
+            return runtime_text("Runtime.Prg.CommandUndo.Error.BackupCreateFailed", {{"path", path}});
+        }
+
+        std::string command_undo_journal_initialize_message() const
+        {
+            return runtime_text("Runtime.Prg.CommandUndo.Error.JournalInitializeFailed");
+        }
+
+        std::string command_undo_journal_persist_message() const
+        {
+            return runtime_text("Runtime.Prg.CommandUndo.Error.JournalPersistFailed");
+        }
+
+        std::string command_undo_journal_replay_message() const
+        {
+            return runtime_text("Runtime.Prg.CommandUndo.Error.JournalReplayFailed");
+        }
+
+        std::string command_undo_empty_message() const
+        {
+            return runtime_text("Runtime.Prg.CommandUndo.Error.NoCommand");
+        }
+
         bool begin_command_undo_journal_if_needed()
         {
             TransactionJournalState &journal = current_command_undo_journal();
@@ -508,7 +533,7 @@
             journal.level = 0;
             if (!write_transaction_journal_file(journal))
             {
-                last_error_message = "Unable to initialize command undo journal";
+                last_error_message = command_undo_journal_initialize_message();
                 return false;
             }
             return true;
@@ -545,7 +570,7 @@
                     std::filesystem::copy_file(path, backup_path, std::filesystem::copy_options::overwrite_existing, copy_error);
                     if (copy_error)
                     {
-                        last_error_message = "Unable to create command undo backup for: " + key;
+                        last_error_message = command_undo_backup_message(key);
                         return false;
                     }
                     entry.backup_path = backup_path.string();
@@ -554,7 +579,7 @@
                 journal.tracked_files.emplace(key, std::move(entry));
                 if (!write_transaction_journal_file(journal))
                 {
-                    last_error_message = "Unable to persist command undo journal";
+                    last_error_message = command_undo_journal_persist_message();
                     return false;
                 }
             }
@@ -574,7 +599,7 @@
             command_undo_journal_by_session.erase(found);
             if (!state.tracked_files.empty() && !replay_transaction_journal_state(state))
             {
-                last_error_message = "Failed to replay command undo journal";
+                last_error_message = command_undo_journal_replay_message();
                 return;
             }
             std::error_code ignored;
@@ -610,7 +635,7 @@
             auto found = command_undo_stack_by_session.find(current_data_session);
             if (found == command_undo_stack_by_session.end() || found->second.empty())
             {
-                last_error_message = "No command to UNDO";
+                last_error_message = command_undo_empty_message();
                 return false;
             }
 
@@ -623,7 +648,7 @@
 
             if (!replay_transaction_journal_state(state))
             {
-                last_error_message = "Failed to replay command undo journal";
+                last_error_message = command_undo_journal_replay_message();
                 return false;
             }
             refresh_local_cursors_after_transaction_replay();
@@ -637,7 +662,7 @@
             auto found = command_undo_stack_by_session.find(current_data_session);
             if (found == command_undo_stack_by_session.end() || found->second.empty())
             {
-                last_error_message = "No command to UNDO";
+                last_error_message = command_undo_empty_message();
                 return false;
             }
 
@@ -647,7 +672,7 @@
                 found->second.pop_back();
                 if (!replay_transaction_journal_state(state))
                 {
-                    last_error_message = "Failed to replay command undo journal";
+                    last_error_message = command_undo_journal_replay_message();
                     return false;
                 }
                 refresh_local_cursors_after_transaction_replay();
