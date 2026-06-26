@@ -1077,6 +1077,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAssignment.RowHeight",
         "StudioHost.LaunchParse.ObjectAssignment.RowSource",
         "StudioHost.LaunchParse.ObjectAssignment.RowSourceTitle"};
+    const std::vector<std::string_view> object_assignment_selection_state_tab_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.RowSourceType",
+        "StudioHost.LaunchParse.ObjectAssignment.RowSourceTypeTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.ScaleMode",
+        "StudioHost.LaunchParse.ObjectAssignment.ScrollBars",
+        "StudioHost.LaunchParse.ObjectAssignment.SelectedBackColor",
+        "StudioHost.LaunchParse.ObjectAssignment.SelectedForeColor",
+        "StudioHost.LaunchParse.ObjectAssignment.SelectedItemBackColor",
+        "StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor",
+        "StudioHost.LaunchParse.ObjectAssignment.ShowWindow",
+        "StudioHost.LaunchParse.ObjectAssignment.Sparse",
+        "StudioHost.LaunchParse.ObjectAssignment.SparseTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.SpecialEffect",
+        "StudioHost.LaunchParse.ObjectAssignment.SplitBar",
+        "StudioHost.LaunchParse.ObjectAssignment.SplitBarTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.StartingTabIndex",
+        "StudioHost.LaunchParse.ObjectAssignment.StatusBarText",
+        "StudioHost.LaunchParse.ObjectAssignment.StatusBarTextTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.Style",
+        "StudioHost.LaunchParse.ObjectAssignment.StyleTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.TabOrder",
+        "StudioHost.LaunchParse.ObjectAssignment.TabOrderTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.TabOrientation",
+        "StudioHost.LaunchParse.ObjectAssignment.TabStop",
+        "StudioHost.LaunchParse.ObjectAssignment.TabStopTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.TitleBar"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1257,6 +1283,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("record-source"),
         "#2661: host object-assignment picture and record labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.ScaleMode") ==
+                "modo de escala" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.StatusBarTextTitle") ==
+                "Texto de barra de estado" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.SparseTitle") ==
+                "Esparso" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.TabOrder") ==
+                "ordem de tabulacao" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.SelectedItemForeColor") ==
+                copperfin::localization::pseudo_localize("selected-item-fore-color"),
+        "#2662: host object-assignment selection state and tab labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1346,6 +1384,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_picture_record_keys) == 0U,
         "#2661: qps-ploc should define every remaining picture/record object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_assignment_selection_state_tab_keys) == 0U,
+        "#2662: es-419 should define every remaining selection-state/tab object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_assignment_selection_state_tab_keys) == 0U,
+        "#2662: pt-BR should define every remaining selection-state/tab object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_selection_state_tab_keys) == 0U,
+        "#2662: qps-ploc should define every remaining selection-state/tab object-assignment localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
