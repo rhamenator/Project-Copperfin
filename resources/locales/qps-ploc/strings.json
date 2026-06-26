@@ -11,6 +11,9 @@
   "BuildHost.Error.UnknownOrIncompleteArgument": "Unknown or incomplete argument: {argument}",
   "BuildHost.Usage": "Usage: {commandName} {buildCommand} {projectOption} {projectValue} {outputDirOption} {outputDirValue} [{configurationOption} {configurationValue}] [{enableSecurityOption}] [{emitDotnetLauncherOption}] [{runtimeHostOption} {runtimeHostValue}]",
   "BuildHost.Warning.ProcessHardening": "warning: {message}",
+  "Runtime.Prg.Expression.Error.DivisionByZero": "Division by zero",
+  "Runtime.Prg.Expression.Error.ExpectedFunctionArgument": "Expected function argument",
+  "Runtime.Prg.Expression.Error.IntegerDivisionByZero": "Division by zero in integer expression",
   "Runtime.Prg.Numeric.Error.PositiveArgumentRequired": "{function} requires a positive argument (got {value})",
   "Runtime.Prg.Numeric.Error.UnitRangeArgumentRequired": "{function} requires an argument between -1 and 1 (got {value})"
 }

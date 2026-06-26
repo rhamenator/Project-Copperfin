@@ -6386,8 +6386,8 @@ void test_division_by_zero_dispatches_runtime_error() {
            "GAP-01/#257: division by zero should pause with an error reason");
     expect(state.location.line == 2U,
            "GAP-01/#257: division by zero should highlight line 2");
-    expect(!state.message.empty(),
-           "GAP-01/#257: division by zero should produce a non-empty diagnostic message");
+    expect(state.message == "Division by zero in integer expression",
+           "#2541: division by zero should route through the default locale catalog");
 
     // Session must survive a continue after the divide-by-zero fault
     state = session.run(copperfin::runtime::DebugResumeAction::continue_run);

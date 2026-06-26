@@ -385,6 +385,39 @@ void test_runtime_numeric_domain_errors_route_through_catalog() {
         "#2540: qps-ploc numeric error should pseudo-localize prose while preserving placeholders");
 }
 
+void test_runtime_expression_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english.translate("Runtime.Prg.Expression.Error.IntegerDivisionByZero") ==
+            "Division by zero in integer expression",
+        "#2541: integer division-by-zero error should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Expression.Error.DivisionByZero") == "Division by zero",
+        "#2541: division-by-zero error should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Expression.Error.ExpectedFunctionArgument") == "Expected function argument",
+        "#2541: expected-function-argument error should preserve en-US default output");
+    expect(
+        spanish.translate("Runtime.Prg.Expression.Error.DivisionByZero") !=
+            english.translate("Runtime.Prg.Expression.Error.DivisionByZero"),
+        "#2541: es-419 expression division error should not fall back to raw English prose");
+    expect(
+        portuguese.translate("Runtime.Prg.Expression.Error.ExpectedFunctionArgument") !=
+            english.translate("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"),
+        "#2541: pt-BR expected-argument error should not fall back to raw English prose");
+
+    const std::string pseudo_message = pseudo.translate("Runtime.Prg.Expression.Error.IntegerDivisionByZero");
+    expect(
+        pseudo_message.find("[!! ") == 0U &&
+            pseudo_message != english.translate("Runtime.Prg.Expression.Error.IntegerDivisionByZero"),
+        "#2541: qps-ploc expression error should pseudo-localize prose");
+}
+
 void test_inspect_usage_routes_through_localization(const std::string& inspect_path) {
     namespace fs = std::filesystem;
     const fs::path temp_root = fs::temp_directory_path() / "copperfin_localization_inspect_usage_tests";
@@ -420,6 +453,7 @@ int main(int argc, char** argv) {
     test_runtime_report_output_messages_route_through_catalog();
     test_build_host_catalog_entries_cover_placeholder_locales();
     test_runtime_numeric_domain_errors_route_through_catalog();
+    test_runtime_expression_errors_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {

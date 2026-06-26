@@ -357,14 +357,14 @@
                         {
                             const std::int64_t divisor = static_cast<std::int64_t>(value_as_number(right));
                             if (divisor == 0)
-                                throw std::runtime_error("Division by zero in integer expression");
+                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.IntegerDivisionByZero"));
                             left = make_int64_value(static_cast<std::int64_t>(value_as_number(left)) / divisor);
                         }
                         else
                         {
                             const double divisor = value_as_number(right);
                             if (divisor == 0.0)
-                                throw std::runtime_error("Division by zero");
+                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.DivisionByZero"));
                             left = make_number_value(value_as_number(left) / divisor);
                         }
                     }
@@ -518,7 +518,7 @@
                             argument_end = position_;
                             if (argument_end == argument_start)
                             {
-                                throw std::runtime_error("Expected function argument");
+                                throw std::runtime_error(runtime_text("Runtime.Prg.Expression.Error.ExpectedFunctionArgument"));
                             }
 
                             skip_whitespace();
