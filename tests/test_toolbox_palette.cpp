@@ -251,15 +251,25 @@ int main() {
         "Studio.Toolbox.Item.Container.Title",
         "Studio.Toolbox.Item.Grid.Description",
         "Studio.Toolbox.Item.Grid.Title"};
+    const std::vector<std::string_view> graphics_item_keys = {
+        "Studio.Toolbox.Item.Image.Description",
+        "Studio.Toolbox.Item.Image.Title",
+        "Studio.Toolbox.Item.Line.Description",
+        "Studio.Toolbox.Item.Line.Title",
+        "Studio.Toolbox.Item.Shape.Description",
+        "Studio.Toolbox.Item.Shape.Title"};
     const auto* spanish_label = find_toolbox_item(spanish_toolbox, "label");
     const auto* spanish_checkbox = find_toolbox_item(spanish_toolbox, "checkbox");
     const auto* spanish_container = find_toolbox_item(spanish_toolbox, "container");
+    const auto* spanish_image = find_toolbox_item(spanish_toolbox, "image");
     const auto* portuguese_textbox = find_toolbox_item(portuguese_toolbox, "textbox");
     const auto* portuguese_commandbutton = find_toolbox_item(portuguese_toolbox, "commandbutton");
     const auto* portuguese_grid = find_toolbox_item(portuguese_toolbox, "grid");
+    const auto* portuguese_shape = find_toolbox_item(portuguese_toolbox, "shape");
     const auto* pseudo_editbox = find_toolbox_item(pseudo_toolbox, "editbox");
     const auto* pseudo_combobox = find_toolbox_item(pseudo_toolbox, "combobox");
     const auto* pseudo_container = find_toolbox_item(pseudo_toolbox, "container");
+    const auto* pseudo_line = find_toolbox_item(pseudo_toolbox, "line");
     expect(
         spanish_label != nullptr &&
             spanish_label->title == "Etiqueta" &&
@@ -354,6 +364,38 @@ int main() {
             pseudo_container->container,
         "#2635: qps-ploc container toolbox metadata should resolve through the pseudo-localization transform");
     expect(
+        spanish_image != nullptr &&
+            spanish_image->title == "Imagen" &&
+            spanish_image->description == "Mostrar mapas de bits y assets de imagen vinculados." &&
+            spanish_image->id == "image" &&
+            spanish_image->vfp_class == "Image" &&
+            spanish_image->base_class == "Image" &&
+            spanish_image->default_name_prefix == "img" &&
+            !spanish_image->container,
+        "#2636: es-419 image toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        portuguese_shape != nullptr &&
+            portuguese_shape->title == "Forma" &&
+            portuguese_shape->description ==
+                "Desenhar retangulos, retangulos arredondados e outras variantes de formas do VFP." &&
+            portuguese_shape->id == "shape" &&
+            portuguese_shape->vfp_class == "Shape" &&
+            portuguese_shape->base_class == "Shape" &&
+            portuguese_shape->default_name_prefix == "shp" &&
+            !portuguese_shape->container,
+        "#2636: pt-BR shape toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        pseudo_line != nullptr &&
+            pseudo_line->title == copperfin::localization::pseudo_localize("Line") &&
+            pseudo_line->description ==
+                copperfin::localization::pseudo_localize("Draw VFP-compatible line shapes.") &&
+            pseudo_line->id == "line" &&
+            pseudo_line->vfp_class == "Line" &&
+            pseudo_line->base_class == "Line" &&
+            pseudo_line->default_name_prefix == "lin" &&
+            !pseudo_line->container,
+        "#2636: qps-ploc line toolbox metadata should resolve through the pseudo-localization transform");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", text_item_keys) == 0U,
         "#2633: es-419 should define every remaining toolbox text-item localization key");
     expect(
@@ -380,6 +422,15 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", container_data_item_keys) == 0U,
         "#2635: qps-ploc should define every remaining toolbox container/data-item localization key");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", graphics_item_keys) == 0U,
+        "#2636: es-419 should define every remaining toolbox graphics-item localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", graphics_item_keys) == 0U,
+        "#2636: pt-BR should define every remaining toolbox graphics-item localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", graphics_item_keys) == 0U,
+        "#2636: qps-ploc should define every remaining toolbox graphics-item localization key");
 
     const auto visual_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
