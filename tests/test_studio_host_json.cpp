@@ -741,6 +741,12 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Usage: copperfin_studio_host --path <asset>",
         "#2394: default studio host usage should preserve en-US CLI text");
     expect_contains(process.stdout_text,
+        "OLE drop-mode object:",
+        "#2569: default studio host usage should preserve localized OLE drop-mode labels");
+    expect_contains(process.stdout_text,
+        "WhatsThis help ID object:",
+        "#2569: default studio host usage should preserve localized WhatsThis help ID labels");
+    expect_contains(process.stdout_text,
         "--selection-builder-dispatch-execution-catalog",
         "#1409: studio host usage should advertise selected builder execution catalog");
     expect_contains(process.stdout_text,
@@ -767,6 +773,21 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_contains(process.stdout_text,
         "--selection-toolbox-dispatch-execution-catalog",
         "#2394: pseudo-localized studio host usage should preserve catalog command tokens");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "qps-ploc");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDropMode"),
+        "#2569: pseudo-localized studio host usage should route OLE drop-mode labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
+        "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
+    expect_not_contains(process.stdout_text,
+        "OLE drop-mode object:",
+        "#2569: pseudo-localized studio host usage should not fall back to the raw English OLE drop-mode label");
+    expect_not_contains(process.stdout_text,
+        "WhatsThis help ID object:",
+        "#2569: pseudo-localized studio host usage should not fall back to the raw English WhatsThis help ID label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

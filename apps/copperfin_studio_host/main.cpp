@@ -96,6 +96,18 @@ void print_object_usage_line(
         }) << "\n";
 }
 
+void print_localized_object_usage_line(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view object_name_key,
+    std::string_view fallback_object_name,
+    std::string_view usage_template) {
+    const std::string localized_object_name = catalog.translate(object_name_key);
+    print_object_usage_line(
+        catalog,
+        localized_object_name == object_name_key ? fallback_object_name : localized_object_name,
+        usage_template);
+}
+
 void print_selection_context_tokens_line(
     const copperfin::localization::LocalizedCatalog& catalog,
     std::string_view selection_context_tokens) {
@@ -226,9 +238,9 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
     print_object_usage_line(catalog, "Disabled-fore-color", "--disabled-fore-color-object --disabled-fore-color <n> [--disabled-fore-color-target-object-name <name>] [--disabled-fore-color-target-unique-id <id>]");
     print_object_usage_line(catalog, "Dynamic-back-color", "--dynamic-back-color-object --dynamic-back-color <expr> [--dynamic-back-color-target-object-name <name>] [--dynamic-back-color-target-unique-id <id>]");
     print_object_usage_line(catalog, "Dynamic-fore-color", "--dynamic-fore-color-object --dynamic-fore-color <expr> [--dynamic-fore-color-target-object-name <name>] [--dynamic-fore-color-target-unique-id <id>]");
-    print_object_usage_line(catalog, "OLE drop-mode", "--ole-drop-mode-object --ole-drop-mode <n> [--ole-drop-mode-target-object-name <name>] [--ole-drop-mode-target-unique-id <id>]");
-    print_object_usage_line(catalog, "OLE drop-effects", "--ole-drop-effects-object --ole-drop-effects <n> [--ole-drop-effects-target-object-name <name>] [--ole-drop-effects-target-unique-id <id>]");
-    print_object_usage_line(catalog, "OLE drop text-insertion", "--ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]");
+    print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.OleDropMode", "OLE drop-mode", "--ole-drop-mode-object --ole-drop-mode <n> [--ole-drop-mode-target-object-name <name>] [--ole-drop-mode-target-unique-id <id>]");
+    print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.OleDropEffects", "OLE drop-effects", "--ole-drop-effects-object --ole-drop-effects <n> [--ole-drop-effects-target-object-name <name>] [--ole-drop-effects-target-unique-id <id>]");
+    print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.OleDropTextInsertion", "OLE drop text-insertion", "--ole-drop-text-insertion-object --ole-drop-text-insertion <n> [--ole-drop-text-insertion-target-object-name <name>] [--ole-drop-text-insertion-target-unique-id <id>]");
     print_object_usage_line(catalog, "Hide-selection", "--hide-selection-object --hide-selection <true|false> [--hide-selection-target-object-name <name>] [--hide-selection-target-unique-id <id>]");
     print_object_usage_line(catalog, "Bind-controls", "--bind-controls-object --bind-controls <true|false> [--bind-controls-target-object-name <name>] [--bind-controls-target-unique-id <id>]");
     print_object_usage_line(catalog, "Auto-verb-menu", "--auto-verb-menu-object --auto-verb-menu <true|false> [--auto-verb-menu-target-object-name <name>] [--auto-verb-menu-target-unique-id <id>]");
@@ -300,9 +312,9 @@ void print_usage(const copperfin::localization::LocalizedCatalog& catalog) {
     print_object_usage_line(catalog, "Tab-orientation", "--tab-orientation-object --tab-orientation <n> [--tab-orientation-target-object-name <name>] [--tab-orientation-target-unique-id <id>]");
     print_object_usage_line(catalog, "Display-orientation", "--display-orientation-object --display-orientation <n> [--display-orientation-target-object-name <name>] [--display-orientation-target-unique-id <id>]");
     print_object_usage_line(catalog, "Help-context-id", "--help-context-id-object --help-context-id <n> [--help-context-id-target-object-name <name>] [--help-context-id-target-unique-id <id>]");
-    print_object_usage_line(catalog, "WhatsThis help-ID", "--whats-this-help-id-object --whats-this-help-id <n> [--whats-this-help-id-target-object-name <name>] [--whats-this-help-id-target-unique-id <id>]");
-    print_object_usage_line(catalog, "WhatsThis help", "--whats-this-help-object --whats-this-help <true|false> [--whats-this-help-target-object-name <name>] [--whats-this-help-target-unique-id <id>]");
-    print_object_usage_line(catalog, "WhatsThis button", "--whats-this-button-object --whats-this-button <true|false> [--whats-this-button-target-object-name <name>] [--whats-this-button-target-unique-id <id>]");
+    print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId", "WhatsThis help ID", "--whats-this-help-id-object --whats-this-help-id <n> [--whats-this-help-id-target-object-name <name>] [--whats-this-help-id-target-unique-id <id>]");
+    print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelp", "WhatsThis help", "--whats-this-help-object --whats-this-help <true|false> [--whats-this-help-target-object-name <name>] [--whats-this-help-target-unique-id <id>]");
+    print_localized_object_usage_line(catalog, "StudioHost.LaunchParse.ObjectAssignment.WhatsThisButton", "WhatsThis button", "--whats-this-button-object --whats-this-button <true|false> [--whats-this-button-target-object-name <name>] [--whats-this-button-target-unique-id <id>]");
     print_object_usage_line(catalog, "Record-source", "--record-source-object --record-source <value> [--record-source-target-object-name <name>] [--record-source-target-unique-id <id>]");
     print_object_usage_line(catalog, "Form-set-class", "--form-set-class-object --form-set-class <value> [--form-set-class-target-object-name <name>] [--form-set-class-target-unique-id <id>]");
     print_object_usage_line(catalog, "Default-file-path", "--default-file-path-object --default-file-path <value> [--default-file-path-target-object-name <name>] [--default-file-path-target-unique-id <id>]");
