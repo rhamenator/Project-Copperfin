@@ -79,6 +79,7 @@
   "RuntimeHost.Error.ExtensionPayloadSha256Mismatch": "Extension payload hash mismatch: {fileName}",
   "RuntimeHost.Error.UnknownArgument": "Unknown argument: {argument}",
   "RuntimeHost.Error.UnknownFederationBackend": "Unknown federation backend: {backend}",
+  "RuntimeHost.Prompt.QuitConfirm": "Do you want to quit this application? [{yesToken}/{defaultNoToken}]: ",
   "RuntimeHost.Prefix.Error": "error: ",
   "RuntimeHost.Prefix.Warning": "warning: ",
   "StudioHost.Prefix.Error": "error: ",

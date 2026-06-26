@@ -489,6 +489,45 @@ void test_runtime_host_manifest_verification_errors_route_through_catalog() {
         "#2588: qps-ploc runtime-host manifest verification should pseudo-localize prose while preserving payload placeholders");
 }
 
+void test_runtime_host_quit_prompt_routes_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap confirmation_tokens{
+        {"yesToken", "y"},
+        {"defaultNoToken", "N"}
+    };
+
+    expect(
+        english.translate("RuntimeHost.Prompt.QuitConfirm", confirmation_tokens) ==
+            "Do you want to quit this application? [y/N]: ",
+        "#2591: runtime-host quit prompt should preserve the en-US confirmation prompt");
+
+    const std::string spanish_prompt = spanish.translate("RuntimeHost.Prompt.QuitConfirm", confirmation_tokens);
+    expect(
+        spanish_prompt == "Desea salir de esta aplicacion? [y/N]: ",
+        "#2591: es-419 runtime-host quit prompt should localize the prose");
+    expect(
+        spanish_prompt.find("Do you want to quit this application?") == std::string::npos &&
+            spanish_prompt.find("[y/N]: ") != std::string::npos,
+        "#2591: es-419 runtime-host quit prompt should preserve confirmation tokens without falling back to English");
+
+    const std::string portuguese_prompt =
+        portuguese.translate("RuntimeHost.Prompt.QuitConfirm", confirmation_tokens);
+    expect(
+        portuguese_prompt == "Deseja sair deste aplicativo? [y/N]: ",
+        "#2591: pt-BR runtime-host quit prompt should localize the prose");
+
+    const std::string pseudo_prompt = pseudo.translate("RuntimeHost.Prompt.QuitConfirm", confirmation_tokens);
+    expect(
+        pseudo_prompt.find("[!! ") == 0U &&
+            pseudo_prompt.find("[y/N]: ") != std::string::npos &&
+            pseudo_prompt.find("Do you want to quit this application?") == std::string::npos,
+        "#2591: qps-ploc runtime-host quit prompt should pseudo-localize prose while preserving confirmation tokens");
+}
+
 void test_runtime_numeric_domain_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1421,6 +1460,7 @@ int main(int argc, char** argv) {
     test_inspect_catalog_entries_cover_placeholder_locales();
     test_shared_core_catalog_entries_cover_placeholder_locales();
     test_runtime_host_manifest_verification_errors_route_through_catalog();
+    test_runtime_host_quit_prompt_routes_through_catalog();
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();

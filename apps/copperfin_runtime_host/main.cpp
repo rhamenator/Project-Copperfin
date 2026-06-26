@@ -1664,8 +1664,13 @@ int main(int argc, char** argv) {
     session_options.startup_path = effective_startup_source;
     session_options.working_directory = working_directory;
     session_options.stop_on_entry = false;
-    session_options.quit_confirm_callback = []() -> bool {
-            std::cerr << "\nDo you want to quit this application? [y/N]: ";
+    const std::string quit_confirm_prompt = localized_message_or_default(
+        catalog,
+        "RuntimeHost.Prompt.QuitConfirm",
+        "Do you want to quit this application? [y/N]: ",
+        {{"yesToken", "y"}, {"defaultNoToken", "N"}});
+    session_options.quit_confirm_callback = [quit_confirm_prompt]() -> bool {
+            std::cerr << "\n" << quit_confirm_prompt;
             std::cerr.flush();
             std::string answer;
             if (!std::getline(std::cin, answer)) {

@@ -78,6 +78,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"Manifest is empty or invalid.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Security-enabled manifest is missing runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Manifest file not found.\",\n"
+        "  \"RuntimeHost.Prompt.QuitConfirm\": \"Do you want to quit this application? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"Runtime host hash does not match manifest digest.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"Security policy denied {permission} for role '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Unknown argument: {argument}\",\n"
@@ -135,6 +136,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"El manifiesto esta vacio o no es valido.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Al manifiesto con seguridad habilitada le falta runtime_host_sha256.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"No se encontro el archivo de manifiesto.\",\n"
+        "  \"RuntimeHost.Prompt.QuitConfirm\": \"Desea salir de esta aplicacion? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"El hash del runtime host no coincide con el digest del manifiesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"La politica de seguridad denego {permission} para el rol '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconocido: {argument}\",\n"
@@ -180,6 +182,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.ManifestEmptyOrInvalid\": \"O manifesto esta vazio ou e invalido.\",\n"
         "  \"RuntimeHost.Error.ManifestMissingRuntimeHostSha256\": \"Falta runtime_host_sha256 no manifesto com seguranca habilitada.\",\n"
         "  \"RuntimeHost.Error.ManifestNotFound\": \"Arquivo de manifesto nao encontrado.\",\n"
+        "  \"RuntimeHost.Prompt.QuitConfirm\": \"Deseja sair deste aplicativo? [{yesToken}/{defaultNoToken}]: \",\n"
         "  \"RuntimeHost.Error.RuntimeHostSha256Mismatch\": \"O hash do runtime host nao corresponde ao digest do manifesto.\",\n"
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"A politica de seguranca negou {permission} para a funcao '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconhecido: {argument}\",\n"
@@ -311,16 +314,23 @@ private:
 ProcessResult run_process_capture(
     const std::string& executable_path,
     const std::vector<std::string>& arguments,
-    const std::filesystem::path& working_directory) {
+    const std::filesystem::path& working_directory,
+    const std::optional<std::string>& stdin_text = std::nullopt) {
     namespace fs = std::filesystem;
 
     const fs::path stdout_path = working_directory / "runtime_host_stdout.log";
     const fs::path stderr_path = working_directory / "runtime_host_stderr.log";
+    const fs::path stdin_path = working_directory / "runtime_host_stdin.log";
 
     std::string command = quote_command_argument(executable_path);
     for (const auto& argument : arguments) {
         command += " ";
         command += quote_command_argument(argument);
+    }
+    if (stdin_text.has_value()) {
+        write_text(stdin_path, *stdin_text);
+        command += " < ";
+        command += quote_command_argument(stdin_path.string());
     }
     command += " > ";
     command += quote_command_argument(stdout_path.string());
@@ -2856,6 +2866,99 @@ void test_runtime_host_watch_errors_localize_without_changing_watch_fields(
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_quit_prompt_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+
+    const fs::path startup_path = temp_root / "quit_prompt.prg";
+    const fs::path manifest_path = temp_root / "quit_prompt.cfmanifest";
+    write_text(
+        startup_path,
+        "LOCAL nValue\n"
+        "QUIT\n"
+        "nValue = 1\n"
+        "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=QuitPromptLocalization\n"
+        "startup_item=quit_prompt.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root,
+            std::string("n\n"));
+        expect(process.exit_code == 0,
+               "#2591: runtime-host quit prompt should keep the normal success exit code when quit is cancelled");
+        expect(process.stderr_text.find("Do you want to quit this application? [y/N]: ") != std::string::npos,
+               "#2591: runtime-host quit prompt should preserve the en-US confirmation prompt");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root,
+            std::string("n\n"));
+        expect(process.exit_code == 0,
+               "#2591: es-419 runtime-host quit prompt should keep the normal success exit code when quit is cancelled");
+        expect(process.stderr_text.find("Desea salir de esta aplicacion? [y/N]: ") != std::string::npos,
+               "#2591: es-419 runtime-host quit prompt should localize the prompt prose");
+        expect(process.stderr_text.find("Do you want to quit this application?") == std::string::npos,
+               "#2591: es-419 runtime-host quit prompt should not fall back to raw English prose");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root,
+            std::string("n\n"));
+        expect(process.exit_code == 0,
+               "#2591: pt-BR runtime-host quit prompt should keep the normal success exit code when quit is cancelled");
+        expect(process.stderr_text.find("Deseja sair deste aplicativo? [y/N]: ") != std::string::npos,
+               "#2591: pt-BR runtime-host quit prompt should localize the prompt prose");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {"--manifest", manifest_path.string()},
+            temp_root,
+            std::string("n\n"));
+        expect(process.exit_code == 0,
+               "#2591: qps-ploc runtime-host quit prompt should keep the normal success exit code when quit is cancelled");
+        expect(process.stderr_text.find("[!! ") != std::string::npos,
+               "#2591: qps-ploc runtime-host quit prompt should pseudo-localize the prompt prose");
+        expect(process.stderr_text.find("[y/N]: ") != std::string::npos,
+               "#2591: qps-ploc runtime-host quit prompt should preserve confirmation tokens");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -2889,6 +2992,7 @@ int main(int argc, char** argv) {
     test_runtime_host_debug_errors_localize_without_changing_command_tokens(argv[1]);
     test_runtime_host_pause_messages_localize_without_changing_pause_reasons(argv[1]);
     test_runtime_host_watch_errors_localize_without_changing_watch_fields(argv[1]);
+    test_runtime_host_quit_prompt_localizes_without_changing_confirmation_tokens(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
