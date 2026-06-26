@@ -25,7 +25,7 @@ Current state:
 Active issue lanes:
 
 - critical-path Phase A lanes are closed: `#92`, `#93`, `#94`, `#97`, `#98`, `#99`, `#100`, `#101`, `#150`, `#151`, `#152`, `#153`
-- live execution is centered on E3/#24 report/label designer fidelity, where latest shipped child `#2682` covers record-selected nested report/label group-section `EXPR` edit fidelity in the shared Studio host JSON contract after `#2680` and `#2681` established stable and record-selected nested section behavior; localization/#2348 remains a standing requirement for new user-facing text, and E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
+- live execution is centered on E3/#24 report/label designer fidelity, where latest shipped child `#2683` covers stable-selected report/label group-section `EXPR` edit fidelity in the shared Studio host JSON contract after `#2680`-`#2682` established nested/stable/record-selected group-section behavior; localization/#2348 remains a standing requirement for new user-facing text, and E2/#23 remains open mainly for evidence-backed audit/closure cleanup of already implemented designer host slices
 
 Execution rule:
 
