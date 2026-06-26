@@ -895,6 +895,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAssignment.AutoSize",
         "StudioHost.LaunchParse.ObjectAssignment.AutoSizeTitle",
         "StudioHost.LaunchParse.ObjectAssignment.AutoVerbMenu"};
+    const std::vector<std::string_view> object_assignment_control_display_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.ContinuousScroll",
+        "StudioHost.LaunchParse.ObjectAssignment.ContinuousScrollTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.ControlBox",
+        "StudioHost.LaunchParse.ObjectAssignment.ControlBoxTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.ControlSource",
+        "StudioHost.LaunchParse.ObjectAssignment.ControlSourceTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.CurrentControl",
+        "StudioHost.LaunchParse.ObjectAssignment.CurrentControlTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.Curvature",
+        "StudioHost.LaunchParse.ObjectAssignment.DataSession",
+        "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePath",
+        "StudioHost.LaunchParse.ObjectAssignment.DeleteMark",
+        "StudioHost.LaunchParse.ObjectAssignment.DeleteMarkTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.Desktop",
+        "StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor",
+        "StudioHost.LaunchParse.ObjectAssignment.DisabledForeColor",
+        "StudioHost.LaunchParse.ObjectAssignment.DisabledItemBackColor",
+        "StudioHost.LaunchParse.ObjectAssignment.DisabledItemForeColor",
+        "StudioHost.LaunchParse.ObjectAssignment.DisabledPicture",
+        "StudioHost.LaunchParse.ObjectAssignment.DisabledPictureTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientation",
+        "StudioHost.LaunchParse.ObjectAssignment.DisplayValue",
+        "StudioHost.LaunchParse.ObjectAssignment.Dockable",
+        "StudioHost.LaunchParse.ObjectAssignment.DockableTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.DownPicture"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -995,6 +1021,17 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("add-line-feeds"),
         "#2654: host object-assignment layout/window labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.CurrentControl") == "control actual" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledPictureTitle") ==
+                "Imagen deshabilitada" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DefaultFilePath") ==
+                "caminho de arquivo padrao" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DockableTitle") ==
+                "Acoplavel" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.DisabledBackColor") ==
+                copperfin::localization::pseudo_localize("disabled back-color"),
+        "#2655: host object-assignment control/display labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1021,6 +1058,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_layout_window_keys) == 0U,
         "#2654: qps-ploc should define every remaining layout/window object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_assignment_control_display_keys) == 0U,
+        "#2655: es-419 should define every remaining control/display object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_assignment_control_display_keys) == 0U,
+        "#2655: pt-BR should define every remaining control/display object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_control_display_keys) == 0U,
+        "#2655: qps-ploc should define every remaining control/display object-assignment localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
