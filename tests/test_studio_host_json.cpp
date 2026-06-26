@@ -1025,6 +1025,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.LaunchParse.ObjectAssignment.LinkMaster",
         "StudioHost.LaunchParse.ObjectAssignment.ListIndex",
         "StudioHost.LaunchParse.ObjectAssignment.ListIndexTitle"};
+    const std::vector<std::string_view> object_assignment_lock_window_keys = {
+        "StudioHost.LaunchParse.ObjectAssignment.ListItemId",
+        "StudioHost.LaunchParse.ObjectAssignment.LockColumns",
+        "StudioHost.LaunchParse.ObjectAssignment.LockColumnsLeft",
+        "StudioHost.LaunchParse.ObjectAssignment.LockScreen",
+        "StudioHost.LaunchParse.ObjectAssignment.LockScreenTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.Locked",
+        "StudioHost.LaunchParse.ObjectAssignment.LockedTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.MacDesktop",
+        "StudioHost.LaunchParse.ObjectAssignment.MaxButton",
+        "StudioHost.LaunchParse.ObjectAssignment.MaxHeight",
+        "StudioHost.LaunchParse.ObjectAssignment.MaxLeft",
+        "StudioHost.LaunchParse.ObjectAssignment.MaxTop",
+        "StudioHost.LaunchParse.ObjectAssignment.MaxWidth",
+        "StudioHost.LaunchParse.ObjectAssignment.MdiForm",
+        "StudioHost.LaunchParse.ObjectAssignment.MinButton",
+        "StudioHost.LaunchParse.ObjectAssignment.MinHeight",
+        "StudioHost.LaunchParse.ObjectAssignment.MinWidth",
+        "StudioHost.LaunchParse.ObjectAssignment.MouseIcon",
+        "StudioHost.LaunchParse.ObjectAssignment.MouseIconTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.MousePointer",
+        "StudioHost.LaunchParse.ObjectAssignment.Movable",
+        "StudioHost.LaunchParse.ObjectAssignment.MultiSelect",
+        "StudioHost.LaunchParse.ObjectAssignment.MultiSelectTitle",
+        "StudioHost.LaunchParse.ObjectAssignment.OleDragMode",
+        "StudioHost.LaunchParse.ObjectAssignment.OleDragModeTitle"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1181,6 +1207,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("item-fore-color"),
         "#2659: host object-assignment selection and highlight labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.LockScreenTitle") ==
+                "Bloquear pantalla" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxWidth") ==
+                "ancho maximo" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MouseIcon") ==
+                "icone do mouse" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MultiSelectTitle") ==
+                "Selecao multipla" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.OleDragMode") ==
+                copperfin::localization::pseudo_localize("OLE-drag-mode"),
+        "#2660: host object-assignment lock and window-state labels should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1252,6 +1290,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_selection_keys) == 0U,
         "#2659: qps-ploc should define every remaining selection/highlight object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_assignment_lock_window_keys) == 0U,
+        "#2660: es-419 should define every remaining lock/window object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_assignment_lock_window_keys) == 0U,
+        "#2660: pt-BR should define every remaining lock/window object-assignment localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_assignment_lock_window_keys) == 0U,
+        "#2660: qps-ploc should define every remaining lock/window object-assignment localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
