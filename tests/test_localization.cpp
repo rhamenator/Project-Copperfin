@@ -672,7 +672,12 @@ void test_runtime_dispatch_errors_route_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap yield_placeholders{{"command", "YIELD"}};
+    const copperfin::localization::PlaceholderMap go_placeholders{{"command", "GO"}};
     const copperfin::localization::PlaceholderMap seek_placeholders{{"command", "SEEK"}};
+    const copperfin::localization::PlaceholderMap skip_placeholders{{"command", "SKIP"}};
+    const copperfin::localization::PlaceholderMap browse_placeholders{{"command", "BROWSE"}};
+    const copperfin::localization::PlaceholderMap set_order_placeholders{{"command", "SET ORDER"}};
+    const copperfin::localization::PlaceholderMap select_placeholders{{"command", "SELECT"}};
     const copperfin::localization::PlaceholderMap scan_placeholders{{"command", "SCAN"}};
     const copperfin::localization::PlaceholderMap do_target_placeholders{
         {"command", "DO"},
@@ -694,6 +699,27 @@ void test_runtime_dispatch_errors_route_through_catalog() {
         english.translate("Runtime.Prg.Dispatch.Error.CommandDoesNotTakeArguments", yield_placeholders) ==
             "YIELD does not take arguments",
         "#2553: YIELD argument error should preserve command placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", go_placeholders) ==
+            "GO target work area not found",
+        "#2556: GO work-area error should localize through catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", skip_placeholders) ==
+            "SKIP target work area not found",
+        "#2556: SKIP work-area error should localize through catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", browse_placeholders) ==
+            "BROWSE target work area not found",
+        "#2556: BROWSE work-area error should localize through catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", set_order_placeholders) ==
+            "SET ORDER target work area not found",
+        "#2556: SET ORDER work-area error should localize through catalog");
+    expect(
+        english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", select_placeholders) +
+            ": MISSING_ALIAS" ==
+            "SELECT target work area not found: MISSING_ALIAS",
+        "#2556: SELECT work-area error should localize through catalog and preserve selection");
     expect(
         english.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders) ==
             "SEEK target work area not found",
@@ -740,6 +766,37 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", seek_placeholders)
                     .find("target work area not found") == std::string::npos,
         "#2555: es-419 SEEK work-area error should preserve command without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", go_placeholders).find("GO") !=
+            std::string::npos &&
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", go_placeholders)
+                    .find("target work area not found") == std::string::npos,
+        "#2556: es-419 GO work-area error should preserve command without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", skip_placeholders).find("SKIP") !=
+            std::string::npos &&
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", skip_placeholders)
+                    .find("target work area not found") == std::string::npos,
+        "#2556: es-419 SKIP work-area error should preserve command without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", browse_placeholders).find("BROWSE") !=
+            std::string::npos &&
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", browse_placeholders)
+                    .find("target work area not found") == std::string::npos,
+        "#2556: es-419 BROWSE work-area error should preserve command without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", set_order_placeholders)
+                    .find("SET ORDER") != std::string::npos &&
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", set_order_placeholders)
+                    .find("target work area not found") == std::string::npos,
+        "#2556: es-419 SET ORDER work-area error should preserve command without falling back to English");
+    expect(
+        (spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", select_placeholders) +
+         ": MISSING_ALIAS")
+                .find("MISSING_ALIAS") != std::string::npos &&
+        spanish.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", select_placeholders)
+                    .find("target work area not found") == std::string::npos,
+        "#2556: es-419 SELECT work-area error should preserve selection without falling back to English");
 
     const std::string pseudo_spawn =
         pseudo.translate("Runtime.Prg.Dispatch.Error.SpawnTargetResolveFailed", spawn_target_placeholders);
@@ -766,6 +823,22 @@ void test_runtime_dispatch_errors_route_through_catalog() {
             pseudo_scan.find("SCAN") != std::string::npos &&
             pseudo_scan.find("{command}") == std::string::npos,
         "#2555: qps-ploc SCAN work-area error should pseudo-localize prose while preserving command");
+    const std::string pseudo_go =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", go_placeholders);
+    expect(
+        pseudo_go.find("[!! ") == 0U &&
+            pseudo_go.find("GO") != std::string::npos &&
+            pseudo_go.find("{command}") == std::string::npos,
+        "#2556: qps-ploc GO work-area error should pseudo-localize prose while preserving command");
+    const std::string pseudo_select =
+        pseudo.translate("Runtime.Prg.Dispatch.Error.CommandTargetWorkAreaNotFound", select_placeholders) +
+        ": MISSING_ALIAS";
+    expect(
+        pseudo_select.find("[!! ") == 0U &&
+            pseudo_select.find("SELECT") != std::string::npos &&
+            pseudo_select.find("MISSING_ALIAS") != std::string::npos &&
+            pseudo_select.find("{command}") == std::string::npos,
+        "#2556: qps-ploc SELECT work-area error should pseudo-localize prose while preserving selection");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {
