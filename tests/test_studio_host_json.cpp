@@ -1129,6 +1129,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "StudioHost.VisualMethodParse.Error.MissingValue",
         "StudioHost.VisualMethodParse.Error.MoveBatchItemRequiresMethodName",
         "StudioHost.VisualMethodParse.Error.NoAssetPath"};
+    const std::vector<std::string_view> visual_method_object_error_keys = {
+        "StudioHost.VisualMethodParse.Error.NoMethodCopies",
+        "StudioHost.VisualMethodParse.Error.NoMethodDeletes",
+        "StudioHost.VisualMethodParse.Error.NoMethodKind",
+        "StudioHost.VisualMethodParse.Error.NoMethodMoves",
+        "StudioHost.VisualMethodParse.Error.NoMethodName",
+        "StudioHost.VisualMethodParse.Error.NoMethodPlacement",
+        "StudioHost.VisualMethodParse.Error.NoMethodRenames",
+        "StudioHost.VisualMethodParse.Error.NoMethodReorders",
+        "StudioHost.VisualMethodParse.Error.NoMethodSource",
+        "StudioHost.VisualMethodParse.Error.NoTargetMethodName",
+        "StudioHost.VisualMethodParse.Error.NonNegativeInteger",
+        "StudioHost.VisualMethodParse.Error.RenameBatchItemRequiresMethodName",
+        "StudioHost.VisualMethodParse.Error.ReorderBatchItemRequiresMethodName",
+        "StudioHost.VisualMethodParse.Error.UnknownOption",
+        "StudioHost.VisualObjectParse.Error.DuplicateBatchItemRequiresSelectedObject",
+        "StudioHost.VisualObjectParse.Error.MissingValue",
+        "StudioHost.VisualObjectParse.Error.NoAssetPath",
+        "StudioHost.VisualObjectParse.Error.NoDuplicateOperations",
+        "StudioHost.VisualObjectParse.Error.NoObjectPlacement",
+        "StudioHost.VisualObjectParse.Error.NoRenameOperations",
+        "StudioHost.VisualObjectParse.Error.NoReorderOperations",
+        "StudioHost.VisualObjectParse.Error.NoReparentOperations",
+        "StudioHost.VisualObjectParse.Error.NoRootObjectSelector",
+        "StudioHost.VisualObjectParse.Error.NoSubtreeReplacementIdentities",
+        "StudioHost.VisualObjectParse.Error.NoUpdateOperations"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1332,6 +1358,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("window-state"),
         "#2663: host tooltip, selector, and visual-method parse labels should resolve through locale catalogs without changing host usage tokens");
     expect(
+        spanish_catalog.translate("StudioHost.VisualMethodParse.Error.NoMethodKind") ==
+                "No se proporciono ningun tipo de metodo." &&
+            spanish_catalog.translate("StudioHost.VisualObjectParse.Error.NoRootObjectSelector") ==
+                "No se proporciono ningun selector de objeto raiz." &&
+            portuguese_catalog.translate("StudioHost.VisualMethodParse.Error.NonNegativeInteger") ==
+                "O valor de {option} deve ser um inteiro nao negativo." &&
+            portuguese_catalog.translate("StudioHost.VisualObjectParse.Error.NoUpdateOperations") ==
+                "Nenhuma operacao de atualizacao foi fornecida." &&
+            pseudo_catalog.translate("StudioHost.VisualMethodParse.Error.UnknownOption") ==
+                copperfin::localization::pseudo_localize("Unknown {commandName} option: {argument}"),
+        "#2664: host visual method and visual object parse errors should resolve through locale catalogs without changing host usage tokens");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1439,6 +1477,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", host_tail_parse_keys) == 0U,
         "#2663: qps-ploc should define every remaining host tail parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", visual_method_object_error_keys) == 0U,
+        "#2664: es-419 should define every remaining visual-method/object parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", visual_method_object_error_keys) == 0U,
+        "#2664: pt-BR should define every remaining visual-method/object parse localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", visual_method_object_error_keys) == 0U,
+        "#2664: qps-ploc should define every remaining visual-method/object parse localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
