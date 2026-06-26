@@ -6058,13 +6058,13 @@ void test_studio_host_launch_font_diagnostics_localize(const std::string& studio
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2444: pseudo-localized font-name missing-target diagnostics should preserve parse-failure exit status");
+        "#2522: pseudo-localized font-name missing-target diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2444: pseudo-localized font-name missing-target diagnostics should decorate human-facing prose");
+        "#2522: pseudo-localized font-name missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
         "An object font-name assignment requires at least one target selector.",
-        "#2444: pseudo-localized font-name missing-target diagnostics should not fall back to raw English prose");
+        "#2522: pseudo-localized font-name missing-target diagnostics should not fall back to raw English prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -6076,16 +6076,16 @@ void test_studio_host_launch_font_diagnostics_localize(const std::string& studio
         temp_root);
 
     expect(process.exit_code == 2,
-        "#2444: pseudo-localized font-shadow stray-argument diagnostics should preserve parse-failure exit status");
+        "#2522: pseudo-localized font-shadow stray-argument diagnostics should preserve parse-failure exit status");
     expect_contains(process.stdout_text,
         "[!! ",
-        "#2444: pseudo-localized font-shadow stray-argument diagnostics should decorate human-facing prose");
+        "#2522: pseudo-localized font-shadow stray-argument diagnostics should decorate human-facing prose");
     expect_contains(process.stdout_text,
         "--font-shadow-object",
-        "#2444: pseudo-localized font-shadow stray-argument diagnostics should preserve required mode option");
+        "#2522: pseudo-localized font-shadow stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Font-shadow arguments can only be used with --font-shadow-object.",
-        "#2444: pseudo-localized font-shadow stray-argument diagnostics should not fall back to raw English prose");
+        "#2522: pseudo-localized font-shadow stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);

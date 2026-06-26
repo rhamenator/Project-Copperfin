@@ -11155,115 +11155,155 @@ LaunchParseResult parse_launch_arguments(
             "--dynamic-font-shadow-object")};
     }
     if (result.request.font_name_object && !result.request.font_name_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-name", "--font-name")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontName"),
+            "--font-name")};
     }
     if (result.request.font_name_object && result.request.font_name_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-name")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontName"))};
     }
     if (!result.request.font_name_object &&
         (result.request.font_name_available ||
          !result.request.font_name_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-name",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontNameTitle"),
             "--font-name-object")};
     }
     if (result.request.font_size_object && !result.request.font_size_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-size", "--font-size")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontSize"),
+            "--font-size")};
     }
     if (result.request.font_size_object && result.request.font_size_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-size")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontSize"))};
     }
     if (!result.request.font_size_object &&
         (result.request.font_size_available ||
          !result.request.font_size_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-size",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontSizeTitle"),
             "--font-size-object")};
     }
     if (result.request.font_bold_object && !result.request.font_bold_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-bold", "--font-bold")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontBold"),
+            "--font-bold")};
     }
     if (result.request.font_bold_object && result.request.font_bold_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-bold")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontBold"))};
     }
     if (!result.request.font_bold_object &&
         (result.request.font_bold_available ||
          !result.request.font_bold_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-bold",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontBoldTitle"),
             "--font-bold-object")};
     }
     if (result.request.font_italic_object && !result.request.font_italic_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-italic", "--font-italic")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontItalic"),
+            "--font-italic")};
     }
     if (result.request.font_italic_object && result.request.font_italic_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-italic")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontItalic"))};
     }
     if (!result.request.font_italic_object &&
         (result.request.font_italic_available ||
          !result.request.font_italic_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-italic",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontItalicTitle"),
             "--font-italic-object")};
     }
     if (result.request.font_underline_object && !result.request.font_underline_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-underline", "--font-underline")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontUnderline"),
+            "--font-underline")};
     }
     if (result.request.font_underline_object && result.request.font_underline_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-underline")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontUnderline"))};
     }
     if (!result.request.font_underline_object &&
         (result.request.font_underline_available ||
          !result.request.font_underline_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-underline",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontUnderlineTitle"),
             "--font-underline-object")};
     }
     if (result.request.font_strikethru_object && !result.request.font_strikethru_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-strikethru", "--font-strikethru")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontStrikethru"),
+            "--font-strikethru")};
     }
     if (result.request.font_strikethru_object && result.request.font_strikethru_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-strikethru")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontStrikethru"))};
     }
     if (!result.request.font_strikethru_object &&
         (result.request.font_strikethru_available ||
          !result.request.font_strikethru_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-strikethru",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontStrikethruTitle"),
             "--font-strikethru-object")};
     }
     if (result.request.font_outline_object && !result.request.font_outline_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-outline", "--font-outline")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontOutline"),
+            "--font-outline")};
     }
     if (result.request.font_outline_object && result.request.font_outline_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-outline")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontOutline"))};
     }
     if (!result.request.font_outline_object &&
         (result.request.font_outline_available ||
          !result.request.font_outline_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-outline",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontOutlineTitle"),
             "--font-outline-object")};
     }
     if (result.request.font_shadow_object && !result.request.font_shadow_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "font-shadow", "--font-shadow")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontShadow"),
+            "--font-shadow")};
     }
     if (result.request.font_shadow_object && result.request.font_shadow_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "font-shadow")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontShadow"))};
     }
     if (!result.request.font_shadow_object &&
         (result.request.font_shadow_available ||
          !result.request.font_shadow_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Font-shadow",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FontShadowTitle"),
             "--font-shadow-object")};
     }
     if (result.request.max_width_object && !result.request.max_width_available) {
