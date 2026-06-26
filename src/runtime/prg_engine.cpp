@@ -1488,7 +1488,7 @@ namespace copperfin::runtime
                 if (task_cancel_requested != nullptr && task_cancel_requested->load(std::memory_order_relaxed))
                 {
                     ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
-                    last_error_message = "Async task cancelled.";
+                    last_error_message = runtime_text("Runtime.Prg.Core.Error.AsyncTaskCancelled");
                     events.push_back({.category = "runtime.task.cancelled",
                                       .detail = "cancelled",
                                       .location = last_fault_location});
@@ -1671,7 +1671,7 @@ namespace copperfin::runtime
         {
             ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
             last_error_compatibility = {};
-            last_error_message = "Runtime resource fault: out of memory. Execution paused safely.";
+            last_error_message = runtime_text("Runtime.Prg.Core.Error.ResourceOutOfMemory");
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
@@ -1689,7 +1689,9 @@ namespace copperfin::runtime
         {
             ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
             last_error_compatibility = {};
-            last_error_message = std::string("Runtime resource fault: filesystem failure: ") + error.what();
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.ResourceFilesystemFailure",
+                {{"detail", error.what()}});
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
@@ -1707,7 +1709,9 @@ namespace copperfin::runtime
         {
             ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
             last_error_compatibility = {};
-            last_error_message = std::string("Runtime resource fault: system error: ") + error.what();
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.ResourceSystemError",
+                {{"detail", error.what()}});
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
@@ -1725,7 +1729,9 @@ namespace copperfin::runtime
         {
             ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
             last_error_compatibility = {};
-            last_error_message = std::string("Runtime fault: ") + error.what();
+            last_error_message = runtime_text(
+                "Runtime.Prg.Core.Error.RuntimeFault",
+                {{"detail", error.what()}});
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});
@@ -1743,7 +1749,7 @@ namespace copperfin::runtime
         {
             ensure_fault_context_defaults(current_statement(), last_fault_location, last_fault_statement);
             last_error_compatibility = {};
-            last_error_message = "Runtime fault: unknown exception";
+            last_error_message = runtime_text("Runtime.Prg.Core.Error.UnknownRuntimeFault");
             events.push_back({.category = "runtime.error",
                               .detail = last_error_message,
                               .location = last_fault_location});

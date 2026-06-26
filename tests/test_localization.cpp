@@ -610,6 +610,50 @@ void test_runtime_dll_errors_route_through_catalog() {
         "#2550: qps-ploc native proc-address error should pseudo-localize prose while preserving function name");
 }
 
+void test_runtime_core_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap detail_placeholders{{"detail", "disk full"}};
+
+    expect(
+        english.translate("Runtime.Prg.Core.Error.AsyncTaskCancelled") == "Async task cancelled.",
+        "#2551: async task cancellation should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.ResourceOutOfMemory") ==
+            "Runtime resource fault: out of memory. Execution paused safely.",
+        "#2551: out-of-memory resource fault should preserve en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.ResourceFilesystemFailure", detail_placeholders) ==
+            "Runtime resource fault: filesystem failure: disk full",
+        "#2551: filesystem resource fault should preserve detail placeholder");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.ResourceSystemError", detail_placeholders) ==
+            "Runtime resource fault: system error: disk full",
+        "#2551: system resource fault should preserve detail placeholder");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.RuntimeFault", detail_placeholders) == "Runtime fault: disk full",
+        "#2551: generic runtime fault should preserve detail placeholder");
+    expect(
+        english.translate("Runtime.Prg.Core.Error.UnknownRuntimeFault") == "Runtime fault: unknown exception",
+        "#2551: unknown runtime fault should preserve en-US default output");
+    expect(
+        spanish.translate("Runtime.Prg.Core.Error.RuntimeFault", detail_placeholders).find("disk full") !=
+                std::string::npos &&
+            spanish.translate("Runtime.Prg.Core.Error.RuntimeFault", detail_placeholders).find("Runtime fault") ==
+                std::string::npos,
+        "#2551: es-419 runtime fault should preserve detail without falling back to English");
+
+    const std::string pseudo_fault =
+        pseudo.translate("Runtime.Prg.Core.Error.ResourceFilesystemFailure", detail_placeholders);
+    expect(
+        pseudo_fault.find("[!! ") == 0U &&
+            pseudo_fault.find("disk full") != std::string::npos &&
+            pseudo_fault.find("{detail}") == std::string::npos,
+        "#2551: qps-ploc runtime resource fault should pseudo-localize prose while preserving detail");
+}
+
 void test_runtime_surface_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -761,6 +805,7 @@ int main(int argc, char** argv) {
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();
     test_runtime_dll_errors_route_through_catalog();
+    test_runtime_core_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
