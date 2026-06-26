@@ -1200,6 +1200,62 @@ void test_studio_host_builder_parse_diagnostics_localize(const std::string& stud
         "Builder launch-plan requests cannot provide both --builder-context and --selection-context.",
         "#2577: pt-BR ambiguous builder-context diagnostics should not fall back to raw English prose");
 
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--builder-launch-plan", "grid-builder", "--builder-context", "unknown", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2578: es-419 unknown builder-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Token de contexto del builder desconocido: unknown",
+        "#2578: es-419 unknown builder-context diagnostics should localize builder-context token prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown builder context token: unknown",
+        "#2578: es-419 unknown builder-context diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--builder-launch-plan", "form-builder", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2578: pt-BR missing-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Nenhum contexto do builder ou de selecao foi fornecido.",
+        "#2578: pt-BR missing-context diagnostics should localize missing builder-or-selection context prose");
+    expect_not_contains(process.stdout_text,
+        "No builder or selection context was provided.",
+        "#2578: pt-BR missing-context diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--builder-invocation-admission", "grid-builder",
+            "--builder-context", "control",
+            "--admit-ui-launch", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2578: es-419 invalid-boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "El valor de --admit-ui-launch debe ser true o false.",
+        "#2578: es-419 invalid-boolean diagnostics should localize boolean validation prose");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2578: es-419 invalid-boolean diagnostics should preserve invariant true tokens");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2578: es-419 invalid-boolean diagnostics should preserve invariant false tokens");
+    expect_not_contains(process.stdout_text,
+        "The --admit-ui-launch value must be true or false.",
+        "#2578: es-419 invalid-boolean diagnostics should not fall back to raw English prose");
+
     set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
 
     process = run_process_capture(
