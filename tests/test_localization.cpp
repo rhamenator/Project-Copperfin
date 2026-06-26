@@ -577,46 +577,70 @@ void test_platform_federation_ai_planner_fallback_routes_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
-    const copperfin::localization::PlaceholderMap placeholders{
+    const std::string english_translation_error =
+        english.translate("Platform.QueryTranslator.Error.SelectFromOnly");
+    const std::string spanish_translation_error =
+        spanish.translate("Platform.QueryTranslator.Error.SelectFromOnly");
+    const std::string portuguese_translation_error =
+        portuguese.translate("Platform.QueryTranslator.Error.SelectFromOnly");
+    const std::string pseudo_translation_error =
+        pseudo.translate("Platform.QueryTranslator.Error.SelectFromOnly");
+
+    const copperfin::localization::PlaceholderMap english_placeholders{
         {"planMode", "optional"},
-        {"translationError", "Only first-pass SELECT...FROM SQL translation is supported."}
+        {"translationError", english_translation_error}
+    };
+    const copperfin::localization::PlaceholderMap spanish_placeholders{
+        {"planMode", "optional"},
+        {"translationError", spanish_translation_error}
+    };
+    const copperfin::localization::PlaceholderMap portuguese_placeholders{
+        {"planMode", "optional"},
+        {"translationError", portuguese_translation_error}
+    };
+    const copperfin::localization::PlaceholderMap pseudo_placeholders{
+        {"planMode", "optional"},
+        {"translationError", pseudo_translation_error}
     };
 
     expect(
-        english.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders) ==
+        english.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", english_placeholders) ==
             "Planner is not yet implemented for optional AI policy. Deterministic translation failed: "
             "Only first-pass SELECT...FROM SQL translation is supported.",
         "#2593: federation AI planner fallback should preserve the en-US default output");
 
     const std::string spanish_message =
-        spanish.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders);
+        spanish.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", spanish_placeholders);
     expect(
         spanish_message ==
             "El planner aun no esta implementado para la politica de IA optional. La traduccion deterministica fallo: "
-            "Only first-pass SELECT...FROM SQL translation is supported.",
-        "#2593: es-419 federation AI planner fallback should localize the prose while preserving placeholders");
+            "Solo se admite la traduccion SQL deterministica de primera pasada de SELECT...FROM.",
+        "#2594: es-419 federation AI planner fallback should localize both the wrapper and translator payload");
     expect(
         spanish_message.find("Planner is not yet implemented") == std::string::npos &&
             spanish_message.find("optional") != std::string::npos &&
-            spanish_message.find("Only first-pass SELECT...FROM SQL translation is supported.") != std::string::npos,
-        "#2593: es-419 federation AI planner fallback should preserve invariant placeholder values without falling back to English prose");
+            spanish_message.find("Only first-pass SELECT...FROM SQL translation is supported.") == std::string::npos &&
+            spanish_message.find("SELECT...FROM") != std::string::npos,
+        "#2594: es-419 federation AI planner fallback should preserve invariant SQL tokens without falling back to English payload prose");
 
     const std::string portuguese_message =
-        portuguese.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders);
+        portuguese.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", portuguese_placeholders);
     expect(
         portuguese_message ==
             "O planner ainda nao esta implementado para a politica de IA optional. A traducao deterministica falhou: "
-            "Only first-pass SELECT...FROM SQL translation is supported.",
-        "#2593: pt-BR federation AI planner fallback should localize the prose while preserving placeholders");
+            "Somente a traducao SQL deterministica de primeira passagem de SELECT...FROM e suportada.",
+        "#2594: pt-BR federation AI planner fallback should localize both the wrapper and translator payload");
 
     const std::string pseudo_message =
-        pseudo.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders);
+        pseudo.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", pseudo_placeholders);
     expect(
         pseudo_message.find("[!! ") == 0U &&
+            pseudo_message.find(pseudo_translation_error) != std::string::npos &&
             pseudo_message.find("optional") != std::string::npos &&
-            pseudo_message.find("Only first-pass SELECT...FROM SQL translation is supported.") != std::string::npos &&
+            pseudo_message.find("Platform.QueryTranslator.Error.SelectFromOnly") == std::string::npos &&
+            pseudo_message.find("Only first-pass SELECT...FROM SQL translation is supported.") == std::string::npos &&
             pseudo_message.find("Planner is not yet implemented") == std::string::npos,
-        "#2593: qps-ploc federation AI planner fallback should pseudo-localize prose while preserving placeholders");
+        "#2594: qps-ploc federation AI planner fallback should pseudo-localize both the wrapper and translator payload without leaking raw English or unresolved keys");
 }
 
 void test_runtime_numeric_domain_errors_route_through_catalog() {

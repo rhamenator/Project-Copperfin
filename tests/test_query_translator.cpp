@@ -45,6 +45,8 @@ void test_basic_translation() {
 void test_platform_query_diagnostics_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
@@ -52,9 +54,22 @@ void test_platform_query_diagnostics_resolve_through_localization_catalog() {
             "Only first-pass SELECT...FROM SQL translation is supported.",
         "#2389: query translator diagnostics should resolve through the en-US catalog");
     expect(
+        spanish_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly") ==
+            "Solo se admite la traduccion SQL deterministica de primera pasada de SELECT...FROM.",
+        "#2594: query translator diagnostics should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly") ==
+            "Somente a traducao SQL deterministica de primeira passagem de SELECT...FROM e suportada.",
+        "#2594: query translator diagnostics should resolve through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly") !=
             english_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly"),
         "#2389: platform query diagnostics should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Platform.QueryTranslator.Error.SelectFromOnly") ==
+            copperfin::localization::pseudo_localize(
+                "Only first-pass SELECT...FROM SQL translation is supported."),
+        "#2594: pseudo-localized query translator diagnostics should resolve through the pseudo-localization transform");
 }
 
 void test_case_variants_and_whitespace_variants() {

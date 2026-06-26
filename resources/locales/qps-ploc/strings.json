@@ -31,6 +31,7 @@
   "Error.UnknownLocale": "Unknown locale: {locale}",
   "Help.LocaleOption": "Select the user-interface locale.",
   "Platform.FederationExecution.Error.AiPlannerNotImplemented": "Planner is not yet implemented for {planMode} AI policy. Deterministic translation failed: {translationError}",
+  "Platform.QueryTranslator.Error.SelectFromOnly": "Only first-pass SELECT...FROM SQL translation is supported.",
   "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit": "Builder launch command returned a non-zero exit code.",
   "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit": "Designer builder launch command returned a non-zero exit code.",
   "StudioHost.DesignerExecution.Error.ChildExecutionsFailed": "One or more designer child executions failed.",
