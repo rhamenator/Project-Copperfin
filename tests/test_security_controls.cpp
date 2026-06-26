@@ -23,6 +23,40 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    bool had_value = false;
+    std::string original_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)) {
+        if (const char* current = std::getenv(name.c_str())) {
+            had_value = true;
+            original_value = current;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
+
 void test_authorization() {
     const auto profile = copperfin::security::default_native_security_profile();
     expect(
@@ -104,6 +138,8 @@ void test_sha256_helpers() {
 void test_security_diagnostics_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
@@ -123,9 +159,58 @@ void test_security_diagnostics_resolve_through_localization_catalog() {
             "Unable to resolve executable on PATH: dotnet",
         "#2388: external process diagnostics should preserve executable placeholders");
     expect(
+        spanish_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows") ==
+            "El hardening de procesos actualmente es un no-op fuera de Windows.",
+        "#2601: es-419 process-hardening status should localize the prose");
+    expect(
+        spanish_catalog.translate("Security.Secret.Error.InvalidReferenceFormat") ==
+            "La referencia del secreto debe usar el formato env:<NAME>.",
+        "#2601: es-419 secret reference format error should localize the prose");
+    expect(
+        portuguese_catalog.translate("Security.Audit.Error.MalformedLine", {{"lineNumber", "7"}}) ==
+            "Linha de auditoria malformada 7",
+        "#2601: pt-BR audit malformed-line error should localize the prose");
+    expect(
+        portuguese_catalog.translate("Security.Sha256.Error.OpenFileFailed", {{"path", "missing.bin"}}) ==
+            "Nao foi possivel abrir o arquivo para SHA-256: missing.bin",
+        "#2601: pt-BR SHA-256 open-file error should localize the prose while preserving the path");
+    expect(
         pseudo_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows") !=
             english_catalog.translate("Security.ProcessHardening.Status.NoopOutsideWindows"),
         "#2388: security diagnostics should be pseudo-localizable");
+}
+
+void test_security_diagnostics_follow_selected_locale() {
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "es-419", true);
+        const auto invalid = copperfin::security::resolve_secret_reference("plain-text-secret");
+        expect(!invalid.ok, "#2601: es-419 invalid secret reference should still fail");
+        expect(
+            invalid.error == "La referencia del secreto debe usar el formato env:<NAME>.",
+            "#2601: es-419 invalid secret reference should route through the selected locale");
+    }
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+        const auto missing_file = copperfin::security::sha256_hex_for_file("missing-security-hash-input.bin");
+        expect(!missing_file.ok, "#2601: pt-BR SHA-256 missing-file lookup should still fail");
+        expect(
+            missing_file.error == "Nao foi possivel abrir o arquivo para SHA-256: missing-security-hash-input.bin",
+            "#2601: pt-BR SHA-256 missing-file error should route through the selected locale");
+    }
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+        const auto invalid = copperfin::security::resolve_secret_reference("plain-text-secret");
+        expect(!invalid.ok, "#2601: qps-ploc invalid secret reference should still fail");
+        expect(
+            invalid.error.find("[!! ") == 0U &&
+                invalid.error.find("Secret reference must use env:<NAME> format.") == std::string::npos,
+            "#2601: qps-ploc invalid secret reference should pseudo-localize the prose");
+    }
 }
 
 // #247 [gap-06a]
@@ -383,6 +468,7 @@ int main() {
     test_audit_stream_chain();
     test_sha256_helpers();
     test_security_diagnostics_resolve_through_localization_catalog();
+    test_security_diagnostics_follow_selected_locale();
     test_authorization_unknown_role_returns_false();
     test_authorization_empty_permission_returns_false();
     test_secret_provider_missing_env_var_returns_not_ok();
