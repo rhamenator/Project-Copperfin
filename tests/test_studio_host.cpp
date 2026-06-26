@@ -23,6 +23,24 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
+}
+
 void test_open_document_path_error_resolves_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -50,6 +68,104 @@ void test_open_document_path_error_resolves_through_localization_catalog() {
     expect(
         result.error == "No path was provided.",
         "#2393: open_document should preserve default localized missing path diagnostic");
+}
+
+void test_launch_parse_errors_resolve_through_localization_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    const std::vector<std::string_view> launch_parse_error_keys{
+        "StudioHost.LaunchParse.Error.AnchorSelectorsRequireAlignOrResize",
+        "StudioHost.LaunchParse.Error.FieldValueNameValueSyntaxRequired",
+        "StudioHost.LaunchParse.Error.IntegerValueRequired",
+        "StudioHost.LaunchParse.Error.LogicalValueRequired",
+        "StudioHost.LaunchParse.Error.MissingValueAfterOption",
+        "StudioHost.LaunchParse.Error.MixedObjectPropertyCommands",
+        "StudioHost.LaunchParse.Error.NonNegativeValueRequired",
+        "StudioHost.LaunchParse.Error.NotNegativeValueRequired",
+        "StudioHost.LaunchParse.Error.NumericValueRequired",
+        "StudioHost.LaunchParse.Error.ObjectArgumentsRequireMode",
+        "StudioHost.LaunchParse.Error.ObjectActionArgumentsRequireMode",
+        "StudioHost.LaunchParse.Error.ObjectActionRequiresEitherOption",
+        "StudioHost.LaunchParse.Error.ObjectActionRequiresOption",
+        "StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector",
+        "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresOption",
+        "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresNonNegativeValue",
+        "StudioHost.LaunchParse.Error.ObjectAssignmentRequiresTargetSelector",
+        "StudioHost.LaunchParse.Error.ObjectCommandRequiresOptions",
+        "StudioHost.LaunchParse.Error.ObjectGroupRequiresFieldValue",
+        "StudioHost.LaunchParse.Error.ObjectGroupRequiresGroupedChildSelector",
+        "StudioHost.LaunchParse.Error.FieldValueOnlyWithGroupObject",
+        "StudioHost.LaunchParse.Error.GroupedChildSelectorsOnlyWithGroupObject",
+        "StudioHost.LaunchParse.Error.NoAssetPathProvided",
+        "StudioHost.LaunchParse.Error.PropertyCommandRequiresOption",
+        "StudioHost.LaunchParse.Error.RequestArgumentsRequireMode",
+        "StudioHost.LaunchParse.Error.DeletedStateRequiresTargetSelector",
+        "StudioHost.LaunchParse.Error.RequestItemRequiresOptionAfterTargetSelector",
+        "StudioHost.LaunchParse.Error.RequestRequiresOption",
+        "StudioHost.LaunchParse.Error.RequestRequiresSelector",
+        "StudioHost.LaunchParse.Error.SelectionContextValueRequired",
+        "StudioHost.LaunchParse.Error.SingleObjectCommand",
+        "StudioHost.LaunchParse.Error.SinglePropertyCommand",
+        "StudioHost.LaunchParse.Error.TrueFalseValueRequired",
+        "StudioHost.LaunchParse.Error.UndoModeValueRequired",
+        "StudioHost.LaunchParse.Error.UnexpectedExtraPositionalArgument",
+        "StudioHost.LaunchParse.Error.UnknownArgument",
+        "StudioHost.LaunchParse.Error.UnsignedIntegerValueRequired"
+    };
+
+    expect(
+        english_catalog.translate("StudioHost.LaunchParse.Error.MissingValueAfterOption") ==
+            "Missing value after {option}.",
+        "#2653: en-US should keep launch-parse error prose stable");
+    expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.Error.NoAssetPathProvided") ==
+            "No se proporciono ninguna ruta de asset.",
+        "#2653: es-419 should localize no-asset-path launch-parse errors");
+    expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.Error.RequestRequiresSelector") ==
+            "Una solicitud de {requestName} requiere al menos un selector.",
+        "#2653: es-419 should localize request-selector launch-parse errors");
+    expect(
+        portuguese_catalog.translate("StudioHost.LaunchParse.Error.SelectionContextValueRequired") ==
+            "Um valor de contexto de selecao e obrigatorio.",
+        "#2653: pt-BR should localize selection-context launch-parse errors");
+    expect(
+        portuguese_catalog.translate("StudioHost.LaunchParse.Error.ObjectActionRequiresTargetSelector") ==
+            "Uma acao de objeto {actionName} exige pelo menos um seletor de destino.",
+        "#2653: pt-BR should localize object-action selector launch-parse errors");
+    expect(
+        pseudo_catalog.translate("StudioHost.LaunchParse.Error.UnknownArgument") ==
+            copperfin::localization::pseudo_localize("Unknown argument: {argument}."),
+        "#2653: qps-ploc should pseudo-localize launch-parse error prose");
+
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", launch_parse_error_keys) == 0U,
+        "#2653: es-419 should define every remaining StudioHost.LaunchParse.Error localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", launch_parse_error_keys) == 0U,
+        "#2653: pt-BR should define every remaining StudioHost.LaunchParse.Error localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", launch_parse_error_keys) == 0U,
+        "#2653: qps-ploc should define every remaining StudioHost.LaunchParse.Error localization key");
+
+    const auto missing_record_result = copperfin::studio::parse_launch_arguments({"--record"});
+    expect(!missing_record_result.ok, "#2653: parse_launch_arguments should reject missing record values");
+    expect(
+        missing_record_result.error == "Missing value after --record.",
+        "#2653: parse_launch_arguments should preserve missing-value diagnostics for record selectors");
+
+    const auto selection_context_result =
+        copperfin::studio::parse_launch_arguments({"--selection-context"});
+    expect(
+        !selection_context_result.ok,
+        "#2653: parse_launch_arguments should reject missing selection-context values");
+    expect(
+        selection_context_result.error == "A selection context value is required.",
+        "#2653: parse_launch_arguments should preserve selection-context diagnostics");
 }
 
 template <typename Descriptor>
@@ -17560,6 +17676,7 @@ void test_open_document_includes_prg_static_diagnostics() {
 
 int main() {
     test_open_document_path_error_resolves_through_localization_catalog();
+    test_launch_parse_errors_resolve_through_localization_catalog();
     test_parse_launch_arguments();
     test_parse_launch_arguments_rejects_numeric_selector_errors();
     test_parse_launch_arguments_for_clear_property();
