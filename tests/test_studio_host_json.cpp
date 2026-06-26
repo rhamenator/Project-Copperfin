@@ -1207,6 +1207,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "VisualAssetEditor.Identity.SubtreeReplacementBatchRequired",
         "VisualAssetEditor.Identity.SubtreeReplacementDataMissing",
         "VisualAssetEditor.Method.Ambiguous"};
+    const std::vector<std::string_view> asset_editor_method_object_keys = {
+        "VisualAssetEditor.Identity.SubtreeReplacementMissingOrAmbiguous",
+        "VisualAssetEditor.Identity.ValueExists",
+        "VisualAssetEditor.Method.CopyBatchRequired",
+        "VisualAssetEditor.Method.DeclarationParseFailed",
+        "VisualAssetEditor.Method.DeleteBatchRequired",
+        "VisualAssetEditor.Method.MoveBatchRequired",
+        "VisualAssetEditor.Method.NameRequired",
+        "VisualAssetEditor.Method.NamesCannotBeEmpty",
+        "VisualAssetEditor.Method.NotFound",
+        "VisualAssetEditor.Method.PlacementUnsupported",
+        "VisualAssetEditor.Method.RelativeAmbiguous",
+        "VisualAssetEditor.Method.RelativeNameRequired",
+        "VisualAssetEditor.Method.RelativeNotFound",
+        "VisualAssetEditor.Method.RenameBatchRequired",
+        "VisualAssetEditor.Method.ReorderBatchRequired",
+        "VisualAssetEditor.Method.SourceMoveToSelf",
+        "VisualAssetEditor.Method.SourceNotFound",
+        "VisualAssetEditor.Method.SourceRelativeToSelf",
+        "VisualAssetEditor.Method.TargetExists",
+        "VisualAssetEditor.Method.TargetNameRequired",
+        "VisualAssetEditor.Method.TargetObjectAlreadyHasMethod",
+        "VisualAssetEditor.Object.AlignmentModeUnsupported",
+        "VisualAssetEditor.Object.AlignmentTargetsRequired",
+        "VisualAssetEditor.Object.ContainerRecordUnavailable",
+        "VisualAssetEditor.Object.CopiedRootRecordUnavailable"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1446,6 +1472,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("Method match is ambiguous."),
         "#2666: host visual property tail and asset-editor field geometry labels should resolve through locale catalogs without changing machine contracts");
     expect(
+        spanish_catalog.translate("VisualAssetEditor.Method.DeclarationParseFailed") ==
+                "No se pudo analizar la declaracion del metodo solicitado." &&
+            spanish_catalog.translate("VisualAssetEditor.Object.AlignmentModeUnsupported") ==
+                "Modo de alineacion de objeto visual no compatible." &&
+            portuguese_catalog.translate("VisualAssetEditor.Method.TargetObjectAlreadyHasMethod") ==
+                "O objeto de destino ja possui um metodo com o nome solicitado." &&
+            portuguese_catalog.translate("VisualAssetEditor.Identity.ValueExists") ==
+                "O valor de identidade solicitado ja existe no ativo." &&
+            pseudo_catalog.translate("VisualAssetEditor.Method.SourceNotFound") ==
+                copperfin::localization::pseudo_localize("The source method was not found."),
+        "#2667: asset-editor method and object operation labels should resolve through locale catalogs without changing machine contracts");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1580,6 +1618,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", visual_property_asset_editor_keys) == 0U,
         "#2666: qps-ploc should define every remaining visual-property/asset-editor localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", asset_editor_method_object_keys) == 0U,
+        "#2667: es-419 should define every remaining asset-editor method/object localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", asset_editor_method_object_keys) == 0U,
+        "#2667: pt-BR should define every remaining asset-editor method/object localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_method_object_keys) == 0U,
+        "#2667: qps-ploc should define every remaining asset-editor method/object localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
