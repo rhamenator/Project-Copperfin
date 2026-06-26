@@ -1233,6 +1233,32 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "VisualAssetEditor.Object.AlignmentTargetsRequired",
         "VisualAssetEditor.Object.ContainerRecordUnavailable",
         "VisualAssetEditor.Object.CopiedRootRecordUnavailable"};
+    const std::vector<std::string_view> asset_editor_object_batch_keys = {
+        "VisualAssetEditor.Object.CreateBatchRequired",
+        "VisualAssetEditor.Object.CreatedBatchRecordUnavailable",
+        "VisualAssetEditor.Object.CreatedRecordUnavailable",
+        "VisualAssetEditor.Object.DeletedStateBatchRequired",
+        "VisualAssetEditor.Object.DistributionModeUnsupported",
+        "VisualAssetEditor.Object.DuplicateBatchRequired",
+        "VisualAssetEditor.Object.DuplicatedRecordUnavailable",
+        "VisualAssetEditor.Object.EditBatchRequired",
+        "VisualAssetEditor.Object.EnabledSelectionDuplicate",
+        "VisualAssetEditor.Object.EnabledSelectionRequired",
+        "VisualAssetEditor.Object.FieldValuesRequired",
+        "VisualAssetEditor.Object.GridSnappingModeUnsupported",
+        "VisualAssetEditor.Object.GroupContainerFieldsRequired",
+        "VisualAssetEditor.Object.GroupContainerNameMissing",
+        "VisualAssetEditor.Object.GroupContainerUnavailable",
+        "VisualAssetEditor.Object.GroupSelectionRequired",
+        "VisualAssetEditor.Object.LockedSelectionDuplicate",
+        "VisualAssetEditor.Object.LockedSelectionRequired",
+        "VisualAssetEditor.Object.MemoFieldMissing",
+        "VisualAssetEditor.Object.NameAmbiguous",
+        "VisualAssetEditor.Object.NameNotFound",
+        "VisualAssetEditor.Object.NameRequired",
+        "VisualAssetEditor.Object.NudgeModeUnsupported",
+        "VisualAssetEditor.Object.NudgeSelectionRequired",
+        "VisualAssetEditor.Object.ParentChainCycle"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -1484,6 +1510,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
                 copperfin::localization::pseudo_localize("The source method was not found."),
         "#2667: asset-editor method and object operation labels should resolve through locale catalogs without changing machine contracts");
     expect(
+        spanish_catalog.translate("VisualAssetEditor.Object.CreateBatchRequired") ==
+                "No se proporcionaron creaciones de objeto visual." &&
+            spanish_catalog.translate("VisualAssetEditor.Object.GroupSelectionRequired") ==
+                "No se seleccionaron objetos visuales para agrupar." &&
+            portuguese_catalog.translate("VisualAssetEditor.Object.LockedSelectionDuplicate") ==
+                "O mesmo objeto visual foi selecionado mais de uma vez para a atribuicao de estado bloqueado." &&
+            portuguese_catalog.translate("VisualAssetEditor.Object.ParentChainCycle") ==
+                "A cadeia de pais do objeto selecionado contem um ciclo." &&
+            pseudo_catalog.translate("VisualAssetEditor.Object.MemoFieldMissing") ==
+                copperfin::localization::pseudo_localize("The object does not expose a {fieldName} memo field."),
+        "#2668: asset-editor object batch and grouping labels should resolve through locale catalogs without changing machine contracts");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
         "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect(
@@ -1627,6 +1665,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_method_object_keys) == 0U,
         "#2667: qps-ploc should define every remaining asset-editor method/object localization key in this slice");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", asset_editor_object_batch_keys) == 0U,
+        "#2668: es-419 should define every remaining asset-editor object batch/grouping localization key in this slice");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", asset_editor_object_batch_keys) == 0U,
+        "#2668: pt-BR should define every remaining asset-editor object batch/grouping localization key in this slice");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", asset_editor_object_batch_keys) == 0U,
+        "#2668: qps-ploc should define every remaining asset-editor object batch/grouping localization key in this slice");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
