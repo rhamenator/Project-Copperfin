@@ -797,5 +797,12 @@
   "Studio.EditorActionDispatch.Execution.Error.ExecutorNonZeroExit": "Um executor de dispatch de acao do editor retornou um codigo de saida diferente de zero.",
   "Studio.EditorActionDispatch.Execution.Error.ExecutorRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um executor.",
   "Studio.EditorActionDispatch.Execution.Error.NonExecutedDispatchRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um dispatch nao executado.",
-  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um id de acao validado."
+  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "Uma solicitacao de execucao de dispatch de acao do editor exige um id de acao validado.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired": "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige uma operacao de criacao admitida que nao seja dry-run.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired": "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige um caminho de asset.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.ConsistentPlannedCreatesRequired": "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige criacoes planejadas consistentes da caixa de ferramentas.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired": "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige valores de campos do descritor.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired": "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige criacoes planejadas da caixa de ferramentas.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired": "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige nomes planejados de objetos.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired": "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige metadados validados de itens da caixa de ferramentas."
 }

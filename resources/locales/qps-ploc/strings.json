@@ -785,5 +785,12 @@
   "Studio.EditorActionDispatch.Execution.Error.ExecutorNonZeroExit": "An editor action dispatch executor returned a non-zero exit code.",
   "Studio.EditorActionDispatch.Execution.Error.ExecutorRequired": "An editor action dispatch execution request requires an executor.",
   "Studio.EditorActionDispatch.Execution.Error.NonExecutedDispatchRequired": "An editor action dispatch execution request requires a non-executed dispatch.",
-  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "An editor action dispatch execution request requires a validated action id."
+  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "An editor action dispatch execution request requires a validated action id.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired": "A toolbox batch create dispatch request requires an admitted non-dry-run create operation.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired": "A toolbox batch create dispatch request requires an asset path.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.ConsistentPlannedCreatesRequired": "A toolbox batch create dispatch request requires consistent planned toolbox creates.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired": "A toolbox batch create dispatch request requires descriptor field values.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired": "A toolbox batch create dispatch request requires planned toolbox creates.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired": "A toolbox batch create dispatch request requires planned object names.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired": "A toolbox batch create dispatch request requires validated toolbox item metadata."
 }

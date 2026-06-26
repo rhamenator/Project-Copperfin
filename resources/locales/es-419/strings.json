@@ -797,5 +797,12 @@
   "Studio.EditorActionDispatch.Execution.Error.ExecutorNonZeroExit": "Un ejecutor de dispatch de accion del editor devolvio un codigo de salida distinto de cero.",
   "Studio.EditorActionDispatch.Execution.Error.ExecutorRequired": "Una solicitud de ejecucion de dispatch de accion del editor requiere un ejecutor.",
   "Studio.EditorActionDispatch.Execution.Error.NonExecutedDispatchRequired": "Una solicitud de ejecucion de dispatch de accion del editor requiere un dispatch no ejecutado.",
-  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "Una solicitud de ejecucion de dispatch de accion del editor requiere un id de accion validado."
+  "Studio.EditorActionDispatch.Execution.Error.ValidatedActionIdRequired": "Una solicitud de ejecucion de dispatch de accion del editor requiere un id de accion validado.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere una operacion de creacion admitida que no sea dry-run.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere una ruta de asset.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.ConsistentPlannedCreatesRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere creaciones planificadas de caja de herramientas coherentes.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere valores de campos del descriptor.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere creaciones planificadas de caja de herramientas.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere nombres planificados de objetos.",
+  "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired": "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere metadatos validados de elementos de la caja de herramientas."
 }

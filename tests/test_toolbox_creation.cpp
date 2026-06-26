@@ -29,6 +29,24 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
+}
+
 std::size_t object_count(const std::filesystem::path& table_path) {
     const auto list_result = copperfin::vfp::list_visual_objects(table_path.string());
     return list_result.ok ? list_result.objects.size() : 0U;
@@ -4415,6 +4433,8 @@ void test_toolbox_creation_errors_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
 
     expect(english_catalog.translate("Studio.ToolboxCreation.Error.ItemNotFound") ==
                "The requested toolbox item was not found." &&
@@ -4432,6 +4452,44 @@ void test_toolbox_creation_errors_resolve_through_localization_catalog() {
                pseudo_catalog.translate("Studio.ToolboxCreation.BatchFromDispatch.Error.ValidatedItemMetadataRequired")
                    .starts_with("[!! "),
            "#2372: toolbox creation error prose should resolve through localizable catalog keys");
+    const std::vector<std::string_view> batch_dispatch_keys = {
+        "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired",
+        "Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired",
+        "Studio.ToolboxCreation.BatchDispatch.Error.ConsistentPlannedCreatesRequired",
+        "Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired",
+        "Studio.ToolboxCreation.BatchDispatch.Error.PlannedCreatesRequired",
+        "Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired",
+        "Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired"};
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired") ==
+            "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere una ruta de asset.",
+        "#2619: es-419 toolbox batch-dispatch asset-path error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.BatchDispatch.Error.PlannedObjectNamesRequired") ==
+            "Una solicitud de dispatch de creacion por lote de caja de herramientas requiere nombres planificados de objetos.",
+        "#2619: es-419 toolbox batch-dispatch planned-object-names error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.BatchDispatch.Error.ConsistentPlannedCreatesRequired") ==
+            "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige criacoes planejadas consistentes da caixa de ferramentas.",
+        "#2619: pt-BR toolbox batch-dispatch consistent-planned-creates error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.BatchDispatch.Error.ValidatedItemMetadataRequired") ==
+            "Uma solicitacao de dispatch de criacao em lote da caixa de ferramentas exige metadados validados de itens da caixa de ferramentas.",
+        "#2619: pt-BR toolbox batch-dispatch validated-item-metadata error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxCreation.BatchDispatch.Error.DescriptorFieldValuesRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A toolbox batch create dispatch request requires descriptor field values."),
+        "#2619: qps-ploc toolbox batch-dispatch descriptor-field-values error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", batch_dispatch_keys) == 0U,
+        "#2619: es-419 should define every remaining Studio.ToolboxCreation.BatchDispatch localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", batch_dispatch_keys) == 0U,
+        "#2619: pt-BR should define every remaining Studio.ToolboxCreation.BatchDispatch localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", batch_dispatch_keys) == 0U,
+        "#2619: qps-ploc should define every remaining Studio.ToolboxCreation.BatchDispatch localization key");
 }
 
 }  // namespace
