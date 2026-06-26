@@ -288,21 +288,149 @@ void test_runtime_transaction_journal_messages_route_through_catalog() {
 }
 
 void test_runtime_report_output_messages_route_through_catalog() {
-    const auto catalog =
-        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "en-US");
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
-        catalog.translate("Runtime.Prg.ReportOutput.Error.PathRequired") ==
+        english.translate("Runtime.Prg.ReportOutput.Error.PathRequired") ==
             "REPORT/LABEL TO clause requires a writable output path",
         "#2536: report output path-required error should be catalog-backed");
     expect(
-        catalog.translate("Runtime.Prg.ReportOutput.Error.OpenFailed", {{"path", "renders/invoice.txt"}}) ==
+        english.translate("Runtime.Prg.ReportOutput.Error.OpenFailed", {{"path", "renders/invoice.txt"}}) ==
             "Unable to open report output path: renders/invoice.txt",
         "#2536: report output open error should preserve the named path placeholder");
     expect(
-        catalog.translate("Runtime.Prg.ReportOutput.Error.WriteFailed", {{"path", "renders/invoice.txt"}}) ==
+        english.translate("Runtime.Prg.ReportOutput.Error.WriteFailed", {{"path", "renders/invoice.txt"}}) ==
             "Unable to write report output path: renders/invoice.txt",
         "#2536: report output write error should preserve the named path placeholder");
+    expect(
+        english.translate("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", "reports/missing_invoice.frx"}}) ==
+            "Unable to resolve report asset: reports/missing_invoice.frx",
+        "#2597: report asset resolve error should be catalog-backed");
+
+    const std::string spanish_path_required =
+        spanish.translate("Runtime.Prg.ReportOutput.Error.PathRequired");
+    expect(
+        spanish_path_required == "La clausula TO de REPORT/LABEL requiere una ruta de salida escribible",
+        "#2597: es-419 report output path-required error should localize the prose");
+    expect(
+        spanish_path_required.find("REPORT/LABEL") != std::string::npos &&
+            spanish_path_required.find("TO") != std::string::npos &&
+            spanish_path_required.find("requires a writable output path") == std::string::npos,
+        "#2597: es-419 report output path-required error should preserve command tokens without falling back to English prose");
+
+    const std::string portuguese_resolve =
+        portuguese.translate("Runtime.Prg.ReportAsset.Error.ResolveFailed", {{"path", "reports/missing_invoice.frx"}});
+    expect(
+        portuguese_resolve == "Nao foi possivel resolver o asset do relatorio: reports/missing_invoice.frx",
+        "#2597: pt-BR report asset resolve error should localize the prose while preserving the path");
+
+    const std::string pseudo_open =
+        pseudo.translate("Runtime.Prg.ReportOutput.Error.OpenFailed", {{"path", "renders/invoice.txt"}});
+    expect(
+        pseudo_open.find("[!! ") == 0U &&
+            pseudo_open.find("renders/invoice.txt") != std::string::npos &&
+            pseudo_open.find("Unable to open report output path") == std::string::npos,
+        "#2597: qps-ploc report output open error should pseudo-localize prose while preserving the path");
+}
+
+std::vector<std::uint8_t> make_vfp_header() {
+    std::vector<std::uint8_t> bytes(32U, 0U);
+    bytes[0] = 0x30U;
+    bytes[1] = 126U;
+    bytes[2] = 4U;
+    bytes[3] = 7U;
+    bytes[8] = 0xA1U;
+    bytes[9] = 0x00U;
+    bytes[10] = 0x40U;
+    bytes[11] = 0x00U;
+    bytes[28] = 0x01U;
+    bytes[29] = 0x03U;
+    return bytes;
+}
+
+void write_synthetic_vfp_asset(const std::filesystem::path& path) {
+    const auto bytes = make_vfp_header();
+    std::ofstream output(path, std::ios::binary);
+    output.write(reinterpret_cast<const char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+}
+
+void test_runtime_report_output_errors_localize_without_changing_runtime_behavior() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_report_output_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path report_path = temp_root / "summary.frx";
+    write_synthetic_vfp_asset(report_path);
+
+    auto run_script = [&](const std::string& stem, const std::string& script) {
+        const fs::path main_path = temp_root / (stem + ".prg");
+        write_text(main_path, script);
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path, temp_root));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "es-419", true);
+        const auto state = run_script(
+            "report_missing_path_es",
+            "REPORT FORM '" + report_path.string() + "' TO FILE\n");
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "#2597: es-419 report output missing-path script should pause with an error");
+        expect(state.message == "La clausula TO de REPORT/LABEL requiere una ruta de salida escribible",
+               "#2597: es-419 report output missing-path error should localize the prose (got '" + state.message + "')");
+    }
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+        const fs::path blocking_parent = temp_root / "not_a_directory";
+        write_text(blocking_parent, "block");
+        const auto state = run_script(
+            "report_open_failed_pt",
+            "REPORT FORM '" + report_path.string() + "' TO FILE '" + (blocking_parent / "invoice.txt").string() + "'\n");
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "#2597: pt-BR report output open-failed script should pause with an error");
+        expect(state.message == "Nao foi possivel abrir o caminho de saida do relatorio: " + (blocking_parent / "invoice.txt").string(),
+               "#2597: pt-BR report output open-failed error should localize the prose while preserving the path");
+    }
+
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+        const auto state = run_script(
+            "report_missing_asset_qps",
+            "REPORT FORM '" + (temp_root / "missing_invoice.frx").string() + "' PREVIEW\n");
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "#2597: qps-ploc missing report asset script should pause with an error");
+        expect(state.message.find("[!! ") == 0U &&
+                   state.message.find((temp_root / "missing_invoice.frx").string()) != std::string::npos &&
+                   state.message.find("Unable to resolve report asset") == std::string::npos,
+               "#2597: qps-ploc missing report asset error should pseudo-localize prose while preserving the path");
+    }
+
+#if defined(__linux__)
+    {
+        ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+        set_env_value("COPPERFIN_LOCALE", "es-419", true);
+        const auto state = run_script(
+            "report_write_failed_es",
+            "REPORT FORM '" + report_path.string() + "' TO FILE '/dev/full'\n");
+        expect(state.reason == copperfin::runtime::DebugPauseReason::error,
+               "#2597: es-419 report output write-failed script should pause with an error on /dev/full");
+        expect(state.message == "No se pudo escribir la ruta de salida del reporte: /dev/full",
+               "#2597: es-419 report output write-failed error should localize the prose while preserving the path");
+    }
+#endif
+
+    fs::remove_all(temp_root, ignored);
 }
 
 void test_runtime_aggregate_errors_route_through_catalog() {
@@ -1658,6 +1786,7 @@ int main(int argc, char** argv) {
     test_parser_behavior_remains_locale_invariant();
     test_runtime_transaction_journal_messages_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
+    test_runtime_report_output_errors_localize_without_changing_runtime_behavior();
     test_runtime_aggregate_errors_route_through_catalog();
     test_runtime_sql_errors_route_through_catalog();
     test_build_host_catalog_entries_cover_placeholder_locales();

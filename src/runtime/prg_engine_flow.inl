@@ -604,9 +604,10 @@
                 return {};
             }
 
-            if (starts_with_insensitive(target, "FILE "))
+            if (starts_with_insensitive(target, "FILE") &&
+                (target.size() == 4U || std::isspace(static_cast<unsigned char>(target[4])) != 0))
             {
-                target = trim_copy(target.substr(5U));
+                target = trim_copy(target.substr(4U));
             }
             if (target.empty())
             {
