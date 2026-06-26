@@ -543,6 +543,12 @@ void test_runtime_dll_errors_route_through_catalog() {
     const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
     const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap handle_placeholders{{"handle", "42"}};
+    const copperfin::localization::PlaceholderMap hresult_placeholders{{"hresult", "-2146232576"}};
+    const copperfin::localization::PlaceholderMap assembly_placeholders{
+        {"hresult", "-2147024894"},
+        {"path", "bin/Interop.dll"}
+    };
+    const copperfin::localization::PlaceholderMap type_placeholders{{"typeName", "Copperfin.Tools.Loader"}};
 
     expect(
         english.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded") == "FOXTOOLS is not loaded",
@@ -552,9 +558,27 @@ void test_runtime_dll_errors_route_through_catalog() {
             "Registered API handle not found: 42",
         "#2548: API handle error should preserve handle placeholder");
     expect(
+        english.translate("Runtime.Prg.Dll.Error.ClrCreateInstanceFailed", hresult_placeholders) ==
+            "CLRCreateInstance failed: -2146232576",
+        "#2549: CLRCreateInstance error should preserve HRESULT placeholder");
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed", assembly_placeholders) ==
+            "Could not load .NET assembly: bin/Interop.dll hr=-2147024894",
+        "#2549: .NET assembly load error should preserve path and HRESULT placeholders");
+    expect(
+        english.translate("Runtime.Prg.Dll.Error.DotNetTypeNotFound", type_placeholders) ==
+            "Type not found: Copperfin.Tools.Loader",
+        "#2549: .NET type lookup error should preserve type-name placeholder");
+    expect(
         spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("FOXTOOLS") != std::string::npos &&
             spanish.translate("Runtime.Prg.Dll.Error.FoxtoolsNotLoaded").find("is not loaded") == std::string::npos,
         "#2548: es-419 FOXTOOLS error should preserve invariant product token without falling back to English");
+    expect(
+        spanish.translate("Runtime.Prg.Dll.Error.DotNetTypeNotFound", type_placeholders)
+                    .find("Copperfin.Tools.Loader") != std::string::npos &&
+            spanish.translate("Runtime.Prg.Dll.Error.DotNetTypeNotFound", type_placeholders)
+                    .find("Type not found") == std::string::npos,
+        "#2549: es-419 .NET type error should preserve type name without falling back to English");
 
     const std::string pseudo_handle =
         pseudo.translate("Runtime.Prg.Dll.Error.RegisteredApiHandleNotFound", handle_placeholders);
@@ -563,6 +587,15 @@ void test_runtime_dll_errors_route_through_catalog() {
             pseudo_handle.find("42") != std::string::npos &&
             pseudo_handle.find("{handle}") == std::string::npos,
         "#2548: qps-ploc API handle error should pseudo-localize prose while preserving handle");
+    const std::string pseudo_assembly =
+        pseudo.translate("Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed", assembly_placeholders);
+    expect(
+        pseudo_assembly.find("[!! ") == 0U &&
+            pseudo_assembly.find("bin/Interop.dll") != std::string::npos &&
+            pseudo_assembly.find("-2147024894") != std::string::npos &&
+            pseudo_assembly.find("{path}") == std::string::npos &&
+            pseudo_assembly.find("{hresult}") == std::string::npos,
+        "#2549: qps-ploc .NET assembly error should pseudo-localize prose while preserving placeholders");
 }
 
 void test_runtime_surface_errors_route_through_catalog() {

@@ -234,7 +234,9 @@
                     HRESULT hr2 = CLRCreateInstance(CLSID_CLRMetaHost, IID_ICLRMetaHost, reinterpret_cast<void **>(&metahost));
                     if (FAILED(hr2))
                     {
-                        last_error_message = "CLRCreateInstance failed: " + std::to_string(hr2);
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.ClrCreateInstanceFailed",
+                            {{"hresult", std::to_string(hr2)}});
                         return make_empty_value();
                     }
                     ICLRRuntimeInfo *runtime_info = nullptr;
@@ -260,7 +262,7 @@
                     if (runtime_info == nullptr)
                     {
                         metahost->Release();
-                        last_error_message = "No CLR runtime found";
+                        last_error_message = runtime_text("Runtime.Prg.Dll.Error.ClrRuntimeNotFound");
                         return make_empty_value();
                     }
                     hr2 = runtime_info->GetInterface(CLSID_CorRuntimeHost, IID_ICorRuntimeHost, reinterpret_cast<void **>(&s_runtime_host));
@@ -268,7 +270,9 @@
                     metahost->Release();
                     if (FAILED(hr2) || s_runtime_host == nullptr)
                     {
-                        last_error_message = "Failed to get ICorRuntimeHost: " + std::to_string(hr2);
+                        last_error_message = runtime_text(
+                            "Runtime.Prg.Dll.Error.CorRuntimeHostGetFailed",
+                            {{"hresult", std::to_string(hr2)}});
                         return make_empty_value();
                     }
                     s_runtime_host->Start();
@@ -300,7 +304,9 @@
                 HRESULT hr = s_runtime_host->GetDefaultDomain(&app_domain_unk);
                 if (FAILED(hr) || app_domain_unk == nullptr)
                 {
-                    last_error_message = "GetDefaultDomain failed: " + std::to_string(hr);
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.GetDefaultDomainFailed",
+                        {{"hresult", std::to_string(hr)}});
                     return make_empty_value();
                 }
                 IDispatch *app_domain_disp = nullptr;
@@ -308,7 +314,7 @@
                 app_domain_unk->Release();
                 if (FAILED(hr) || app_domain_disp == nullptr)
                 {
-                    last_error_message = "AppDomain QueryInterface IDispatch failed";
+                    last_error_message = runtime_text("Runtime.Prg.Dll.Error.AppDomainDispatchQueryFailed");
                     return make_empty_value();
                 }
 
@@ -329,7 +335,12 @@
                 {
                     // We couldn't load: return a graceful empty
                     VariantClear(&v_assembly);
-                    last_error_message = "Could not load .NET assembly: " + declfn.dll_path + " hr=" + std::to_string(hr);
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetAssemblyLoadFailed",
+                        {
+                            {"hresult", std::to_string(hr)},
+                            {"path", declfn.dll_path}
+                        });
                     return make_empty_value();
                 }
 
@@ -341,7 +352,7 @@
                 if (!assembly_disp)
                 {
                     VariantClear(&v_assembly);
-                    last_error_message = "Assembly is not IDispatch";
+                    last_error_message = runtime_text("Runtime.Prg.Dll.Error.AssemblyNotDispatch");
                     return make_empty_value();
                 }
                 assembly_disp->AddRef();
@@ -364,7 +375,9 @@
                 if (!type_disp)
                 {
                     VariantClear(&v_type);
-                    last_error_message = "Type not found: " + declfn.dotnet_type_name;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetTypeNotFound",
+                        {{"typeName", declfn.dotnet_type_name}});
                     return make_empty_value();
                 }
                 type_disp->AddRef();
@@ -387,7 +400,9 @@
                 if (!method_disp)
                 {
                     VariantClear(&v_method);
-                    last_error_message = "Method not found: " + declfn.dotnet_method_name;
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetMethodNotFound",
+                        {{"methodName", declfn.dotnet_method_name}});
                     return make_empty_value();
                 }
                 method_disp->AddRef();
@@ -420,7 +435,9 @@
 
                 if (FAILED(hr))
                 {
-                    last_error_message = "Method invoke failed: " + std::to_string(hr);
+                    last_error_message = runtime_text(
+                        "Runtime.Prg.Dll.Error.DotNetMethodInvokeFailed",
+                        {{"hresult", std::to_string(hr)}});
                     return make_empty_value();
                 }
                 PrgValue result = from_variant(ret_var);
