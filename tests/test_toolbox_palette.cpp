@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/studio/toolbox_palette.h"
 #include "copperfin/studio/toolbox_dispatch.h"
 #include "copperfin/studio/toolbox_invocation_admission.h"
@@ -5,6 +6,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace {
 
@@ -17,6 +20,24 @@ void expect(bool condition, const std::string& message) {
     }
 }
 
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
+}
+
 bool has_toolbox_item(
     const std::vector<copperfin::studio::StudioToolboxItemDescriptor>& items,
     std::string_view id) {
@@ -26,6 +47,17 @@ bool has_toolbox_item(
         }
     }
     return false;
+}
+
+const copperfin::studio::StudioToolboxItemDescriptor* find_toolbox_item(
+    const std::vector<copperfin::studio::StudioToolboxItemDescriptor>& items,
+    std::string_view id) {
+    for (const auto& item : items) {
+        if (item.id == id) {
+            return &item;
+        }
+    }
+    return nullptr;
 }
 
 const copperfin::studio::StudioToolboxPaletteLaunchCatalogEntry* find_launch_catalog_entry(
@@ -190,6 +222,63 @@ int main() {
                report_textbox_query.item_count == 0U &&
                report_textbox_query.items.empty(),
            "#1411: toolbox palette queries should return empty results when context filters remove matches");
+
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto spanish_toolbox = copperfin::studio::studio_toolbox_palette_for_catalog(spanish_catalog);
+    const auto portuguese_toolbox = copperfin::studio::studio_toolbox_palette_for_catalog(portuguese_catalog);
+    const auto pseudo_toolbox = copperfin::studio::studio_toolbox_palette_for_catalog(pseudo_catalog);
+    const std::vector<std::string_view> text_item_keys = {
+        "Studio.Toolbox.Item.Label.Description",
+        "Studio.Toolbox.Item.Label.Title",
+        "Studio.Toolbox.Item.TextBox.Description",
+        "Studio.Toolbox.Item.TextBox.Title",
+        "Studio.Toolbox.Item.EditBox.Description",
+        "Studio.Toolbox.Item.EditBox.Title"};
+    const auto* spanish_label = find_toolbox_item(spanish_toolbox, "label");
+    const auto* portuguese_textbox = find_toolbox_item(portuguese_toolbox, "textbox");
+    const auto* pseudo_editbox = find_toolbox_item(pseudo_toolbox, "editbox");
+    expect(
+        spanish_label != nullptr &&
+            spanish_label->title == "Etiqueta" &&
+            spanish_label->description ==
+                "Mostrar texto estatico o titulos de reportes con semantica de Label de VFP." &&
+            spanish_label->id == "label" &&
+            spanish_label->vfp_class == "Label" &&
+            spanish_label->base_class == "Label" &&
+            spanish_label->default_name_prefix == "lbl",
+        "#2633: es-419 label toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        portuguese_textbox != nullptr &&
+            portuguese_textbox->title == "Caixa de texto" &&
+            portuguese_textbox->description ==
+                "Editar valores de caracteres, numericos, datas e campos vinculados." &&
+            portuguese_textbox->id == "textbox" &&
+            portuguese_textbox->vfp_class == "TextBox" &&
+            portuguese_textbox->base_class == "TextBox" &&
+            portuguese_textbox->default_name_prefix == "txt",
+        "#2633: pt-BR textbox toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        pseudo_editbox != nullptr &&
+            pseudo_editbox->title == copperfin::localization::pseudo_localize("EditBox") &&
+            pseudo_editbox->description ==
+                copperfin::localization::pseudo_localize("Edit memo and multi-line text values.") &&
+            pseudo_editbox->id == "editbox" &&
+            pseudo_editbox->vfp_class == "EditBox" &&
+            pseudo_editbox->base_class == "EditBox" &&
+            pseudo_editbox->default_name_prefix == "edt",
+        "#2633: qps-ploc editbox toolbox metadata should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", text_item_keys) == 0U,
+        "#2633: es-419 should define every remaining toolbox text-item localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", text_item_keys) == 0U,
+        "#2633: pt-BR should define every remaining toolbox text-item localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", text_item_keys) == 0U,
+        "#2633: qps-ploc should define every remaining toolbox text-item localization key");
 
     const auto visual_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
