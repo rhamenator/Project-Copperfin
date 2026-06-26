@@ -18134,6 +18134,30 @@ void write_synthetic_report_table_for_stable_group_section_expression_json(
            "#1666: synthetic report table for stable group section expression JSON should be created");
 }
 
+void write_synthetic_report_table_for_stable_nested_group_section_expression_json(
+    const std::filesystem::path& report_path) {
+    const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
+        {.name = "OBJTYPE", .type = 'N', .length = 8U},
+        {.name = "OBJCODE", .type = 'N', .length = 8U},
+        {.name = "EXPR", .type = 'M', .length = 4U},
+        {.name = "VPOS", .type = 'N', .length = 10U},
+        {.name = "HEIGHT", .type = 'N', .length = 10U},
+        {.name = "UNIQUEID", .type = 'C', .length = 24U}
+    };
+    const std::vector<std::vector<std::string>> records{
+        {"1", "53", "ORIENTATION=0", "", "", ""},
+        {"9", "3", "customer.region", "0", "400", "region-header-guid"},
+        {"9", "3", "customer.country", "400", "300", "country-header-guid"},
+        {"9", "4", "", "700", "2200", ""},
+        {"9", "5", "customer.country", "2900", "250", "country-footer-guid"},
+        {"9", "5", "customer.region", "3150", "350", "region-footer-guid"}
+    };
+
+    const auto create_result = copperfin::vfp::create_dbf_table_file(report_path.string(), fields, records);
+    expect(create_result.ok,
+           "#2680: synthetic report table for stable nested group section expression JSON should be created");
+}
+
 void write_synthetic_report_table_for_stable_summary_section_json(
     const std::filesystem::path& report_path) {
     const std::vector<copperfin::vfp::DbfFieldDescriptor> fields{
@@ -39365,6 +39389,116 @@ void test_studio_host_json_exposes_report_group_section_expressions_by_stable_se
     run_group_expression_json(temp_root / "stable_group_sections.lbx",
                               "stable_group_sections.lbx",
                               "label");
+
+    if (failures == 0) {
+        fs::remove_all(temp_root, ignored);
+    }
+}
+
+void test_studio_host_json_exposes_nested_report_group_section_ordering_by_stable_selection(
+    const std::string& studio_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root =
+        fs::temp_directory_path() / "copperfin_studio_host_nested_group_section_expression_stable_json_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const auto run_nested_group_expression_json = [&](const fs::path& asset_path,
+                                                      const std::string& title,
+                                                      const std::string& label) {
+        write_synthetic_report_table_for_stable_nested_group_section_expression_json(asset_path);
+        const auto process = run_process_capture(
+            studio_host_path,
+            {"--path", asset_path.string(), "--unique-id", "country-header-guid", "--json"},
+            temp_root);
+
+        if (process.exit_code != 0) {
+            std::cerr << "studio host " << label << " stable nested group section stdout:\n"
+                      << process.stdout_text << "\n";
+            std::cerr << "studio host " << label << " stable nested group section stderr:\n"
+                      << process.stderr_text << "\n";
+            std::cerr << "fixture root: " << temp_root << "\n";
+        }
+
+        expect(process.exit_code == 0,
+               "#2680: stable selected nested report/label group section JSON should exit successfully");
+        expect_contains(process.stdout_text, "\"documentTitle\": \"" + title + "\"",
+                        "#2680: stable selected nested group section JSON should preserve document titles");
+        if (asset_path.extension() == ".lbx") {
+            expect_contains(process.stdout_text, "\"isLabel\": true",
+                            "#2680: stable selected nested label group section JSON should retain label identity");
+        }
+        expect_contains(process.stdout_text, "\"sectionCount\": 5",
+                        "#2680: stable selected nested group section JSON should preserve both group levels");
+        expect_contains(process.stdout_text, "\"deletedSectionCount\": 0",
+                        "#2680: stable selected nested group section JSON should preserve deleted section counts");
+        expect_contains(process.stdout_text, "\"previewBoundsAvailable\": true",
+                        "#2680: stable selected nested group section JSON should preserve preview availability");
+        expect_contains(process.stdout_text, "\"previewBoundsTop\": 0",
+                        "#2680: stable selected nested group section JSON should preserve preview top bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsBottom\": 3500",
+                        "#2680: stable selected nested group section JSON should preserve preview bottom bounds");
+        expect_contains(process.stdout_text, "\"previewBoundsHeight\": 3500",
+                        "#2680: stable selected nested group section JSON should preserve preview heights");
+        expect_contains(process.stdout_text, "\"deletedPreviewBoundsAvailable\": false",
+                        "#2680: stable selected nested group section JSON should not fabricate deleted preview bounds");
+        expect_contains(process.stdout_text, "\"selectedReportSectionAvailable\": true",
+                        "#2680: stable selected nested group section JSON should advertise section selection");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionAvailable\": true",
+                        "#2680: stable selected nested group section JSON should advertise report selection");
+        expect_contains(process.stdout_text, "\"selectedReportSelectionKind\": \"section\"",
+                        "#2680: stable selected nested group section JSON should preserve selection classification");
+        expect_contains(process.stdout_text, "\"selectedReportObjectAvailable\": false",
+                        "#2680: stable selected nested group section JSON should keep selected object unavailable");
+        expect_contains(process.stdout_text, "\"selectedReportSettingsAvailable\": false",
+                        "#2680: stable selected nested group section JSON should keep selected settings unavailable");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"sections\": [",
+                "\"id\": \"group_header_1\"",
+                "\"expression\": \"customer.region\"",
+                "\"recordIndex\": 1",
+                "\"id\": \"group_header_2\"",
+                "\"expression\": \"customer.country\"",
+                "\"recordIndex\": 2",
+                "\"bandKind\": \"detail\"",
+                "\"recordIndex\": 3",
+                "\"id\": \"group_footer_4\"",
+                "\"expression\": \"customer.country\"",
+                "\"recordIndex\": 4",
+                "\"id\": \"group_footer_5\"",
+                "\"expression\": \"customer.region\"",
+                "\"recordIndex\": 5"
+            },
+            "#2680: stable selected nested group section JSON should preserve nested sibling ordering and expressions");
+        expect_contains_in_order(
+            process.stdout_text,
+            {
+                "\"selectedReportSection\": {",
+                "\"id\": \"group_header_2\"",
+                "\"bandKind\": \"group_header\"",
+                "\"expression\": \"customer.country\"",
+                "\"expressionFieldIndex\": 2",
+                "\"expressionMemoBlockNumber\": 3",
+                "\"recordIndex\": 2",
+                "\"sectionIndex\": 1",
+                "\"sectionCount\": 5",
+                "\"top\": 400",
+                "\"height\": 300",
+                "\"bottom\": 700"
+            },
+            "#2680: stable selected nested group section JSON should expose selected inner-group metadata");
+    };
+
+    run_nested_group_expression_json(temp_root / "nested_group_sections.frx",
+                                     "nested_group_sections.frx",
+                                     "report");
+    run_nested_group_expression_json(temp_root / "nested_group_sections.lbx",
+                                     "nested_group_sections.lbx",
+                                     "label");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
@@ -125645,6 +125779,7 @@ int main(int argc, char** argv) {
     test_studio_host_json_synthesizes_report_object_titles_without_title_schema(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions(argv[1]);
     test_studio_host_json_exposes_report_group_section_expressions_by_stable_selection(argv[1]);
+    test_studio_host_json_exposes_nested_report_group_section_ordering_by_stable_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_header_report_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_header_label_sections_by_record_selection(argv[1]);
     test_studio_host_json_exposes_selected_group_footer_report_sections_by_record_selection(argv[1]);
