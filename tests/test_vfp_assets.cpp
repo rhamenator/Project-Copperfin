@@ -6,12 +6,14 @@
 #include "copperfin/vfp/index_probe.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -23,6 +25,24 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 bool has_validation_issue(
@@ -245,6 +265,8 @@ void test_parse_dbf_header_rejects_short_input() {
 void test_dbf_cdx_header_errors_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
@@ -259,9 +281,22 @@ void test_dbf_cdx_header_errors_resolve_through_localization_catalog() {
             "Header values do not look like a CDX-family index file.",
         "#2379: CDX invalid-header error should resolve through the en-US catalog");
     expect(
+        spanish_catalog.translate("Vfp.DbfHeader.Error.ShortHeader") ==
+            "El archivo es menor que el tamano minimo del encabezado DBF (32 bytes).",
+        "#2602: DBF header short-input error should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Vfp.CdxHeader.Error.InvalidValues") ==
+            "Os valores do cabecalho nao parecem pertencer a um arquivo de indice da familia CDX.",
+        "#2602: CDX invalid-header error should resolve through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Vfp.DbfHeader.Error.ShortHeader") !=
             english_catalog.translate("Vfp.DbfHeader.Error.ShortHeader"),
         "#2379: DBF header errors should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Vfp.DbfHeader.Error.ShortHeader") ==
+            copperfin::localization::pseudo_localize(
+                "File is smaller than the minimum DBF header size (32 bytes)."),
+        "#2602: DBF header pseudo-locale should route through the pseudo-localization transform");
 
     const auto parsed_result = copperfin::vfp::parse_dbf_header(make_vfp_header());
     expect(parsed_result.ok, "#2494: DBF header parse should remain valid before version localization checks");
@@ -315,6 +350,8 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
     namespace fs = std::filesystem;
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
     const copperfin::localization::PlaceholderMap path_placeholder{{"path", "missing.dbc"}};
     const copperfin::localization::PlaceholderMap error_placeholder{{"error", "inner parse failure"}};
@@ -339,9 +376,21 @@ void test_asset_inspector_errors_resolve_through_localization_catalog() {
             "A companion index file exists but could not be parsed: inner parse failure",
         "#2387: asset inspector validation messages should preserve named placeholders");
     expect(
+        spanish_catalog.translate("Vfp.AssetInspector.Error.DbcPathMissing", path_placeholder) ==
+            "La ruta DBC no existe: missing.dbc",
+        "#2602: asset inspector DBC path errors should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Vfp.AssetInspector.Validation.IndexCompanionParseFailed", error_placeholder) ==
+            "Existe um arquivo de indice complementar, mas nao foi possivel analisa-lo: inner parse failure",
+        "#2602: asset inspector validation placeholders should resolve through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Vfp.AssetInspector.Validation.MemoSidecarMissing") !=
             english_catalog.translate("Vfp.AssetInspector.Validation.MemoSidecarMissing"),
         "#2387: asset inspector validation messages should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Vfp.AssetInspector.Error.PathMissing") ==
+            copperfin::localization::pseudo_localize("Path does not exist."),
+        "#2602: asset inspector qps-ploc strings should resolve through the pseudo-localization transform");
 
     const fs::path temp_path = fs::temp_directory_path() / "copperfin_missing_asset_for_localization.dbc";
     std::error_code ignored;
@@ -606,6 +655,8 @@ void test_parse_index_probe_for_mdx_rejects_implausible_header() {
 void test_index_probe_errors_resolve_through_localization_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
@@ -617,9 +668,21 @@ void test_index_probe_errors_resolve_through_localization_catalog() {
             "Header values do not look like a block-oriented dBase MDX file.",
         "#2380: MDX invalid-header error should resolve through the en-US catalog");
     expect(
+        spanish_catalog.translate("Vfp.IndexProbe.Error.UnknownExtension") ==
+            "Extension de indice desconocida.",
+        "#2602: index probe extension errors should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall") ==
+            "O arquivo e menor que o tamanho do cabecalho Visual FoxPro IDX de 512 bytes.",
+        "#2602: Visual FoxPro IDX short-header errors should resolve through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall") !=
             english_catalog.translate("Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall"),
         "#2380: index probe errors should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Vfp.IndexProbe.Error.UnknownExtension") ==
+            copperfin::localization::pseudo_localize("Unknown index extension."),
+        "#2602: index probe qps-ploc strings should resolve through the pseudo-localization transform");
 
     const auto idx_result =
         copperfin::vfp::parse_index_probe({0x00U}, 1U, copperfin::vfp::IndexKind::idx);
@@ -758,6 +821,84 @@ void test_inspect_database_container_collects_dcx_companion() {
     fs::remove(dbc_path, ignored);
     fs::remove(dcx_path, ignored);
     fs::remove(temp_dir, ignored);
+}
+
+void test_vfp_locale_catalog_parity() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys{
+        "Vfp.AssetInspector.Error.DbcHeaderParseFailed",
+        "Vfp.AssetInspector.Error.DbcPathMissing",
+        "Vfp.AssetInspector.Error.DbcReadFailed",
+        "Vfp.AssetInspector.Error.PathMissing",
+        "Vfp.AssetInspector.Validation.DbcCatalogEmpty",
+        "Vfp.AssetInspector.Validation.DbcCatalogParseFailed",
+        "Vfp.AssetInspector.Validation.DbfDescriptorSpanMisaligned",
+        "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorMissing",
+        "Vfp.AssetInspector.Validation.DbfDescriptorTerminatorNoRoom",
+        "Vfp.AssetInspector.Validation.DbfFieldLayoutOverflow",
+        "Vfp.AssetInspector.Validation.DbfFieldLayoutOverlap",
+        "Vfp.AssetInspector.Validation.DbfFieldNameBlank",
+        "Vfp.AssetInspector.Validation.DbfFieldNameDuplicate",
+        "Vfp.AssetInspector.Validation.DbfFieldNameInvalid",
+        "Vfp.AssetInspector.Validation.DbfFieldOffsetInvalid",
+        "Vfp.AssetInspector.Validation.DbfHeaderLengthDescriptorMismatch",
+        "Vfp.AssetInspector.Validation.DbfHeaderLengthExceedsFileSize",
+        "Vfp.AssetInspector.Validation.DbfRecordLengthMismatch",
+        "Vfp.AssetInspector.Validation.DbfRecordStorageLengthMismatch",
+        "Vfp.AssetInspector.Validation.DbfRecordStorageTruncated",
+        "Vfp.AssetInspector.Validation.IndexCompanionParseFailed",
+        "Vfp.AssetInspector.Validation.IndexStructuralSidecarMissing",
+        "Vfp.AssetInspector.Validation.MemoBlockSizeInvalid",
+        "Vfp.AssetInspector.Validation.MemoPayloadTruncated",
+        "Vfp.AssetInspector.Validation.MemoPointerOutOfRange",
+        "Vfp.AssetInspector.Validation.MemoSidecarHeaderTruncated",
+        "Vfp.AssetInspector.Validation.MemoSidecarMissing",
+        "Vfp.AssetInspector.Validation.MemoSidecarShorterThanBlockSize",
+        "Vfp.CdxHeader.Error.InvalidValues",
+        "Vfp.CdxHeader.Error.OpenFileFailed",
+        "Vfp.CdxHeader.Error.ReadProbeFailed",
+        "Vfp.CdxHeader.Error.ShortProbe",
+        "Vfp.DbfHeader.Error.InvalidValues",
+        "Vfp.DbfHeader.Error.OpenFileFailed",
+        "Vfp.DbfHeader.Error.ReadHeaderFailed",
+        "Vfp.DbfHeader.Error.ShortHeader",
+        "Vfp.DbfHeader.Version.DbaseIiiCompatible",
+        "Vfp.DbfHeader.Version.DbaseIiiMemo",
+        "Vfp.DbfHeader.Version.DbaseIvMemo",
+        "Vfp.DbfHeader.Version.DbaseIvMemoSql",
+        "Vfp.DbfHeader.Version.DbaseIvSqlTable",
+        "Vfp.DbfHeader.Version.DbaseIvSystemFile",
+        "Vfp.DbfHeader.Version.FoxProMemo",
+        "Vfp.DbfHeader.Version.Foxbase",
+        "Vfp.DbfHeader.Version.Unknown",
+        "Vfp.DbfHeader.Version.VisualFoxPro",
+        "Vfp.DbfHeader.Version.VisualFoxProAutoincrement",
+        "Vfp.DbfHeader.Version.VisualFoxProVarbinaryVarchar",
+        "Vfp.IndexProbe.Error.DbaseMdxInvalidValues",
+        "Vfp.IndexProbe.Error.DbaseMdxProbeTooSmall",
+        "Vfp.IndexProbe.Error.DbaseMdxTagMetadataMissing",
+        "Vfp.IndexProbe.Error.DbaseNdxHeaderTooSmall",
+        "Vfp.IndexProbe.Error.DbaseNdxInvalidValues",
+        "Vfp.IndexProbe.Error.OpenFileFailed",
+        "Vfp.IndexProbe.Error.PathExtensionUnknown",
+        "Vfp.IndexProbe.Error.ReadHeaderFailed",
+        "Vfp.IndexProbe.Error.UnknownExtension",
+        "Vfp.IndexProbe.Error.UnsupportedType",
+        "Vfp.IndexProbe.Error.VisualFoxProIdxHeaderTooSmall",
+        "Vfp.IndexProbe.Error.VisualFoxProIdxInvalidValues"};
+
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2602: es-419 should define every remaining non-DBF-table Vfp localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2602: pt-BR should define every remaining non-DBF-table Vfp localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2602: qps-ploc should define every remaining non-DBF-table Vfp localization key");
 }
 
 void test_inspect_database_container_collects_casefolded_same_base_companions() {
@@ -1504,6 +1645,7 @@ int main() {
     test_index_probe_errors_resolve_through_localization_catalog();
     test_inspect_asset_collects_companion_indexes();
     test_inspect_database_container_collects_dcx_companion();
+    test_vfp_locale_catalog_parity();
     test_inspect_database_container_collects_casefolded_same_base_companions();
     test_inspect_database_container_extracts_first_pass_catalog_metadata();
     test_parse_real_vfp_cdx_when_available();

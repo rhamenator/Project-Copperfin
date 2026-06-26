@@ -13,6 +13,7 @@
 #define _getpid getpid
 #endif
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -24,6 +25,24 @@ void expect(bool condition, const std::string& message) {
         std::cerr << "FAIL: " << message << "\n";
         ++failures;
     }
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+    return missing;
 }
 
 void write_le_u16(std::vector<std::uint8_t>& bytes, std::size_t offset, std::uint16_t value) {
@@ -1038,6 +1057,8 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
     namespace fs = std::filesystem;
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
@@ -1049,9 +1070,22 @@ void test_dbf_table_record_value_errors_resolve_through_localization_catalog() {
             "DateTime fields currently accept values formatted as 'julian:<day> millis:<milliseconds>'.",
         "#2381: DBF table datetime validation error should resolve through the en-US catalog");
     expect(
+        spanish_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") ==
+            "El valor de caracteres es demasiado grande para el campo destino.",
+        "#2602: DBF table character overflow error should resolve through the es-419 catalog");
+    expect(
+        portuguese_catalog.translate("Vfp.DbfTable.Error.DateTimeValueInvalid") ==
+            "Campos DateTime atualmente aceitam valores formatados como 'julian:<day> millis:<milliseconds>'.",
+        "#2602: DBF table datetime validation error should resolve through the pt-BR catalog");
+    expect(
         pseudo_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") !=
             english_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge"),
         "#2381: DBF table record/value errors should be pseudo-localizable");
+    expect(
+        pseudo_catalog.translate("Vfp.DbfTable.Error.CharacterValueTooLarge") ==
+            copperfin::localization::pseudo_localize(
+                "Character value is too large for the target field."),
+        "#2602: DBF table qps-ploc record/value errors should use the pseudo-localization transform");
 
     const fs::path temp_dir = fs::temp_directory_path() /
         ("copperfin_dbf_localized_record_value_error_tests_" + std::to_string(_getpid()));
@@ -1297,6 +1331,60 @@ void test_memo_sidecar_version_mismatch_is_diagnosed() {
     }
 
     fs::remove_all(temp_dir, ignored);
+}
+
+void test_dbf_table_locale_catalog_parity() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> keys{
+        "Vfp.DbfTable.Error.CharacterValueTooLarge",
+        "Vfp.DbfTable.Error.CreateFieldRequired",
+        "Vfp.DbfTable.Error.CreateUnsupportedFieldType",
+        "Vfp.DbfTable.Error.CurrencyValueInvalid",
+        "Vfp.DbfTable.Error.DateTimeValueInvalid",
+        "Vfp.DbfTable.Error.DateValueInvalid",
+        "Vfp.DbfTable.Error.DoubleFieldWidthInvalid",
+        "Vfp.DbfTable.Error.DoubleValueInvalid",
+        "Vfp.DbfTable.Error.DropLastField",
+        "Vfp.DbfTable.Error.EightByteFieldWidthInvalid",
+        "Vfp.DbfTable.Error.FieldLengthRequired",
+        "Vfp.DbfTable.Error.FieldNameRequired",
+        "Vfp.DbfTable.Error.HeaderLengthExceedsFile",
+        "Vfp.DbfTable.Error.IntegerFieldWidthInvalid",
+        "Vfp.DbfTable.Error.IntegerValueInvalid",
+        "Vfp.DbfTable.Error.IntegerValueTooLarge",
+        "Vfp.DbfTable.Error.LogicalValueInvalid",
+        "Vfp.DbfTable.Error.MemoSidecarPathMissing",
+        "Vfp.DbfTable.Error.MemoFieldWidthTooSmall",
+        "Vfp.DbfTable.Error.NumericValueTooLarge",
+        "Vfp.DbfTable.Error.OpaqueValueInvalid",
+        "Vfp.DbfTable.Error.OpenTableFailed",
+        "Vfp.DbfTable.Error.RecordDataTruncated",
+        "Vfp.DbfTable.Error.RecordFieldCountMismatch",
+        "Vfp.DbfTable.Error.RecordIndexOutOfRange",
+        "Vfp.DbfTable.Error.RecordLayoutExceedsSize",
+        "Vfp.DbfTable.Error.RequestedRecordCountTooLarge",
+        "Vfp.DbfTable.Error.TableDataTruncated",
+        "Vfp.DbfTable.Error.TableHeaderTruncated",
+        "Vfp.DbfTable.Error.TargetFieldExists",
+        "Vfp.DbfTable.Error.TargetFieldNotFound",
+        "Vfp.DbfTable.Error.TargetFieldNotFoundInTable",
+        "Vfp.DbfTable.Error.VqFieldWidthTooSmall",
+        "Vfp.DbfTable.Error.VqValueTooLarge",
+        "Vfp.DbfTable.Error.WriteMemoSidecarFailed",
+        "Vfp.DbfTable.Error.WriteTableFailed"};
+
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
+        "#2602: es-419 should define every remaining Vfp.DbfTable localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", keys) == 0U,
+        "#2602: pt-BR should define every remaining Vfp.DbfTable localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", keys) == 0U,
+        "#2602: qps-ploc should define every remaining Vfp.DbfTable localization key");
 }
 
 void test_dbf_field_name_without_null_terminator_is_tolerated() {
@@ -1700,6 +1788,7 @@ int main() {
     test_dbf_table_record_replacement_errors_resolve_through_localization_catalog();
     test_dbf_table_row_header_errors_resolve_through_localization_catalog();
     test_memo_sidecar_version_mismatch_is_diagnosed();
+    test_dbf_table_locale_catalog_parity();
     test_dbf_field_name_without_null_terminator_is_tolerated();
     test_currency_field_boundary_values();
     test_nan_inf_in_double_field_round_trip_behavior();
