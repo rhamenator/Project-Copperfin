@@ -886,6 +886,49 @@ void test_runtime_pause_and_session_messages_route_through_catalog() {
         "#2589: qps-ploc no-runnable-startup message should pseudo-localize prose while preserving the asset path");
 }
 
+void test_runtime_watch_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english.translate("Runtime.Prg.Watch.Error.EmptyExpression") == "Watch expression is empty.",
+        "#2590: empty watch-expression error should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Watch.Error.RequiresPausedFrame") ==
+            "Watch evaluation requires a paused runtime frame.",
+        "#2590: paused-frame watch error should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Watch.Error.OutOfMemory") ==
+            "Watch evaluation ran out of memory.",
+        "#2590: out-of-memory watch error should preserve the en-US default output");
+    expect(
+        english.translate("Runtime.Prg.Watch.Error.Failed") == "Watch evaluation failed.",
+        "#2590: generic watch failure should preserve the en-US default output");
+
+    const std::string spanish_empty = spanish.translate("Runtime.Prg.Watch.Error.EmptyExpression");
+    expect(
+        spanish_empty == "La expresion de watch esta vacia.",
+        "#2590: es-419 empty watch-expression error should localize the prose");
+    expect(
+        spanish_empty.find("Watch expression is empty.") == std::string::npos,
+        "#2590: es-419 empty watch-expression error should not fall back to raw English prose");
+
+    const std::string portuguese_paused =
+        portuguese.translate("Runtime.Prg.Watch.Error.RequiresPausedFrame");
+    expect(
+        portuguese_paused == "A avaliacao de watch exige um frame de runtime pausado.",
+        "#2590: pt-BR paused-frame watch error should localize the prose");
+
+    const std::string pseudo_failed = pseudo.translate("Runtime.Prg.Watch.Error.Failed");
+    expect(
+        pseudo_failed.find("[!! ") == 0U &&
+            pseudo_failed.find("Watch evaluation failed.") == std::string::npos,
+        "#2590: qps-ploc generic watch failure should pseudo-localize the prose");
+}
+
 void test_runtime_dispatch_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1384,6 +1427,7 @@ int main(int argc, char** argv) {
     test_runtime_dll_errors_route_through_catalog();
     test_runtime_core_errors_route_through_catalog();
     test_runtime_pause_and_session_messages_route_through_catalog();
+    test_runtime_watch_errors_route_through_catalog();
     test_runtime_dispatch_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
     test_runtime_package_warnings_pseudo_localize();

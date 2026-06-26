@@ -90,6 +90,10 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"Runtime.Prg.Session.Message.StepOverCompleted\": \"Step-over completed.\",\n"
         "  \"Runtime.Prg.Session.Message.StoppedOnEntry\": \"Stopped on entry.\",\n"
         "  \"Runtime.Prg.Session.Message.WaitingInReadEvents\": \"The runtime is waiting in READ EVENTS.\",\n"
+        "  \"Runtime.Prg.Watch.Error.EmptyExpression\": \"Watch expression is empty.\",\n"
+        "  \"Runtime.Prg.Watch.Error.Failed\": \"Watch evaluation failed.\",\n"
+        "  \"Runtime.Prg.Watch.Error.OutOfMemory\": \"Watch evaluation ran out of memory.\",\n"
+        "  \"Runtime.Prg.Watch.Error.RequiresPausedFrame\": \"Watch evaluation requires a paused runtime frame.\",\n"
         "  \"RuntimeHost.Usage.Federation\": \"   or: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
         "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
         "  \"RuntimeHost.Usage.Manifest\": \"Usage: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\"\n"
@@ -143,6 +147,10 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"Runtime.Prg.Session.Message.StepOverCompleted\": \"El paso sobre se completo.\",\n"
         "  \"Runtime.Prg.Session.Message.StoppedOnEntry\": \"Se detuvo en la entrada.\",\n"
         "  \"Runtime.Prg.Session.Message.WaitingInReadEvents\": \"El runtime esta esperando en READ EVENTS.\",\n"
+        "  \"Runtime.Prg.Watch.Error.EmptyExpression\": \"La expresion de watch esta vacia.\",\n"
+        "  \"Runtime.Prg.Watch.Error.Failed\": \"La evaluacion de watch fallo.\",\n"
+        "  \"Runtime.Prg.Watch.Error.OutOfMemory\": \"La evaluacion de watch se quedo sin memoria.\",\n"
+        "  \"Runtime.Prg.Watch.Error.RequiresPausedFrame\": \"La evaluacion de watch requiere un frame de runtime pausado.\",\n"
         "  \"RuntimeHost.Usage.Federation\": \"   o: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
         "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
         "  \"RuntimeHost.Usage.Manifest\": \"Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\"\n"
@@ -184,6 +192,10 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"Runtime.Prg.Session.Message.StepOverCompleted\": \"O passo sobre foi concluido.\",\n"
         "  \"Runtime.Prg.Session.Message.StoppedOnEntry\": \"Parado na entrada.\",\n"
         "  \"Runtime.Prg.Session.Message.WaitingInReadEvents\": \"O runtime esta aguardando em READ EVENTS.\",\n"
+        "  \"Runtime.Prg.Watch.Error.EmptyExpression\": \"A expressao de watch esta vazia.\",\n"
+        "  \"Runtime.Prg.Watch.Error.Failed\": \"A avaliacao de watch falhou.\",\n"
+        "  \"Runtime.Prg.Watch.Error.OutOfMemory\": \"A avaliacao de watch ficou sem memoria.\",\n"
+        "  \"Runtime.Prg.Watch.Error.RequiresPausedFrame\": \"A avaliacao de watch exige um frame de runtime pausado.\",\n"
         "  \"RuntimeHost.Usage.Federation\": \"   ou: {commandName} {federationBackendOption} {federationBackendValue} {federationQueryOption} {federationQueryValue} [{federationTargetOption} {federationTargetValue}]\",\n"
         "  \"RuntimeHost.Usage.FederationPlanning\": \"       [{planningEnableOption} {booleanValue}] [{planningRequireOption} {booleanValue}] [{planningAuditOption} {booleanValue}]\",\n"
         "  \"RuntimeHost.Usage.Manifest\": \"Uso: {commandName} {manifestOption} {manifestValue} [{debugOption}] [{breakpointOption} {breakpointValue}] [{debugCommandOption} {debugCommandValue}]\",\n"
@@ -2756,6 +2768,94 @@ void test_runtime_host_pause_messages_localize_without_changing_pause_reasons(
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_host_watch_errors_localize_without_changing_watch_fields(
+    const std::string& runtime_host_path) {
+    namespace fs = std::filesystem;
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_host_watch_error_localization_tests";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
+
+    const fs::path startup_path = temp_root / "main.prg";
+    const fs::path manifest_path = temp_root / "app.cfmanifest";
+    write_text(
+        startup_path,
+        "LOCAL nValue\n"
+        "nValue = 1\n"
+        "RETURN\n");
+    write_text(
+        manifest_path,
+        "manifest_version=1\n"
+        "project_title=WatchErrorLocalization\n"
+        "startup_item=main.prg\n"
+        "startup_source=" + startup_path.string() + "\n"
+        "working_directory=" + temp_root.string() + "\n"
+        "security_enabled=false\n"
+        "security_role=\n"
+        "security_mode=native\n"
+        "dotnet_story=none\n");
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "pt-BR");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--breakpoint", startup_path.string() + ":2",
+                "--debug-command", "continue",
+                "--debug-command", "watch:"
+            },
+            temp_root);
+        expect(process.exit_code == 0,
+               "#2590: pt-BR watch errors should keep the runtime-host success exit code");
+        expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
+               "#2590: pt-BR watch errors should preserve the breakpoint pause reason");
+        expect(process.stdout_text.find("debug.watch.expression: ") != std::string::npos,
+               "#2590: pt-BR watch errors should preserve the debug.watch.expression field");
+        expect(process.stdout_text.find("debug.watch.ok: false") != std::string::npos,
+               "#2590: pt-BR watch errors should preserve the debug.watch.ok field");
+        expect(process.stdout_text.find("debug.watch.error: A expressao de watch esta vazia.") !=
+                   std::string::npos,
+               "#2590: pt-BR watch errors should localize the watch error prose");
+        expect(process.stdout_text.find("debug.watch.error: Watch expression is empty.") ==
+                   std::string::npos,
+               "#2590: pt-BR watch errors should not fall back to the raw English watch error");
+    }
+
+    {
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        const auto process = run_process_capture(
+            runtime_host_path,
+            {
+                "--manifest", manifest_path.string(),
+                "--debug",
+                "--breakpoint", startup_path.string() + ":2",
+                "--debug-command", "continue",
+                "--debug-command", "watch:"
+            },
+            temp_root);
+        expect(process.exit_code == 0,
+               "#2590: qps-ploc watch errors should keep the runtime-host success exit code");
+        expect(process.stdout_text.find("debug.reason: breakpoint") != std::string::npos,
+               "#2590: qps-ploc watch errors should preserve the breakpoint pause reason");
+        expect(process.stdout_text.find("debug.watch.ok: false") != std::string::npos,
+               "#2590: qps-ploc watch errors should preserve the debug.watch.ok field");
+        expect(process.stdout_text.find("debug.watch.error: [!! ") != std::string::npos,
+               "#2590: qps-ploc watch errors should pseudo-localize the watch error prose");
+        expect(process.stdout_text.find("debug.watch.error: Watch expression is empty.") ==
+                   std::string::npos,
+               "#2590: qps-ploc watch errors should not fall back to the raw English watch error");
+    }
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -2788,6 +2888,7 @@ int main(int argc, char** argv) {
     test_runtime_host_usage_text_localizes_without_changing_cli_tokens(argv[1]);
     test_runtime_host_debug_errors_localize_without_changing_command_tokens(argv[1]);
     test_runtime_host_pause_messages_localize_without_changing_pause_reasons(argv[1]);
+    test_runtime_host_watch_errors_localize_without_changing_watch_fields(argv[1]);
 
     if (failures != 0) {
         std::cerr << failures << " test(s) failed\n";
