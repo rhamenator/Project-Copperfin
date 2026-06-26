@@ -137,9 +137,77 @@ void test_default_extensibility_profile() {
             "#2492: default .NET parity reason tags should remain invariant");
     }
 
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog =
-        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+        copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto spanish_profile = copperfin::platform::default_extensibility_profile(spanish_catalog);
+    const auto portuguese_profile = copperfin::platform::default_extensibility_profile(portuguese_catalog);
     const auto pseudo_profile = copperfin::platform::default_extensibility_profile(pseudo_catalog);
+
+    const auto spanish_xbase =
+        std::find_if(spanish_profile.languages.begin(), spanish_profile.languages.end(), [](const auto& language) {
+            return language.id == "xbase";
+        });
+    expect(spanish_xbase != spanish_profile.languages.end(),
+           "#2599: es-419 extensibility profile should still expose the xbase language entry");
+    if (spanish_xbase != spanish_profile.languages.end()) {
+        expect(spanish_xbase->title == "Runtime nativo Copperfin/xBase",
+               "#2599: es-419 xbase language title should localize the prose");
+        expect(spanish_xbase->trust_boundary == "nucleo confiable",
+               "#2599: es-419 xbase trust boundary should localize the prose");
+    }
+
+    const auto spanish_mcp =
+        std::find_if(spanish_profile.ai_features.begin(), spanish_profile.ai_features.end(), [](const auto& feature) {
+            return feature.id == "mcp-host";
+        });
+    expect(spanish_mcp != spanish_profile.ai_features.end(),
+           "#2599: es-419 extensibility profile should still expose the MCP feature");
+    if (spanish_mcp != spanish_profile.ai_features.end()) {
+        expect(spanish_mcp->title == "Capacidad de host MCP",
+               "#2599: es-419 MCP feature title should localize the prose");
+        expect(spanish_mcp->trust_boundary == "limite de herramienta externa administrado por politica",
+               "#2599: es-419 MCP feature trust boundary should localize the prose");
+    }
+
+    expect(!spanish_profile.guardrails.empty() &&
+               spanish_profile.guardrails[0] ==
+                   "El nucleo de ejecucion confiable sigue siendo nativo primero y orientado a la seguridad.",
+           "#2599: es-419 extensibility guardrails should localize without falling back to English");
+
+    const auto portuguese_python =
+        std::find_if(portuguese_profile.languages.begin(), portuguese_profile.languages.end(), [](const auto& language) {
+            return language.id == "python";
+        });
+    expect(portuguese_python != portuguese_profile.languages.end(),
+           "#2599: pt-BR extensibility profile should still expose the python language entry");
+    if (portuguese_python != portuguese_profile.languages.end()) {
+        expect(portuguese_python->title == "Sidecar de Python e jobs de analitica",
+               "#2599: pt-BR python language title should localize the prose");
+        expect(portuguese_python->output_story ==
+                   "O suporte a Python e posicionado como sidecar ou servico de jobs para ciencia de dados e automacao, nao como o nucleo confiavel.",
+               "#2599: pt-BR python output story should localize the prose");
+    }
+
+    const auto portuguese_task_primitives = std::find_if(
+        portuguese_profile.dotnet_output.parity_matrix.begin(),
+        portuguese_profile.dotnet_output.parity_matrix.end(),
+        [](const auto& capability) { return capability.id == "task-primitives"; });
+    expect(portuguese_task_primitives != portuguese_profile.dotnet_output.parity_matrix.end(),
+           "#2599: pt-BR extensibility profile should still expose task-primitives parity");
+    if (portuguese_task_primitives != portuguese_profile.dotnet_output.parity_matrix.end()) {
+        expect(portuguese_task_primitives->title == "Primitivas Task/Async",
+               "#2599: pt-BR task-primitives title should localize the prose");
+        expect(portuguese_task_primitives->rationale ==
+                   "Expor comportamento no estilo async/await por meio de fachadas de comandos e funcoes amigaveis para FP/VFP.",
+               "#2599: pt-BR task-primitives rationale should localize the prose");
+        expect(!portuguese_task_primitives->reason_tags.empty() &&
+                   portuguese_task_primitives->reason_tags[0] == "ergonomics",
+               "#2599: pt-BR parity entries should preserve reason tags");
+    }
+
     expect(
         pseudo_profile.languages.size() == profile.languages.size(),
         "#2492: pseudo-localized extensibility profile should preserve language counts");
@@ -275,8 +343,36 @@ void test_dotnet_interop_policy_gateway() {
         unaudited_allowed.reason == "allowed by policy",
         "#2493: unaudited allowed reason should preserve default en-US prose");
 
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog =
-        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "qps-ploc");
+        copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const auto spanish_allowed = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "task-primitives",
+            .estimated_latency_ms = 10U},
+        spanish_catalog);
+    expect(spanish_allowed.reason == "permitida por politica con ruta que requiere auditoria",
+           "#2599: es-419 allowed .NET interop reason should localize the prose");
+    expect(spanish_allowed.execution_path == "dotnet",
+           "#2599: es-419 allowed .NET interop should preserve execution-path values");
+
+    const auto portuguese_denied = copperfin::platform::evaluate_dotnet_interop_call(
+        profile,
+        copperfin::platform::DotNetInteropCallRequest{
+            .capability_id = "unsafe-reflection-load",
+            .estimated_latency_ms = 5U,
+            .requires_reflection = true,
+            .untrusted_input = true,
+            .security_sensitive = true},
+        portuguese_catalog);
+    expect(portuguese_denied.reason == "capacidade negada pela politica de allowlist/denylist",
+           "#2599: pt-BR denylisted .NET interop reason should localize the prose");
+    expect(portuguese_denied.execution_path == "none",
+           "#2599: pt-BR denylisted .NET interop should preserve execution-path values");
+
     const auto pseudo_allowed = copperfin::platform::evaluate_dotnet_interop_call(
         profile,
         copperfin::platform::DotNetInteropCallRequest{
