@@ -405,6 +405,43 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", editor_execution_keys) == 0U,
         "#2614: qps-ploc should define every remaining Studio.EditorActionDispatch.Execution localization key");
+    const std::vector<std::string_view> editor_catalog_entry_keys = {
+        "Studio.EditorActionDispatch.CatalogEntry.Error.AdmittedDispatchRequired",
+        "Studio.EditorActionDispatch.CatalogEntry.Error.CommandTokenRequired",
+        "Studio.EditorActionDispatch.CatalogEntry.Error.DispatchArgumentsRequired",
+        "Studio.EditorActionDispatch.CatalogEntry.Error.ExecutionAdmissionRequired",
+        "Studio.EditorActionDispatch.CatalogEntry.Error.NonExecutedDispatchRequired",
+        "Studio.EditorActionDispatch.CatalogEntry.Error.ValidatedActionIdRequired"};
+    expect(
+        spanish_catalog.translate("Studio.EditorActionDispatch.CatalogEntry.Error.ExecutionAdmissionRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de accion del editor requiere admision explicita de ejecucion.",
+        "#2621: es-419 editor-action dispatch catalog-entry execution-admission error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.EditorActionDispatch.CatalogEntry.Error.ValidatedActionIdRequired") ==
+            "Una entrada de catalogo de ejecucion de dispatch de accion del editor requiere un id de accion validado.",
+        "#2621: es-419 editor-action dispatch catalog-entry validated-action-id error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.EditorActionDispatch.CatalogEntry.Error.CommandTokenRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch de acao do editor exige um token de comando.",
+        "#2621: pt-BR editor-action dispatch catalog-entry command-token error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.EditorActionDispatch.CatalogEntry.Error.NonExecutedDispatchRequired") ==
+            "Uma entrada de catalogo de execucao de dispatch de acao do editor exige um dispatch nao executado.",
+        "#2621: pt-BR editor-action dispatch catalog-entry non-executed-dispatch error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.EditorActionDispatch.CatalogEntry.Error.DispatchArgumentsRequired") ==
+            copperfin::localization::pseudo_localize(
+                "An editor action dispatch execution catalog entry requires dispatch arguments."),
+        "#2621: qps-ploc editor-action dispatch catalog-entry dispatch-arguments error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", editor_catalog_entry_keys) == 0U,
+        "#2621: es-419 should define every remaining Studio.EditorActionDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", editor_catalog_entry_keys) == 0U,
+        "#2621: pt-BR should define every remaining Studio.EditorActionDispatch.CatalogEntry localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", editor_catalog_entry_keys) == 0U,
+        "#2621: qps-ploc should define every remaining Studio.EditorActionDispatch.CatalogEntry localization key");
 
     const auto visual_actions = copperfin::studio::studio_editor_actions_for_context(
         StudioEditorSelectionContext::visual_object);
