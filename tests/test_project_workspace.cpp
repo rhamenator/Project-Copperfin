@@ -316,7 +316,13 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
         "Studio.ProjectWorkspace.ItemType.ProjectRecord",
         "Studio.ProjectWorkspace.ItemType.Query",
         "Studio.ProjectWorkspace.ItemType.Report",
-        "Studio.ProjectWorkspace.ItemType.Table"};
+        "Studio.ProjectWorkspace.ItemType.Table",
+        "Studio.ProjectWorkspace.BuildTarget.VisualFoxProApplicationArchive",
+        "Studio.ProjectWorkspace.BuildTarget.VisualFoxProLibrary",
+        "Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram",
+        "Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl",
+        "Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary",
+        "Studio.ProjectWorkspace.BuildTarget.WindowsExecutable"};
 
     expect(
         english_catalog.translate("Studio.ProjectWorkspace.Group.Forms") == "Forms",
@@ -334,9 +340,29 @@ void test_project_workspace_catalog_entries_cover_placeholder_locales() {
         portuguese_catalog.translate("Studio.ProjectWorkspace.ItemType.Label") == "Rotulo",
         "#2611: pt-BR project-workspace label type should localize through the catalog");
     expect(
+        spanish_catalog.translate("Studio.ProjectWorkspace.BuildTarget.WindowsExecutable") ==
+            "Ejecutable de Windows x64",
+        "#2622: es-419 project-workspace executable build target should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ProjectWorkspace.BuildTarget.VisualFoxProLibrary") ==
+            "Biblioteca de Visual FoxPro x64",
+        "#2622: es-419 project-workspace VFP library build target should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ProjectWorkspace.BuildTarget.WindowsDynamicLinkLibrary") ==
+            "Biblioteca de vinculo dinamico do Windows x64",
+        "#2622: pt-BR project-workspace DLL build target should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ProjectWorkspace.BuildTarget.VisualFoxProTokenizedProgram") ==
+            "Programa tokenizado do Visual FoxPro x64",
+        "#2622: pt-BR project-workspace tokenized-program build target should localize through the catalog");
+    expect(
         pseudo_catalog.translate("Studio.ProjectWorkspace.Group.ProjectItems") ==
             copperfin::localization::pseudo_localize("Project Items"),
         "#2611: qps-ploc project-workspace group titles should resolve through the pseudo-localization transform");
+    expect(
+        pseudo_catalog.translate("Studio.ProjectWorkspace.BuildTarget.WindowsActiveXControl") ==
+            copperfin::localization::pseudo_localize("x64 Windows ActiveX control"),
+        "#2622: qps-ploc project-workspace build targets should resolve through the pseudo-localization transform");
 
     expect(
         count_missing_locale_keys(spanish_catalog, "es-419", keys) == 0U,
