@@ -346,8 +346,78 @@ void test_runtime_session_diagnostics_route_through_catalog() {
     expect(
         pseudo_transaction.find("[!! ") == 0U &&
             pseudo_transaction.find("fixtures/people.dbf") != std::string::npos &&
-            pseudo_transaction.find("Unable to create transaction backup for: fixtures/people.dbf") == std::string::npos,
+        pseudo_transaction.find("Unable to create transaction backup for: fixtures/people.dbf") == std::string::npos,
         "#2607: qps-ploc transaction backup error should pseudo-localize prose while preserving the path");
+}
+
+void test_runtime_cursor_diagnostics_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english.translate("Runtime.Prg.Cursor.Error.AliasAlreadyOpen", {{"alias", "People"}}) ==
+            "Alias already open in this data session: People",
+        "#2608: cursor duplicate-alias error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired", {{"path", "fixtures/people.dbf"}}) ==
+            "Table already open in this data session; USE AGAIN is required: fixtures/people.dbf",
+        "#2608: cursor duplicate-table error should preserve the named path placeholder in en-US");
+    expect(
+        english.translate("Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound", {{"target", "42"}}) ==
+            "USE target work area not found: 42",
+        "#2608: cursor missing-work-area error should remain catalog-backed in en-US");
+
+    const std::string spanish_alias =
+        spanish.translate("Runtime.Prg.Cursor.Error.AliasAlreadyOpen", {{"alias", "People"}});
+    expect(
+        spanish_alias == "El alias ya esta abierto en esta sesion de datos: People",
+        "#2608: es-419 cursor duplicate-alias error should localize the prose while preserving the alias");
+    expect(
+        spanish_alias.find("People") != std::string::npos &&
+            spanish_alias.find("Alias already open in this data session") == std::string::npos,
+        "#2608: es-419 cursor duplicate-alias error should preserve the alias without falling back to English prose");
+
+    const std::string spanish_seek =
+        spanish.translate("Runtime.Prg.Cursor.Error.SeekRequiresActiveOrder");
+    expect(
+        spanish_seek == "SEEK requiere un orden activo",
+        "#2608: es-419 cursor active-order error should localize the prose");
+    expect(
+        spanish_seek.find("SEEK") != std::string::npos &&
+            spanish_seek.find("requires an active order") == std::string::npos,
+        "#2608: es-419 cursor active-order error should preserve SEEK without falling back to English prose");
+
+    const std::string portuguese_use_target =
+        portuguese.translate("Runtime.Prg.Cursor.Error.UseTargetResolveFailed", {{"path", "fixtures/missing.dbf"}});
+    expect(
+        portuguese_use_target == "Nao foi possivel resolver o destino de USE: fixtures/missing.dbf",
+        "#2608: pt-BR cursor USE-target resolve error should localize the prose while preserving the path");
+
+    const std::string portuguese_local_seek =
+        portuguese.translate("Runtime.Prg.Cursor.Error.SeekRequiresLocalTableBackedCursor");
+    expect(
+        portuguese_local_seek == "SEEK exige um cursor local com suporte de tabela",
+        "#2608: pt-BR cursor local-table requirement should localize the prose");
+
+    const std::string pseudo_use_again = pseudo.translate(
+        "Runtime.Prg.Cursor.Error.TableAlreadyOpenUseAgainRequired",
+        {{"path", "fixtures/people.dbf"}});
+    expect(
+        pseudo_use_again.find("[!! ") == 0U &&
+            pseudo_use_again.find("fixtures/people.dbf") != std::string::npos &&
+            pseudo_use_again.find("Table already open in this data session; USE AGAIN is required: fixtures/people.dbf") == std::string::npos,
+        "#2608: qps-ploc cursor duplicate-table error should pseudo-localize prose while preserving the path");
+
+    const std::string pseudo_work_area =
+        pseudo.translate("Runtime.Prg.Cursor.Error.UseTargetWorkAreaNotFound", {{"target", "42"}});
+    expect(
+        pseudo_work_area.find("[!! ") == 0U &&
+            pseudo_work_area.find("42") != std::string::npos &&
+            pseudo_work_area.find("USE target work area not found: 42") == std::string::npos,
+        "#2608: qps-ploc cursor missing-work-area error should pseudo-localize prose while preserving the target");
 }
 
 void test_runtime_report_output_messages_route_through_catalog() {
@@ -1848,6 +1918,7 @@ int main(int argc, char** argv) {
     test_catalog_root_resolution_searches_parent_directories();
     test_parser_behavior_remains_locale_invariant();
     test_runtime_session_diagnostics_route_through_catalog();
+    test_runtime_cursor_diagnostics_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
     test_runtime_report_output_errors_localize_without_changing_runtime_behavior();
     test_runtime_aggregate_errors_route_through_catalog();
