@@ -4489,6 +4489,42 @@ void test_toolbox_creation_errors_resolve_through_localization_catalog() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_creation_error_keys) == 0U,
         "#2624: qps-ploc should define every remaining Studio.ToolboxCreation.Error localization key");
+    const std::vector<std::string_view> toolbox_creation_dispatch_keys = {
+        "Studio.ToolboxCreation.Dispatch.Error.AdmittedCreateOperationRequired",
+        "Studio.ToolboxCreation.Dispatch.Error.AssetPathRequired",
+        "Studio.ToolboxCreation.Dispatch.Error.DescriptorFieldValuesRequired",
+        "Studio.ToolboxCreation.Dispatch.Error.PlannedObjectNameRequired",
+        "Studio.ToolboxCreation.Dispatch.Error.ValidatedItemMetadataRequired"};
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.Dispatch.Error.AssetPathRequired") ==
+            "Una solicitud de dispatch de creacion de caja de herramientas requiere una ruta de asset.",
+        "#2626: es-419 toolbox creation dispatch asset-path error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxCreation.Dispatch.Error.PlannedObjectNameRequired") ==
+            "Una solicitud de dispatch de creacion de caja de herramientas requiere un nombre planificado de objeto.",
+        "#2626: es-419 toolbox creation dispatch planned-object-name error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.Dispatch.Error.AdmittedCreateOperationRequired") ==
+            "Uma solicitacao de dispatch de criacao da caixa de ferramentas exige uma operacao de criacao admitida que nao seja dry-run.",
+        "#2626: pt-BR toolbox creation dispatch admitted-create-operation error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxCreation.Dispatch.Error.ValidatedItemMetadataRequired") ==
+            "Uma solicitacao de dispatch de criacao da caixa de ferramentas exige metadados validados de itens da caixa de ferramentas.",
+        "#2626: pt-BR toolbox creation dispatch validated-item-metadata error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxCreation.Dispatch.Error.DescriptorFieldValuesRequired") ==
+            copperfin::localization::pseudo_localize(
+                "A toolbox create dispatch request requires descriptor field values."),
+        "#2626: qps-ploc toolbox creation dispatch descriptor-field-values error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", toolbox_creation_dispatch_keys) == 0U,
+        "#2626: es-419 should define every remaining Studio.ToolboxCreation.Dispatch localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", toolbox_creation_dispatch_keys) == 0U,
+        "#2626: pt-BR should define every remaining Studio.ToolboxCreation.Dispatch localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_creation_dispatch_keys) == 0U,
+        "#2626: qps-ploc should define every remaining Studio.ToolboxCreation.Dispatch localization key");
     const std::vector<std::string_view> batch_dispatch_keys = {
         "Studio.ToolboxCreation.BatchDispatch.Error.AdmittedCreateOperationRequired",
         "Studio.ToolboxCreation.BatchDispatch.Error.AssetPathRequired",
