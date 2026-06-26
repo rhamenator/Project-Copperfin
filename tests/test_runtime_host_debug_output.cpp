@@ -84,6 +84,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"Security policy denied {permission} for role '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Unknown argument: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Unknown federation backend: {backend}\",\n"
+        "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"Planner is not yet implemented for {planMode} AI policy. Deterministic translation failed: {translationError}\",\n"
         "  \"Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset\": \"No runnable startup methods were found in asset: {path}\",\n"
         "  \"Runtime.Prg.Session.Message.BreakpointHit\": \"Breakpoint hit.\",\n"
         "  \"Runtime.Prg.Session.Message.ExecutionCompleted\": \"Execution completed.\",\n"
@@ -142,6 +143,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"La politica de seguridad denego {permission} para el rol '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconocido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacion desconocido: {backend}\",\n"
+        "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"El planner aun no esta implementado para la politica de IA {planMode}. La traduccion deterministica fallo: {translationError}\",\n"
         "  \"Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset\": \"No se encontraron metodos de inicio ejecutables en el asset: {path}\",\n"
         "  \"Runtime.Prg.Session.Message.BreakpointHit\": \"Se alcanzo un breakpoint.\",\n"
         "  \"Runtime.Prg.Session.Message.ExecutionCompleted\": \"La ejecucion se completo.\",\n"
@@ -188,6 +190,7 @@ void write_runtime_host_usage_catalogs(const std::filesystem::path& locale_root)
         "  \"RuntimeHost.Error.SecurityPolicyDenied\": \"A politica de seguranca negou {permission} para a funcao '{role}'.\",\n"
         "  \"RuntimeHost.Error.UnknownArgument\": \"Argumento desconhecido: {argument}\",\n"
         "  \"RuntimeHost.Error.UnknownFederationBackend\": \"Backend de federacao desconhecido: {backend}\",\n"
+        "  \"Platform.FederationExecution.Error.AiPlannerNotImplemented\": \"O planner ainda nao esta implementado para a politica de IA {planMode}. A traducao deterministica falhou: {translationError}\",\n"
         "  \"Runtime.Prg.Session.Error.NoRunnableStartupMethodsFoundInAsset\": \"Nenhum metodo de inicializacao executavel foi encontrado no asset: {path}\",\n"
         "  \"Runtime.Prg.Session.Message.BreakpointHit\": \"Um breakpoint foi atingido.\",\n"
         "  \"Runtime.Prg.Session.Message.ExecutionCompleted\": \"A execucao foi concluida.\",\n"
@@ -1320,6 +1323,8 @@ void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(cons
     std::error_code ignored;
     fs::remove_all(temp_root, ignored);
     fs::create_directories(temp_root);
+    const fs::path locale_root = temp_root / "locales";
+    write_runtime_host_usage_catalogs(locale_root);
 
     const auto process = run_process_capture(
         runtime_host_path,
@@ -1345,6 +1350,8 @@ void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(cons
 
     {
         ScopedEnvironmentVariable allow_ai_role("COPPERFIN_SECURITY_ROLE", "runtime-operator");
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "es-419");
         const auto allowed_process = run_process_capture(
             runtime_host_path,
             {
@@ -1355,9 +1362,41 @@ void test_runtime_host_rejects_ai_federation_planning_without_ai_permission(cons
             temp_root);
 
         expect(allowed_process.exit_code == 6,
-               "runtime host should advance past AI permission gating for runtime-operator and reach planner fallback");
-        expect(allowed_process.stdout_text.find("Planner is not yet implemented for optional AI policy.") != std::string::npos,
-               "runtime host should surface the existing planner-fallback error once AI permission is granted");
+               "#2593: es-419 runtime host should advance past AI permission gating for runtime-operator and reach planner fallback");
+        expect(allowed_process.stdout_text.find(
+                   "error: El planner aun no esta implementado para la politica de IA optional. La traduccion deterministica fallo: ") !=
+                   std::string::npos,
+               "#2593: es-419 runtime host should localize the planner-fallback wrapper once AI permission is granted");
+        expect(allowed_process.stdout_text.find("runtime.mode: federation-query-plan") != std::string::npos,
+               "#2593: es-419 runtime host should preserve the federation runtime mode during planner fallback");
+        expect(allowed_process.stdout_text.find("Platform.QueryTranslator.Error.SelectFromOnly") != std::string::npos,
+               "#2593: es-419 runtime host should preserve the unresolved translation-error payload content");
+        expect(allowed_process.stdout_text.find("Planner is not yet implemented for optional AI policy.") == std::string::npos,
+               "#2593: es-419 runtime host should not fall back to raw English planner-fallback prose");
+    }
+
+    {
+        ScopedEnvironmentVariable allow_ai_role("COPPERFIN_SECURITY_ROLE", "runtime-operator");
+        ScopedEnvironmentVariable locale_dir("COPPERFIN_LOCALE_DIR", locale_root.string());
+        ScopedEnvironmentVariable locale("COPPERFIN_LOCALE", "qps-ploc");
+        const auto allowed_process = run_process_capture(
+            runtime_host_path,
+            {
+                "--federation-backend", "oracle",
+                "--federation-query", "DELETE FROM customer",
+                "--federation-planning-enable", "true"
+            },
+            temp_root);
+
+        expect(allowed_process.exit_code == 6,
+               "#2593: qps-ploc runtime host should keep the planner-fallback exit code after AI permission is granted");
+        expect(allowed_process.stdout_text.find("runtime.mode: federation-query-plan") != std::string::npos,
+               "#2593: qps-ploc runtime host should preserve the federation runtime mode during planner fallback");
+        expect(allowed_process.stdout_text.find("[!! ërrør:  !!][!! ") != std::string::npos,
+               "#2593: qps-ploc runtime host should pseudo-localize the planner-fallback prose");
+        expect(allowed_process.stdout_text.find("Platform.QueryTranslator.Error.SelectFromOnly") !=
+                   std::string::npos,
+               "#2593: qps-ploc runtime host should preserve the deterministic translation error placeholder text");
     }
 
     if (failures == 0) {

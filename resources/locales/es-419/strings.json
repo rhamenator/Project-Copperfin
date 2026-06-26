@@ -30,6 +30,7 @@
   "Error.CatalogMissing": "Falta el catalogo de localizacion: {path}",
   "Error.UnknownLocale": "Configuracion regional desconocida: {locale}",
   "Help.LocaleOption": "Selecciona la configuracion regional de la interfaz de usuario.",
+  "Platform.FederationExecution.Error.AiPlannerNotImplemented": "El planner aun no esta implementado para la politica de IA {planMode}. La traduccion deterministica fallo: {translationError}",
   "StudioHost.BuilderExecution.Error.LaunchCommandNonZeroExit": "El comando de lanzamiento del builder devolvio un codigo de salida distinto de cero.",
   "StudioHost.DesignerExecution.Error.BuilderLaunchCommandNonZeroExit": "El comando de lanzamiento del builder del diseniador devolvio un codigo de salida distinto de cero.",
   "StudioHost.DesignerExecution.Error.ChildExecutionsFailed": "Una o mas ejecuciones hijas del diseniador fallaron.",

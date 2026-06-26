@@ -571,6 +571,54 @@ void test_runtime_host_security_policy_denial_routes_through_catalog() {
         "#2592: qps-ploc runtime-host security denial should pseudo-localize prose while preserving invariant ids");
 }
 
+void test_platform_federation_ai_planner_fallback_routes_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const copperfin::localization::PlaceholderMap placeholders{
+        {"planMode", "optional"},
+        {"translationError", "Only first-pass SELECT...FROM SQL translation is supported."}
+    };
+
+    expect(
+        english.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders) ==
+            "Planner is not yet implemented for optional AI policy. Deterministic translation failed: "
+            "Only first-pass SELECT...FROM SQL translation is supported.",
+        "#2593: federation AI planner fallback should preserve the en-US default output");
+
+    const std::string spanish_message =
+        spanish.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders);
+    expect(
+        spanish_message ==
+            "El planner aun no esta implementado para la politica de IA optional. La traduccion deterministica fallo: "
+            "Only first-pass SELECT...FROM SQL translation is supported.",
+        "#2593: es-419 federation AI planner fallback should localize the prose while preserving placeholders");
+    expect(
+        spanish_message.find("Planner is not yet implemented") == std::string::npos &&
+            spanish_message.find("optional") != std::string::npos &&
+            spanish_message.find("Only first-pass SELECT...FROM SQL translation is supported.") != std::string::npos,
+        "#2593: es-419 federation AI planner fallback should preserve invariant placeholder values without falling back to English prose");
+
+    const std::string portuguese_message =
+        portuguese.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders);
+    expect(
+        portuguese_message ==
+            "O planner ainda nao esta implementado para a politica de IA optional. A traducao deterministica falhou: "
+            "Only first-pass SELECT...FROM SQL translation is supported.",
+        "#2593: pt-BR federation AI planner fallback should localize the prose while preserving placeholders");
+
+    const std::string pseudo_message =
+        pseudo.translate("Platform.FederationExecution.Error.AiPlannerNotImplemented", placeholders);
+    expect(
+        pseudo_message.find("[!! ") == 0U &&
+            pseudo_message.find("optional") != std::string::npos &&
+            pseudo_message.find("Only first-pass SELECT...FROM SQL translation is supported.") != std::string::npos &&
+            pseudo_message.find("Planner is not yet implemented") == std::string::npos,
+        "#2593: qps-ploc federation AI planner fallback should pseudo-localize prose while preserving placeholders");
+}
+
 void test_runtime_numeric_domain_errors_route_through_catalog() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1505,6 +1553,7 @@ int main(int argc, char** argv) {
     test_runtime_host_manifest_verification_errors_route_through_catalog();
     test_runtime_host_quit_prompt_routes_through_catalog();
     test_runtime_host_security_policy_denial_routes_through_catalog();
+    test_platform_federation_ai_planner_fallback_routes_through_catalog();
     test_runtime_numeric_domain_errors_route_through_catalog();
     test_runtime_expression_errors_route_through_catalog();
     test_runtime_record_precondition_errors_route_through_catalog();
