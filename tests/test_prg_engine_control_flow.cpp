@@ -4807,8 +4807,9 @@ void test_critical_section_blocking_policy_rejects_await_inside_section() {
         expect(await_blocked->second.boolean_value, "AWAIT inside a critical section should be rejected");
     }
     if (await_error != state.globals.end()) {
-        expect(copperfin::runtime::format_value(await_error->second).find("Blocking operation AWAIT") != std::string::npos,
-               "AWAIT policy error should mention the blocking AWAIT operation");
+        expect(copperfin::runtime::format_value(await_error->second) ==
+                   "Blocking operation AWAIT is not allowed while holding CRITICAL section shared",
+               "AWAIT policy error should route through the default locale catalog");
     }
     if (done_after_exit != state.globals.end()) {
         expect(done_after_exit->second.boolean_value, "AWAIT should succeed once the critical section is exited");
@@ -4856,8 +4857,9 @@ void test_critical_section_blocking_policy_rejects_sleep_inside_section() {
         expect(sleep_blocked->second.boolean_value, "SLEEP inside a critical section should be rejected");
     }
     if (sleep_error != state.globals.end()) {
-        expect(copperfin::runtime::format_value(sleep_error->second).find("Blocking operation SLEEP") != std::string::npos,
-               "SLEEP policy error should mention the blocking SLEEP operation");
+        expect(copperfin::runtime::format_value(sleep_error->second) ==
+                   "Blocking operation SLEEP is not allowed while holding CRITICAL section shared",
+               "SLEEP policy error should route through the default locale catalog");
     }
 
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {

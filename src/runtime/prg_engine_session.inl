@@ -768,6 +768,37 @@
             return critical_section;
         }
 
+        std::string critical_section_blocking_operation_message(const std::string &operation,
+                                                                const std::string &section_name) const
+        {
+            return runtime_text("Runtime.Prg.CriticalSection.Error.BlockingOperation",
+                                {{"operation", operation}, {"section", section_name}});
+        }
+
+        std::string critical_section_enter_order_message(const std::string &held_section,
+                                                         const std::string &requested_section) const
+        {
+            return runtime_text("Runtime.Prg.CriticalSection.Error.EnterAscendingOrder",
+                                {{"heldSection", held_section}, {"requestedSection", requested_section}});
+        }
+
+        std::string critical_section_unknown_message(const std::string &section_name) const
+        {
+            return runtime_text("Runtime.Prg.CriticalSection.Error.UnknownSection", {{"section", section_name}});
+        }
+
+        std::string critical_section_exit_lifo_message(const std::string &held_section,
+                                                       const std::string &requested_section) const
+        {
+            return runtime_text("Runtime.Prg.CriticalSection.Error.ExitLifoOrder",
+                                {{"heldSection", held_section}, {"requestedSection", requested_section}});
+        }
+
+        std::string critical_section_mutex_missing_message(const std::string &section_name) const
+        {
+            return runtime_text("Runtime.Prg.CriticalSection.Error.MutexNotFound", {{"section", section_name}});
+        }
+
         // Engine critical-section policy (see docs/25-engine-concurrency-policy.md):
         // - critical-section names are normalized, with an implicit "default" section when omitted
         // - nested acquires across different section names must follow ascending normalized-name order
@@ -785,8 +816,7 @@
             }
 
             const std::string section_name = critical_section_stack.back();
-            last_error_message = "Blocking operation " + operation +
-                                 " is not allowed while holding CRITICAL section " + section_name;
+            last_error_message = critical_section_blocking_operation_message(operation, section_name);
             std::string event_detail = "operation=" + operation + " section=" + section_name;
             if (!detail.empty())
             {
@@ -806,8 +836,7 @@
                 const std::string &held_section = critical_section_stack.back();
                 if (section_name != held_section && section_name < held_section)
                 {
-                    last_error_message = "Critical sections must be entered in ascending normalized name order: held " +
-                                         held_section + " before " + section_name;
+                    last_error_message = critical_section_enter_order_message(held_section, section_name);
                     events.push_back({.category = "runtime.critical.order_violation",
                                       .detail = "held=" + held_section + " requested=" + section_name,
                                       .location = location});
@@ -829,14 +858,14 @@
             const std::string section_name = normalize_identifier(name.empty() ? std::string{"default"} : name);
             if (critical_section_stack.empty())
             {
-                last_error_message = "Unknown critical section: " + section_name;
+                last_error_message = critical_section_unknown_message(section_name);
                 return false;
             }
 
             if (section_name != critical_section_stack.back())
             {
                 const std::string held_section = critical_section_stack.back();
-                last_error_message = "Critical sections must be exited in LIFO order: held " + held_section + " before " + section_name;
+                last_error_message = critical_section_exit_lifo_message(held_section, section_name);
                 events.push_back({.category = "runtime.critical.order_violation",
                                   .detail = "held=" + held_section + " requested=" + section_name,
                                   .location = location});
@@ -846,14 +875,14 @@
             auto depth_found = critical_section_depth_by_name.find(section_name);
             if (depth_found == critical_section_depth_by_name.end() || depth_found->second == 0U)
             {
-                last_error_message = "Unknown critical section: " + section_name;
+                last_error_message = critical_section_unknown_message(section_name);
                 return false;
             }
 
             auto mutex_found = critical_section_mutexes_by_name.find(section_name);
             if (mutex_found == critical_section_mutexes_by_name.end() || mutex_found->second == nullptr)
             {
-                last_error_message = "Critical section mutex not found: " + section_name;
+                last_error_message = critical_section_mutex_missing_message(section_name);
                 return false;
             }
 

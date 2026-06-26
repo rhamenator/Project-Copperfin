@@ -754,8 +754,9 @@ void test_lock_retry_blocking_is_rejected_inside_critical_section() {
                "REPLACE under contention inside a critical section should be rejected");
     }
     if (policy_error != state.globals.end()) {
-        expect(copperfin::runtime::format_value(policy_error->second).find("Blocking operation LOCK RETRY") != std::string::npos,
-               "lock-retry policy error should mention the rejected blocking retry path");
+        expect(copperfin::runtime::format_value(policy_error->second) ==
+                   "Blocking operation LOCK RETRY is not allowed while holding CRITICAL section shared",
+               "lock-retry policy error should route through the default locale catalog");
     }
 
     expect(std::any_of(state.events.begin(), state.events.end(), [](const auto& event) {
