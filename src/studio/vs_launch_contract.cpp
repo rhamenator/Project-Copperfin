@@ -10547,146 +10547,193 @@ LaunchParseResult parse_launch_arguments(
             "--min-button-object")};
     }
     if (result.request.min_height_object && !result.request.min_height_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "min-height", "--min-height")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinHeight"),
+            "--min-height")};
     }
     if (result.request.min_height_object && result.request.min_height_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "min-height")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinHeight"))};
     }
     if (!result.request.min_height_object &&
         (result.request.min_height_available ||
          !result.request.min_height_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Min-height",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinHeightTitle"),
             "--min-height-object")};
     }
     if (result.request.min_width_object && !result.request.min_width_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "min-width", "--min-width")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinWidth"),
+            "--min-width")};
     }
     if (result.request.min_width_object && result.request.min_width_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "min-width")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinWidth"))};
     }
     if (!result.request.min_width_object &&
         (result.request.min_width_available ||
          !result.request.min_width_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Min-width",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MinWidthTitle"),
             "--min-width-object")};
     }
     if (result.request.max_height_object && !result.request.max_height_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "max-height", "--max-height")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxHeight"),
+            "--max-height")};
     }
     if (result.request.max_height_object && result.request.max_height_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "max-height")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxHeight"))};
     }
     if (!result.request.max_height_object &&
         (result.request.max_height_available ||
          !result.request.max_height_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Max-height",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MaxHeightTitle"),
             "--max-height-object")};
     }
     if (result.request.movable_object && !result.request.movable_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "movable", "--movable")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Movable"),
+            "--movable")};
     }
     if (result.request.movable_object && result.request.movable_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "movable")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.Movable"))};
     }
     if (!result.request.movable_object &&
         (result.request.movable_available ||
          !result.request.movable_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Movable",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MovableTitle"),
             "--movable-object")};
     }
     if (result.request.half_height_caption_object && !result.request.half_height_caption_available) {
         return {.ok = false, .error = localized_object_assignment_requires_option(
             catalog,
-            "half-height-caption",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption"),
             "--half-height-caption")};
     }
     if (result.request.half_height_caption_object && result.request.half_height_caption_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "half-height-caption")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaption"))};
     }
     if (!result.request.half_height_caption_object &&
         (result.request.half_height_caption_available ||
          !result.request.half_height_caption_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Half-height-caption",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HalfHeightCaptionTitle"),
             "--half-height-caption-object")};
     }
     if (result.request.mdi_form_object && !result.request.mdi_form_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "MDI-form", "--mdi-form")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MdiForm"),
+            "--mdi-form")};
     }
     if (result.request.mdi_form_object && result.request.mdi_form_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "MDI-form")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MdiForm"))};
     }
     if (!result.request.mdi_form_object &&
         (result.request.mdi_form_available ||
          !result.request.mdi_form_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "MDI-form",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.MdiFormTitle"),
             "--mdi-form-object")};
     }
     if (result.request.back_style_object && !result.request.back_style_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "back-style", "--back-style")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackStyle"),
+            "--back-style")};
     }
     if (result.request.back_style_object && result.request.back_style_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "back-style")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackStyle"))};
     }
     if (!result.request.back_style_object &&
         (result.request.back_style_available ||
          !result.request.back_style_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Back-style",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BackStyleTitle"),
             "--back-style-object")};
     }
     if (result.request.border_style_object && !result.request.border_style_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "border-style", "--border-style")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderStyle"),
+            "--border-style")};
     }
     if (result.request.border_style_object && result.request.border_style_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "border-style")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderStyle"))};
     }
     if (!result.request.border_style_object &&
         (result.request.border_style_available ||
          !result.request.border_style_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Border-style",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderStyleTitle"),
             "--border-style-object")};
     }
     if (result.request.border_width_object && !result.request.border_width_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "border-width", "--border-width")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderWidth"),
+            "--border-width")};
     }
     if (result.request.border_width_object && result.request.border_width_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "border-width")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderWidth"))};
     }
     if (!result.request.border_width_object &&
         (result.request.border_width_available ||
          !result.request.border_width_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Border-width",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderWidthTitle"),
             "--border-width-object")};
     }
     if (result.request.border_color_object && !result.request.border_color_available) {
-        return {.ok = false, .error = localized_object_assignment_requires_option(catalog, "border-color", "--border-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_option(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderColor"),
+            "--border-color")};
     }
     if (result.request.border_color_object && result.request.border_color_objects.empty()) {
-        return {.ok = false, .error = localized_object_assignment_requires_target(catalog, "border-color")};
+        return {.ok = false, .error = localized_object_assignment_requires_target(
+            catalog,
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderColor"))};
     }
     if (!result.request.border_color_object &&
         (result.request.border_color_available ||
          !result.request.border_color_objects.empty())) {
         return {.ok = false, .error = localized_object_arguments_require_mode(
             catalog,
-            "Border-color",
+            catalog.translate("StudioHost.LaunchParse.ObjectAssignment.BorderColorTitle"),
             "--border-color-object")};
     }
     if (result.request.special_effect_object && !result.request.special_effect_available) {

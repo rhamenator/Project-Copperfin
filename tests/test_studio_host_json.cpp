@@ -5759,8 +5759,8 @@ void test_studio_host_launch_form_bounds_style_diagnostics_localize(const std::s
         "--min-width",
         "#2441: pseudo-localized min-width missing-option diagnostics should preserve CLI option names");
     expect_not_contains(process.stdout_text,
-        "An object min-width assignment requires --min-width.",
-        "#2441: pseudo-localized min-width missing-option diagnostics should not fall back to raw English prose");
+        " min-width assignment ",
+        "#2519: pseudo-localized min-width missing-option diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5778,8 +5778,8 @@ void test_studio_host_launch_form_bounds_style_diagnostics_localize(const std::s
         "[!! ",
         "#2441: pseudo-localized half-height-caption missing-target diagnostics should decorate human-facing prose");
     expect_not_contains(process.stdout_text,
-        "An object half-height-caption assignment requires at least one target selector.",
-        "#2441: pseudo-localized half-height-caption missing-target diagnostics should not fall back to raw English prose");
+        " half-height-caption assignment ",
+        "#2519: pseudo-localized half-height-caption missing-target diagnostics should not preserve raw label prose");
 
     process = run_process_capture(
         studio_host_path,
@@ -5800,7 +5800,7 @@ void test_studio_host_launch_form_bounds_style_diagnostics_localize(const std::s
         "#2441: pseudo-localized border-color stray-argument diagnostics should preserve required mode option");
     expect_not_contains(process.stdout_text,
         "Border-color arguments can only be used with --border-color-object.",
-        "#2441: pseudo-localized border-color stray-argument diagnostics should not fall back to raw English prose");
+        "#2519: pseudo-localized border-color stray-argument diagnostics should not fall back to raw English prose");
 
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
