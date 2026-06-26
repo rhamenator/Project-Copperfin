@@ -305,6 +305,51 @@ void test_runtime_report_output_messages_route_through_catalog() {
         "#2536: report output write error should preserve the named path placeholder");
 }
 
+void test_runtime_aggregate_errors_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments") ==
+            "CALCULATE requires one or more aggregate TO/INTO assignments",
+        "#2595: aggregate missing-assignment error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression") ==
+            "CALCULATE requires aggregate expressions like COUNT() or SUM(field)",
+        "#2595: aggregate malformed-expression error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Aggregate.Error.CountToSingleTarget") ==
+            "COUNT TO only accepts a single variable target",
+        "#2595: count multi-target error should remain catalog-backed in en-US");
+
+    const std::string spanish_assignments =
+        spanish.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAssignments");
+    expect(
+        spanish_assignments == "CALCULATE requiere una o mas asignaciones agregadas TO/INTO",
+        "#2595: es-419 aggregate missing-assignment error should localize the prose");
+    expect(
+        spanish_assignments.find("CALCULATE") != std::string::npos &&
+            spanish_assignments.find("TO/INTO") != std::string::npos &&
+            spanish_assignments.find("requires one or more") == std::string::npos,
+        "#2595: es-419 aggregate missing-assignment error should preserve invariant command tokens without falling back to English prose");
+
+    const std::string portuguese_expression =
+        portuguese.translate("Runtime.Prg.Aggregate.Error.CalculateRequiresAggregateExpression");
+    expect(
+        portuguese_expression == "CALCULATE exige expressoes agregadas como COUNT() ou SUM(field)",
+        "#2595: pt-BR aggregate malformed-expression error should localize the prose");
+
+    const std::string pseudo_count =
+        pseudo.translate("Runtime.Prg.Aggregate.Error.CountToSingleTarget");
+    expect(
+        pseudo_count ==
+            copperfin::localization::pseudo_localize("COUNT TO only accepts a single variable target"),
+        "#2595: qps-ploc aggregate count-target error should resolve through the pseudo-localization transform");
+}
+
 void test_build_host_catalog_entries_cover_placeholder_locales() {
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
@@ -1571,6 +1616,7 @@ int main(int argc, char** argv) {
     test_parser_behavior_remains_locale_invariant();
     test_runtime_transaction_journal_messages_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
+    test_runtime_aggregate_errors_route_through_catalog();
     test_build_host_catalog_entries_cover_placeholder_locales();
     test_inspect_catalog_entries_cover_placeholder_locales();
     test_shared_core_catalog_entries_cover_placeholder_locales();

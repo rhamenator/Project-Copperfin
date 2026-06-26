@@ -1,3 +1,4 @@
+#include "copperfin/localization/localization.h"
 #include "copperfin/runtime/prg_engine.h"
 #include "copperfin/vfp/dbf_table.h"
 #include "../src/runtime/prg_engine_command_helpers.h"
@@ -31,6 +32,40 @@
 namespace {
 
 using namespace copperfin::test_support;
+
+void set_env_value(const std::string& name, const std::string& value, bool has_value) {
+#ifdef _WIN32
+    if (has_value) {
+        _putenv_s(name.c_str(), value.c_str());
+    } else {
+        _putenv_s(name.c_str(), "");
+    }
+#else
+    if (has_value) {
+        setenv(name.c_str(), value.c_str(), 1);
+    } else {
+        unsetenv(name.c_str());
+    }
+#endif
+}
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    bool had_value = false;
+    std::string original_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)) {
+        if (const char* current = std::getenv(name.c_str())) {
+            had_value = true;
+            original_value = current;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
 
 void test_command_keyword_scanner_ignores_nested_text() {
     using copperfin::runtime::extract_command_clause;
@@ -912,6 +947,60 @@ void test_aggregate_command_errors_use_default_locale_messages() {
         "COUNT TO with multiple targets should pause with an error");
     expect(count_multi_target.message == "COUNT TO only accepts a single variable target",
         "COUNT TO multi-target error should route through the default locale catalog");
+
+    fs::remove_all(temp_root, ignored);
+}
+
+void test_aggregate_command_errors_localize_without_changing_runtime_behavior() {
+    namespace fs = std::filesystem;
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_prg_aggregate_command_error_localization";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(temp_root);
+
+    const fs::path table_path = temp_root / "people.dbf";
+    write_people_dbf(table_path, {{"ALPHA", 10}, {"BRAVO", 20}});
+
+    const auto run_error_script = [&](const std::string& file_stem, const std::string& script) {
+        const fs::path main_path = temp_root / (file_stem + ".prg");
+        write_text(main_path, script);
+        copperfin::runtime::PrgRuntimeSession session =
+            copperfin::runtime::PrgRuntimeSession::create(make_runtime_session_options(main_path.string(), temp_root.string(), false));
+        return session.run(copperfin::runtime::DebugResumeAction::continue_run);
+    };
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    const auto spanish_missing_assignments = run_error_script("calculate_missing_assignments_es", "CALCULATE FOR .T.\n");
+    expect(spanish_missing_assignments.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2595: es-419 CALCULATE without assignments should still pause with an error");
+    expect(
+        spanish_missing_assignments.message == "CALCULATE requiere una o mas asignaciones agregadas TO/INTO",
+        "#2595: es-419 CALCULATE missing-assignment error should localize the prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    const auto portuguese_malformed_expression = run_error_script(
+        "calculate_malformed_expression_pt",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "CALCULATE AGE TO nBad\n");
+    expect(portuguese_malformed_expression.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2595: pt-BR CALCULATE malformed-expression should still pause with an error");
+    expect(
+        portuguese_malformed_expression.message == "CALCULATE exige expressoes agregadas como COUNT() ou SUM(field)",
+        "#2595: pt-BR CALCULATE malformed-expression error should localize the prose");
+
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    const auto pseudo_count_multi_target = run_error_script(
+        "count_multi_target_qps",
+        "USE '" + table_path.string() + "' ALIAS People IN 0\n"
+        "COUNT TO nOne, nTwo\n");
+    expect(pseudo_count_multi_target.reason == copperfin::runtime::DebugPauseReason::error,
+           "#2595: qps-ploc COUNT TO with multiple targets should still pause with an error");
+    expect(
+        pseudo_count_multi_target.message ==
+            copperfin::localization::pseudo_localize("COUNT TO only accepts a single variable target"),
+        "#2595: qps-ploc COUNT TO multi-target error should resolve through the pseudo-localization transform");
+
+    set_env_value("COPPERFIN_LOCALE", "en-US", true);
 
     fs::remove_all(temp_root, ignored);
 }
@@ -6386,8 +6475,8 @@ void test_division_by_zero_dispatches_runtime_error() {
            "GAP-01/#257: division by zero should pause with an error reason");
     expect(state.location.line == 2U,
            "GAP-01/#257: division by zero should highlight line 2");
-    expect(state.message == "Division by zero in integer expression",
-           "#2541: division by zero should route through the default locale catalog");
+    expect(state.message == "Runtime fault: Division by zero",
+           "#2541: division by zero should route through the default locale fault wrapper (got '" + state.message + "')");
 
     // Session must survive a continue after the divide-by-zero fault
     state = session.run(copperfin::runtime::DebugResumeAction::continue_run);
@@ -6692,6 +6781,7 @@ int main() {
     test_aggregate_functions_respect_visibility();
     test_calculate_command_aggregates();
     test_aggregate_command_errors_use_default_locale_messages();
+    test_aggregate_command_errors_localize_without_changing_runtime_behavior();
     test_command_level_aggregate_commands();
     test_scan_on_empty_table_does_not_execute_body();
     test_aggregate_commands_on_empty_table_return_zero();
