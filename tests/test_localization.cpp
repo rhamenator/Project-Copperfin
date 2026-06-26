@@ -261,30 +261,93 @@ void test_parser_behavior_remains_locale_invariant() {
     fs::remove_all(temp_root, ignored);
 }
 
-void test_runtime_transaction_journal_messages_route_through_catalog() {
-    const auto catalog =
-        copperfin::localization::load_catalogs(copperfin::localization::resolve_catalog_root(), "en-US");
+void test_runtime_session_diagnostics_route_through_catalog() {
+    const auto catalog_root = copperfin::localization::resolve_catalog_root();
+    const auto english = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
+    const auto pseudo = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
 
     expect(
-        catalog.translate("Runtime.Prg.Transaction.Error.JournalInitializeFailed") ==
+        english.translate("Runtime.Prg.CommandUndo.Error.NoCommand") == "No command to UNDO",
+        "#2607: command UNDO empty-stack error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.CriticalSection.Error.UnknownSection", {{"section", "orders"}}) ==
+            "Unknown critical section: orders",
+        "#2607: critical-section unknown-name error should remain catalog-backed in en-US");
+    expect(
+        english.translate("Runtime.Prg.Transaction.Error.JournalInitializeFailed") ==
             "Unable to initialize transaction journal",
-        "#2535: transaction journal initialize error should be catalog-backed");
+        "#2607: transaction journal initialize error should remain catalog-backed in en-US");
     expect(
-        catalog.translate("Runtime.Prg.Transaction.Error.JournalStatePersistFailed") ==
+        english.translate("Runtime.Prg.Transaction.Error.JournalStatePersistFailed") ==
             "Unable to persist transaction journal state",
-        "#2535: transaction journal state persist error should be catalog-backed");
+        "#2607: transaction journal state persist error should remain catalog-backed in en-US");
     expect(
-        catalog.translate("Runtime.Prg.Transaction.Error.BackupCreateFailed", {{"path", "fixtures/people.dbf"}}) ==
+        english.translate("Runtime.Prg.Transaction.Error.BackupCreateFailed", {{"path", "fixtures/people.dbf"}}) ==
             "Unable to create transaction backup for: fixtures/people.dbf",
-        "#2535: transaction backup error should preserve the named path placeholder");
+        "#2607: transaction backup error should preserve the named path placeholder in en-US");
     expect(
-        catalog.translate("Runtime.Prg.Transaction.Error.BackupJournalPersistFailed") ==
+        english.translate("Runtime.Prg.Transaction.Error.BackupJournalPersistFailed") ==
             "Unable to persist transaction backup journal",
-        "#2535: transaction backup journal persist error should be catalog-backed");
+        "#2607: transaction backup journal persist error should remain catalog-backed in en-US");
     expect(
-        catalog.translate("Runtime.Prg.Transaction.Error.JournalReplayFailed") ==
+        english.translate("Runtime.Prg.Transaction.Error.JournalReplayFailed") ==
             "Failed to replay transaction journal",
-        "#2535: transaction replay error should be catalog-backed");
+        "#2607: transaction replay error should remain catalog-backed in en-US");
+
+    const std::string spanish_command_undo =
+        spanish.translate("Runtime.Prg.CommandUndo.Error.BackupCreateFailed", {{"path", "fixtures/people.dbf"}});
+    expect(
+        spanish_command_undo ==
+            "No se pudo crear el respaldo de undo del comando para: fixtures/people.dbf",
+        "#2607: es-419 command UNDO backup error should localize the prose while preserving the path");
+    expect(
+        spanish_command_undo.find("fixtures/people.dbf") != std::string::npos &&
+            spanish_command_undo.find("Unable to create command undo backup") == std::string::npos,
+        "#2607: es-419 command UNDO backup error should preserve the path without falling back to English prose");
+
+    const std::string spanish_critical_section = spanish.translate(
+        "Runtime.Prg.CriticalSection.Error.BlockingOperation",
+        {{"operation", "WAIT"}, {"section", "orders"}});
+    expect(
+        spanish_critical_section ==
+            "La operacion bloqueante WAIT no esta permitida mientras se mantiene la seccion CRITICAL orders",
+        "#2607: es-419 critical-section blocking-operation error should localize the prose while preserving invariant tokens");
+    expect(
+        spanish_critical_section.find("WAIT") != std::string::npos &&
+            spanish_critical_section.find("CRITICAL") != std::string::npos &&
+            spanish_critical_section.find("Blocking operation") == std::string::npos,
+        "#2607: es-419 critical-section blocking-operation error should preserve invariant tokens without falling back to English prose");
+
+    const std::string portuguese_command_undo =
+        portuguese.translate("Runtime.Prg.CommandUndo.Error.NoCommand");
+    expect(
+        portuguese_command_undo == "Nao ha comando para UNDO",
+        "#2607: pt-BR command UNDO empty-stack error should localize the prose");
+
+    const std::string portuguese_transaction =
+        portuguese.translate("Runtime.Prg.Transaction.Error.JournalReplayFailed");
+    expect(
+        portuguese_transaction == "Falha ao reproduzir o diario da transacao",
+        "#2607: pt-BR transaction replay error should localize the prose");
+
+    const std::string pseudo_critical_section = pseudo.translate(
+        "Runtime.Prg.CriticalSection.Error.MutexNotFound",
+        {{"section", "orders"}});
+    expect(
+        pseudo_critical_section.find("[!! ") == 0U &&
+            pseudo_critical_section.find("orders") != std::string::npos &&
+            pseudo_critical_section.find("Critical section mutex not found: orders") == std::string::npos,
+        "#2607: qps-ploc critical-section mutex error should pseudo-localize prose while preserving the section name");
+
+    const std::string pseudo_transaction =
+        pseudo.translate("Runtime.Prg.Transaction.Error.BackupCreateFailed", {{"path", "fixtures/people.dbf"}});
+    expect(
+        pseudo_transaction.find("[!! ") == 0U &&
+            pseudo_transaction.find("fixtures/people.dbf") != std::string::npos &&
+            pseudo_transaction.find("Unable to create transaction backup for: fixtures/people.dbf") == std::string::npos,
+        "#2607: qps-ploc transaction backup error should pseudo-localize prose while preserving the path");
 }
 
 void test_runtime_report_output_messages_route_through_catalog() {
@@ -1784,7 +1847,7 @@ int main(int argc, char** argv) {
     test_machine_contract_fields_remain_invariant();
     test_catalog_root_resolution_searches_parent_directories();
     test_parser_behavior_remains_locale_invariant();
-    test_runtime_transaction_journal_messages_route_through_catalog();
+    test_runtime_session_diagnostics_route_through_catalog();
     test_runtime_report_output_messages_route_through_catalog();
     test_runtime_report_output_errors_localize_without_changing_runtime_behavior();
     test_runtime_aggregate_errors_route_through_catalog();
