@@ -181,5 +181,18 @@
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorDestinationAliasRequired": "{function} destination alias is required",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired": "{function} requires XML input and destination alias",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} failed to materialize destination cursor",
-  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} could not parse the provided XML payload"
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} could not parse the provided XML payload",
+  "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle": "[!! Çhïļð-øřðëř !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle": "[!! Çøļümñ-øřðëř !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle": "[!! Ðëƒåüļţ-ƒïļë-þåţh !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientationTitle": "[!! Ðïšþļåÿ-øřïëñţåţïøñ !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle": "[!! Fïļļ-çøļøř !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle": "[!! Føřm-šëţ-çļåšš !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle": "[!! Hëļþ-çøñţëxţ-ïð !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle": "[!! Hïĝhļïĝhţ-šţÿļë !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle": "[!! Ïñïţïåļ-šëļëçţëð-åļïåš !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle": "[!! Ŀïšţ-ïţëm-ïð !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle": "[!! Řëçøřð-šøüřçë !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle": "[!! Řëçøřð-šøüřçë-ţÿþë !!]",
+  "StudioHost.LaunchParse.ObjectAssignment.TabOrientationTitle": "[!! Ţåƀ-øřïëñţåţïøñ !!]"
 }

@@ -181,5 +181,18 @@
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorDestinationAliasRequired": "{function} requiere alias de destino",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorInputAndAliasRequired": "{function} requiere entrada XML y alias de destino",
   "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorMaterializeFailed": "{function} no pudo materializar el cursor destino",
-  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} no pudo analizar la carga XML proporcionada"
+  "Runtime.Prg.RuntimeSurface.Warning.XmlToCursorParseFailed": "{function} no pudo analizar la carga XML proporcionada",
+  "StudioHost.LaunchParse.ObjectAssignment.ChildOrderTitle": "Orden secundario",
+  "StudioHost.LaunchParse.ObjectAssignment.ColumnOrderTitle": "Orden de columnas",
+  "StudioHost.LaunchParse.ObjectAssignment.DefaultFilePathTitle": "Ruta de archivo predeterminada",
+  "StudioHost.LaunchParse.ObjectAssignment.DisplayOrientationTitle": "Orientacion de visualizacion",
+  "StudioHost.LaunchParse.ObjectAssignment.FillColorTitle": "Color de relleno",
+  "StudioHost.LaunchParse.ObjectAssignment.FormSetClassTitle": "Clase de conjunto de formularios",
+  "StudioHost.LaunchParse.ObjectAssignment.HelpContextIdTitle": "ID de contexto de ayuda",
+  "StudioHost.LaunchParse.ObjectAssignment.HighlightStyleTitle": "Estilo de resaltado",
+  "StudioHost.LaunchParse.ObjectAssignment.InitialSelectedAliasTitle": "Alias seleccionado inicial",
+  "StudioHost.LaunchParse.ObjectAssignment.ListItemIdTitle": "ID del elemento de lista",
+  "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle": "Origen del registro",
+  "StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle": "Tipo de origen del registro",
+  "StudioHost.LaunchParse.ObjectAssignment.TabOrientationTitle": "Orientacion de pestañas"
 }

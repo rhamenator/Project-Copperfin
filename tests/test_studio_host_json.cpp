@@ -780,6 +780,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Partition object:",
         "#2574: default studio host usage should preserve en-US partition labels");
     expect_contains(process.stdout_text,
+        "Record-source-type object:",
+        "#2575: default studio host usage should preserve en-US record-source-type labels");
+    expect_contains(process.stdout_text,
+        "Fill-color object:",
+        "#2575: default studio host usage should preserve en-US fill-color labels");
+    expect_contains(process.stdout_text,
+        "Record-source object:",
+        "#2575: default studio host usage should preserve en-US record-source labels");
+    expect_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: default studio host usage should preserve localized OLE drop-mode labels");
     expect_contains(process.stdout_text,
@@ -858,6 +867,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PartitionTitle"),
         "#2574: pseudo-localized studio host usage should route partition labels through localization");
     expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSourceTypeTitle"),
+        "#2575: pseudo-localized studio host usage should route record-source-type labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.FillColorTitle"),
+        "#2575: pseudo-localized studio host usage should route fill-color labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RecordSourceTitle"),
+        "#2575: pseudo-localized studio host usage should route record-source labels through localization");
+    expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
     expect_not_contains(process.stdout_text,
@@ -866,6 +884,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_not_contains(process.stdout_text,
         "Dynamic-fore-color object:",
         "#2570: pseudo-localized studio host usage should not fall back to the raw English dynamic-fore-color label");
+    expect_not_contains(process.stdout_text,
+        "Record-source-type object:",
+        "#2575: pseudo-localized studio host usage should not fall back to the raw English record-source-type label");
+    expect_not_contains(process.stdout_text,
+        "Fill-color object:",
+        "#2575: pseudo-localized studio host usage should not fall back to the raw English fill-color label");
+    expect_not_contains(process.stdout_text,
+        "Record-source object:",
+        "#2575: pseudo-localized studio host usage should not fall back to the raw English record-source label");
     expect_not_contains(process.stdout_text,
         "Desktop object:",
         "#2571: pseudo-localized studio host usage should not fall back to the raw English desktop label");
