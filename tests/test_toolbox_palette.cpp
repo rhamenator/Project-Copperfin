@@ -237,9 +237,21 @@ int main() {
         "Studio.Toolbox.Item.TextBox.Title",
         "Studio.Toolbox.Item.EditBox.Description",
         "Studio.Toolbox.Item.EditBox.Title"};
+    const std::vector<std::string_view> interactive_item_keys = {
+        "Studio.Toolbox.Item.CheckBox.Description",
+        "Studio.Toolbox.Item.CheckBox.Title",
+        "Studio.Toolbox.Item.ComboBox.Description",
+        "Studio.Toolbox.Item.ComboBox.Title",
+        "Studio.Toolbox.Item.CommandButton.Description",
+        "Studio.Toolbox.Item.CommandButton.Title",
+        "Studio.Toolbox.Item.ListBox.Description",
+        "Studio.Toolbox.Item.ListBox.Title"};
     const auto* spanish_label = find_toolbox_item(spanish_toolbox, "label");
+    const auto* spanish_checkbox = find_toolbox_item(spanish_toolbox, "checkbox");
     const auto* portuguese_textbox = find_toolbox_item(portuguese_toolbox, "textbox");
+    const auto* portuguese_commandbutton = find_toolbox_item(portuguese_toolbox, "commandbutton");
     const auto* pseudo_editbox = find_toolbox_item(pseudo_toolbox, "editbox");
+    const auto* pseudo_combobox = find_toolbox_item(pseudo_toolbox, "combobox");
     expect(
         spanish_label != nullptr &&
             spanish_label->title == "Etiqueta" &&
@@ -271,6 +283,36 @@ int main() {
             pseudo_editbox->default_name_prefix == "edt",
         "#2633: qps-ploc editbox toolbox metadata should resolve through the pseudo-localization transform");
     expect(
+        spanish_checkbox != nullptr &&
+            spanish_checkbox->title == "Casilla de verificacion" &&
+            spanish_checkbox->description ==
+                "Editar valores logicos con comportamiento de CheckBox de VFP." &&
+            spanish_checkbox->id == "checkbox" &&
+            spanish_checkbox->vfp_class == "CheckBox" &&
+            spanish_checkbox->base_class == "CheckBox" &&
+            spanish_checkbox->default_name_prefix == "chk",
+        "#2634: es-419 checkbox toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        portuguese_commandbutton != nullptr &&
+            portuguese_commandbutton->title == "Botao de comando" &&
+            portuguese_commandbutton->description ==
+                "Executar acoes de clique e metodos de comando." &&
+            portuguese_commandbutton->id == "commandbutton" &&
+            portuguese_commandbutton->vfp_class == "CommandButton" &&
+            portuguese_commandbutton->base_class == "CommandButton" &&
+            portuguese_commandbutton->default_name_prefix == "cmd",
+        "#2634: pt-BR commandbutton toolbox metadata should localize through the palette without changing invariant fields");
+    expect(
+        pseudo_combobox != nullptr &&
+            pseudo_combobox->title == copperfin::localization::pseudo_localize("ComboBox") &&
+            pseudo_combobox->description ==
+                copperfin::localization::pseudo_localize("Pick or enter values from RowSource-driven lists.") &&
+            pseudo_combobox->id == "combobox" &&
+            pseudo_combobox->vfp_class == "ComboBox" &&
+            pseudo_combobox->base_class == "ComboBox" &&
+            pseudo_combobox->default_name_prefix == "cbo",
+        "#2634: qps-ploc combobox toolbox metadata should resolve through the pseudo-localization transform");
+    expect(
         count_missing_locale_keys(spanish_catalog, "es-419", text_item_keys) == 0U,
         "#2633: es-419 should define every remaining toolbox text-item localization key");
     expect(
@@ -279,6 +321,15 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", text_item_keys) == 0U,
         "#2633: qps-ploc should define every remaining toolbox text-item localization key");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", interactive_item_keys) == 0U,
+        "#2634: es-419 should define every remaining toolbox interactive-item localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", interactive_item_keys) == 0U,
+        "#2634: pt-BR should define every remaining toolbox interactive-item localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", interactive_item_keys) == 0U,
+        "#2634: qps-ploc should define every remaining toolbox interactive-item localization key");
 
     const auto visual_plan = copperfin::studio::plan_studio_toolbox_palette_launch({
         .selection_context = StudioEditorSelectionContext::visual_object,
