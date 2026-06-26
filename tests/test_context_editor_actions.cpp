@@ -294,6 +294,13 @@ int main() {
         "Studio.Toolbox.Category.Interop",
         "Studio.Toolbox.Category.ListControls",
         "Studio.Toolbox.Category.StandardControls"};
+    const std::vector<std::string_view> toolbox_invocation_palette_keys = {
+        "Studio.ToolboxInvocationAdmission.Error.CatalogRequiresItemMetadata",
+        "Studio.ToolboxInvocationAdmission.Error.ConsistentItemMetadataRequired",
+        "Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette",
+        "Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired",
+        "Studio.ToolboxPalette.Error.ContextUnavailable",
+        "Studio.ToolboxPalette.Error.NoItems"};
     expect(english_catalog.translate("Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired") ==
                "A toolbox invocation admission request requires validated toolbox item metadata." &&
                english_catalog.translate("Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette") ==
@@ -400,6 +407,36 @@ int main() {
     expect(
         count_missing_locale_keys(pseudo_catalog, "qps-ploc", editor_action_catalog_keys) == 0U,
         "#2647: qps-ploc should define every remaining shared Studio.EditorAction catalog key");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxPalette.Error.ContextUnavailable") ==
+            "El contexto seleccionado de Studio no expone una paleta de caja de herramientas.",
+        "#2650: es-419 toolbox palette context-unavailable error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.ToolboxInvocationAdmission.Error.ValidatedItemMetadataRequired") ==
+            "Una solicitud de admision de invocacion de caja de herramientas requiere metadatos validados de elementos de caja de herramientas.",
+        "#2650: es-419 toolbox invocation validated-item-metadata error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxPalette.Error.NoItems") ==
+            "O contexto selecionado do Studio nao tem itens da caixa de ferramentas.",
+        "#2650: pt-BR toolbox palette no-items error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.ToolboxInvocationAdmission.Error.SelectionCatalogRequiresPalette") ==
+            "Uma solicitacao de catalogo de admissao de invocacao da caixa de ferramentas com contexto de selecao exige uma paleta da caixa de ferramentas.",
+        "#2650: pt-BR toolbox invocation selection-catalog palette error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.ToolboxInvocationAdmission.Error.CatalogRequiresItemMetadata") ==
+            copperfin::localization::pseudo_localize(
+                "A toolbox invocation admission catalog request requires validated toolbox item metadata."),
+        "#2650: qps-ploc toolbox invocation catalog-item-metadata error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", toolbox_invocation_palette_keys) == 0U,
+        "#2650: es-419 should define every remaining Studio.ToolboxInvocationAdmission and Studio.ToolboxPalette localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", toolbox_invocation_palette_keys) == 0U,
+        "#2650: pt-BR should define every remaining Studio.ToolboxInvocationAdmission and Studio.ToolboxPalette localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", toolbox_invocation_palette_keys) == 0U,
+        "#2650: qps-ploc should define every remaining Studio.ToolboxInvocationAdmission and Studio.ToolboxPalette localization key");
     const std::vector<std::string_view> toolbox_execution_keys = {
         "Studio.ToolboxDispatch.Execution.Error.AdmittedDispatchRequired",
         "Studio.ToolboxDispatch.Execution.Error.CommandTokenRequired",
