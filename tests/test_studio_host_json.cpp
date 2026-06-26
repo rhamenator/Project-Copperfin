@@ -771,6 +771,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         "Header-height object:",
         "#2573: default studio host usage should preserve en-US header-height labels");
     expect_contains(process.stdout_text,
+        "Row-height object:",
+        "#2574: default studio host usage should preserve en-US row-height labels");
+    expect_contains(process.stdout_text,
+        "Grid-line-width object:",
+        "#2574: default studio host usage should preserve en-US grid-line-width labels");
+    expect_contains(process.stdout_text,
+        "Partition object:",
+        "#2574: default studio host usage should preserve en-US partition labels");
+    expect_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: default studio host usage should preserve localized OLE drop-mode labels");
     expect_contains(process.stdout_text,
@@ -840,6 +849,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.HeaderHeightTitle"),
         "#2573: pseudo-localized studio host usage should route header-height labels through localization");
     expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.RowHeightTitle"),
+        "#2574: pseudo-localized studio host usage should route row-height labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.GridLineWidthTitle"),
+        "#2574: pseudo-localized studio host usage should route grid-line-width labels through localization");
+    expect_contains(process.stdout_text,
+        pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.PartitionTitle"),
+        "#2574: pseudo-localized studio host usage should route partition labels through localization");
+    expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
     expect_not_contains(process.stdout_text,
@@ -872,6 +890,15 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_not_contains(process.stdout_text,
         "Header-height object:",
         "#2573: pseudo-localized studio host usage should not fall back to the raw English header-height label");
+    expect_not_contains(process.stdout_text,
+        "Row-height object:",
+        "#2574: pseudo-localized studio host usage should not fall back to the raw English row-height label");
+    expect_not_contains(process.stdout_text,
+        "Grid-line-width object:",
+        "#2574: pseudo-localized studio host usage should not fall back to the raw English grid-line-width label");
+    expect_not_contains(process.stdout_text,
+        "Partition object:",
+        "#2574: pseudo-localized studio host usage should not fall back to the raw English partition label");
     expect_not_contains(process.stdout_text,
         "OLE drop-mode object:",
         "#2569: pseudo-localized studio host usage should not fall back to the raw English OLE drop-mode label");
