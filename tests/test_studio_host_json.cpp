@@ -1773,6 +1773,104 @@ void test_studio_host_toolbox_parse_diagnostics_localize(const std::string& stud
         "No toolbox launch command was provided.",
         "#2399: pseudo-localized missing-launch-command diagnostics should not fall back to raw English prose");
 
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-invocation-admission", "--selection-context", "unknown", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2583: es-419 unknown-selection diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "\"status\": \"error\"",
+        "#2583: es-419 unknown-selection diagnostics should preserve JSON status contracts");
+    expect_contains(process.stdout_text,
+        "\"toolboxInvocationAdmission\": null",
+        "#2583: es-419 unknown-selection diagnostics should preserve JSON payload contracts");
+    expect_contains(process.stdout_text,
+        "Token de contexto de seleccion desconocido: unknown",
+        "#2583: es-419 unknown-selection diagnostics should localize selection-context token prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown selection context token: unknown",
+        "#2583: es-419 unknown-selection diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--toolbox-dispatch-catalog", "--toolbox-context", "menu_item", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2583: pt-BR unknown-toolbox-context diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Token de contexto da caixa de ferramentas desconhecido: menu_item",
+        "#2583: pt-BR unknown-toolbox-context diagnostics should localize toolbox-context token prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown toolbox context token: menu_item",
+        "#2583: pt-BR unknown-toolbox-context diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-dispatch",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "maybe",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2583: es-419 invalid-boolean diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "El valor de --admit-palette-invocation debe ser true o false.",
+        "#2583: es-419 invalid-boolean diagnostics should localize boolean validation prose");
+    expect_contains(process.stdout_text,
+        "true",
+        "#2583: es-419 invalid-boolean diagnostics should preserve invariant true tokens");
+    expect_contains(process.stdout_text,
+        "false",
+        "#2583: es-419 invalid-boolean diagnostics should preserve invariant false tokens");
+    expect_not_contains(process.stdout_text,
+        "The --admit-palette-invocation value must be true or false.",
+        "#2583: es-419 invalid-boolean diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "pt-BR", true);
+    process = run_process_capture(
+        studio_host_path,
+        {"--selection-toolbox-dispatch-catalog", "--selection-context", "visual_object", "--toolbox-context", "form", "--json"},
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2583: pt-BR unknown-option diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "Opcao desconhecida de selection-toolbox-dispatch-catalog: --toolbox-context",
+        "#2583: pt-BR unknown-option diagnostics should localize command-option prose");
+    expect_not_contains(process.stdout_text,
+        "Unknown selection-toolbox-dispatch-catalog option: --toolbox-context",
+        "#2583: pt-BR unknown-option diagnostics should not fall back to raw English prose");
+
+    set_env_value("COPPERFIN_LOCALE", "es-419", true);
+    process = run_process_capture(
+        studio_host_path,
+        {
+            "--toolbox-execute",
+            "--selection-context", "visual_object",
+            "--admit-palette-invocation", "true",
+            "--admit-toolbox-execution", "true",
+            "--json"
+        },
+        temp_root);
+
+    expect(process.exit_code == 2,
+        "#2583: es-419 missing-launch-command diagnostics should preserve parse-failure exit status");
+    expect_contains(process.stdout_text,
+        "No se proporciono un comando de lanzamiento de la caja de herramientas.",
+        "#2583: es-419 missing-launch-command diagnostics should localize toolbox launch-command prose");
+    expect_not_contains(process.stdout_text,
+        "No toolbox launch command was provided.",
+        "#2583: es-419 missing-launch-command diagnostics should not fall back to raw English prose");
+
     if (failures == 0) {
         fs::remove_all(temp_root, ignored);
     }
