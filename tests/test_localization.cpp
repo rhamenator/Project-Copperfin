@@ -1,7 +1,12 @@
 #include "copperfin/localization/localization.h"
+#include "copperfin/platform/extensibility_model.h"
+#include "copperfin/runtime/runtime_pipeline.h"
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/security/security_model.h"
+#include "copperfin/studio/project_workspace.h"
 #include "prg_engine_test_support.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -79,6 +84,24 @@ std::string run_command_capture(const std::string& command) {
 #endif
     return output;
 }
+
+struct ScopedEnvironmentValue {
+    std::string name;
+    bool had_value = false;
+    std::string original_value;
+
+    explicit ScopedEnvironmentValue(std::string environment_name)
+        : name(std::move(environment_name)) {
+        if (const char* current = std::getenv(name.c_str())) {
+            had_value = true;
+            original_value = current;
+        }
+    }
+
+    ~ScopedEnvironmentValue() {
+        set_env_value(name, original_value, had_value);
+    }
+};
 
 void seed_test_catalogs(const std::filesystem::path& root) {
     write_catalog(
@@ -1041,6 +1064,73 @@ void test_inspect_usage_routes_through_localization(const std::string& inspect_p
     fs::remove_all(temp_root, ignored);
 }
 
+void test_runtime_package_warnings_pseudo_localize() {
+    namespace fs = std::filesystem;
+
+    ScopedEnvironmentValue locale("COPPERFIN_LOCALE");
+    ScopedEnvironmentValue locale_dir("COPPERFIN_LOCALE_DIR");
+    set_env_value("COPPERFIN_LOCALE", "qps-ploc", true);
+    set_env_value("COPPERFIN_LOCALE_DIR", "", false);
+
+    const fs::path temp_root = fs::temp_directory_path() / "copperfin_runtime_package_warning_localization";
+    const fs::path project_dir = temp_root / "project";
+    const fs::path output_dir = temp_root / "output";
+    std::error_code ignored;
+    fs::remove_all(temp_root, ignored);
+    fs::create_directories(project_dir);
+
+    copperfin::studio::StudioDocumentModel document;
+    document.path = (project_dir / "runtime_warning_localization.pjx").string();
+
+    copperfin::studio::StudioProjectWorkspace workspace;
+    workspace.available = true;
+    workspace.project_title = "RuntimeWarningLocalization";
+    workspace.home_directory = project_dir.string();
+    workspace.build_plan.available = true;
+    workspace.build_plan.can_build = true;
+    workspace.build_plan.project_title = "RuntimeWarningLocalization";
+    workspace.build_plan.output_path = (output_dir / "RuntimeWarningLocalization.exe").string();
+    workspace.build_plan.startup_item = "main.prg";
+    workspace.build_plan.startup_record_index = 42U;
+    workspace.entries = {
+        {.record_index = 1U, .name = "missing.prg", .relative_path = "missing.prg", .type_title = "Program"}
+    };
+
+    const auto plan = copperfin::runtime::create_runtime_package_plan(
+        document,
+        workspace,
+        copperfin::security::default_native_security_profile(),
+        copperfin::platform::default_extensibility_profile(),
+        output_dir.string(),
+        copperfin::runtime::BuildConfiguration::debug,
+        false,
+        false);
+
+    expect(plan.ok, "#2561: qps-ploc runtime package plan should still be created when warning paths trigger");
+
+    const auto pseudo_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "qps-ploc");
+    const std::string missing_asset_warning = pseudo_catalog.translate(
+        "Runtime.Package.Warning.MissingProjectAsset",
+        {{"path", (project_dir / "missing.prg").string()}});
+    const std::string startup_warning =
+        pseudo_catalog.translate("Runtime.Package.Warning.StartupSourceUnresolved");
+    const std::string debug_startup_warning =
+        pseudo_catalog.translate("Runtime.Package.Warning.DebugStartupSourceUnresolved");
+
+    expect(std::find(plan.warnings.begin(), plan.warnings.end(), missing_asset_warning) != plan.warnings.end(),
+        "#2561: qps-ploc runtime package warnings should pseudo-localize missing-asset prose while preserving paths");
+    expect(std::find(plan.warnings.begin(), plan.warnings.end(), startup_warning) != plan.warnings.end(),
+        "#2561: qps-ploc runtime package warnings should pseudo-localize startup-resolution prose");
+    expect(std::find(plan.warnings.begin(), plan.warnings.end(), debug_startup_warning) != plan.warnings.end(),
+        "#2561: qps-ploc runtime package warnings should pseudo-localize debug startup-resolution prose");
+    expect(missing_asset_warning.find("[!! ") == 0U,
+        "#2561: qps-ploc runtime package missing-asset warning should decorate human-facing prose");
+
+    fs::remove_all(temp_root, ignored);
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1059,6 +1149,7 @@ int main(int argc, char** argv) {
     test_runtime_core_errors_route_through_catalog();
     test_runtime_dispatch_errors_route_through_catalog();
     test_runtime_surface_errors_route_through_catalog();
+    test_runtime_package_warnings_pseudo_localize();
     if (argc > 1) {
         test_inspect_usage_routes_through_localization(argv[1]);
     } else {

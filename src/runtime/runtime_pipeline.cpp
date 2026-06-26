@@ -4381,7 +4381,7 @@ RuntimePackagePlan create_runtime_package_plan(
     }
 
     if (!workspace.available) {
-        plan.warnings.push_back("Project workspace is not available.");
+        plan.warnings.push_back(runtime_text("Runtime.Package.Warning.ProjectWorkspaceUnavailable"));
         return plan;
     }
 
@@ -4438,8 +4438,12 @@ RuntimePackagePlan create_runtime_package_plan(
         const std::string requested_role = plan.security_role;
         plan.security_role = "developer";
         if (!requested_role.empty()) {
-            plan.warnings.push_back(
-                "Unknown security role requested: " + requested_role + "; defaulting to developer.");
+            plan.warnings.push_back(runtime_text(
+                "Runtime.Package.Warning.UnknownSecurityRoleRequested",
+                {
+                    {"requestedRole", requested_role},
+                    {"defaultRole", plan.security_role}
+                }));
         }
     }
     plan.audit_log_path = (package_root / "security_audit.log").string();
@@ -4460,16 +4464,18 @@ RuntimePackagePlan create_runtime_package_plan(
             plan.debug_plan.startup_source_path = asset.source_path;
         }
         if (!asset.exists && !entry.excluded && entry.group_id != "project") {
-            plan.warnings.push_back("Missing project asset: " + asset.source_path);
+            plan.warnings.push_back(runtime_text(
+                "Runtime.Package.Warning.MissingProjectAsset",
+                {{"path", asset.source_path}}));
         }
         plan.assets.push_back(std::move(asset));
     }
 
     if (plan.startup_source_path.empty()) {
-        plan.warnings.push_back("No startup source asset could be resolved.");
+        plan.warnings.push_back(runtime_text("Runtime.Package.Warning.StartupSourceUnresolved"));
     }
     if (plan.debug_plan.startup_source_path.empty()) {
-        plan.warnings.push_back("No source-side startup asset could be resolved for debugging.");
+        plan.warnings.push_back(runtime_text("Runtime.Package.Warning.DebugStartupSourceUnresolved"));
     }
 
     plan.debug_plan.manifest_path = plan.debug_manifest_path;
@@ -4485,22 +4491,22 @@ RuntimePackagePlan create_runtime_package_plan(
     plan.debug_plan.supports_step_debugging = plan.debug_plan.supports_breakpoints;
 
     if (enable_security && !security_profile.available) {
-        plan.warnings.push_back("Security was requested but no native security profile is available.");
+        plan.warnings.push_back(runtime_text("Runtime.Package.Warning.SecurityProfileUnavailable"));
     }
     if (emit_dotnet_launcher && !extensibility_profile.dotnet_output.available) {
-        plan.warnings.push_back(".NET launcher generation was requested but no .NET output profile is available.");
+        plan.warnings.push_back(runtime_text("Runtime.Package.Warning.DotNetOutputProfileUnavailable"));
     }
     if (is_library_output_kind(plan.output_kind)) {
         plan.exported_symbols = collect_library_exported_symbols(plan);
         if (plan.exported_symbols.empty()) {
-            plan.warnings.push_back("No PRG routine exports were discovered for the library output contract.");
+            plan.warnings.push_back(runtime_text("Runtime.Package.Warning.LibraryExportsUnresolved"));
         }
     } else if (plan.output_kind == BuildOutputKind::fxp) {
         const bool has_prg_asset = std::any_of(plan.assets.begin(), plan.assets.end(), [](const RuntimePackageAsset& asset) {
             return is_prg_path(asset.source_path);
         });
         if (!has_prg_asset) {
-            plan.warnings.push_back("No PRG sources were discovered for the FXP token contract.");
+            plan.warnings.push_back(runtime_text("Runtime.Package.Warning.FxpSourcesUnresolved"));
         }
     }
 

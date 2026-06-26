@@ -120,6 +120,13 @@ std::string quote_manifest_value(const std::string& value) {
     return escaped;
 }
 
+const copperfin::localization::LocalizedCatalog& runtime_pipeline_english_catalog() {
+    static const auto catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "en-US");
+    return catalog;
+}
+
 std::vector<std::string> lines_with_prefix(const std::string& text, const std::string& prefix) {
     std::vector<std::string> matches;
     std::istringstream input(text);
@@ -4379,7 +4386,8 @@ void run_library_output_warning_debug_manifest_smoke(const std::string& output_k
         true);
 
     expect(plan.ok, "library warning-path plan should be created for " + extension + " outputs");
-    const std::string export_warning = "No PRG routine exports were discovered for the library output contract.";
+    const std::string export_warning =
+        runtime_pipeline_english_catalog().translate("Runtime.Package.Warning.LibraryExportsUnresolved");
     expect(std::find(plan.warnings.begin(), plan.warnings.end(), export_warning) != plan.warnings.end(),
            "library warning-path plan should surface the no-export warning for " + extension + " outputs");
 
@@ -5442,13 +5450,15 @@ void test_missing_startup_record_surfaces_plan_warnings_and_disables_debug_start
         plan.warnings.begin(),
         plan.warnings.end(),
         [](const std::string& warning) {
-            return warning.find("No startup source asset could be resolved.") != std::string::npos;
+            return warning.find(runtime_pipeline_english_catalog().translate(
+                "Runtime.Package.Warning.StartupSourceUnresolved")) != std::string::npos;
         });
     const bool has_debug_startup_warning = std::any_of(
         plan.warnings.begin(),
         plan.warnings.end(),
         [](const std::string& warning) {
-            return warning.find("No source-side startup asset could be resolved for debugging.") != std::string::npos;
+            return warning.find(runtime_pipeline_english_catalog().translate(
+                "Runtime.Package.Warning.DebugStartupSourceUnresolved")) != std::string::npos;
         });
     expect(has_runtime_startup_warning, "missing startup record should emit runtime startup resolution warning");
     expect(has_debug_startup_warning, "missing startup record should emit debug startup resolution warning");
