@@ -1,14 +1,24 @@
 #include "copperfin/runtime/prg_engine.h"
+#include "copperfin/localization/localization.h"
 
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <string_view>
 #include <vector>
 
 namespace copperfin::runtime {
 
 namespace {
+
+std::string prg_static_analysis_text(
+    std::string_view key,
+    const localization::PlaceholderMap& placeholders = {}) {
+    static const localization::LocalizedCatalog catalog =
+        localization::load_catalogs(localization::resolve_catalog_root(), localization::select_locale());
+    return catalog.translate(key, placeholders);
+}
 
 enum class StaticLineKind {
     do_while_true,
@@ -159,7 +169,7 @@ std::vector<PrgStaticDiagnostic> analyze_prg_file(const std::string& path) {
         diagnostics.push_back({
             .code = "PRG0001",
             .severity = DiagnosticSeverity::error,
-            .message = "Failed to analyze PRG source: file could not be opened.",
+            .message = prg_static_analysis_text("Runtime.PrgStaticAnalysis.Diagnostic.PRG0001.Message"),
             .location = {.file_path = normalize_path(path), .line = 1}
         });
         return diagnostics;
@@ -176,7 +186,7 @@ std::vector<PrgStaticDiagnostic> analyze_prg_file(const std::string& path) {
             diagnostics.push_back({
                 .code = "PRG1002",
                 .severity = DiagnosticSeverity::error,
-                .message = "DO WHILE block is missing ENDDO.",
+                .message = prg_static_analysis_text("Runtime.PrgStaticAnalysis.Diagnostic.PRG1002.Message"),
                 .location = {.file_path = normalize_path(path), .line = lines[index].line}
             });
             continue;
@@ -186,7 +196,7 @@ std::vector<PrgStaticDiagnostic> analyze_prg_file(const std::string& path) {
             diagnostics.push_back({
                 .code = "PRG1001",
                 .severity = DiagnosticSeverity::warning,
-                .message = "Likely infinite loop: DO WHILE condition is always true and no EXIT/RETURN path was found.",
+                .message = prg_static_analysis_text("Runtime.PrgStaticAnalysis.Diagnostic.PRG1001.Message"),
                 .location = {.file_path = normalize_path(path), .line = lines[index].line}
             });
         }

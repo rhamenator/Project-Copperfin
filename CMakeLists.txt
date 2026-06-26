@@ -170,6 +170,8 @@ else()
     target_compile_options(cf_prg_analysis PRIVATE -Wall -Wextra -Wpedantic)
 endif()
 
+target_link_libraries(cf_prg_analysis PRIVATE cf_localization)
+
 target_include_directories(cf_xbase_runtime
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include

@@ -1845,13 +1845,54 @@ void test_static_diagnostic_flags_likely_infinite_do_while_loop() {
 
     const auto diagnostics = copperfin::runtime::analyze_prg_file(flagged_path.string());
     expect(!diagnostics.empty(), "analyzer should emit diagnostics for likely infinite loops");
-    const bool has_infinite_loop_warning = std::any_of(
+    const auto infinite_loop_warning = std::find_if(
         diagnostics.begin(),
         diagnostics.end(),
         [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
             return diagnostic.code == "PRG1001";
         });
-    expect(has_infinite_loop_warning, "analyzer should emit PRG1001 for DO WHILE .T. without exit path");
+    expect(infinite_loop_warning != diagnostics.end(), "analyzer should emit PRG1001 for DO WHILE .T. without exit path");
+    if (infinite_loop_warning != diagnostics.end()) {
+        expect(infinite_loop_warning->severity == copperfin::runtime::DiagnosticSeverity::warning,
+            "PRG1001 severity should remain warning");
+        expect(
+            infinite_loop_warning->message ==
+                "Likely infinite loop: DO WHILE condition is always true and no EXIT/RETURN path was found.",
+            "PRG1001 message should route through the default locale catalog");
+    }
+
+    const fs::path missing_enddo_path = temp_root / "missing_enddo.prg";
+    write_text(
+        missing_enddo_path,
+        "DO WHILE .T.\n"
+        "x = 1\n");
+    const auto missing_enddo_diagnostics = copperfin::runtime::analyze_prg_file(missing_enddo_path.string());
+    const auto missing_enddo_error = std::find_if(
+        missing_enddo_diagnostics.begin(),
+        missing_enddo_diagnostics.end(),
+        [](const copperfin::runtime::PrgStaticDiagnostic& diagnostic) {
+            return diagnostic.code == "PRG1002";
+        });
+    expect(missing_enddo_error != missing_enddo_diagnostics.end(), "analyzer should emit PRG1002 for unterminated DO WHILE");
+    if (missing_enddo_error != missing_enddo_diagnostics.end()) {
+        expect(missing_enddo_error->severity == copperfin::runtime::DiagnosticSeverity::error,
+            "PRG1002 severity should remain error");
+        expect(missing_enddo_error->message == "DO WHILE block is missing ENDDO.",
+            "PRG1002 message should route through the default locale catalog");
+    }
+
+    const fs::path missing_path = temp_root / "missing.prg";
+    const auto missing_file_diagnostics = copperfin::runtime::analyze_prg_file(missing_path.string());
+    expect(missing_file_diagnostics.size() == 1U, "missing PRG source should emit exactly one diagnostic");
+    if (!missing_file_diagnostics.empty()) {
+        expect(missing_file_diagnostics.front().code == "PRG0001",
+            "missing PRG source diagnostic code should remain stable");
+        expect(missing_file_diagnostics.front().severity == copperfin::runtime::DiagnosticSeverity::error,
+            "PRG0001 severity should remain error");
+        expect(
+            missing_file_diagnostics.front().message == "Failed to analyze PRG source: file could not be opened.",
+            "PRG0001 message should route through the default locale catalog");
+    }
 
     const fs::path safe_path = temp_root / "safe.prg";
     write_text(
