@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #if !defined(_WIN32)
@@ -91,6 +92,25 @@ void expect_contains(const std::string& text, const std::string& needle, const s
 
 void expect_not_contains(const std::string& text, const std::string& needle, const std::string& message) {
     expect(text.find(needle) == std::string::npos, message);
+}
+
+std::size_t count_missing_locale_keys(
+    const copperfin::localization::LocalizedCatalog& catalog,
+    std::string_view locale,
+    const std::vector<std::string_view>& keys) {
+    const auto locale_entries = catalog.catalogs.find(std::string(locale));
+    if (locale_entries == catalog.catalogs.end()) {
+        return keys.size();
+    }
+
+    std::size_t missing = 0U;
+    for (const auto key : keys) {
+        if (locale_entries->second.find(std::string(key)) == locale_entries->second.end()) {
+            ++missing;
+        }
+    }
+
+    return missing;
 }
 
 void expect_contains_in_order(
@@ -830,6 +850,18 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     const auto pseudo_catalog = copperfin::localization::load_catalogs(
         copperfin::localization::resolve_catalog_root(),
         "qps-ploc");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(
+        copperfin::localization::resolve_catalog_root(),
+        "pt-BR");
+    const std::vector<std::string_view> object_command_keys = {
+        "StudioHost.LaunchParse.ObjectCommand.Rename",
+        "StudioHost.LaunchParse.ObjectCommand.RenameRequiredOptions",
+        "StudioHost.LaunchParse.ObjectCommand.Reorder",
+        "StudioHost.LaunchParse.ObjectCommand.Reparent",
+        "StudioHost.LaunchParse.ObjectCommand.ReparentRequiredOptions"};
     expect_contains(process.stdout_text,
         pseudo_catalog.translate(
             "StudioHost.Usage.Alternate",
@@ -902,6 +934,23 @@ void test_studio_host_usage_exposes_selected_execution_catalogs(const std::strin
     expect_contains(process.stdout_text,
         pseudo_catalog.translate("StudioHost.LaunchParse.ObjectAssignment.WhatsThisHelpId"),
         "#2569: pseudo-localized studio host usage should route WhatsThis help ID labels through localization");
+    expect(
+        spanish_catalog.translate("StudioHost.LaunchParse.ObjectCommand.Rename") == "renombrar" &&
+            spanish_catalog.translate("StudioHost.LaunchParse.ObjectCommand.Reorder") == "reordenar" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectCommand.Rename") == "renomear" &&
+            portuguese_catalog.translate("StudioHost.LaunchParse.ObjectCommand.Reparent") == "reparentar" &&
+            pseudo_catalog.translate("StudioHost.LaunchParse.ObjectCommand.Reorder") ==
+                copperfin::localization::pseudo_localize("reorder"),
+        "#2628: host object-command labels should resolve through locale catalogs without changing CLI option placeholders");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", object_command_keys) == 0U,
+        "#2628: es-419 should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", object_command_keys) == 0U,
+        "#2628: pt-BR should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", object_command_keys) == 0U,
+        "#2628: qps-ploc should define every remaining StudioHost.LaunchParse.ObjectCommand localization key");
     expect_not_contains(process.stdout_text,
         "Usage: copperfin_studio_host --path <asset>",
         "#2576: pseudo-localized studio host usage should not fall back to raw English primary usage prose");
