@@ -475,7 +475,16 @@ int main() {
 
     const auto catalog_root = copperfin::localization::resolve_catalog_root();
     const auto english_catalog = copperfin::localization::load_catalogs(catalog_root, "en-US");
+    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
+    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     const auto pseudo_catalog = copperfin::localization::load_catalogs(catalog_root, "qps-ploc");
+    const std::vector<std::string_view> selection_builder_error_keys = {
+        "Studio.SelectionBuilderDispatch.Error.DispatchCatalogRequiresBuilder",
+        "Studio.SelectionBuilderDispatch.Error.ExecutionCatalogRequiresBuilder",
+        "Studio.SelectionBuilderInvocationAdmission.Error.CatalogRequiresBuilder",
+        "Studio.SelectionBuilderLaunch.Error.BuilderIdRequired",
+        "Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext",
+        "Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder"};
     expect(english_catalog.translate("Studio.SelectionBuilderLaunch.Error.BuilderIdRequired") ==
                "A selection-context builder launch request requires a builder id." &&
                english_catalog.translate("Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder") ==
@@ -489,6 +498,36 @@ int main() {
                pseudo_catalog.translate("Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext").starts_with("[!! ") &&
                pseudo_catalog.translate("Studio.BuilderDispatch.CatalogEntry.Error.ExecutionAdmissionRequired").starts_with("[!! "),
            "#2369: selection-context builder error prose should resolve through localizable catalog keys");
+    expect(
+        spanish_catalog.translate("Studio.SelectionBuilderLaunch.Error.BuilderIdRequired") ==
+            "Una solicitud de inicio de builder con contexto de seleccion requiere un id de builder.",
+        "#2649: es-419 selection-builder launch-id error should localize through the catalog");
+    expect(
+        spanish_catalog.translate("Studio.SelectionBuilderDispatch.Error.ExecutionCatalogRequiresBuilder") ==
+            "Una solicitud de catalogo de ejecucion de dispatch de builder con contexto de seleccion requiere al menos un builder.",
+        "#2649: es-419 selection-builder dispatch execution-catalog error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.SelectionBuilderInvocationAdmission.Error.CatalogRequiresBuilder") ==
+            "Uma solicitacao de catalogo de admissao de invocacao de builder com contexto de selecao exige pelo menos um builder.",
+        "#2649: pt-BR selection-builder invocation-admission catalog error should localize through the catalog");
+    expect(
+        portuguese_catalog.translate("Studio.SelectionBuilderLaunch.Error.BuilderUnavailableForContext") ==
+            "O builder solicitado nao esta disponivel para o contexto selecionado do Studio.",
+        "#2649: pt-BR selection-builder unavailable-for-context error should localize through the catalog");
+    expect(
+        pseudo_catalog.translate("Studio.SelectionBuilderLaunch.Error.CatalogRequiresBuilder") ==
+            copperfin::localization::pseudo_localize(
+                "A selection-context builder launch catalog request requires at least one builder."),
+        "#2649: qps-ploc selection-builder launch-catalog error should resolve through the pseudo-localization transform");
+    expect(
+        count_missing_locale_keys(spanish_catalog, "es-419", selection_builder_error_keys) == 0U,
+        "#2649: es-419 should define every remaining Studio.SelectionBuilder localization key");
+    expect(
+        count_missing_locale_keys(portuguese_catalog, "pt-BR", selection_builder_error_keys) == 0U,
+        "#2649: pt-BR should define every remaining Studio.SelectionBuilder localization key");
+    expect(
+        count_missing_locale_keys(pseudo_catalog, "qps-ploc", selection_builder_error_keys) == 0U,
+        "#2649: qps-ploc should define every remaining Studio.SelectionBuilder localization key");
 
     const auto missing_builder_plan = copperfin::studio::plan_studio_builder_launch_for_selection({
         .selection_context = StudioEditorSelectionContext::visual_object,
@@ -1050,8 +1089,6 @@ int main() {
     expect(!empty_dispatch.ok &&
                empty_dispatch.error == "A designer dispatch request requires at least one invocation admission.",
            "#1237: aggregate designer dispatch should reject empty invocation inputs");
-    const auto spanish_catalog = copperfin::localization::load_catalogs(catalog_root, "es-419");
-    const auto portuguese_catalog = copperfin::localization::load_catalogs(catalog_root, "pt-BR");
     expect(english_catalog.translate("Studio.DesignerDispatch.Error.InvocationAdmissionRequired") ==
                "A designer dispatch request requires at least one invocation admission." &&
                english_catalog.translate("Studio.DesignerDispatch.Execution.Error.ExecutionAdmissionRequired") ==
